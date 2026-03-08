@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://RENDER_URL_HERE/api/:path*" },
-    { "source": "/health", "destination": "https://RENDER_URL_HERE/health" }
+    { "source": "/api/:path*", "destination": "https://fortune-site-iuzo.onrender.com/api/:path*" },
+    { "source": "/health", "destination": "https://fortune-site-iuzo.onrender.com/health" }
   ]
 }
