@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit'
 import { fortuneRouter } from './routes/fortune.js'
 import { chatRouter } from './routes/chat.js'
 import { paymentRouter } from './routes/payment.js'
+import { reportRouter } from './routes/report.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -26,10 +27,10 @@ const limiter = rateLimit({
 })
 app.use('/api', limiter)
 
-// 鑑定エンドポイント: IPごと3req/時（コスト保護）
+// 鑑定エンドポイント: IPごと3req/時（コスト保護）※本番は3に戻す
 const fortuneLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: process.env.NODE_ENV === 'production' ? 3 : 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: '鑑定のご利用は1時間に3回までです。しばらくお待ちください。' },
@@ -39,6 +40,7 @@ app.use('/api/fortune', fortuneLimiter)
 app.use('/api/fortune', fortuneRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/payment', paymentRouter)
+app.use('/api/report', reportRouter)
 
 app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''

@@ -4,14 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        'deep-navy': '#1A1A3E',
-        'gold': '#B8860B',
-        'gold-light': '#D4A017',
-        'ink': '#2C2C2C',
+        'deep-navy': '#0F172A',
+        'navy': '#1E293B',
+        'navy-light': '#334155',
+        'accent': '#3B82F6',
+        'accent-dark': '#2563EB',
+        'gold': '#3B82F6',
+        'gold-light': '#60A5FA',
+        'ink': '#1E293B',
       },
       fontFamily: {
-        serif: ['"Noto Serif JP"', 'serif'],
+        serif: ['"Noto Serif JP"', '"EB Garamond"', 'serif'],
         sans: ['"Noto Sans JP"', 'sans-serif'],
+        garamond: ['"EB Garamond"', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

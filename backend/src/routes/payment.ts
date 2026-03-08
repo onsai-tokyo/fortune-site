@@ -31,7 +31,7 @@ export function verifyPaidToken(token: string): boolean {
 }
 
 // Stripe Checkout セッション作成
-paymentRouter.post('/create-session', async (req, res) => {
+paymentRouter.post('/create-session', async (_req, res) => {
   try {
     const stripe = getStripe()
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
@@ -58,10 +58,38 @@ paymentRouter.post('/create-session', async (req, res) => {
   }
 })
 
+// 詳細レポート用 Stripe Checkout セッション作成
+paymentRouter.post('/create-report-session', async (_req, res) => {
+  try {
+    const stripe = getStripe()
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'jpy',
+          product_data: { name: '宿命構造分析書（詳細版）' },
+          unit_amount: 2000,
+        },
+        quantity: 1,
+      }],
+      success_url: `${frontendUrl}/result?payment=success&session_id={CHECKOUT_SESSION_ID}&type=report`,
+      cancel_url: `${frontendUrl}/result?payment=cancel`,
+    })
+
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('Report payment session error:', err)
+    res.status(500).json({ error: '決済セッションの作成に失敗しました' })
+  }
+})
+
 // 決済確認 → 署名トークン発行
 paymentRouter.post('/verify', async (req, res) => {
   try {
-    const { sessionId } = req.body as { sessionId?: string }
+    const { sessionId, type } = req.body as { sessionId?: string; type?: string }
     if (!sessionId) {
       res.status(400).json({ error: 'sessionId が必要です' })
       return
@@ -76,7 +104,7 @@ paymentRouter.post('/verify', async (req, res) => {
     }
 
     const token = createPaidToken(sessionId)
-    res.json({ token })
+    res.json({ token, type: type ?? 'chat' })
   } catch (err) {
     console.error('Payment verify error:', err)
     res.status(500).json({ error: '決済確認に失敗しました' })

@@ -26,7 +26,7 @@ interface Props {
   loading: boolean
 }
 
-const sc = "bg-white/5 border border-white/20 rounded-lg px-2 py-2 text-white text-sm focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 transition-all font-sans cursor-pointer appearance-none"
+const sc = "bg-deep-navy/50 border border-navy-light rounded-lg px-2 py-2 text-white text-sm focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all font-sans cursor-pointer appearance-none"
 
 // 生年月日・時刻セレクタ（再利用コンポーネント）
 function DateTimePicker({
@@ -153,15 +153,15 @@ export function InputForm({ onSubmit, loading }: Props) {
     })
   }
 
-  const labelClass = "block text-sm font-medium text-gold/80 mb-2 font-serif"
-  const selectClass = "bg-white/5 border border-white/20 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 transition-all font-sans cursor-pointer appearance-none"
+  const labelClass = "block text-sm font-medium text-white/70 mb-2"
+  const selectClass = "bg-deep-navy/50 border border-navy-light rounded-xl px-3 py-3 text-white focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all font-sans cursor-pointer appearance-none"
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
 
       {/* 生年月日（一列） */}
       <div>
-        <label className={labelClass}>生年月日 <span className="text-gold">*</span></label>
+        <label className={labelClass}>生年月日 <span className="text-accent">*</span></label>
         <DateTimePicker date={date} setDate={setDate} time={time} setTime={setTime}
           timeUnknown={timeUnknown} setTimeUnknown={setTimeUnknown} />
         {errors.date && <p className="mt-1 text-red-400 text-xs">{errors.date}</p>}
@@ -169,7 +169,7 @@ export function InputForm({ onSubmit, loading }: Props) {
 
       {/* 性別 */}
       <div>
-        <label className={labelClass}>性別 <span className="text-gold">*</span></label>
+        <label className={labelClass}>性別 <span className="text-accent">*</span></label>
         <div className="flex gap-4">
           {([['male', '男性'], ['female', '女性']] as const).map(([val, label]) => (
             <label key={val} className="flex items-center gap-2 cursor-pointer select-none">
@@ -197,7 +197,7 @@ export function InputForm({ onSubmit, loading }: Props) {
           onClick={() => setShowPartner(p => !p)}
           className="w-full flex items-center justify-between px-4 py-3 text-sm font-serif hover:bg-white/5 transition-colors"
         >
-          <span className={showPartner ? 'text-gold/80' : 'text-white/50'}>
+          <span className={showPartner ? 'text-accent' : 'text-white/50'}>
             {showPartner ? '▲ 相手の情報（相性鑑定）' : '＋ 相手の情報を入力する（相性鑑定）'}
           </span>
           <span className="text-white/25 text-xs">任意</span>
@@ -237,15 +237,15 @@ export function InputForm({ onSubmit, loading }: Props) {
       {/* 質問・相談内容 */}
       <div>
         <label className={labelClass}>
-          ご相談・ご質問 <span className="text-gold">*</span>
+          質問事項 <span className="text-accent">*</span>
         </label>
         <textarea
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          placeholder="例：今後の恋愛運や仕事運について知りたいです。転職を考えているのですが…"
+          placeholder="例：キャリアの転換期にあり、次のフェーズの戦略を立てたい。財務・人間関係の最適化についても知りたい。"
           rows={4}
           maxLength={500}
-          className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 transition-all font-sans resize-none"
+          className="w-full bg-deep-navy/50 border border-navy-light rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all font-sans resize-none"
         />
         <div className="flex justify-between mt-1">
           {errors.question ? <p className="text-red-400 text-xs">{errors.question}</p> : <span />}
@@ -257,15 +257,19 @@ export function InputForm({ onSubmit, loading }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-4 bg-gradient-to-r from-gold/80 to-gold-light/80 hover:from-gold hover:to-gold-light text-deep-navy font-bold font-serif text-lg rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/20 hover:shadow-gold/40"
+        className="w-full py-5 text-white font-bold text-lg rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.01]"
+        style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }}
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="inline-block w-5 h-5 border-2 border-deep-navy/30 border-t-deep-navy rounded-full animate-spin" />
-            鑑定中...
+            <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            解析中...
           </span>
         ) : (
-          '✦ 鑑定する ✦'
+          <span className="flex items-center justify-center gap-2">
+            解析を開始する
+            <span className="text-white/70 text-base">→</span>
+          </span>
         )}
       </button>
     </form>
