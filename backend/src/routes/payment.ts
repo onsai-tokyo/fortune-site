@@ -30,20 +30,21 @@ export function verifyPaidToken(token: string): boolean {
   }
 }
 
-// Stripe Checkout セッション作成
+// AIチャット月額サブスクリプション セッション作成
 paymentRouter.post('/create-session', async (_req, res) => {
   try {
     const stripe = getStripe()
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
           currency: 'jpy',
-          product_data: { name: '追加鑑定チャット（無制限）' },
+          product_data: { name: 'AIチャット無制限プラン（月額）' },
           unit_amount: 500,
+          recurring: { interval: 'month' },
         },
         quantity: 1,
       }],
@@ -98,7 +99,11 @@ paymentRouter.post('/verify', async (req, res) => {
     const stripe = getStripe()
     const session = await stripe.checkout.sessions.retrieve(sessionId)
 
-    if (session.payment_status !== 'paid') {
+    const isPaid = session.status === 'complete' ||
+      session.payment_status === 'paid' ||
+      session.payment_status === 'no_payment_required'
+
+    if (!isPaid) {
       res.status(400).json({ error: '決済が完了していません' })
       return
     }

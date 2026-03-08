@@ -135,15 +135,15 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
   return (
     <div className="glass-card overflow-hidden animate-fade-in">
       <div className="flex items-center gap-2 p-6 pb-4 border-b border-white/10">
-        <div className="w-1 h-6 bg-gold rounded-full" />
-        <h2 className="text-gold font-serif text-lg font-bold">追加相談</h2>
+        <div className="w-1 h-6 bg-accent rounded-full" />
+        <h2 className="text-white font-semibold text-base">追加相談</h2>
         {!isPaid && (
-          <span className="ml-auto text-white/40 text-xs font-sans">
+          <span className="ml-auto text-white/40 text-xs">
             残り {Math.max(0, FREE_LIMIT - userMsgCount)} 回無料
           </span>
         )}
         {isPaid && (
-          <span className="ml-auto text-gold/60 text-xs font-sans">✦ 無制限プラン</span>
+          <span className="ml-auto text-accent text-xs">無制限プラン</span>
         )}
       </div>
 
@@ -152,14 +152,14 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold text-sm mr-3 flex-shrink-0 mt-1">
-                ✦
+              <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs mr-3 flex-shrink-0 mt-1">
+                AI
               </div>
             )}
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-sans ${
                 msg.role === 'user'
-                  ? 'bg-gold/20 border border-gold/30 text-white/90 rounded-tr-sm'
+                  ? 'bg-accent/15 border border-accent/20 text-white/90 rounded-tr-sm'
                   : 'bg-white/5 border border-white/10 text-white/85 rounded-tl-sm'
               }`}
             >
@@ -169,8 +169,8 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
               }
             </div>
             {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 text-sm ml-3 flex-shrink-0 mt-1">
-                人
+              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 text-xs ml-3 flex-shrink-0 mt-1">
+                You
               </div>
             )}
           </div>
@@ -190,9 +190,10 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
           <button
             onClick={handlePayment}
             disabled={isCheckingPayment}
-            className="w-full py-3 bg-gold hover:bg-gold/90 text-deep-navy font-bold rounded-xl transition-all disabled:opacity-50 font-serif text-sm"
+            className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 text-sm shadow-lg shadow-blue-500/20"
+            style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }}
           >
-            {isCheckingPayment ? '準備中...' : '続けて相談する（500円）'}
+            {isCheckingPayment ? '準備中...' : '月額プランで続ける（¥500 / 月）'}
           </button>
           <p className="text-white/25 text-xs">Stripe による安全な決済</p>
         </div>
@@ -206,12 +207,12 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
             placeholder="さらに詳しく聞く…（Enterで送信、Shift+Enterで改行）"
             rows={2}
             disabled={isStreaming}
-            className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 transition-all resize-none text-sm font-sans disabled:opacity-50"
+            className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all resize-none text-sm font-sans disabled:opacity-50"
           />
           <button
             onClick={sendMessage}
             disabled={isStreaming || !input.trim()}
-            className="px-5 py-3 bg-gold/80 hover:bg-gold text-deep-navy font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed self-end"
+            className="px-5 py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed self-end"
           >
             {isStreaming ? (
               <span className="inline-block w-5 h-5 border-2 border-deep-navy/30 border-t-deep-navy rounded-full animate-spin" />
