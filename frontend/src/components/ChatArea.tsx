@@ -17,10 +17,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [userMsgCount, setUserMsgCount] = useState(0)
-  const [isPaid, setIsPaid] = useState(() => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    return !!token
-  })
+  const isPaid = !!localStorage.getItem(TOKEN_KEY)
   const [isCheckingPayment, setIsCheckingPayment] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
