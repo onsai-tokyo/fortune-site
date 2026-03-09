@@ -33,7 +33,7 @@ const fortuneLimiter = rateLimit({
   max: process.env.NODE_ENV === 'production' ? 3 : 50,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: '鑑定のご利用は1時間に3回までです。しばらくお待ちください。' },
+  message: { error: '無料の解析回数の上限に達しました。1時間後に再度お試しください。' },
 })
 app.use('/api/fortune', fortuneLimiter)
 

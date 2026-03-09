@@ -38,6 +38,7 @@ export function ResultPage() {
   const [reading, setReading]       = useState(isStripeReturn ? storedReading : '')
   const [isStreaming, setIsStreaming] = useState(true)
   const [apiError, setApiError]      = useState(false)
+  const [rateLimitError, setRateLimitError] = useState(false)
   const [noApiKey, setNoApiKey]      = useState(false)
   const [sessionData, setSessionData] = useState<Record<string, unknown>>(storedSessionData ?? {})
   const [streamDone, setStreamDone]  = useState(false)
@@ -116,6 +117,7 @@ export function ResultPage() {
     setReading('')
     setIsStreaming(true)
     setApiError(false)
+    setRateLimitError(false)
     setStreamDone(false)
 
     try {
@@ -135,6 +137,12 @@ export function ResultPage() {
       })
 
       if (!res.ok) {
+        if (res.status === 429) {
+          setRateLimitError(true)
+          setIsStreaming(false)
+          setStreamDone(true)
+          return
+        }
         const errBody = await res.json().catch(() => ({}))
         throw new Error(errBody.error ?? `HTTP ${res.status}`)
       }
@@ -306,18 +314,25 @@ export function ResultPage() {
           </div>
         )}
 
-        {apiError && (
-          <div className="glass-card p-5 border border-red-500/20 animate-fade-in">
-            <p className="text-red-400 font-semibold mb-2 text-sm">解析エラーが発生しました</p>
-            <p className="text-white/50 text-sm">ANTHROPIC_API_KEY を確認してください。</p>
+        {rateLimitError && (
+          <div className="glass-card p-5 border border-accent/20 animate-fade-in text-center space-y-3">
+            <p className="text-accent font-semibold text-sm">無料の解析回数の上限に達しました</p>
+            <p className="text-white/50 text-sm">1時間あたり3回まで無料でご利用いただけます。<br />時間をおいて再度お試しください。</p>
           </div>
         )}
 
-        {!apiError && !noApiKey && (
+        {apiError && (
+          <div className="glass-card p-5 border border-red-500/20 animate-fade-in">
+            <p className="text-red-400 font-semibold mb-2 text-sm">解析エラーが発生しました</p>
+            <p className="text-white/50 text-sm">しばらく時間をおいて再度お試しください。</p>
+          </div>
+        )}
+
+        {!apiError && !rateLimitError && !noApiKey && (
           <FortuneReading reading={reading} isStreaming={isStreaming} />
         )}
 
-        {streamDone && !apiError && !noApiKey && reading && (
+        {streamDone && !apiError && !rateLimitError && !noApiKey && reading && (
           <div>
             <div className="flex border-b border-navy-light">
               {tabs.map(tab => (
