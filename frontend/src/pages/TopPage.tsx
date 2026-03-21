@@ -653,6 +653,7 @@ export function TopPage() {
                 <textarea
                   value={form.question}
                   onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
+                  onBlur={() => setTimeout(() => document.getElementById('submit-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
                   placeholder="例：転職のタイミングは？　仕事と家庭の両立について　今の恋愛はうまくいく？"
                   rows={3}
                   className="w-full bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 placeholder:text-white/20 resize-none leading-relaxed"
@@ -661,7 +662,7 @@ export function TopPage() {
 
               {previewError && <p className="text-red-400 text-xs">{previewError}</p>}
 
-              <button type="submit" disabled={!form.year || !form.month || !form.day || isStreaming}
+              <button id="submit-btn" type="submit" disabled={!form.year || !form.month || !form.day || isStreaming}
                 className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2">
                 {isStreaming ? (
                   <>
