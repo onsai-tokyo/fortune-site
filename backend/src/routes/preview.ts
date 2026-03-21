@@ -38,6 +38,9 @@ interface CalculatedData {
   honmeiName: string
   archetype?: string
   sukuyoDetail?: string
+  daiyun?: string
+  daiyunAge?: string
+  ryunen?: string
 }
 
 // LP用：命式鑑定書 全章ストリーミング生成
@@ -81,7 +84,8 @@ previewRouter.post('/generate', async (req, res) => {
 算命学 — 宿命星:${calculatedData.sanmeiStar}　天中殺:${calculatedData.chusatsu}
 宿曜：${calculatedData.sukuyo}宿
 数秘術（運命数）：${calculatedData.lifePathNumber}
-九星気学（本命星）：${calculatedData.honmeiName}${calculatedData.archetype ? `
+九星気学（本命星）：${calculatedData.honmeiName}
+四柱推命 年運データ — 現在の大運:${calculatedData.daiyun ?? '不明'}（${calculatedData.daiyunAge ?? ''}）　今年の流年:${calculatedData.ryunen ?? '不明'}${calculatedData.archetype ? `
 【日柱アーキタイプ参照データ（分析の深化に使用。アーキタイプ名・動物名は出力に含めないこと）】
 ${calculatedData.archetype}` : ''}${calculatedData.sukuyoDetail ? `
 【宿曜詳細データ（性格・年運の補強に使用）】
@@ -140,7 +144,7 @@ ${calculatedData.sukuyoDetail}` : ''}` : ''
 数秘術の運命数・九星気学の本命星・宿曜の宿を統合し、この魂が持って生まれた使命・人生テーマ・社会的役割を読み解く。なぜこの生年月日に生まれたのか、どのような貢献や体験をするために生まれてきたのかを断言する。他者への影響・社会での立ち位置・魂が目指す方向性を具体的に示す。
 
 【人生の転換期 — 過去から未来の大きな変化（${pastStart}〜${futureEnd}年）】
-四柱推命の日柱と宿曜を主軸として、算命学の天中殺・宿命星で補足する。
+四柱推命の大運・流年を主軸に据えて分析する。現在の大運干支と今年の流年干支が日柱・月柱・年柱とどう作用するかを読み解き、宿曜・算命学の天中殺で補強する。
 ${pastStart}年から${futureEnd}年の中で、転機・試練・飛躍・出会い・縁など特筆すべき動きがある年のみを抽出して記述する。
 平穏・安定の年は一切書かない。各年は必ず「○○年（X歳）：内容」の形式で記述する。最低8年・最大15年を目安に抽出すること。
 

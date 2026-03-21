@@ -74,3 +74,54 @@ export function calcShichu(
 
   return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar }
 }
+
+export interface DaiyunPeriod {
+  kanshi: string
+  startAge: number
+  endAge: number
+}
+
+// 流年干支（指定年の年柱）
+export function calcRyunen(year: number): string {
+  const stemIdx   = ((year - 1984) % 10 + 10) % 10
+  const branchIdx = ((year - 1984) % 12 + 12) % 12
+  return STEMS[stemIdx] + BRANCHES[branchIdx]
+}
+
+// 大運（10年周期）を計算
+// 簡易版：起運年齢を birth→次節までの日数÷3 で近似（固定値5歳）
+export function calcDaiyun(
+  birthYear: number,
+  birthMonth: number,
+  birthDay: number,
+  gender: 'male' | 'female',
+  count = 8
+): DaiyunPeriod[] {
+  const shichu = calcShichu(birthYear, birthMonth, birthDay)
+  const yearYinYang = shichu.year.yinYang
+
+  // 順行：男×陽年 or 女×陰年、逆行：男×陰年 or 女×陽年
+  const isForward =
+    (gender === 'male'   && yearYinYang === '陽') ||
+    (gender === 'female' && yearYinYang === '陰')
+
+  // 起運年齢：簡易的に5歳固定（本来は節入りまでの日数÷3）
+  const startAge = 5
+
+  const msi = shichu.month.stemIdx
+  const mbi = shichu.month.branchIdx
+
+  return Array.from({ length: count }, (_, i) => {
+    const si = isForward
+      ? (msi + i + 1) % 10
+      : ((msi - i - 1 + 100) % 10)
+    const bi = isForward
+      ? (mbi + i + 1) % 12
+      : ((mbi - i - 1 + 120) % 12)
+    return {
+      kanshi: STEMS[si] + BRANCHES[bi],
+      startAge: startAge + i * 10,
+      endAge:   startAge + (i + 1) * 10 - 1,
+    }
+  })
+}

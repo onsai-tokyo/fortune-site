@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PayjpModal } from '../components/PayjpModal'
 import { useAuth } from '../contexts/AuthContext'
-import { calcShichu } from '../lib/shichu'
+import { calcShichu, calcDaiyun, calcRyunen } from '../lib/shichu'
 import { calcNayin } from '../lib/nayin'
 import { calcSanmei } from '../lib/sanmei'
 import { getSukuyo } from '../lib/sukuyo'
@@ -24,6 +24,9 @@ interface FortuneCalcData {
   tsukimeiName: string
   archetype: string
   sukuyoDetail: string
+  daiyun: string        // 現在の大運干支
+  daiyunAge: string     // 大運の年齢範囲
+  ryunen: string        // 今年の流年干支
 }
 
 const TOC_ITEMS = [
@@ -171,6 +174,11 @@ export function TopPage() {
     const tsukimei = calcTsukimeiStar(honmei, m)
     const archetype = getArchetype(shichu.day.kanshi)
     const sukuyoDetail = getSukuyoDetail(sukuyo)
+    const currentYear = new Date().getFullYear()
+    const daiyunList = calcDaiyun(y, m, d, form.gender)
+    const age = currentYear - y
+    const currentDaiyun = daiyunList.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? daiyunList[0]
+    const ryunen = calcRyunen(currentYear)
     const newCalcData: FortuneCalcData = {
       shichuYear: shichu.year.kanshi,
       shichuMonth: shichu.month.kanshi,
@@ -185,6 +193,9 @@ export function TopPage() {
       tsukimeiName: KYUSEI_NAMES[tsukimei],
       archetype,
       sukuyoDetail,
+      daiyun: currentDaiyun.kanshi,
+      daiyunAge: `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`,
+      ryunen,
     }
     setCalcData(newCalcData)
 
@@ -223,6 +234,9 @@ export function TopPage() {
             honmeiName: newCalcData.honmeiName,
             archetype: newCalcData.archetype,
             sukuyoDetail: newCalcData.sukuyoDetail,
+            daiyun: newCalcData.daiyun,
+            daiyunAge: newCalcData.daiyunAge,
+            ryunen: newCalcData.ryunen,
           },
         }),
       })
