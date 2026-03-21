@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import PDFDocument from 'pdfkit'
 import { verifyPaidToken } from './payment.js'
 
 export const reportRouter = Router()
@@ -157,5 +158,142 @@ ${sanitize(input.question)}
       res.write('data: [DONE]\n\n')
       res.end()
     }
+  }
+})
+
+// 6占術 AI統合鑑定書 PDF生成 + メール送信
+// POST /api/report/generate-pdf
+reportRouter.post('/generate-pdf', async (req, res) => {
+  try {
+    const { email, fortuneData, purchaseType } = req.body as {
+      email?: string
+      fortuneData: FortuneData
+      purchaseType?: string
+    }
+
+    if (!fortuneData?.input?.birthDate) {
+      res.status(400).json({ error: '鑑定データが不足しています' })
+      return
+    }
+
+    const { input, shichu, nayin, sanmei, sukuyo } = fortuneData
+    const age = calcAge(input.birthDate)
+    const [y, m, d] = input.birthDate.split('-')
+    const genderLabel = input.gender === 'male' ? '男性' : '女性'
+
+    const systemPrompt = `あなたは四柱推命・算命学・宿曜・数秘術・九星気学の5占術に精通した専門家AIです。
+以下の命式データを元に各占術の観点から詳細な分析を行ってください。
+記述は具体的・前向きなトーンで、データに基づく客観的な表現を使ってください。
+各セクション400〜600文字程度で記述してください。
+箇条書き・記号（*、#、━等）は使わず、流れる文章で書いてください。
+断言調で書いてください（「〜でしょう」禁止）。`
+
+    const userContent = `【命式データ】
+生年月日：${y}年${m}月${d}日　性別：${genderLabel}　年齢：${age}歳
+四柱推命：年柱=${shichu.year.kanshi} 月柱=${shichu.month.kanshi} 日柱=${shichu.day.kanshi}${shichu.hour ? ` 時柱=${shichu.hour.kanshi}` : ''}
+納音：${nayin}
+算命学：宿命星=${sanmei.shukumeiStar} / 天中殺=${sanmei.chusatsu}
+宿曜：${sukuyo}宿
+
+以下の5セクションを順番に執筆してください。各セクションは「【セクション名】」で始める：
+
+【四柱推命 — 性格と宿命の核心】
+【算命学 — 対人・社会運と宿命星の意味】
+【宿曜占術 — 運命周期と人生のリズム】
+【数秘術 — 使命と才能】
+【九星気学 — 今年の運勢と開運の方向】`
+
+    // Claude でコンテンツ生成
+    const message = await getAnthropicClient().messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }],
+    })
+
+    const content = message.content[0].type === 'text' ? message.content[0].text : ''
+
+    // PDFKit で PDF 生成
+    const pdfBuffers: Buffer[] = []
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 60, bottom: 60, left: 60, right: 60 },
+      info: {
+        Title: '6占術 AI統合命式鑑定書',
+        Author: 'Meishiki Analysis',
+      },
+    })
+
+    doc.on('data', (chunk: Buffer) => pdfBuffers.push(chunk))
+
+    // ===== 表紙 =====
+    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#080f28')
+    doc.fillColor('#c9a84c').fontSize(10).font('Helvetica').text('MEISHIKI ANALYSIS', { align: 'center' })
+    doc.moveDown(4)
+    doc.fillColor('#ffffff').fontSize(22).text('6占術 AI統合命式鑑定書', { align: 'center' })
+    doc.moveDown(0.5)
+    doc.fillColor('#c9a84c').fontSize(12).text('Integrated Fortune Analysis Report', { align: 'center' })
+    doc.moveDown(3)
+    doc.fillColor('#aaaaaa').fontSize(11)
+      .text(`生年月日　${y}年${m}月${d}日`, { align: 'center' })
+      .text(`性別　${genderLabel}`, { align: 'center' })
+      .text(`鑑定日　${new Date().toLocaleDateString('ja-JP')}`, { align: 'center' })
+    doc.moveDown(3)
+    const systems = ['四柱推命', '算命学', '宿曜占術', '数秘術', '九星気学']
+    doc.fillColor('#8a7040').fontSize(9)
+    systems.forEach(s => doc.text(`— ${s} —`, { align: 'center' }))
+
+    // ===== 本文ページ =====
+    doc.addPage()
+    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#080f28')
+    doc.fillColor('#c9a84c').fontSize(10).text('Meishiki Analysis — Confidential', 60, 40)
+
+    const sections = content.split(/【/).filter(Boolean)
+    let yPos = 80
+
+    for (const section of sections) {
+      if (yPos > doc.page.height - 120) {
+        doc.addPage()
+        doc.rect(0, 0, doc.page.width, doc.page.height).fill('#080f28')
+        yPos = 80
+      }
+      const lines = section.split('】')
+      const title = lines[0]?.trim() ?? ''
+      const body = lines.slice(1).join('】').trim()
+
+      if (title) {
+        doc.fillColor('#c9a84c').fontSize(13).font('Helvetica-Bold')
+          .text(`■ ${title}`, 60, yPos, { width: doc.page.width - 120 })
+        yPos += 28
+        doc.moveTo(60, yPos).lineTo(doc.page.width - 60, yPos).strokeColor('#c9a84c').lineWidth(0.5).stroke()
+        yPos += 12
+      }
+      if (body) {
+        doc.fillColor('#cccccc').fontSize(10).font('Helvetica')
+          .text(body, 60, yPos, { width: doc.page.width - 120, lineGap: 4 })
+        yPos += doc.heightOfString(body, { width: doc.page.width - 120, lineGap: 4 }) + 30
+      }
+    }
+
+    // フッター（最終ページ）
+    doc.fillColor('#6b5930').fontSize(8)
+      .text('本鑑定書はAIによる統計的分析です。意思決定の参考情報としてご活用ください。', 60, doc.page.height - 40, { width: doc.page.width - 120, align: 'center' })
+
+    doc.end()
+
+    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(pdfBuffers)))
+      doc.on('error', reject)
+    })
+
+    // PDF をブラウザに直接返却（ダウンロード用）
+    const filename = `meishiki_report_${input.birthDate}.pdf`
+    res.set('Content-Type', 'application/pdf')
+    res.set('Content-Disposition', `attachment; filename="${filename}"`)
+    res.set('Content-Length', String(pdfBuffer.length))
+    res.send(pdfBuffer)
+  } catch (err) {
+    console.error('Generate PDF error:', err)
+    res.status(500).json({ error: 'PDF生成に失敗しました' })
   }
 })

@@ -1,117 +1,199 @@
 import { Router } from 'express'
-import Stripe from 'stripe'
 import crypto from 'crypto'
+import { createClient } from '@supabase/supabase-js'
+import { requireAuth, AuthRequest } from '../middleware/auth.js'
 
 export const paymentRouter = Router()
 
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!)
+const PAYJP_API = 'https://api.pay.jp/v1'
+
+function getAuthHeader(): string {
+  const secretKey = process.env.PAYJP_SECRET_KEY!
+  return 'Basic ' + Buffer.from(secretKey + ':').toString('base64')
+}
+
+async function payjpRequest(path: string, method: string, body?: Record<string, string>) {
+  const headers: Record<string, string> = { Authorization: getAuthHeader() }
+  let bodyStr: string | undefined
+  if (body) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    bodyStr = new URLSearchParams(body).toString()
+  }
+  const res = await fetch(`${PAYJP_API}${path}`, { method, headers, body: bodyStr })
+  return res.json()
 }
 
 function getTokenSecret(): string {
   return process.env.TOKEN_SECRET ?? 'fortune-dev-secret'
 }
 
-export function createPaidToken(sessionId: string): string {
-  const hmac = crypto.createHmac('sha256', getTokenSecret()).update(sessionId).digest('hex')
-  return `${sessionId}.${hmac}`
+export function createPaidToken(id: string): string {
+  const hmac = crypto.createHmac('sha256', getTokenSecret()).update(id).digest('hex')
+  return `${id}.${hmac}`
 }
 
 export function verifyPaidToken(token: string): boolean {
   try {
     const dotIdx = token.lastIndexOf('.')
     if (dotIdx < 0) return false
-    const sessionId = token.slice(0, dotIdx)
+    const id = token.slice(0, dotIdx)
     const hmac = token.slice(dotIdx + 1)
-    const expected = crypto.createHmac('sha256', getTokenSecret()).update(sessionId).digest('hex')
+    const expected = crypto.createHmac('sha256', getTokenSecret()).update(id).digest('hex')
     return crypto.timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex'))
   } catch {
     return false
   }
 }
 
-// AIチャット月額サブスクリプション セッション作成
-paymentRouter.post('/create-session', async (_req, res) => {
-  try {
-    const stripe = getStripe()
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+async function saveSubscription(userId: string, accessToken: string, chargeId: string, plan: string) {
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+  )
+  const { error } = await supabase.from('subscriptions').insert({
+    user_id: userId,
+    plan,
+    expires_at: expiresAt,
+    payjp_charge_id: chargeId,
+  })
+  if (error) console.error('Subscription save error:', error)
+}
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'jpy',
-          product_data: { name: 'AIチャット無制限プラン（月額）' },
-          unit_amount: 500,
-          recurring: { interval: 'month' },
-        },
-        quantity: 1,
-      }],
-      success_url: `${frontendUrl}/result?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/result?payment=cancel`,
+// プレミアム会員サブスク（¥1,980/月）- 要ログイン
+paymentRouter.post('/subscribe-monthly', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '1980',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'プレミアム会員 - 6占術AIチャット相談し放題（月額）',
     })
 
-    res.json({ url: session.url })
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    await saveSubscription(req.userId!, req.accessToken!, charge.id, 'monthly')
+
+    res.json({ success: true, type: 'subscription' })
   } catch (err) {
-    console.error('Payment session error:', err)
-    res.status(500).json({ error: '決済セッションの作成に失敗しました' })
+    console.error('Subscribe monthly error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
   }
 })
 
-// 詳細レポート用 Stripe Checkout セッション作成
-paymentRouter.post('/create-report-session', async (_req, res) => {
+// 質問詳細回答（¥500）- 要ログイン
+paymentRouter.post('/charge-question', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const stripe = getStripe()
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'jpy',
-          product_data: { name: '宿命構造分析書（詳細版）' },
-          unit_amount: 2000,
-        },
-        quantity: 1,
-      }],
-      success_url: `${frontendUrl}/result?payment=success&session_id={CHECKOUT_SESSION_ID}&type=report`,
-      cancel_url: `${frontendUrl}/result?payment=cancel`,
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '500',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'ご質問への詳細回答（1回分）',
     })
 
-    res.json({ url: session.url })
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const token = createPaidToken(charge.id)
+    res.json({ token, type: 'question' })
   } catch (err) {
-    console.error('Report payment session error:', err)
-    res.status(500).json({ error: '決済セッションの作成に失敗しました' })
+    console.error('Charge question error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
   }
 })
 
-// 決済確認 → 署名トークン発行
-paymentRouter.post('/verify', async (req, res) => {
+// サブスク解約（即時）
+paymentRouter.post('/cancel-subscription', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { sessionId, type } = req.body as { sessionId?: string; type?: string }
-    if (!sessionId) {
-      res.status(400).json({ error: 'sessionId が必要です' })
-      return
-    }
-
-    const stripe = getStripe()
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
-
-    const isPaid = session.status === 'complete' ||
-      session.payment_status === 'paid' ||
-      session.payment_status === 'no_payment_required'
-
-    if (!isPaid) {
-      res.status(400).json({ error: '決済が完了していません' })
-      return
-    }
-
-    const token = createPaidToken(sessionId)
-    res.json({ token, type: type ?? 'chat' })
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${req.accessToken}` } } }
+    )
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({ expires_at: new Date().toISOString() })
+      .eq('user_id', req.userId!)
+      .gt('expires_at', new Date().toISOString())
+    if (error) throw error
+    res.json({ success: true })
   } catch (err) {
-    console.error('Payment verify error:', err)
-    res.status(500).json({ error: '決済確認に失敗しました' })
+    console.error('Cancel subscription error:', err)
+    res.status(500).json({ error: '解約処理に失敗しました' })
+  }
+})
+
+// AIチャット（¥500 旧エンドポイント・互換用）
+paymentRouter.post('/subscribe', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '500',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'AIチャット無制限プラン',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const token = createPaidToken(charge.id)
+    res.json({ token, type: 'chat' })
+  } catch (err) {
+    console.error('Subscribe error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
+  }
+})
+
+// 詳細レポート（¥2,000）
+paymentRouter.post('/charge-report', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '2000',
+      currency: 'jpy',
+      card: payjpToken,
+      description: '宿命構造分析書（詳細版）',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const token = createPaidToken(charge.id)
+    res.json({ token, type: 'report' })
+  } catch (err) {
+    console.error('Charge report error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
+  }
+})
+
+// 6占術鑑定書ワンタイム購入（¥9,800）
+paymentRouter.post('/charge-onetime', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '9800',
+      currency: 'jpy',
+      card: payjpToken,
+      description: '6占術 AI統合命式鑑定書（全30ページ）',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const token = createPaidToken(charge.id)
+    res.json({ token, type: 'onetime' })
+  } catch (err) {
+    console.error('Charge onetime error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
   }
 })

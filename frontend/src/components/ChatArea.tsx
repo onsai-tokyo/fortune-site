@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, FortuneData } from '../lib/types'
+import { PayjpModal } from './PayjpModal'
 
 const FREE_LIMIT = 3
 const TOKEN_KEY = 'fortune_paid_token'
@@ -17,8 +18,10 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [userMsgCount, setUserMsgCount] = useState(0)
-  const isPaid = !!localStorage.getItem(TOKEN_KEY)
-  const [isCheckingPayment, setIsCheckingPayment] = useState(false)
+  const [isPaid, setIsPaid] = useState(!!localStorage.getItem(TOKEN_KEY))
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -111,117 +114,144 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
     }
   }
 
-  async function handlePayment() {
-    setIsCheckingPayment(true)
+  async function handlePayjpToken(payjpToken: string) {
+    setIsProcessingPayment(true)
+    setPaymentError('')
     try {
-      // fortuneDataをsessionStorageに退避（Stripe後に戻ったとき用）
+      // 3DS後に戻った時のためにデータを退避
       sessionStorage.setItem('fortune_data', JSON.stringify(fortuneData))
       sessionStorage.setItem('fortune_session', JSON.stringify(sessionData))
+      sessionStorage.setItem('fortune_reading', initialReading)
 
-      const res = await fetch('/api/payment/create-session', {
+      const res = await fetch('/api/payment/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payjpToken }),
       })
-      const { url } = await res.json()
-      if (url) window.location.href = url
+      const body = await res.json() as { tdsUrl?: string; chargeId?: string; token?: string; error?: string }
+      if (!res.ok) throw new Error(body.error ?? '決済に失敗しました')
+
+      if (body.tdsUrl && body.chargeId) {
+        // 3DS認証へリダイレクト
+        sessionStorage.setItem('fortune_tds_charge_id', body.chargeId)
+        window.location.href = body.tdsUrl
+        return
+      }
+
+      // 3DS不要の場合
+      if (!body.token) throw new Error('決済に失敗しました')
+      localStorage.setItem(TOKEN_KEY, body.token)
+      setIsPaid(true)
+      setShowPaymentModal(false)
     } catch (err) {
-      console.error(err)
-      alert('決済の開始に失敗しました。しばらく後にお試しください。')
-    } finally {
-      setIsCheckingPayment(false)
+      setPaymentError(err instanceof Error ? err.message : '決済に失敗しました')
+      setIsProcessingPayment(false)
     }
   }
 
   return (
-    <div className="glass-card overflow-hidden animate-fade-in">
-      <div className="flex items-center gap-2 p-6 pb-4 border-b border-white/10">
-        <div className="w-1 h-6 bg-accent rounded-full" />
-        <h2 className="text-white font-semibold text-base">追加相談</h2>
-        {!isPaid && (
-          <span className="ml-auto text-white/40 text-xs">
-            残り {Math.max(0, FREE_LIMIT - userMsgCount)} 回無料
-          </span>
-        )}
-        {isPaid && (
-          <span className="ml-auto text-accent text-xs">無制限プラン</span>
-        )}
-      </div>
-
-      {/* メッセージ一覧 */}
-      <div className="p-6 space-y-4 max-h-[480px] overflow-y-auto">
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs mr-3 flex-shrink-0 mt-1">
-                AI
-              </div>
-            )}
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-sans ${
-                msg.role === 'user'
-                  ? 'bg-accent/15 border border-accent/20 text-white/90 rounded-tr-sm'
-                  : 'bg-white/5 border border-white/10 text-white/85 rounded-tl-sm'
-              }`}
-            >
-              {msg.content
-                ? <span className="whitespace-pre-wrap">{msg.content}</span>
-                : <span className="streaming-cursor" />
-              }
-            </div>
-            {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 text-xs ml-3 flex-shrink-0 mt-1">
-                You
-              </div>
-            )}
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* 決済ウォール */}
-      {isLimitReached ? (
-        <div className="p-6 border-t border-white/10 text-center space-y-4">
-          <p className="text-white/70 font-serif text-sm">
-            無料の3回相談をご利用いただきました
-          </p>
-          <p className="text-white/50 text-xs">
-            引き続きご相談いただくには、追加プランをご利用ください
-          </p>
-          <button
-            onClick={handlePayment}
-            disabled={isCheckingPayment}
-            className="w-full py-3 text-white font-semibold rounded-xl transition-all disabled:opacity-50 text-sm shadow-lg shadow-blue-500/20"
-            style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }}
-          >
-            {isCheckingPayment ? '準備中...' : '月額プランで続ける（¥500 / 月）'}
-          </button>
-          <p className="text-white/25 text-xs">Stripe による安全な決済</p>
-        </div>
-      ) : (
-        /* 入力エリア */
-        <div className="p-4 border-t border-white/10 flex gap-3">
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="さらに詳しく聞く…（Enterで送信、Shift+Enterで改行）"
-            rows={2}
-            disabled={isStreaming}
-            className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all resize-none text-sm font-sans disabled:opacity-50"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={isStreaming || !input.trim()}
-            className="px-5 py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed self-end"
-          >
-            {isStreaming ? (
-              <span className="inline-block w-5 h-5 border-2 border-deep-navy/30 border-t-deep-navy rounded-full animate-spin" />
-            ) : (
-              '送信'
-            )}
-          </button>
-        </div>
+    <>
+      {showPaymentModal && (
+        <PayjpModal
+          mode="subscription"
+          title="月額プランで続ける"
+          amount={500}
+          isProcessing={isProcessingPayment}
+          error={paymentError}
+          onToken={handlePayjpToken}
+          onClose={() => { setShowPaymentModal(false); setPaymentError('') }}
+        />
       )}
-    </div>
+
+      <div className="glass-card overflow-hidden animate-fade-in">
+        <div className="flex items-center gap-2 p-6 pb-4 border-b border-white/10">
+          <div className="w-1 h-6 bg-accent rounded-full" />
+          <h2 className="text-white font-semibold text-base">追加相談</h2>
+          {!isPaid && (
+            <span className="ml-auto text-white/40 text-xs">
+              残り {Math.max(0, FREE_LIMIT - userMsgCount)} 回無料
+            </span>
+          )}
+          {isPaid && (
+            <span className="ml-auto text-accent text-xs">無制限プラン</span>
+          )}
+        </div>
+
+        {/* メッセージ一覧 */}
+        <div className="p-6 space-y-4 max-h-[480px] overflow-y-auto">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {msg.role === 'assistant' && (
+                <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs mr-3 flex-shrink-0 mt-1">
+                  AI
+                </div>
+              )}
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-sans ${
+                  msg.role === 'user'
+                    ? 'bg-accent/15 border border-accent/20 text-white/90 rounded-tr-sm'
+                    : 'bg-white/5 border border-white/10 text-white/85 rounded-tl-sm'
+                }`}
+              >
+                {msg.content
+                  ? <span className="whitespace-pre-wrap">{msg.content}</span>
+                  : <span className="streaming-cursor" />
+                }
+              </div>
+              {msg.role === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 text-xs ml-3 flex-shrink-0 mt-1">
+                  You
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* 決済ウォール */}
+        {isLimitReached ? (
+          <div className="p-6 border-t border-white/10 text-center space-y-4">
+            <p className="text-white/70 font-serif text-sm">
+              無料の3回相談をご利用いただきました
+            </p>
+            <p className="text-white/50 text-xs">
+              引き続きご相談いただくには、追加プランをご利用ください
+            </p>
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className="w-full py-3 text-white font-semibold rounded-xl transition-all text-sm shadow-lg shadow-blue-500/20"
+              style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }}
+            >
+              月額プランで続ける（¥500 / 月）
+            </button>
+            <p className="text-white/25 text-xs">PAY.JP による安全な決済</p>
+          </div>
+        ) : (
+          /* 入力エリア */
+          <div className="p-4 border-t border-white/10 flex gap-3">
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="さらに詳しく聞く…（Enterで送信、Shift+Enterで改行）"
+              rows={2}
+              disabled={isStreaming}
+              className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all resize-none text-sm font-sans disabled:opacity-50"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isStreaming || !input.trim()}
+              className="px-5 py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed self-end"
+            >
+              {isStreaming ? (
+                <span className="inline-block w-5 h-5 border-2 border-deep-navy/30 border-t-deep-navy rounded-full animate-spin" />
+              ) : (
+                '送信'
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   )
 }

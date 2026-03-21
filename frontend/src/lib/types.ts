@@ -43,3 +43,83 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
+
+export interface SelfAnalysis {
+  corePersonality: string
+  lifeTheme: string
+  strengths: Array<{ name: string; score: number; description: string }>
+  weaknesses: Array<{ name: string; description: string; advice: string }>
+  careers: Array<{ title: string; match: number; reason: string }>
+  turningPoints: Array<{ year: number; age: number; theme: string; description: string; type: 'opportunity' | 'challenge' | 'transformation' }>
+}
+
+export interface CompatibilityAnalysis {
+  overall: number
+  work: { score: number; summary: string; strengths: string[]; challenges: string[]; advice: string }
+  romantic: { score: number; summary: string; strengths: string[]; challenges: string[]; advice: string }
+  dynamic: string
+}
+
+export interface OrgMember {
+  name: string
+  birthDate: string
+  gender: 'male' | 'female'
+}
+
+export interface OrganizationAnalysis {
+  teamScore: number
+  teamType: string
+  keyPerson: { name: string; reason: string }
+  battleStrategy: string
+  strengths: string[]
+  challenges: string[]
+  relationships: Array<{ members: string[]; dynamic: string; description: string }>
+  roles: Array<{ name: string; suggestedRole: string; strength: string }>
+  strategy: string
+  advice: string
+}
+
+export interface MarriageAnalysis {
+  overallScore: number
+  marriageType: string
+  lifeDescription: string
+  powerDynamic: { leader: string; description: string; balance: string }
+  successKeys: Array<{ key: string; description: string }>
+  challenges: Array<{ issue: string; description: string; solution: string }>
+  compatibility: { daily: number; crisis: number; growth: number; passion: number }
+  advice: string
+}
+
+export interface NumerologyResult {
+  lifePathNumber: number
+  birthdayNumber: number
+  meaning: {
+    title: string
+    summary: string
+    talent: string
+    mission: string
+  }
+}
+
+export interface KyuseiResult {
+  honmeiStar: number
+  honmeiName: string
+  tsukimeiStar: number
+  tsukimeiName: string
+  element: string
+  personality: string
+  luckyDirection: string
+  luckyColor: string
+  yearFortune: string
+}
+
+export interface RecruitAnalysis {
+  candidateType: string
+  fitScore: number
+  strengths: Array<{ name: string; score: number; description: string }>
+  weaknesses: Array<{ name: string; description: string; mitigation: string }>
+  workStyle: string
+  chemistryWithYou: { score: number; dynamic: string; description: string }
+  interviewQuestions: string[]
+  hiringAdvice: string
+}
