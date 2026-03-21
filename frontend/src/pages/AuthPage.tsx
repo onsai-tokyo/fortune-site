@@ -32,8 +32,11 @@ export default function AuthPage() {
 
     try {
       if (mode === 'register') {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
+        if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+          throw new Error('User already registered')
+        }
         setMessage('確認メールを送信しました。メールのリンクをクリックして登録を完了してください。')
       } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
