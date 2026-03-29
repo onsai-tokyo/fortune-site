@@ -180,7 +180,7 @@ ${calculatedData.sukuyoDetail}` : ''}` : ''
 性別：${genderLabel}　年齢：${age}歳${dataSection}${partnerLine}${questionLine}
 
 以下の章立てで命式分析書を執筆してください。
-各章は必ず「【章タイトル】」という形式の見出しから始め、200〜350文字程度で記述してください。
+各章は必ず「【章タイトル】」という形式の見出しから始め、150〜250文字程度で簡潔に記述してください。
 
 【性格特性 — あなたの本質と気質】
 日柱を中心に、この人物の根本的な気質と思考パターンを読み解く。専門用語は使わず、誰でもわかる言葉で具体的に描写する。
@@ -236,7 +236,7 @@ ${ageTable}
 
     const stream = getClient().messages.stream({
       model: 'claude-sonnet-4-6',
-      max_tokens: 9000,
+      max_tokens: 16000,
       temperature: 0,  // 同じ生年月日には常に同じ結果を返す
       messages: [{ role: 'user', content: prompt }],
     })

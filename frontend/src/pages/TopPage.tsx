@@ -860,31 +860,12 @@ export function TopPage() {
                     <p className="text-accent/70 text-xs italic mb-3 border-l-2 border-accent/30 pl-3">特に確認したいことへの回答</p>
                     <div className="rounded-lg p-5 border border-accent/15 text-center space-y-3" style={{ background: 'rgba(201,168,76,0.03)' }}>
                       <p className="text-white/50 text-sm">「{submittedQuestion.slice(0, 40)}{submittedQuestion.length > 40 ? '...' : ''}」</p>
-                      <p className="text-white/35 text-xs">命式データをもとに600〜900文字の詳細回答を生成します</p>
                       <button
-                        onClick={() => user ? setShowQuestionModal(true) : navigate('/auth?mode=register')}
+                        onClick={() => navigate('/auth?mode=register')}
                         className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all"
                       >
-                        {user ? '¥500 で詳細回答を見る（1回限り）' : 'ログインして詳細回答を見る'}
+                        会員登録をして続きをみる
                       </button>
-                      <div className="flex items-center gap-3">
-                        <div className="h-px flex-1 bg-white/10" />
-                        <span className="text-white/25 text-xs">または</span>
-                        <div className="h-px flex-1 bg-white/10" />
-                      </div>
-                      {isPremium ? (
-                        <p className="text-accent text-sm font-semibold text-center py-2">✓ プレミアム会員として登録済みです</p>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
-                            className="w-full py-3 border border-accent/30 text-accent hover:border-accent/60 rounded-lg text-sm font-semibold transition-all"
-                          >
-                            {user ? '命術師AIに相談する（2pt/回）' : 'ログインして相談する'}
-                          </button>
-                          <p className="text-white/25 text-xs">仕事・恋愛・転機など何でも相談できる（1メッセージ2pt）</p>
-                        </>
-                      )}
                     </div>
                     {qPaymentError && <p className="text-red-400 text-xs mt-2">{qPaymentError}</p>}
                   </div>
