@@ -211,7 +211,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
         {/* 決済ウォール */}
         {isLimitReached ? (
           <div className="p-6 border-t border-white/10 text-center space-y-4">
-            <p className="text-white/70 font-serif text-sm">
+            <p className="text-white/70 text-sm">
               無料の3回相談をご利用いただきました
             </p>
             <p className="text-white/50 text-xs">

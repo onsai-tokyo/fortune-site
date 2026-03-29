@@ -14,9 +14,7 @@ export default {
         'ink': '#1E293B',
       },
       fontFamily: {
-        serif: ['"Noto Serif JP"', '"EB Garamond"', 'serif'],
         sans: ['"Noto Sans JP"', 'sans-serif'],
-        garamond: ['"EB Garamond"', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

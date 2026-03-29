@@ -31,7 +31,7 @@ function ChatPreview({ content }: { content: unknown }) {
 
 export default function MyPage() {
   const navigate = useNavigate()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, isPremium, points } = useAuth()
   const [records, setRecords] = useState<AnalysisRecord[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -74,9 +74,25 @@ export default function MyPage() {
       </nav>
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        {/* プロフィール・ポイント */}
+        <div className="glass-card p-5 flex items-center justify-between border border-white/5">
+          <div>
+            <p className="text-white/60 text-sm">{user.email}</p>
+            {isPremium && <span className="text-xs bg-accent/20 text-accent rounded-full px-2 py-0.5 mt-1 inline-block">Premium</span>}
+          </div>
+          {!isPremium && (
+            <div className="text-right">
+              <p className="text-white font-bold text-2xl font-mono">{points} <span className="text-white/40 text-sm font-sans">pt</span></p>
+              <p className="text-white/30 text-xs mt-0.5">残ポイント</p>
+              <button onClick={() => navigate('/?section=pricing')} className="text-accent text-xs hover:underline mt-1">
+                ポイントを購入 →
+              </button>
+            </div>
+          )}
+        </div>
+
         <div>
-          <h1 className="text-white font-bold text-xl font-serif mb-1">鑑定履歴</h1>
-          <p className="text-white/30 text-sm">{user.email}</p>
+          <h1 className="text-white font-bold text-xl mb-1">鑑定履歴</h1>
         </div>
 
         {records.length === 0 ? (

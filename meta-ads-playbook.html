@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meta広告 設定プレイブック — fate-lab.com</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.7; }
+  .container { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 26px; font-weight: 700; color: #c9a96e; border-bottom: 1px solid #c9a96e33; padding-bottom: 16px; margin-bottom: 32px; }
+  h2 { font-size: 18px; font-weight: 700; color: #c9a96e; margin: 40px 0 16px; padding-left: 12px; border-left: 3px solid #c9a96e; }
+  h3 { font-size: 14px; font-weight: 700; color: #94a3b8; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  .card.highlight { border-color: #c9a96e44; background: #1e1a10; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+  .step-num { min-width: 32px; height: 32px; border-radius: 50%; background: #c9a96e; color: #0f1117; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+  .step-desc { color: #94a3b8; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
+  th { background: #2d3748; color: #94a3b8; text-align: left; padding: 8px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { border-bottom: 1px solid #2d3748; padding: 10px 12px; color: #e2e8f0; vertical-align: top; }
+  td:first-child { color: #94a3b8; white-space: nowrap; font-size: 13px; }
+  .tag { display: inline-block; background: #c9a96e22; color: #c9a96e; border: 1px solid #c9a96e44; border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 2px; }
+  .copy-box { background: #0d1117; border: 1px solid #2d3748; border-radius: 8px; padding: 16px; font-size: 14px; white-space: pre-line; color: #c9a96e; margin: 8px 0; }
+  .copy-label { font-size: 11px; color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .alert { background: #1a0a0a; border: 1px solid #c0392b44; border-radius: 8px; padding: 12px 16px; color: #e74c3c; font-size: 14px; margin: 12px 0; }
+  .ok { background: #0a1a0a; border: 1px solid #27ae6044; border-radius: 8px; padding: 12px 16px; color: #2ecc71; font-size: 14px; margin: 12px 0; }
+  .pixel-code { background: #0d1117; border: 1px solid #c9a96e44; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; color: #7dd3fc; overflow-x: auto; white-space: pre; }
+  .big-tag { display: inline-block; font-size: 22px; font-weight: 700; color: #c9a96e; margin: 4px 0; }
+  .creative-block { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  .creative-num { font-size: 12px; color: #c9a96e; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .creative-hook { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; line-height: 1.4; }
+  .creative-body { font-size: 14px; color: #94a3b8; margin-bottom: 12px; line-height: 1.7; }
+  .creative-visual { font-size: 13px; color: #7dd3fc; background: #0d1117; border-radius: 6px; padding: 10px 12px; }
+  .badge { display: inline-block; background: #c9a96e; color: #0f1117; border-radius: 4px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; font-size: 14px; color: #94a3b8; }
+  li strong { color: #e2e8f0; }
+  .section-note { font-size: 13px; color: #64748b; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Meta広告 設定プレイブック<br><span style="font-size:14px;color:#64748b;font-weight:400">fate-lab.com — 帰宅後にここを見ながら設定するだけ</span></h1>
+
+  <!-- STEP 0: Pixel ID -->
+  <h2>Step 0 — ピクセルID発行（最初にやること）</h2>
+  <div class="card highlight">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Meta Business Manager を開く</div>
+        <div class="step-desc">business.facebook.com → 「データソース」→「ピクセル」→「追加」</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">ピクセルIDをコピー</div>
+        <div class="step-desc">15〜16桁の数字。これが <code style="color:#c9a96e">PIXEL_ID_HERE</code> の差し替え先。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">index.html の2箇所を差し替えてVercelにデプロイ</div>
+        <div class="step-desc">
+          ファイル: <code style="color:#7dd3fc">fortune-site/frontend/index.html</code><br>
+          <code style="color:#c9a96e">PIXEL_ID_HERE</code> を2箇所とも実際のIDに置換 → <code>git push</code> で自動デプロイ
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Meta Pixel Helper で確認（Chrome拡張）</div>
+        <div class="step-desc">fate-lab.com を開いて PageView が緑になればOK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Campaign -->
+  <h2>Step 1 — キャンペーン作成</h2>
+  <div class="card">
+    <table>
+      <tr><th>項目</th><th>設定値</th></tr>
+      <tr><td>目標</td><td><strong>リード</strong>（ユーザー登録をコンバージョンにする）</td></tr>
+      <tr><td>キャンペーン名</td><td>fate-lab_登録獲得_2024春</td></tr>
+      <tr><td>予算</td><td>¥20,000（全体上限）</td></tr>
+      <tr><td>予算タイプ</td><td>キャンペーン予算最適化（CBO）ON</td></tr>
+      <tr><td>A/Bテスト</td><td>OFF</td></tr>
+    </table>
+  </div>
+
+  <!-- STEP 2: Ad Set -->
+  <h2>Step 2 — 広告セット設定</h2>
+  <div class="card">
+    <table>
+      <tr><th>項目</th><th>設定値</th></tr>
+      <tr><td>広告セット名</td><td>F25-44_占い好き_日本</td></tr>
+      <tr><td>コンバージョン場所</td><td>ウェブサイト</td></tr>
+      <tr><td>ピクセル</td><td>fate-lab.com（Step0で作成したもの）</td></tr>
+      <tr><td>コンバージョンイベント</td><td><strong>CompleteRegistration</strong></td></tr>
+      <tr><td>配信地域</td><td>日本</td></tr>
+      <tr><td>年齢</td><td>25〜44歳</td></tr>
+      <tr><td>性別</td><td><strong>女性</strong>（占い系はF優位。男性はOFF）</td></tr>
+      <tr><td>言語</td><td>日本語</td></tr>
+      <tr><td>スケジュール</td><td>開始日: 本日 / 終了日: 14日後</td></tr>
+    </table>
+  </div>
+
+  <h2>Step 2-b — 詳細ターゲティング</h2>
+  <div class="card">
+    <h3>興味・関心（これを入力）</h3>
+    <div>
+      <span class="tag">占星術</span>
+      <span class="tag">占い</span>
+      <span class="tag">スピリチュアル</span>
+      <span class="tag">四柱推命</span>
+      <span class="tag">MBTI</span>
+      <span class="tag">自己分析</span>
+      <span class="tag">転職</span>
+      <span class="tag">キャリア</span>
+      <span class="tag">パーソナリティ診断</span>
+    </div>
+    <div class="section-note" style="margin-top:12px">「詳細ターゲティングの拡大」は <strong style="color:#e74c3c">OFF</strong> にする（予算が少ないので絞り込む）</div>
+
+    <h3 style="margin-top:20px">配置</h3>
+    <div><strong>自動配置</strong>でOK（Reels・フィード両方に出る）</div>
+    <div class="section-note">Reelsは縦動画クリエイティブが必要（後述）</div>
+  </div>
+
+  <!-- STEP 3: Creative -->
+  <h2>Step 3 — 広告クリエイティブ（3種類作る）</h2>
+  <p style="color:#64748b;font-size:13px;margin-bottom:16px">3種類を同時に入稿してMetaに最適化させる。最初の3〜5日でCTRが高い方に予算が集まる。</p>
+
+  <div class="creative-block">
+    <div class="creative-num">クリエイティブ A — 静止画（フィード・ストーリーズ） <span class="badge">最初に作る</span></div>
+    <div class="creative-hook">「なぜか仕事がうまくいかない」には、宿命的な理由がある。</div>
+    <div class="creative-body">
+      生年月日を入れるだけで、四柱推命・算命学・宿曜など6つの占術がAIで瞬時に統合分析。
+      あなたの強み・弱み・転換期・適職が、データで見えてくる。
+      無料で試してみる →
+    </div>
+    <div class="creative-visual">
+      【ビジュアル指示】<br>
+      背景: 濃紺（#0a0d1a）／中央に金色の命盤グラフィック or 星座ホイール<br>
+      フォント: セリフ体（細め）／白文字でキャッチ、金でアクセント<br>
+      サイズ: 1080x1080px（フィード）、1080x1920px（ストーリーズ）<br>
+      雰囲気: 高級感・知的・神秘的。占いっぽい「キラキラ」は避ける<br>
+      Canvaテンプレート: 「占星術 ダーク」で検索するとベース素材が見つかる
+    </div>
+  </div>
+
+  <div class="creative-block">
+    <div class="creative-num">クリエイティブ B — 静止画（比較型）</div>
+    <div class="creative-hook">無料の占いと違うのは、「なぜそうなるか」まで解析すること。</div>
+    <div class="creative-body">
+      血液型・星座・タロット——これらは傾向を「当てる」もの。<br>
+      宿命解析は、四柱推命・算命学・宿曜を統合し、<br>
+      あなたの人生の構造を「読む」システムです。<br>
+      生年月日だけで今すぐ試す（無料）→
+    </div>
+    <div class="creative-visual">
+      【ビジュアル指示】<br>
+      左右分割レイアウト: 左=ぼんやりした一般占い感、右=データビジュアライゼーション風<br>
+      右側に命盤・グラフ・スコア数値を見せる（サイトのスクショ活用可）<br>
+      サイズ: 1080x1080px
+    </div>
+  </div>
+
+  <div class="creative-block">
+    <div class="creative-num">クリエイティブ C — 縦動画15秒（Reels） <span class="badge">効果高め</span></div>
+    <div class="creative-hook">あなたの「転換期」、いつか知っていますか？</div>
+    <div class="creative-body">
+      【台本 — 15秒】<br>
+      0〜3秒: 「転換期、わかってる？」テキストアニメーション（フック）<br>
+      3〜8秒: サイト画面のスクロール録画（命盤・グラフ・結果画面）<br>
+      8〜12秒: 「生年月日だけで6占術統合解析」テキスト表示<br>
+      12〜15秒: fate-lab.com のURL ＋ 「無料で試す」CTA<br>
+      <br>
+      BGM: ローファイ系・神秘的・静か（著作権フリー）<br>
+      サイズ: 1080x1920px / 縦向き
+    </div>
+    <div class="creative-visual">
+      【制作手順 — CapCutで無料作成可能】<br>
+      1. iPhone でサイトをスクロール録画（画面収録）<br>
+      2. CapCutに読み込み → テキスト追加 → BGM追加<br>
+      3. 書き出し → Meta広告マネージャにアップロード
+    </div>
+  </div>
+
+  <!-- STEP 4: Ad Settings -->
+  <h2>Step 4 — 広告テキスト設定（コピペ用）</h2>
+  <div class="card">
+    <div class="copy-label">メインテキスト（本文）— クリエイティブA用</div>
+    <div class="copy-box">なぜか仕事がうまくいかない、人間関係に疲れる——
+それには、宿命的な理由があるかもしれません。
+
+四柱推命・納音・算命学・宿曜・MBTI を統合した AI 解析システム。
+生年月日を入れるだけで、あなたの強み・弱み・適職・転換期が数値で見えてきます。
+
+星座占いや血液型とは違う、「命式データ」による本格鑑定。
+まずは無料でお試しください。</div>
+
+    <div class="copy-label" style="margin-top:16px">メインテキスト — クリエイティブB用</div>
+    <div class="copy-box">血液型・星座占いは「当てる」もの。
+宿命解析は「読む」システムです。
+
+6つの占術を AI が統合解析。
+生年月日だけで、仕事・恋愛・人生の転換期まで構造的に可視化。
+
+無料で、今すぐ。</div>
+
+    <div class="copy-label" style="margin-top:16px">見出し（25文字以内）</div>
+    <div class="copy-box">生年月日だけで6占術が統合解析</div>
+
+    <div class="copy-label" style="margin-top:16px">説明文（30文字以内）</div>
+    <div class="copy-box">強み・転換期・適職をデータで可視化</div>
+
+    <div class="copy-label" style="margin-top:16px">リンク先URL</div>
+    <div class="copy-box">https://fate-lab.com/auth?mode=register</div>
+
+    <div class="copy-label" style="margin-top:16px">CTAボタン</div>
+    <div class="copy-box">無料で試す（「登録する」または「詳細はこちら」でも可）</div>
+  </div>
+
+  <!-- STEP 5: Review -->
+  <h2>Step 5 — 入稿前チェックリスト</h2>
+  <div class="card">
+    <ul>
+      <li>[ ] ピクセルIDを index.html の2箇所に入れてデプロイ済み</li>
+      <li>[ ] fate-lab.com を開いて Meta Pixel Helper が緑になっている</li>
+      <li>[ ] キャンペーン目標: <strong>リード</strong></li>
+      <li>[ ] コンバージョンイベント: <strong>CompleteRegistration</strong></li>
+      <li>[ ] 予算: ¥20,000（期間全体）</li>
+      <li>[ ] 性別: 女性のみ</li>
+      <li>[ ] 詳細ターゲティング拡大: OFF</li>
+      <li>[ ] クリエイティブ: 最低2種類（A・B）を入稿</li>
+      <li>[ ] リンク先: https://fate-lab.com/auth?mode=register</li>
+      <li>[ ] 「レビュー送信」前に全設定を目視確認</li>
+    </ul>
+  </div>
+
+  <!-- KPI -->
+  <h2>期待値と判断基準</h2>
+  <div class="card">
+    <table>
+      <tr><th>指標</th><th>目標値</th><th>要見直しライン</th></tr>
+      <tr><td>CPC</td><td>¥80〜150</td><td>¥200超で入稿停止・クリエイティブ見直し</td></tr>
+      <tr><td>CTR</td><td>1.5%以上</td><td>1%未満でクリエイティブ差し替え</td></tr>
+      <tr><td>登録CVR</td><td>10〜20%</td><td>5%未満でLPを見直す</td></tr>
+      <tr><td>クリック数</td><td>130〜250</td><td>（¥20,000 / CPC）</td></tr>
+      <tr><td>登録者数</td><td>13〜50人</td><td>—</td></tr>
+      <tr><td>有料転換</td><td>3〜10人</td><td>ROI = ¥6,000〜¥20,000</td></tr>
+    </table>
+    <p style="color:#64748b;font-size:13px;margin-top:12px">最初の3日間でCTR・CPCをチェック。クリエイティブCのReelsが強い場合は予算を寄せる。</p>
+  </div>
+
+  <!-- Post-launch -->
+  <h2>配信後の運用（帰宅後やること）</h2>
+  <div class="card">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">配信開始から48時間は触らない</div>
+        <div class="step-desc">Meta の学習期間。インプレッション50回が貯まるまで判断しない。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">3日後: CTR確認</div>
+        <div class="step-desc">1%未満のクリエイティブは停止。CTRが高いものの予算を増やす。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">7日後: CVR確認</div>
+        <div class="step-desc">登録CVRが5%未満なら登録ページのコピーを見直す。CPC¥200超えたら配信停止。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">有料転換データが出たらリターゲティング追加</div>
+        <div class="step-desc">登録済みユーザーに「有料プラン」訴求のリターゲティング広告（¥5,000〜）を別キャンペーンで追加。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ok" style="margin-top:32px">
+    このファイルを開いたまま Meta広告マネージャを操作すれば、全設定が完了します。<br>
+    ピクセルIDの置換 → デプロイ → 広告入稿 → レビュー送信、の順で。
+  </div>
+
+</div>
+</body>
+</html>

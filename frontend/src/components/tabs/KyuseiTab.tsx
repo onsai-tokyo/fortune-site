@@ -20,7 +20,7 @@ export function KyuseiTab({ result, hasFullAccess, onOpenOneTime, onOpenSubscrip
       <div className="flex items-center gap-2">
         <div className="w-1 h-6 rounded-full" style={{ background: 'linear-gradient(to bottom, #4ade80, #86efac)' }} />
         <div>
-          <p className="text-white/25 text-xs font-garamond italic">Kyusei Kigaku</p>
+          <p className="text-white/25 text-xs italic">Kyusei Kigaku</p>
           <h2 className="text-white font-semibold text-base">九星気学</h2>
         </div>
       </div>

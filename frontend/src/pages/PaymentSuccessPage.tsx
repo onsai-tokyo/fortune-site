@@ -1,7 +1,13 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { pixel } from '../lib/pixel'
 
 export default function PaymentSuccessPage() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    pixel.trackPurchase(2000)
+  }, [])
 
   return (
     <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
@@ -10,7 +16,7 @@ export default function PaymentSuccessPage() {
           <div className="w-16 h-16 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center mx-auto mb-6">
             <span className="text-accent text-2xl">✦</span>
           </div>
-          <h1 className="text-white font-bold text-2xl font-serif mb-3">ご購入ありがとうございます</h1>
+          <h1 className="text-white font-bold text-2xl mb-3">ご購入ありがとうございます</h1>
           <p className="text-white/50 text-sm leading-relaxed">
             プレミアム会員として登録が完了しました。<br />
             命術師AIへの相談が今すぐご利用いただけます。

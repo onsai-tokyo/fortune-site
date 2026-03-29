@@ -2,6 +2,7 @@ import { Router } from 'express'
 import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
+import { addPoints } from '../middleware/points.js'
 
 export const paymentRouter = Router()
 
@@ -171,6 +172,75 @@ paymentRouter.post('/charge-report', requireAuth, async (req: AuthRequest, res) 
     res.json({ token, type: 'report' })
   } catch (err) {
     console.error('Charge report error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
+  }
+})
+
+// ポイントパック購入: スモール（¥480 → 30pt）
+paymentRouter.post('/buy-points-small', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '480',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'ポイントパック スモール 30pt',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const newBalance = await addPoints(req.userId!, req.accessToken!, 30)
+    res.json({ success: true, pointsAdded: 30, newBalance })
+  } catch (err) {
+    console.error('Buy points small error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
+  }
+})
+
+// ポイントパック購入: スタンダード（¥980 → 80pt）
+paymentRouter.post('/buy-points-standard', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '980',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'ポイントパック スタンダード 80pt',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const newBalance = await addPoints(req.userId!, req.accessToken!, 80)
+    res.json({ success: true, pointsAdded: 80, newBalance })
+  } catch (err) {
+    console.error('Buy points standard error:', err)
+    res.status(500).json({ error: '決済に失敗しました' })
+  }
+})
+
+// ポイントパック購入: ラージ（¥1,980 → 200pt）
+paymentRouter.post('/buy-points-large', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { payjpToken } = req.body as { payjpToken?: string }
+    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
+
+    const charge = await payjpRequest('/charges', 'POST', {
+      amount: '1980',
+      currency: 'jpy',
+      card: payjpToken,
+      description: 'ポイントパック ラージ 200pt',
+    })
+
+    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+
+    const newBalance = await addPoints(req.userId!, req.accessToken!, 200)
+    res.json({ success: true, pointsAdded: 200, newBalance })
+  } catch (err) {
+    console.error('Buy points large error:', err)
     res.status(500).json({ error: '決済に失敗しました' })
   }
 })

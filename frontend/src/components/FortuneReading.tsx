@@ -31,7 +31,7 @@ export function FortuneReading({ reading, isStreaming }: Props) {
       {!reading && isStreaming && <AnalyzingLoader />}
 
       {reading && (
-        <div className="text-white/85 leading-loose font-serif text-sm sm:text-base whitespace-pre-wrap">
+        <div className="text-white/85 leading-loose text-sm sm:text-base whitespace-pre-wrap">
           {reading}
           {isStreaming && <span className="streaming-cursor" />}
         </div>

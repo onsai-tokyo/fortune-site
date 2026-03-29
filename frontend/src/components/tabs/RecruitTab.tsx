@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FortuneData, RecruitAnalysis } from '../../lib/types'
+import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
@@ -41,18 +42,18 @@ export function RecruitTab({ fortuneData }: Props) {
       const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
 
       const { input, shichu: sShichu, nayin: sNayin, sanmei: sSanmei, sukuyo: sSukuyo } = fortuneData
-      const res = await fetch('/api/analyze/recruit', {
+      const res = await apiFetch('/api/analyze/recruit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           selfData:      { shichu: sShichu, nayin: sNayin, sanmei: sSanmei, sukuyo: sSukuyo, birthDate: input.birthDate, gender: input.gender, mbti: input.mbti },
           candidateData: { shichu, nayin, sanmei, sukuyo, birthDate, gender, mbti },
         }),
       })
+      if (res.status === 402) throw new Error('ポイントが不足しています')
       if (!res.ok) throw new Error()
       setResult(await res.json() as RecruitAnalysis)
-    } catch {
-      setError('採用分析に失敗しました。再度お試しください。')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '採用分析に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
     }
@@ -72,7 +73,7 @@ export function RecruitTab({ fortuneData }: Props) {
       <div className="glass-card border border-accent/20 p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-white/25 text-xs font-garamond italic mb-1">Candidate Profile</p>
+            <p className="text-white/25 text-xs italic mb-1">Candidate Profile</p>
             <h3 className="text-white text-xl font-bold">{result.candidateType}</h3>
           </div>
           <div className="text-right">
@@ -165,7 +166,7 @@ export function RecruitTab({ fortuneData }: Props) {
 
       {/* 採用判断 */}
       <div className="glass-card border border-accent/20 p-6">
-        <p className="text-white/30 text-xs mb-2 font-garamond italic">採用判断のポイント</p>
+        <p className="text-white/30 text-xs mb-2 italic">採用判断のポイント</p>
         <p className="text-white/80 text-sm leading-relaxed">{result.hiringAdvice}</p>
       </div>
 

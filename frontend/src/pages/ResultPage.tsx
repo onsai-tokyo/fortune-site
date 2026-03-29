@@ -182,7 +182,7 @@ export function ResultPage() {
             <button onClick={() => navigate('/')} className="text-white/30 hover:text-white/60 transition-colors text-sm flex items-center gap-1">
               ← トップに戻る
             </button>
-            <span className="text-white/30 font-garamond italic text-xs tracking-widest">Meishiki Analysis</span>
+            <span className="text-white/30 italic text-xs tracking-widest">Meishiki Analysis</span>
           </header>
 
           <ResultCard data={fortuneData} />
@@ -221,7 +221,7 @@ export function ResultPage() {
                   }`}
                 >
                   <span className="font-medium">{tab.label}</span>
-                  <span className={`text-[10px] font-garamond italic ${activeTab === tab.id ? 'text-accent/60' : 'text-white/15'}`}>{tab.sub}</span>
+                  <span className={`text-[10px] italic ${activeTab === tab.id ? 'text-accent/60' : 'text-white/15'}`}>{tab.sub}</span>
                 </button>
               ))}
             </div>
@@ -247,7 +247,7 @@ export function ResultPage() {
                   </div>
                 )}
                 {reading && (
-                  <div className="text-white/85 leading-loose font-serif text-sm sm:text-base whitespace-pre-wrap">
+                  <div className="text-white/85 leading-loose text-sm sm:text-base whitespace-pre-wrap">
                     {reading}
                     {isStreaming && <span className="streaming-cursor" />}
                   </div>
@@ -286,7 +286,7 @@ export function ResultPage() {
 
             {/* 他のメニュー導線 */}
             <div className="glass-card p-4 border border-white/5">
-              <p className="text-white/25 text-xs mb-3 font-garamond italic">他のメニューも試す — More Features</p>
+              <p className="text-white/25 text-xs mb-3 italic">他のメニューも試す — More Features</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: '相談し放題プラン', sub: '命術師AIに何でも相談', path: '/feature/chat',    dot: 'bg-accent',        border: 'border-accent/20    hover:border-accent/40',    text: 'text-accent'        },

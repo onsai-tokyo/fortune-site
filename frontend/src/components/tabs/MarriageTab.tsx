@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FortuneData, MarriageAnalysis, PartnerData } from '../../lib/types'
+import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
@@ -111,18 +112,18 @@ export function MarriageTab({ fortuneData }: Props) {
     setError('')
     try {
       const { input, shichu, nayin, sanmei, sukuyo } = fortuneData
-      const res = await fetch('/api/analyze/marriage', {
+      const res = await apiFetch('/api/analyze/marriage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           selfData:    { shichu, nayin, sanmei, sukuyo, birthDate: input.birthDate, gender: input.gender, mbti: input.mbti },
           partnerData: { shichu: p.shichu, nayin: p.nayin, sanmei: p.sanmei, sukuyo: p.sukuyo, birthDate: p.birthDate, gender: p.gender, mbti: p.mbti },
         }),
       })
+      if (res.status === 402) throw new Error('ポイントが不足しています')
       if (!res.ok) throw new Error()
       setResult(await res.json() as MarriageAnalysis)
-    } catch {
-      setError('結婚相性診断に失敗しました。再度お試しください。')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '結婚相性診断に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
     }
@@ -152,7 +153,7 @@ export function MarriageTab({ fortuneData }: Props) {
       <div className="glass-card border border-pink-500/15 p-6">
         <div className="flex items-start justify-between mb-5">
           <div>
-            <p className="text-white/25 text-xs font-garamond italic mb-1">Marriage Analysis</p>
+            <p className="text-white/25 text-xs italic mb-1">Marriage Analysis</p>
             <h3 className="text-white text-xl font-bold">{result.marriageType}</h3>
           </div>
           <div className="text-right">
@@ -223,7 +224,7 @@ export function MarriageTab({ fortuneData }: Props) {
 
       {/* 総括メッセージ */}
       <div className="glass-card border border-pink-400/20 p-6">
-        <p className="text-white/30 text-xs mb-2 font-garamond italic">命術師より</p>
+        <p className="text-white/30 text-xs mb-2 italic">命術師より</p>
         <p className="text-white/80 text-sm leading-relaxed">{result.advice}</p>
       </div>
 

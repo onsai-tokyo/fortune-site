@@ -20,16 +20,17 @@ interface PayjpInstance {
 }
 
 interface Props {
-  mode: 'one-time' | 'subscription'
+  mode: 'one-time' | 'subscription' | 'points'
   title: string
   amount: number
+  pts?: number
   isProcessing: boolean
   error: string
   onToken: (payjpToken: string) => void
   onClose: () => void
 }
 
-export function PayjpModal({ mode, title, amount, isProcessing, error, onToken, onClose }: Props) {
+export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onToken, onClose }: Props) {
   const [localError, setLocalError] = useState('')
   const payjpRef = useRef<PayjpInstance | null>(null)
   const numberElementRef = useRef<PayjpElement | null>(null)
@@ -102,7 +103,15 @@ export function PayjpModal({ mode, title, amount, isProcessing, error, onToken, 
         </div>
 
         <div className="glass-card p-3 space-y-1" style={{ background: 'rgba(148,163,184,0.05)' }}>
-          {mode === 'one-time' ? (
+          {mode === 'points' ? (
+            <>
+              <p className="text-white/40 text-xs">自己分析・相性診断・AIチャットなどで消費</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-white font-bold text-2xl">¥{amount.toLocaleString()}</span>
+                <span className="text-white/40 text-xs">→ {pts}pt 付与</span>
+              </div>
+            </>
+          ) : mode === 'one-time' ? (
             <>
               <p className="text-white/40 text-xs">6占術 AI統合命式鑑定書（全30ページ）</p>
               <div className="flex items-baseline gap-2">
@@ -145,7 +154,7 @@ export function PayjpModal({ mode, title, amount, isProcessing, error, onToken, 
             disabled={isProcessing}
             className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all disabled:opacity-50 text-sm"
           >
-            {isProcessing ? '処理中...' : mode === 'subscription' ? `¥${amount.toLocaleString()}/月で会員になる` : `¥${amount.toLocaleString()}で鑑定書を受け取る`}
+            {isProcessing ? '処理中...' : mode === 'points' ? `¥${amount.toLocaleString()}で${pts}pt購入する` : mode === 'subscription' ? `¥${amount.toLocaleString()}/月で会員になる` : `¥${amount.toLocaleString()}で鑑定書を受け取る`}
           </button>
 
           <p className="text-white/20 text-xs text-center">PAY.JP による安全な決済</p>

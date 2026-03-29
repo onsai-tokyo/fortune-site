@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
-import { requireAuth, requireSubscription, AuthRequest } from '../middleware/auth.js'
+import { requireAuth, AuthRequest } from '../middleware/auth.js'
+import { requirePoints } from '../middleware/points.js'
 
 export const chatRouter = Router()
 
@@ -41,8 +42,8 @@ function calcAge(birthDate: string): number {
   return age
 }
 
-// メインチャット（プレミアム会員専用）
-chatRouter.post('/', requireAuth, requireSubscription, async (req: AuthRequest, res) => {
+// メインチャット（1pt/メッセージ）
+chatRouter.post('/', requireAuth, requirePoints(1), async (req: AuthRequest, res) => {
   try {
     const { conversationHistory, newMessage, birthDate, birthTime, gender, calculatedData, partnerBirthDate, partnerGender } = req.body as {
       conversationHistory?: ChatMessage[]
@@ -100,7 +101,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: AuthRequest, 
     res.setHeader('X-Accel-Buffering', 'no')
 
     const stream = getClient().messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 800,
       system: systemPrompt,
       messages: history,

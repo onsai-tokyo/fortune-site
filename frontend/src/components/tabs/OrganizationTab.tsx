@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FortuneData, OrgMember, OrganizationAnalysis } from '../../lib/types'
+import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
@@ -57,16 +58,15 @@ export function OrganizationTab({ fortuneData }: Props) {
       }
       const computedMembers = members.map(calcMemberData)
 
-      const res = await fetch('/api/analyze/organization', {
+      const res = await apiFetch('/api/analyze/organization', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selfData, members: computedMembers }),
       })
-      const json = await res.json() as OrganizationAnalysis
+      if (res.status === 402) throw new Error('ポイントが不足しています')
       if (!res.ok) throw new Error()
-      setResult(json)
-    } catch {
-      setError('組織診断に失敗しました。再度お試しください。')
+      setResult(await res.json() as OrganizationAnalysis)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '組織診断に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
     }

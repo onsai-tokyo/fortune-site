@@ -195,7 +195,7 @@ export function InputForm({ onSubmit, loading }: Props) {
         <button
           type="button"
           onClick={() => setShowPartner(p => !p)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-serif hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-white/5 transition-colors"
         >
           <span className={showPartner ? 'text-accent' : 'text-white/50'}>
             {showPartner ? '▲ 相手の情報（相性鑑定）' : '＋ 相手の情報を入力する（相性鑑定）'}

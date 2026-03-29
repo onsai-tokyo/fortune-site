@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FortuneData, CompatibilityAnalysis, PartnerData } from '../../lib/types'
+import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
@@ -172,16 +173,15 @@ export function CompatibilityTab({ fortuneData }: Props) {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/analyze/compatibility', {
+      const res = await apiFetch('/api/analyze/compatibility', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fortuneData, partnerBlock }),
       })
-      const json = await res.json() as CompatibilityAnalysis
+      if (res.status === 402) throw new Error('ポイントが不足しています')
       if (!res.ok) throw new Error()
-      setResult(json)
-    } catch {
-      setError('相性診断に失敗しました。再度お試しください。')
+      setResult(await res.json() as CompatibilityAnalysis)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '相性診断に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
     }

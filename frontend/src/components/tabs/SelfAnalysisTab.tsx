@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { FortuneData, SelfAnalysis } from '../../lib/types'
+import { apiFetch } from '../../lib/api'
+import { ShareButton } from '../ShareButton'
 
 interface Props {
   fortuneData: FortuneData
@@ -58,14 +60,17 @@ export function SelfAnalysisTab({ fortuneData }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/analyze/self', {
+    apiFetch('/api/analyze/self', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fortuneData }),
     })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 402) throw new Error('ポイントが不足しています')
+        if (!r.ok) throw new Error()
+        return r.json()
+      })
       .then((json: SelfAnalysis) => setData(json))
-      .catch(() => setError('解析に失敗しました。再度お試しください。'))
+      .catch((e: Error) => setError(e.message || '解析に失敗しました。再度お試しください。'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -87,6 +92,7 @@ export function SelfAnalysisTab({ fortuneData }: Props) {
             <p className="text-white/30 text-xs tracking-widest uppercase mb-1">Core Profile</p>
             <h3 className="text-white text-xl font-bold">{data.corePersonality}</h3>
           </div>
+          <ShareButton text={`命式解析で「${data.corePersonality}」と診断されました。\n人生テーマ：${data.lifeTheme}`} />
           <div className="text-right">
             <p className="text-white/20 text-xs mb-1">Data Sources</p>
             <div className="flex gap-1 flex-wrap justify-end">

@@ -4,6 +4,35 @@ import { verifyPaidToken } from './payment.js'
 
 export const previewRouter = Router()
 
+// ─── IP別 日次レート制限（無料プレビュー） ────────────────────────────────
+const DAILY_LIMIT = 5
+interface IpEntry { date: string; count: number }
+const ipDailyMap = new Map<string, IpEntry>()
+
+function getToday(): string {
+  return new Date().toISOString().slice(0, 10) // "YYYY-MM-DD"
+}
+
+function checkIpLimit(ip: string): boolean {
+  const today = getToday()
+  const entry = ipDailyMap.get(ip)
+  if (!entry || entry.date !== today) {
+    ipDailyMap.set(ip, { date: today, count: 1 })
+    return true
+  }
+  if (entry.count >= DAILY_LIMIT) return false
+  entry.count++
+  return true
+}
+
+// メモリリーク防止: 古いIPエントリを1時間ごとに削除
+setInterval(() => {
+  const today = getToday()
+  for (const [ip, entry] of ipDailyMap) {
+    if (entry.date !== today) ipDailyMap.delete(ip)
+  }
+}, 60 * 60 * 1000)
+
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
@@ -46,6 +75,16 @@ interface CalculatedData {
 // LP用：命式鑑定書 全章ストリーミング生成
 // POST /api/preview/generate
 previewRouter.post('/generate', async (req, res) => {
+  // IP日次制限チェック
+  const ip = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0].trim() ?? req.socket.remoteAddress ?? 'unknown'
+  if (!checkIpLimit(ip)) {
+    res.status(429).json({
+      error: '本日の無料鑑定回数の上限に達しました。アカウントを作成すると継続してご利用いただけます。',
+      code: 'DAILY_LIMIT_EXCEEDED',
+    })
+    return
+  }
+
   try {
     const { birthDate, birthTime, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
       birthDate?: string

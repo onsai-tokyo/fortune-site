@@ -12,6 +12,8 @@ export interface AuthRequest extends Request {
   userId?: string
   userEmail?: string
   accessToken?: string
+  isPremium?: boolean
+  pointsAfter?: number
 }
 
 // JWT検証ミドルウェア（必須）

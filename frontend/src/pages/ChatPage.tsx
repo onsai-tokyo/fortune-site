@@ -29,7 +29,7 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => i)
 
 export default function ChatPage() {
   const navigate = useNavigate()
-  const { user, session, isPremium } = useAuth()
+  const { user, session, points, refreshPoints } = useAuth()
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -127,7 +127,10 @@ export default function ChatPage() {
       })
 
       if (!res.ok) {
-        const err = await res.json() as { error?: string }
+        const err = await res.json() as { error?: string; code?: string }
+        if (res.status === 402 || err.code === 'INSUFFICIENT_POINTS') {
+          throw new Error('ポイントが不足しています。マイページからポイントを購入してください。')
+        }
         throw new Error(err.error ?? 'エラーが発生しました')
       }
 
@@ -164,6 +167,7 @@ export default function ChatPage() {
     } finally {
       setIsStreaming(false)
       setTimeout(() => inputRef.current?.focus(), 100)
+      refreshPoints()
       // チャット履歴をSupabaseに保存
       if (chatRecordId) {
         setMessages(prev => {
@@ -194,21 +198,6 @@ export default function ChatPage() {
     )
   }
 
-  // プレミアム未加入
-  if (!isPremium) {
-    return (
-      <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
-        <div className="glass-card max-w-sm w-full p-8 text-center space-y-5">
-          <div className="text-accent text-3xl">✦</div>
-          <h2 className="text-white font-bold text-xl">プレミアム会員限定</h2>
-          <p className="text-white/50 text-sm leading-relaxed">命術師AIチャットは月額¥1,980のプレミアム会員限定機能です。仕事・恋愛・転機など何でも何度でも相談できます。</p>
-          <button onClick={() => navigate('/')} className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm">プレミアム会員になる</button>
-          <button onClick={() => navigate('/')} className="w-full py-2 text-white/30 hover:text-white/50 text-xs">トップに戻る</button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-deep-navy flex flex-col">
       {/* ヘッダー */}
@@ -216,11 +205,13 @@ export default function ChatPage() {
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <button onClick={() => navigate('/')} className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-            <span className="font-garamond italic text-white/60 text-sm tracking-widest">Meishiki</span>
+            <span className="italic text-white/60 text-sm tracking-widest">Meishiki</span>
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-xs bg-accent/20 text-accent rounded-full px-2 py-0.5">Premium</span>
-            <span className="text-white/30 text-xs hidden sm:block">命術師AI</span>
+            <button onClick={() => navigate('/mypage')} className="text-xs bg-white/10 text-white/60 hover:bg-white/20 rounded-full px-2 py-0.5 font-mono transition-colors">
+              {points} pt
+            </button>
+            <span className="text-white/30 text-xs hidden sm:block">1pt/メッセージ</span>
           </div>
         </div>
       </nav>
@@ -231,7 +222,7 @@ export default function ChatPage() {
         {!calcData && (
           <div>
             <div className="text-center mb-6">
-              <h1 className="text-white font-bold text-xl font-serif mb-2">命術師AIに相談する</h1>
+              <h1 className="text-white font-bold text-xl mb-2">命術師AIに相談する</h1>
               <p className="text-white/40 text-sm">生年月日を入力すると、あなたの命式を踏まえた上で鑑定します。</p>
             </div>
 
@@ -342,15 +333,15 @@ export default function ChatPage() {
             {/* 命式サマリ */}
             <div className="glass-card p-4 border border-accent/15 flex items-center justify-between gap-3">
               <div>
-                <p className="text-accent/70 text-xs font-garamond italic">命式鑑定中</p>
+                <p className="text-accent/70 text-xs italic">命式鑑定中</p>
                 <p className="text-white text-sm font-medium">{form.year}年{form.month}月{form.day}日 · {form.gender === 'female' ? '女性' : '男性'} · 日柱 {calcData.shichuDay}</p>
                 {form.showPartner && partnerBirthDate && (
                   <p className="text-purple-300/60 text-xs mt-0.5">相手: {partnerBirthDate} · {form.partnerGender === 'female' ? '女性' : '男性'}</p>
                 )}
               </div>
-              <button onClick={() => { setCalcData(null); setMessages([]) }}
-                className="text-white/20 hover:text-white/50 text-xs transition-colors flex-shrink-0">
-                変更
+              <button onClick={() => { setCalcData(null); setMessages([]); setChatRecordId(null) }}
+                className="text-white/30 hover:text-accent border border-white/10 hover:border-accent/30 rounded-lg px-3 py-1.5 text-xs transition-all flex-shrink-0">
+                新しい相談 →
               </button>
             </div>
 
@@ -366,7 +357,7 @@ export default function ChatPage() {
                   <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-loose ${
                     msg.role === 'user'
                       ? 'bg-accent/20 text-white/90 rounded-tr-sm'
-                      : 'bg-white/5 border border-white/8 text-white/80 rounded-tl-sm font-serif'
+                      : 'bg-white/5 border border-white/8 text-white/80 rounded-tl-sm'
                   }`}>
                     {msg.role === 'assistant' ? renderBold(msg.content) : msg.content}
                     {msg.role === 'assistant' && isStreaming && i === messages.length - 1 && msg.content === '' && (

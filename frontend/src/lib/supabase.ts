@@ -13,3 +13,10 @@ export interface Subscription {
   payjp_charge_id: string | null
   created_at: string
 }
+
+export interface UserPoints {
+  user_id: string
+  balance: number
+  total_earned: number
+  updated_at: string
+}

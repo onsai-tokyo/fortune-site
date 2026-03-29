@@ -13,7 +13,7 @@ export function NumerologyTab({ result, hasFullAccess, onOpenOneTime, onOpenSubs
       <div className="flex items-center gap-2">
         <div className="w-1 h-6 rounded-full" style={{ background: 'linear-gradient(to bottom, #94a3b8, #cbd5e1)' }} />
         <div>
-          <p className="text-white/25 text-xs font-garamond italic">Numerology</p>
+          <p className="text-white/25 text-xs italic">Numerology</p>
           <h2 className="text-white font-semibold text-base">数秘術</h2>
         </div>
       </div>
@@ -22,7 +22,7 @@ export function NumerologyTab({ result, hasFullAccess, onOpenOneTime, onOpenSubs
       <div className="flex items-center gap-5">
         <div className="w-20 h-20 rounded-full border-2 border-white/20 flex items-center justify-center flex-shrink-0"
           style={{ background: 'radial-gradient(circle, rgba(148,163,184,0.15) 0%, transparent 70%)' }}>
-          <span className="text-white text-3xl font-bold font-garamond">{result.lifePathNumber}</span>
+          <span className="text-white text-3xl font-bold">{result.lifePathNumber}</span>
         </div>
         <div className="space-y-1">
           <p className="text-white/40 text-xs">ライフパスナンバー</p>
@@ -33,7 +33,7 @@ export function NumerologyTab({ result, hasFullAccess, onOpenOneTime, onOpenSubs
 
       <div className="flex items-center gap-3 border-t border-white/5 pt-4">
         <div className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center flex-shrink-0">
-          <span className="text-white/70 text-lg font-garamond">{result.birthdayNumber}</span>
+          <span className="text-white/70 text-lg">{result.birthdayNumber}</span>
         </div>
         <div>
           <p className="text-white/40 text-xs">誕生日ナンバー</p>

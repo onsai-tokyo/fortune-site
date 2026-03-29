@@ -37,6 +37,15 @@ export interface FortuneData {
   sanmei: SanmeiResult
   sukuyo: string
   partner?: PartnerData
+  // 拡張占術データ（プレビューと同レベルの精度を実現）
+  lifePathNumber?: number
+  honmeiName?: string
+  archetype?: string
+  animalFortune?: string
+  sukuyoDetail?: string
+  daiyun?: string
+  daiyunAge?: string
+  ryunen?: string
 }
 
 export interface ChatMessage {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { pixel } from '../lib/pixel'
 
 type Mode = 'login' | 'register' | 'reset'
 
@@ -17,8 +18,22 @@ export default function AuthPage() {
   const { user } = useAuth()
 
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    // メール確認後のコールバック検出（Supabaseがhashにtype=signupを付与）
+    const hash = window.location.hash
+    const hashParams = new URLSearchParams(hash.substring(1))
+    if (hashParams.get('type') === 'signup') {
+      setMessage('✓ メールの認証が完了しました！ようこそ。3ptプレゼント済みです。')
+      window.history.replaceState({}, '', window.location.pathname + window.location.search)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (user && !message.includes('認証が完了')) navigate('/', { replace: true })
+    else if (user && message.includes('認証が完了')) {
+      const t = setTimeout(() => navigate('/', { replace: true }), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [user, navigate, message])
 
   useEffect(() => {
     if (params.get('mode') === 'register') setMode('register')
@@ -38,6 +53,7 @@ export default function AuthPage() {
           throw new Error('User already registered')
         }
         setMessage('確認メールを送信しました。メールのリンクをクリックして登録を完了してください。')
+        pixel.trackCompleteRegistration()
       } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
