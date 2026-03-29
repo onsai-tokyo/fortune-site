@@ -6,6 +6,7 @@ import AuthPage from './pages/AuthPage'
 import PaymentSuccessPage from './pages/PaymentSuccessPage'
 import ChatPage from './pages/ChatPage'
 import MyPage from './pages/MyPage'
+import CompatReportPage from './pages/CompatReportPage'
 import { AuthProvider } from './contexts/AuthContext'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/feature/:id" element={<FeaturePage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/compat-report" element={<CompatReportPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

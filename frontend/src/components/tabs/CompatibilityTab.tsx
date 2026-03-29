@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { FortuneData, CompatibilityAnalysis, PartnerData } from '../../lib/types'
 import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
@@ -164,14 +165,48 @@ function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDa
 }
 
 export function CompatibilityTab({ fortuneData }: Props) {
+  const navigate = useNavigate()
   const [result, setResult] = useState<CompatibilityAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [subTab, setSubTab] = useState<SubTab>('work')
+  const [partnerBirthDate, setPartnerBirthDate] = useState('')
+  const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('female')
+
+  function saveAndOpenReport(r: CompatibilityAnalysis, pBirthDate: string, pGender: string) {
+    const reportData = {
+      result: r,
+      self: {
+        birthDate: fortuneData.input.birthDate,
+        gender: fortuneData.input.gender,
+        shichuDay: fortuneData.shichu.day.kanshi,
+      },
+      partner: {
+        birthDate: pBirthDate,
+        gender: pGender,
+        shichuDay: '', // partnerブロックから取得
+      },
+      generatedAt: new Date().toISOString(),
+    }
+    // partnerの日柱を取得
+    if (fortuneData.partner) {
+      reportData.partner.shichuDay = fortuneData.partner.shichu.day.kanshi
+    } else if (pBirthDate) {
+      const [y, m, d] = pBirthDate.split('-').map(Number)
+      const shichu = calcShichu(y, m, d, undefined)
+      reportData.partner.shichuDay = shichu.day.kanshi
+    }
+    localStorage.setItem('compat_report_data', JSON.stringify(reportData))
+    navigate('/compat-report')
+  }
 
   async function runAnalysis(partnerBlock?: PartnerData & { birthDate: string; gender: string; mbti: string }) {
     setLoading(true)
     setError('')
+    if (partnerBlock) {
+      setPartnerBirthDate(partnerBlock.birthDate)
+      setPartnerGender(partnerBlock.gender as 'male' | 'female')
+    }
     try {
       const res = await apiFetch('/api/analyze/compatibility', {
         method: 'POST',
@@ -242,6 +277,23 @@ export function CompatibilityTab({ fortuneData }: Props) {
       </div>
 
       <CompatResult data={result} sub={subTab} />
+
+      {/* レポート保存ボタン */}
+      <div className="pt-2">
+        <button
+          onClick={() => {
+            const pDate = fortuneData.input.partnerBirthDate || partnerBirthDate
+            const pGender = fortuneData.input.partnerGender || partnerGender
+            saveAndOpenReport(result, pDate, pGender)
+          }}
+          className="w-full py-3 rounded-xl text-sm font-semibold border border-pink-400/30 text-pink-300 hover:bg-pink-400/10 transition-all flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          レポートをPDFで保存する
+        </button>
+      </div>
     </div>
   )
 }
