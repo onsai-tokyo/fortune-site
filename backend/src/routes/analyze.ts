@@ -78,8 +78,8 @@ function buildPersonCtx(p: PersonBlock, meta: { birthDate: string; gender: strin
   return base + (extra.length ? ' ' + extra.join(' ') : '') + archetypePart + animalPart + sukuyoPart
 }
 
-// ─── 自己分析（2pt）─────────────────────────────────────────────────────────
-analyzeRouter.post('/self', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
+// ─── 自己分析（3pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
     const { fortuneData } = req.body
     const { input, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen } = fortuneData
@@ -142,8 +142,8 @@ analyzeRouter.post('/self', requireAuth, requirePoints(2), async (req: AuthReque
   }
 })
 
-// ─── 相性診断（2pt）─────────────────────────────────────────────────────────
-analyzeRouter.post('/compatibility', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
+// ─── 相性診断（3pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/compatibility', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
     const { fortuneData, partnerBlock } = req.body
     const { input, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen } = fortuneData
@@ -242,8 +242,8 @@ analyzeRouter.post('/organization', requireAuth, requirePoints(3), async (req: A
   }
 })
 
-// ─── 結婚相性診断（2pt）─────────────────────────────────────────────────────
-analyzeRouter.post('/marriage', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
+// ─── 結婚相性診断（3pt）─────────────────────────────────────────────────────
+analyzeRouter.post('/marriage', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
     const { selfData, partnerData } = req.body
 
@@ -283,8 +283,8 @@ analyzeRouter.post('/marriage', requireAuth, requirePoints(2), async (req: AuthR
   }
 })
 
-// ─── 採用・他己分析（2pt）───────────────────────────────────────────────────
-analyzeRouter.post('/recruit', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
+// ─── 採用・他己分析（3pt）───────────────────────────────────────────────────
+analyzeRouter.post('/recruit', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
     const { selfData, candidateData } = req.body
 

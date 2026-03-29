@@ -46,47 +46,165 @@ export function verifyPaidToken(token: string): boolean {
   }
 }
 
-async function saveSubscription(userId: string, accessToken: string, chargeId: string, plan: string) {
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-  const supabase = createClient(
+// ─── ポイントサブスクプラン定義 ─────────────────────────────────────────────
+// PAY.JP ダッシュボードで事前にプランを作成し、IDを環境変数に設定してください
+// PAYJP_PLAN_LIGHT, PAYJP_PLAN_STANDARD, PAYJP_PLAN_HEAVY
+const PLANS = {
+  light:    { pts: 30,  amount: 480,  label: 'ライト',       planId: process.env.PAYJP_PLAN_LIGHT    ?? 'fortune_light' },
+  standard: { pts: 80,  amount: 980,  label: 'スタンダード', planId: process.env.PAYJP_PLAN_STANDARD ?? 'fortune_standard' },
+  heavy:    { pts: 200, amount: 1980, label: 'ヘビー',        planId: process.env.PAYJP_PLAN_HEAVY    ?? 'fortune_heavy' },
+} as const
+type PlanKey = keyof typeof PLANS
+
+function getUserSupabase(accessToken: string) {
+  return createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!,
     { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
   )
-  const { error } = await supabase.from('subscriptions').insert({
-    user_id: userId,
-    plan,
-    expires_at: expiresAt,
-    payjp_charge_id: chargeId,
-  })
-  if (error) console.error('Subscription save error:', error)
 }
 
-// プレミアム会員サブスク（¥1,980/月）- 要ログイン
-paymentRouter.post('/subscribe-monthly', requireAuth, async (req: AuthRequest, res) => {
+function getServiceSupabase() {
+  // Webhook など認証コンテキストがない処理に使用
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY!
+  )
+}
+
+// ─── ポイントサブスク登録（ライト ¥480/月 → 30pt/月）────────────────────────
+paymentRouter.post('/subscribe-light', requireAuth, async (req: AuthRequest, res) => {
+  await handleSubscribe(req, res, 'light')
+})
+
+// ─── ポイントサブスク登録（スタンダード ¥980/月 → 80pt/月）─────────────────
+paymentRouter.post('/subscribe-standard', requireAuth, async (req: AuthRequest, res) => {
+  await handleSubscribe(req, res, 'standard')
+})
+
+// ─── ポイントサブスク登録（ヘビー ¥1,980/月 → 200pt/月）────────────────────
+paymentRouter.post('/subscribe-heavy', requireAuth, async (req: AuthRequest, res) => {
+  await handleSubscribe(req, res, 'heavy')
+})
+
+async function handleSubscribe(req: AuthRequest, res: import('express').Response, tier: PlanKey) {
   try {
     const { payjpToken } = req.body as { payjpToken?: string }
     if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
 
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '1980',
-      currency: 'jpy',
+    const plan = PLANS[tier]
+
+    // PAY.JP: カードを持つカスタマーを作成
+    const customer = await payjpRequest('/customers', 'POST', {
       card: payjpToken,
-      description: 'プレミアム会員 - 6占術AIチャット相談し放題（月額）',
+      description: `fortune-site user ${req.userId}`,
     })
+    if (customer.error) throw new Error(customer.error.message ?? '決済に失敗しました')
 
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
+    // PAY.JP: サブスクリプション作成（初回は即時課金）
+    const subscription = await payjpRequest('/subscriptions', 'POST', {
+      customer: customer.id,
+      plan: plan.planId,
+    })
+    if (subscription.error) throw new Error(subscription.error.message ?? '決済に失敗しました')
 
-    await saveSubscription(req.userId!, req.accessToken!, charge.id, 'monthly')
+    // 初回ポイント付与
+    const newBalance = await addPoints(req.userId!, req.accessToken!, plan.pts)
 
-    res.json({ success: true, type: 'subscription' })
+    // Supabase にサブスク情報を保存
+    const supabase = getUserSupabase(req.accessToken!)
+    const expiresAt = new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: dbErr } = await supabase.from('subscriptions').insert({
+      user_id: req.userId,
+      plan: tier,
+      expires_at: expiresAt,
+      payjp_charge_id: subscription.id,
+    })
+    if (dbErr) console.error('Subscription save error:', dbErr)
+
+    res.json({ success: true, pointsAdded: plan.pts, newBalance })
   } catch (err) {
-    console.error('Subscribe monthly error:', err)
+    console.error(`Subscribe ${tier} error:`, err)
     res.status(500).json({ error: '決済に失敗しました' })
+  }
+}
+
+// ─── PAY.JP Webhook（サブスク月次更新時にポイント付与）──────────────────────
+// PAY.JP ダッシュボードで Webhook URL を /api/payment/webhook に設定してください
+paymentRouter.post('/webhook', async (req, res) => {
+  try {
+    const event = req.body as { type?: string; data?: { object?: Record<string, unknown> } }
+
+    // charge.succeeded かつサブスクリプション由来の課金
+    if (event.type === 'charge.succeeded' && event.data?.object) {
+      const charge = event.data.object
+      const subscriptionId = charge.subscription as string | undefined
+      if (subscriptionId) {
+        // サブスクリプションIDでユーザーを検索
+        const supabase = getServiceSupabase()
+        const { data: rows } = await supabase
+          .from('subscriptions')
+          .select('user_id, plan')
+          .eq('payjp_charge_id', subscriptionId)
+          .limit(1)
+
+        if (rows && rows.length > 0) {
+          const { user_id, plan } = rows[0] as { user_id: string; plan: PlanKey }
+          const planInfo = PLANS[plan]
+          if (planInfo) {
+            // ポイント付与（service role で直接 RPC 呼び出し）
+            await supabase.rpc('add_points', { uid: user_id, delta: planInfo.pts })
+            // expires_at を更新
+            await supabase
+              .from('subscriptions')
+              .update({ expires_at: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString() })
+              .eq('payjp_charge_id', subscriptionId)
+            console.log(`Webhook: added ${planInfo.pts}pt to user ${user_id} (plan: ${plan})`)
+          }
+        }
+      }
+    }
+
+    res.json({ received: true })
+  } catch (err) {
+    console.error('Webhook error:', err)
+    res.status(500).json({ error: 'Webhook processing failed' })
   }
 })
 
-// 質問詳細回答（¥500）- 要ログイン
+// ─── サブスク解約 ─────────────────────────────────────────────────────────────
+paymentRouter.post('/cancel-subscription', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const supabase = getUserSupabase(req.accessToken!)
+    // 有効なサブスクを取得して PAY.JP 側も解約
+    const { data: rows } = await supabase
+      .from('subscriptions')
+      .select('payjp_charge_id')
+      .eq('user_id', req.userId!)
+      .gt('expires_at', new Date().toISOString())
+      .order('expires_at', { ascending: false })
+      .limit(1)
+
+    if (rows && rows.length > 0) {
+      const subId = (rows[0] as { payjp_charge_id: string }).payjp_charge_id
+      // PAY.JP サブスクリプション解約
+      await payjpRequest(`/subscriptions/${subId}/cancel`, 'POST')
+    }
+
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({ expires_at: new Date().toISOString() })
+      .eq('user_id', req.userId!)
+      .gt('expires_at', new Date().toISOString())
+    if (error) throw error
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Cancel subscription error:', err)
+    res.status(500).json({ error: '解約処理に失敗しました' })
+  }
+})
+
+// ─── 質問詳細回答（¥500 ワンタイム）─────────────────────────────────────────
 paymentRouter.post('/charge-question', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { payjpToken } = req.body as { payjpToken?: string }
@@ -105,165 +223,6 @@ paymentRouter.post('/charge-question', requireAuth, async (req: AuthRequest, res
     res.json({ token, type: 'question' })
   } catch (err) {
     console.error('Charge question error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// サブスク解約（即時）
-paymentRouter.post('/cancel-subscription', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${req.accessToken}` } } }
-    )
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ expires_at: new Date().toISOString() })
-      .eq('user_id', req.userId!)
-      .gt('expires_at', new Date().toISOString())
-    if (error) throw error
-    res.json({ success: true })
-  } catch (err) {
-    console.error('Cancel subscription error:', err)
-    res.status(500).json({ error: '解約処理に失敗しました' })
-  }
-})
-
-// AIチャット（¥500 旧エンドポイント・互換用）
-paymentRouter.post('/subscribe', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '500',
-      currency: 'jpy',
-      card: payjpToken,
-      description: 'AIチャット無制限プラン',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const token = createPaidToken(charge.id)
-    res.json({ token, type: 'chat' })
-  } catch (err) {
-    console.error('Subscribe error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// 詳細レポート（¥2,000）
-paymentRouter.post('/charge-report', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '2000',
-      currency: 'jpy',
-      card: payjpToken,
-      description: '宿命構造分析書（詳細版）',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const token = createPaidToken(charge.id)
-    res.json({ token, type: 'report' })
-  } catch (err) {
-    console.error('Charge report error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// ポイントパック購入: スモール（¥480 → 30pt）
-paymentRouter.post('/buy-points-small', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '480',
-      currency: 'jpy',
-      card: payjpToken,
-      description: 'ポイントパック スモール 30pt',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const newBalance = await addPoints(req.userId!, req.accessToken!, 30)
-    res.json({ success: true, pointsAdded: 30, newBalance })
-  } catch (err) {
-    console.error('Buy points small error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// ポイントパック購入: スタンダード（¥980 → 80pt）
-paymentRouter.post('/buy-points-standard', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '980',
-      currency: 'jpy',
-      card: payjpToken,
-      description: 'ポイントパック スタンダード 80pt',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const newBalance = await addPoints(req.userId!, req.accessToken!, 80)
-    res.json({ success: true, pointsAdded: 80, newBalance })
-  } catch (err) {
-    console.error('Buy points standard error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// ポイントパック購入: ラージ（¥1,980 → 200pt）
-paymentRouter.post('/buy-points-large', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '1980',
-      currency: 'jpy',
-      card: payjpToken,
-      description: 'ポイントパック ラージ 200pt',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const newBalance = await addPoints(req.userId!, req.accessToken!, 200)
-    res.json({ success: true, pointsAdded: 200, newBalance })
-  } catch (err) {
-    console.error('Buy points large error:', err)
-    res.status(500).json({ error: '決済に失敗しました' })
-  }
-})
-
-// 6占術鑑定書ワンタイム購入（¥9,800）
-paymentRouter.post('/charge-onetime', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const { payjpToken } = req.body as { payjpToken?: string }
-    if (!payjpToken) { res.status(400).json({ error: 'payjpToken が必要です' }); return }
-
-    const charge = await payjpRequest('/charges', 'POST', {
-      amount: '9800',
-      currency: 'jpy',
-      card: payjpToken,
-      description: '6占術 AI統合命式鑑定書（全30ページ）',
-    })
-
-    if (charge.error) throw new Error(charge.error.message ?? '決済に失敗しました')
-
-    const token = createPaidToken(charge.id)
-    res.json({ token, type: 'onetime' })
-  } catch (err) {
-    console.error('Charge onetime error:', err)
     res.status(500).json({ error: '決済に失敗しました' })
   }
 })

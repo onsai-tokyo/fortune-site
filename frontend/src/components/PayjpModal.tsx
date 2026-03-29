@@ -121,12 +121,12 @@ export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onTo
             </>
           ) : (
             <>
-              <p className="text-white/40 text-xs">プレミアム会員 — AIチャット相談し放題 + 毎月運勢レポート</p>
+              <p className="text-white/40 text-xs">月額サブスク — 毎月ポイント付与・自己分析・AIチャットに使えます</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-white font-bold text-2xl">¥{amount.toLocaleString()}</span>
                 <span className="text-white/40 text-xs">/月（税込）</span>
               </div>
-              <p className="text-white/30 text-xs">初月に統合PDF鑑定書プレゼント</p>
+              {pts && <p className="text-accent/70 text-xs font-medium">毎月 {pts}pt 付与</p>}
             </>
           )}
         </div>
@@ -154,7 +154,7 @@ export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onTo
             disabled={isProcessing}
             className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all disabled:opacity-50 text-sm"
           >
-            {isProcessing ? '処理中...' : mode === 'points' ? `¥${amount.toLocaleString()}で${pts}pt購入する` : mode === 'subscription' ? `¥${amount.toLocaleString()}/月で会員になる` : `¥${amount.toLocaleString()}で鑑定書を受け取る`}
+            {isProcessing ? '処理中...' : mode === 'points' ? `¥${amount.toLocaleString()}で${pts}pt購入する` : mode === 'subscription' ? `¥${amount.toLocaleString()}/月で${pts}pt/月プランを始める` : `¥${amount.toLocaleString()}で鑑定書を受け取る`}
           </button>
 
           <p className="text-white/20 text-xs text-center">PAY.JP による安全な決済</p>

@@ -42,8 +42,8 @@ function calcAge(birthDate: string): number {
   return age
 }
 
-// メインチャット（1pt/メッセージ）
-chatRouter.post('/', requireAuth, requirePoints(1), async (req: AuthRequest, res) => {
+// メインチャット（2pt/メッセージ）
+chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
   try {
     const { conversationHistory, newMessage, birthDate, birthTime, gender, calculatedData, partnerBirthDate, partnerGender } = req.body as {
       conversationHistory?: ChatMessage[]

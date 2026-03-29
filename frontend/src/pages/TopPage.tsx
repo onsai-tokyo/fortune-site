@@ -49,10 +49,10 @@ const TOC_ITEMS = [
 
 const FAQS = [
   { q: '無料でどこまで使えますか？', a: '総合命式鑑定書の生成は完全無料・登録不要です。詳細分析（自己分析・相性診断・組織診断など）はポイントが必要です。登録すると3ポイント無料でもらえます。' },
-  { q: 'ポイントとは何ですか？', a: '詳細分析を利用するために消費するポイントです。登録時に3pt付与。自己分析・相性診断は2pt、組織診断は3pt消費します。ポイントパックで追加購入可能です。' },
-  { q: 'AIチャットとは何ですか？', a: 'あなたの命式データを記憶した命術師AIに、仕事・恋愛・対人関係など何でも相談できます。月額¥1,980で全機能無制限です。' },
-  { q: 'サブスクはいつでも解約できますか？', a: 'はい、いつでも解約できます。解約後も購入した期間の終了まで引き続きご利用いただけます。' },
-  { q: '解約方法を教えてください', a: 'ログイン後、トップページの料金プランセクションにある「解約する」ボタンから即座に解約できます。解約後は即時にプレミアム機能が停止します。' },
+  { q: 'ポイントとは何ですか？', a: '詳細分析・AIチャットを利用するために消費するポイントです。登録時に3pt付与。自己分析・相性診断・結婚相性・採用分析は3pt、組織診断は3pt、AIチャットは2pt/メッセージ消費します。月額サブスクで毎月ポイントが付与されます。' },
+  { q: 'AIチャットとは何ですか？', a: 'あなたの命式データを記憶した命術師AIに、仕事・恋愛・対人関係など何でも相談できます。2pt/メッセージで利用できます。月額サブスクを契約するとまとめてお得にポイントを受け取れます。' },
+  { q: 'サブスクはいつでも解約できますか？', a: 'はい、いつでも解約できます。解約後は翌月からポイントの付与が停止します。残ったポイントはそのままご利用いただけます。' },
+  { q: '解約方法を教えてください', a: 'ログイン後、マイページまたはトップページの料金セクションから解約できます。解約後は即時にサブスクが停止され、翌月の課金はありません。' },
 ]
 
 const YEARS    = Array.from({ length: 107 }, (_, i) => 2026 - i)  // 2026〜1920
@@ -106,10 +106,10 @@ export function TopPage() {
   const [isAnswering, setIsAnswering] = useState(false)
   const [submittedQuestion, setSubmittedQuestion] = useState('')
 
-  // ポイント購入フロー
-  const [showPointsModal, setShowPointsModal] = useState<null | 'small' | 'standard' | 'large'>(null)
-  const [isProcessingPoints, setIsProcessingPoints] = useState(false)
-  const [pointsError, setPointsError] = useState('')
+  // サブスク購入フロー
+  const [showSubModal, setShowSubModal] = useState<null | 'light' | 'standard' | 'heavy'>(null)
+  const [isProcessingSub, setIsProcessingSub] = useState(false)
+  const [subError, setSubError] = useState('')
 
   // 鑑定済みフラグ（localStorage）
   const [analyzedFeatures] = useState<string[]>(() => {
@@ -134,18 +134,18 @@ export function TopPage() {
     } catch { return true }
   }
 
-  const POINT_PACKS = {
-    small:    { pts: 30,  amount: 480,  label: 'スモール',    endpoint: '/api/payment/buy-points-small' },
-    standard: { pts: 80,  amount: 980,  label: 'スタンダード', endpoint: '/api/payment/buy-points-standard' },
-    large:    { pts: 200, amount: 1980, label: 'ラージ',       endpoint: '/api/payment/buy-points-large' },
+  const SUBSCRIPTION_PLANS = {
+    light:    { pts: 30,  amount: 480,  label: 'ライト',       endpoint: '/api/payment/subscribe-light' },
+    standard: { pts: 80,  amount: 980,  label: 'スタンダード', endpoint: '/api/payment/subscribe-standard' },
+    heavy:    { pts: 200, amount: 1980, label: 'ヘビー',        endpoint: '/api/payment/subscribe-heavy' },
   } as const
 
-  async function handlePointsPayment(payjpToken: string) {
-    if (!showPointsModal) return
-    const pack = POINT_PACKS[showPointsModal]
-    setIsProcessingPoints(true); setPointsError('')
+  async function handleSubPayment(payjpToken: string) {
+    if (!showSubModal) return
+    const plan = SUBSCRIPTION_PLANS[showSubModal]
+    setIsProcessingSub(true); setSubError('')
     try {
-      const res = await fetch(pack.endpoint, {
+      const res = await fetch(plan.endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,11 +155,11 @@ export function TopPage() {
       })
       const data = await res.json() as { success?: boolean; error?: string; newBalance?: number }
       if (!res.ok) throw new Error(data.error ?? '決済に失敗しました')
-      setShowPointsModal(null)
+      setShowSubModal(null)
       await refreshPoints()
     } catch (err) {
-      setPointsError(err instanceof Error ? err.message : '決済に失敗しました')
-    } finally { setIsProcessingPoints(false) }
+      setSubError(err instanceof Error ? err.message : '決済に失敗しました')
+    } finally { setIsProcessingSub(false) }
   }
 
   function scrollToInput() {
@@ -450,16 +450,16 @@ export function TopPage() {
         </div>
       )}
 
-      {showPointsModal && (
+      {showSubModal && (
         <PayjpModal
-          mode="points"
-          title={`ポイント購入 — ${POINT_PACKS[showPointsModal].label}`}
-          amount={POINT_PACKS[showPointsModal].amount}
-          pts={POINT_PACKS[showPointsModal].pts}
-          isProcessing={isProcessingPoints}
-          error={pointsError}
-          onToken={handlePointsPayment}
-          onClose={() => { setShowPointsModal(null); setPointsError('') }}
+          mode="subscription"
+          title={`ポイントサブスク — ${SUBSCRIPTION_PLANS[showSubModal].label}`}
+          amount={SUBSCRIPTION_PLANS[showSubModal].amount}
+          pts={SUBSCRIPTION_PLANS[showSubModal].pts}
+          isProcessing={isProcessingSub}
+          error={subError}
+          onToken={handleSubPayment}
+          onClose={() => { setShowSubModal(null); setSubError('') }}
         />
       )}
 
@@ -518,7 +518,7 @@ export function TopPage() {
               {[
                 { label: '総合鑑定書を生成する', sub: '無料 · 登録不要', action: () => { scrollToInput(); setMenuOpen(false) } },
                 { label: '詳細鑑定',             sub: 'AIに相談・自己分析・相性診断など', action: () => { chatRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
-                { label: 'プランを購入する',      sub: '月額¥1,980 相談し放題', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
+                { label: 'プランを購入する',      sub: '¥480/月〜 毎月ポイント付与', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 { label: 'FAQ',                  sub: 'よくある質問・解約について', action: () => { faqRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 ...(user ? [{ label: 'マイページ', sub: '鑑定履歴・チャット記録', action: () => { navigate('/mypage'); setMenuOpen(false) } }] : []),
               ].map(item => (
@@ -869,9 +869,9 @@ export function TopPage() {
                             onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
                             className="w-full py-3 border border-accent/30 text-accent hover:border-accent/60 rounded-lg text-sm font-semibold transition-all"
                           >
-                            {user ? '命術師AIに相談する（1pt/回）' : 'ログインして相談する'}
+                            {user ? '命術師AIに相談する（2pt/回）' : 'ログインして相談する'}
                           </button>
-                          <p className="text-white/25 text-xs">仕事・恋愛・転機など何でも相談できる（1メッセージ1pt）</p>
+                          <p className="text-white/25 text-xs">仕事・恋愛・転機など何でも相談できる（1メッセージ2pt）</p>
                         </>
                       )}
                     </div>
@@ -918,28 +918,28 @@ export function TopPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
-                id: 'chat', label: 'AIに何でも相談', cost: '1pt / 回',
+                id: 'chat', label: 'AIに何でも相談', cost: '2pt / 回',
                 color: 'accent', border: 'border-blue-400/20', bg: 'rgba(59,130,246,0.06)',
                 description: '命式を記憶した命術師AIに仕事・恋愛・転機など何でも相談。',
                 items: ['テーマ・質問は何でもOK', '命式を踏まえた深い洞察', '会話履歴を記憶'],
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />,
               },
               {
-                id: 'self', label: '自己分析', cost: '2pt / 回',
+                id: 'self', label: '自己分析', cost: '3pt / 回',
                 color: 'blue-400', border: 'border-blue-500/20', bg: 'rgba(96,165,250,0.06)',
                 description: '強み・弱み・適職・人生転換期を6つの占術から解析。',
                 items: ['強み指数スコア', '適職マッチ分析', '人生転換期予測'],
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />,
               },
               {
-                id: 'compat', label: '相性診断', cost: '2pt / 回',
+                id: 'compat', label: '相性診断', cost: '3pt / 回',
                 color: 'pink-400', border: 'border-pink-500/20', bg: 'rgba(244,114,182,0.06)',
                 description: '仕事・恋愛それぞれの相性スコアと関係性タイプを解析。',
                 items: ['仕事相性スコア', '恋愛相性スコア', '関係改善アドバイス'],
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />,
               },
               {
-                id: 'marriage', label: '結婚相性', cost: '2pt / 回',
+                id: 'marriage', label: '結婚相性', cost: '3pt / 回',
                 color: 'rose-400', border: 'border-rose-500/20', bg: 'rgba(251,113,133,0.06)',
                 description: '結婚生活の実態・力関係・うまくいくコツを命式から解析。',
                 items: ['結婚生活スタイル', '力関係・主導権', 'うまくいくコツ'],
@@ -953,7 +953,7 @@ export function TopPage() {
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />,
               },
               {
-                id: 'recruit', label: '採用・他己分析', cost: '2pt / 回',
+                id: 'recruit', label: '採用・他己分析', cost: '3pt / 回',
                 color: 'violet-400', border: 'border-violet-500/20', bg: 'rgba(167,139,250,0.06)',
                 description: '候補者の命式から強み・適性・面接官との相性を解析。',
                 items: ['候補者強み分析', '面接質問提案', 'あなたとの相性'],
@@ -1074,35 +1074,37 @@ export function TopPage() {
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-4">
               <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Pricing</span>
             </div>
-            <h2 className="text-white font-bold text-2xl sm:text-3xl mb-2">ポイントを購入する</h2>
-            <p className="text-white/35 text-sm">詳細分析・AIチャット全機能に使えるポイント</p>
-            <p className="text-white/25 text-xs mt-1">登録すると 3pt 無料プレゼント · 有効期限なし</p>
+            <h2 className="text-white font-bold text-2xl sm:text-3xl mb-2">月額サブスクリプション</h2>
+            <p className="text-white/35 text-sm">毎月ポイントが付与。詳細分析・AIチャット全機能に使えます</p>
+            <p className="text-white/25 text-xs mt-1">登録すると 3pt 無料プレゼント · いつでも解約可能</p>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-5">
 
-            {/* スモール */}
+            {/* ライト */}
             <div className="relative glass-card flex flex-col overflow-hidden border border-blue-400/20"
               style={{ background: 'linear-gradient(145deg, rgba(96,165,250,0.08) 0%, rgba(8,15,40,0) 70%)' }}>
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 -translate-y-10 translate-x-10"
                 style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
               <div className="p-7 flex flex-col gap-6 flex-1">
                 <div>
-                  <p className="text-blue-300/60 text-xs font-medium tracking-widest uppercase mb-4">スモール</p>
+                  <p className="text-blue-300/60 text-xs font-medium tracking-widest uppercase mb-4">ライト</p>
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-white font-bold font-mono" style={{ fontSize: '3rem', lineHeight: 1 }}>30</span>
                     <span className="text-blue-300 text-xl font-bold">pt</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
                     <span className="text-white font-bold text-2xl">480</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <p className="text-blue-300/50 text-xs mt-1 font-mono">1pt ≈ ¥16</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '15回分（2pt/回）'],
-                    ['AIチャット', '30回分（1pt/回）'],
+                    ['詳細分析', '10回分（3pt/回）'],
+                    ['AIチャット', '15回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
@@ -1111,9 +1113,9 @@ export function TopPage() {
                   ))}
                 </ul>
                 <button
-                  onClick={() => user ? setShowPointsModal('small') : navigate('/auth?mode=register')}
+                  onClick={() => user ? setShowSubModal('light') : navigate('/auth?mode=register')}
                   className="w-full py-3 rounded-xl text-sm font-semibold border border-blue-400/30 text-blue-300 hover:bg-blue-400/10 transition-all">
-                  {user ? 'ポイントを購入する' : '登録して始める（3pt 無料）'}
+                  {user ? 'チャットを始める' : '登録して始める（3pt 無料）'}
                 </button>
               </div>
             </div>
@@ -1132,17 +1134,19 @@ export function TopPage() {
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-white font-bold font-mono" style={{ fontSize: '3rem', lineHeight: 1 }}>80</span>
                     <span className="text-accent text-xl font-bold">pt</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
                     <span className="text-white font-bold text-2xl">980</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <p className="text-accent/50 text-xs mt-1 font-mono">1pt ≈ ¥12 · 25%お得</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '40回分（2pt/回）'],
-                    ['AIチャット', '80回分（1pt/回）'],
+                    ['詳細分析', '26回分（3pt/回）'],
+                    ['AIチャット', '40回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
@@ -1151,35 +1155,37 @@ export function TopPage() {
                   ))}
                 </ul>
                 <button
-                  onClick={() => user ? setShowPointsModal('standard') : navigate('/auth?mode=register')}
+                  onClick={() => user ? setShowSubModal('standard') : navigate('/auth?mode=register')}
                   className="w-full py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-dark text-white transition-all">
-                  {user ? 'ポイントを購入する' : '登録して始める（3pt 無料）'}
+                  {user ? 'チャットを始める' : '登録して始める（3pt 無料）'}
                 </button>
               </div>
             </div>
 
-            {/* ラージ */}
+            {/* ヘビー */}
             <div className="relative glass-card flex flex-col overflow-hidden border border-violet-400/20"
               style={{ background: 'linear-gradient(145deg, rgba(167,139,250,0.08) 0%, rgba(8,15,40,0) 70%)' }}>
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 -translate-y-10 translate-x-10"
                 style={{ background: 'radial-gradient(circle, #a78bfa, transparent)' }} />
               <div className="p-7 flex flex-col gap-6 flex-1">
                 <div>
-                  <p className="text-violet-300/60 text-xs font-medium tracking-widest uppercase mb-4">ラージ</p>
+                  <p className="text-violet-300/60 text-xs font-medium tracking-widest uppercase mb-4">ヘビー</p>
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-white font-bold font-mono" style={{ fontSize: '3rem', lineHeight: 1 }}>200</span>
                     <span className="text-violet-300 text-xl font-bold">pt</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
                     <span className="text-white font-bold text-2xl">1,980</span>
+                    <span className="text-white/30 text-sm">/月</span>
                   </div>
                   <p className="text-violet-300/50 text-xs mt-1 font-mono">1pt ≈ ¥9.9 · 38%お得</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '100回分（2pt/回）'],
-                    ['AIチャット', '200回分（1pt/回）'],
+                    ['詳細分析', '66回分（3pt/回）'],
+                    ['AIチャット', '100回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
@@ -1188,9 +1194,9 @@ export function TopPage() {
                   ))}
                 </ul>
                 <button
-                  onClick={() => user ? setShowPointsModal('large') : navigate('/auth?mode=register')}
+                  onClick={() => user ? setShowSubModal('heavy') : navigate('/auth?mode=register')}
                   className="w-full py-3 rounded-xl text-sm font-semibold border border-violet-400/30 text-violet-300 hover:bg-violet-400/10 transition-all">
-                  {user ? 'ポイントを購入する' : '登録して始める（3pt 無料）'}
+                  {user ? 'チャットを始める' : '登録して始める（3pt 無料）'}
                 </button>
               </div>
             </div>
