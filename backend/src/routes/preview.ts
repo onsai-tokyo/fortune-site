@@ -237,6 +237,7 @@ ${ageTable}
     const stream = getClient().messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 9000,
+      temperature: 0,  // 同じ生年月日には常に同じ結果を返す
       messages: [{ role: 'user', content: prompt }],
     })
 
