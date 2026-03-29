@@ -93,6 +93,13 @@ export function TopPage() {
     question: '',
   })
   const [isStreaming, setIsStreaming] = useState(false)
+
+  // isStreaming が true になったら鑑定結果セクションにスクロール
+  useEffect(() => {
+    if (isStreaming) {
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+    }
+  }, [isStreaming])
   const [previewContent, setPreviewContent] = useState('')
   const [previewError, setPreviewError] = useState('')
   const [submittedLabel, setSubmittedLabel] = useState('')
@@ -298,8 +305,12 @@ export function TopPage() {
           try {
             const parsed = JSON.parse(data) as { delta?: { text?: string } }
             if (parsed.delta?.text) {
-              fullContent += parsed.delta.text
-              setPreviewContent(prev => prev + parsed.delta!.text!)
+              const cleaned = parsed.delta.text
+                .replace(/^#{1,3}\s*/gm, '')
+                .replace(/^---+$/gm, '')
+                .replace(/^===+$/gm, '')
+              fullContent += cleaned
+              setPreviewContent(prev => prev + cleaned)
               if (firstChunk) {
                 firstChunk = false
                 setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
