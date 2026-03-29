@@ -113,7 +113,6 @@ previewRouter.post('/generate', async (req, res) => {
     const timeLine = birthTime ? `　生誕時刻：${birthTime}` : ''
 
     const hasPartner = !!partnerBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(partnerBirthDate)
-    const hasQuestion = !!(question?.trim())
 
     // 事前計算済み命式データ（クライアント側で正確に計算されたもの）
     const dataSection = calculatedData ? `
@@ -134,9 +133,7 @@ ${calculatedData.sukuyoDetail}` : ''}` : ''
       ? `\n\n【相手の情報】\n生年月日：${partnerBirthDate}${partnerBirthTime ? `　生誕時刻：${partnerBirthTime}` : ''}　性別：${partnerGender === 'male' ? '男性' : '女性'}`
       : ''
 
-    const questionLine = hasQuestion
-      ? `\n\n【特に確認したいこと】\n${sanitize(question!)}`
-      : ''
+    // 質問は別エンドポイント（/api/preview/question）で処理するため本文生成には含めない
 
     const partnerChapter = hasPartner
       ? '\n【相性診断 — 二人の命式が示す関係性と未来】'
@@ -177,7 +174,7 @@ ${calculatedData.sukuyoDetail}` : ''}` : ''
 
 【対象者プロフィール】
 生年月日：${year}年${month}月${day}日${timeLine}
-性別：${genderLabel}　年齢：${age}歳${dataSection}${partnerLine}${questionLine}
+性別：${genderLabel}　年齢：${age}歳${dataSection}${partnerLine}
 
 以下の章立てで命式分析書を執筆してください。
 各章は必ず「【章タイトル】」という形式の見出しから始め、200〜350文字程度で記述してください。
