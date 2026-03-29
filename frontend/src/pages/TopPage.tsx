@@ -9,6 +9,7 @@ import { getSukuyo } from '../lib/sukuyo'
 import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, calcTsukimeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
+import { saveAnalysis } from '../lib/history'
 
 interface FortuneCalcData {
   shichuYear: string
@@ -320,9 +321,12 @@ export function TopPage() {
         }
       }
 
-      // 生成完了 → キャッシュ保存
+      // 生成完了 → キャッシュ保存 + 履歴保存（ログイン中のみ）
       if (fullContent) {
         try { localStorage.setItem(cacheKey, fullContent) } catch { /* localStorage 容量超過時は無視 */ }
+        if (user) {
+          saveAnalysis(user.id, 'preview', birthDate, submittedLabel).catch(() => {/* 履歴保存失敗は無視 */})
+        }
       }
     } catch (err) {
       setPreviewError(err instanceof Error ? err.message : '生成に失敗しました')

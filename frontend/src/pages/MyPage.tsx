@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getAnalyses, type AnalysisRecord } from '../lib/history'
 
 const FEATURE_META: Record<string, { label: string; dot: string; path: string }> = {
+  preview:  { label: '命式鑑定書',     dot: 'bg-amber-400',   path: '/' },
   self:     { label: '自己分析',       dot: 'bg-blue-400',    path: '/feature/self' },
   compat:   { label: '相性診断',       dot: 'bg-pink-400',    path: '/feature/compat' },
   marriage: { label: '結婚相性',       dot: 'bg-rose-400',    path: '/feature/marriage' },
