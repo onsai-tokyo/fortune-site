@@ -14,11 +14,12 @@ export async function saveAnalysis(
   userId: string,
   feature: string,
   birthDate: string,
-  title: string
+  title: string,
+  content?: unknown
 ): Promise<string | null> {
   const { data } = await supabase
     .from('analyses')
-    .insert({ user_id: userId, feature, birth_date: birthDate, title })
+    .insert({ user_id: userId, feature, birth_date: birthDate, title, content })
     .select('id')
     .single()
   return data?.id ?? null

@@ -6,6 +6,9 @@ import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
 import { getSukuyo } from '../../lib/sukuyo'
+import { useAuth } from '../../contexts/AuthContext'
+import { saveAnalysis } from '../../lib/history'
+import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
@@ -95,69 +98,75 @@ function CompatResult({ data, sub }: { data: CompatibilityAnalysis; sub: SubTab 
   )
 }
 
-function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDate: string; gender: string; mbti: string }) => void }) {
-  const [birthDate, setBirthDate] = useState('')
+function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDate: string; gender: string }) => void }) {
+  const [year, setYear] = useState('')
+  const [month, setMonth] = useState('')
+  const [day, setDay] = useState('')
   const [gender, setGender] = useState<'male' | 'female'>('female')
-  const [mbti, setMbti] = useState('')
+
+  const YEARS = Array.from({ length: 107 }, (_, i) => 2026 - i)
+  const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
+  const DAYS = Array.from({ length: 31 }, (_, i) => i + 1)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!birthDate) return
-    const [y, m, d] = birthDate.split('-').map(Number)
+    if (!year || !month || !day) return
+    const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const [y, m, d] = [Number(year), Number(month), Number(day)]
     const shichu = calcShichu(y, m, d, undefined)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(y, m, d)
-    onSubmit({ shichu, nayin, sanmei, sukuyo, birthDate, gender, mbti })
+    onSubmit({ shichu, nayin, sanmei, sukuyo, birthDate, gender })
   }
 
   return (
-    <div className="glass-card p-6">
+    <div className="glass-card p-6 border border-accent/15">
       <div className="flex items-center gap-2 mb-5">
-        <div className="w-1 h-5 bg-pink-400 rounded-full" />
+        <div className="w-1 h-5 bg-accent rounded-full" />
         <h3 className="text-white font-semibold text-base">相手の情報を入力</h3>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="text-white/50 text-xs mb-1 block">生年月日</label>
-          <input
-            type="date"
-            value={birthDate}
-            onChange={e => setBirthDate(e.target.value)}
-            required
-            className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/60"
-          />
+          <label className="text-white/50 text-xs mb-2 block">相手の生年月日 <span className="text-accent">*</span></label>
+          <div className="grid grid-cols-3 gap-2">
+            <select value={year} onChange={e => setYear(e.target.value)}
+              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+              <option value="">年</option>
+              {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
+            </select>
+            <select value={month} onChange={e => setMonth(e.target.value)}
+              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+              <option value="">月</option>
+              {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
+            </select>
+            <select value={day} onChange={e => setDay(e.target.value)}
+              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+              <option value="">日</option>
+              {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
+            </select>
+          </div>
         </div>
         <div>
-          <label className="text-white/50 text-xs mb-1 block">性別</label>
-          <div className="flex gap-3">
-            {(['male', 'female'] as const).map(g => (
+          <label className="text-white/50 text-xs mb-2 block">相手の性別 <span className="text-accent">*</span></label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['female', 'male'] as const).map(g => (
               <button
                 key={g} type="button"
                 onClick={() => setGender(g)}
-                className={`flex-1 py-2 rounded-lg text-sm border transition-all ${gender === g ? 'border-accent bg-accent/10 text-accent' : 'border-white/20 text-white/50'}`}
+                className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${gender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}
               >
-                {g === 'male' ? '男性' : '女性'}
+                {g === 'female' ? '女性' : '男性'}
               </button>
             ))}
           </div>
         </div>
-        <div>
-          <label className="text-white/50 text-xs mb-1 block">MBTI（任意）</label>
-          <input
-            type="text"
-            value={mbti}
-            onChange={e => setMbti(e.target.value.toUpperCase())}
-            placeholder="例: ENFJ"
-            maxLength={4}
-            className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-accent/60"
-          />
-        </div>
         <button
           type="submit"
-          className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all text-sm"
+          disabled={!year || !month || !day}
+          className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg transition-all text-sm disabled:opacity-40"
         >
-          相性を診断する
+          ✦ 相性を診断する
         </button>
       </form>
     </div>
@@ -166,12 +175,15 @@ function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDa
 
 export function CompatibilityTab({ fortuneData }: Props) {
   const navigate = useNavigate()
+  const { user, refreshPoints } = useAuth()
   const [result, setResult] = useState<CompatibilityAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isPointInsufficient, setIsPointInsufficient] = useState(false)
   const [subTab, setSubTab] = useState<SubTab>('work')
   const [partnerBirthDate, setPartnerBirthDate] = useState('')
   const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('female')
+  const [submittedPartnerBlock, setSubmittedPartnerBlock] = useState<PartnerData & { birthDate: string; gender: string } | null>(null)
 
   function saveAndOpenReport(r: CompatibilityAnalysis, pBirthDate: string, pGender: string) {
     const reportData = {
@@ -200,22 +212,48 @@ export function CompatibilityTab({ fortuneData }: Props) {
     navigate('/compat-report')
   }
 
-  async function runAnalysis(partnerBlock?: PartnerData & { birthDate: string; gender: string; mbti: string }) {
+  async function runAnalysis(partnerBlock?: PartnerData & { birthDate: string; gender: string }) {
     setLoading(true)
     setError('')
+    setIsPointInsufficient(false)
     if (partnerBlock) {
       setPartnerBirthDate(partnerBlock.birthDate)
       setPartnerGender(partnerBlock.gender as 'male' | 'female')
+      setSubmittedPartnerBlock(partnerBlock)
     }
     try {
+      console.log('[CompatibilityTab] Starting analysis with partnerBlock:', partnerBlock)
       const res = await apiFetch('/api/analyze/compatibility', {
         method: 'POST',
         body: JSON.stringify({ fortuneData, partnerBlock }),
       })
-      if (res.status === 402) throw new Error('ポイントが不足しています')
-      if (!res.ok) throw new Error()
-      setResult(await res.json() as CompatibilityAnalysis)
+      console.log('[CompatibilityTab] Response status:', res.status)
+      if (res.status === 402) {
+        setIsPointInsufficient(true)
+        throw new Error('ポイントが不足しています')
+      }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        console.error('[CompatibilityTab] Error response:', errData)
+        throw new Error(errData.error || `相性診断に失敗しました（ステータス: ${res.status}）`)
+      }
+      const analysisResult = await res.json() as CompatibilityAnalysis
+      console.log('[CompatibilityTab] Analysis result received')
+      setResult(analysisResult)
+      refreshPoints()
+      // 鑑定済みフラグを保存
+      addAnalyzedFeature(user?.id, 'compat')
+      if (user && partnerBlock) {
+        saveAnalysis(
+          user.id,
+          'compat',
+          fortuneData.input.birthDate,
+          `相性診断 - ${fortuneData.input.birthDate} × ${partnerBlock.birthDate}`,
+          analysisResult
+        ).catch(err => console.error('[CompatibilityTab] Failed to save analysis:', err))
+      }
     } catch (e) {
+      console.error('[CompatibilityTab] Error:', e)
       setError(e instanceof Error ? e.message : '相性診断に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
@@ -240,12 +278,36 @@ export function CompatibilityTab({ fortuneData }: Props) {
     </div>
   )
 
-  if (error) return (
-    <div className="glass-card p-6 text-center space-y-3">
-      <p className="text-red-400 text-sm">{error}</p>
-      <button onClick={() => runAnalysis()} className="text-accent text-xs underline">再試行する</button>
-    </div>
-  )
+  if (error) {
+    if (isPointInsufficient) {
+      return (
+        <div className="glass-card border border-amber-400/20 p-8 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full border-2 border-amber-400/30 bg-amber-400/10 flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-amber-400 font-semibold text-base mb-2">ポイントが不足しています</p>
+            <p className="text-white/60 text-sm mb-1">この分析には <span className="text-accent font-semibold">3ポイント</span> が必要です</p>
+            <p className="text-white/40 text-xs">ポイントを購入してご利用ください</p>
+          </div>
+          <button
+            onClick={() => navigate('/?section=pricing')}
+            className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all"
+          >
+            ポイントを購入する
+          </button>
+        </div>
+      )
+    }
+    return (
+      <div className="glass-card p-6 text-center space-y-3">
+        <p className="text-red-400 text-sm">{error}</p>
+        <button onClick={() => runAnalysis(submittedPartnerBlock || undefined)} className="text-accent text-xs underline">再試行する</button>
+      </div>
+    )
+  }
 
   if (!result && !fortuneData.partner) {
     return <PartnerForm onSubmit={runAnalysis} />

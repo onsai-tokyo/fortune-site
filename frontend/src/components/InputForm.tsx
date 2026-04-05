@@ -1,13 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { FortuneInput } from '../lib/types'
 
-const MBTI_TYPES = [
-  'INTJ','INTP','ENTJ','ENTP',
-  'INFJ','INFP','ENFJ','ENFP',
-  'ISTJ','ISFJ','ESTJ','ESFJ',
-  'ISTP','ISFP','ESTP','ESFP',
-]
-
 const currentYear = new Date().getFullYear()
 const YEARS  = Array.from({ length: currentYear - 1899 }, (_, i) => currentYear - i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -111,7 +104,6 @@ export function InputForm({ onSubmit, loading }: Props) {
   const [time, setTime]               = useState<TimeState>({ hour: '', minute: '' })
   const [timeUnknown, setTimeUnknown] = useState(false)
   const [gender, setGender]           = useState<'male' | 'female'>('female')
-  const [mbti, setMbti]               = useState('')
   const [question, setQuestion]       = useState('')
   const [errors, setErrors]           = useState<Record<string, string>>({})
 
@@ -120,7 +112,6 @@ export function InputForm({ onSubmit, loading }: Props) {
   const [pTime, setPTime]               = useState<TimeState>({ hour: '', minute: '' })
   const [pTimeUnknown, setPTimeUnknown] = useState(false)
   const [pGender, setPGender]           = useState<'male' | 'female'>('female')
-  const [pMbti, setPMbti]               = useState('')
 
   function validate(): boolean {
     const errs: Record<string, string> = {}
@@ -147,14 +138,13 @@ export function InputForm({ onSubmit, loading }: Props) {
       ? `${String(pTime.hour).padStart(2,'0')}:${String(pTime.minute).padStart(2,'0')}` : ''
 
     onSubmit({
-      birthDate, birthTime, gender, mbti, question,
+      birthDate, birthTime, gender, mbti: '', question,
       partnerBirthDate, partnerBirthTime,
-      partnerGender: pGender, partnerMbti: pMbti,
+      partnerGender: pGender, partnerMbti: '',
     })
   }
 
   const labelClass = "block text-sm font-medium text-white/70 mb-2"
-  const selectClass = "bg-deep-navy/50 border border-navy-light rounded-xl px-3 py-3 text-white focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-all font-sans cursor-pointer appearance-none"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -179,15 +169,6 @@ export function InputForm({ onSubmit, loading }: Props) {
             </label>
           ))}
         </div>
-      </div>
-
-      {/* MBTI */}
-      <div>
-        <label className={labelClass}>MBTI（任意）</label>
-        <select value={mbti} onChange={e => setMbti(e.target.value)} className={`w-full ${selectClass}`}>
-          <option value="">不明・選択しない</option>
-          {MBTI_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
       </div>
 
       {/* 相手の情報（相性鑑定・任意） */}
@@ -222,13 +203,6 @@ export function InputForm({ onSubmit, loading }: Props) {
                   </label>
                 ))}
               </div>
-            </div>
-            <div>
-              <label className={labelClass}>相手のMBTI（任意）</label>
-              <select value={pMbti} onChange={e => setPMbti(e.target.value)} className={`w-full ${selectClass}`}>
-                <option value="">不明・選択しない</option>
-                {MBTI_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
             </div>
           </div>
         )}

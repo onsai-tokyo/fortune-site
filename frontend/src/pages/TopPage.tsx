@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PayjpModal } from '../components/PayjpModal'
+import { Toast } from '../components/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import { calcShichu, calcDaiyun, calcRyunen } from '../lib/shichu'
 import { calcNayin } from '../lib/nayin'
@@ -10,6 +11,7 @@ import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, calcTsukimeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
 import { saveAnalysis } from '../lib/history'
+import { getAnalyzedFeatures } from '../lib/analyzedFeatures'
 
 interface FortuneCalcData {
   shichuYear: string
@@ -119,10 +121,46 @@ export function TopPage() {
   const [isProcessingSub, setIsProcessingSub] = useState(false)
   const [subError, setSubError] = useState('')
 
-  // 鑑定済みフラグ（localStorage）
-  const [analyzedFeatures] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('analyzed_features') ?? '[]') } catch { return [] }
-  })
+  // 鑑定済みフラグ（ユーザー別にlocalStorageで管理）
+  const [analyzedFeatures, setAnalyzedFeatures] = useState<string[]>([])
+
+  useEffect(() => {
+    console.log('[TopPage] User changed, userId:', user?.id)
+    const features = getAnalyzedFeatures(user?.id)
+    console.log('[TopPage] Analyzed features for user:', features)
+    setAnalyzedFeatures(features)
+  }, [user?.id])
+
+  // 登録完了通知 - URLパラメータから直接チェック
+  const [showRegistrationToast, setShowRegistrationToast] = useState(
+    searchParams.get('registered') === 'true' ||
+    searchParams.get('welcome') === 'true'
+  )
+
+  useEffect(() => {
+    console.log('[TopPage] Component mounted')
+    console.log('[TopPage] URL params:', window.location.search)
+    console.log('[TopPage] showRegistrationToast:', showRegistrationToast)
+
+    // 旧フォーマットの鑑定済みフラグを完全クリア
+    try {
+      const oldKey = localStorage.getItem('analyzed_features')
+      if (oldKey) {
+        console.log('[TopPage] Clearing old analyzed_features')
+        localStorage.removeItem('analyzed_features')
+      }
+    } catch (e) {
+      console.error('[TopPage] Failed to clear old data:', e)
+    }
+
+    // localStorageからもチェック（バックアップ）
+    const flag = localStorage.getItem('show_registration_complete')
+    if (flag === 'true') {
+      console.log('[TopPage] ✅ localStorage flag detected!')
+      localStorage.removeItem('show_registration_complete')
+      setShowRegistrationToast(true)
+    }
+  }, [])
 
   // 無料鑑定 日次制限（3回/日、キャッシュヒットはカウントしない）
   const [showLimitModal, setShowLimitModal] = useState(false)
@@ -421,6 +459,15 @@ export function TopPage() {
 
   return (
     <div className="min-h-screen">
+
+      {showRegistrationToast && (
+        <Toast
+          message="登録が完了しました！ウェルカムボーナス3ptをプレゼントしました"
+          type="success"
+          onClose={() => setShowRegistrationToast(false)}
+          duration={6000}
+        />
+      )}
 
       {showQuestionModal && (
         <PayjpModal
@@ -955,6 +1002,34 @@ export function TopPage() {
                 items: ['候補者強み分析', '面接質問提案', 'あなたとの相性'],
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />,
               },
+              {
+                id: 'boss', label: '上司占い', cost: '3pt / 回',
+                color: 'blue-500', border: 'border-blue-600/20', bg: 'rgba(59,130,246,0.08)',
+                description: '上司の命式からコミュニケーションのコツ・喜ぶ言葉を解析。',
+                items: ['喜ぶ言葉・NG言葉', 'コミュニケーション戦略', '今月の接し方'],
+                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />,
+              },
+              {
+                id: 'subordinate', label: '部下占い', cost: '3pt / 回',
+                color: 'green-500', border: 'border-green-600/20', bg: 'rgba(34,197,94,0.08)',
+                description: '部下の命式からモチベーション源泉・マネジメントのコツを解析。',
+                items: ['モチベーション源泉', 'マネジメントのコツ', '成長支援戦略'],
+                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />,
+              },
+              {
+                id: 'client', label: '取引先占い', cost: '3pt / 回',
+                color: 'purple-500', border: 'border-purple-600/20', bg: 'rgba(168,85,247,0.08)',
+                description: '取引先担当者の命式から信頼構築ポイント・アプローチ戦略を解析。',
+                items: ['信頼構築ポイント', 'アプローチ戦略', '次のアクション'],
+                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />,
+              },
+              {
+                id: 'direction', label: '方位診断', cost: '2pt / 回',
+                color: 'cyan-500', border: 'border-cyan-600/20', bg: 'rgba(6,182,212,0.08)',
+                description: '九星気学×四柱推命から吉方位・引越し・デスク配置を解析。',
+                items: ['吉方位・凶方位', '引越し・移転アドバイス', 'デスク配置提案'],
+                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />,
+              },
             ].map((f) => (
               <div key={f.id} ref={f.id === 'chat' ? chatRef : undefined}
                 className="glass-card-hover border flex flex-col gap-4 p-6"
@@ -1223,8 +1298,13 @@ export function TopPage() {
 
       {/* フッター */}
       <footer className="border-t border-white/5 py-8">
-        <div className="max-w-5xl mx-auto px-4 text-center text-white/15 text-xs italic">
-          <p>解析結果は意思決定の参考情報としてご活用ください</p>
+        <div className="max-w-5xl mx-auto px-4 text-center space-y-3">
+          <div className="flex justify-center gap-4">
+            <button onClick={() => navigate('/tokushohou')} className="text-white/30 hover:text-white/50 text-xs transition-colors">
+              特定商取引法に基づく表記
+            </button>
+          </div>
+          <p className="text-white/15 text-xs italic">解析結果は意思決定の参考情報としてご活用ください</p>
         </div>
       </footer>
 

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LocalStorage Debug</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1e293b; color: #fff; }
+    button { margin: 10px 5px; padding: 10px 20px; cursor: pointer; background: #3b82f6; color: white; border: none; border-radius: 6px; }
+    button:hover { background: #2563eb; }
+    pre { background: #0f172a; padding: 15px; border-radius: 8px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 LocalStorage Debug Tool</h1>
+  
+  <button onclick="showAll()">📋 Show All LocalStorage</button>
+  <button onclick="clearOld()">🧹 Clear Old analyzed_features</button>
+  <button onclick="clearAll()">❌ Clear All analyzed_features_*</button>
+  <button onclick="setFlag()">🎉 Set Registration Flag</button>
+  
+  <pre id="output"></pre>
+
+  <script>
+    const output = document.getElementById('output');
+
+    function showAll() {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.includes('analyzed') || key.includes('registration')) {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function clearOld() {
+      localStorage.removeItem('analyzed_features');
+      output.textContent = 'Cleared: analyzed_features';
+      setTimeout(showAll, 100);
+    }
+
+    function clearAll() {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('analyzed_features_'));
+      keys.forEach(k => localStorage.removeItem(k));
+      output.textContent = `Cleared ${keys.length} keys: ${keys.join(', ')}`;
+      setTimeout(showAll, 100);
+    }
+
+    function setFlag() {
+      localStorage.setItem('show_registration_complete', 'true');
+      output.textContent = 'Set: show_registration_complete = true';
+      setTimeout(showAll, 100);
+    }
+
+    showAll();
+  </script>
+</body>
+</html>

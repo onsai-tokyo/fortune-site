@@ -42,7 +42,7 @@ function MetricBadge({ label, value, accent }: { label: string; value: string; a
 }
 
 function ProfileBlock({
-  title, shichu, nayin, sanmei, sukuyo, gender, mbti, isPartner,
+  title, shichu, nayin, sanmei, sukuyo, gender, isPartner,
 }: {
   title: string
   shichu: PartnerData['shichu']
@@ -50,7 +50,6 @@ function ProfileBlock({
   sanmei: PartnerData['sanmei']
   sukuyo: string
   gender?: 'male' | 'female'
-  mbti?: string
   isPartner?: boolean
 }) {
   const dayEl = shichu.day.element
@@ -64,11 +63,6 @@ function ProfileBlock({
         {gender && (
           <span className="text-white/30 text-xs border border-white/10 rounded px-1.5 py-0.5">
             {gender === 'male' ? '♂ 男性' : '♀ 女性'}
-          </span>
-        )}
-        {mbti && (
-          <span className="text-accent text-xs border border-accent/30 rounded px-1.5 py-0.5 bg-accent/10">
-            {mbti}
           </span>
         )}
         <div className="ml-auto flex gap-1">
@@ -134,7 +128,6 @@ export function ResultCard({ data }: Props) {
         sanmei={sanmei}
         sukuyo={sukuyo}
         gender={input.gender}
-        mbti={input.mbti}
       />
 
       {partner && (
@@ -145,7 +138,6 @@ export function ResultCard({ data }: Props) {
           sanmei={partner.sanmei}
           sukuyo={partner.sukuyo}
           gender={input.partnerGender}
-          mbti={input.partnerMbti}
           isPartner
         />
       )}

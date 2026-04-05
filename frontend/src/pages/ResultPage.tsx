@@ -113,7 +113,7 @@ export function ResultPage() {
       const { input, shichu, nayin, sanmei, sukuyo } = fd
       const res = await fetch('/api/fortune', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ birthDate: input.birthDate, birthTime: input.birthTime, gender: input.gender, mbti: input.mbti, question: input.question, fortuneData: { input, shichu, nayin, sanmei, sukuyo, partner: fd.partner } }),
+        body: JSON.stringify({ birthDate: input.birthDate, birthTime: input.birthTime, gender: input.gender, question: input.question, fortuneData: { input, shichu, nayin, sanmei, sukuyo, partner: fd.partner } }),
         signal,
       })
       if (!res.ok) {
@@ -289,12 +289,16 @@ export function ResultPage() {
               <p className="text-white/25 text-xs mb-3 italic">他のメニューも試す — More Features</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: '相談し放題プラン', sub: '命術師AIに何でも相談', path: '/feature/chat',    dot: 'bg-accent',        border: 'border-accent/20    hover:border-accent/40',    text: 'text-accent'        },
-                  { label: '自己詳細分析',     sub: '強み・適職・転換期',  path: '/feature/self',    dot: 'bg-blue-400',      border: 'border-blue-400/20  hover:border-blue-400/40',  text: 'text-blue-300'      },
-                  { label: '相性診断',         sub: '仕事・恋愛の相性',    path: '/feature/compat',  dot: 'bg-pink-400',      border: 'border-pink-400/20  hover:border-pink-400/40',  text: 'text-pink-300'      },
-                  { label: '結婚相性',         sub: '生活・力関係・コツ',  path: '/feature/marriage',dot: 'bg-rose-400',      border: 'border-rose-400/20  hover:border-rose-400/40',  text: 'text-rose-300'      },
-                  { label: '組織診断',         sub: 'キーマン・戦略分析',  path: '/feature/org',     dot: 'bg-emerald-400',   border: 'border-emerald-400/20 hover:border-emerald-400/40', text: 'text-emerald-300' },
-                  { label: '他己分析',         sub: '採用・相手の特性',    path: '/feature/recruit', dot: 'bg-violet-400',    border: 'border-violet-400/20 hover:border-violet-400/40',  text: 'text-violet-300'  },
+                  { label: '相談し放題プラン', sub: '命術師AIに何でも相談', path: '/feature/chat',        dot: 'bg-accent',        border: 'border-accent/20        hover:border-accent/40',        text: 'text-accent'        },
+                  { label: '自己詳細分析',     sub: '強み・適職・転換期',  path: '/feature/self',        dot: 'bg-blue-400',      border: 'border-blue-400/20      hover:border-blue-400/40',      text: 'text-blue-300'      },
+                  { label: '相性診断',         sub: '仕事・恋愛の相性',    path: '/feature/compat',      dot: 'bg-pink-400',      border: 'border-pink-400/20      hover:border-pink-400/40',      text: 'text-pink-300'      },
+                  { label: '結婚相性',         sub: '生活・力関係・コツ',  path: '/feature/marriage',    dot: 'bg-rose-400',      border: 'border-rose-400/20      hover:border-rose-400/40',      text: 'text-rose-300'      },
+                  { label: '組織診断',         sub: 'キーマン・戦略分析',  path: '/feature/org',         dot: 'bg-emerald-400',   border: 'border-emerald-400/20   hover:border-emerald-400/40',   text: 'text-emerald-300'   },
+                  { label: '他己分析',         sub: '採用・相手の特性',    path: '/feature/recruit',     dot: 'bg-violet-400',    border: 'border-violet-400/20    hover:border-violet-400/40',    text: 'text-violet-300'    },
+                  { label: '上司占い',         sub: 'コミュニケーション',  path: '/feature/boss',        dot: 'bg-blue-500',      border: 'border-blue-500/20      hover:border-blue-500/40',      text: 'text-blue-400'      },
+                  { label: '部下占い',         sub: 'マネジメントのコツ',  path: '/feature/subordinate', dot: 'bg-green-500',     border: 'border-green-500/20     hover:border-green-500/40',     text: 'text-green-400'     },
+                  { label: '取引先占い',       sub: '信頼構築・戦略',      path: '/feature/client',      dot: 'bg-purple-500',    border: 'border-purple-500/20    hover:border-purple-500/40',    text: 'text-purple-400'    },
+                  { label: '方位診断',         sub: '吉方位・引越し',      path: '/feature/direction',   dot: 'bg-cyan-500',      border: 'border-cyan-500/20      hover:border-cyan-500/40',      text: 'text-cyan-400'      },
                 ].map(item => (
                   <button
                     key={item.path}

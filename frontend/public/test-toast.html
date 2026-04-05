@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toast Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      background: #1e293b;
+      color: white;
+    }
+    button {
+      padding: 12px 24px;
+      margin: 10px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    pre {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      overflow: auto;
+      margin-top: 20px;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      z-index: 99999;
+      min-width: 300px;
+      display: none;
+    }
+    .toast.show {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Toast & LocalStorage Test</h1>
+
+  <div>
+    <button onclick="showToast()">🎉 Show Toast</button>
+    <button onclick="setFlag()">💾 Set Registration Flag</button>
+    <button onclick="checkFlag()">🔍 Check Flag</button>
+    <button onclick="clearFlag()">🧹 Clear Flag</button>
+    <button onclick="clearAll()">❌ Clear All analyzed_features</button>
+  </div>
+
+  <pre id="log">Logs will appear here...</pre>
+
+  <div id="toast" class="toast">
+    🎉 登録が完了しました！ウェルカムボーナス3ptをプレゼントしました
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+    const toast = document.getElementById('toast');
+    let logs = [];
+
+    function addLog(msg) {
+      const timestamp = new Date().toLocaleTimeString();
+      logs.push(`[${timestamp}] ${msg}`);
+      log.textContent = logs.slice(-15).join('\n');
+    }
+
+    function showToast() {
+      addLog('Showing toast...');
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+        addLog('Toast hidden');
+      }, 6000);
+    }
+
+    function setFlag() {
+      localStorage.setItem('show_registration_complete', 'true');
+      addLog('✅ Set: show_registration_complete = true');
+      checkFlag();
+    }
+
+    function checkFlag() {
+      const flag = localStorage.getItem('show_registration_complete');
+      addLog(`Flag value: ${flag}`);
+
+      if (flag === 'true') {
+        addLog('🎉 Flag is true! Auto-showing toast...');
+        showToast();
+      }
+    }
+
+    function clearFlag() {
+      localStorage.removeItem('show_registration_complete');
+      addLog('🧹 Cleared registration flag');
+      checkFlag();
+    }
+
+    function clearAll() {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key === 'analyzed_features' || key.startsWith('analyzed_features_'))) {
+          keys.push(key);
+        }
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+      addLog(`🧹 Cleared ${keys.length} keys: ${keys.join(', ')}`);
+    }
+
+    // On load, check flag
+    addLog('Page loaded');
+    checkFlag();
+  </script>
+</body>
+</html>

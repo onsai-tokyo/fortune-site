@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>最終確認</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 30px;
+      background: #1e293b;
+      color: white;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { color: #10b981; margin-bottom: 30px; }
+    h2 { color: #3b82f6; margin-top: 30px; margin-bottom: 15px; }
+    .test-item {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+    .test-item.success {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .test-item.error {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .status.ok { background: #10b981; color: white; }
+    .status.ng { background: #ef4444; color: white; }
+    button {
+      padding: 12px 24px;
+      margin: 10px 10px 10px 0;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #2563eb; }
+    pre {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .result { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>✅ 最終確認チェックリスト</h1>
+
+  <div id="results"></div>
+
+  <h2>🎯 テストを実行</h2>
+  <button onclick="runTests()">🔍 すべてのテストを実行</button>
+  <button onclick="testToast()">🎉 トースト表示テスト</button>
+  <button onclick="clearAll()">🧹 全データをクリア</button>
+  <button onclick="location.href='/'">🏠 トップページへ</button>
+
+  <div id="output" class="result"></div>
+
+  <script>
+    const results = document.getElementById('results');
+    const output = document.getElementById('output');
+
+    function log(msg) {
+      console.log(msg);
+      output.innerHTML += msg + '<br>';
+    }
+
+    function addTestResult(title, passed, details) {
+      const div = document.createElement('div');
+      div.className = 'test-item ' + (passed ? 'success' : 'error');
+      div.innerHTML = `
+        <strong>${title}</strong>
+        <span class="status ${passed ? 'ok' : 'ng'}">${passed ? '✅ OK' : '❌ NG'}</span>
+        <div style="margin-top: 10px; font-size: 14px; color: rgba(255,255,255,0.7);">${details}</div>
+      `;
+      results.appendChild(div);
+    }
+
+    function runTests() {
+      results.innerHTML = '<h2>🧪 テスト結果</h2>';
+      output.innerHTML = '';
+
+      // テスト1: localStorageが動作するか
+      try {
+        localStorage.setItem('_test', 'ok');
+        const val = localStorage.getItem('_test');
+        localStorage.removeItem('_test');
+        addTestResult(
+          'テスト1: localStorage動作確認',
+          val === 'ok',
+          val === 'ok' ? 'localStorageは正常に動作しています' : 'localStorageが使用できません'
+        );
+      } catch (e) {
+        addTestResult('テスト1: localStorage動作確認', false, 'エラー: ' + e.message);
+      }
+
+      // テスト2: 旧フォーマットのデータが残っていないか
+      const oldKey = localStorage.getItem('analyzed_features');
+      addTestResult(
+        'テスト2: 旧データのクリーンアップ',
+        !oldKey,
+        oldKey ? `⚠️ 旧データが残っています: ${oldKey}` : '旧データはありません（正常）'
+      );
+
+      // テスト3: 新フォーマットのキー確認
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('analyzed_features_')) {
+          keys.push(key);
+        }
+      }
+      addTestResult(
+        'テスト3: ユーザー別鑑定済みフラグ',
+        true,
+        keys.length === 0 
+          ? '鑑定済みフラグはありません（クリーンな状態）' 
+          : `${keys.length}個のユーザー別フラグが存在: <pre>${keys.join('\n')}</pre>`
+      );
+
+      // テスト4: 登録完了フラグ
+      const regFlag = localStorage.getItem('show_registration_complete');
+      addTestResult(
+        'テスト4: 登録完了フラグ',
+        !regFlag,
+        regFlag ? '⚠️ 登録完了フラグが残っています（通常は自動削除されます）' : 'フラグはありません（正常）'
+      );
+
+      // テスト5: 全localStorage内容
+      const allData = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          allData[key] = localStorage.getItem(key);
+        }
+      }
+      addTestResult(
+        'テスト5: localStorage全体の状態',
+        true,
+        `<pre>${JSON.stringify(allData, null, 2)}</pre>`
+      );
+
+      log('✅ すべてのテストが完了しました');
+    }
+
+    function testToast() {
+      output.innerHTML = '🎉 トーストテストを開始...<br>';
+      localStorage.setItem('show_registration_complete', 'true');
+      log('✅ フラグをセットしました');
+      log('🔄 3秒後にトップページへ移動します...');
+      setTimeout(() => {
+        window.location.href = '/?registered=true';
+      }, 3000);
+    }
+
+    function clearAll() {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key === 'analyzed_features' || key.startsWith('analyzed_features_'))) {
+          keys.push(key);
+        }
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+      localStorage.removeItem('show_registration_complete');
+      output.innerHTML = `🧹 ${keys.length}個のキーを削除しました<br>`;
+      log('✅ クリーンアップ完了');
+      setTimeout(runTests, 100);
+    }
+
+    // ページ読み込み時に自動実行
+    window.addEventListener('load', () => {
+      runTests();
+    });
+  </script>
+</body>
+</html>

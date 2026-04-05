@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シンプルテスト</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      background: #1e293b;
+      color: white;
+      text-align: center;
+    }
+    h1 { font-size: 32px; margin-bottom: 30px; }
+    .btn {
+      display: inline-block;
+      padding: 20px 40px;
+      margin: 15px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .btn:hover {
+      background: #059669;
+    }
+    .info {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 トースト表示テスト</h1>
+
+  <a href="/?registered=true" class="btn">
+    🎉 トーストを表示する<br>
+    <small style="font-size: 14px; font-weight: normal;">（URLパラメータ方式）</small>
+  </a>
+
+  <br><br>
+
+  <button onclick="testLocalStorage()" class="btn">
+    💾 localStorage方式でテスト<br>
+    <small style="font-size: 14px; font-weight: normal;">（従来の方式）</small>
+  </button>
+
+  <div class="info">
+    <strong>📋 使い方：</strong><br><br>
+
+    <strong>方法1（推奨）:</strong><br>
+    上の緑のボタン「トーストを表示する」をクリック<br>
+    → トップページが開いて、画面上部に緑のメッセージが出ます<br><br>
+
+    <strong>方法2:</strong><br>
+    下の青いボタンをクリック<br>
+    → localStorageにフラグをセットしてトップページへ移動<br><br>
+
+    <strong>✅ 期待される結果:</strong><br>
+    画面の一番上に、緑色の背景で<br>
+    「🎉 登録が完了しました！ウェルカムボーナス3ptをプレゼントしました」<br>
+    というメッセージが6秒間表示されます。
+  </div>
+
+  <script>
+    function testLocalStorage() {
+      console.log('💾 localStorage方式でテスト開始');
+      localStorage.clear();
+      localStorage.setItem('show_registration_complete', 'true');
+      console.log('✅ フラグをセット:', localStorage.getItem('show_registration_complete'));
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>

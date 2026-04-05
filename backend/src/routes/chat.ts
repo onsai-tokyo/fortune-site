@@ -71,6 +71,13 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
       history.push({ role: 'user', content: sanitizedMsg })
     }
 
+    // 現在の日付を取得
+    const today = new Date()
+    const currentYear = today.getFullYear()
+    const currentMonth = today.getMonth() + 1
+    const currentDay = today.getDate()
+    const todayString = `${currentYear}年${currentMonth}月${currentDay}日`
+
     // 命式コンテキスト構築
     let meishikiContext = ''
     if (birthDate && gender && calculatedData) {
@@ -78,9 +85,11 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
       const genderLabel = gender === 'male' ? '男性' : '女性'
       const [y, m, d] = birthDate.split('-').map(Number)
       meishikiContext = `
+【本日の日付】${todayString}
+
 【相談者の命式データ】
 生年月日：${y}年${m}月${d}日${birthTime ? `　生誕時刻：${birthTime}` : ''}
-性別：${genderLabel}　年齢：${age}歳
+性別：${genderLabel}　現在の年齢：${age}歳
 四柱推命 — 年柱:${calculatedData.shichuYear} 月柱:${calculatedData.shichuMonth} 日柱:${calculatedData.shichuDay}${calculatedData.shichuHour ? ` 時柱:${calculatedData.shichuHour}` : ''}
 納音：${calculatedData.nayin}
 算命学 — 宿命星:${calculatedData.sanmeiStar}　天中殺:${calculatedData.chusatsu}
@@ -92,6 +101,9 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
     const systemPrompt = `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学を30年以上研究してきた命術師です。
 相談者の命式データをもとに、温かみと確信をもって鑑定を行います。
 データに基づいた洞察を提供し、相談者が前に進むための具体的な指針を示します。
+
+【最重要】本日は${todayString}です。時期を言及する際は、必ず本日の日付を基準にしてください。過去の年月を未来として扱わないこと。
+
 【重要】必ず日本語のみで記述。「〜でしょう」「〜かもしれません」は禁止。断言調で答える。
 回答は300〜500字。箇条書き禁止。流れる文章で記述。最重要キーワードは **テキスト** で太字にする。${meishikiContext}`
 
@@ -116,10 +128,16 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
     res.write('data: [DONE]\n\n')
     res.end()
   } catch (err) {
-    console.error('Chat error:', err)
+    console.error('❌ Chat error:', err)
+    console.error('Error details:', {
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      name: err instanceof Error ? err.name : undefined,
+    })
     if (!res.headersSent) {
       res.status(500).json({ error: 'チャットの処理中にエラーが発生しました' })
     } else {
+      res.write(`data: ${JSON.stringify({ error: 'エラーが発生しました' })}\n\n`)
       res.write('data: [DONE]\n\n')
       res.end()
     }

@@ -4,13 +4,17 @@ import { useAuth } from '../contexts/AuthContext'
 import { getAnalyses, type AnalysisRecord } from '../lib/history'
 
 const FEATURE_META: Record<string, { label: string; dot: string; path: string }> = {
-  preview:  { label: '命式鑑定書',     dot: 'bg-amber-400',   path: '/' },
-  self:     { label: '自己分析',       dot: 'bg-blue-400',    path: '/feature/self' },
-  compat:   { label: '相性診断',       dot: 'bg-pink-400',    path: '/feature/compat' },
-  marriage: { label: '結婚相性',       dot: 'bg-rose-400',    path: '/feature/marriage' },
-  org:      { label: '組織診断',       dot: 'bg-emerald-400', path: '/feature/org' },
-  recruit:  { label: '採用分析',       dot: 'bg-violet-400',  path: '/feature/recruit' },
-  chat:     { label: 'AIチャット',     dot: 'bg-accent',      path: '/chat' },
+  preview:     { label: '命式鑑定書',     dot: 'bg-amber-400',   path: '/' },
+  self:        { label: '自己分析',       dot: 'bg-blue-400',    path: '/feature/self' },
+  compat:      { label: '相性診断',       dot: 'bg-pink-400',    path: '/feature/compat' },
+  marriage:    { label: '結婚相性',       dot: 'bg-rose-400',    path: '/feature/marriage' },
+  org:         { label: '組織診断',       dot: 'bg-emerald-400', path: '/feature/org' },
+  recruit:     { label: '採用分析',       dot: 'bg-violet-400',  path: '/feature/recruit' },
+  boss:        { label: '上司占い',       dot: 'bg-blue-500',    path: '/feature/boss' },
+  subordinate: { label: '部下占い',       dot: 'bg-green-500',   path: '/feature/subordinate' },
+  client:      { label: '取引先占い',     dot: 'bg-purple-500',  path: '/feature/client' },
+  direction:   { label: '方位診断',       dot: 'bg-cyan-500',    path: '/feature/direction' },
+  chat:        { label: 'AIチャット',     dot: 'bg-accent',      path: '/chat' },
 }
 
 function formatDate(iso: string) {

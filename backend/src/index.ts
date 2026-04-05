@@ -13,6 +13,9 @@ import { previewRouter } from './routes/preview.js'
 const app = express()
 const PORT = process.env.PORT ?? 3001
 
+// Renderなどのリバースプロキシの背後で動作する場合に必要
+app.set('trust proxy', 1)
+
 app.use(cors({
   origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   credentials: true,

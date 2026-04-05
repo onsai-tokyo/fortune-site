@@ -60,11 +60,11 @@ interface PersonBlock {
   ryunen?: string
 }
 
-function buildPersonCtx(p: PersonBlock, meta: { birthDate: string; gender: string; mbti?: string }, label: string): string {
+function buildPersonCtx(p: PersonBlock, meta: { birthDate: string; gender: string }, label: string): string {
   const age = calcAge(meta.birthDate)
   const gender = meta.gender === 'male' ? '男性' : meta.gender === 'female' ? '女性' : '不明'
   const hourPart = p.shichu.hour ? `/時柱${p.shichu.hour.kanshi}(${p.shichu.hour.element}${p.shichu.hour.yinYang})` : ''
-  const base = `【${label}】生年月日:${meta.birthDate}(${age}歳) 性別:${gender} MBTI:${meta.mbti || '不明'}`
+  const base = `【${label}】生年月日:${meta.birthDate}(${age}歳) 性別:${gender}`
     + ` 四柱推命:年柱${p.shichu.year.kanshi}(${p.shichu.year.element}${p.shichu.year.yinYang})/月柱${p.shichu.month.kanshi}(${p.shichu.month.element}${p.shichu.month.yinYang})/日柱${p.shichu.day.kanshi}(${p.shichu.day.element}${p.shichu.day.yinYang})${hourPart}`
     + ` 納音:${p.nayin} 宿命星:${p.sanmei.shukumeiStar} 天中殺:${p.sanmei.chusatsu} 宿曜:${p.sukuyo}宿`
   const extra: string[] = []
@@ -82,20 +82,36 @@ function buildPersonCtx(p: PersonBlock, meta: { birthDate: string; gender: strin
 analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
     const { fortuneData } = req.body
+    console.log('[/self] Request received, fortuneData:', JSON.stringify(fortuneData, null, 2))
+
+    if (!fortuneData) {
+      throw new Error('fortuneData is missing')
+    }
+
     const { input, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen } = fortuneData
+
+    if (!input || !input.birthDate) {
+      throw new Error('input.birthDate is missing')
+    }
+
     const age = calcAge(input.birthDate)
     const currentYear = new Date().getFullYear()
 
-    const cacheKey = `self_${input.birthDate}_${input.gender}_${input.mbti || ''}`
+    const cacheKey = `self_${input.birthDate}_${input.gender}`
     const cached = cacheGet(cacheKey)
-    if (cached) { res.json(cached); return }
+    if (cached) {
+      console.log('[/self] Cache hit for key:', cacheKey)
+      res.json(cached)
+      return
+    }
 
+    console.log('[/self] Building person context...')
     const ctx = buildPersonCtx({ shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen }, input, 'あなた')
 
     const message = await getAnthropicClient().messages.create({
       model: getModel(req),
       max_tokens: 2500,
-      system: `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学・MBTIを統合した最高峰の命理アナリストです。
+      system: `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した最高峰の命理アナリストです。
 四柱推命の日柱（命主）を分析の中心に置き、他の占術で補強します。
 命式データから深く・具体的・断言調で分析し、結果をJSONのみで返します。
 マークダウン・コードブロック・余分なテキストは一切禁止。
@@ -111,17 +127,12 @@ analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthReque
 この手順を踏まないと表面的な分析になるため、必ず実行すること。
 
 【精度が高かった実例（参考）】
-▼ 1985年6月6日生まれ・男性（狼型・火陽・十二運星:胎）
+▼ 1985年6月6日生まれ・男性（動物占い:狼型・日柱:丙子・火陽・十二運星:胎）
 共通コア:「外は明るい太陽（丙）、内は論理的で冷静（子）、孤独志向（調舒星・斗宿・狼）」→ 二面性・秘密主義・信頼した人だけに懐くが5つの占術で一致
 強み:表舞台での存在感と信頼した人だけに深く懐く人間性・独自路線の実行力
 弱み:二面性による誤解・一人で悩みを抱え込む・協調性が表面的に低く見られる
 
-▼ 1995年2月20日5時40分生まれ・女性（狼型・水陰・十二運星:胎）
-共通コア:「信頼した人にだけ本音を見せる」「独自の価値観・一匹狼」が複数占術で一致
-強み:感情的な別れではなく「ある日突然心の扉を閉める」クールな判断力、愛情は行動で示す
-弱み:内面をさらけ出さないため孤独感が蓄積しやすい
-
-▼ 1995年3月16日生まれ・女性（虎型・火陽・十二運星:帝旺）
+▼ 1995年3月16日生まれ・女性（動物占い:虎型・日柱:丙寅・火陽・十二運星:帝旺）
 共通コア:「強烈な意志と頑固さ」「正義感・自分の基準を曲げない」「行動力・パワー」が5つの占術で一致
 強み:やると決めたら最後までやり抜く・権力者にも物怖じしない正義感
 弱み:頑固さで周囲と衝突・礼儀マナーへの厳しさで怖がられる`,
@@ -131,14 +142,20 @@ analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthReque
       }],
     })
 
+    console.log('[/self] AI analysis complete')
     const content = message.content[0]
     if (content.type !== 'text') throw new Error('Invalid response type')
     const result = parseJSON(content.text)
+    console.log('[/self] Parsed result:', result)
     cacheSet(cacheKey, result)
     res.json(result)
   } catch (err) {
-    console.error('Self analysis error:', err)
-    res.status(500).json({ error: '自己分析の生成に失敗しました' })
+    console.error('[/self] Error:', err)
+    if (err instanceof Error) {
+      console.error('[/self] Error stack:', err.stack)
+    }
+    const errorMessage = err instanceof Error ? err.message : '自己分析の生成に失敗しました'
+    res.status(500).json({ error: errorMessage })
   }
 })
 
@@ -158,7 +175,6 @@ analyzeRouter.post('/compatibility', requireAuth, requirePoints(3), async (req: 
       partnerCtx = buildPersonCtx(fortuneData.partner, {
         birthDate: partnerBirthDate,
         gender: partnerGender,
-        mbti: input.partnerMbti,
       }, 'お相手')
     } else if (partnerBlock) {
       partnerBirthDate = partnerBlock.birthDate
@@ -166,7 +182,6 @@ analyzeRouter.post('/compatibility', requireAuth, requirePoints(3), async (req: 
       partnerCtx = buildPersonCtx(partnerBlock, {
         birthDate: partnerBirthDate,
         gender: partnerGender,
-        mbti: partnerBlock.mbti,
       }, 'お相手')
     }
 
@@ -251,8 +266,8 @@ analyzeRouter.post('/marriage', requireAuth, requirePoints(3), async (req: AuthR
     const cached = cacheGet(cacheKey)
     if (cached) { res.json(cached); return }
 
-    const selfCtx   = buildPersonCtx(selfData,   { birthDate: selfData.birthDate,   gender: selfData.gender,   mbti: selfData.mbti   }, 'あなた')
-    const partnerCtx = buildPersonCtx(partnerData, { birthDate: partnerData.birthDate, gender: partnerData.gender, mbti: partnerData.mbti }, 'お相手')
+    const selfCtx   = buildPersonCtx(selfData,   { birthDate: selfData.birthDate,   gender: selfData.gender }, 'あなた')
+    const partnerCtx = buildPersonCtx(partnerData, { birthDate: partnerData.birthDate, gender: partnerData.gender }, 'お相手')
 
     const message = await getAnthropicClient().messages.create({
       model: getModel(req),
@@ -292,8 +307,8 @@ analyzeRouter.post('/recruit', requireAuth, requirePoints(3), async (req: AuthRe
     const cached = cacheGet(cacheKey)
     if (cached) { res.json(cached); return }
 
-    const selfCtx      = buildPersonCtx(selfData,      { birthDate: selfData.birthDate,      gender: selfData.gender,      mbti: selfData.mbti      }, 'あなた（面接官）')
-    const candidateCtx = buildPersonCtx(candidateData, { birthDate: candidateData.birthDate, gender: candidateData.gender, mbti: candidateData.mbti }, '候補者')
+    const selfCtx      = buildPersonCtx(selfData,      { birthDate: selfData.birthDate,      gender: selfData.gender }, 'あなた（面接官）')
+    const candidateCtx = buildPersonCtx(candidateData, { birthDate: candidateData.birthDate, gender: candidateData.gender }, '候補者')
 
     const message = await getAnthropicClient().messages.create({
       model: getModel(req),
@@ -321,5 +336,168 @@ analyzeRouter.post('/recruit', requireAuth, requirePoints(3), async (req: AuthRe
   } catch (err) {
     console.error('Recruit error:', err)
     res.status(500).json({ error: '採用分析の生成に失敗しました' })
+  }
+})
+
+// ─── 上司占い（3pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/boss', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
+  try {
+    const { selfData, bossData } = req.body
+
+    const cacheKey = `boss_${selfData.birthDate}_${selfData.gender}_${bossData.birthDate}_${bossData.gender}`
+    const cached = cacheGet(cacheKey)
+    if (cached) { res.json(cached); return }
+
+    const selfCtx = buildPersonCtx(selfData, { birthDate: selfData.birthDate, gender: selfData.gender }, 'あなた（部下）')
+    const bossCtx = buildPersonCtx(bossData, { birthDate: bossData.birthDate, gender: bossData.gender }, '上司')
+
+    const message = await getAnthropicClient().messages.create({
+      model: getModel(req),
+      max_tokens: 2500,
+      system: `四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した上司分析AIです。
+上司の命式から性格・価値観・コミュニケーションスタイルを分析し、良好な関係を築くためのアドバイスをJSONで返します。
+マークダウン・余分なテキスト禁止。「〜でしょう」「〜かもしれません」禁止、断言調で書くこと。
+
+【必須：分析の手順】
+① 上司の複数占術が共通して示すコア特性を特定する
+② その特性が職場でのリーダーシップスタイルにどう現れるかを断言する
+③ あなたとの相性と効果的なコミュニケーション方法を具体的に示す`,
+      messages: [{
+        role: 'user',
+        content: `${selfCtx}\n${bossCtx}\n\n以下のJSON形式のみで出力:\n{"bossType":"上司の本質タイプ名","leadershipStyle":"リーダーシップスタイルを断言調で80文字以内","values":["この上司が大切にする価値観1","価値観2","価値観3"],"preferredWords":["喜ぶ言葉・フレーズ1","言葉2","言葉3"],"ngWords":["避けるべき言葉・態度1","NG2"],"communicationTips":[{"situation":"報告時","advice":"具体的なコツ60文字以内"},{"situation":"相談時","advice":"60文字以内"},{"situation":"依頼時","advice":"60文字以内"}],"chemistryWithYou":{"score":75,"description":"あなたとの相性と関係性の特徴80文字以内"},"monthlyStrategy":"今月の接し方・注意点を80文字以内"}\nvalues3つ、preferredWords3〜4つ、ngWords2〜3つ、communicationTips3つ。`,
+      }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid response type')
+    const result = parseJSON(content.text)
+    cacheSet(cacheKey, result)
+    res.json(result)
+  } catch (err) {
+    console.error('Boss error:', err)
+    res.status(500).json({ error: '上司分析の生成に失敗しました' })
+  }
+})
+
+// ─── 部下占い（3pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/subordinate', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
+  try {
+    const { selfData, subordinateData } = req.body
+
+    const cacheKey = `subordinate_${selfData.birthDate}_${selfData.gender}_${subordinateData.birthDate}_${subordinateData.gender}`
+    const cached = cacheGet(cacheKey)
+    if (cached) { res.json(cached); return }
+
+    const selfCtx        = buildPersonCtx(selfData,        { birthDate: selfData.birthDate,        gender: selfData.gender }, 'あなた（上司）')
+    const subordinateCtx = buildPersonCtx(subordinateData, { birthDate: subordinateData.birthDate, gender: subordinateData.gender }, '部下')
+
+    const message = await getAnthropicClient().messages.create({
+      model: getModel(req),
+      max_tokens: 2500,
+      system: `四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した部下分析AIです。
+部下の命式から性格・モチベーション・成長ポイントを分析し、効果的なマネジメント方法をJSONで返します。
+マークダウン・余分なテキスト禁止。「〜でしょう」「〜かもしれません」禁止、断言調で書くこと。
+
+【必須：分析の手順】
+① 部下の複数占術が共通して示すコア特性を特定する
+② その特性が仕事へのモチベーションや成長パターンにどう影響するかを断言する
+③ あなたとの相性と効果的なマネジメント方法を具体的に示す`,
+      messages: [{
+        role: 'user',
+        content: `${selfCtx}\n${subordinateCtx}\n\n以下のJSON形式のみで出力:\n{"subordinateType":"部下の本質タイプ名","workStyle":"仕事への取り組み方を断言調で80文字以内","motivators":["モチベーションの源泉1","源泉2","源泉3"],"strengths":[{"name":"強みタイトル","description":"職場でどう活かすか50文字以内"}],"growthAreas":[{"area":"成長が必要な領域","approach":"育成アプローチ60文字以内"}],"managementTips":[{"situation":"指示出し時","advice":"効果的な伝え方60文字以内"},{"situation":"フィードバック時","advice":"60文字以内"},{"situation":"育成時","advice":"60文字以内"}],"chemistryWithYou":{"score":72,"description":"あなたとの相性と関係性80文字以内"},"caution":"マネジメント上の最重要注意点を80文字以内"}\nmotivators3つ、strengths3つ、growthAreas2〜3つ、managementTips3つ。`,
+      }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid response type')
+    const result = parseJSON(content.text)
+    cacheSet(cacheKey, result)
+    res.json(result)
+  } catch (err) {
+    console.error('Subordinate error:', err)
+    res.status(500).json({ error: '部下分析の生成に失敗しました' })
+  }
+})
+
+// ─── 取引先占い（3pt）───────────────────────────────────────────────────────
+analyzeRouter.post('/client', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
+  try {
+    const { selfData, clientData } = req.body
+
+    const cacheKey = `client_${selfData.birthDate}_${selfData.gender}_${clientData.birthDate}_${clientData.gender}`
+    const cached = cacheGet(cacheKey)
+    if (cached) { res.json(cached); return }
+
+    const selfCtx   = buildPersonCtx(selfData,   { birthDate: selfData.birthDate,   gender: selfData.gender }, 'あなた')
+    const clientCtx = buildPersonCtx(clientData, { birthDate: clientData.birthDate, gender: clientData.gender }, '取引先担当者')
+
+    const message = await getAnthropicClient().messages.create({
+      model: getModel(req),
+      max_tokens: 2500,
+      system: `四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した取引先分析AIです。
+取引先担当者の命式から性格・意思決定スタイル・信頼構築ポイントを分析し、良好な関係を築くためのアドバイスをJSONで返します。
+マークダウン・余分なテキスト禁止。「〜でしょう」「〜かもしれません」禁止、断言調で書くこと。
+
+【必須：分析の手順】
+① 取引先担当者の複数占術が共通して示すコア特性を特定する
+② その特性がビジネス判断や人間関係にどう影響するかを断言する
+③ あなたとの相性と効果的なアプローチ方法を具体的に示す`,
+      messages: [{
+        role: 'user',
+        content: `${selfCtx}\n${clientCtx}\n\n以下のJSON形式のみで出力:\n{"clientType":"取引先担当者の本質タイプ名","decisionStyle":"意思決定スタイルを断言調で80文字以内","trustFactors":["信頼を得るポイント1","ポイント2","ポイント3"],"communicationPreferences":[{"channel":"対面・メール・電話など","style":"好まれるコミュニケーション方法50文字以内"}],"approachStrategies":[{"phase":"初回接触","strategy":"効果的なアプローチ60文字以内"},{"phase":"提案時","strategy":"60文字以内"},{"phase":"交渉時","strategy":"60文字以内"}],"taboos":["避けるべき行動・態度1","タブー2"],"chemistryWithYou":{"score":78,"description":"あなたとの相性とシナジー80文字以内"},"nextAction":"次に取るべき具体的行動を80文字以内"}\ntrustFactors3つ、communicationPreferences2〜3つ、approachStrategies3つ、taboos2〜3つ。`,
+      }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid response type')
+    const result = parseJSON(content.text)
+    cacheSet(cacheKey, result)
+    res.json(result)
+  } catch (err) {
+    console.error('Client error:', err)
+    res.status(500).json({ error: '取引先分析の生成に失敗しました' })
+  }
+})
+
+// ─── 方位診断（2pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/direction', requireAuth, requirePoints(2), async (req: AuthRequest, res) => {
+  try {
+    const { fortuneData } = req.body
+    const { input, shichu, nayin, sanmei, sukuyo, honmeiName } = fortuneData
+
+    if (!input || !input.birthDate) throw new Error('input.birthDate is missing')
+
+    const currentYear = new Date().getFullYear()
+    const cacheKey = `direction_${input.birthDate}_${input.gender}_${currentYear}`
+    const cached = cacheGet(cacheKey)
+    if (cached) { res.json(cached); return }
+
+    const ctx = buildPersonCtx({ shichu, nayin, sanmei, sukuyo, honmeiName }, input, 'あなた')
+
+    const message = await getAnthropicClient().messages.create({
+      model: getModel(req),
+      max_tokens: 2000,
+      system: `四柱推命・算命学・宿曜・九星気学を統合した方位診断AIです。
+命式と九星気学から吉方位・凶方位を分析し、具体的な活用アドバイスをJSONで返します。
+マークダウン・余分なテキスト禁止。「〜でしょう」「〜かもしれません」禁止、断言調で書くこと。
+
+【必須：分析の手順】
+① 九星気学の本命星から今年の吉方位・凶方位を特定する
+② 四柱推命の五行バランスから補うべき方位エネルギーを判断する
+③ 具体的な活用方法を断言調で示す`,
+      messages: [{
+        role: 'user',
+        content: `${ctx}\n\n【現在年】${currentYear}年\n\n以下のJSON形式のみで出力:\n{"luckyDirections":[{"direction":"北・南・東・西・北東・南東・南西・北西","effect":"吉方位の効果50文字以内","usage":"具体的な活用方法60文字以内"}],"unluckyDirections":[{"direction":"方位名","reason":"凶方位の理由40文字以内","mitigation":"対策方法50文字以内"}],"monthlyBest":"今月の最吉方位と活用タイミング80文字以内","relocationAdvice":"引越し・移転に関するアドバイス80文字以内","travelTips":"出張・旅行の方位選び60文字以内","officeLayout":"オフィス・自宅でのデスク配置アドバイス80文字以内"}\nluckyDirections2〜3つ、unluckyDirections1〜2つ。`,
+      }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid response type')
+    const result = parseJSON(content.text)
+    cacheSet(cacheKey, result)
+    res.json(result)
+  } catch (err) {
+    console.error('Direction error:', err)
+    res.status(500).json({ error: '方位診断の生成に失敗しました' })
   }
 })

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { saveAnalysis } from '../lib/history'
 import { SelfAnalysisTab } from '../components/tabs/SelfAnalysisTab'
 import { CompatibilityTab } from '../components/tabs/CompatibilityTab'
 import { OrganizationTab } from '../components/tabs/OrganizationTab'
 import { MarriageTab } from '../components/tabs/MarriageTab'
 import { RecruitTab } from '../components/tabs/RecruitTab'
+import { BossTab } from '../components/tabs/BossTab'
+import { SubordinateTab } from '../components/tabs/SubordinateTab'
+import { ClientTab } from '../components/tabs/ClientTab'
+import { DirectionTab } from '../components/tabs/DirectionTab'
 import { ChatArea } from '../components/ChatArea'
 import { PayjpModal } from '../components/PayjpModal'
 import type { FortuneData } from '../lib/types'
@@ -18,21 +21,20 @@ import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail, getAnimalFortune } from '../lib/archetype'
 
-type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'chat' | 'recruit'
+type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'chat' | 'recruit' | 'boss' | 'subordinate' | 'client' | 'direction'
 
 // ポイントコスト定義
 const POINT_COST: Record<FeatureId, number> = {
-  self: 2, compat: 2, marriage: 2, org: 3, chat: 1, recruit: 2,
+  self: 3, compat: 3, marriage: 3, org: 3, chat: 2, recruit: 3, boss: 3, subordinate: 3, client: 3, direction: 2,
 }
 
 const FEATURE_META: Record<FeatureId, {
-  label: string; sub: string; dot: string; border: string; description: string; showMbti?: boolean
+  label: string; sub: string; dot: string; border: string; description: string
 }> = {
   self: {
     label: '自己分析', sub: 'Self Analysis',
     dot: 'bg-blue-400', border: 'border-blue-500/30',
-    description: '生年月日を入力すると、強み・弱み・適職・人生転換期を命式から解析します。MBTIと組み合わせることでより精度が上がります。',
-    showMbti: true,
+    description: '生年月日を入力すると、強み・弱み・適職・人生転換期を命式から解析します。',
   },
   compat: {
     label: '相性診断', sub: 'Compatibility',
@@ -53,13 +55,31 @@ const FEATURE_META: Record<FeatureId, {
     label: '命術師に相談', sub: 'Fortune Consultation',
     dot: 'bg-accent', border: 'border-accent/30',
     description: '生年月日を入力すると、30年以上の経験を持つ命術師（AIデータ駆動）があなたの命式をもとに相談に答えます。',
-    showMbti: true,
   },
   recruit: {
     label: '採用・他己分析', sub: 'Recruitment Analysis',
     dot: 'bg-violet-400', border: 'border-violet-500/30',
     description: 'あなた（面接官）の生年月日を入力後、候補者の情報を入力して強み・適性・あなたとの相性を命式から解析します。',
-    showMbti: true,
+  },
+  boss: {
+    label: '上司占い', sub: 'Boss Fortune',
+    dot: 'bg-blue-400', border: 'border-blue-500/30',
+    description: 'あなたの生年月日を入力後、上司の情報を入力してコミュニケーションのコツ・喜ぶ言葉・避けるべき言葉を解析します。',
+  },
+  subordinate: {
+    label: '部下占い', sub: 'Subordinate Fortune',
+    dot: 'bg-green-400', border: 'border-green-500/30',
+    description: 'あなたの生年月日を入力後、部下の情報を入力してモチベーション・成長ポイント・マネジメントのコツを解析します。',
+  },
+  client: {
+    label: '取引先占い', sub: 'Client Fortune',
+    dot: 'bg-purple-400', border: 'border-purple-500/30',
+    description: 'あなたの生年月日を入力後、取引先担当者の情報を入力して意思決定スタイル・信頼構築ポイント・アプローチ戦略を解析します。',
+  },
+  direction: {
+    label: '方位診断', sub: 'Direction Diagnosis',
+    dot: 'bg-cyan-400', border: 'border-cyan-500/30',
+    description: 'あなたの生年月日から九星気学と四柱推命を統合し、吉方位・凶方位・引越し・出張・デスク配置のアドバイスを解析します。',
   },
 }
 
@@ -72,20 +92,20 @@ function daysInMonth(y: number, m: number) { return (!y || !m) ? 31 : new Date(y
 
 const sc = "bg-white/5 border border-white/15 rounded-lg px-2 py-2.5 text-white text-sm focus:outline-none focus:border-accent/60 transition-all font-sans cursor-pointer appearance-none"
 
-const MBTI_TYPES = ['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP']
-
 function BirthForm({
-  meta,
+  meta: _meta,
   featureId,
   points,
   isPremium,
   onSubmit,
+  onInsufficientPoints,
 }: {
   meta: typeof FEATURE_META[FeatureId]
   featureId: FeatureId
   points: number
   isPremium: boolean
   onSubmit: (fd: FortuneData) => void
+  onInsufficientPoints?: () => void
 }) {
   const cost = POINT_COST[featureId]
   const hasEnough = isPremium || points >= cost
@@ -97,13 +117,19 @@ function BirthForm({
   const [minute,      setMinute]      = useState<number | ''>('')
   const [timeUnknown, setTimeUnknown] = useState(true)
   const [gender,      setGender]      = useState<'male' | 'female'>('female')
-  const [mbti,        setMbti]        = useState('')
   const days = Array.from({ length: daysInMonth(Number(year), Number(month)) }, (_, i) => i + 1)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!year || !month || !day) return
-    if (!hasEnough) return
+    if (!year || !month || !day) {
+      alert('生年月日を入力してください')
+      return
+    }
+    if (!hasEnough) {
+      console.log('[BirthForm] Insufficient points!')
+      onInsufficientPoints?.()
+      return
+    }
     const y = Number(year), m = Number(month), d = Number(day)
     const h = (!timeUnknown && hour !== '') ? Number(hour) : undefined
     const shichu = calcShichu(y, m, d, h)
@@ -130,7 +156,7 @@ function BirthForm({
     const ryunen = calcRyunen(currentYear)
 
     onSubmit({
-      input: { birthDate, birthTime, gender, mbti, question: '', partnerBirthDate: '', partnerBirthTime: '', partnerGender: 'female', partnerMbti: '' },
+      input: { birthDate, birthTime, gender, mbti: '', question: '', partnerBirthDate: '', partnerBirthTime: '', partnerGender: 'female', partnerMbti: '' },
       shichu, nayin, sanmei, sukuyo,
       lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen,
     })
@@ -197,17 +223,6 @@ function BirthForm({
           ))}
         </div>
       </div>
-
-      {/* MBTI */}
-      {meta.showMbti && (
-        <div>
-          <p className="text-white/50 text-xs mb-3">MBTI <span className="text-white/20">（任意）</span></p>
-          <select value={mbti} onChange={e => setMbti(e.target.value)} className={`${sc} w-48`}>
-            <option value="">不明・選択しない</option>
-            {MBTI_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-      )}
 
       {/* ポイント表示 */}
       {!isPremium && (
@@ -370,16 +385,7 @@ export function FeaturePage() {
 
   function handleFortuneSubmit(fd: FortuneData) {
     setFortuneData(fd)
-    const analyzed = JSON.parse(localStorage.getItem('analyzed_features') ?? '[]') as string[]
-    if (!analyzed.includes(featureId)) {
-      localStorage.setItem('analyzed_features', JSON.stringify([...analyzed, featureId]))
-    }
-    if (user) {
-      const title = `${meta.label} — ${fd.input.birthDate}`
-      saveAnalysis(user.id, featureId, fd.input.birthDate, title).catch(() => {})
-    }
-    // ポイント残高を更新
-    refreshPoints()
+    // 注：analyzed_featuresへの追加は各タブで解析成功後に行う
   }
 
   const payjpTitleMap = {
@@ -470,6 +476,7 @@ export function FeaturePage() {
               points={points}
               isPremium={isPremium}
               onSubmit={handleFortuneSubmit}
+              onInsufficientPoints={() => setShowInsufficientModal(true)}
             />
             {/* ポイント不足時のアップグレード導線 */}
             {!isPremium && points < POINT_COST[featureId] && (
@@ -500,12 +507,16 @@ export function FeaturePage() {
               <span className="text-white/20 text-xs ml-1">{fortuneData.input.birthDate}</span>
             </div>
 
-            {featureId === 'self'    && <SelfAnalysisTab  fortuneData={fortuneData} />}
-            {featureId === 'compat'  && <CompatibilityTab fortuneData={fortuneData} />}
-            {featureId === 'marriage'&& <MarriageTab      fortuneData={fortuneData} />}
-            {featureId === 'org'     && <OrganizationTab  fortuneData={fortuneData} />}
-            {featureId === 'recruit' && <RecruitTab       fortuneData={fortuneData} />}
-            {featureId === 'chat'    && <ChatArea fortuneData={fortuneData} initialReading="" sessionData={{}} />}
+            {featureId === 'self'        && <SelfAnalysisTab  fortuneData={fortuneData} />}
+            {featureId === 'compat'      && <CompatibilityTab fortuneData={fortuneData} />}
+            {featureId === 'marriage'    && <MarriageTab      fortuneData={fortuneData} />}
+            {featureId === 'org'         && <OrganizationTab  fortuneData={fortuneData} />}
+            {featureId === 'recruit'     && <RecruitTab       fortuneData={fortuneData} />}
+            {featureId === 'boss'        && <BossTab          fortuneData={fortuneData} />}
+            {featureId === 'subordinate' && <SubordinateTab   fortuneData={fortuneData} />}
+            {featureId === 'client'      && <ClientTab        fortuneData={fortuneData} />}
+            {featureId === 'direction'   && <DirectionTab     fortuneData={fortuneData} />}
+            {featureId === 'chat'        && <ChatArea fortuneData={fortuneData} initialReading="" sessionData={{}} />}
           </>
         )}
 

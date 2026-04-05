@@ -132,3 +132,45 @@ export interface RecruitAnalysis {
   interviewQuestions: string[]
   hiringAdvice: string
 }
+
+export interface BossAnalysis {
+  bossType: string
+  leadershipStyle: string
+  values: string[]
+  preferredWords: string[]
+  ngWords: string[]
+  communicationTips: Array<{ situation: string; advice: string }>
+  chemistryWithYou: { score: number; description: string }
+  monthlyStrategy: string
+}
+
+export interface SubordinateAnalysis {
+  subordinateType: string
+  workStyle: string
+  motivators: string[]
+  strengths: Array<{ name: string; description: string }>
+  growthAreas: Array<{ area: string; approach: string }>
+  managementTips: Array<{ situation: string; advice: string }>
+  chemistryWithYou: { score: number; description: string }
+  caution: string
+}
+
+export interface ClientAnalysis {
+  clientType: string
+  decisionStyle: string
+  trustFactors: string[]
+  communicationPreferences: Array<{ channel: string; style: string }>
+  approachStrategies: Array<{ phase: string; strategy: string }>
+  taboos: string[]
+  chemistryWithYou: { score: number; description: string }
+  nextAction: string
+}
+
+export interface DirectionAnalysis {
+  luckyDirections: Array<{ direction: string; effect: string; usage: string }>
+  unluckyDirections: Array<{ direction: string; reason: string; mitigation: string }>
+  monthlyBest: string
+  relocationAdvice: string
+  travelTips: string
+  officeLayout: string
+}

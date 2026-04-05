@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/star.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="四柱推命・納音・算命学・宿曜・MBTIを統合した人生戦略データ解析システム" />
+    <meta name="description" content="四柱推命・納音・算命学・宿曜を統合した人生戦略データ解析システム" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,6 +24,18 @@
     </script>
     <!-- End Meta Pixel Code -->
     <script src="https://js.pay.jp/v2/pay.js"></script>
+    <!-- 旧データクリーンアップ -->
+    <script>
+      try {
+        // 旧フォーマットの鑑定済みフラグを削除
+        if (localStorage.getItem('analyzed_features')) {
+          console.log('[Cleanup] Removing old analyzed_features');
+          localStorage.removeItem('analyzed_features');
+        }
+      } catch (e) {
+        console.error('[Cleanup] Failed:', e);
+      }
+    </script>
   </head>
   <body>
     <noscript><img height="1" width="1" style="display:none"

@@ -22,10 +22,11 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesRef.current
+    if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
   const isLimitReached = !isPaid && userMsgCount >= FREE_LIMIT
@@ -178,7 +179,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
         </div>
 
         {/* メッセージ一覧 */}
-        <div className="p-6 space-y-4 max-h-[480px] overflow-y-auto">
+        <div ref={messagesRef} className="p-6 space-y-4 max-h-[480px] overflow-y-auto">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
@@ -205,7 +206,6 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
               )}
             </div>
           ))}
-          <div ref={bottomRef} />
         </div>
 
         {/* 決済ウォール */}

@@ -49,6 +49,7 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [formError, setFormError] = useState('')
   const [chatRecordId, setChatRecordId] = useState<string | null>(null)
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -111,6 +112,7 @@ export default function ChatPage() {
     setMessages(prev => [...prev, assistantMsg])
 
     try {
+      console.log('[ChatPage] Sending message:', userMsg)
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -126,12 +128,38 @@ export default function ChatPage() {
         }),
       })
 
+      console.log('[ChatPage] Response status:', res.status, 'Content-Type:', res.headers.get('content-type'))
+
       if (!res.ok) {
-        const err = await res.json() as { error?: string; code?: string }
-        if (res.status === 402 || err.code === 'INSUFFICIENT_POINTS') {
-          throw new Error('ポイントが不足しています。マイページからポイントを購入してください。')
+        // 402エラー（ポイント不足）の場合は直接モーダルを表示
+        if (res.status === 402) {
+          console.log('[ChatPage] Insufficient points, showing modal')
+          setShowInsufficientModal(true)
+          setMessages(prev => prev.slice(0, -1)) // 空のアシスタントメッセージを削除
+          setIsStreaming(false)
+          return
         }
-        throw new Error(err.error ?? 'エラーが発生しました')
+
+        // その他のエラーの場合はレスポンスボディを確認
+        console.log('[ChatPage] Error response, attempting to read body')
+        const contentType = res.headers.get('content-type')
+
+        // JSONレスポンスの場合のみパース
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const err = await res.json() as { error?: string; code?: string }
+            console.error('[ChatPage] Error JSON:', err)
+            throw new Error(err.error ?? 'エラーが発生しました')
+          } catch (jsonErr) {
+            console.error('[ChatPage] JSON parse error:', jsonErr)
+            throw new Error(`エラーが発生しました（ステータス: ${res.status}）`)
+          }
+        } else {
+          // JSON以外のレスポンスの場合はテキストとして読む
+          const text = await res.text()
+          console.error('[ChatPage] Non-JSON error response:', text)
+          throw new Error(`エラーが発生しました（ステータス: ${res.status}）`)
+        }
       }
 
       const reader = res.body!.getReader()
@@ -282,39 +310,46 @@ export default function ChatPage() {
               {/* 相手情報 */}
               <div>
                 <button type="button" onClick={() => setForm(f => ({ ...f, showPartner: !f.showPartner }))}
-                  className={`w-full py-2.5 rounded-lg text-xs font-medium border transition-all ${form.showPartner ? 'border-purple-400/40 bg-purple-400/10 text-purple-300' : 'border-white/10 text-white/35 hover:text-white/55'}`}>
+                  className={`w-full py-2.5 rounded-lg text-xs font-medium border transition-all ${form.showPartner ? 'border-accent/40 bg-accent/10 text-accent' : 'border-white/10 text-white/35 hover:text-white/55'}`}>
                   {form.showPartner ? '▲ 相手の情報を入力中' : '＋ 相性を見たい相手の情報（任意）'}
                 </button>
               </div>
 
               {form.showPartner && (
-                <div className="space-y-4 p-4 rounded-lg border border-purple-400/15" style={{ background: 'rgba(167,139,250,0.05)' }}>
+                <>
                   <div>
-                    <label className="text-white/40 text-xs mb-2 block">相手の生年月日</label>
+                    <label className="text-white/50 text-xs mb-2 block">相手の生年月日 <span className="text-white/25">（任意）</span></label>
                     <div className="grid grid-cols-3 gap-2">
-                      {[{ val: form.partnerYear, key: 'partnerYear', opts: YEARS, label: '年', suffix: '年' },
-                        { val: form.partnerMonth, key: 'partnerMonth', opts: MONTHS, label: '月', suffix: '月' },
-                        { val: form.partnerDay, key: 'partnerDay', opts: DAYS, label: '日', suffix: '日' }].map(({ val, key, opts, label, suffix }) => (
-                        <select key={key} value={val} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                          className="bg-navy-light border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none appearance-none">
-                          <option value="">{label}</option>
-                          {opts.map(o => <option key={o} value={o}>{o}{suffix}</option>)}
-                        </select>
-                      ))}
+                      <select value={form.partnerYear} onChange={e => setForm(f => ({ ...f, partnerYear: e.target.value }))}
+                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+                        <option value="">年</option>
+                        {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
+                      </select>
+                      <select value={form.partnerMonth} onChange={e => setForm(f => ({ ...f, partnerMonth: e.target.value }))}
+                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+                        <option value="">月</option>
+                        {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
+                      </select>
+                      <select value={form.partnerDay} onChange={e => setForm(f => ({ ...f, partnerDay: e.target.value }))}
+                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
+                        <option value="">日</option>
+                        {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
+                      </select>
                     </div>
                   </div>
+
                   <div>
-                    <label className="text-white/40 text-xs mb-2 block">相手の性別</label>
+                    <label className="text-white/50 text-xs mb-2 block">相手の性別 <span className="text-white/25">（任意）</span></label>
                     <div className="grid grid-cols-2 gap-2">
                       {(['female', 'male'] as const).map(g => (
                         <button key={g} type="button" onClick={() => setForm(f => ({ ...f, partnerGender: g }))}
-                          className={`py-2 rounded-lg text-xs font-medium border transition-all ${form.partnerGender === g ? 'border-purple-400/50 bg-purple-400/10 text-purple-300' : 'border-white/10 text-white/35'}`}>
+                          className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${form.partnerGender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}>
                           {g === 'female' ? '女性' : '男性'}
                         </button>
                       ))}
                     </div>
                   </div>
-                </div>
+                </>
               )}
 
               {formError && <p className="text-red-400 text-xs">{formError}</p>}
@@ -397,6 +432,41 @@ export default function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* ポイント不足モーダル */}
+      {showInsufficientModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowInsufficientModal(false)}>
+          <div className="glass-card max-w-sm w-full p-8 space-y-6 border border-accent/20" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">💎</span>
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">ポイントが不足しています</h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                メッセージを送信するには1ポイントが必要です。<br/>
+                マイページからポイントを購入してください。
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowInsufficientModal(false)
+                  navigate('/mypage')
+                }}
+                className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all"
+              >
+                💎 ポイントを購入する
+              </button>
+              <button
+                onClick={() => setShowInsufficientModal(false)}
+                className="w-full py-2.5 text-white/40 hover:text-white/60 text-sm transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

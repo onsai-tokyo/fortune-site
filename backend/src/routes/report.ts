@@ -84,12 +84,12 @@ reportRouter.post('/generate', async (req, res) => {
 
     const partnerSection = partner ? `
 【比較対象データ】
-性別: ${input.partnerGender === 'male' ? '男性' : '女性'}${input.partnerBirthDate ? `　生年月日: ${input.partnerBirthDate}` : ''}${input.partnerMbti ? `　MBTI: ${input.partnerMbti}` : ''}
+性別: ${input.partnerGender === 'male' ? '男性' : '女性'}${input.partnerBirthDate ? `　生年月日: ${input.partnerBirthDate}` : ''}
 四柱推命: 年柱=${partner.shichu.year.kanshi} 月柱=${partner.shichu.month.kanshi} 日柱=${partner.shichu.day.kanshi}
 納音: ${partner.nayin}　宿命星: ${partner.sanmei.shukumeiStar}　天中殺: ${partner.sanmei.chusatsu}　宿曜: ${partner.sukuyo}宿` : ''
 
     const userContent = `【対象者データ】
-性別: ${genderLabel}　年齢: ${age}歳　生年月日: ${input.birthDate}${input.mbti ? `　MBTI: ${input.mbti}` : ''}
+性別: ${genderLabel}　年齢: ${age}歳　生年月日: ${input.birthDate}
 四柱推命:
   年柱: ${shichu.year.kanshi}（${shichu.year.element}・${shichu.year.yinYang}）
   月柱: ${shichu.month.kanshi}（${shichu.month.element}・${shichu.month.yinYang}）
@@ -138,7 +138,7 @@ ${sanitize(input.question)}
     const stream = getAnthropicClient().messages.stream({
       model: 'claude-sonnet-4-5',
       max_tokens: 6000,
-      system: `あなたは最高水準の人生戦略データ解析システムのシニアアナリストです。東洋命理学（四柱推命・納音・算命学・宿曜）とMBTI心理指標を統合した、極めて詳細かつ実践的な分析レポートを生成します。このレポートは有料サービスの成果物であり、クライアントが具体的な人生戦略を立てるための根拠となる文書です。表面的な分析ではなく、データの深部から洞察を引き出し、実行可能な戦略提言として昇華させてください。`,
+      system: `あなたは最高水準の人生戦略データ解析システムのシニアアナリストです。東洋命理学（四柱推命・納音・算命学・宿曜）を統合した、極めて詳細かつ実践的な分析レポートを生成します。このレポートは有料サービスの成果物であり、クライアントが具体的な人生戦略を立てるための根拠となる文書です。表面的な分析ではなく、データの深部から洞察を引き出し、実行可能な戦略提言として昇華させてください。`,
       messages: [{ role: 'user', content: userContent }],
     })
 

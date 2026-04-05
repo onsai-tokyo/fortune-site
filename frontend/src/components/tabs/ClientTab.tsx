@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { FortuneData, MarriageAnalysis, PartnerData } from '../../lib/types'
+import type { FortuneData, ClientAnalysis, PartnerData } from '../../lib/types'
 import { apiFetch } from '../../lib/api'
 import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
@@ -16,27 +16,7 @@ const YEARS  = Array.from({ length: 107 }, (_, i) => 2026 - i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const DAYS   = Array.from({ length: 31 }, (_, i) => i + 1)
 
-function ScoreRing({ score, label, color }: { score: number; label: string; color: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative w-16 h-16">
-        <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
-          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-          <circle cx="32" cy="32" r="26" fill="none" stroke={color} strokeWidth="5"
-            strokeDasharray={`${2 * Math.PI * 26}`}
-            strokeDashoffset={`${2 * Math.PI * 26 * (1 - score / 100)}`}
-            strokeLinecap="round" />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-base font-bold font-mono text-white">{score}</span>
-        </div>
-      </div>
-      <span className="text-white/35 text-xs text-center">{label}</span>
-    </div>
-  )
-}
-
-function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: string; gender: string }) => void }) {
+function ClientForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: string; gender: string }) => void }) {
   const [year,   setYear]   = useState('')
   const [month,  setMonth]  = useState('')
   const [day,    setDay]    = useState('')
@@ -58,11 +38,11 @@ function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: st
     <div className="glass-card border border-accent/15 p-6">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-1 h-5 bg-accent rounded-full" />
-        <h3 className="text-white font-semibold text-base">お相手の情報を入力</h3>
+        <h3 className="text-white font-semibold text-base">取引先担当者の情報を入力</h3>
       </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="text-white/50 text-xs mb-2 block">相手の生年月日 <span className="text-accent">*</span></label>
+          <label className="text-white/50 text-xs mb-2 block">担当者の生年月日 <span className="text-accent">*</span></label>
           <div className="grid grid-cols-3 gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
@@ -82,7 +62,7 @@ function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: st
           </div>
         </div>
         <div>
-          <label className="text-white/50 text-xs mb-2 block">相手の性別 <span className="text-accent">*</span></label>
+          <label className="text-white/50 text-xs mb-2 block">担当者の性別 <span className="text-accent">*</span></label>
           <div className="grid grid-cols-2 gap-2">
             {(['female', 'male'] as const).map(g => (
               <button key={g} type="button" onClick={() => setGender(g)}
@@ -94,65 +74,65 @@ function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: st
         </div>
         <button type="submit" disabled={!year || !month || !day}
           className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg transition-all text-sm disabled:opacity-40">
-          ✦ 結婚相性を診断する
+          ✦ 取引先担当者を分析する
         </button>
       </form>
     </div>
   )
 }
 
-export function MarriageTab({ fortuneData }: Props) {
+export function ClientTab({ fortuneData }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
-  const [result,  setResult]  = useState<MarriageAnalysis | null>(null)
+  const [result,  setResult]  = useState<ClientAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
   const [isPointInsufficient, setIsPointInsufficient] = useState(false)
-  const [partner, setPartner] = useState<(PartnerData & { birthDate: string; gender: string }) | null>(null)
+  const [client, setClient] = useState<(PartnerData & { birthDate: string; gender: string }) | null>(null)
 
   async function runAnalysis(p: PartnerData & { birthDate: string; gender: string }) {
-    setPartner(p)
+    setClient(p)
     setLoading(true)
     setError('')
     setIsPointInsufficient(false)
     try {
-      console.log('[MarriageTab] Starting analysis with partner:', p)
+      console.log('[ClientTab] Starting analysis with client:', p)
       const { input, shichu, nayin, sanmei, sukuyo } = fortuneData
-      const res = await apiFetch('/api/analyze/marriage', {
+      const res = await apiFetch('/api/analyze/client', {
         method: 'POST',
         body: JSON.stringify({
-          selfData:    { shichu, nayin, sanmei, sukuyo, birthDate: input.birthDate, gender: input.gender },
-          partnerData: { shichu: p.shichu, nayin: p.nayin, sanmei: p.sanmei, sukuyo: p.sukuyo, birthDate: p.birthDate, gender: p.gender },
+          selfData:   { shichu, nayin, sanmei, sukuyo, birthDate: input.birthDate, gender: input.gender },
+          clientData: { shichu: p.shichu, nayin: p.nayin, sanmei: p.sanmei, sukuyo: p.sukuyo, birthDate: p.birthDate, gender: p.gender },
         }),
       })
-      console.log('[MarriageTab] Response status:', res.status)
+      console.log('[ClientTab] Response status:', res.status)
       if (res.status === 402) {
         setIsPointInsufficient(true)
         throw new Error('ポイントが不足しています')
       }
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
-        console.error('[MarriageTab] Error response:', errData)
-        throw new Error(errData.error || `結婚相性診断に失敗しました（ステータス: ${res.status}）`)
+        console.error('[ClientTab] Error response:', errData)
+        throw new Error(errData.error || `取引先分析に失敗しました（ステータス: ${res.status}）`)
       }
-      const analysisResult = await res.json() as MarriageAnalysis
-      console.log('[MarriageTab] Analysis result received')
+      const analysisResult = await res.json() as ClientAnalysis
+      console.log('[ClientTab] Analysis result received')
       setResult(analysisResult)
       refreshPoints()
       // 鑑定済みフラグを保存
-      addAnalyzedFeature(user?.id, 'marriage')
+      addAnalyzedFeature(user?.id, 'client')
       if (user) {
         saveAnalysis(
           user.id,
-          'marriage',
+          'client',
           fortuneData.input.birthDate,
-          `結婚相性 - ${fortuneData.input.birthDate} × ${p.birthDate}`,
+          `取引先占い - ${fortuneData.input.birthDate} × ${p.birthDate}`,
           analysisResult
-        ).catch(err => console.error('[MarriageTab] Failed to save analysis:', err))
+        ).catch(err => console.error('[ClientTab] Failed to save analysis:', err))
       }
     } catch (e) {
-      console.error('[MarriageTab] Error:', e)
-      setError(e instanceof Error ? e.message : '結婚相性診断に失敗しました。再度お試しください。')
+      console.error('[ClientTab] Error:', e)
+      setError(e instanceof Error ? e.message : '取引先分析に失敗しました。再度お試しください。')
     } finally {
       setLoading(false)
     }
@@ -160,7 +140,7 @@ export function MarriageTab({ fortuneData }: Props) {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <div className="flex gap-1.5">{[0,1,2,3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse" style={{ animationDelay: `${i*0.15}s` }} />)}</div>
+      <div className="flex gap-1.5">{[0,1,2,3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: `${i*0.15}s` }} />)}</div>
       <p className="text-white/40 text-sm">命式を照合中...</p>
     </div>
   )
@@ -190,100 +170,116 @@ export function MarriageTab({ fortuneData }: Props) {
     return (
       <div className="glass-card p-6 text-center space-y-3">
         <p className="text-red-400 text-sm">{error}</p>
-        {partner && <button onClick={() => runAnalysis(partner)} className="text-pink-400 text-xs underline mr-4">再試行する</button>}
-        <button onClick={() => { setError(''); setPartner(null); setResult(null) }} className="text-pink-400 text-xs underline">再入力する</button>
+        {client && <button onClick={() => runAnalysis(client)} className="text-purple-400 text-xs underline mr-4">再試行する</button>}
+        <button onClick={() => { setError(''); setClient(null); setResult(null) }} className="text-purple-400 text-xs underline">再入力する</button>
       </div>
     )
   }
-  if (!result) return <PartnerForm onSubmit={runAnalysis} />
-
-  const balanceLabel = result.powerDynamic.balance === '対等' ? '対等' : result.powerDynamic.balance === 'あなた主導' ? 'あなた主導' : '相手主導'
-  const compatEntries: [string, number][] = [['日常生活', result.compatibility.daily], ['危機対応', result.compatibility.crisis], ['成長・向上', result.compatibility.growth], ['情熱・魅力', result.compatibility.passion]]
+  if (!result) return <ClientForm onSubmit={runAnalysis} />
 
   return (
     <div className="space-y-4 animate-fade-in">
-
-      {/* スコア概要 */}
-      <div className="glass-card border border-pink-500/15 p-6">
-        <div className="flex items-start justify-between mb-5">
+      {/* 取引先タイプ */}
+      <div className="glass-card border border-purple-500/15 p-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-white/25 text-xs italic mb-1">Marriage Analysis</p>
-            <h3 className="text-white text-xl font-bold">{result.marriageType}</h3>
+            <p className="text-white/25 text-xs italic mb-1">Client Analysis</p>
+            <h3 className="text-white text-xl font-bold">{result.clientType}</h3>
           </div>
           <div className="text-right">
-            <p className="text-white/20 text-xs mb-1">総合スコア</p>
-            <span className="text-4xl font-bold font-mono text-pink-400">{result.overallScore}</span>
+            <p className="text-white/20 text-xs mb-1">相性スコア</p>
+            <span className="text-4xl font-bold font-mono text-purple-400">{result.chemistryWithYou.score}</span>
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-2 mb-5">
-          {compatEntries.map(([label, score]) => (
-            <ScoreRing key={label} score={score} label={label} color={score >= 80 ? '#34d399' : score >= 65 ? '#f472b6' : '#fbbf24'} />
-          ))}
-        </div>
-        <div className="bg-pink-400/8 border border-pink-400/20 rounded-lg px-4 py-3">
-          <p className="text-white/80 text-sm leading-relaxed">{result.lifeDescription}</p>
+        <div className="bg-purple-400/8 border border-purple-400/20 rounded-lg px-4 py-3">
+          <p className="text-white/50 text-xs mb-0.5">意思決定スタイル</p>
+          <p className="text-white/80 text-sm leading-relaxed">{result.decisionStyle}</p>
         </div>
       </div>
 
-      {/* 力関係 */}
-      <div className="glass-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-1 h-5 bg-amber-400 rounded-full" />
-          <h3 className="text-white font-semibold">力関係・主導権</h3>
-          <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded border ${result.powerDynamic.balance === '対等' ? 'text-blue-400 border-blue-400/30 bg-blue-400/10' : 'text-amber-400 border-amber-400/30 bg-amber-400/10'}`}>{balanceLabel}</span>
-        </div>
-        <div className="bg-white/5 border border-white/8 rounded-lg p-4">
-          {result.powerDynamic.balance !== '対等' && (
-            <p className="text-amber-300 font-medium text-sm mb-2">リード役：{result.powerDynamic.leader}</p>
-          )}
-          <p className="text-white/60 text-sm leading-relaxed">{result.powerDynamic.description}</p>
-        </div>
-      </div>
-
-      {/* うまくいくコツ */}
+      {/* 信頼を得るポイント */}
       <div className="glass-card p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-1 h-5 bg-emerald-400 rounded-full" />
-          <h3 className="text-white font-semibold">うまくいくコツ</h3>
+          <h3 className="text-white font-semibold">信頼を得るポイント</h3>
         </div>
-        <div className="space-y-3">
-          {result.successKeys.map((k, i) => (
-            <div key={i} className="bg-emerald-400/5 border border-emerald-400/15 rounded-lg p-4">
-              <p className="text-emerald-300 font-semibold text-sm mb-1.5">{k.key}</p>
-              <p className="text-white/55 text-xs leading-relaxed">{k.description}</p>
+        <div className="space-y-2">
+          {result.trustFactors.map((t, i) => (
+            <div key={i} className="flex items-start gap-2 bg-emerald-400/5 border border-emerald-400/15 rounded-lg p-3">
+              <span className="text-emerald-400 text-xs mt-0.5">✓</span>
+              <span className="text-white/70 text-sm">{t}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 注意点 */}
+      {/* コミュニケーション傾向 */}
+      <div className="glass-card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 bg-blue-400 rounded-full" />
+          <h3 className="text-white font-semibold">コミュニケーション傾向</h3>
+        </div>
+        <div className="space-y-3">
+          {result.communicationPreferences.map((c, i) => (
+            <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-4">
+              <p className="text-blue-300 font-semibold text-sm mb-2">{c.channel}</p>
+              <p className="text-white/60 text-xs">{c.style}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* アプローチ戦略 */}
+      <div className="glass-card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 bg-purple-400 rounded-full" />
+          <h3 className="text-white font-semibold">フェーズ別アプローチ戦略</h3>
+        </div>
+        <div className="space-y-3">
+          {result.approachStrategies.map((a, i) => (
+            <div key={i} className="bg-purple-400/5 border border-purple-400/15 rounded-lg p-4">
+              <p className="text-purple-300 font-semibold text-sm mb-2">{a.phase}</p>
+              <p className="text-white/60 text-xs">{a.strategy}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* タブー */}
       <div className="glass-card p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-1 h-5 bg-red-400 rounded-full" />
-          <h3 className="text-white font-semibold">乗り越えるべき壁</h3>
+          <h3 className="text-white font-semibold">避けるべきこと</h3>
         </div>
-        <div className="space-y-3">
-          {result.challenges.map((c, i) => (
-            <div key={i} className="border border-white/8 rounded-lg p-4">
-              <p className="text-white font-medium text-sm mb-1">{c.issue}</p>
-              <p className="text-white/45 text-xs mb-2">{c.description}</p>
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-400 text-xs mt-0.5">→</span>
-                <p className="text-emerald-300/80 text-xs">{c.solution}</p>
-              </div>
+        <div className="space-y-2">
+          {result.taboos.map((t, i) => (
+            <div key={i} className="flex items-start gap-2 bg-red-400/5 border border-red-400/15 rounded-lg p-3">
+              <span className="text-red-400 text-xs mt-0.5">✕</span>
+              <span className="text-white/70 text-sm">{t}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 総括メッセージ */}
-      <div className="glass-card border border-pink-400/20 p-6">
-        <p className="text-white/30 text-xs mb-2 italic">命術師より</p>
-        <p className="text-white/80 text-sm leading-relaxed">{result.advice}</p>
+      {/* あなたとの相性 */}
+      <div className="glass-card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-5 bg-amber-400 rounded-full" />
+          <h3 className="text-white font-semibold">あなたとのシナジー</h3>
+        </div>
+        <div className="bg-white/5 border border-white/8 rounded-lg p-4">
+          <p className="text-white/70 text-sm leading-relaxed">{result.chemistryWithYou.description}</p>
+        </div>
       </div>
 
-      <button onClick={() => { setResult(null); setPartner(null) }} className="w-full py-2 text-white/20 hover:text-white/40 text-sm transition-colors">
-        ← 相手を変えて再診断
+      {/* 次のアクション */}
+      <div className="glass-card border border-purple-400/20 p-6">
+        <p className="text-purple-400 font-semibold text-sm mb-2">📌 次に取るべきアクション</p>
+        <p className="text-white/80 text-sm leading-relaxed">{result.nextAction}</p>
+      </div>
+
+      <button onClick={() => { setResult(null); setClient(null) }} className="w-full py-2 text-white/20 hover:text-white/40 text-sm transition-colors">
+        ← 別の取引先を分析
       </button>
     </div>
   )

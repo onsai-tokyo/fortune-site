@@ -18,13 +18,56 @@ export default function AuthPage() {
   const { user } = useAuth()
 
   useEffect(() => {
-    // メール確認後のコールバック検出（Supabaseがhashにtype=signupを付与）
-    const hash = window.location.hash
-    const hashParams = new URLSearchParams(hash.substring(1))
-    if (hashParams.get('type') === 'signup') {
-      setMessage('✓ メールの認証が完了しました！ようこそ。3ptプレゼント済みです。')
-      window.history.replaceState({}, '', window.location.pathname + window.location.search)
+    const detectRegistration = () => {
+      const hash = window.location.hash
+      const hashParams = new URLSearchParams(hash.substring(1))
+      const searchParams = new URLSearchParams(window.location.search)
+
+      console.log('[AuthPage] ====================')
+      console.log('[AuthPage] Full URL:', window.location.href)
+      console.log('[AuthPage] Hash:', hash)
+      console.log('[AuthPage] Hash params:', Object.fromEntries(hashParams.entries()))
+      console.log('[AuthPage] Search params:', Object.fromEntries(searchParams.entries()))
+
+      const isSignup = hashParams.get('type') === 'signup' || searchParams.get('type') === 'signup'
+      const hasAccessToken = !!hashParams.get('access_token')
+
+      console.log('[AuthPage] isSignup:', isSignup)
+      console.log('[AuthPage] hasAccessToken:', hasAccessToken)
+
+      if (isSignup || hasAccessToken) {
+        console.log('[AuthPage] 🎉 REGISTRATION COMPLETE DETECTED!')
+        console.log('[AuthPage] Setting localStorage flag...')
+
+        // フラグを設定
+        try {
+          localStorage.setItem('show_registration_complete', 'true')
+          const verify = localStorage.getItem('show_registration_complete')
+          console.log('[AuthPage] Flag verification:', verify)
+
+          if (verify !== 'true') {
+            console.error('[AuthPage] ❌ Failed to set flag!')
+          } else {
+            console.log('[AuthPage] ✅ Flag successfully set!')
+          }
+        } catch (e) {
+          console.error('[AuthPage] ❌ localStorage error:', e)
+        }
+
+        setMessage('🎉 登録が完了しました！ようこそ、宿命解析へ。ウェルカムボーナス3ptをプレゼントしました。')
+
+        // URLをクリーンにする
+        setTimeout(() => {
+          console.log('[AuthPage] Cleaning URL...')
+          window.history.replaceState({}, '', window.location.pathname)
+        }, 100)
+      } else {
+        console.log('[AuthPage] No registration detected')
+      }
+      console.log('[AuthPage] ====================')
     }
+
+    detectRegistration()
   }, [])
 
   useEffect(() => {

@@ -56,16 +56,15 @@ function calcAge(birthDate: string): number {
   return age
 }
 
-function personBlock(label: string, p: PersonData, gender: string, mbti: string, birthDate?: string): string {
+function personBlock(label: string, p: PersonData, gender: string, birthDate?: string): string {
   const hourLine = p.shichu.hour
     ? `時柱: ${p.shichu.hour.kanshi}（${p.shichu.hour.element}・${p.shichu.hour.yinYang}）`
     : '時柱: 不明'
-  const mbtiLine = mbti ? `MBTI: ${mbti}` : ''
   const genderLine = gender === 'male' ? '男性' : '女性'
 
   const ageLine = birthDate ? `生年月日: ${birthDate}（${calcAge(birthDate)}歳）` : ''
 
-  return `【${label}】性別: ${genderLine}${ageLine ? ' / ' + ageLine : ''}${mbtiLine ? ' / ' + mbtiLine : ''}
+  return `【${label}】性別: ${genderLine}${ageLine ? ' / ' + ageLine : ''}
 四柱推命:
   年柱: ${p.shichu.year.kanshi}（${p.shichu.year.element}・${p.shichu.year.yinYang}）
   月柱: ${p.shichu.month.kanshi}（${p.shichu.month.element}・${p.shichu.month.yinYang}）
@@ -79,9 +78,9 @@ function personBlock(label: string, p: PersonData, gender: string, mbti: string,
 function buildUserContent(fd: FortuneData): string {
   const hasPartner = !!fd.partner
 
-  const myBlock = personBlock('あなた', fd, fd.input.gender, fd.input.mbti, fd.input.birthDate)
+  const myBlock = personBlock('あなた', fd, fd.input.gender, fd.input.birthDate)
   const partnerBlock = hasPartner && fd.partner
-    ? '\n\n' + personBlock('お相手', fd.partner, fd.input.partnerGender, fd.input.partnerMbti, fd.input.partnerBirthDate)
+    ? '\n\n' + personBlock('お相手', fd.partner, fd.input.partnerGender, fd.input.partnerBirthDate)
     : ''
 
   const compatSection = hasPartner ? `
@@ -125,7 +124,7 @@ fortuneRouter.post('/', async (req, res) => {
     const stream = getAnthropicClient().messages.stream({
       model: 'claude-sonnet-4-5',
       max_tokens: 2500,
-      system: `あなたは人生戦略データ解析システムのAIアナリストです。東洋の命理学データ（四柱推命・納音・算命学・宿曜）とMBTI心理指標を統合し、クライアントの人生戦略を科学的・定量的に分析します。
+      system: `あなたは人生戦略データ解析システムのAIアナリストです。東洋の命理学データ（四柱推命・納音・算命学・宿曜）を統合し、クライアントの人生戦略を科学的・定量的に分析します。
 
 【絶対に守るルール】
 ・占術用語の解説は不要。分析結果と戦略提言だけを出力する

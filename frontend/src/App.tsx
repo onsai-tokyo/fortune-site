@@ -7,6 +7,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage'
 import ChatPage from './pages/ChatPage'
 import MyPage from './pages/MyPage'
 import CompatReportPage from './pages/CompatReportPage'
+import { TokushohouPage } from './pages/TokushohouPage'
 import { AuthProvider } from './contexts/AuthContext'
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/compat-report" element={<CompatReportPage />} />
+          <Route path="/tokushohou" element={<TokushohouPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

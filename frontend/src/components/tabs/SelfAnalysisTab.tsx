@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { FortuneData, SelfAnalysis } from '../../lib/types'
 import { apiFetch } from '../../lib/api'
 import { ShareButton } from '../ShareButton'
+import { useAuth } from '../../contexts/AuthContext'
+import { saveAnalysis } from '../../lib/history'
+import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
@@ -48,38 +52,95 @@ function AnalysisLoader() {
         ))}
       </div>
       <p className="text-white/40 text-sm">命式データを解析中...</p>
-      <p className="text-white/20 text-xs">四柱推命 × 算命学 × 宿曜 × 納音 × MBTI</p>
+      <p className="text-white/20 text-xs">四柱推命 × 算命学 × 宿曜 × 納音</p>
     </div>
   )
 }
 
 export function SelfAnalysisTab({ fortuneData }: Props) {
+  const navigate = useNavigate()
+  const { user, refreshPoints } = useAuth()
   const [data, setData] = useState<SelfAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isPointInsufficient, setIsPointInsufficient] = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setError('')
+    setIsPointInsufficient(false)
+    console.log('[SelfAnalysisTab] Starting analysis with fortuneData:', fortuneData)
+
     apiFetch('/api/analyze/self', {
       method: 'POST',
       body: JSON.stringify({ fortuneData }),
     })
-      .then(r => {
-        if (r.status === 402) throw new Error('ポイントが不足しています')
-        if (!r.ok) throw new Error()
+      .then(async r => {
+        console.log('[SelfAnalysisTab] Response status:', r.status)
+        if (r.status === 402) {
+          setIsPointInsufficient(true)
+          throw new Error('ポイントが不足しています')
+        }
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}))
+          console.error('[SelfAnalysisTab] Error response:', errData)
+          throw new Error(errData.error || `解析に失敗しました（ステータス: ${r.status}）`)
+        }
         return r.json()
       })
-      .then((json: SelfAnalysis) => setData(json))
-      .catch((e: Error) => setError(e.message || '解析に失敗しました。再度お試しください。'))
+      .then((json: SelfAnalysis) => {
+        console.log('[SelfAnalysisTab] Analysis result received:', json)
+        setData(json)
+        refreshPoints()
+        // 鑑定済みフラグを保存（ユーザー別）
+        addAnalyzedFeature(user?.id, 'self')
+        if (user) {
+          saveAnalysis(
+            user.id,
+            'self',
+            fortuneData.input.birthDate,
+            `自己分析 - ${fortuneData.input.birthDate}`,
+            json
+          ).catch(err => console.error('[SelfAnalysisTab] Failed to save analysis:', err))
+        }
+      })
+      .catch((e: Error) => {
+        console.error('[SelfAnalysisTab] Error:', e)
+        setError(e.message || '解析に失敗しました。再度お試しください。')
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [fortuneData.input.birthDate])
 
   if (loading) return <AnalysisLoader />
-  if (error) return (
-    <div className="glass-card p-6 text-center">
-      <p className="text-red-400 text-sm">{error}</p>
-    </div>
-  )
+  if (error) {
+    if (isPointInsufficient) {
+      return (
+        <div className="glass-card border border-amber-400/20 p-8 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full border-2 border-amber-400/30 bg-amber-400/10 flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-amber-400 font-semibold text-base mb-2">ポイントが不足しています</p>
+            <p className="text-white/60 text-sm mb-1">この分析には <span className="text-accent font-semibold">3ポイント</span> が必要です</p>
+            <p className="text-white/40 text-xs">ポイントを購入してご利用ください</p>
+          </div>
+          <button
+            onClick={() => navigate('/?section=pricing')}
+            className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all"
+          >
+            ポイントを購入する
+          </button>
+        </div>
+      )
+    }
+    return (
+      <div className="glass-card p-6 text-center">
+        <p className="text-red-400 text-sm">{error}</p>
+      </div>
+    )
+  }
   if (!data) return null
 
   return (
@@ -96,7 +157,7 @@ export function SelfAnalysisTab({ fortuneData }: Props) {
           <div className="text-right">
             <p className="text-white/20 text-xs mb-1">Data Sources</p>
             <div className="flex gap-1 flex-wrap justify-end">
-              {['四柱推命', '算命学', '宿曜', '納音', 'MBTI'].map(s => (
+              {['四柱推命', '算命学', '宿曜', '納音'].map(s => (
                 <span key={s} className="text-xs text-white/40 border border-white/10 rounded px-1.5 py-0.5">{s}</span>
               ))}
             </div>

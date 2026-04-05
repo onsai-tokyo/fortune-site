@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自動テスト実行中...</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      background: #1e293b;
+      color: white;
+      text-align: center;
+    }
+    .status {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .info { color: #3b82f6; }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>🤖 自動テスト</h1>
+  <div id="status" class="status">テスト準備中...</div>
+  <div id="instructions"></div>
+
+  <script>
+    const status = document.getElementById('status');
+    const instructions = document.getElementById('instructions');
+
+    function log(msg, type = 'info') {
+      console.log(msg);
+      status.className = 'status ' + type;
+      status.innerHTML = msg;
+    }
+
+    function showButton(text, onClick) {
+      const btn = document.createElement('button');
+      btn.textContent = text;
+      btn.onclick = onClick;
+      instructions.appendChild(btn);
+    }
+
+    // 自動実行
+    setTimeout(() => {
+      log('🧹 ステップ1: 旧データをクリア中...', 'info');
+
+      // 旧データを全削除
+      localStorage.removeItem('analyzed_features');
+      let cleared = 0;
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('analyzed_features_')) {
+          localStorage.removeItem(key);
+          cleared++;
+        }
+      });
+
+      console.log(`削除したキー: ${cleared}個`);
+
+      setTimeout(() => {
+        log('✅ ステップ2: 登録完了フラグをセット', 'success');
+        localStorage.setItem('show_registration_complete', 'true');
+
+        setTimeout(() => {
+          log('🔄 ステップ3: 3秒後に自動でトップページへ移動します...', 'info');
+
+          const countdown = document.createElement('div');
+          countdown.style.fontSize = '48px';
+          countdown.style.margin = '20px 0';
+          instructions.appendChild(countdown);
+
+          let count = 3;
+          countdown.textContent = count;
+
+          const timer = setInterval(() => {
+            count--;
+            countdown.textContent = count;
+            if (count === 0) {
+              clearInterval(timer);
+              log('🎉 トップページへ移動します！画面上部を見てください！', 'success');
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 500);
+            }
+          }, 1000);
+
+          showButton('今すぐ移動する', () => {
+            clearInterval(timer);
+            window.location.href = '/';
+          });
+
+          showButton('テストをキャンセル', () => {
+            clearInterval(timer);
+            localStorage.removeItem('show_registration_complete');
+            log('❌ テストをキャンセルしました', 'error');
+            countdown.remove();
+            instructions.innerHTML = '';
+            showButton('もう一度テスト', () => location.reload());
+          });
+
+        }, 1000);
+      }, 1000);
+    }, 500);
+  </script>
+</body>
+</html>
