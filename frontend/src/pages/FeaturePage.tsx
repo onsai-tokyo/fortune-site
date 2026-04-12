@@ -248,17 +248,18 @@ function BirthForm({
       </button>
 
       {!hasEnough && (
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center">
           <p className="text-red-400/70 text-xs">
-            ポイントを購入するか、月額プランにアップグレードしてください
+            ポイントを購入するか、月額プランにアップグレードしてください（
+            <button
+              type="button"
+              onClick={onInsufficientPoints}
+              className="text-accent underline underline-offset-2 hover:text-accent-dark transition-colors"
+            >
+              →ポイントを購入する
+            </button>
+            ）
           </p>
-          <button
-            type="button"
-            onClick={onInsufficientPoints}
-            className="flex-shrink-0 text-xs text-accent border border-accent/40 hover:bg-accent/10 rounded-lg px-3 py-1.5 transition-all"
-          >
-            購入する →
-          </button>
         </div>
       )}
     </form>
