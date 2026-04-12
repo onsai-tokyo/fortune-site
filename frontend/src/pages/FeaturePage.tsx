@@ -11,6 +11,7 @@ import { SubordinateTab } from '../components/tabs/SubordinateTab'
 import { ClientTab } from '../components/tabs/ClientTab'
 import { DirectionTab } from '../components/tabs/DirectionTab'
 import { PayjpModal } from '../components/PayjpModal'
+import { AnalysisChatPanel } from '../components/AnalysisChatPanel'
 import type { FortuneData } from '../lib/types'
 import { calcShichu, calcDaiyun, calcRyunen } from '../lib/shichu'
 import { calcNayin } from '../lib/nayin'
@@ -247,9 +248,18 @@ function BirthForm({
       </button>
 
       {!hasEnough && (
-        <p className="text-red-400/70 text-xs text-center">
-          ポイントを購入するか、月額プランにアップグレードしてください
-        </p>
+        <div className="flex items-center justify-center gap-3">
+          <p className="text-red-400/70 text-xs">
+            ポイントを購入するか、月額プランにアップグレードしてください
+          </p>
+          <button
+            type="button"
+            onClick={onInsufficientPoints}
+            className="flex-shrink-0 text-xs text-accent border border-accent/40 hover:bg-accent/10 rounded-lg px-3 py-1.5 transition-all"
+          >
+            購入する →
+          </button>
+        </div>
       )}
     </form>
   )
@@ -515,6 +525,7 @@ export function FeaturePage() {
             {featureId === 'subordinate' && <SubordinateTab   fortuneData={fortuneData} />}
             {featureId === 'client'      && <ClientTab        fortuneData={fortuneData} />}
             {featureId === 'direction'   && <DirectionTab     fortuneData={fortuneData} />}
+            <AnalysisChatPanel fortuneData={fortuneData} featureLabel={meta.label} />
           </>
         )}
 

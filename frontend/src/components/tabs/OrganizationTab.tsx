@@ -5,6 +5,9 @@ import { calcShichu } from '../../lib/shichu'
 import { calcNayin } from '../../lib/nayin'
 import { calcSanmei } from '../../lib/sanmei'
 import { getSukuyo } from '../../lib/sukuyo'
+import { useAuth } from '../../contexts/AuthContext'
+import { saveAnalysis } from '../../lib/history'
+import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
@@ -27,6 +30,7 @@ function calcMemberData(m: OrgMember) {
 }
 
 export function OrganizationTab({ fortuneData }: Props) {
+  const { user, refreshPoints } = useAuth()
   const [selfName, setSelfName] = useState('自分')
   const [members, setMembers] = useState<OrgMember[]>([{ name: '', birthDate: '', gender: 'male' }])
   const [result, setResult] = useState<OrganizationAnalysis | null>(null)
@@ -64,7 +68,14 @@ export function OrganizationTab({ fortuneData }: Props) {
       })
       if (res.status === 402) throw new Error('ポイントが不足しています')
       if (!res.ok) throw new Error()
-      setResult(await res.json() as OrganizationAnalysis)
+      const json = await res.json() as OrganizationAnalysis
+      setResult(json)
+      refreshPoints()
+      addAnalyzedFeature(user?.id, 'org')
+      if (user) {
+        saveAnalysis(user.id, 'org', fortuneData.input.birthDate, `組織診断 - ${fortuneData.input.birthDate}`, json)
+          .catch(() => {})
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '組織診断に失敗しました。再度お試しください。')
     } finally {
