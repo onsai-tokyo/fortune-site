@@ -11,7 +11,6 @@ import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, calcTsukimeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
 import { saveAnalysis } from '../lib/history'
-import { getAnalyzedFeatures } from '../lib/analyzedFeatures'
 
 interface FortuneCalcData {
   shichuYear: string
@@ -121,14 +120,8 @@ export function TopPage() {
   const [isProcessingSub, setIsProcessingSub] = useState(false)
   const [subError, setSubError] = useState('')
 
-  // 鑑定済みフラグ（ユーザー別にlocalStorageで管理）
-  const [analyzedFeatures, setAnalyzedFeatures] = useState<string[]>([])
-
   useEffect(() => {
     console.log('[TopPage] User changed, userId:', user?.id)
-    const features = getAnalyzedFeatures(user?.id)
-    console.log('[TopPage] Analyzed features for user:', features)
-    setAnalyzedFeatures(features)
   }, [user?.id])
 
   // 登録完了通知 - URLパラメータから直接チェック
@@ -958,122 +951,76 @@ export function TopPage() {
             <p className="text-white/35 text-sm">ポイントを使って各機能を利用できます</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              {
-                id: 'chat', label: 'AIに何でも相談', cost: '2pt / 回',
-                color: 'accent', border: 'border-blue-400/20', bg: 'rgba(59,130,246,0.06)',
-                description: '命式を記憶した命術師AIに仕事・恋愛・転機など何でも相談。',
-                items: ['テーマ・質問は何でもOK', '命式を踏まえた深い洞察', '会話履歴を記憶'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />,
-              },
-              {
-                id: 'self', label: '自己分析', cost: '3pt / 回',
-                color: 'blue-400', border: 'border-blue-500/20', bg: 'rgba(96,165,250,0.06)',
-                description: '強み・弱み・適職・人生転換期を6つの占術から解析。',
-                items: ['強み指数スコア', '適職マッチ分析', '人生転換期予測'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />,
-              },
-              {
-                id: 'compat', label: '相性診断', cost: '3pt / 回',
-                color: 'pink-400', border: 'border-pink-500/20', bg: 'rgba(244,114,182,0.06)',
-                description: '仕事・恋愛それぞれの相性スコアと関係性タイプを解析。',
-                items: ['仕事相性スコア', '恋愛相性スコア', '関係改善アドバイス'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />,
-              },
-              {
-                id: 'marriage', label: '結婚相性', cost: '3pt / 回',
-                color: 'rose-400', border: 'border-rose-500/20', bg: 'rgba(251,113,133,0.06)',
-                description: '結婚生活の実態・力関係・うまくいくコツを命式から解析。',
-                items: ['結婚生活スタイル', '力関係・主導権', 'うまくいくコツ'],
-                icon: <><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></>,
-              },
-              {
-                id: 'org', label: '組織診断', cost: '3pt / 回',
-                color: 'emerald-400', border: 'border-emerald-500/20', bg: 'rgba(52,211,153,0.06)',
-                description: 'キーマン特定・戦い方・人間関係マトリクスを一括解析。',
-                items: ['キーマン特定', '組織の戦い方', '人間関係マトリクス'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />,
-              },
-              {
-                id: 'recruit', label: '採用・他己分析', cost: '3pt / 回',
-                color: 'violet-400', border: 'border-violet-500/20', bg: 'rgba(167,139,250,0.06)',
-                description: '候補者の命式から強み・適性・面接官との相性を解析。',
-                items: ['候補者強み分析', '面接質問提案', 'あなたとの相性'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />,
-              },
-              {
-                id: 'boss', label: '上司占い', cost: '3pt / 回',
-                color: 'blue-500', border: 'border-blue-600/20', bg: 'rgba(59,130,246,0.08)',
-                description: '上司の命式からコミュニケーションのコツ・喜ぶ言葉を解析。',
-                items: ['喜ぶ言葉・NG言葉', 'コミュニケーション戦略', '今月の接し方'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />,
-              },
-              {
-                id: 'subordinate', label: '部下占い', cost: '3pt / 回',
-                color: 'green-500', border: 'border-green-600/20', bg: 'rgba(34,197,94,0.08)',
-                description: '部下の命式からモチベーション源泉・マネジメントのコツを解析。',
-                items: ['モチベーション源泉', 'マネジメントのコツ', '成長支援戦略'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />,
-              },
-              {
-                id: 'client', label: '取引先占い', cost: '3pt / 回',
-                color: 'purple-500', border: 'border-purple-600/20', bg: 'rgba(168,85,247,0.08)',
-                description: '取引先担当者の命式から信頼構築ポイント・アプローチ戦略を解析。',
-                items: ['信頼構築ポイント', 'アプローチ戦略', '次のアクション'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />,
-              },
-              {
-                id: 'direction', label: '方位診断', cost: '2pt / 回',
-                color: 'cyan-500', border: 'border-cyan-600/20', bg: 'rgba(6,182,212,0.08)',
-                description: '九星気学×四柱推命から吉方位・引越し・デスク配置を解析。',
-                items: ['吉方位・凶方位', '引越し・移転アドバイス', 'デスク配置提案'],
-                icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />,
-              },
-            ].map((f) => (
-              <div key={f.id} ref={f.id === 'chat' ? chatRef : undefined}
-                className="glass-card-hover border flex flex-col gap-4 p-6"
-                style={{ borderColor: 'rgba(255,255,255,0.07)', background: `linear-gradient(145deg, ${f.bg} 0%, rgba(15,23,42,0.65) 70%)` }}>
-                <div className="flex items-start justify-between">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-${f.color} flex-shrink-0`}
-                    style={{ background: `${f.bg}`, border: `1px solid rgba(255,255,255,0.08)` }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      {f.icon}
-                    </svg>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {analyzedFeatures.includes(f.id) && (
-                      <span className="text-xs text-white/30 bg-white/5 border border-white/8 rounded-full px-2 py-0.5">鑑定済</span>
-                    )}
-                    <span className={`text-xs font-mono font-medium text-${f.color} opacity-60`}>{f.cost}</span>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* 自由鑑定 */}
+            <div ref={chatRef} className="glass-card-hover border flex flex-col gap-4 p-6"
+              style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.65) 70%)' }}>
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-accent flex-shrink-0"
+                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
                 </div>
-                <div>
-                  <h3 className="text-white font-bold text-base mb-1">{f.label}</h3>
-                  <p className="text-white/40 text-xs leading-relaxed">{f.description}</p>
-                </div>
-                <ul className="space-y-1.5 flex-1">
-                  {f.items.map(item => (
-                    <li key={item} className="flex items-center gap-2">
-                      <svg className={`w-3.5 h-3.5 text-${f.color} opacity-60 flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      <span className="text-white/40 text-xs">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => f.id === 'chat'
-                    ? (user ? navigate('/chat') : navigate('/auth?mode=register'))
-                    : navigate(`/feature/${f.id}`)
-                  }
-                  className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all text-${f.color} border hover:opacity-90`}
-                  style={{ borderColor: `${f.bg.replace('0.06', '0.4')}`, background: f.bg }}
-                >
-                  {f.id === 'chat' ? 'チャットを始める →' : `${f.label}を試す →`}
-                </button>
+                <span className="text-xs font-mono font-medium text-accent opacity-60">3pt / 回</span>
               </div>
-            ))}
+              <div>
+                <h3 className="text-white font-bold text-base mb-1">自由鑑定</h3>
+                <p className="text-white/40 text-xs leading-relaxed">生年月日を入力して、気になることを自由に質問。複数の占術を統合してAIが回答します。</p>
+              </div>
+              <ul className="space-y-1.5 flex-1">
+                {['自己分析・強み・適職', '相性・人間関係・職場', '仕事運・恋愛運・方位など何でも'].map(item => (
+                  <li key={item} className="flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5 text-accent opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    <span className="text-white/40 text-xs">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => user ? navigate('/analyze') : navigate('/auth?mode=register')}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all text-accent border hover:opacity-90"
+                style={{ borderColor: 'rgba(99,102,241,0.4)', background: 'rgba(99,102,241,0.08)' }}
+              >
+                鑑定を始める →
+              </button>
+            </div>
+
+            {/* AIチャット */}
+            <div className="glass-card-hover border flex flex-col gap-4 p-6"
+              style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(145deg, rgba(59,130,246,0.06) 0%, rgba(15,23,42,0.65) 70%)' }}>
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-blue-400 flex-shrink-0"
+                  style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-mono font-medium text-blue-400 opacity-60">2pt / 回</span>
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-base mb-1">AIに何でも相談</h3>
+                <p className="text-white/40 text-xs leading-relaxed">命式を記憶した命術師AIに仕事・恋愛・転機など何でも相談。会話形式で深掘りできます。</p>
+              </div>
+              <ul className="space-y-1.5 flex-1">
+                {['テーマ・質問は何でもOK', '命式を踏まえた深い洞察', '会話履歴を記憶'].map(item => (
+                  <li key={item} className="flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5 text-blue-400 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    <span className="text-white/40 text-xs">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all text-blue-400 border hover:opacity-90"
+                style={{ borderColor: 'rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.06)' }}
+              >
+                チャットを始める →
+              </button>
+            </div>
           </div>
         </section>
 
