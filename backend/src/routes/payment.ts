@@ -153,7 +153,7 @@ paymentRouter.post('/webhook', async (req, res) => {
           const planInfo = PLANS[plan]
           if (planInfo) {
             // ポイント付与（service role で直接 RPC 呼び出し）
-            await supabase.rpc('add_points', { uid: user_id, delta: planInfo.pts })
+            await supabase.rpc('add_points', { target_user_id: user_id, amount: planInfo.pts })
             // expires_at を更新
             await supabase
               .from('subscriptions')

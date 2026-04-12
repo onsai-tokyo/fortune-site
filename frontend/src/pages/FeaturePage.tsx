@@ -10,7 +10,6 @@ import { BossTab } from '../components/tabs/BossTab'
 import { SubordinateTab } from '../components/tabs/SubordinateTab'
 import { ClientTab } from '../components/tabs/ClientTab'
 import { DirectionTab } from '../components/tabs/DirectionTab'
-import { ChatArea } from '../components/ChatArea'
 import { PayjpModal } from '../components/PayjpModal'
 import type { FortuneData } from '../lib/types'
 import { calcShichu, calcDaiyun, calcRyunen } from '../lib/shichu'
@@ -21,11 +20,11 @@ import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail, getAnimalFortune } from '../lib/archetype'
 
-type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'chat' | 'recruit' | 'boss' | 'subordinate' | 'client' | 'direction'
+type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'recruit' | 'boss' | 'subordinate' | 'client' | 'direction'
 
 // ポイントコスト定義
 const POINT_COST: Record<FeatureId, number> = {
-  self: 3, compat: 3, marriage: 3, org: 3, chat: 2, recruit: 3, boss: 3, subordinate: 3, client: 3, direction: 2,
+  self: 3, compat: 3, marriage: 3, org: 3, recruit: 3, boss: 3, subordinate: 3, client: 3, direction: 2,
 }
 
 const FEATURE_META: Record<FeatureId, {
@@ -50,11 +49,6 @@ const FEATURE_META: Record<FeatureId, {
     label: '組織診断', sub: 'Organization',
     dot: 'bg-emerald-400', border: 'border-emerald-500/30',
     description: 'あなたの生年月日を入力後、メンバーを追加してチームのキーマン・戦い方・人間関係マトリクスを解析します。',
-  },
-  chat: {
-    label: '命術師に相談', sub: 'Fortune Consultation',
-    dot: 'bg-accent', border: 'border-accent/30',
-    description: '生年月日を入力すると、30年以上の経験を持つ命術師（AIデータ駆動）があなたの命式をもとに相談に答えます。',
   },
   recruit: {
     label: '採用・他己分析', sub: 'Recruitment Analysis',
@@ -293,10 +287,10 @@ function InsufficientPointsModal({
             className="w-full py-3 border border-white/15 hover:border-white/30 rounded-lg text-sm transition-all text-left px-4 disabled:opacity-40">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-white font-medium">スモール</span>
-                <span className="text-white/40 text-xs ml-2">20 ポイント</span>
+                <span className="text-white font-medium">ライト</span>
+                <span className="text-white/40 text-xs ml-2">30 ポイント/月</span>
               </div>
-              <span className="text-accent font-bold">¥480</span>
+              <span className="text-accent font-bold">¥480/月</span>
             </div>
           </button>
 
@@ -305,10 +299,10 @@ function InsufficientPointsModal({
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-white font-medium">スタンダード</span>
-                <span className="text-white/40 text-xs ml-2">60 ポイント</span>
+                <span className="text-white/40 text-xs ml-2">80 ポイント/月</span>
                 <span className="text-xs text-accent ml-2">おすすめ</span>
               </div>
-              <span className="text-accent font-bold">¥980</span>
+              <span className="text-accent font-bold">¥980/月</span>
             </div>
           </button>
 
@@ -337,7 +331,7 @@ function InsufficientPointsModal({
 export function FeaturePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user, session, isPremium, points, refreshPoints } = useAuth()
+  const { user, session, isLoading, isPremium, points, refreshPoints } = useAuth()
   const [fortuneData, setFortuneData] = useState<FortuneData | null>(null)
   const [showInsufficientModal, setShowInsufficientModal] = useState(false)
   const [showPayjpModal, setShowPayjpModal] = useState<'small' | 'standard' | 'premium' | null>(null)
@@ -347,21 +341,24 @@ export function FeaturePage() {
   const featureId = (id as FeatureId) ?? 'self'
   const meta = FEATURE_META[featureId] ?? FEATURE_META.self
 
-  // 未ログインならリダイレクト
+  // 未ログインならリダイレクト（isLoading中は待機）
+  // /feature/chat は ChatPage（/chat）で処理する
   useEffect(() => {
-    if (!user) navigate('/auth?mode=register', { replace: true })
-  }, [user, navigate])
+    if (!isLoading && !user) navigate('/auth?mode=register', { replace: true })
+    if (!isLoading && id === 'chat') navigate('/chat', { replace: true })
+  }, [user, isLoading, id, navigate])
 
-  if (!user) return null
+  if (isLoading || !user) return null
+  if (id === 'chat') return null
 
   async function handlePayment(payjpToken: string) {
     if (!showPayjpModal) return
     setIsProcessingPayment(true); setPaymentError('')
 
     const endpointMap = {
-      small: '/api/payment/buy-points-small',
-      standard: '/api/payment/buy-points-standard',
-      premium: '/api/payment/subscribe-monthly',
+      small: '/api/payment/subscribe-light',
+      standard: '/api/payment/subscribe-standard',
+      premium: '/api/payment/subscribe-heavy',
     }
 
     try {
@@ -389,20 +386,22 @@ export function FeaturePage() {
   }
 
   const payjpTitleMap = {
-    small: 'ポイントパック スモール',
-    standard: 'ポイントパック スタンダード',
-    premium: 'AIに何でも相談 — 月額プラン',
+    small: 'ライトプラン — 30pt/月',
+    standard: 'スタンダードプラン — 80pt/月',
+    premium: 'ヘビープラン — 200pt/月',
   }
   const payjpAmountMap = { small: 480, standard: 980, premium: 1980 }
+  const payjpPtsMap = { small: 30, standard: 80, premium: 200 }
 
   return (
     <div className="min-h-screen">
       {/* Pay.jp モーダル */}
       {showPayjpModal && (
         <PayjpModal
-          mode={showPayjpModal === 'premium' ? 'subscription' : 'one-time'}
+          mode="subscription"
           title={payjpTitleMap[showPayjpModal]}
           amount={payjpAmountMap[showPayjpModal]}
+          pts={payjpPtsMap[showPayjpModal]}
           isProcessing={isProcessingPayment}
           error={paymentError}
           onToken={handlePayment}
@@ -414,9 +413,9 @@ export function FeaturePage() {
       {showInsufficientModal && (
         <InsufficientPointsModal
           onClose={() => setShowInsufficientModal(false)}
-          onBuySmall={() => setShowPayjpModal('small')}
-          onBuyStandard={() => setShowPayjpModal('standard')}
-          onPremium={() => setShowPayjpModal('premium')}
+          onBuySmall={() => { setShowInsufficientModal(false); setShowPayjpModal('small') }}
+          onBuyStandard={() => { setShowInsufficientModal(false); setShowPayjpModal('standard') }}
+          onPremium={() => { setShowInsufficientModal(false); setShowPayjpModal('premium') }}
           isProcessing={isProcessingPayment}
           error={paymentError}
         />
@@ -485,11 +484,11 @@ export function FeaturePage() {
                 <div className="flex gap-2">
                   <button onClick={() => setShowPayjpModal('small')}
                     className="flex-1 py-2.5 border border-white/15 hover:border-white/30 rounded-lg text-xs text-white/60 hover:text-white/80 transition-all">
-                    20pt — ¥480
+                    30pt — ¥480/月
                   </button>
                   <button onClick={() => setShowPayjpModal('standard')}
                     className="flex-1 py-2.5 border border-accent/30 hover:border-accent/60 rounded-lg text-xs text-accent transition-all bg-accent/5">
-                    60pt — ¥980
+                    80pt — ¥980/月
                   </button>
                 </div>
                 <button onClick={() => setShowPayjpModal('premium')}
@@ -516,7 +515,6 @@ export function FeaturePage() {
             {featureId === 'subordinate' && <SubordinateTab   fortuneData={fortuneData} />}
             {featureId === 'client'      && <ClientTab        fortuneData={fortuneData} />}
             {featureId === 'direction'   && <DirectionTab     fortuneData={fortuneData} />}
-            {featureId === 'chat'        && <ChatArea fortuneData={fortuneData} initialReading="" sessionData={{}} />}
           </>
         )}
 

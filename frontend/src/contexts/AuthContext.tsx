@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase, Subscription, UserPoints } from '../lib/supabase'
 import { clearAnalyzedFeatures } from '../lib/analyzedFeatures'
@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const userRef = useRef<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null)
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
-      const prevUserId = user?.id
+      const prevUserId = userRef.current?.id
 
       // 新規登録完了時にフラグを保存
       if (event === 'SIGNED_IN' && session?.user) {
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      userRef.current = session?.user ?? null
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {

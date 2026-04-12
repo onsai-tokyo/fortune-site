@@ -239,7 +239,7 @@ export default function ChatPage() {
             <button onClick={() => navigate('/mypage')} className="text-xs bg-white/10 text-white/60 hover:bg-white/20 rounded-full px-2 py-0.5 font-mono transition-colors">
               {points} pt
             </button>
-            <span className="text-white/30 text-xs hidden sm:block">1pt/メッセージ</span>
+            <span className="text-white/30 text-xs hidden sm:block">2pt/メッセージ</span>
           </div>
         </div>
       </nav>
@@ -443,7 +443,7 @@ export default function ChatPage() {
               </div>
               <h3 className="text-white font-bold text-lg mb-2">ポイントが不足しています</h3>
               <p className="text-white/50 text-sm leading-relaxed">
-                メッセージを送信するには1ポイントが必要です。<br/>
+                メッセージを送信するには2ポイントが必要です。<br/>
                 マイページからポイントを購入してください。
               </p>
             </div>
