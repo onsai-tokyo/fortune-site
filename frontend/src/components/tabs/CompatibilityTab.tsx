@@ -12,6 +12,7 @@ import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
+  onSaved?: (id: string) => void
 }
 
 type SubTab = 'work' | 'romantic'
@@ -173,7 +174,7 @@ function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDa
   )
 }
 
-export function CompatibilityTab({ fortuneData }: Props) {
+export function CompatibilityTab({ fortuneData, onSaved }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
   const [result, setResult] = useState<CompatibilityAnalysis | null>(null)
@@ -249,8 +250,9 @@ export function CompatibilityTab({ fortuneData }: Props) {
           'compat',
           fortuneData.input.birthDate,
           `相性診断 - ${fortuneData.input.birthDate} × ${partnerBlock.birthDate}`,
-          analysisResult
-        ).catch(err => console.error('[CompatibilityTab] Failed to save analysis:', err))
+          { result: analysisResult }
+        ).then(id => { if (id) onSaved?.(id) })
+          .catch(err => console.error('[CompatibilityTab] Failed to save analysis:', err))
       }
     } catch (e) {
       console.error('[CompatibilityTab] Error:', e)

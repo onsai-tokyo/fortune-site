@@ -11,6 +11,7 @@ import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
+  onSaved?: (id: string) => void
 }
 
 function dynamicColor(dynamic: string) {
@@ -29,7 +30,7 @@ function calcMemberData(m: OrgMember) {
   return { ...m, shichu, nayin, sanmei, sukuyo }
 }
 
-export function OrganizationTab({ fortuneData }: Props) {
+export function OrganizationTab({ fortuneData, onSaved }: Props) {
   const { user, refreshPoints } = useAuth()
   const [selfName, setSelfName] = useState('自分')
   const [members, setMembers] = useState<OrgMember[]>([{ name: '', birthDate: '', gender: 'male' }])
@@ -73,7 +74,8 @@ export function OrganizationTab({ fortuneData }: Props) {
       refreshPoints()
       addAnalyzedFeature(user?.id, 'org')
       if (user) {
-        saveAnalysis(user.id, 'org', fortuneData.input.birthDate, `組織診断 - ${fortuneData.input.birthDate}`, json)
+        saveAnalysis(user.id, 'org', fortuneData.input.birthDate, `組織診断 - ${fortuneData.input.birthDate}`, { result: json })
+          .then(id => { if (id) onSaved?.(id) })
           .catch(() => {})
       }
     } catch (e) {

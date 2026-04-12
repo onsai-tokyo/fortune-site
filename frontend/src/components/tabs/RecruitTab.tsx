@@ -10,7 +10,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
-interface Props { fortuneData: FortuneData }
+interface Props { fortuneData: FortuneData; onSaved?: (id: string) => void }
 
 const YEARS  = Array.from({ length: 107 }, (_, i) => 2026 - i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -19,7 +19,7 @@ const DAYS   = Array.from({ length: 31 }, (_, i) => i + 1)
 function scoreColor(s: number) { return s >= 80 ? 'bg-emerald-400' : s >= 65 ? 'bg-blue-400' : 'bg-amber-400' }
 function scoreText(s: number)  { return s >= 80 ? 'text-emerald-400' : s >= 65 ? 'text-blue-400' : 'text-amber-400' }
 
-export function RecruitTab({ fortuneData }: Props) {
+export function RecruitTab({ fortuneData, onSaved }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
   const [year,   setYear]   = useState('')
@@ -76,8 +76,9 @@ export function RecruitTab({ fortuneData }: Props) {
           'recruit',
           input.birthDate,
           `採用分析 - 候補者 ${birthDate}`,
-          analysisResult
-        ).catch(err => console.error('[RecruitTab] Failed to save analysis:', err))
+          { result: analysisResult }
+        ).then(id => { if (id) onSaved?.(id) })
+          .catch(err => console.error('[RecruitTab] Failed to save analysis:', err))
       }
     } catch (e) {
       console.error('[RecruitTab] Error:', e)

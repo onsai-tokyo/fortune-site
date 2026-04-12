@@ -9,6 +9,7 @@ import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
 interface Props {
   fortuneData: FortuneData
+  onSaved?: (id: string) => void
 }
 
 function ScoreBar({ score, color }: { score: number; color: string }) {
@@ -57,7 +58,7 @@ function AnalysisLoader() {
   )
 }
 
-export function SelfAnalysisTab({ fortuneData }: Props) {
+export function SelfAnalysisTab({ fortuneData, onSaved }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
   const [data, setData] = useState<SelfAnalysis | null>(null)
@@ -100,8 +101,9 @@ export function SelfAnalysisTab({ fortuneData }: Props) {
             'self',
             fortuneData.input.birthDate,
             `自己分析 - ${fortuneData.input.birthDate}`,
-            json
-          ).catch(err => console.error('[SelfAnalysisTab] Failed to save analysis:', err))
+            { result: json }
+          ).then(id => { if (id) onSaved?.(id) })
+            .catch(err => console.error('[SelfAnalysisTab] Failed to save analysis:', err))
         }
       })
       .catch((e: Error) => {

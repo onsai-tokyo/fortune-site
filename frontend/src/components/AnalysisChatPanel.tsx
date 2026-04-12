@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { FortuneData } from '../lib/types'
 import { useAuth } from '../contexts/AuthContext'
+import { saveChatMessages } from '../lib/history'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -10,6 +11,7 @@ interface Message {
 interface Props {
   fortuneData: FortuneData
   featureLabel: string
+  analysisId?: string
 }
 
 function renderBold(text: string): React.ReactNode {
@@ -26,7 +28,7 @@ function renderBold(text: string): React.ReactNode {
   )
 }
 
-export function AnalysisChatPanel({ fortuneData, featureLabel }: Props) {
+export function AnalysisChatPanel({ fortuneData, featureLabel, analysisId }: Props) {
   const { session, points, refreshPoints } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -135,6 +137,10 @@ export function AnalysisChatPanel({ fortuneData, featureLabel }: Props) {
       }
 
       refreshPoints()
+      if (analysisId) {
+        const allMessages = [...newMessages, { role: 'assistant' as const, content: full }]
+        saveChatMessages(analysisId, allMessages).catch(() => {})
+      }
     } catch (err) {
       setMessages(prev => {
         const updated = [...prev]

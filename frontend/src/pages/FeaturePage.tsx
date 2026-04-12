@@ -344,6 +344,7 @@ export function FeaturePage() {
   const navigate = useNavigate()
   const { user, session, isLoading, isPremium, points, refreshPoints } = useAuth()
   const [fortuneData, setFortuneData] = useState<FortuneData | null>(null)
+  const [analysisId, setAnalysisId] = useState<string | null>(null)
   const [showInsufficientModal, setShowInsufficientModal] = useState(false)
   const [showPayjpModal, setShowPayjpModal] = useState<'small' | 'standard' | 'premium' | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
@@ -517,16 +518,16 @@ export function FeaturePage() {
               <span className="text-white/20 text-xs ml-1">{fortuneData.input.birthDate}</span>
             </div>
 
-            {featureId === 'self'        && <SelfAnalysisTab  fortuneData={fortuneData} />}
-            {featureId === 'compat'      && <CompatibilityTab fortuneData={fortuneData} />}
-            {featureId === 'marriage'    && <MarriageTab      fortuneData={fortuneData} />}
-            {featureId === 'org'         && <OrganizationTab  fortuneData={fortuneData} />}
-            {featureId === 'recruit'     && <RecruitTab       fortuneData={fortuneData} />}
-            {featureId === 'boss'        && <BossTab          fortuneData={fortuneData} />}
-            {featureId === 'subordinate' && <SubordinateTab   fortuneData={fortuneData} />}
-            {featureId === 'client'      && <ClientTab        fortuneData={fortuneData} />}
-            {featureId === 'direction'   && <DirectionTab     fortuneData={fortuneData} />}
-            <AnalysisChatPanel fortuneData={fortuneData} featureLabel={meta.label} />
+            {featureId === 'self'        && <SelfAnalysisTab  fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'compat'      && <CompatibilityTab fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'marriage'    && <MarriageTab      fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'org'         && <OrganizationTab  fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'recruit'     && <RecruitTab       fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'boss'        && <BossTab          fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'subordinate' && <SubordinateTab   fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'client'      && <ClientTab        fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            {featureId === 'direction'   && <DirectionTab     fortuneData={fortuneData} onSaved={setAnalysisId} />}
+            <AnalysisChatPanel fortuneData={fortuneData} featureLabel={meta.label} analysisId={analysisId ?? undefined} />
           </>
         )}
 

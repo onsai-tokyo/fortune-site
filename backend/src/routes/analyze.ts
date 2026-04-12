@@ -501,3 +501,47 @@ analyzeRouter.post('/direction', requireAuth, requirePoints(2), async (req: Auth
     res.status(500).json({ error: '方位診断の生成に失敗しました' })
   }
 })
+
+// ─── 自由鑑定（3pt）─────────────────────────────────────────────────────────
+analyzeRouter.post('/free', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
+  try {
+    const { fortuneData, question, partnerBirthDate, partnerGender } = req.body
+    if (!fortuneData?.input?.birthDate) throw new Error('fortuneData is missing')
+
+    const { input, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen } = fortuneData
+    const currentYear = new Date().getFullYear()
+
+    const cacheKey = `free_${input.birthDate}_${input.gender}_${question ?? ''}_${partnerBirthDate ?? ''}`
+    const cached = cacheGet(cacheKey)
+    if (cached) { res.json(cached); return }
+
+    const selfCtx = buildPersonCtx({ shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen }, input, 'あなた')
+
+    let partnerCtx = ''
+    if (partnerBirthDate) {
+      partnerCtx = `\n【相手】生年月日:${partnerBirthDate} 性別:${partnerGender === 'female' ? '女性' : '男性'}`
+    }
+
+    const userPrompt = question
+      ? `${selfCtx}${partnerCtx}\n\n【現在年】${currentYear}年\n\n【質問】${question}\n\n上記の命式データをもとに、質問に対して詳細に答えてください。`
+      : `${selfCtx}\n\n【現在年】${currentYear}年\n\n命式データをもとに、この人物の特性・強み・人生傾向について詳しく解析してください。`
+
+    const message = await getAnthropicClient().messages.create({
+      model: getModel(req),
+      max_tokens: 2500,
+      system: `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した最高峰の命理アナリストです。
+命式データをもとに、ユーザーの質問に対して深く・具体的・断言調で回答します。
+マークダウンは使わず、自然な日本語の文章で答えてください。重要なポイントは**太字**で強調してください。`,
+      messages: [{ role: 'user', content: userPrompt }],
+    })
+
+    const content = message.content[0]
+    if (content.type !== 'text') throw new Error('Invalid response type')
+    const result = { answer: content.text }
+    cacheSet(cacheKey, result)
+    res.json(result)
+  } catch (err) {
+    console.error('Free analyze error:', err)
+    res.status(500).json({ error: '解析に失敗しました' })
+  }
+})

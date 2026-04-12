@@ -25,13 +25,29 @@ export async function saveAnalysis(
   return data?.id ?? null
 }
 
+export async function getAnalysis(id: string): Promise<AnalysisRecord | null> {
+  const { data } = await supabase
+    .from('analyses')
+    .select('*')
+    .eq('id', id)
+    .single()
+  return data ?? null
+}
+
 export async function saveChatMessages(
   recordId: string,
   messages: { role: string; content: string }[]
 ) {
+  const { data: record } = await supabase
+    .from('analyses')
+    .select('content')
+    .eq('id', recordId)
+    .single()
+  const existing = record?.content as Record<string, unknown> | null
+  const result = existing?.result ?? existing
   await supabase
     .from('analyses')
-    .update({ content: messages })
+    .update({ content: { result, chat: messages } })
     .eq('id', recordId)
 }
 

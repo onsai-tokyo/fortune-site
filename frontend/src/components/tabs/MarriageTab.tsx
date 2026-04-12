@@ -10,7 +10,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
-interface Props { fortuneData: FortuneData }
+interface Props { fortuneData: FortuneData; onSaved?: (id: string) => void }
 
 const YEARS  = Array.from({ length: 107 }, (_, i) => 2026 - i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -101,7 +101,7 @@ function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: st
   )
 }
 
-export function MarriageTab({ fortuneData }: Props) {
+export function MarriageTab({ fortuneData, onSaved }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
   const [result,  setResult]  = useState<MarriageAnalysis | null>(null)
@@ -147,8 +147,9 @@ export function MarriageTab({ fortuneData }: Props) {
           'marriage',
           fortuneData.input.birthDate,
           `結婚相性 - ${fortuneData.input.birthDate} × ${p.birthDate}`,
-          analysisResult
-        ).catch(err => console.error('[MarriageTab] Failed to save analysis:', err))
+          { result: analysisResult }
+        ).then(id => { if (id) onSaved?.(id) })
+          .catch(err => console.error('[MarriageTab] Failed to save analysis:', err))
       }
     } catch (e) {
       console.error('[MarriageTab] Error:', e)

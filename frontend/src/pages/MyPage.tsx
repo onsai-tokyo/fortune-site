@@ -15,6 +15,7 @@ const FEATURE_META: Record<string, { label: string; dot: string; path: string }>
   client:      { label: '取引先占い',     dot: 'bg-purple-500',  path: '/feature/client' },
   direction:   { label: '方位診断',       dot: 'bg-cyan-500',    path: '/feature/direction' },
   chat:        { label: 'AIチャット',     dot: 'bg-accent',      path: '/chat' },
+  free:        { label: '自由鑑定',       dot: 'bg-accent',      path: '/analyze' },
 }
 
 function formatDate(iso: string) {
@@ -112,7 +113,11 @@ export default function MyPage() {
             {records.map(r => {
               const meta = FEATURE_META[r.feature] ?? { label: r.feature, dot: 'bg-white/30', path: '/' }
               return (
-                <div key={r.id} className="glass-card border border-white/5 p-4 flex items-start gap-4">
+                <div
+                  key={r.id}
+                  className="glass-card border border-white/5 p-4 flex items-start gap-4 cursor-pointer hover:border-white/15 transition-colors"
+                  onClick={() => navigate(`/history/${r.id}`)}
+                >
                   <div className={`w-1.5 h-1.5 rounded-full ${meta.dot} mt-2 flex-shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -128,12 +133,9 @@ export default function MyPage() {
                     )}
                     <p className="text-white/20 text-xs mt-1">{formatDate(r.created_at)}</p>
                   </div>
-                  <button
-                    onClick={() => navigate(meta.path)}
-                    className="text-white/20 hover:text-accent text-xs transition-colors flex-shrink-0"
-                  >
-                    再分析 →
-                  </button>
+                  <span className="text-white/20 hover:text-accent text-xs transition-colors flex-shrink-0">
+                    詳細 →
+                  </span>
                 </div>
               )
             })}

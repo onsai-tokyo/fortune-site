@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
 
-interface Props { fortuneData: FortuneData }
+interface Props { fortuneData: FortuneData; onSaved?: (id: string) => void }
 
 function DirectionLoader() {
   return (
@@ -37,7 +37,7 @@ function getDirectionColor(direction: string): string {
   return DIRECTION_COLORS[direction] || 'text-white/60 border-white/20 bg-white/5'
 }
 
-export function DirectionTab({ fortuneData }: Props) {
+export function DirectionTab({ fortuneData, onSaved }: Props) {
   const navigate = useNavigate()
   const { user, refreshPoints } = useAuth()
   const [data, setData] = useState<DirectionAnalysis | null>(null)
@@ -80,8 +80,9 @@ export function DirectionTab({ fortuneData }: Props) {
             'direction',
             fortuneData.input.birthDate,
             `方位診断 - ${fortuneData.input.birthDate}`,
-            json
-          ).catch(err => console.error('[DirectionTab] Failed to save analysis:', err))
+            { result: json }
+          ).then(id => { if (id) onSaved?.(id) })
+            .catch(err => console.error('[DirectionTab] Failed to save analysis:', err))
         }
       })
       .catch((e: Error) => {
