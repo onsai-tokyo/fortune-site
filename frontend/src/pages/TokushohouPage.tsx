@@ -32,7 +32,7 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">所在地</h2>
-            <p className="text-white/70 text-sm">〒150-0001 東京都渋谷区神宮前1-1-1</p>
+            <p className="text-white/70 text-sm">東京都目黒区下目黒1丁目1番14号 コノトラビル7F</p>
             <p className="text-white/50 text-xs mt-1">※請求があった場合には遅滞なく開示いたします</p>
           </section>
 

@@ -1250,6 +1250,14 @@ export function TopPage() {
             <button onClick={() => navigate('/tokushohou')} className="text-white/30 hover:text-white/50 text-xs transition-colors">
               特定商取引法に基づく表記
             </button>
+            <span className="text-white/15 text-xs">|</span>
+            <button onClick={() => navigate('/terms')} className="text-white/30 hover:text-white/50 text-xs transition-colors">
+              利用規約
+            </button>
+            <span className="text-white/15 text-xs">|</span>
+            <button onClick={() => navigate('/privacy')} className="text-white/30 hover:text-white/50 text-xs transition-colors">
+              プライバシーポリシー
+            </button>
           </div>
           <p className="text-white/15 text-xs italic">解析結果は意思決定の参考情報としてご活用ください</p>
         </div>

@@ -10,6 +10,8 @@ import HistoryDetailPage from './pages/HistoryDetailPage'
 import AnalyzePage from './pages/AnalyzePage'
 import CompatReportPage from './pages/CompatReportPage'
 import { TokushohouPage } from './pages/TokushohouPage'
+import { TermsPage } from './pages/TermsPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { AuthProvider } from './contexts/AuthContext'
 
 export default function App() {
@@ -28,6 +30,8 @@ export default function App() {
           <Route path="/analyze" element={<AnalyzePage />} />
           <Route path="/compat-report" element={<CompatReportPage />} />
           <Route path="/tokushohou" element={<TokushohouPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
