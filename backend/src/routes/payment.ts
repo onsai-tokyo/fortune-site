@@ -50,9 +50,9 @@ export function verifyPaidToken(token: string): boolean {
 // PAY.JP ダッシュボードで事前にプランを作成し、IDを環境変数に設定してください
 // PAYJP_PLAN_LIGHT, PAYJP_PLAN_STANDARD, PAYJP_PLAN_HEAVY
 const PLANS = {
-  light:    { pts: 30,  amount: 480,  label: 'ライト',       planId: process.env.PAYJP_PLAN_LIGHT    ?? 'fortune_light' },
-  standard: { pts: 80,  amount: 980,  label: 'スタンダード', planId: process.env.PAYJP_PLAN_STANDARD ?? 'fortune_standard' },
-  heavy:    { pts: 200, amount: 1980, label: 'ヘビー',        planId: process.env.PAYJP_PLAN_HEAVY    ?? 'fortune_heavy' },
+  light:    { pts: 30,  amount: 780,  label: 'ライト',       planId: process.env.PAYJP_PLAN_LIGHT    ?? 'fortune_light' },
+  standard: { pts: 80,  amount: 1980, label: 'スタンダード', planId: process.env.PAYJP_PLAN_STANDARD ?? 'fortune_standard' },
+  heavy:    { pts: 200, amount: 3980, label: 'ヘビー',        planId: process.env.PAYJP_PLAN_HEAVY    ?? 'fortune_heavy' },
 } as const
 type PlanKey = keyof typeof PLANS
 
@@ -72,17 +72,17 @@ function getServiceSupabase() {
   )
 }
 
-// ─── ポイントサブスク登録（ライト ¥480/月 → 30pt/月）────────────────────────
+// ─── ポイントサブスク登録（ライト ¥780/月 → 30pt/月）────────────────────────
 paymentRouter.post('/subscribe-light', requireAuth, async (req: AuthRequest, res) => {
   await handleSubscribe(req, res, 'light')
 })
 
-// ─── ポイントサブスク登録（スタンダード ¥980/月 → 80pt/月）─────────────────
+// ─── ポイントサブスク登録（スタンダード ¥1,980/月 → 80pt/月）───────────────
 paymentRouter.post('/subscribe-standard', requireAuth, async (req: AuthRequest, res) => {
   await handleSubscribe(req, res, 'standard')
 })
 
-// ─── ポイントサブスク登録（ヘビー ¥1,980/月 → 200pt/月）────────────────────
+// ─── ポイントサブスク登録（ヘビー ¥3,980/月 → 200pt/月）────────────────────
 paymentRouter.post('/subscribe-heavy', requireAuth, async (req: AuthRequest, res) => {
   await handleSubscribe(req, res, 'heavy')
 })

@@ -174,9 +174,9 @@ export function TopPage() {
   }
 
   const SUBSCRIPTION_PLANS = {
-    light:    { pts: 30,  amount: 480,  label: 'ライト',       endpoint: '/api/payment/subscribe-light' },
-    standard: { pts: 80,  amount: 980,  label: 'スタンダード', endpoint: '/api/payment/subscribe-standard' },
-    heavy:    { pts: 200, amount: 1980, label: 'ヘビー',        endpoint: '/api/payment/subscribe-heavy' },
+    light:    { pts: 30,  amount: 780,  label: 'ライト',       endpoint: '/api/payment/subscribe-light' },
+    standard: { pts: 80,  amount: 1980, label: 'スタンダード', endpoint: '/api/payment/subscribe-standard' },
+    heavy:    { pts: 200, amount: 3980, label: 'ヘビー',        endpoint: '/api/payment/subscribe-heavy' },
   } as const
 
   async function handleSubPayment(payjpToken: string) {
@@ -573,7 +573,7 @@ export function TopPage() {
               {[
                 { label: '総合鑑定書を生成する', sub: '無料 · 登録不要', action: () => { scrollToInput(); setMenuOpen(false) } },
                 { label: '詳細鑑定',             sub: 'AIに相談・自己分析・相性診断など', action: () => { chatRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
-                { label: 'プランを購入する',      sub: '¥480/月〜 毎月ポイント付与', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
+                { label: 'プランを購入する',      sub: '¥780/月〜 毎月ポイント付与', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 { label: 'FAQ',                  sub: 'よくある質問・解約について', action: () => { faqRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 ...(user ? [{ label: 'マイページ', sub: '鑑定履歴・チャット記録', action: () => { navigate('/mypage'); setMenuOpen(false) } }] : []),
               ].map(item => (
@@ -1079,7 +1079,7 @@ export function TopPage() {
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
-                    <span className="text-white font-bold text-2xl">480</span>
+                    <span className="text-white font-bold text-2xl">780</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
                 </div>
@@ -1120,7 +1120,7 @@ export function TopPage() {
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
-                    <span className="text-white font-bold text-2xl">980</span>
+                    <span className="text-white font-bold text-2xl">1,980</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
                 </div>
@@ -1158,7 +1158,7 @@ export function TopPage() {
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white/40 text-sm">¥</span>
-                    <span className="text-white font-bold text-2xl">1,980</span>
+                    <span className="text-white font-bold text-2xl">3,980</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
                 </div>

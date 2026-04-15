@@ -50,16 +50,16 @@ export function TokushohouPage() {
                 <span className="text-accent font-semibold">無料</span>
               </div>
               <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（スモール）</span>
-                <span className="text-white/80 font-semibold">480円/月（税込）</span>
+                <span>ポイントサブスク（ライト）</span>
+                <span className="text-white/80 font-semibold">780円/月（税込）</span>
               </div>
               <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（ミディアム）</span>
-                <span className="text-white/80 font-semibold">1,480円/月（税込）</span>
+                <span>ポイントサブスク（スタンダード）</span>
+                <span className="text-white/80 font-semibold">1,980円/月（税込）</span>
               </div>
               <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（ラージ）</span>
-                <span className="text-white/80 font-semibold">2,980円/月（税込）</span>
+                <span>ポイントサブスク（ヘビー）</span>
+                <span className="text-white/80 font-semibold">3,980円/月（税込）</span>
               </div>
               <div className="flex justify-between py-2">
                 <span>各種分析（自己分析・相性診断など）</span>

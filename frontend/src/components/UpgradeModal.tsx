@@ -19,7 +19,7 @@ export function UpgradeModal({ onSubscribe, onClose }: Props) {
         </div>
 
         <div className="glass-card p-4 space-y-2 border border-accent/20" style={{ background: 'rgba(148,163,184,0.05)' }}>
-          <p className="text-accent text-xs font-semibold tracking-wider">プレミアム会員 — 1,980円/月</p>
+          <p className="text-accent text-xs font-semibold tracking-wider">プレミアム会員 — 3,980円/月</p>
           <p className="text-white/70 text-sm leading-relaxed">
             毎月AIが6占術を統合して今月の運勢をお届け。AIチャット相談も無制限でご利用いただけます。
           </p>
@@ -42,7 +42,7 @@ export function UpgradeModal({ onSubscribe, onClose }: Props) {
             onClick={onSubscribe}
             className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all"
           >
-            1,980円/月のプレミアム会員になる
+            3,980円/月のプレミアム会員になる
           </button>
           <button
             onClick={onClose}

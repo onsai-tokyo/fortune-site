@@ -301,7 +301,7 @@ function InsufficientPointsModal({
                 <span className="text-white font-medium">ライト</span>
                 <span className="text-white/40 text-xs ml-2">30 ポイント/月</span>
               </div>
-              <span className="text-accent font-bold">¥480/月</span>
+              <span className="text-accent font-bold">¥780/月</span>
             </div>
           </button>
 
@@ -313,7 +313,7 @@ function InsufficientPointsModal({
                 <span className="text-white/40 text-xs ml-2">80 ポイント/月</span>
                 <span className="text-xs text-accent ml-2">おすすめ</span>
               </div>
-              <span className="text-accent font-bold">¥980/月</span>
+              <span className="text-accent font-bold">¥1,980/月</span>
             </div>
           </button>
 
@@ -325,7 +325,7 @@ function InsufficientPointsModal({
 
           <button onClick={onPremium} disabled={isProcessing}
             className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all disabled:opacity-40">
-            月額プラン ¥1,980 — 無制限
+            月額プラン ¥3,980 — 無制限
           </button>
         </div>
 
@@ -402,7 +402,7 @@ export function FeaturePage() {
     standard: 'スタンダードプラン — 80pt/月',
     premium: 'ヘビープラン — 200pt/月',
   }
-  const payjpAmountMap = { small: 480, standard: 980, premium: 1980 }
+  const payjpAmountMap = { small: 780, standard: 1980, premium: 3980 }
   const payjpPtsMap = { small: 30, standard: 80, premium: 200 }
 
   return (
@@ -496,16 +496,16 @@ export function FeaturePage() {
                 <div className="flex gap-2">
                   <button onClick={() => setShowPayjpModal('small')}
                     className="flex-1 py-2.5 border border-white/15 hover:border-white/30 rounded-lg text-xs text-white/60 hover:text-white/80 transition-all">
-                    30pt — ¥480/月
+                    30pt — ¥780/月
                   </button>
                   <button onClick={() => setShowPayjpModal('standard')}
                     className="flex-1 py-2.5 border border-accent/30 hover:border-accent/60 rounded-lg text-xs text-accent transition-all bg-accent/5">
-                    80pt — ¥980/月
+                    80pt — ¥1,980/月
                   </button>
                 </div>
                 <button onClick={() => setShowPayjpModal('premium')}
                   className="w-full py-2.5 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-xs transition-all">
-                  月額プラン ¥1,980 — 無制限
+                  月額プラン ¥3,980 — 無制限
                 </button>
               </div>
             )}

@@ -167,7 +167,7 @@ export default function AnalyzePage() {
   }
 
   const payjpTitleMap = { small: 'ライトプラン — 30pt/月', standard: 'スタンダードプラン — 80pt/月', premium: 'ヘビープラン — 200pt/月' }
-  const payjpAmountMap = { small: 480, standard: 980, premium: 1980 }
+  const payjpAmountMap = { small: 780, standard: 1980, premium: 3980 }
   const payjpPtsMap = { small: 30, standard: 80, premium: 200 }
 
   return (
