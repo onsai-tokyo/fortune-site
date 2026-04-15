@@ -1085,8 +1085,7 @@ export function TopPage() {
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '10回分（3pt/回）'],
-                    ['AIチャット', '15回分（2pt/回）'],
+                    ['チャット', '15回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
@@ -1126,8 +1125,7 @@ export function TopPage() {
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '26回分（3pt/回）'],
-                    ['AIチャット', '40回分（2pt/回）'],
+                    ['チャット', '40回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
@@ -1164,8 +1162,7 @@ export function TopPage() {
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
-                    ['詳細分析', '66回分（3pt/回）'],
-                    ['AIチャット', '100回分（2pt/回）'],
+                    ['チャット', '100回分（2pt/回）'],
                   ].map(([k, v]) => (
                     <li key={k} className="flex items-center justify-between text-xs">
                       <span className="text-white/40">{k}</span>
