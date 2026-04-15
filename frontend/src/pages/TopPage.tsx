@@ -1082,7 +1082,6 @@ export function TopPage() {
                     <span className="text-white font-bold text-2xl">480</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
-                  <p className="text-blue-300/50 text-xs mt-1 font-mono">1pt ≈ ¥16</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
@@ -1124,7 +1123,6 @@ export function TopPage() {
                     <span className="text-white font-bold text-2xl">980</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
-                  <p className="text-accent/50 text-xs mt-1 font-mono">1pt ≈ ¥12 · 25%お得</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
@@ -1163,7 +1161,6 @@ export function TopPage() {
                     <span className="text-white font-bold text-2xl">1,980</span>
                     <span className="text-white/30 text-sm">/月</span>
                   </div>
-                  <p className="text-violet-300/50 text-xs mt-1 font-mono">1pt ≈ ¥9.9 · 38%お得</p>
                 </div>
                 <ul className="space-y-2.5 flex-1">
                   {[
