@@ -57,7 +57,7 @@ const sc = 'bg-white/5 border border-white/10 rounded-lg px-2 py-2.5 text-white 
 
 export default function ChatPage() {
   const navigate = useNavigate()
-  const { user, session, points, refreshPoints } = useAuth()
+  const { user, session, points, refreshPoints, isLoading } = useAuth()
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
 
@@ -262,6 +262,14 @@ export default function ChatPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-deep-navy flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+      </div>
+    )
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
@@ -357,7 +365,7 @@ export default function ChatPage() {
             </svg>
             マイページ
           </button>
-          <span className="text-white/25 text-xs font-mono">{points} pt</span>
+          <span className="text-white/60 text-xs font-mono bg-white/8 px-2 py-0.5 rounded-full">{points} pt</span>
         </div>
       </aside>
 
@@ -375,7 +383,7 @@ export default function ChatPage() {
             <div className="w-1.5 h-1.5 rounded-full bg-accent" />
             <span className="text-white/55 text-sm italic tracking-widest">fate-lab</span>
           </div>
-          <span className="ml-auto text-white/25 text-xs font-mono">{points} pt</span>
+          <span className="ml-auto text-white/60 text-xs font-mono bg-white/5 px-2 py-0.5 rounded-full">{points} pt</span>
         </div>
 
         {/* ── Past session view ── */}

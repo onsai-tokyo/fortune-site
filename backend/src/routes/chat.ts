@@ -67,6 +67,11 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
       .filter((m): m is ChatMessage => m.role === 'user' || m.role === 'assistant')
       .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content.slice(0, 2000) }))
 
+    // Claude APIは最初のメッセージが'user'でないとエラーになるため先頭のassistantを除去
+    while (history.length > 0 && history[0].role === 'assistant') {
+      history.shift()
+    }
+
     if (history.length === 0 || history[history.length - 1].role !== 'user') {
       history.push({ role: 'user', content: sanitizedMsg })
     }
