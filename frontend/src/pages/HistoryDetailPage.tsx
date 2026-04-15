@@ -196,8 +196,11 @@ function AnalysisContent({ record }: { record: AnalysisRecord }) {
 
   // feature === 'chat' の場合は会話のみ
   if (record.feature === 'chat') {
-    const msgs = Array.isArray(raw) ? raw as { role: string; content: string }[] : null
-    return msgs ? <ChatHistory messages={msgs} /> : null
+    const msgs = Array.isArray(raw?.chat)
+      ? raw!.chat as { role: string; content: string }[]
+      : Array.isArray(raw) ? raw as { role: string; content: string }[]
+      : null
+    return msgs && msgs.length > 0 ? <ChatHistory messages={msgs} /> : <p className="text-white/30 text-sm">チャット内容がありません</p>
   }
 
   // 自由鑑定: answer フィールドを直接表示

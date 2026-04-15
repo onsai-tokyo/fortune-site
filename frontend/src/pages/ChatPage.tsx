@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { saveAnalysis, saveChatMessages } from '../lib/history'
+import { saveAnalysis, saveChatMessages, getAnalyses, type AnalysisRecord } from '../lib/history'
 import { calcShichu } from '../lib/shichu'
 import { calcNayin } from '../lib/nayin'
 import { calcSanmei } from '../lib/sanmei'
@@ -27,12 +27,58 @@ const DAYS    = Array.from({ length: 31 }, (_, i) => i + 1)
 const HOURS   = Array.from({ length: 24 }, (_, i) => i)
 const MINUTES = Array.from({ length: 60 }, (_, i) => i)
 
+function groupSessions(sessions: AnalysisRecord[]) {
+  const now = new Date()
+  const groups: { label: string; items: AnalysisRecord[] }[] = [
+    { label: '今日', items: [] },
+    { label: '昨日', items: [] },
+    { label: '過去7日間', items: [] },
+    { label: '過去30日間', items: [] },
+    { label: 'それ以前', items: [] },
+  ]
+  sessions.forEach(s => {
+    const diff = (now.getTime() - new Date(s.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    if (diff < 1) groups[0].items.push(s)
+    else if (diff < 2) groups[1].items.push(s)
+    else if (diff < 7) groups[2].items.push(s)
+    else if (diff < 30) groups[3].items.push(s)
+    else groups[4].items.push(s)
+  })
+  return groups.filter(g => g.items.length > 0)
+}
+
+function renderBold(text: string): React.ReactNode {
+  const parts = text.split(/\*\*(.+?)\*\*/g)
+  if (parts.length === 1) return text
+  return <>{parts.map((p, i) => i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{p}</strong> : <span key={i}>{p}</span>)}</>
+}
+
+const sc = 'bg-white/5 border border-white/10 rounded-lg px-2 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none w-full'
+
 export default function ChatPage() {
   const navigate = useNavigate()
   const { user, session, points, refreshPoints } = useAuth()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const inputRef  = useRef<HTMLTextAreaElement>(null)
 
+  // Sidebar
+  const [sessions, setSessions]         = useState<AnalysisRecord[]>([])
+  const [sidebarOpen, setSidebarOpen]   = useState(false)
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+  const [isViewingPast, setIsViewingPast]     = useState(false)
+
+  // Chat
+  const [calcData, setCalcData]             = useState<CalcData | null>(null)
+  const [birthDate, setBirthDate]           = useState('')
+  const [birthTime, setBirthTime]           = useState('')
+  const [partnerBirthDate, setPartnerBirthDate] = useState('')
+  const [messages, setMessages]             = useState<Message[]>([])
+  const [input, setInput]                   = useState('')
+  const [isStreaming, setIsStreaming]       = useState(false)
+  const [chatRecordId, setChatRecordId]     = useState<string | null>(null)
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false)
+
+  // Birth form
   const [form, setForm] = useState({
     year: '', month: '', day: '', hour: '', minute: '',
     gender: 'female' as 'male' | 'female',
@@ -40,20 +86,41 @@ export default function ChatPage() {
     partnerYear: '', partnerMonth: '', partnerDay: '',
     partnerGender: 'male' as 'male' | 'female',
   })
-  const [calcData, setCalcData] = useState<CalcData | null>(null)
-  const [birthDate, setBirthDate] = useState('')
-  const [birthTime, setBirthTime] = useState('')
-  const [partnerBirthDate, setPartnerBirthDate] = useState('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [isStreaming, setIsStreaming] = useState(false)
   const [formError, setFormError] = useState('')
-  const [chatRecordId, setChatRecordId] = useState<string | null>(null)
-  const [showInsufficientModal, setShowInsufficientModal] = useState(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    if (!user) return
+    getAnalyses(user.id).then(data => {
+      setSessions(data.filter(r => r.feature === 'chat'))
+    }).catch(() => {})
+  }, [user])
+
+  function startNewChat() {
+    setCalcData(null)
+    setMessages([])
+    setActiveSessionId(null)
+    setIsViewingPast(false)
+    setChatRecordId(null)
+    setForm({ year: '', month: '', day: '', hour: '', minute: '', gender: 'female', showPartner: false, partnerYear: '', partnerMonth: '', partnerDay: '', partnerGender: 'male' })
+    setSidebarOpen(false)
+  }
+
+  function loadSession(record: AnalysisRecord) {
+    const raw = record.content as Record<string, unknown> | null
+    const msgs = Array.isArray(raw?.chat)
+      ? raw!.chat as Message[]
+      : Array.isArray(raw) ? raw as Message[]
+      : []
+    setMessages(msgs)
+    setCalcData(null)
+    setActiveSessionId(record.id)
+    setIsViewingPast(true)
+    setSidebarOpen(false)
+  }
 
   function handleStartChat(e: React.FormEvent) {
     e.preventDefault()
@@ -69,12 +136,12 @@ export default function ChatPage() {
     const [y, m, d] = [Number(form.year), Number(form.month), Number(form.day)]
     const hourNum = form.hour !== '' ? Number(form.hour) : undefined
     const shichu = calcShichu(y, m, d, hourNum)
-    const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
+    const nayin  = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(y, m, d)
     const honmei = calcHonmeiStar(y, m, d)
 
-    setCalcData({
+    const calc: CalcData = {
       shichuYear: shichu.year.kanshi, shichuMonth: shichu.month.kanshi,
       shichuDay: shichu.day.kanshi, shichuHour: shichu.hour?.kanshi ?? null,
       nayin, sanmeiStar: sanmei.shukumeiStar, chusatsu: sanmei.chusatsu, sukuyo,
@@ -82,20 +149,32 @@ export default function ChatPage() {
       honmeiName: KYUSEI_NAMES[honmei],
       archetype: getArchetype(shichu.day.kanshi),
       sukuyoDetail: getSukuyoDetail(sukuyo),
-    })
+    }
+    setCalcData(calc)
     setBirthDate(bd)
     setBirthTime(bt)
     setPartnerBirthDate(pbd)
-    setChatRecordId(null)
+    setIsViewingPast(false)
+
     const initMsg: Message = {
       role: 'assistant',
       content: `命式の読み込みが完了しました。${form.gender === 'female' ? '女性' : '男性'}・${form.year}年${form.month}月${form.day}日生まれの方として鑑定を行います。\n\n仕事・恋愛・転機・対人関係など、何でもお気軽にご相談ください。`,
     }
     setMessages([initMsg])
-    // ログイン中なら履歴レコードを作成
+
     if (user) {
-      saveAnalysis(user.id, 'chat', bd, `AIチャット — ${bd}`).then(rid => {
-        if (rid) setChatRecordId(rid)
+      const title = `AIチャット — ${bd}`
+      saveAnalysis(user.id, 'chat', bd, title).then(rid => {
+        if (rid) {
+          const newRecord: AnalysisRecord = {
+            id: rid, user_id: user.id, feature: 'chat',
+            birth_date: bd, title, content: null,
+            created_at: new Date().toISOString(),
+          }
+          setChatRecordId(rid)
+          setActiveSessionId(rid)
+          setSessions(prev => [newRecord, ...prev])
+        }
       }).catch(() => {})
     }
   }
@@ -107,12 +186,9 @@ export default function ChatPage() {
     const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
     setIsStreaming(true)
-
-    const assistantMsg: Message = { role: 'assistant', content: '' }
-    setMessages(prev => [...prev, assistantMsg])
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
     try {
-      console.log('[ChatPage] Sending message:', userMsg)
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -128,41 +204,22 @@ export default function ChatPage() {
         }),
       })
 
-      console.log('[ChatPage] Response status:', res.status, 'Content-Type:', res.headers.get('content-type'))
-
       if (!res.ok) {
-        // 402エラー（ポイント不足）の場合は直接モーダルを表示
         if (res.status === 402) {
-          console.log('[ChatPage] Insufficient points, showing modal')
           setShowInsufficientModal(true)
-          setMessages(prev => prev.slice(0, -1)) // 空のアシスタントメッセージを削除
+          setMessages(prev => prev.slice(0, -1))
           setIsStreaming(false)
           return
         }
-
-        // その他のエラーの場合はレスポンスボディを確認
-        console.log('[ChatPage] Error response, attempting to read body')
-        const contentType = res.headers.get('content-type')
-
-        // JSONレスポンスの場合のみパース
-        if (contentType && contentType.includes('application/json')) {
-          try {
-            const err = await res.json() as { error?: string; code?: string }
-            console.error('[ChatPage] Error JSON:', err)
-            throw new Error(err.error ?? 'エラーが発生しました')
-          } catch (jsonErr) {
-            console.error('[ChatPage] JSON parse error:', jsonErr)
-            throw new Error(`エラーが発生しました（ステータス: ${res.status}）`)
-          }
-        } else {
-          // JSON以外のレスポンスの場合はテキストとして読む
-          const text = await res.text()
-          console.error('[ChatPage] Non-JSON error response:', text)
-          throw new Error(`エラーが発生しました（ステータス: ${res.status}）`)
+        const ct = res.headers.get('content-type')
+        if (ct?.includes('application/json')) {
+          const err = await res.json() as { error?: string }
+          throw new Error(err.error ?? 'エラーが発生しました')
         }
+        throw new Error(`エラーが発生しました（${res.status}）`)
       }
 
-      const reader = res.body!.getReader()
+      const reader  = res.body!.getReader()
       const decoder = new TextDecoder()
       let full = ''
 
@@ -196,7 +253,6 @@ export default function ChatPage() {
       setIsStreaming(false)
       setTimeout(() => inputRef.current?.focus(), 100)
       refreshPoints()
-      // チャット履歴をSupabaseに保存
       if (chatRecordId) {
         setMessages(prev => {
           saveChatMessages(chatRecordId, prev).catch(() => {})
@@ -206,234 +262,364 @@ export default function ChatPage() {
     }
   }
 
-  function renderBold(text: string): React.ReactNode {
-    const parts = text.split(/\*\*(.+?)\*\*/g)
-    if (parts.length === 1) return text
-    return <>{parts.map((p, i) => i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{p}</strong> : <span key={i}>{p}</span>)}</>
-  }
-
-  // 未ログイン
   if (!user) {
     return (
       <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
         <div className="glass-card max-w-sm w-full p-8 text-center space-y-5">
           <h2 className="text-white font-bold text-xl">ログインが必要です</h2>
           <p className="text-white/50 text-sm">命術師AIチャットをご利用いただくにはログインが必要です。</p>
-          <button onClick={() => navigate('/auth')} className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm">ログイン / 新規登録</button>
-          <button onClick={() => navigate('/')} className="w-full py-2 text-white/30 hover:text-white/50 text-xs">トップに戻る</button>
+          <button onClick={() => navigate('/auth')} className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm">
+            ログイン / 新規登録
+          </button>
+          <button onClick={() => navigate('/')} className="w-full py-2 text-white/30 hover:text-white/50 text-xs">
+            トップに戻る
+          </button>
         </div>
       </div>
     )
   }
 
+  const grouped = groupSessions(sessions)
+
   return (
-    <div className="min-h-screen bg-deep-navy flex flex-col">
-      {/* ヘッダー */}
-      <nav className="border-b border-white/5 backdrop-blur-sm sticky top-0 z-20" style={{ background: 'rgba(8,15,40,0.95)' }}>
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2">
+    <div className="flex h-screen overflow-hidden" style={{ background: '#080f28' }}>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* ── Sidebar ── */}
+      <aside
+        className={`
+          fixed md:relative inset-y-0 left-0 z-40 md:z-auto
+          w-64 flex-shrink-0 flex flex-col border-r border-white/5
+          transition-transform duration-200
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{ background: '#060b1c' }}
+      >
+        {/* Logo + New chat */}
+        <div className="p-3 border-b border-white/5 flex-shrink-0">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 px-2 py-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-            <span className="italic text-white/60 text-sm tracking-widest">Meishiki</span>
+            <span className="text-white/50 text-sm italic tracking-widest">fate-lab</span>
           </button>
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate('/mypage')} className="text-xs bg-white/10 text-white/60 hover:bg-white/20 rounded-full px-2 py-0.5 font-mono transition-colors">
-              {points} pt
-            </button>
-            <span className="text-white/30 text-xs hidden sm:block">2pt/メッセージ</span>
-          </div>
+          <button
+            onClick={startNewChat}
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/10 hover:border-white/25 hover:bg-white/5 transition-all text-sm text-white/55 hover:text-white/80"
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            新しいチャット
+          </button>
         </div>
-      </nav>
 
-      <div className="max-w-3xl mx-auto w-full px-4 flex-1 flex flex-col py-6 gap-6">
-
-        {/* 命式入力フォーム（チャット開始前） */}
-        {!calcData && (
-          <div>
-            <div className="text-center mb-6">
-              <h1 className="text-white font-bold text-xl mb-2">命術師AIに相談する</h1>
-              <p className="text-white/40 text-sm">生年月日を入力すると、あなたの命式を踏まえた上で鑑定します。</p>
-            </div>
-
-            <form onSubmit={handleStartChat} className="glass-card p-6 space-y-5 border border-accent/15">
-              {/* 生年月日 */}
-              <div>
-                <label className="text-white/50 text-xs mb-2 block">あなたの生年月日 <span className="text-accent">*</span></label>
-                <div className="grid grid-cols-3 gap-2">
-                  <select value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value }))}
-                    className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                    <option value="">年</option>
-                    {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
-                  </select>
-                  <select value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))}
-                    className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                    <option value="">月</option>
-                    {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
-                  </select>
-                  <select value={form.day} onChange={e => setForm(f => ({ ...f, day: e.target.value }))}
-                    className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                    <option value="">日</option>
-                    {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* 時間 */}
-              <div>
-                <label className="text-white/50 text-xs mb-2 block">生まれた時間 <span className="text-white/25">（任意）</span></label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select value={form.hour} onChange={e => setForm(f => ({ ...f, hour: e.target.value }))}
-                    className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none appearance-none">
-                    <option value="">不明</option>
-                    {HOURS.map(h => <option key={h} value={h}>{String(h).padStart(2, '0')}時</option>)}
-                  </select>
-                  <select value={form.minute} onChange={e => setForm(f => ({ ...f, minute: e.target.value }))}
-                    className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none appearance-none">
-                    <option value="">不明</option>
-                    {MINUTES.map(min => <option key={min} value={min}>{String(min).padStart(2, '0')}分</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* 性別 */}
-              <div>
-                <label className="text-white/50 text-xs mb-2 block">性別 <span className="text-accent">*</span></label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['female', 'male'] as const).map(g => (
-                    <button key={g} type="button" onClick={() => setForm(f => ({ ...f, gender: g }))}
-                      className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${form.gender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}>
-                      {g === 'female' ? '女性' : '男性'}
+        {/* Session list */}
+        <div className="flex-1 overflow-y-auto py-2 px-2">
+          {grouped.length === 0 ? (
+            <p className="text-white/20 text-xs px-3 py-4 text-center">チャット履歴はありません</p>
+          ) : (
+            grouped.map(group => (
+              <div key={group.label} className="mb-3">
+                <p className="text-white/20 text-xs px-3 py-1">{group.label}</p>
+                {group.items.map(s => {
+                  const title = (s.title ?? '').replace(/^AIチャット — \d{4}-\d{2}-\d{2}$/, s.birth_date ?? '').trim() || s.birth_date || 'チャット'
+                  const isActive = s.id === activeSessionId
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => loadSession(s)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all truncate block ${
+                        isActive
+                          ? 'bg-white/10 text-white/80'
+                          : 'text-white/40 hover:bg-white/5 hover:text-white/65'
+                      }`}
+                    >
+                      {title}
                     </button>
-                  ))}
-                </div>
+                  )
+                })}
               </div>
+            ))
+          )}
+        </div>
 
-              {/* 相手情報 */}
-              <div>
-                <button type="button" onClick={() => setForm(f => ({ ...f, showPartner: !f.showPartner }))}
-                  className={`w-full py-2.5 rounded-lg text-xs font-medium border transition-all ${form.showPartner ? 'border-accent/40 bg-accent/10 text-accent' : 'border-white/10 text-white/35 hover:text-white/55'}`}>
-                  {form.showPartner ? '▲ 相手の情報を入力中' : '＋ 相性を見たい相手の情報（任意）'}
-                </button>
-              </div>
+        {/* Footer */}
+        <div className="p-3 border-t border-white/5 flex-shrink-0 flex items-center justify-between">
+          <button
+            onClick={() => navigate('/mypage')}
+            className="flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs transition-colors"
+          >
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            マイページ
+          </button>
+          <span className="text-white/25 text-xs font-mono">{points} pt</span>
+        </div>
+      </aside>
 
-              {form.showPartner && (
-                <>
-                  <div>
-                    <label className="text-white/50 text-xs mb-2 block">相手の生年月日 <span className="text-white/25">（任意）</span></label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <select value={form.partnerYear} onChange={e => setForm(f => ({ ...f, partnerYear: e.target.value }))}
-                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                        <option value="">年</option>
-                        {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
-                      </select>
-                      <select value={form.partnerMonth} onChange={e => setForm(f => ({ ...f, partnerMonth: e.target.value }))}
-                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                        <option value="">月</option>
-                        {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
-                      </select>
-                      <select value={form.partnerDay} onChange={e => setForm(f => ({ ...f, partnerDay: e.target.value }))}
-                        className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-                        <option value="">日</option>
-                        {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
-                      </select>
-                    </div>
-                  </div>
+      {/* ── Main area ── */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-                  <div>
-                    <label className="text-white/50 text-xs mb-2 block">相手の性別 <span className="text-white/25">（任意）</span></label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['female', 'male'] as const).map(g => (
-                        <button key={g} type="button" onClick={() => setForm(f => ({ ...f, partnerGender: g }))}
-                          className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${form.partnerGender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}>
-                          {g === 'female' ? '女性' : '男性'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {formError && <p className="text-red-400 text-xs">{formError}</p>}
-
-              <button type="submit" disabled={!form.year || !form.month || !form.day}
-                className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all disabled:opacity-40">
-                ✦ 命術師AIに相談を始める
-              </button>
-            </form>
+        {/* Mobile header */}
+        <div className="md:hidden flex items-center gap-3 px-4 h-12 border-b border-white/5 flex-shrink-0" style={{ background: '#060b1c' }}>
+          <button onClick={() => setSidebarOpen(true)} className="text-white/40 hover:text-white/70 transition-colors">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+            <span className="text-white/55 text-sm italic tracking-widest">fate-lab</span>
           </div>
-        )}
+          <span className="ml-auto text-white/25 text-xs font-mono">{points} pt</span>
+        </div>
 
-        {/* チャットUI */}
-        {calcData && (
-          <div className="flex flex-col flex-1 gap-4">
-            {/* 命式サマリ */}
-            <div className="glass-card p-4 border border-accent/15 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-accent/70 text-xs italic">命式鑑定中</p>
-                <p className="text-white text-sm font-medium">{form.year}年{form.month}月{form.day}日 · {form.gender === 'female' ? '女性' : '男性'} · 日柱 {calcData.shichuDay}</p>
-                {form.showPartner && partnerBirthDate && (
-                  <p className="text-purple-300/60 text-xs mt-0.5">相手: {partnerBirthDate} · {form.partnerGender === 'female' ? '女性' : '男性'}</p>
+        {/* ── Past session view ── */}
+        {isViewingPast && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-2xl mx-auto px-4 py-6">
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-white/25 text-xs">過去のチャット</p>
+                  <button
+                    onClick={startNewChat}
+                    className="text-xs bg-accent/15 text-accent border border-accent/30 rounded-lg px-3 py-1.5 hover:bg-accent/25 transition-colors"
+                  >
+                    + 新しいチャット
+                  </button>
+                </div>
+                {messages.length === 0 ? (
+                  <p className="text-white/25 text-sm text-center py-20">チャット内容がありません</p>
+                ) : (
+                  <div className="space-y-5">
+                    {messages.map((msg, i) => (
+                      <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        {msg.role === 'assistant' && (
+                          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-accent text-xs">✦</span>
+                          </div>
+                        )}
+                        <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-loose ${
+                          msg.role === 'user'
+                            ? 'bg-accent/20 text-white/90 rounded-tr-sm'
+                            : 'bg-white/5 border border-white/8 text-white/80 rounded-tl-sm'
+                        }`}>
+                          {msg.role === 'assistant' ? renderBold(msg.content) : msg.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-              <button onClick={() => { setCalcData(null); setMessages([]); setChatRecordId(null) }}
-                className="text-white/30 hover:text-accent border border-white/10 hover:border-accent/30 rounded-lg px-3 py-1.5 text-xs transition-all flex-shrink-0">
-                新しい相談 →
-              </button>
-            </div>
-
-            {/* メッセージ一覧 */}
-            <div className="flex flex-col gap-4 flex-1">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-                      <span className="text-accent text-xs">✦</span>
-                    </div>
-                  )}
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-loose ${
-                    msg.role === 'user'
-                      ? 'bg-accent/20 text-white/90 rounded-tr-sm'
-                      : 'bg-white/5 border border-white/8 text-white/80 rounded-tl-sm'
-                  }`}>
-                    {msg.role === 'assistant' ? renderBold(msg.content) : msg.content}
-                    {msg.role === 'assistant' && isStreaming && i === messages.length - 1 && msg.content === '' && (
-                      <span className="inline-flex gap-1 ml-1">
-                        {[0,1,2].map(j => <span key={j} className="w-1 h-1 rounded-full bg-accent/50 animate-pulse inline-block" style={{ animationDelay: `${j * 0.2}s` }} />)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
-
-            {/* 入力エリア */}
-            <div className="sticky bottom-0 pb-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(8,15,40,1) 80%, transparent)' }}>
-              <div className="flex gap-2 items-end glass-card border border-white/10 p-2 rounded-2xl">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleSend() } }}
-                  placeholder="仕事・恋愛・転機など何でも..."
-                  rows={1}
-                  disabled={isStreaming}
-                  className="flex-1 bg-transparent text-white text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed px-2 py-1 max-h-32"
-                  style={{ fieldSizing: 'content' } as React.CSSProperties}
-                />
-                <button onClick={handleSend} disabled={!input.trim() || isStreaming}
-                  className="w-9 h-9 rounded-xl bg-accent hover:bg-accent-dark disabled:opacity-30 flex items-center justify-center transition-all flex-shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                    <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-white/15 text-xs text-center mt-2">Enter で送信 · Shift+Enter で改行</p>
             </div>
           </div>
         )}
-      </div>
 
-      {/* ポイント不足モーダル */}
+        {/* ── Welcome / birth form ── */}
+        {!isViewingPast && !calcData && (
+          <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
+            <div className="w-full max-w-md">
+              <div className="text-center mb-8">
+                <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/25 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-accent text-2xl">✦</span>
+                </div>
+                <h1 className="text-white text-2xl font-bold mb-2">命術師AIに相談する</h1>
+                <p className="text-white/35 text-sm">生年月日を入力してチャットを始めてください</p>
+              </div>
+
+              <form onSubmit={handleStartChat} className="glass-card p-6 space-y-5">
+                {/* 生年月日 */}
+                <div>
+                  <label className="text-white/45 text-xs mb-2 block">あなたの生年月日 <span className="text-accent">*</span></label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <select value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value }))} className={sc}>
+                      <option value="">年</option>
+                      {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
+                    </select>
+                    <select value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))} className={sc}>
+                      <option value="">月</option>
+                      {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
+                    </select>
+                    <select value={form.day} onChange={e => setForm(f => ({ ...f, day: e.target.value }))} className={sc}>
+                      <option value="">日</option>
+                      {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 時間 */}
+                <div>
+                  <label className="text-white/45 text-xs mb-2 block">生まれた時間 <span className="text-white/25">（任意）</span></label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select value={form.hour} onChange={e => setForm(f => ({ ...f, hour: e.target.value }))} className={sc}>
+                      <option value="">不明</option>
+                      {HOURS.map(h => <option key={h} value={h}>{String(h).padStart(2, '0')}時</option>)}
+                    </select>
+                    <select value={form.minute} onChange={e => setForm(f => ({ ...f, minute: e.target.value }))} className={sc}>
+                      <option value="">不明</option>
+                      {MINUTES.map(min => <option key={min} value={min}>{String(min).padStart(2, '0')}分</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 性別 */}
+                <div>
+                  <label className="text-white/45 text-xs mb-2 block">性別 <span className="text-accent">*</span></label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['female', 'male'] as const).map(g => (
+                      <button key={g} type="button" onClick={() => setForm(f => ({ ...f, gender: g }))}
+                        className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${form.gender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}>
+                        {g === 'female' ? '女性' : '男性'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 相手 */}
+                <div>
+                  <button type="button" onClick={() => setForm(f => ({ ...f, showPartner: !f.showPartner }))}
+                    className={`w-full py-2.5 rounded-lg text-xs font-medium border transition-all ${form.showPartner ? 'border-accent/40 bg-accent/10 text-accent' : 'border-white/10 text-white/35 hover:text-white/55'}`}>
+                    {form.showPartner ? '▲ 相手の情報を入力中' : '＋ 相手の情報を追加（相性診断の場合）'}
+                  </button>
+                </div>
+
+                {form.showPartner && (
+                  <>
+                    <div>
+                      <label className="text-white/45 text-xs mb-2 block">相手の生年月日</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <select value={form.partnerYear} onChange={e => setForm(f => ({ ...f, partnerYear: e.target.value }))} className={sc}>
+                          <option value="">年</option>
+                          {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
+                        </select>
+                        <select value={form.partnerMonth} onChange={e => setForm(f => ({ ...f, partnerMonth: e.target.value }))} className={sc}>
+                          <option value="">月</option>
+                          {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
+                        </select>
+                        <select value={form.partnerDay} onChange={e => setForm(f => ({ ...f, partnerDay: e.target.value }))} className={sc}>
+                          <option value="">日</option>
+                          {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-white/45 text-xs mb-2 block">相手の性別</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(['female', 'male'] as const).map(g => (
+                          <button key={g} type="button" onClick={() => setForm(f => ({ ...f, partnerGender: g }))}
+                            className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${form.partnerGender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}>
+                            {g === 'female' ? '女性' : '男性'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {formError && <p className="text-red-400 text-xs">{formError}</p>}
+
+                <button type="submit" disabled={!form.year || !form.month || !form.day}
+                  className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-sm transition-all disabled:opacity-40 shadow-lg shadow-accent/20">
+                  ✦ チャットを始める
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Active chat ── */}
+        {!isViewingPast && calcData && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Session bar */}
+            <div className="flex-shrink-0 px-4 py-2.5 border-b border-white/5 flex items-center justify-between gap-3" style={{ background: 'rgba(6,11,28,0.8)' }}>
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                <span className="text-white/50 text-xs truncate">
+                  {form.year}年{form.month}月{form.day}日 · {form.gender === 'female' ? '女性' : '男性'} · 日柱 {calcData.shichuDay}
+                </span>
+              </div>
+              <button
+                onClick={startNewChat}
+                className="text-white/30 hover:text-accent text-xs border border-white/10 hover:border-accent/30 rounded-lg px-3 py-1.5 transition-all flex-shrink-0"
+              >
+                新しいチャット
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-accent text-xs">✦</span>
+                      </div>
+                    )}
+                    <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-loose ${
+                      msg.role === 'user'
+                        ? 'bg-accent/20 text-white/90 rounded-tr-sm'
+                        : 'bg-white/5 border border-white/8 text-white/80 rounded-tl-sm'
+                    }`}>
+                      {msg.role === 'assistant' ? renderBold(msg.content) : msg.content}
+                      {msg.role === 'assistant' && isStreaming && i === messages.length - 1 && msg.content === '' && (
+                        <span className="inline-flex gap-1 ml-1">
+                          {[0, 1, 2].map(j => (
+                            <span key={j} className="w-1 h-1 rounded-full bg-accent/50 animate-pulse inline-block" style={{ animationDelay: `${j * 0.2}s` }} />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div ref={bottomRef} />
+              </div>
+            </div>
+
+            {/* Input */}
+            <div className="flex-shrink-0 px-4 pb-4 pt-2" style={{ background: 'linear-gradient(to top, rgba(8,15,40,1) 70%, transparent)' }}>
+              <div className="max-w-2xl mx-auto">
+                <div className="flex gap-2 items-end bg-white/5 border border-white/10 hover:border-white/15 p-2 rounded-2xl transition-colors">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                        e.preventDefault()
+                        handleSend()
+                      }
+                    }}
+                    placeholder="何でも聞いてみてください..."
+                    rows={1}
+                    disabled={isStreaming}
+                    className="flex-1 bg-transparent text-white text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed px-2 py-1.5 max-h-32"
+                    style={{ fieldSizing: 'content' } as React.CSSProperties}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() || isStreaming}
+                    className="w-9 h-9 rounded-xl bg-accent hover:bg-accent-dark disabled:opacity-30 flex items-center justify-center transition-all flex-shrink-0"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-white/12 text-xs text-center mt-2">Enter で送信 · Shift+Enter で改行 · 2pt/メッセージ</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* Insufficient points modal */}
       {showInsufficientModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowInsufficientModal(false)}>
           <div className="glass-card max-w-sm w-full p-8 space-y-6 border border-accent/20" onClick={e => e.stopPropagation()}>
@@ -443,16 +629,12 @@ export default function ChatPage() {
               </div>
               <h3 className="text-white font-bold text-lg mb-2">ポイントが不足しています</h3>
               <p className="text-white/50 text-sm leading-relaxed">
-                メッセージを送信するには2ポイントが必要です。<br/>
-                マイページからポイントを購入してください。
+                メッセージを送信するには2ポイントが必要です。
               </p>
             </div>
             <div className="space-y-3">
               <button
-                onClick={() => {
-                  setShowInsufficientModal(false)
-                  navigate('/mypage')
-                }}
+                onClick={() => { setShowInsufficientModal(false); navigate('/mypage') }}
                 className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all"
               >
                 💎 ポイントを購入する
@@ -467,6 +649,7 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
     </div>
   )
 }

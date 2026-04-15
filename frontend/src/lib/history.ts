@@ -17,11 +17,12 @@ export async function saveAnalysis(
   title: string,
   content?: unknown
 ): Promise<string | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('analyses')
     .insert({ user_id: userId, feature, birth_date: birthDate, title, content })
     .select('id')
     .single()
+  if (error) console.error('[saveAnalysis] error:', error)
   return data?.id ?? null
 }
 
@@ -52,11 +53,12 @@ export async function saveChatMessages(
 }
 
 export async function getAnalyses(userId: string): Promise<AnalysisRecord[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('analyses')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(100)
+  if (error) console.error('[getAnalyses] error:', error)
   return data ?? []
 }

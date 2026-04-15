@@ -951,76 +951,41 @@ export function TopPage() {
             <p className="text-white/35 text-sm">ポイントを使って各機能を利用できます</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* 自由鑑定 */}
-            <div ref={chatRef} className="glass-card-hover border flex flex-col gap-4 p-6"
-              style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.65) 70%)' }}>
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-accent flex-shrink-0"
-                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                </div>
-                <span className="text-xs font-mono font-medium text-accent opacity-60">3pt / 回</span>
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-base mb-1">自由鑑定</h3>
-                <p className="text-white/40 text-xs leading-relaxed">生年月日を入力して、気になることを自由に質問。複数の占術を統合してAIが回答します。</p>
-              </div>
-              <ul className="space-y-1.5 flex-1">
-                {['自己分析・強み・適職', '相性・人間関係・職場', '仕事運・恋愛運・方位など何でも'].map(item => (
-                  <li key={item} className="flex items-center gap-2">
-                    <svg className="w-3.5 h-3.5 text-accent opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    <span className="text-white/40 text-xs">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => user ? navigate('/analyze') : navigate('/auth?mode=register')}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all text-accent border hover:opacity-90"
-                style={{ borderColor: 'rgba(99,102,241,0.4)', background: 'rgba(99,102,241,0.08)' }}
-              >
-                鑑定を始める →
-              </button>
-            </div>
-
-            {/* AIチャット */}
-            <div className="glass-card-hover border flex flex-col gap-4 p-6"
-              style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'linear-gradient(145deg, rgba(59,130,246,0.06) 0%, rgba(15,23,42,0.65) 70%)' }}>
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-blue-400 flex-shrink-0"
-                  style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* 命術師AIチャット（統合カード） */}
+          <div ref={chatRef} className="glass-card-hover border flex flex-col gap-5 p-7"
+            style={{ borderColor: 'rgba(99,102,241,0.2)', background: 'linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.7) 70%)' }}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-accent flex-shrink-0"
+                  style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                   </svg>
                 </div>
-                <span className="text-xs font-mono font-medium text-blue-400 opacity-60">2pt / 回</span>
+                <div>
+                  <h3 className="text-white font-bold text-base">命術師AIに相談する</h3>
+                  <p className="text-white/35 text-xs mt-0.5">生年月日を入力して、何でも相談できます</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-white font-bold text-base mb-1">AIに何でも相談</h3>
-                <p className="text-white/40 text-xs leading-relaxed">命式を記憶した命術師AIに仕事・恋愛・転機など何でも相談。会話形式で深掘りできます。</p>
-              </div>
-              <ul className="space-y-1.5 flex-1">
-                {['テーマ・質問は何でもOK', '命式を踏まえた深い洞察', '会話履歴を記憶'].map(item => (
-                  <li key={item} className="flex items-center gap-2">
-                    <svg className="w-3.5 h-3.5 text-blue-400 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    <span className="text-white/40 text-xs">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all text-blue-400 border hover:opacity-90"
-                style={{ borderColor: 'rgba(59,130,246,0.4)', background: 'rgba(59,130,246,0.06)' }}
-              >
-                チャットを始める →
-              </button>
+              <span className="text-xs font-mono font-medium text-accent opacity-55 flex-shrink-0">2pt / 回</span>
             </div>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {['仕事・転職・適職', '恋愛・相性・結婚', '転機・運気の流れ', '人間関係・対人', '強み・特性分析', '会話履歴を保存'].map(item => (
+                <li key={item} className="flex items-center gap-2">
+                  <svg className="w-3 h-3 text-accent opacity-55 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span className="text-white/40 text-xs">{item}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all text-white border hover:opacity-90"
+              style={{ borderColor: 'rgba(99,102,241,0.5)', background: 'rgba(99,102,241,0.2)' }}
+            >
+              ✦ チャットを始める →
+            </button>
           </div>
         </section>
 
