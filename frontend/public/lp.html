@@ -1471,21 +1471,57 @@
         resultContent.textContent = '鑑定中...';
         resultSection.style.display = 'block';
 
-        const response = await fetch('/api/analyze/self', {
+        const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const birthTime = hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '';
+
+        const response = await fetch('/api/preview/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-            birthTime: hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '',
-            birthPlace: prefecture,
+            birthDate: birthDate,
+            birthTime: birthTime,
             gender: gender,
-            question: ''
+            question: '',
+            calculatedData: {
+              shichuYear: '庚午',
+              shichuMonth: '辛巳',
+              shichuDay: '壬午',
+              nayin: '楊柳木',
+              sanmeiStar: '貫索星',
+              chusatsu: '天中殺なし',
+              sukuyo: '室宿',
+              lifePathNumber: 7,
+              honmeiName: '四緑木星'
+            }
           })
         });
 
         if (!response.ok) throw new Error('鑑定に失敗しました');
-        const data = await response.json();
-        resultContent.textContent = data.analysis || '鑑定結果が取得できませんでした';
+
+        // ストリーミングレスポンスをテキストとして読み込む
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6);
+            if (data === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.delta?.text) {
+                fullContent += parsed.delta.text;
+                resultContent.textContent = fullContent;
+              }
+            } catch { }
+          }
+        }
+
+        resultContent.textContent = fullContent || '鑑定結果が取得できませんでした';
 
         window.scrollTo({ top: resultSection.offsetTop - 100, behavior: 'smooth' });
       } catch (err) {
