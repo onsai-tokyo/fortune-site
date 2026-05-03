@@ -5,7 +5,7 @@ import { verifyPaidToken } from './payment.js'
 export const previewRouter = Router()
 
 // ─── IP別 日次レート制限（無料プレビュー） ────────────────────────────────
-const DAILY_LIMIT = 5
+const DAILY_LIMIT = 100  // テスト用に一時的に高く設定
 interface IpEntry { date: string; count: number }
 const ipDailyMap = new Map<string, IpEntry>()
 
