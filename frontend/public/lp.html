@@ -1424,12 +1424,11 @@
   </section>
 
   <!-- 鑑定結果表示 -->
-  <section class="section" id="result" style="display: none;">
-    <div class="section-inner">
-      <div class="report-card">
-        <h2 class="report-title">鑑定結果</h2>
-        <div id="result-content" style="font-size: 15px; color: var(--text-sub); line-height: 1.8; white-space: pre-wrap;"></div>
-      </div>
+  <section class="section" id="result" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div style="max-width: 800px; margin: 0 auto; background: var(--bg-main); border-radius: 12px; padding: 30px; min-height: 100vh; position: relative;">
+      <button id="close-result" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main);">✕</button>
+      <h2 class="report-title">鑑定結果</h2>
+      <div id="result-content" style="font-size: 15px; color: var(--text-sub); line-height: 1.8; white-space: pre-wrap; max-height: 60vh; overflow-y: auto; padding-right: 15px; border: 1px solid var(--border-gold); border-radius: 8px; padding: 20px; background: var(--bg-card);"></div>
     </div>
   </section>
 
@@ -1523,13 +1522,31 @@
             }
           }
           resultContent.textContent = fullContent;
+          // テキストボックス内で最下部にスクロール
+          resultContent.parentElement.scrollTop = resultContent.parentElement.scrollHeight;
         }
-
-        window.scrollTo({ top: resultSection.offsetTop - 100, behavior: 'smooth' });
       } catch (err) {
         alert('エラーが発生しました: ' + err.message);
       }
     });
+
+    // 結果モーダルを閉じるボタン
+    const closeBtn = document.getElementById('close-result');
+    const resultSection = document.getElementById('result');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        resultSection.style.display = 'none';
+      });
+    }
+
+    // モーダルの背景をクリックしても閉じる
+    if (resultSection) {
+      resultSection.addEventListener('click', (e) => {
+        if (e.target === resultSection) {
+          resultSection.style.display = 'none';
+        }
+      });
+    }
   </script>
 
 </body>
