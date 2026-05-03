@@ -228,8 +228,10 @@ export function TopPage() {
 
     // 全占術データをクライアント側で計算（決定論的・毎回同じ結果）
     const [y, m, d] = [Number(form.year), Number(form.month), Number(form.day)]
+    console.log('Form inputs:', { formYear: form.year, y, m, d })
     const hourNum = form.hour !== '' ? Number(form.hour) : undefined
     const shichu = calcShichu(y, m, d, hourNum)
+    console.log('Shichu result:', { shichuYear: shichu.year.kanshi, y, m, d })
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(y, m, d)
