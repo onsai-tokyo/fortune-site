@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>統計学鑑定 | 6つの占術を掛け合わせた統計学鑑定の決定版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      background-color: #FAF7EF !important;
+    }
+    :root {
+      --bg-main: #FAF7EF;
+      --bg-card: #FFFDF8;
+      --text-main: #161616;
+      --text-sub: #5F564C;
+      --gold-primary: #B88A2A;
+      --gold-light: #D6B15C;
+      --gold-dark: #8F6A1F;
+      --border-gold: #E7D7B5;
+      --shadow: rgba(143, 106, 31, 0.08);
+      --accent-black: #111111;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      background: #FAF7EF !important;
+      background-color: #FAF7EF !important;
+      color: #161616;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 装飾要素 */
+    .decoration {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.06;
+    }
+
+    .star-pattern {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--gold-primary) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    .compass-decoration {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border: 1px solid var(--gold-primary);
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+
+    .compass-decoration::before,
+    .compass-decoration::after {
+      content: '';
+      position: absolute;
+      border: 1px solid var(--gold-primary);
+      border-radius: 50%;
+    }
+
+    .compass-decoration::before {
+      inset: 20px;
+    }
+
+    .compass-decoration::after {
+      inset: 40px;
+    }
+
+    /* ヘッダー */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250, 247, 239, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--gold-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--gold-primary);
+    }
+
+    .logo-text {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.1em;
+    }
+
+    .menu-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .menu-btn span {
+      display: block;
+      width: 22px;
+      height: 1.5px;
+      background: var(--text-main);
+      transition: all 0.3s;
+    }
+
+    /* セクション共通 */
+    .section {
+      position: relative;
+      padding: 80px 24px;
+    }
+
+    .section-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-title {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: center;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--gold-primary);
+      letter-spacing: 0.2em;
+      text-align: center;
+      margin-bottom: 48px;
+      font-weight: 500;
+    }
+
+    .section-desc {
+      font-size: 15px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.9;
+      margin-bottom: 40px;
+    }
+
+    /* ファーストビュー */
+    .hero {
+      padding: 60px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-decoration-left,
+    .hero-decoration-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    .hero-decoration-left {
+      left: -60px;
+      width: 150px;
+      height: 150px;
+    }
+
+    .hero-decoration-right {
+      right: -40px;
+      width: 120px;
+      height: 120px;
+    }
+
+    .hero-decoration-left svg,
+    .hero-decoration-right svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--gold-primary);
+      fill: none;
+      stroke-width: 1;
+    }
+
+    .hero-stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, var(--gold-primary) 1px, transparent 1px),
+        radial-gradient(circle, var(--gold-primary) 1px, transparent 1px);
+      background-size: 100px 100px, 150px 150px;
+      background-position: 0 0, 50px 50px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--gold-primary);
+      letter-spacing: 0.15em;
+      margin-bottom: 24px;
+    }
+
+
+    .hero-title-small {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-sub);
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.08em;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-sub);
+      line-height: 2;
+      margin-bottom: 40px;
+    }
+
+    /* ボタン */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 320px;
+      padding: 18px 32px;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 50%, var(--gold-dark) 100%);
+      color: white;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      border: none;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(184, 138, 42, 0.3);
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(184, 138, 42, 0.4);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* カード */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 4px 24px var(--shadow);
+    }
+
+    /* フォーム */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+    }
+
+    .form-label .required {
+      color: var(--gold-primary);
+      margin-left: 4px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 540px) {
+      .form-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    select, input[type="text"], textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 15px;
+      color: var(--text-main);
+      appearance: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold-primary);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235F564C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .gender-select {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .gender-option {
+      position: relative;
+    }
+
+    .gender-option input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .gender-option label {
+      display: block;
+      padding: 14px 20px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      text-align: center;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 14px;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .gender-option input:checked + label {
+      background: var(--gold-primary);
+      border-color: var(--gold-primary);
+      color: white;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .form-note {
+      font-size: 12px;
+      color: var(--text-sub);
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    /* 鑑定書セクション */
+    .report-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 40px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .report-decoration {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 180px;
+      height: 180px;
+      opacity: 0.08;
+    }
+
+    .report-decoration svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--gold-primary);
+      fill: none;
+      stroke-width: 0.8;
+    }
+
+    .report-tagline {
+      font-size: 11px;
+      color: var(--gold-primary);
+      letter-spacing: 0.2em;
+      margin-bottom: 12px;
+    }
+
+    .report-title {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .report-subtitle {
+      font-size: 12px;
+      color: var(--text-sub);
+      letter-spacing: 0.15em;
+      margin-bottom: 24px;
+    }
+
+    .report-desc {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.9;
+      margin-bottom: 24px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      padding: 8px 16px;
+      background: rgba(184, 138, 42, 0.08);
+      border: 1px solid var(--border-gold);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 2;
+    }
+
+    .feature-list li::before {
+      content: '・';
+      position: absolute;
+      left: 0;
+      color: var(--gold-primary);
+    }
+
+    /* 個人鑑定セクション */
+    .personal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 32px 28px;
+    }
+
+    .personal-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .personal-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .personal-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    .personal-title {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .personal-subtitle {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .personal-list {
+      list-style: none;
+      margin-bottom: 28px;
+    }
+
+    .personal-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 2.2;
+    }
+
+    .btn-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%);
+      color: white;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(184, 138, 42, 0.25);
+    }
+
+    .btn-arrow:hover {
+      transform: translateX(4px);
+      box-shadow: 0 6px 24px rgba(184, 138, 42, 0.35);
+    }
+
+    /* なぜ当たるのか */
+    .reason-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .reason-item {
+      display: flex;
+      gap: 20px;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 16px;
+    }
+
+    .reason-number {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .reason-title {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .reason-text {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.8;
+    }
+
+    /* レビュー */
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .review-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 16px var(--shadow);
+    }
+
+    .stars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .star {
+      color: var(--gold-primary);
+      font-size: 14px;
+    }
+
+    .review-text {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .reviewer {
+      font-size: 12px;
+      color: var(--text-sub);
+      opacity: 0.7;
+    }
+
+    /* FAQ */
+    .faq-list {
+      border-top: 1px solid var(--border-gold);
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+      cursor: pointer;
+    }
+
+    .faq-question-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-main);
+      padding-right: 16px;
+    }
+
+    .faq-icon {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .faq-icon::before,
+    .faq-icon::after {
+      content: '';
+      position: absolute;
+      background: var(--gold-primary);
+      transition: all 0.3s;
+    }
+
+    .faq-icon::before {
+      width: 12px;
+      height: 1.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .faq-icon::after {
+      width: 1.5px;
+      height: 12px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .faq-item.open .faq-icon::after {
+      transform: translate(-50%, -50%) rotate(90deg);
+      opacity: 0;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding-bottom: 24px;
+    }
+
+    .faq-answer-text {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.9;
+      padding-right: 40px;
+    }
+
+    /* フッター */
+    .footer {
+      background: var(--bg-main);
+      border-top: 1px solid var(--border-gold);
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.15em;
+      margin-bottom: 32px;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 24px;
+      margin-bottom: 24px;
+    }
+
+    .footer-link {
+      font-size: 13px;
+      color: var(--text-sub);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: var(--gold-primary);
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: var(--text-sub);
+      opacity: 0.6;
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 540px) {
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .section-title {
+        font-size: 22px;
+      }
+
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .reason-item {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .report-decoration {
+        display: none;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .hero-title {
+        font-size: 40px;
+      }
+
+      .section {
+        padding: 100px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="header-inner" style="flex-wrap: wrap; gap: 8px;">
+      <a href="#" class="logo">
+        <span class="logo-text">統計学鑑定</span>
+      </a>
+      <nav class="nav-links" style="display: flex; gap: 8px 16px; flex-wrap: wrap; justify-content: center;">
+        <a href="#form" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">鑑定する</a>
+        <a href="#report" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">鑑定書</a>
+        <a href="#personal" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">個人鑑定</a>
+        <a href="#faq" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ファーストビュー -->
+  <section class="hero">
+    <div class="hero-stars"></div>
+    <div class="hero-decoration-left">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45"/>
+        <circle cx="50" cy="50" r="35"/>
+        <circle cx="50" cy="50" r="25"/>
+        <line x1="50" y1="5" x2="50" y2="95"/>
+        <line x1="5" y1="50" x2="95" y2="50"/>
+        <line x1="18" y1="18" x2="82" y2="82"/>
+        <line x1="82" y1="18" x2="18" y2="82"/>
+      </svg>
+    </div>
+    <div class="hero-decoration-right">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40"/>
+        <path d="M50 10 L53 40 L80 50 L53 60 L50 90 L47 60 L20 50 L47 40 Z"/>
+      </svg>
+    </div>
+    <div class="section-inner" style="text-align: center;">
+      <h1 class="hero-title">統計学鑑定の<br>決定版。</h1>
+      <p class="hero-desc" style="font-size: 14px; line-height: 2; margin-bottom: 16px;">
+        四柱推命・算命学・納音・宿曜・紫微斗数・数秘術。複数の占術を掛け合わせ、共通する部分だけを抽出することで的中にこだわる。徹底的にチューニングを重ね、統計学と占術の頂点を目指す鑑定です。
+      </p>
+      <p class="hero-desc" style="margin-bottom: 32px;">
+        性格・仕事・恋愛・結婚・子供・人生転換期まで、詳細に鑑定します
+      </p>
+      <a href="#form" class="btn-primary">
+        今すぐ鑑定する
+      </a>
+    </div>
+  </section>
+
+  <!-- 鑑定フォーム -->
+  <section class="section" id="form">
+    <div class="section-inner">
+      <h2 class="section-title">あなた専用の命式鑑定書を、<br>今すぐ生成する</h2>
+
+      <div class="card">
+        <form>
+          <div class="form-group">
+            <label class="form-label">生年月日<span class="required">*</span></label>
+            <div class="form-row">
+              <select>
+                <option>年</option>
+                <option>1990</option>
+                <option>1991</option>
+                <option>1992</option>
+                <option>1993</option>
+                <option>1994</option>
+                <option>1995</option>
+              </select>
+              <select>
+                <option>月</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+              </select>
+              <select>
+                <option>日</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">出生時間<span class="required">*</span></label>
+            <div class="form-row-2">
+              <select>
+                <option>時</option>
+                <option>不明</option>
+                <option>0時</option>
+                <option>1時</option>
+                <option>12時</option>
+                <option>23時</option>
+              </select>
+              <select>
+                <option>分</option>
+                <option>不明</option>
+                <option>00分</option>
+                <option>15分</option>
+                <option>30分</option>
+                <option>45分</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">出生地<span class="required">*</span></label>
+            <input type="text" placeholder="例）東京都">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">性別<span class="required">*</span></label>
+            <div class="gender-select">
+              <div class="gender-option">
+                <input type="radio" name="gender" id="male" value="male">
+                <label for="male">男性</label>
+              </div>
+              <div class="gender-option">
+                <input type="radio" name="gender" id="female" value="female">
+                <label for="female">女性</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">鑑定についてのご質問（任意）</label>
+            <textarea placeholder="気になる点や聞きたいことをご記入ください"></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary">
+            今すぐ鑑定する
+          </button>
+
+          <p class="form-note">ご入力いただいた情報は厳重に管理します</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 命式鑑定書 -->
+  <section class="section" id="report">
+    <div class="section-inner">
+      <div class="report-card">
+        <div class="report-decoration">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48"/>
+            <circle cx="50" cy="50" r="38"/>
+            <circle cx="50" cy="50" r="28"/>
+            <circle cx="50" cy="50" r="18"/>
+            <line x1="50" y1="2" x2="50" y2="98"/>
+            <line x1="2" y1="50" x2="98" y2="50"/>
+            <line x1="15" y1="15" x2="85" y2="85"/>
+            <line x1="85" y1="15" x2="15" y2="85"/>
+            <polygon points="50,10 55,40 85,50 55,60 50,90 45,60 15,50 45,40"/>
+          </svg>
+        </div>
+        <p class="report-tagline">MEISHIKI REPORT</p>
+        <h2 class="report-title">命式鑑定書</h2>
+        <p class="report-subtitle">あなた専用のオリジナル鑑定書をお届けします</p>
+
+        <div class="tags">
+          <span class="tag">四柱推命</span>
+          <span class="tag">算命学</span>
+          <span class="tag">宿曜</span>
+          <span class="tag">納音</span>
+          <span class="tag">紫微斗数</span>
+          <span class="tag">西洋占星術</span>
+        </div>
+
+        <ul class="feature-list">
+          <li>総合的な運勢・性格・才能・適職を詳細に分析</li>
+          <li>人生の転機・吉凶・開運のヒントまで完全網羅</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 個人鑑定 -->
+  <section class="section" id="personal">
+    <div class="section-inner">
+      <div class="report-card">
+        <div class="report-decoration" style="right: -60px; opacity: 0.06;">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48"/>
+            <circle cx="50" cy="50" r="38"/>
+            <circle cx="50" cy="50" r="28"/>
+            <line x1="50" y1="2" x2="50" y2="98"/>
+            <line x1="2" y1="50" x2="98" y2="50"/>
+            <polygon points="50,15 55,40 80,50 55,60 50,85 45,60 20,50 45,40"/>
+          </svg>
+        </div>
+        <p class="report-tagline">PERSONAL READING</p>
+        <h2 class="report-title">個人鑑定</h2>
+        <p class="report-subtitle">さらに深く、あなただけの未来を読み解きます</p>
+
+        <div class="personal-menu" style="display: grid; gap: 12px; margin: 28px 0;">
+          <div class="menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: var(--bg-main); border: 1px solid var(--border-gold); border-radius: 12px;">
+            <div>
+              <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">スポット鑑定</p>
+              <p style="font-size: 12px; color: var(--text-sub);">1つのご質問に回答</p>
+            </div>
+            <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 22px; font-weight: 700; color: var(--gold-primary);">¥5,000</p>
+          </div>
+          <div class="menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: rgba(184, 138, 42, 0.06); border: 1.5px solid var(--gold-primary); border-radius: 12px; position: relative;">
+            <span style="position: absolute; top: 0; right: 24px; background: var(--gold-primary); color: white; font-size: 10px; font-weight: 600; padding: 4px 14px; border-radius: 0 0 10px 10px;">人気</span>
+            <div style="margin-top: 4px;">
+              <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">個人鑑定</p>
+              <p style="font-size: 12px; color: var(--text-sub);">3つのご質問に回答</p>
+            </div>
+            <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 22px; font-weight: 700; color: var(--gold-primary);">¥10,000</p>
+          </div>
+          <div class="menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: var(--bg-main); border: 1px solid var(--border-gold); border-radius: 12px;">
+            <div>
+              <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">一生版レポート</p>
+              <p style="font-size: 12px; color: var(--text-sub);">詳細な個人レポート（1万字超）</p>
+            </div>
+            <p style="font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 22px; font-weight: 700; color: var(--gold-primary);">¥20,000</p>
+          </div>
+        </div>
+
+        <p class="report-desc">恋愛・結婚・仕事・子供・人生のご相談にお応えします。じっくりと丁寧な鑑定で、具体的なアドバイスと開運アクションをご提案いたします。</p>
+
+        <a href="https://mozunoheya.stores.jp/" target="_blank" class="btn-arrow" style="margin-top: 8px;">
+          個人鑑定の詳細を見る →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- なぜ当たるのか -->
+  <section class="section" id="reason">
+    <div class="section-inner">
+      <h2 class="section-title">なぜこの鑑定が当たるのか</h2>
+
+      <div class="reason-grid">
+        <div class="reason-item">
+          <div class="reason-number">1</div>
+          <div>
+            <h3 class="reason-title">6つの占術を統計的に統合</h3>
+            <p class="reason-text">異なる占術の強みを掛け合わせ、多角的にあなたの運命を読み解きます。</p>
+          </div>
+        </div>
+
+        <div class="reason-item">
+          <div class="reason-number">2</div>
+          <div>
+            <h3 class="reason-title">一人ひとりを詳細に解析</h3>
+            <p class="reason-text">生年月日・出生時間・出生地をもとに、あなただけの命式を精密に作成し、人生の流れを読み解きます。</p>
+          </div>
+        </div>
+
+        <div class="reason-item">
+          <div class="reason-number">3</div>
+          <div>
+            <h3 class="reason-title">再現性のある鑑定ロジック</h3>
+            <p class="reason-text">占術の経験則だけに頼らず、統計学的な裏付けをもつ独自ロジックで、納得感の高い鑑定を実現しています。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ユーザーの声 -->
+  <section class="section" id="reviews">
+    <div class="section-inner">
+      <p class="section-subtitle">USER VOICE</p>
+      <h2 class="section-title">ユーザーの声</h2>
+
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+          <p class="review-text">自分でも気づけないことがたくさんありました。人生の指針になっています。</p>
+          <p class="reviewer">Mさん・30代女性</p>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+          <p class="review-text">転職のタイミングで鑑定してもらいました。結果通りの良い流れになっています。</p>
+          <p class="reviewer">Kさん・40代男性</p>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+          <p class="review-text">結婚についての悩みがスッキリしました。具体的なアドバイスが助かります。</p>
+          <p class="reviewer">Aさん・20代女性</p>
+        </div>
+
+        <div class="review-card">
+          <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+          </div>
+          <p class="review-text">子供の将来について鑑定。親としての接し方のヒントをいただきました。</p>
+          <p class="reviewer">Tさん・50代女性</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="section-inner">
+      <h2 class="section-title">FAQ</h2>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+            <span class="faq-question-text">鑑定書はどこまで読み解きますか？</span>
+            <span class="faq-icon"></span>
+          </div>
+          <div class="faq-answer">
+            <p class="faq-answer-text">性格・才能・適職・恋愛・結婚・人生の転機・開運のヒントまで、総合的に鑑定いたします。</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+            <span class="faq-question-text">情報がわからない場合はどうなりますか？</span>
+            <span class="faq-icon"></span>
+          </div>
+          <div class="faq-answer">
+            <p class="faq-answer-text">出生時間が不明な場合でも鑑定は可能です。生年月日だけでも大枠の運命を読み解くことができます。</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+            <span class="faq-question-text">鑑定結果はいつ届きますか？</span>
+            <span class="faq-icon"></span>
+          </div>
+          <div class="faq-answer">
+            <p class="faq-answer-text">ご入力後、即座に鑑定書を生成いたします。個人鑑定の場合は、3営業日以内にご連絡いたします。</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+            <span class="faq-question-text">個人鑑定ではどんな相談ができますか？</span>
+            <span class="faq-icon"></span>
+          </div>
+          <div class="faq-answer">
+            <p class="faq-answer-text">恋愛・結婚・仕事・転職・人間関係・子育て・的任何の人生の悩みに対応いたします。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- フッター -->
+  <footer class="footer">
+    <div class="footer-logo">統計学鑑定</div>
+    <div class="footer-links">
+      <a href="#" class="footer-link">特定商取引法に基づく表記</a>
+      <a href="#" class="footer-link">プライバシーポリシー</a>
+      <a href="#" class="footer-link">利用規約</a>
+      <a href="#" class="footer-link">お問い合わせ</a>
+    </div>
+    <p class="footer-copy">© 統計学鑑定 All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
