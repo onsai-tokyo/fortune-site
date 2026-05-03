@@ -61,6 +61,9 @@ function removeEmoji(text: string): string {
     .replace(/[\u{2600}-\u{27BF}]/gu, '')   // 装飾記号
     .replace(/[\u{2300}-\u{23FF}]/gu, '')   // その他の装飾
     .replace(/[\u{2000}-\u{206F}]/gu, '')   // 一般句読点
+    .replace(/\*\*/g, '')                    // **記号を削除
+    .replace(/---/g, '')                     // ---を削除
+    .replace(/===/g, '')                     // ===を削除
     .trim()
 }
 
