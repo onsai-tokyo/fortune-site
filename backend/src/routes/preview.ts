@@ -106,6 +106,8 @@ previewRouter.post('/generate', async (req, res) => {
       calculatedData?: CalculatedData
     }
 
+    console.log('Preview generate request:', { birthDate, calculatedData })
+
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
       return
