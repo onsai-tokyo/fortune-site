@@ -807,11 +807,14 @@
     /* レスポンシブ */
     @media (max-width: 540px) {
       .hero-title {
-        font-size: 36px;
+        font-size: 40px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
       }
 
       .section-title {
-        font-size: 26px;
+        font-size: 28px;
+        font-weight: 800;
       }
 
       .review-grid {
@@ -893,7 +896,11 @@
   <!-- 鑑定フォーム -->
   <section class="section" id="form">
     <div class="section-inner">
-      <h2 class="section-title">あなた専用の命式鑑定書を、<br>今すぐ生成する</h2>
+      <div class="report-card" style="margin-bottom: 32px; border: 2px solid var(--gold-primary);">
+        <p class="report-tagline">INSTANT ANALYSIS</p>
+        <h2 class="section-title" style="text-align: left; margin-bottom: 4px;">あなた専用の命式鑑定書を、<br>今すぐ生成する</h2>
+        <p class="report-subtitle" style="text-align: left;">生年月日と出生地を入力するだけで、複数の占術から統計的に算出した鑑定書がお手元に届きます</p>
+      </div>
 
       <div class="card">
         <form>
@@ -902,12 +909,22 @@
             <div class="form-row">
               <select>
                 <option>年</option>
+                <option>1950</option>
+                <option>1955</option>
+                <option>1960</option>
+                <option>1965</option>
+                <option>1970</option>
+                <option>1975</option>
+                <option>1980</option>
+                <option>1985</option>
                 <option>1990</option>
-                <option>1991</option>
-                <option>1992</option>
-                <option>1993</option>
-                <option>1994</option>
                 <option>1995</option>
+                <option>2000</option>
+                <option>2005</option>
+                <option>2010</option>
+                <option>2015</option>
+                <option>2020</option>
+                <option>2025</option>
               </select>
               <select>
                 <option>月</option>
@@ -917,6 +934,12 @@
                 <option>4</option>
                 <option>5</option>
                 <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+                <option>11</option>
+                <option>12</option>
               </select>
               <select>
                 <option>日</option>
@@ -926,6 +949,31 @@
                 <option>4</option>
                 <option>5</option>
                 <option>6</option>
+                <option>7</option>
+                <option>8</option>
+                <option>9</option>
+                <option>10</option>
+                <option>11</option>
+                <option>12</option>
+                <option>13</option>
+                <option>14</option>
+                <option>15</option>
+                <option>16</option>
+                <option>17</option>
+                <option>18</option>
+                <option>19</option>
+                <option>20</option>
+                <option>21</option>
+                <option>22</option>
+                <option>23</option>
+                <option>24</option>
+                <option>25</option>
+                <option>26</option>
+                <option>27</option>
+                <option>28</option>
+                <option>29</option>
+                <option>30</option>
+                <option>31</option>
               </select>
             </div>
           </div>
@@ -938,23 +986,97 @@
                 <option>不明</option>
                 <option>0時</option>
                 <option>1時</option>
+                <option>2時</option>
+                <option>3時</option>
+                <option>4時</option>
+                <option>5時</option>
+                <option>6時</option>
+                <option>7時</option>
+                <option>8時</option>
+                <option>9時</option>
+                <option>10時</option>
+                <option>11時</option>
                 <option>12時</option>
+                <option>13時</option>
+                <option>14時</option>
+                <option>15時</option>
+                <option>16時</option>
+                <option>17時</option>
+                <option>18時</option>
+                <option>19時</option>
+                <option>20時</option>
+                <option>21時</option>
+                <option>22時</option>
                 <option>23時</option>
               </select>
               <select>
                 <option>分</option>
                 <option>不明</option>
                 <option>00分</option>
+                <option>05分</option>
+                <option>10分</option>
                 <option>15分</option>
+                <option>20分</option>
+                <option>25分</option>
                 <option>30分</option>
+                <option>35分</option>
+                <option>40分</option>
                 <option>45分</option>
+                <option>50分</option>
+                <option>55分</option>
               </select>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">出生地<span class="required">*</span></label>
-            <input type="text" placeholder="例）東京都">
+            <label class="form-label" style="margin-top: 10px;">出生地<span class="required">*</span></label>
+            <select style="width: 100%; margin-top: 8px;">
+              <option>出生地を選択</option>
+              <option>北海道</option>
+              <option>青森県</option>
+              <option>岩手県</option>
+              <option>宮城県</option>
+              <option>秋田県</option>
+              <option>山形県</option>
+              <option>福島県</option>
+              <option>茨城県</option>
+              <option>栃木県</option>
+              <option>群馬県</option>
+              <option>埼玉県</option>
+              <option>千葉県</option>
+              <option>東京都</option>
+              <option>神奈川県</option>
+              <option>新潟県</option>
+              <option>富山県</option>
+              <option>石川県</option>
+              <option>福井県</option>
+              <option>山梨県</option>
+              <option>長野県</option>
+              <option>岐阜県</option>
+              <option>静岡県</option>
+              <option>愛知県</option>
+              <option>三重県</option>
+              <option>滋賀県</option>
+              <option>京都府</option>
+              <option>大阪府</option>
+              <option>兵庫県</option>
+              <option>奈良県</option>
+              <option>和歌山県</option>
+              <option>鳥取県</option>
+              <option>島根県</option>
+              <option>岡山県</option>
+              <option>広島県</option>
+              <option>山口県</option>
+              <option>徳島県</option>
+              <option>香川県</option>
+              <option>愛媛県</option>
+              <option>高知県</option>
+              <option>福岡県</option>
+              <option>佐賀県</option>
+              <option>長崎県</option>
+              <option>熊本県</option>
+              <option>大分県</option>
+              <option>宮崎県</option>
+              <option>鹿児島県</option>
+              <option>沖縄県</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -1199,7 +1321,7 @@
             <span class="faq-icon"></span>
           </div>
           <div class="faq-answer">
-            <p class="faq-answer-text">ご入力後、即座に鑑定書を生成いたします。個人鑑定の場合は、3営業日以内にご連絡いたします。</p>
+            <p class="faq-answer-text">ご入力後、即座に鑑定書を生成いたします。個人鑑定の場合は、予約が殺到しているため、現在１週間以内にご連絡の予定です。順番待ちになる場合がございますので、あらかじめご了承ください。</p>
           </div>
         </div>
 
@@ -1209,7 +1331,7 @@
             <span class="faq-icon"></span>
           </div>
           <div class="faq-answer">
-            <p class="faq-answer-text">恋愛・結婚・仕事・転職・人間関係・子育て・的任何の人生の悩みに対応いたします。</p>
+            <p class="faq-answer-text">恋愛・結婚・仕事・転職・人間関係・子育て・キャリア形成・人生の岐路など、あらゆる人生の悩みに対応いたします。</p>
           </div>
         </div>
       </div>
