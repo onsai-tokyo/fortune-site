@@ -9,6 +9,7 @@ import { paymentRouter } from './routes/payment.js'
 import { reportRouter } from './routes/report.js'
 import { analyzeRouter } from './routes/analyze.js'
 import { previewRouter } from './routes/preview.js'
+import { calcRouter } from './routes/calc.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -48,6 +49,7 @@ app.use('/api/payment', paymentRouter)
 app.use('/api/report', reportRouter)
 app.use('/api/analyze', analyzeRouter)
 app.use('/api/preview', previewRouter)
+app.use('/api/calc', calcRouter)
 
 app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''

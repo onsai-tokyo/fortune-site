@@ -1484,21 +1484,31 @@
         const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const birthTime = hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '';
 
-        // 占術データを表示
-        const divinationData = {
-          '四柱推命（年柱）': '庚午',
-          '四柱推命（月柱）': '辛巳',
-          '四柱推命（日柱）': '壬午',
-          '納音': '楊柳木',
-          '算命学（宿命星）': '貫索星',
-          '算命学（天中殺）': '天中殺なし',
-          '宿曜': '室宿',
-          '数秘術（運命数）': '7',
-          '九星気学（本命星）': '四緑木星'
-        };
-        divinationContent.innerHTML = Object.entries(divinationData).map(([key, val]) =>
-          `<div><strong>${key}：</strong>${val}</div>`
-        ).join('');
+        // バックエンドから占術データを取得
+        const calcResponse = await fetch('/api/calc/divination', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ birthDate, gender })
+        });
+
+        if (calcResponse.ok) {
+          const calcData = await calcResponse.json();
+          const divinationData = {
+            '四柱推命（年柱）': calcData.shichuYear,
+            '四柱推命（月柱）': calcData.shichuMonth,
+            '四柱推命（日柱）': calcData.shichuDay,
+            '納音': calcData.nayin,
+            '算命学（宿命星）': calcData.sanmeiStar,
+            '宿曜': calcData.sukuyo,
+            '数秘術（運命数）': calcData.lifePathNumber,
+            '九星気学（本命星）': calcData.honmeiName
+          };
+          divinationContent.innerHTML = Object.entries(divinationData).map(([key, val]) =>
+            `<div><strong>${key}：</strong>${val}</div>`
+          ).join('');
+        } else {
+          divinationContent.innerHTML = '<div style="color: red;">占術データの計算に失敗しました</div>';
+        }
 
         const response = await fetch('/api/preview/generate', {
           method: 'POST',
