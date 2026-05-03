@@ -364,6 +364,19 @@
       gap: 10px;
     }
 
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 540px) {
+      .form-row-3 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+    }
+
     select, input[type="text"], textarea {
       width: 100%;
       padding: 14px 16px;
@@ -823,7 +836,12 @@
       }
 
       .section-title {
-        font-size: 28px;
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .report-title {
+        font-size: 26px;
         font-weight: 800;
       }
 
@@ -838,6 +856,11 @@
 
       .report-decoration {
         display: none;
+      }
+
+      .form-row-2 {
+        grid-template-columns: 1fr;
+        gap: 10px;
       }
     }
 
@@ -892,7 +915,7 @@
     <div class="section-inner" style="text-align: center;">
       <h1 class="hero-title">統計学鑑定の<br>決定版。</h1>
       <p class="hero-desc" style="font-size: 14px; line-height: 1.9; margin-bottom: 16px;">
-        四柱推命・算命学・納音・宿曜・<br class="sp-break">紫微斗数・数秘術。複数の占術を掛け合わせ、<br class="sp-break">共通する部分だけを抽出することで的中にこだわる。<br>徹底的にチューニングを重ね、統計学と占術の頂点を目指す鑑定です。
+        四柱推命・算命学・納音・宿曜・紫微斗数・数秘術。<br class="sp-break">複数の占術を掛け合わせ、<br class="sp-break">共通する部分だけを抽出することで的中にこだわる。<br>徹底的にチューニングを重ね、統計学と占術の頂点を目指す鑑定です。
       </p>
       <p class="hero-desc" style="margin-bottom: 32px;">
         性格・仕事・恋愛・結婚・<br class="sp-break">子供・人生転換期まで、詳細に鑑定します
@@ -1047,8 +1070,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">出生時間<span class="required">*</span></label>
-            <div class="form-row-2">
+            <label class="form-label">出生時間 / 出生地<span class="required">*</span></label>
+            <div class="form-row-3">
               <select>
                 <option>時</option>
                 <option>不明</option>
@@ -1093,58 +1116,57 @@
                 <option>50分</option>
                 <option>55分</option>
               </select>
+              <select>
+                <option>出生地を選択</option>
+                <option>北海道</option>
+                <option>青森県</option>
+                <option>岩手県</option>
+                <option>宮城県</option>
+                <option>秋田県</option>
+                <option>山形県</option>
+                <option>福島県</option>
+                <option>茨城県</option>
+                <option>栃木県</option>
+                <option>群馬県</option>
+                <option>埼玉県</option>
+                <option>千葉県</option>
+                <option>東京都</option>
+                <option>神奈川県</option>
+                <option>新潟県</option>
+                <option>富山県</option>
+                <option>石川県</option>
+                <option>福井県</option>
+                <option>山梨県</option>
+                <option>長野県</option>
+                <option>岐阜県</option>
+                <option>静岡県</option>
+                <option>愛知県</option>
+                <option>三重県</option>
+                <option>滋賀県</option>
+                <option>京都府</option>
+                <option>大阪府</option>
+                <option>兵庫県</option>
+                <option>奈良県</option>
+                <option>和歌山県</option>
+                <option>鳥取県</option>
+                <option>島根県</option>
+                <option>岡山県</option>
+                <option>広島県</option>
+                <option>山口県</option>
+                <option>徳島県</option>
+                <option>香川県</option>
+                <option>愛媛県</option>
+                <option>高知県</option>
+                <option>福岡県</option>
+                <option>佐賀県</option>
+                <option>長崎県</option>
+                <option>熊本県</option>
+                <option>大分県</option>
+                <option>宮崎県</option>
+                <option>鹿児島県</option>
+                <option>沖縄県</option>
+              </select>
             </div>
-            <label class="form-label" style="margin-top: 10px;">出生地<span class="required">*</span></label>
-            <select style="width: 100%; margin-top: 8px;">
-              <option>出生地を選択</option>
-              <option>北海道</option>
-              <option>青森県</option>
-              <option>岩手県</option>
-              <option>宮城県</option>
-              <option>秋田県</option>
-              <option>山形県</option>
-              <option>福島県</option>
-              <option>茨城県</option>
-              <option>栃木県</option>
-              <option>群馬県</option>
-              <option>埼玉県</option>
-              <option>千葉県</option>
-              <option>東京都</option>
-              <option>神奈川県</option>
-              <option>新潟県</option>
-              <option>富山県</option>
-              <option>石川県</option>
-              <option>福井県</option>
-              <option>山梨県</option>
-              <option>長野県</option>
-              <option>岐阜県</option>
-              <option>静岡県</option>
-              <option>愛知県</option>
-              <option>三重県</option>
-              <option>滋賀県</option>
-              <option>京都府</option>
-              <option>大阪府</option>
-              <option>兵庫県</option>
-              <option>奈良県</option>
-              <option>和歌山県</option>
-              <option>鳥取県</option>
-              <option>島根県</option>
-              <option>岡山県</option>
-              <option>広島県</option>
-              <option>山口県</option>
-              <option>徳島県</option>
-              <option>香川県</option>
-              <option>愛媛県</option>
-              <option>高知県</option>
-              <option>福岡県</option>
-              <option>佐賀県</option>
-              <option>長崎県</option>
-              <option>熊本県</option>
-              <option>大分県</option>
-              <option>宮崎県</option>
-              <option>鹿児島県</option>
-              <option>沖縄県</option>
-            </select>
           </div>
 
           <div class="form-group">
@@ -1159,11 +1181,6 @@
                 <label for="female">女性</label>
               </div>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">鑑定についてのご質問（任意）</label>
-            <textarea placeholder="気になる点や聞きたいことをご記入ください"></textarea>
           </div>
 
           <button type="submit" class="btn-primary">
