@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://fortune-site-backend.onrender.com/api/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://fortune-site-backend.onrender.com/health"
+    }
+  ]
+}
