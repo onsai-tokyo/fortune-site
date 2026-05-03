@@ -635,8 +635,10 @@ export function TopPage() {
           <p className="text-white/20 text-xs mt-3">登録不要 · 生年月日だけ</p>
         </section>
 
-        {/* ★ 指南書プレビューセクション */}
-        <section ref={inputRef} className="pb-16">
+        <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4rem' }}>
+        {/* ★ プレビュー表示（生成後） - 順序を逆にして表示 */}
+        {(previewContent || isStreaming) && (
+          <section ref={previewRef} className="pb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.3))' }} />
             <span className="text-accent/60 text-xs italic tracking-widest uppercase">Preview — Page 1</span>
@@ -810,9 +812,8 @@ export function TopPage() {
           </div>
         </section>
 
-        {/* ★ プレビュー表示（生成後） */}
-        {(previewContent || isStreaming) && (
-          <section ref={previewRef} className="pb-16">
+        {/* ★ 指南書プレビューセクション */}
+        <section ref={inputRef} className="pb-16">
             <div className="flex items-center gap-4 mb-6">
               <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.3))' }} />
               <span className="text-accent/60 text-xs italic tracking-widest">命式鑑定書</span>
@@ -953,6 +954,7 @@ export function TopPage() {
             </div>
           </section>
         )}
+        </div>
 
         {/* ③ 機能カード */}
         <section ref={featuresRef} className="pb-20">
