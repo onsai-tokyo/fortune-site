@@ -226,44 +226,59 @@ export function TopPage() {
     setSubmittedQuestion(form.question)
     setQuestionAnswer('')
 
-    // 全占術データをクライアント側で計算（決定論的・毎回同じ結果）
+    // バックエンド側で計算した値を取得（フロント側の計算ライブラリのバグ回避）
+    const calcRes = await fetch('/api/calc/divination', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birthDate, gender: form.gender }),
+    })
+
+    if (!calcRes.ok) {
+      setPreviewError('占術データの計算に失敗しました')
+      setIsStreaming(false)
+      return
+    }
+
+    const backendCalcData = await calcRes.json() as {
+      shichuYear: string
+      shichuMonth: string
+      shichuDay: string
+      nayin: string
+      sanmeiStar: string
+      chusatsu: string
+      sukuyo: string
+      lifePathNumber: number
+      honmeiName: string
+    }
+
+    // バックエンド側の値を優先使用
     const [y, m, d] = [Number(form.year), Number(form.month), Number(form.day)]
-    console.log('Form inputs:', { formYear: form.year, y, m, d })
-    const hourNum = form.hour !== '' ? Number(form.hour) : undefined
-    const shichu = calcShichu(y, m, d, hourNum)
-    console.log('Shichu result:', { shichuYear: shichu.year.kanshi, y, m, d })
-    const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-    const sukuyo = getSukuyo(y, m, d)
-    const lifePathNum = calcLifePathNumber(birthDate)
-    const honmei = calcHonmeiStar(y, m, d)
-    const tsukimei = calcTsukimeiStar(honmei, m)
-    const archetype = getArchetype(shichu.day.kanshi)
-    const sukuyoDetail = getSukuyoDetail(sukuyo)
     const currentYear = new Date().getFullYear()
     const daiyunList = calcDaiyun(y, m, d, form.gender)
     const age = currentYear - y
     const currentDaiyun = daiyunList.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? daiyunList[0]
     const ryunen = calcRyunen(currentYear)
+    const archetype = getArchetype(backendCalcData.shichuDay)
+    const sukuyoDetail = getSukuyoDetail(backendCalcData.sukuyo)
+
     const newCalcData: FortuneCalcData = {
-      shichuYear: shichu.year.kanshi,
-      shichuMonth: shichu.month.kanshi,
-      shichuDay: shichu.day.kanshi,
-      shichuHour: shichu.hour?.kanshi ?? null,
-      nayin,
-      sanmeiStar: sanmei.shukumeiStar,
-      chusatsu: sanmei.chusatsu,
-      sukuyo,
-      lifePathNumber: lifePathNum,
-      honmeiName: KYUSEI_NAMES[honmei],
-      tsukimeiName: KYUSEI_NAMES[tsukimei],
+      shichuYear: backendCalcData.shichuYear,
+      shichuMonth: backendCalcData.shichuMonth,
+      shichuDay: backendCalcData.shichuDay,
+      shichuHour: null,
+      nayin: backendCalcData.nayin,
+      sanmeiStar: backendCalcData.sanmeiStar,
+      chusatsu: backendCalcData.chusatsu,
+      sukuyo: backendCalcData.sukuyo,
+      lifePathNumber: backendCalcData.lifePathNumber,
+      honmeiName: backendCalcData.honmeiName,
+      tsukimeiName: '', // 不要なので空
       archetype,
       sukuyoDetail,
       daiyun: currentDaiyun.kanshi,
       daiyunAge: `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`,
       ryunen,
     }
-    console.log('newCalcData created:', newCalcData)
     setCalcData(newCalcData)
 
     // キャッシュキー（質問は含めない — 質問は別課金で都度生成）
