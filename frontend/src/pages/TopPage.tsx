@@ -261,6 +261,7 @@ export function TopPage() {
       daiyunAge: `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`,
       ryunen,
     }
+    console.log('newCalcData created:', newCalcData)
     setCalcData(newCalcData)
 
     // キャッシュキー（質問は含めない — 質問は別課金で都度生成）
