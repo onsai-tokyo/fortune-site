@@ -1423,6 +1423,16 @@
     </div>
   </section>
 
+  <!-- 鑑定結果表示 -->
+  <section class="section" id="result" style="display: none;">
+    <div class="section-inner">
+      <div class="report-card">
+        <h2 class="report-title">鑑定結果</h2>
+        <div id="result-content" style="font-size: 15px; color: var(--text-sub); line-height: 1.8; white-space: pre-wrap;"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- フッター -->
   <footer class="footer">
     <div class="footer-logo">統計学鑑定</div>
@@ -1434,6 +1444,55 @@
     </div>
     <p class="footer-copy">© 統計学鑑定 All rights reserved.</p>
   </footer>
+
+  <script>
+    const formEl = document.querySelector('form');
+    formEl.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const year = formEl.querySelector('select').value;
+      const month = formEl.querySelectorAll('select')[1].value;
+      const day = formEl.querySelectorAll('select')[2].value;
+      const hour = formEl.querySelectorAll('select')[3].value;
+      const minute = formEl.querySelectorAll('select')[4].value;
+      const prefecture = formEl.querySelectorAll('select')[5].value;
+      const genderMale = formEl.querySelector('input[value="male"]').checked;
+      const gender = genderMale ? 'male' : 'female';
+
+      if (!year || !month || !day || !prefecture) {
+        alert('生年月日と出生地を入力してください');
+        return;
+      }
+
+      try {
+        const resultSection = document.getElementById('result');
+        const resultContent = document.getElementById('result-content');
+        resultSection.style.display = 'none';
+        resultContent.textContent = '鑑定中...';
+        resultSection.style.display = 'block';
+
+        const response = await fetch('/api/analyze/self', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+            birthTime: hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '',
+            birthPlace: prefecture,
+            gender: gender,
+            question: ''
+          })
+        });
+
+        if (!response.ok) throw new Error('鑑定に失敗しました');
+        const data = await response.json();
+        resultContent.textContent = data.analysis || '鑑定結果が取得できませんでした';
+
+        window.scrollTo({ top: resultSection.offsetTop - 100, behavior: 'smooth' });
+      } catch (err) {
+        alert('エラーが発生しました: ' + err.message);
+      }
+    });
+  </script>
 
 </body>
 </html>
