@@ -125,23 +125,20 @@ previewRouter.post('/generate', async (req, res) => {
 
     const hasPartner = !!partnerBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(partnerBirthDate)
 
-    // サーバー側で正確に再計算（フロント側の計算ライブラリのバグを回避）
-    const calcRes = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001'}/api/calc/divination`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birthDate, gender }),
-    }).catch(() => null)
-
-    const serverCalcData = calcRes && calcRes.ok ? await calcRes.json() : null
-
-    const dataSection = serverCalcData ? `
+    // 事前計算済み命式データ（クライアント側で計算されたもの）
+    const dataSection = calculatedData ? `
 【事前計算済み命式データ（必ずこの値を使用すること。自分で計算しないこと）】
-四柱推命 — 年柱:${serverCalcData.shichuYear} 月柱:${serverCalcData.shichuMonth} 日柱:${serverCalcData.shichuDay}
-納音：${serverCalcData.nayin}
-算命学 — 宿命星:${serverCalcData.sanmeiStar}　天中殺:${serverCalcData.chusatsu}
-宿曜：${serverCalcData.sukuyo}宿
-数秘術（運命数）：${serverCalcData.lifePathNumber}
-九星気学（本命星）：${serverCalcData.honmeiName}` : ''
+四柱推命 — 年柱:${calculatedData.shichuYear} 月柱:${calculatedData.shichuMonth} 日柱:${calculatedData.shichuDay}${calculatedData.shichuHour ? ` 時柱:${calculatedData.shichuHour}` : '（時柱不明）'}
+納音：${calculatedData.nayin}
+算命学 — 宿命星:${calculatedData.sanmeiStar}　天中殺:${calculatedData.chusatsu}
+宿曜：${calculatedData.sukuyo}宿
+数秘術（運命数）：${calculatedData.lifePathNumber}
+九星気学（本命星）：${calculatedData.honmeiName}
+四柱推命 年運データ — 現在の大運:${calculatedData.daiyun ?? '不明'}（${calculatedData.daiyunAge ?? ''}）　今年の流年:${calculatedData.ryunen ?? '不明'}${calculatedData.archetype ? `
+【日柱アーキタイプ参照データ（分析の深化に使用。アーキタイプ名・動物名は出力に含めないこと）】
+${calculatedData.archetype}` : ''}${calculatedData.sukuyoDetail ? `
+【宿曜詳細データ（性格・年運の補強に使用）】
+${calculatedData.sukuyoDetail}` : ''}` : ''
 
     const partnerLine = hasPartner
       ? `\n\n【相手の情報】\n生年月日：${partnerBirthDate}${partnerBirthTime ? `　生誕時刻：${partnerBirthTime}` : ''}　性別：${partnerGender === 'male' ? '男性' : '女性'}`
