@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>宿命解析 | Fate Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0c0812;
+      --bg-light:  #170f26;
+      --accent:    #c9a84c;
+      --accent-b:  #3b82f6;
+      --white:     #ffffff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .result-cover h3, .why-card h2, .section-header h2, .form-title h2 {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    /* 数字専用フォント */
+    .plan-pts .num, .plan-price .amount,
+    .chat-pt, .feature-pt {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .plan-pts .num { letter-spacing: -.02em; }
+    .plan-price .amount { letter-spacing: -.01em; }
+
+    /* ── Utils ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    .glass {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+    }
+    .accent-line {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
+    }
+    .accent-line hr { flex: 1; border: none; border-top: 1px solid rgba(201,168,76,0.2); }
+    .accent-line span { color: rgba(201,168,76,0.5); font-size: 11px; letter-spacing: .15em; font-style: italic; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(12,8,18,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: inherit;
+    }
+    .nav-dot {
+      width: 24px; height: 24px; border-radius: 8px;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.25);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-dot i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: block; }
+    .nav-logo span { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .nav-right { display: flex; gap: 8px; }
+    .btn-ghost { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color .2s; }
+    .btn-ghost:hover { color: rgba(255,255,255,0.7); }
+    .btn-pill {
+      background: var(--accent);
+      border: none; border-radius: 20px;
+      color: #fff; font-size: 12px; font-weight: 600;
+      padding: 5px 14px; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-pill:hover { opacity: .85; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 96px 0 80px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px; padding: 6px 16px; margin-bottom: 32px;
+      background: rgba(59,130,246,0.06);
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .badge span { color: rgba(201,168,76,0.85); font-size: 11px; font-weight: 500; letter-spacing: .1em; }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -.02em;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #fff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub { color: rgba(255,255,255,0.45); font-size: 16px; max-width: 480px; margin: 0 auto 40px; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 700;
+      padding: 14px 32px; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(201,168,76,0.2);
+      transition: all .2s;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .hero-note { color: rgba(255,255,255,0.18); font-size: 11px; margin-top: 12px; }
+
+    /* ── Form ── */
+    .form-section { padding-bottom: 64px; }
+    .form-wrap { max-width: 520px; margin: 0 auto; }
+    .form-title { text-align: center; margin-bottom: 32px; }
+    .form-title h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .form-title p { color: rgba(255,255,255,0.35); font-size: 13px; }
+
+    form.card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 20px;
+    }
+    label.field-label { color: rgba(255,255,255,0.45); font-size: 11px; display: block; margin-bottom: 8px; }
+    .field-label .req { color: var(--accent); }
+    .field-label .opt { color: rgba(255,255,255,0.2); }
+
+    .select-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .select-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    select {
+      width: 100%;
+      background: var(--bg-light);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 10px 12px;
+      color: #fff; font-size: 13px;
+      appearance: none; cursor: pointer;
+      transition: border-color .2s;
+    }
+    select:focus { outline: none; border-color: rgba(201,168,76,0.4); }
+
+    .gender-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .gender-btn {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: none; border-radius: 10px;
+      color: rgba(255,255,255,0.35); font-size: 13px; font-weight: 500;
+      padding: 10px; cursor: pointer; transition: all .2s;
+    }
+    .gender-btn.active {
+      border-color: rgba(201,168,76,0.5);
+      background: rgba(201,168,76,0.1);
+      color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-light);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 10px 12px;
+      color: #fff; font-size: 13px; resize: none;
+      font-family: inherit; line-height: 1.6;
+    }
+    textarea::placeholder { color: rgba(255,255,255,0.18); }
+    textarea:focus { outline: none; border-color: rgba(201,168,76,0.4); }
+
+    .btn-submit {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-submit:hover { opacity: .88; }
+    .form-note { text-align: center; color: rgba(255,255,255,0.18); font-size: 11px; }
+
+    /* ── Result preview (placeholder) ── */
+    .result-preview {
+      max-width: 640px; margin: 0 auto 64px;
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(201,168,76,0.2);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+    .result-cover {
+      background: linear-gradient(135deg, #0c0812 0%, #170f26 100%);
+      padding: 40px 32px 32px; text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .result-cover .label { color: rgba(201,168,76,0.45); font-size: 10px; letter-spacing: .2em; margin-bottom: 16px; font-style: italic; }
+    .result-cover h3 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+    .result-cover .en { color: rgba(201,168,76,0.5); font-size: 11px; font-style: italic; margin-bottom: 20px; }
+    .jutsu-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; }
+    .jutsu-tag {
+      font-size: 11px; border-radius: 20px; padding: 3px 12px; font-weight: 500;
+      border: 1px solid;
+    }
+    .result-body { background: #170f26; padding: 28px 32px; }
+    .result-section { margin-bottom: 24px; }
+    .result-section-title {
+      color: rgba(201,168,76,0.6); font-size: 11px; font-style: italic;
+      border-left: 2px solid rgba(201,168,76,0.3); padding-left: 10px; margin-bottom: 12px;
+    }
+    .result-section p { color: rgba(255,255,255,0.65); font-size: 13px; line-height: 1.9; }
+    .blur-block {
+      background: linear-gradient(to bottom, rgba(23,15,38,0), rgba(23,15,38,1));
+      height: 80px; margin-top: -80px; position: relative;
+    }
+    .result-cta { padding: 24px 32px; background: rgba(23,15,38,0.95); text-align: center; }
+    .result-cta p { color: rgba(255,255,255,0.4); font-size: 12px; margin-bottom: 12px; }
+    .btn-cta {
+      display: block; width: 100%; padding: 13px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── Features ── */
+    .features-section { padding-bottom: 80px; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-badge {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 5px 14px; margin-bottom: 14px;
+    }
+    .section-badge span { color: rgba(255,255,255,0.35); font-size: 10px; letter-spacing: .15em; font-weight: 500; }
+    .section-header h2 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 700; margin-bottom: 8px; }
+    .section-header p { color: rgba(255,255,255,0.3); font-size: 13px; }
+
+    .chat-card {
+      border-radius: 16px; padding: 28px;
+      border: 1px solid rgba(99,102,241,0.2);
+      background: linear-gradient(145deg, rgba(99,102,241,0.07) 0%, rgba(18,14,30,0.7) 70%);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .chat-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .chat-icon-wrap {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .chat-title { margin-left: 12px; }
+    .chat-title h3 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .chat-title p { color: rgba(255,255,255,0.3); font-size: 11px; }
+    .chat-pt { color: rgba(99,102,241,0.7); font-size: 11px; font-family: monospace; font-weight: 500; }
+
+    .chat-features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
+    .chat-feature { display: flex; align-items: center; gap: 6px; }
+    .check { color: rgba(99,102,241,0.55); font-size: 11px; }
+    .chat-feature span { color: rgba(255,255,255,0.38); font-size: 12px; }
+
+    .btn-indigo {
+      display: block; width: 100%; padding: 12px;
+      border: 1px solid rgba(99,102,241,0.45);
+      background: rgba(99,102,241,0.18);
+      color: #fff; border-radius: 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-indigo:hover { opacity: .85; }
+
+    .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    @media(max-width:540px){ .feature-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      border-radius: 14px; padding: 20px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .feature-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .feature-label { font-size: 13px; font-weight: 600; }
+    .feature-pt { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+    .feature-desc { color: rgba(255,255,255,0.35); font-size: 11px; line-height: 1.6; }
+
+    /* ── Why section ── */
+    .why-section { padding-bottom: 64px; }
+    .why-card {
+      border-radius: 16px; padding: 32px;
+      border: 1px solid rgba(201,168,76,0.12);
+      background: linear-gradient(135deg, rgba(59,130,246,0.04) 0%, rgba(12,8,18,0.8) 100%);
+    }
+    .why-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; line-height: 1.4; }
+    .why-card p { color: rgba(255,255,255,0.55); font-size: 13px; line-height: 1.95; margin-bottom: 20px; }
+    .why-card p strong { color: rgba(255,255,255,0.82); }
+    .why-note {
+      color: rgba(255,255,255,0.28); font-size: 11px; line-height: 1.8;
+      border-left: 2px solid rgba(201,168,76,0.25); padding-left: 14px;
+    }
+
+    /* ── Reviews ── */
+    .reviews-section { padding-bottom: 80px; }
+    .review-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media(max-width:540px){ .review-grid { grid-template-columns: 1fr; } }
+    .review-card {
+      border-radius: 14px; padding: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02);
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color .2s;
+    }
+    .review-card:hover { border-color: rgba(255,255,255,0.1); }
+    .stars { display: flex; gap: 2px; }
+    .star { color: #fbbf24; font-size: 12px; }
+    .review-text { color: rgba(255,255,255,0.55); font-size: 12px; line-height: 1.8; flex: 1; }
+    .review-author { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04); }
+    .review-avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(201,168,76,0.55); font-size: 11px; font-weight: 700;
+    }
+    .review-name { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); }
+    .review-attr { font-size: 10px; color: rgba(255,255,255,0.22); }
+
+    /* ── Pricing ── */
+    .pricing-section { padding-bottom: 64px; }
+    .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media(max-width:640px){ .plan-grid { grid-template-columns: 1fr; } }
+
+    .plan-card {
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+      display: flex; flex-direction: column;
+      position: relative;
+    }
+    .plan-card.featured {
+      border-color: rgba(201,168,76,0.35);
+    }
+    .plan-featured-badge {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 4px 18px;
+      border-radius: 0 0 10px 10px;
+    }
+    .plan-body { padding: 28px 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+    .plan-name { font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 16px; }
+    .plan-pts { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+    .plan-pts .num { font-size: 48px; font-weight: 800; font-family: monospace; line-height: 1; }
+    .plan-pts .unit { font-size: 20px; font-weight: 700; }
+    .plan-pts .per { color: rgba(255,255,255,0.25); font-size: 13px; }
+    .plan-price { display: flex; align-items: baseline; gap: 2px; }
+    .plan-price .sym { color: rgba(255,255,255,0.35); font-size: 13px; }
+    .plan-price .amount { font-size: 24px; font-weight: 700; }
+    .plan-price .per { color: rgba(255,255,255,0.25); font-size: 12px; }
+    .plan-desc { color: rgba(255,255,255,0.35); font-size: 11px; line-height: 1.6; flex: 1; }
+
+    /* ── FAQ ── */
+    .faq-section { padding-bottom: 64px; }
+    .faq-list { display: flex; flex-direction: column; gap: 10px; }
+    .faq-item { border-radius: 12px; padding: 16px 18px; border: 1px solid rgba(255,255,255,0.05); }
+    .faq-q { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
+    .faq-a { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.7; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 32px 0;
+      text-align: center;
+    }
+    .footer-links { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; }
+    .footer-link { color: rgba(255,255,255,0.25); font-size: 11px; text-decoration: none; transition: color .2s; }
+    .footer-link:hover { color: rgba(255,255,255,0.5); }
+    .footer-sep { color: rgba(255,255,255,0.1); }
+    .footer-note { color: rgba(255,255,255,0.12); font-size: 10px; font-style: italic; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav>
+    <div class="container nav-inner">
+      <a class="nav-logo" href="#">
+        <div class="nav-dot"><i></i></div>
+        <span>宿命解析</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>6占術統合解析 · 完全無料</span>
+      </div>
+      <h1>6つの占術を掛け合わせた、<br>統計学鑑定の決定版。</h1>
+      <p class="hero-sub">生年月日を入力するだけ。性格・仕事・恋愛・転換期まで、全項目を無料で解析します。</p>
+      <button class="btn-primary">✦ 無料で鑑定書を生成する <span style="color:rgba(255,255,255,0.5)">→</span></button>
+      <p class="hero-note">登録不要 · 生年月日だけ</p>
+    </div>
+  </section>
+
+  <!-- ── Form ── -->
+  <section class="form-section">
+    <div class="container">
+      <div class="accent-line">
+        <hr><span>Preview — Page 1</span><hr>
+      </div>
+      <div class="form-wrap">
+        <div class="form-title">
+          <h2>あなた専用の命式鑑定書を、今すぐ生成する</h2>
+          <p>生年月日を入力するだけ。性格・仕事・恋愛・転換期まで、全項目を無料で解析します。</p>
+        </div>
+        <form class="card">
+          <div>
+            <label class="field-label">あなたの生年月日 <span class="req">*</span></label>
+            <div class="select-row">
+              <select><option>年</option><option>1990</option><option>1991</option><option>1995</option></select>
+              <select><option>月</option><option>1</option><option>3</option><option>7</option></select>
+              <select><option>日</option><option>1</option><option>15</option><option>28</option></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">生まれた時間 <span class="opt">（任意・より精密な分析に）</span></label>
+            <div class="select-row-2">
+              <select><option>不明</option><option>0時</option><option>12時</option></select>
+              <select><option>不明</option><option>00分</option><option>30分</option></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">性別 <span class="req">*</span></label>
+            <div class="gender-row">
+              <button type="button" class="gender-btn active">女性</button>
+              <button type="button" class="gender-btn">男性</button>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">特に確認したいこと <span class="opt">（任意）</span></label>
+            <textarea rows="3" placeholder="例：転職のタイミングは？　仕事と家庭の両立について　今の恋愛はうまくいく？"></textarea>
+          </div>
+          <button type="submit" class="btn-submit">✦ 指南書を作る</button>
+          <p class="form-note">無料 · 登録不要</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Result preview (sample) ── -->
+  <section style="padding-bottom:64px;">
+    <div class="container">
+      <div class="accent-line">
+        <hr><span>命式鑑定書</span><hr>
+      </div>
+      <div class="result-preview">
+        <div class="result-cover" style="background:linear-gradient(135deg,#0c0812 0%,#170f26 100%);">
+          <p class="label">MEISHIKI ANALYSIS — Confidential</p>
+          <h3>命式鑑定書</h3>
+          <p class="en">Personal Fortune Analysis Report</p>
+          <p style="color:rgba(255,255,255,0.45);font-size:13px;">1990年7月15日　女性</p>
+          <p style="color:rgba(255,255,255,0.2);font-size:11px;margin-top:4px;">鑑定日　2026年4月18日</p>
+          <div class="jutsu-tags">
+            <span class="jutsu-tag" style="color:#f87171;border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.08);">四柱推命</span>
+            <span class="jutsu-tag" style="color:#60a5fa;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08);">算命学</span>
+            <span class="jutsu-tag" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.08);">宿曜</span>
+            <span class="jutsu-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);">納音</span>
+            <span class="jutsu-tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">数秘術</span>
+            <span class="jutsu-tag" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.08);">九星気学</span>
+          </div>
+        </div>
+        <div class="result-body" style="background:#120e1e;">
+          <div class="result-section">
+            <p class="result-section-title">性格特性 — あなたの本質と気質</p>
+            <p>あなたの本質は、<strong style="color:rgba(255,255,255,0.88);">表面の穏やかさと内側の強固な意志のギャップ</strong>にあります。四柱推命の日柱・算命学の宿命星ともに「静かな火」を示しており、感情をあまり外に出しませんが、内側では誰よりも強く燃えています。</p>
+          </div>
+          <div class="result-section">
+            <p class="result-section-title">仕事・適職 — 才能が開花する職業領域</p>
+            <p>複数の体系が一致して指し示すのは、<strong style="color:rgba(255,255,255,0.88);">「人と深く関わりながら何かを生み出す」役割</strong>への適性です。宿曜が示す創造性と、算命学の対人調和力が組み合わさることで、クリエイティブ領域でも組織運営でも力を発揮できます。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 個人鑑定 ── -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge"><span>PERSONAL READING</span></div>
+        <h2>個人鑑定</h2>
+        <p>複数の占術が一致した答えを、あなただけにお届けします</p>
+      </div>
+
+      <!-- 個人鑑定カード -->
+      <div class="chat-card" style="border-color: rgba(201,168,76,0.25); background: linear-gradient(145deg, rgba(201,168,76,0.07) 0%, rgba(18,14,30,0.7) 70%);">
+        <div class="chat-card-top">
+          <div style="display:flex;align-items:center;">
+            <div class="chat-icon-wrap" style="background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.3);">✦</div>
+            <div class="chat-title">
+              <h3>個人鑑定はこちら</h3>
+              <p>四柱推命・算命学・宿曜・納音など複数の占術で鑑定</p>
+            </div>
+          </div>
+        </div>
+        <div class="chat-features" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="chat-feature" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="color: rgba(255,255,255,0.8); font-size: 13px;">スポット鑑定</span>
+            <span style="color: var(--accent); font-size: 11px;">¥5,000</span>
+          </div>
+          <div class="chat-feature" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="color: rgba(255,255,255,0.8); font-size: 13px;">個人鑑定</span>
+            <span style="color: var(--accent); font-size: 11px;">¥10,000</span>
+          </div>
+          <div class="chat-feature" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span style="color: rgba(255,255,255,0.8); font-size: 13px;">一生版レポート</span>
+            <span style="color: var(--accent); font-size: 11px;">¥20,000</span>
+          </div>
+        </div>
+        <a href="https://mozunoheya.stores.jp/" target="_blank" rel="noopener noreferrer" class="btn-indigo" style="border-color: rgba(201,168,76,0.45); background: rgba(201,168,76,0.18); text-decoration: none; display: block; text-align: center;">
+          ✦ 個人鑑定の詳細を見る →
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <style>
+    @media (max-width: 540px) {
+      .chat-features {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+
+  <!-- ── Why ── -->
+  <section class="why-section">
+    <div class="container">
+      <div class="why-card">
+        <h2>なぜこの鑑定が当たるのか</h2>
+        <p>四柱推命・算命学・宿曜といった命理体系は、それぞれ数百〜数千年にわたり、膨大な人数の生涯データを照合しながら体系化されてきた<strong>統計的なパターン集</strong>です。「生まれた日時」という変数に対して、性格・対人傾向・人生の転機がどう対応するかを記録し続けた、いわば古代の機械学習です。</p>
+        <p>この鑑定が精度を出せる理由はシンプルです。<strong>6つの独立した体系を同時に照合し、一致した結論だけを抽出している</strong>から。1つの体系が「仕事に向いている」と言っても偶然かもしれない。しかし四柱推命・算命学・数秘術・九星気学の4つが同じ傾向を示すとき、それは統計的に無視できない信号です。</p>
+        <p class="why-note">各体系の計算はすべてアルゴリズムで行われます。複数体系の計算結果を照合し、一致点を読み解きます。占い師の主観は介在しません。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Reviews ── -->
+  <section class="reviews-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge"><span>REVIEWS</span></div>
+        <h2>ユーザーの声</h2>
+        <p>鑑定書を受け取った方からのフィードバック</p>
+      </div>
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          <p class="review-text">「めちゃくちゃ当たってて鳥肌立ちました。転職を迷ってた時期がちゃんと「転機の年」として出ていて、背中を押してもらえた感じ。」</p>
+          <div class="review-author">
+            <div class="review-avatar">M</div>
+            <div><p class="review-name">M.K さん</p><p class="review-attr">30代・女性</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          <p class="review-text">「人生の転換期のところを読んで震えた。去年の出来事がそのまま書いてあって、もう信じるしかない状態です笑」</p>
+          <div class="review-author">
+            <div class="review-avatar">T</div>
+            <div><p class="review-name">T.N さん</p><p class="review-attr">20代・男性</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          <p class="review-text">「結婚相手の特徴が今の彼氏にドンピシャすぎて怖い。占いって曖昧なものだと思ってたけど、ここまで具体的だと話が違う。」</p>
+          <div class="review-author">
+            <div class="review-avatar">A</div>
+            <div><p class="review-name">A.S さん</p><p class="review-attr">30代・女性</p></div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+          <p class="review-text">「適職の部分が今の仕事と全然合ってなくて、転職を真剣に考え始めました。これだけで元が取れる内容だと思う。」</p>
+          <div class="review-author">
+            <div class="review-avatar">Y</div>
+            <div><p class="review-name">Y.M さん</p><p class="review-attr">30代・男性</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section class="faq-section">
+    <div class="container">
+      <div class="accent-line">
+        <hr><span>FAQ</span><hr>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <p class="faq-q">無料でどこまで使えますか？</p>
+          <p class="faq-a">総合命式鑑定書の生成は完全無料・登録不要です。</p>
+        </div>
+        <div class="faq-item">
+          <p class="faq-q">命術師チャットとは何ですか？</p>
+          <p class="faq-a">あなたの命式データを記憶した命術師に、仕事・恋愛・対人関係など何でも相談できます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a class="footer-link" href="#">特定商取引法に基づく表記</a>
+        <span class="footer-sep">|</span>
+        <a class="footer-link" href="#">利用規約</a>
+        <span class="footer-sep">|</span>
+        <a class="footer-link" href="#">プライバシーポリシー</a>
+      </div>
+      <p class="footer-note">解析結果は意思決定の参考情報としてご活用ください</p>
+    </div>
+  </footer>
+
+</body>
+</html>

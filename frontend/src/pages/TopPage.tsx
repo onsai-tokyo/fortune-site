@@ -52,7 +52,7 @@ const TOC_ITEMS = [
 const FAQS = [
   { q: '無料でどこまで使えますか？', a: '総合命式鑑定書の生成は完全無料・登録不要です。詳細分析（自己分析・相性診断・組織診断など）はポイントが必要です。登録すると3ポイント無料でもらえます。' },
   { q: 'ポイントとは何ですか？', a: '詳細分析・AIチャットを利用するために消費するポイントです。登録時に3pt付与。自己分析・相性診断・結婚相性・採用分析は3pt、組織診断は3pt、AIチャットは2pt/メッセージ消費します。月額サブスクで毎月ポイントが付与されます。' },
-  { q: 'AIチャットとは何ですか？', a: 'あなたの命式データを記憶した命術師AIに、仕事・恋愛・対人関係など何でも相談できます。2pt/メッセージで利用できます。月額サブスクを契約するとまとめてお得にポイントを受け取れます。' },
+  { q: '命術師チャットとは何ですか？', a: 'あなたの命式データを記憶した命術師に、仕事・恋愛・対人関係など何でも相談できます。2pt/メッセージで利用できます。月額サブスクを契約するとまとめてお得にポイントを受け取れます。' },
   { q: 'サブスクはいつでも解約できますか？', a: 'はい、いつでも解約できます。解約後は翌月からポイントの付与が停止します。残ったポイントはそのままご利用いただけます。' },
   { q: '解約方法を教えてください', a: 'ログイン後、マイページまたはトップページの料金セクションから解約できます。解約後は即時にサブスクが停止され、翌月の課金はありません。' },
 ]
@@ -572,7 +572,7 @@ export function TopPage() {
             <div className="max-w-5xl mx-auto px-4 py-3 space-y-1">
               {[
                 { label: '総合鑑定書を生成する', sub: '無料 · 登録不要', action: () => { scrollToInput(); setMenuOpen(false) } },
-                { label: '詳細鑑定',             sub: 'AIに相談・自己分析・相性診断など', action: () => { chatRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
+                { label: '詳細鑑定',             sub: '命術師に相談・自己分析・相性診断など', action: () => { chatRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 { label: 'プランを購入する',      sub: '¥780/月〜 毎月ポイント付与', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 { label: 'FAQ',                  sub: 'よくある質問・解約について', action: () => { faqRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 ...(user ? [{ label: 'マイページ', sub: '鑑定履歴・チャット記録', action: () => { navigate('/mypage'); setMenuOpen(false) } }] : []),
@@ -597,7 +597,7 @@ export function TopPage() {
         <section className="pt-24 pb-20 text-center">
           <div className="inline-flex items-center gap-2 border border-accent/25 rounded-full px-4 py-1.5 mb-8" style={{ background: 'rgba(59,130,246,0.08)' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-accent/90 text-xs font-medium tracking-wider">6占術 AI統合解析 · 完全無料</span>
+            <span className="text-accent/90 text-xs font-medium tracking-wider">6占術統合解析 · 完全無料</span>
           </div>
 
           <h1
@@ -963,7 +963,7 @@ export function TopPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-base">命術師AIに相談する</h3>
+                  <h3 className="text-white font-bold text-base">命術師に相談する</h3>
                   <p className="text-white/35 text-xs mt-0.5">生年月日を入力して、何でも相談できます</p>
                 </div>
               </div>
@@ -1004,7 +1004,7 @@ export function TopPage() {
               1つの体系が「仕事に向いている」と言っても偶然かもしれない。しかし四柱推命・算命学・数秘術・九星気学の4つが同じ傾向を示すとき、それは統計的に無視できない信号です。
             </p>
             <p className="text-white/35 text-xs leading-loose border-l-2 border-accent/30 pl-4">
-              各体系の計算はすべてアルゴリズムで行われます。AIは計算結果を受け取り、複数体系の一致点を言語化します。占い師の主観は介在しません。
+              各体系の計算はすべてアルゴリズムで行われます。複数体系の計算結果を照合し、一致点を読み解きます。占い師の主観は介在しません。
             </p>
           </div>
         </section>
