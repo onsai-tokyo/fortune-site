@@ -8,7 +8,7 @@ const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","�
 const ELEMENTS = ["木","木","火","火","土","土","金","金","水","水"]
 const YIN_YANG = ["陽","陰","陽","陰","陽","陰","陽","陰","陽","陰"]
 const SUKUYO_ORDER = ["婁","胃","昴","畢","觜","参","井","鬼","柳","星","張","翼","軫","角","亢","氐","房","心","尾","箕","斗","女","虚","危","室","壁","奎"]
-const KYUSEI_NAMES = ['', '一白水星', '二黒土星', '三碧木星', '四緑木星', '五黄土星', '六白金星', '七赤金星', '八白土星', '九紫火星']
+export const KYUSEI_NAMES = ['', '一白水星', '二黒土星', '三碧木星', '四緑木星', '五黄土星', '六白金星', '七赤金星', '八白土星', '九紫火星']
 
 // ===== 四柱推命計算 =====
 function calcJDN(year: number, month: number, day: number): number {
@@ -33,7 +33,7 @@ function makePillar(stemIdx: number, branchIdx: number) {
   }
 }
 
-function calcShichu(year: number, month: number, day: number, hour?: number) {
+export function calcShichu(year: number, month: number, day: number, hour?: number) {
   const yearStemIdx = ((year - 1984) % 10 + 10) % 10
   const yearBranchIdx = ((year - 1984) % 12 + 12) % 12
   const yearPillar = makePillar(yearStemIdx, yearBranchIdx)
@@ -58,7 +58,7 @@ function calcShichu(year: number, month: number, day: number, hour?: number) {
 }
 
 // ===== 納音計算 =====
-function calcNayin(stemIdx: number, branchIdx: number): string {
+export function calcNayin(stemIdx: number, branchIdx: number): string {
   const NAYIN = [
     "海中金","海中金","炉中火","炉中火","大林木","大林木","路旁土","路旁土","剣鋒金","剣鋒金","山頭火","山頭火",
     "涧下水","涧下水","城頭土","城頭土","白蜡金","白蜡金","楊柳木","楊柳木","泉中水","泉中水","屋上土","屋上土",
@@ -73,7 +73,7 @@ function calcNayin(stemIdx: number, branchIdx: number): string {
 }
 
 // ===== 算命学 宿命星 =====
-function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: number) {
+export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: number) {
   const BRANCH_HONKI = [9, 5, 0, 1, 4, 2, 5, 5, 6, 7, 4, 8]
   const GEN = [1, 2, 3, 4, 0]
   const CTRL = [2, 3, 4, 0, 1]
@@ -193,7 +193,7 @@ function getKyureikiMonth(targetJDN: number): number {
   return ((10 + months) % 12) + 1
 }
 
-function getSukuyo(year: number, month: number, day: number): string {
+export function getSukuyo(year: number, month: number, day: number): string {
   const SAKUJITSU_SHU = [24, 26, 1, 3, 5, 7, 10, 13, 15, 17, 20, 22]
   const targetJDN = calcJDN(year, month, day)
   const { sakuJDN } = prevNewMoonJDN(targetJDN)
@@ -204,7 +204,7 @@ function getSukuyo(year: number, month: number, day: number): string {
 }
 
 // ===== 九星気学 本命星 =====
-function calcHonmeiStar(birthYear: number, birthMonth: number, birthDay: number): number {
+export function calcHonmeiStar(birthYear: number, birthMonth: number, birthDay: number): number {
   const year = (birthMonth === 1 || (birthMonth === 2 && birthDay < 4)) ? birthYear - 1 : birthYear
   return ((1999 - year) % 9 + 9) % 9 + 1
 }

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
+import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 
 export const previewRouter = Router()
 
@@ -125,20 +126,32 @@ previewRouter.post('/generate', async (req, res) => {
 
     const hasPartner = !!partnerBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(partnerBirthDate)
 
-    // 事前計算済み命式データ（クライアント側で計算されたもの）
-    const dataSection = calculatedData ? `
-【事前計算済み命式データ（必ずこの値を使用すること。自分で計算しないこと）】
-四柱推命 — 年柱:${calculatedData.shichuYear} 月柱:${calculatedData.shichuMonth} 日柱:${calculatedData.shichuDay}${calculatedData.shichuHour ? ` 時柱:${calculatedData.shichuHour}` : '（時柱不明）'}
-納音：${calculatedData.nayin}
-算命学 — 宿命星:${calculatedData.sanmeiStar}　天中殺:${calculatedData.chusatsu}
-宿曜：${calculatedData.sukuyo}宿
-数秘術（運命数）：${calculatedData.lifePathNumber}
-九星気学（本命星）：${calculatedData.honmeiName}
-四柱推命 年運データ — 現在の大運:${calculatedData.daiyun ?? '不明'}（${calculatedData.daiyunAge ?? ''}）　今年の流年:${calculatedData.ryunen ?? '不明'}${calculatedData.archetype ? `
-【日柱アーキタイプ参照データ（分析の深化に使用。アーキタイプ名・動物名は出力に含めないこと）】
-${calculatedData.archetype}` : ''}${calculatedData.sukuyoDetail ? `
-【宿曜詳細データ（性格・年運の補強に使用）】
-${calculatedData.sukuyoDetail}` : ''}` : ''
+    // サーバー側で正確に計算（フロント側の計算ライブラリのバグ回避）
+    const shichu = calcShichu(year, month, day)
+    const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
+    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+    const sukuyo = getSukuyo(year, month, day)
+    const honmei = calcHonmeiStar(year, month, day)
+
+    // 運命数の計算（既存ロジック）
+    const birthStr = birthDate.replace(/-/g, '')
+    let lifePathNumber = 0
+    for (const char of birthStr) lifePathNumber += parseInt(char)
+    while (lifePathNumber >= 10) {
+      let newSum = 0
+      let n = lifePathNumber
+      while (n > 0) { newSum += n % 10; n = Math.floor(n / 10) }
+      lifePathNumber = newSum
+    }
+
+    const dataSection = `
+【占術データ（サーバー側で正確に計算）】
+四柱推命 — 年柱:${shichu.year.kanshi} 月柱:${shichu.month.kanshi} 日柱:${shichu.day.kanshi}
+納音：${nayin}
+算命学 — 宿命星:${sanmei.shukumeiStar}　天中殺:${sanmei.chusatsu}
+宿曜：${sukuyo}宿
+数秘術（運命数）：${lifePathNumber}
+九星気学（本命星）：${KYUSEI_NAMES[honmei]}`
 
     const partnerLine = hasPartner
       ? `\n\n【相手の情報】\n生年月日：${partnerBirthDate}${partnerBirthTime ? `　生誕時刻：${partnerBirthTime}` : ''}　性別：${partnerGender === 'male' ? '男性' : '女性'}`
