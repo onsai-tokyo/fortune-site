@@ -53,6 +53,7 @@ app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''
   res.json({
     status: 'ok',
+    version: '1.1.1',
     hasApiKey: key.length > 0 && key !== 'your_api_key_here',
   })
 })
