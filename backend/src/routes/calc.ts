@@ -2,7 +2,50 @@ import { Router } from 'express'
 
 export const calcRouter = Router()
 
-// 占術データ計算（認証不要）
+const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+const ELEMENTS = ["木","木","火","火","土","土","金","金","水","水"]
+const SUKUYO_ORDER = ["婁","胃","昴","畢","觜","参","井","鬼","柳","星","張","翼","軫","角","亢","氐","房","心","尾","箕","斗","女","虚","危","室","壁","奎"]
+
+function calcJDN(year: number, month: number, day: number): number {
+  let y = year, m = month
+  if (m <= 2) { y--; m += 12 }
+  const A = Math.floor(y / 100)
+  const B = 2 - A + Math.floor(A / 4)
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524
+}
+
+function calcNayin(stemIdx: number, branchIdx: number): string {
+  const NAYIN = [
+    "海中金","海中金","炉中火","炉中火","大林木","大林木","路旁土","路旁土","剣鋒金","剣鋒金","山頭火","山頭火",
+    "涧下水","涧下水","城頭土","城頭土","白蜡金","白蜡金","楊柳木","楊柳木","泉中水","泉中水","屋上土","屋上土",
+    "霹靂火","霹靂火","松柏木","松柏木","長流水","長流水","砂中金","砂中金","山下火","山下火","平地木","平地木",
+    "壁上土","壁上土","金箔金","金箔金","覆燈火","覆燈火","天河水","天河水","大駅土","大駅土","釵釧金","釵釧金",
+    "桑柘木","桑柘木","大溪水","大溪水","沙中土","沙中土","天上火","天上火","石榴木","石榴木","大海水","大海水"
+  ]
+  const diff = (((branchIdx - stemIdx) / 2) % 6 + 6) % 6
+  const k = (5 * diff) % 6
+  const pos = stemIdx + 10 * k
+  return NAYIN[pos]
+}
+
+function getSukuyo(year: number, month: number, day: number): string {
+  const SAKUJITSU_SHU = [24, 26, 1, 3, 5, 7, 10, 13, 15, 17, 20, 22]
+  const targetJDN = calcJDN(year, month, day)
+
+  // 簡易版: 旧暦月を概算（月単位）
+  // 本来は新月カレンダーと中気の計算が必要だが、ここでは簡略版
+  let kyuMonth = month
+  if (month >= 11) kyuMonth = month - 10
+  else if (month >= 1) kyuMonth = month + 2
+
+  const sakuIdx = SAKUJITSU_SHU[kyuMonth - 1]
+  const monthFirstJDN = calcJDN(year, month, 1)
+  const dayInMonth = targetJDN - monthFirstJDN + 1
+
+  return SUKUYO_ORDER[(sakuIdx + dayInMonth - 1) % 27]
+}
+
 calcRouter.post('/divination', (req, res) => {
   try {
     const { birthDate, gender } = req.body as { birthDate?: string; gender?: string }
@@ -18,74 +61,29 @@ calcRouter.post('/divination', (req, res) => {
       return
     }
 
-    // ===== 四柱推命計算 =====
-    const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
-    const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+    // ===== 四柱推命 =====
+    const yearStemIdx = ((year - 1984) % 10 + 10) % 10
+    const yearBranchIdx = ((year - 1984) % 12 + 12) % 12
+    const monthBranchIdx = month % 12
+    const monthStemIdx = (yearStemIdx % 5 * 2 + monthBranchIdx) % 10
 
-    function calcJDN(y: number, m: number, d: number): number {
-      let yy = y, mm = m
-      if (mm <= 2) { yy--; mm += 12 }
-      const A = Math.floor(yy / 100)
-      const B = 2 - A + Math.floor(A / 4)
-      return Math.floor(365.25 * (yy + 4716)) + Math.floor(30.6001 * (mm + 1)) + d + B - 1524
-    }
+    const JDN = calcJDN(year, month, day)
+    const dayStemIdx = ((JDN - 11) % 10 + 10) % 10
+    const dayBranchIdx = ((JDN - 11) % 12 + 12) % 12
 
-    function calcShichu(y: number, m: number, d: number): { year: string; month: string; day: string } {
-      const jdn = calcJDN(y, m, d)
-      const ly = y - 1900
-      const lm = m - 1
-      const yearStem = (ly * 10 + Math.floor(ly / 60) * 60) % 10
-      const yearBranch = (ly + 8) % 12
-      const monthStem = (ly * 10 + lm * 2 + 2) % 10
-      const monthBranch = (m + 1) % 12
-      const dayStem = (jdn + 9) % 10
-      const dayBranch = (jdn + 1) % 12
+    const shichuYear = STEMS[yearStemIdx] + BRANCHES[yearBranchIdx]
+    const shichuMonth = STEMS[monthStemIdx] + BRANCHES[monthBranchIdx]
+    const shichuDay = STEMS[dayStemIdx] + BRANCHES[dayBranchIdx]
 
-      return {
-        year: STEMS[yearStem] + BRANCHES[yearBranch],
-        month: STEMS[monthStem] + BRANCHES[monthBranch],
-        day: STEMS[dayStem] + BRANCHES[dayBranch]
-      }
-    }
-
-    const shichu = calcShichu(year, month, day)
-
-    // ===== 宿曜計算 =====
-    const SUKUYO_NAMES = ["角", "亢", "氐", "房", "心", "尾", "箕", "斗", "牛", "女", "虚", "危",
-      "室", "壁", "奎", "婁", "胃", "昴", "畢", "觜", "参", "井", "鬼", "柳", "星", "張", "翼", "軫"]
-    const jdn = calcJDN(year, month, day)
-    const sukuyoIdx = (jdn + 13) % 28
-    const sukuyo = SUKUYO_NAMES[sukuyoIdx]
-
-    // ===== 納音計算 =====
-    const NAYIN_MAP: { [key: string]: string } = {
-      "甲子": "海中金", "乙丑": "海中金",
-      "丙寅": "炉中火", "丁卯": "炉中火",
-      "戊辰": "大林木", "己巳": "大林木",
-      "庚午": "路旁土", "辛未": "路旁土",
-      "壬申": "剑锋金", "癸酉": "剑锋金",
-      "甲戌": "山头火", "乙亥": "山头火",
-      "丙子": "洞下水", "丁丑": "洞下水",
-      "戊寅": "城头土", "己卯": "城头土",
-      "庚辰": "白蜡金", "辛巳": "白蜡金",
-      "壬午": "杨柳木", "癸未": "杨柳木",
-      "甲申": "泉中水", "乙酉": "泉中水",
-      "丙戌": "屋上土", "丁亥": "屋上土",
-      "戊子": "霹雳火", "己丑": "霹雳火",
-      "庚寅": "松柏木", "辛卯": "松柏木",
-      "壬辰": "长流水", "癸巳": "长流水",
-      "甲午": "砂中金", "乙未": "砂中金",
-      "丙申": "山下火", "丁酉": "山下火",
-      "戊戌": "平地木", "己亥": "平地木"
-    }
-    const dayKanshi = shichu.day
-    const nayin = NAYIN_MAP[dayKanshi] || "不明"
+    // ===== 納音 =====
+    const nayin = calcNayin(dayStemIdx, dayBranchIdx)
 
     // ===== 算命学 宿命星 =====
-    const dayStemIdx = parseInt(dayKanshi[0].charCodeAt(0).toString())
-    const dayBranchIdx = BRANCHES.indexOf(dayKanshi[1])
     const SANMEI_STARS = ["貫索", "石門", "紅艶", "天馬", "天禄", "天権", "逐門", "龍高", "玉堂", "寿星"]
     const sanmeiStar = SANMEI_STARS[(dayStemIdx + dayBranchIdx * 2) % 10]
+
+    // ===== 宿曜 =====
+    const sukuyo = getSukuyo(year, month, day)
 
     // ===== 数秘術 運命数 =====
     const birthStr = birthDate.replace(/-/g, '')
@@ -93,7 +91,8 @@ calcRouter.post('/divination', (req, res) => {
     for (const char of birthStr) sum += parseInt(char)
     while (sum >= 10) {
       let newSum = 0
-      while (sum > 0) { newSum += sum % 10; sum = Math.floor(sum / 10) }
+      let n = sum
+      while (n > 0) { newSum += n % 10; n = Math.floor(n / 10) }
       sum = newSum
     }
     const lifePathNumber = sum
@@ -103,13 +102,13 @@ calcRouter.post('/divination', (req, res) => {
     const honmei = KYUSEI_NAMES[(year + month + day - 1) % 9]
 
     res.json({
-      shichuYear: shichu.year,
-      shichuMonth: shichu.month,
-      shichuDay: shichu.day,
-      nayin: nayin,
-      sanmeiStar: sanmeiStar,
-      sukuyo: sukuyo,
-      lifePathNumber: lifePathNumber,
+      shichuYear,
+      shichuMonth,
+      shichuDay,
+      nayin,
+      sanmeiStar,
+      sukuyo,
+      lifePathNumber,
       honmeiName: honmei
     })
   } catch (err) {
