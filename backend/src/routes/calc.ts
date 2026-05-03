@@ -104,21 +104,103 @@ function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: nu
   return { shukumeiStar, chusatsu }
 }
 
-// ===== 宿曜計算（簡易版） =====
+// ===== 宿曜計算（フロントと同一の正確な計算） =====
+function newMoonJDE(k: number): number {
+  const T = k / 1236.85
+  const DEG = Math.PI / 180
+  let JDE = 2451550.09766 + 29.530588861 * k
+    + 0.00015437 * T * T - 0.000000150 * T * T * T + 0.00000000073 * T * T * T * T
+  const M  = (2.5534  + 29.10535670  * k - 0.0000014 * T * T) * DEG
+  const Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T * T) * DEG
+  const F  = (160.7108 + 390.67050284 * k - 0.0016118 * T * T) * DEG
+  const Om = (124.7746 -   1.56375588 * k + 0.0020672 * T * T) * DEG
+  JDE += -0.40720 * Math.sin(Mp) + 0.17241 * Math.sin(M)
+       +  0.01608 * Math.sin(2 * Mp) + 0.01039 * Math.sin(2 * F)
+       +  0.00739 * Math.sin(Mp - M) - 0.00514 * Math.sin(Mp + M)
+       +  0.00208 * Math.sin(2 * M)  - 0.00111 * Math.sin(Mp - 2 * F)
+       -  0.00057 * Math.sin(Mp + 2 * F) + 0.00056 * Math.sin(2 * Mp + M)
+       -  0.00042 * Math.sin(3 * Mp) + 0.00042 * Math.sin(M + 2 * F)
+       +  0.00038 * Math.sin(M - 2 * F) - 0.00024 * Math.sin(2 * Mp - M)
+       -  0.00017 * Math.sin(Om) - 0.00007 * Math.sin(Mp + 2 * M)
+  return JDE
+}
+
+function prevNewMoonJDN(targetJDN: number): { sakuJDN: number; k: number } {
+  let k = Math.round((targetJDN - 0.5 - 2451550.09766) / 29.530588861)
+  for (let dk = -2; dk <= 1; dk++) {
+    const nm0 = Math.floor(newMoonJDE(k + dk)     + 21 / 24)
+    const nm1 = Math.floor(newMoonJDE(k + dk + 1) + 21 / 24)
+    if (nm0 <= targetJDN && targetJDN < nm1) {
+      return { sakuJDN: nm0, k: k + dk }
+    }
+  }
+  return { sakuJDN: Math.floor(newMoonJDE(k) + 21 / 24), k }
+}
+
+function solarLongitude(JD: number): number {
+  const T = (JD - 2451545.0) / 36525.0
+  const DEG = Math.PI / 180
+  const M = ((357.52911 + 35999.05029 * T - 0.0001537 * T * T) % 360 + 360) % 360
+  const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M * DEG)
+          + (0.019993 - 0.000101 * T) * Math.sin(2 * M * DEG)
+          + 0.000289 * Math.sin(3 * M * DEG)
+  return ((M + C + 282.9372) % 360 + 360) % 360
+}
+
+function findChuki(targetLon: number, nearJD: number): number {
+  let lo = nearJD - 20, hi = nearJD + 20
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2
+    let lon = solarLongitude(mid)
+    if (targetLon < 30 && lon > 300)  lon -= 360
+    if (targetLon > 300 && lon < 30) lon += 360
+    if (lon < targetLon) lo = mid; else hi = mid
+  }
+  return (lo + hi) / 2
+}
+
+function getKyureikiMonth(targetJDN: number): number {
+  const { sakuJDN } = prevNewMoonJDN(targetJDN)
+  const approxYear = Math.floor((targetJDN - 1721425.5) / 365.25)
+  const tojiApprox = calcJDN(approxYear, 12, 22)
+  const toji = findChuki(270, tojiApprox)
+  const m11saku = prevNewMoonJDN(Math.floor(toji + 21 / 24)).sakuJDN
+  const chukiLons = [270, 300, 330, 0, 30, 60, 90, 120, 150, 180, 210, 240]
+  let kyuMon = 11
+  let chukiIdx = 0
+  let k11 = Math.round((m11saku - 0.5 - 2451550.09766) / 29.530588861)
+
+  for (let i = 0; i < 18; i++) {
+    const currSaku = Math.floor(newMoonJDE(k11 + i)     + 21 / 24)
+    const nextSaku = Math.floor(newMoonJDE(k11 + i + 1) + 21 / 24)
+    const isTarget = currSaku <= sakuJDN && sakuJDN < nextSaku
+    const targetLon = chukiLons[chukiIdx % 12]
+    const chukiJST = findChuki(targetLon, currSaku + 15) + 21 / 24
+    const hasChuki = chukiJST >= currSaku && chukiJST < nextSaku
+
+    if (hasChuki) {
+      if (isTarget) return kyuMon > 12 ? kyuMon - 12 : kyuMon
+      chukiIdx++
+      kyuMon = kyuMon >= 12 ? 1 : kyuMon + 1
+    } else {
+      if (isTarget) {
+        const prevMon = kyuMon > 12 ? kyuMon - 13 : kyuMon - 1
+        return prevMon <= 0 ? 12 : prevMon
+      }
+    }
+  }
+  const months = Math.round((sakuJDN - m11saku) / 29.5)
+  return ((10 + months) % 12) + 1
+}
+
 function getSukuyo(year: number, month: number, day: number): string {
   const SAKUJITSU_SHU = [24, 26, 1, 3, 5, 7, 10, 13, 15, 17, 20, 22]
   const targetJDN = calcJDN(year, month, day)
-
-  // 簡易版: 旧暦月の推定
-  let kyuMonth = month
-  if (month >= 11) kyuMonth = month - 10
-  else if (month >= 1) kyuMonth = month + 2
-
-  const sakuIdx = SAKUJITSU_SHU[(kyuMonth - 1 + 12) % 12]
-  const monthFirstJDN = calcJDN(year, month, 1)
-  const dayInMonth = targetJDN - monthFirstJDN + 1
-
-  return SUKUYO_ORDER[(sakuIdx + dayInMonth - 1) % 27]
+  const { sakuJDN } = prevNewMoonJDN(targetJDN)
+  const kyuDay   = targetJDN - sakuJDN + 1
+  const kyuMonth = getKyureikiMonth(targetJDN)
+  const sakuIdx  = SAKUJITSU_SHU[kyuMonth - 1]
+  return SUKUYO_ORDER[(sakuIdx + kyuDay - 1) % 27]
 }
 
 // ===== 九星気学 本命星 =====

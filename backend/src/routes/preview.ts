@@ -54,6 +54,15 @@ function sanitize(str: string): string {
     .slice(0, 500)
 }
 
+function removeEmoji(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // 絵文字範囲
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')   // 装飾記号
+    .replace(/[\u{2300}-\u{23FF}]/gu, '')   // その他の装飾
+    .replace(/[\u{2000}-\u{206F}]/gu, '')   // 一般句読点
+    .trim()
+}
+
 interface CalculatedData {
   shichuYear: string
   shichuMonth: string
@@ -228,7 +237,8 @@ ${ageTable}
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        res.write(`data: ${JSON.stringify({ delta: { text: event.delta.text } })}\n\n`)
+        const cleanedText = removeEmoji(event.delta.text)
+        res.write(`data: ${JSON.stringify({ delta: { text: cleanedText } })}\n\n`)
       }
     }
 
@@ -310,7 +320,8 @@ ${sanitize(question)}
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        res.write(`data: ${JSON.stringify({ delta: { text: event.delta.text } })}\n\n`)
+        const cleanedText = removeEmoji(event.delta.text)
+        res.write(`data: ${JSON.stringify({ delta: { text: cleanedText } })}\n\n`)
       }
     }
 
