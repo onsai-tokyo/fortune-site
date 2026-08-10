@@ -1075,6 +1075,7 @@
                 <option>2023</option>
                 <option>2024</option>
                 <option>2025</option>
+                <option>2026</option>
               </select>
               <select>
                 <option>月</option>
@@ -1129,53 +1130,51 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">出生時間 / 出生地（任意）</label>
-            <div class="form-row-3">
+            <label class="form-label">出生時間（任意）</label>
+            <div class="form-row">
               <select>
-                <option>時</option>
-                <option>不明</option>
-                <option>0時</option>
-                <option>1時</option>
-                <option>2時</option>
-                <option>3時</option>
-                <option>4時</option>
-                <option>5時</option>
-                <option>6時</option>
-                <option>7時</option>
-                <option>8時</option>
-                <option>9時</option>
-                <option>10時</option>
-                <option>11時</option>
-                <option>12時</option>
-                <option>13時</option>
-                <option>14時</option>
-                <option>15時</option>
-                <option>16時</option>
-                <option>17時</option>
-                <option>18時</option>
-                <option>19時</option>
-                <option>20時</option>
-                <option>21時</option>
-                <option>22時</option>
-                <option>23時</option>
+                <option value="">不明</option>
+                <option value="0">0時</option>
+                <option value="1">1時</option>
+                <option value="2">2時</option>
+                <option value="3">3時</option>
+                <option value="4">4時</option>
+                <option value="5">5時</option>
+                <option value="6">6時</option>
+                <option value="7">7時</option>
+                <option value="8">8時</option>
+                <option value="9">9時</option>
+                <option value="10">10時</option>
+                <option value="11">11時</option>
+                <option value="12">12時</option>
+                <option value="13">13時</option>
+                <option value="14">14時</option>
+                <option value="15">15時</option>
+                <option value="16">16時</option>
+                <option value="17">17時</option>
+                <option value="18">18時</option>
+                <option value="19">19時</option>
+                <option value="20">20時</option>
+                <option value="21">21時</option>
+                <option value="22">22時</option>
+                <option value="23">23時</option>
               </select>
               <select>
-                <option>分</option>
-                <option>不明</option>
-                <option>00分</option>
-                <option>05分</option>
-                <option>10分</option>
-                <option>15分</option>
-                <option>20分</option>
-                <option>25分</option>
-                <option>30分</option>
-                <option>35分</option>
-                <option>40分</option>
-                <option>45分</option>
-                <option>50分</option>
-                <option>55分</option>
+                <option value="">不明</option>
+                <option value="00">00分</option>
+                <option value="05">05分</option>
+                <option value="10">10分</option>
+                <option value="15">15分</option>
+                <option value="20">20分</option>
+                <option value="25">25分</option>
+                <option value="30">30分</option>
+                <option value="35">35分</option>
+                <option value="40">40分</option>
+                <option value="45">45分</option>
+                <option value="50">50分</option>
+                <option value="55">55分</option>
               </select>
-              <select>
+              <select style="display:none" aria-hidden="true" tabindex="-1">
                 <option>出生地を選択</option>
                 <option>北海道</option>
                 <option>青森県</option>
@@ -1539,7 +1538,6 @@
       const day = formEl.querySelectorAll('select')[2].value;
       const hour = formEl.querySelectorAll('select')[3].value;
       const minute = formEl.querySelectorAll('select')[4].value;
-      const prefecture = formEl.querySelectorAll('select')[5].value;
       const genderMale = formEl.querySelector('input[value="male"]').checked;
       const gender = genderMale ? 'male' : 'female';
 
@@ -1548,12 +1546,17 @@
         return;
       }
 
+      const resultSection = document.getElementById('result');
+      const resultContent = document.getElementById('result-content');
+      const divinationContent = document.getElementById('divination-content');
+      const submitButton = formEl.querySelector('button[type="submit"]');
+
       try {
-        const resultSection = document.getElementById('result');
-        const resultContent = document.getElementById('result-content');
-        const divinationContent = document.getElementById('divination-content');
+        submitButton.disabled = true;
+        submitButton.textContent = '鑑定中...';
         resultSection.style.display = 'block';
         resultContent.textContent = '鑑定中...';
+        divinationContent.textContent = '命式を計算中...';
 
         const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const birthTime = hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '';
@@ -1631,7 +1634,11 @@
           resultContent.parentElement.scrollTop = resultContent.parentElement.scrollHeight;
         }
       } catch (err) {
-        alert('エラーが発生しました: ' + err.message);
+        resultContent.textContent = '通信が混み合っています。少し時間をおいて、もう一度お試しください。';
+        console.error('Fortune generation failed:', err);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = '今すぐ鑑定する';
       }
     });
 
