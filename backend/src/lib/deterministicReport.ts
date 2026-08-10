@@ -57,5 +57,5 @@ export function buildDeterministicReport(input: ReportInput): string {
 あなたの天中殺は${input.chusatsu}です。これは不幸を予告するものではなく、従来の前提を見直しやすい周期を示す分類です。時期だけで重大な決断をせず、資金、健康、契約、周囲への影響といった現実条件を確認してください。**占術は決断を代行するものではなく、見落としている観点を増やす道具**です。
 
 【統合結果】
-四柱推命の日柱${input.shichuDay}、納音${input.nayin}、算命学の${input.sanmeiStar}、宿曜の${input.sukuyo}宿、運命数${input.lifePathNumber}、九星気学の${input.honmeiName}を統合すると、あなたの軸は**${day.core}として、${mission}**ことにあります。同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
+四柱推命の日柱${input.shichuDay}、納音${input.nayin}、算命学の${input.sanmeiStar}、宿曜の${input.sukuyo}宿、運命数${input.lifePathNumber}、九星気学の${input.honmeiName}を統合すると、あなたの軸は**${day.core}として、${mission}**にあります。同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
 }
