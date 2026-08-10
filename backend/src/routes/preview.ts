@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
-import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 
 export const previewRouter = Router()
 
@@ -140,15 +140,7 @@ previewRouter.post('/generate', async (req, res) => {
     const honmei = calcHonmeiStar(year, month, day)
 
     // 運命数の計算（既存ロジック）
-    const birthStr = birthDate.replace(/-/g, '')
-    let lifePathNumber = 0
-    for (const char of birthStr) lifePathNumber += parseInt(char)
-    while (lifePathNumber >= 10) {
-      let newSum = 0
-      let n = lifePathNumber
-      while (n > 0) { newSum += n % 10; n = Math.floor(n / 10) }
-      lifePathNumber = newSum
-    }
+    const lifePathNumber = calcLifePathNumber(birthDate)
 
     const dataSection = `
 【占術データ（サーバー側で正確に計算）】

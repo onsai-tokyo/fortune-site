@@ -121,9 +121,14 @@ function getKyureikiMonth(targetJDN: number): number {
   const { sakuJDN } = prevNewMoonJDN(targetJDN)
 
   // targetJDN 付近の冬至(270°)を探す（12月22日前後）
-  const approxYear = Math.floor((targetJDN - 1721425.5) / 365.25)
-  const tojiApprox = calcJDN(approxYear, 12, 22)
-  const toji = findChuki(270, tojiApprox)
+  let solsticeYear = Math.floor((targetJDN - 1721425.5) / 365.25)
+  let toji = findChuki(270, calcJDN(solsticeYear, 12, 22))
+  // 旧暦11月の起点は対象日以前の直近の冬至。従来は常に同年12月の
+  // 冬至を使っていたため、1月〜冬至直前の旧暦月が崩れていた。
+  if (targetJDN < Math.floor(toji + 21 / 24)) {
+    solsticeYear--
+    toji = findChuki(270, calcJDN(solsticeYear, 12, 22))
+  }
 
   // 冬至を含む月の朔 = 旧11月1日
   const m11saku = prevNewMoonJDN(Math.floor(toji + 21 / 24)).sakuJDN

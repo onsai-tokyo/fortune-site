@@ -108,6 +108,16 @@ export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranch
   return { shukumeiStar, chusatsu }
 }
 
+// ===== 数秘術（ライフパス） =====
+// ピタゴラス式。11・22・33はマスターナンバーとして還元しない。
+export function calcLifePathNumber(birthDate: string): number {
+  let sum = birthDate.replace(/\D/g, '').split('').reduce((total, digit) => total + Number(digit), 0)
+  while (sum > 9 && ![11, 22, 33].includes(sum)) {
+    sum = String(sum).split('').reduce((total, digit) => total + Number(digit), 0)
+  }
+  return sum
+}
+
 // ===== 宿曜計算（フロントと同一の正確な計算） =====
 function newMoonJDE(k: number): number {
   const T = k / 1236.85
@@ -165,9 +175,12 @@ function findChuki(targetLon: number, nearJD: number): number {
 
 function getKyureikiMonth(targetJDN: number): number {
   const { sakuJDN } = prevNewMoonJDN(targetJDN)
-  const approxYear = Math.floor((targetJDN - 1721425.5) / 365.25)
-  const tojiApprox = calcJDN(approxYear, 12, 22)
-  const toji = findChuki(270, tojiApprox)
+  let solsticeYear = Math.floor((targetJDN - 1721425.5) / 365.25)
+  let toji = findChuki(270, calcJDN(solsticeYear, 12, 22))
+  if (targetJDN < Math.floor(toji + 21 / 24)) {
+    solsticeYear--
+    toji = findChuki(270, calcJDN(solsticeYear, 12, 22))
+  }
   const m11saku = prevNewMoonJDN(Math.floor(toji + 21 / 24)).sakuJDN
   const chukiLons = [270, 300, 330, 0, 30, 60, 90, 120, 150, 180, 210, 240]
   let kyuMon = 11
@@ -237,15 +250,7 @@ calcRouter.post('/divination', (req, res) => {
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(year, month, day)
 
-    const birthStr = birthDate.replace(/-/g, '')
-    let lifePathNumber = 0
-    for (const char of birthStr) lifePathNumber += parseInt(char)
-    while (lifePathNumber >= 10) {
-      let newSum = 0
-      let n = lifePathNumber
-      while (n > 0) { newSum += n % 10; n = Math.floor(n / 10) }
-      lifePathNumber = newSum
-    }
+    const lifePathNumber = calcLifePathNumber(birthDate)
 
     const honmei = calcHonmeiStar(year, month, day)
 
