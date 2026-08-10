@@ -2,37 +2,9 @@ import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
+import { buildDeterministicReport } from '../lib/deterministicReport.js'
 
 export const previewRouter = Router()
-
-// ─── IP別 日次レート制限（無料プレビュー） ────────────────────────────────
-const DAILY_LIMIT = 100  // テスト用に一時的に高く設定
-interface IpEntry { date: string; count: number }
-const ipDailyMap = new Map<string, IpEntry>()
-
-function getToday(): string {
-  return new Date().toISOString().slice(0, 10) // "YYYY-MM-DD"
-}
-
-function checkIpLimit(ip: string): boolean {
-  const today = getToday()
-  const entry = ipDailyMap.get(ip)
-  if (!entry || entry.date !== today) {
-    ipDailyMap.set(ip, { date: today, count: 1 })
-    return true
-  }
-  if (entry.count >= DAILY_LIMIT) return false
-  entry.count++
-  return true
-}
-
-// メモリリーク防止: 古いIPエントリを1時間ごとに削除
-setInterval(() => {
-  const today = getToday()
-  for (const [ip, entry] of ipDailyMap) {
-    if (entry.date !== today) ipDailyMap.delete(ip)
-  }
-}, 60 * 60 * 1000)
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -88,16 +60,6 @@ interface CalculatedData {
 // LP用：命式鑑定書 全章ストリーミング生成
 // POST /api/preview/generate
 previewRouter.post('/generate', async (req, res) => {
-  // IP日次制限チェック
-  const ip = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0].trim() ?? req.socket.remoteAddress ?? 'unknown'
-  if (!checkIpLimit(ip)) {
-    res.status(429).json({
-      error: '本日の無料鑑定回数の上限に達しました。アカウントを作成すると継続してご利用いただけます。',
-      code: 'DAILY_LIMIT_EXCEEDED',
-    })
-    return
-  }
-
   try {
     const { birthDate, birthTime, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
       birthDate?: string
@@ -142,6 +104,29 @@ previewRouter.post('/generate', async (req, res) => {
     // 運命数の計算（既存ロジック）
     const lifePathNumber = calcLifePathNumber(birthDate)
 
+    // 初回鑑定は計算結果から固定文を生成する。AI APIは使用せず、同じ入力には同じ結果を返す。
+    const deterministicReport = buildDeterministicReport({
+      shichuDay: shichu.day.kanshi,
+      nayin,
+      sanmeiStar: sanmei.shukumeiStar,
+      chusatsu: sanmei.chusatsu,
+      sukuyo,
+      lifePathNumber,
+      honmeiName: KYUSEI_NAMES[honmei],
+    })
+
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'public, max-age=86400')
+    res.setHeader('Connection', 'keep-alive')
+    res.setHeader('X-Accel-Buffering', 'no')
+    for (let offset = 0; offset < deterministicReport.length; offset += 240) {
+      res.write(`data: ${JSON.stringify({ delta: { text: deterministicReport.slice(offset, offset + 240) } })}\n\n`)
+    }
+    res.write('data: [DONE]\n\n')
+    res.end()
+    return
+
+    /* Legacy AI report generator retained temporarily for reference.
     const dataSection = `
 【占術データ（サーバー側で正確に計算）】
 四柱推命 — 年柱:${shichu.year.kanshi} 月柱:${shichu.month.kanshi} 日柱:${shichu.day.kanshi}
@@ -257,6 +242,7 @@ ${ageTable}
 
     res.write('data: [DONE]\n\n')
     res.end()
+    */
   } catch (err) {
     console.error('Preview generate error:', err)
     if (!res.headersSent) {
