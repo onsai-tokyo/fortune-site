@@ -30,27 +30,26 @@ const TOC_ITEMS = [
   { num: '1',  title: '性格特性 — あなたの本質と気質' },
   { num: '2',  title: '周りから見たあなた — 社会的ペルソナ' },
   { num: '3',  title: '仕事・適職 — 才能が開花する職業領域' },
-  { num: '4',  title: '恋愛特徴 — 愛し方・愛され方のパターン' },
-  { num: '5',  title: '結婚相手の特徴 — 理想的な伴侶の命式' },
-  { num: '6',  title: '子供との縁と特徴' },
-  { num: '7',  title: '親・兄弟との縁 — 家族が結んだ宿縁' },
-  { num: '8',  title: '人生の使命 — この世に担って生まれた役割' },
-  { num: '9',  title: '人生の転換期 — 大きな変化のタイミング' },
-  { num: '10', title: 'あなたらしく生きるためのアドバイス' },
-  { num: '11', title: '相性診断 — 入力した場合のみ生成' },
-  { num: '12', title: '特に確認したいことへのご回答 — 入力した場合のみ生成' },
+  { num: '4',  title: '恋愛とパートナーシップ' },
+  { num: '5',  title: '人生の使命 — この世で活かしたい資質' },
+  { num: '6',  title: '運気を扱うときの注意' },
+  { num: '7',  title: '統合結果 — 複数占術に共通する傾向' },
 ]
 
 
 
 
 const FAQS = [
-  { q: '無料でどこまで使えますか？', a: '総合命式鑑定書の生成は完全無料・登録不要です。詳細分析（自己分析・相性診断・組織診断など）はポイントが必要です。登録すると3ポイント無料でもらえます。' },
-  { q: 'ポイントとは何ですか？', a: '詳細分析・AIチャットを利用するために消費するポイントです。登録時に3pt付与。自己分析・相性診断・結婚相性・採用分析は3pt、組織診断は3pt、AIチャットは2pt/メッセージ消費します。月額サブスクで毎月ポイントが付与されます。' },
-  { q: '命術師チャットとは何ですか？', a: 'あなたの命式データを記憶した命術師に、仕事・恋愛・対人関係など何でも相談できます。2pt/メッセージで利用できます。月額サブスクを契約するとまとめてお得にポイントを受け取れます。' },
-  { q: 'サブスクはいつでも解約できますか？', a: 'はい、いつでも解約できます。解約後は翌月からポイントの付与が停止します。残ったポイントはそのままご利用いただけます。' },
-  { q: '解約方法を教えてください', a: 'ログイン後、マイページまたはトップページの料金セクションから解約できます。解約後は即時にサブスクが停止され、翌月の課金はありません。' },
+  { q: '無料でどこまで使えますか？', a: '統合鑑定書は登録不要・無料で利用できます。現在、サイト内での新規課金は受け付けていません。' },
+  { q: '同じ情報を入れると、同じ結果になりますか？', a: 'はい。初回の統合鑑定は固定ルールで組み立てるため、同じ生年月日・出生時刻・性別なら同じ結果になります。' },
+  { q: '鑑定書の生成にAIを使っていますか？', a: '初回の統合鑑定書は生成AIを使わず、各占術の計算結果と固定された解釈ルールから生成します。' },
+  { q: '出生時刻が分からなくても使えますか？', a: '利用できます。ただし四柱推命の時柱など、出生時刻が必要な項目は省略されます。分かる場合は入力すると、より多くの要素を計算できます。' },
+  { q: '結果は科学的に証明されていますか？', a: '占術は科学的な診断や将来の保証ではありません。自己理解や選択肢を整理するための参考情報としてご利用ください。' },
 ]
+
+const COCONALA_AFFILIATE_URL = (import.meta as ImportMeta & {
+  env: { VITE_COCONALA_AFFILIATE_URL?: string }
+}).env.VITE_COCONALA_AFFILIATE_URL?.trim()
 
 const YEARS    = Array.from({ length: 107 }, (_, i) => 2026 - i)  // 2026〜1920
 const MONTHS   = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -150,23 +149,8 @@ export function TopPage() {
     }
   }, [])
 
-  // 無料鑑定 日次制限（3回/日、キャッシュヒットはカウントしない）
+  // 旧バックエンドから制限応答が返った場合の互換表示
   const [showLimitModal, setShowLimitModal] = useState(false)
-
-  function checkDailyLimit(): boolean {
-    try {
-      const today = new Date().toISOString().slice(0, 10)
-      const stored = localStorage.getItem('fortune_daily_usage')
-      const usage = stored ? JSON.parse(stored) as { date: string; count: number } : { date: '', count: 0 }
-      if (usage.date !== today) {
-        localStorage.setItem('fortune_daily_usage', JSON.stringify({ date: today, count: 1 }))
-        return true
-      }
-      if (usage.count >= 3) return false
-      localStorage.setItem('fortune_daily_usage', JSON.stringify({ date: today, count: usage.count + 1 }))
-      return true
-    } catch { return true }
-  }
 
   const SUBSCRIPTION_PLANS = {
     light:    { pts: 30,  amount: 780,  label: 'ライト',       endpoint: '/api/payment/subscribe-light' },
@@ -218,14 +202,14 @@ export function TopPage() {
 
     const label = `${form.year}年${form.month}月${form.day}日　${form.gender === 'female' ? '女性' : '男性'}`
     setSubmittedLabel(label)
-    setSubmittedQuestion(form.question)
+    setSubmittedQuestion('')
     setQuestionAnswer('')
 
     // バックエンド側で計算した値を取得（フロント側の計算ライブラリのバグ回避）
     const calcRes = await fetch('/api/calc/divination', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birthDate, gender: form.gender }),
+      body: JSON.stringify({ birthDate, birthTime, gender: form.gender }),
     })
 
     if (!calcRes.ok) {
@@ -238,6 +222,7 @@ export function TopPage() {
       shichuYear: string
       shichuMonth: string
       shichuDay: string
+      shichuHour: string | null
       nayin: string
       sanmeiStar: string
       chusatsu: string
@@ -260,7 +245,7 @@ export function TopPage() {
       shichuYear: backendCalcData.shichuYear,
       shichuMonth: backendCalcData.shichuMonth,
       shichuDay: backendCalcData.shichuDay,
-      shichuHour: null,
+      shichuHour: backendCalcData.shichuHour,
       nayin: backendCalcData.nayin,
       sanmeiStar: backendCalcData.sanmeiStar,
       chusatsu: backendCalcData.chusatsu,
@@ -276,8 +261,8 @@ export function TopPage() {
     }
     setCalcData(newCalcData)
 
-    // キャッシュキー（質問は含めない — 質問は別課金で都度生成）
-    const cacheKey = `meishiki_v2_${birthDate}_${birthTime}_${form.gender}_${partnerBirthDate}_${partnerBirthTime}_${form.showPartner ? form.partnerGender : ''}`
+    // 固定鑑定版のキャッシュ。旧AI生成結果とは混在させない。
+    const cacheKey = `meishiki_deterministic_v1_${birthDate}_${birthTime}_${form.gender}_${partnerBirthDate}_${partnerBirthTime}_${form.showPartner ? form.partnerGender : ''}`
 
     // キャッシュヒット → API不要（カウントしない）
     const cached = localStorage.getItem(cacheKey)
@@ -285,12 +270,6 @@ export function TopPage() {
       setPreviewContent(cached)
       setPreviewError('')
       setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-      return
-    }
-
-    // 日次制限チェック（未ログイン時のみ）
-    if (!user && !checkDailyLimit()) {
-      setShowLimitModal(true)
       return
     }
 
@@ -303,7 +282,7 @@ export function TopPage() {
         body: JSON.stringify({
           birthDate, birthTime, gender: form.gender,
           partnerBirthDate, partnerBirthTime, partnerGender: form.partnerGender,
-          question: form.question,
+          question: '',
           calculatedData: {
             shichuYear: newCalcData.shichuYear,
             shichuMonth: newCalcData.shichuMonth,
@@ -585,9 +564,8 @@ export function TopPage() {
             <div className="max-w-5xl mx-auto px-4 py-3 space-y-1">
               {[
                 { label: '総合鑑定書を生成する', sub: '無料 · 登録不要', action: () => { scrollToInput(); setMenuOpen(false) } },
-                { label: '詳細鑑定',             sub: '命術師に相談・自己分析・相性診断など', action: () => { chatRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
-                { label: 'プランを購入する',      sub: '¥780/月〜 毎月ポイント付与', action: () => { pricingRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
-                { label: 'FAQ',                  sub: 'よくある質問・解約について', action: () => { faqRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
+                { label: '専門家に相談する',       sub: '外部の占いサービスを案内', action: () => { featuresRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
+                { label: 'FAQ',                  sub: '鑑定方法について', action: () => { faqRef.current?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) } },
                 ...(user ? [{ label: 'マイページ', sub: '鑑定履歴・チャット記録', action: () => { navigate('/mypage'); setMenuOpen(false) } }] : []),
               ].map(item => (
                 <button key={item.label} onClick={item.action}
@@ -610,18 +588,18 @@ export function TopPage() {
         <section className="pt-24 pb-20 text-center">
           <div className="inline-flex items-center gap-2 border border-accent/25 rounded-full px-4 py-1.5 mb-8" style={{ background: 'rgba(59,130,246,0.08)' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-accent/90 text-xs font-medium tracking-wider">6占術統合解析 · 完全無料</span>
+            <span className="text-accent/90 text-xs font-medium tracking-wider">複数占術の統合解析 · 完全無料</span>
           </div>
 
           <h1
             className="text-4xl sm:text-6xl font-bold tracking-tight mb-6 leading-tight"
             style={{ background: 'linear-gradient(135deg, #fff 40%, #93c5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
           >
-            6つの占術を掛け合わせた、<br />統計学鑑定の決定版。
+            生年月日から読み解く、<br />ぶれない統合鑑定。
           </h1>
 
           <p className="text-white/50 text-base sm:text-lg leading-relaxed max-w-lg mx-auto mb-10">
-            生年月日を入力するだけ。性格・仕事・恋愛・転換期まで、全項目を無料で解析します。
+            四柱推命・算命学・宿曜・数秘術などの計算結果を、固定ルールで一つの鑑定書にまとめます。
           </p>
 
           <button
@@ -781,19 +759,6 @@ export function TopPage() {
                   </div>
                 </div>
               )}
-
-              {/* 特に確認したいこと */}
-              <div>
-                <label className="text-white/50 text-xs mb-2 block">特に確認したいこと <span className="text-white/25">（任意）</span></label>
-                <textarea
-                  value={form.question}
-                  onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
-                  onBlur={() => setTimeout(() => document.getElementById('submit-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
-                  placeholder="例：転職のタイミングは？　仕事と家庭の両立について　今の恋愛はうまくいく？"
-                  rows={3}
-                  className="w-full bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 placeholder:text-white/20 resize-none leading-relaxed"
-                />
-              </div>
 
               {previewError && <p className="text-red-400 text-xs">{previewError}</p>}
 
@@ -964,11 +929,11 @@ export function TopPage() {
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-4">
               <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Features</span>
             </div>
-            <h2 className="text-white font-bold text-2xl sm:text-3xl mb-2">詳細分析ツール</h2>
-            <p className="text-white/35 text-sm">ポイントを使って各機能を利用できます</p>
+            <h2 className="text-white font-bold text-2xl sm:text-3xl mb-2">もっと詳しく相談したい方へ</h2>
+            <p className="text-white/35 text-sm">必要なときだけ、外部の占い専門家を探せます</p>
           </div>
 
-          {/* 命術師AIチャット（統合カード） */}
+          {/* ココナラ提携リンク。URL未設定時は誤リンクを出さない。 */}
           <div ref={chatRef} className="glass-card-hover border flex flex-col gap-5 p-7"
             style={{ borderColor: 'rgba(99,102,241,0.2)', background: 'linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(15,23,42,0.7) 70%)' }}>
             <div className="flex items-start justify-between">
@@ -980,14 +945,14 @@ export function TopPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-base">命術師に相談する</h3>
-                  <p className="text-white/35 text-xs mt-0.5">生年月日を入力して、何でも相談できます</p>
+                  <h3 className="text-white font-bold text-base">占いの専門家に相談する</h3>
+                  <p className="text-white/35 text-xs mt-0.5">鑑定書を参考に、自分に合う相談相手を探せます</p>
                 </div>
               </div>
-              <span className="text-xs font-mono font-medium text-accent opacity-55 flex-shrink-0">2pt / 回</span>
+              <span className="text-xs font-medium text-accent opacity-55 flex-shrink-0">外部サービス</span>
             </div>
             <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
-              {['仕事・転職・適職', '恋愛・相性・結婚', '転機・運気の流れ', '人間関係・対人', '強み・特性分析', '会話履歴を保存'].map(item => (
+              {['仕事・転職・適職', '恋愛・相性・結婚', '転機・運気の流れ', '人間関係・対人'].map(item => (
                 <li key={item} className="flex items-center gap-2">
                   <svg className="w-3 h-3 text-accent opacity-55 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -996,38 +961,41 @@ export function TopPage() {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => user ? navigate('/chat') : navigate('/auth?mode=register')}
-              className="w-full py-3 rounded-xl text-sm font-semibold transition-all text-white border hover:opacity-90"
-              style={{ borderColor: 'rgba(99,102,241,0.5)', background: 'rgba(99,102,241,0.2)' }}
-            >
-              ✦ チャットを始める →
-            </button>
+            {COCONALA_AFFILIATE_URL ? (
+              <a href={COCONALA_AFFILIATE_URL} target="_blank" rel="sponsored noopener noreferrer"
+                className="w-full py-3 rounded-xl text-sm font-semibold transition-all text-white border hover:opacity-90 text-center"
+                style={{ borderColor: 'rgba(99,102,241,0.5)', background: 'rgba(99,102,241,0.2)' }}>
+                ココナラで占い師を探す →
+              </a>
+            ) : (
+              <p className="w-full py-3 rounded-xl text-sm text-center text-white/35 border border-white/10">
+                専門家相談リンクは準備中です
+              </p>
+            )}
+            <p className="text-white/25 text-xs leading-relaxed">リンク先は外部サービスです。掲載時は広告であることを明示します。</p>
           </div>
         </section>
 
-        {/* なぜ当たるか */}
+        {/* 結果がぶれない理由 */}
         <section className="pb-16">
           <div className="glass-card p-8 border border-accent/15" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(8,15,40,0.8) 100%)' }}>
             <h2 className="text-white font-bold text-xl sm:text-2xl mb-5 leading-snug">
-              なぜこの鑑定が当たるのか
+              同じ入力で、結果がぶれない理由
             </h2>
             <p className="text-white/60 text-sm leading-loose mb-5">
-              四柱推命・算命学・宿曜といった命理体系は、それぞれ数百〜数千年にわたり、膨大な人数の生涯データを照合しながら体系化されてきた<strong className="text-white/85">統計的なパターン集</strong>です。
-              「生まれた日時」という変数に対して、性格・対人傾向・人生の転機がどう対応するかを記録し続けた、いわば古代の機械学習です。
+              四柱推命・算命学・宿曜・数秘術など、それぞれの体系で生年月日や出生時刻から命式・宿・数字を計算します。計算方法と解釈ルールを固定しているため、<strong className="text-white/85">同じ条件なら毎回同じ鑑定書</strong>になります。
             </p>
             <p className="text-white/60 text-sm leading-loose mb-5">
-              この鑑定が精度を出せる理由はシンプルです。<strong className="text-white/85">6つの独立した体系を同時に照合し、一致した結論だけを抽出している</strong>から。
-              1つの体系が「仕事に向いている」と言っても偶然かもしれない。しかし四柱推命・算命学・数秘術・九星気学の4つが同じ傾向を示すとき、それは統計的に無視できない信号です。
+              生成AIに自由作文をさせず、各占術から得た要素を決められた順序で統合しています。入力時刻が不明な場合は、時柱など計算できない項目を明示的に省略します。
             </p>
             <p className="text-white/35 text-xs leading-loose border-l-2 border-accent/30 pl-4">
-              各体系の計算はすべてアルゴリズムで行われます。複数体系の計算結果を照合し、一致点を読み解きます。占い師の主観は介在しません。
+              占術は科学的診断ではなく、未来を保証するものでもありません。自己理解や選択肢を整理するための参考情報としてご利用ください。
             </p>
           </div>
         </section>
 
         {/* 口コミセクション */}
-        <section className="pb-20">
+        <section className="hidden pb-20" aria-hidden="true">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-4">
               <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Reviews</span>
@@ -1069,7 +1037,7 @@ export function TopPage() {
         </section>
 
         {/* ④ 料金セクション */}
-        <section ref={pricingRef} className="pb-16">
+        <section ref={pricingRef} className="hidden pb-16" aria-hidden="true">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-4">
               <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Pricing</span>
