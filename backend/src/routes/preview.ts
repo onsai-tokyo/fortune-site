@@ -130,7 +130,10 @@ previewRouter.post('/generate', async (req, res) => {
     const hasPartner = !!partnerBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(partnerBirthDate)
 
     // サーバー側で正確に計算（フロント側の計算ライブラリのバグ回避）
-    const shichu = calcShichu(year, month, day)
+    const [birthHour, birthMinute] = birthTime
+      ? birthTime.split(':').map(Number)
+      : [undefined, 0]
+    const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(year, month, day)

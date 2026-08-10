@@ -1,3 +1,5 @@
+import { Solar } from 'lunar-javascript'
+
 export const STEMS    = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
 export const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 export const ELEMENTS = ["木","木","火","火","土","土","金","金","水","水"]
@@ -34,43 +36,44 @@ function makePillar(stemIdx: number, branchIdx: number): Pillar {
   }
 }
 
-function calcJDN(year: number, month: number, day: number): number {
-  let y = year, m = month
-  if (m <= 2) { y--; m += 12 }
-  const A = Math.floor(y / 100)
-  const B = 2 - A + Math.floor(A / 4)
-  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524
+function pillarFromKanshi(kanshi: string): Pillar {
+  const stemIdx = STEMS.indexOf(kanshi[0])
+  const branchIdx = BRANCHES.indexOf(kanshi[1])
+  if (stemIdx < 0 || branchIdx < 0) throw new Error(`不正な干支です: ${kanshi}`)
+  return makePillar(stemIdx, branchIdx)
+}
+
+// lunar-javascript の節気時刻は中国標準時。日本標準時の入力を1時間戻して
+// 同一瞬間の中国標準時に変換し、年柱・月柱の節入り判定だけに使用する。
+function toChineseStandardTime(year: number, month: number, day: number, hour: number, minute: number) {
+  const shifted = new Date(Date.UTC(year, month - 1, day, hour - 1, minute))
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  }
 }
 
 export function calcShichu(
   year: number,
   month: number,
   day: number,
-  hour?: number
+  hour?: number,
+  minute = 0,
 ): ShichuResult {
-  // 年柱
-  const yearStemIdx   = ((year - 1984) % 10 + 10) % 10
-  const yearBranchIdx = ((year - 1984) % 12 + 12) % 12
-  const yearPillar    = makePillar(yearStemIdx, yearBranchIdx)
+  // 時刻不明時は正午として節入り日の誤判定を最小化する。
+  const localHour = hour ?? 12
+  const localLunar = Solar.fromYmdHms(year, month, day, localHour, minute, 0).getLunar()
+  const localEightChar = localLunar.getEightChar()
+  const cst = toChineseStandardTime(year, month, day, localHour, minute)
+  const solarTermLunar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0).getLunar()
 
-  // 月柱（節入り考慮なし、単純計算）
-  const monthBranchIdx = month % 12
-  const monthStemIdx   = (yearStemIdx % 5 * 2 + monthBranchIdx) % 10
-  const monthPillar    = makePillar(monthStemIdx, monthBranchIdx)
-
-  // 日柱（JDN法）
-  const JDN = calcJDN(year, month, day)
-  const dayStemIdx   = ((JDN - 11) % 10 + 10) % 10
-  const dayBranchIdx = ((JDN - 11) % 12 + 12) % 12
-  const dayPillar    = makePillar(dayStemIdx, dayBranchIdx)
-
-  // 時柱（時刻不明の場合は null）
-  let hourPillar: Pillar | null = null
-  if (hour !== undefined) {
-    const hourBranchIdx = Math.floor((hour + 1) / 2) % 12
-    const hourStemIdx   = (dayStemIdx % 5 * 2 + hourBranchIdx) % 10
-    hourPillar = makePillar(hourStemIdx, hourBranchIdx)
-  }
+  const yearPillar = pillarFromKanshi(solarTermLunar.getYearInGanZhiExact())
+  const monthPillar = pillarFromKanshi(solarTermLunar.getMonthInGanZhiExact())
+  const dayPillar = pillarFromKanshi(localEightChar.getDay())
+  const hourPillar = hour === undefined ? null : pillarFromKanshi(localEightChar.getTime())
 
   return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar }
 }

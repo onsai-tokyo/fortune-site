@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { Solar } from 'lunar-javascript'
 
 export const calcRouter = Router()
 
@@ -19,6 +20,24 @@ function calcJDN(year: number, month: number, day: number): number {
   return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524
 }
 
+function pillarFromKanshi(kanshi: string) {
+  const stemIdx = STEMS.indexOf(kanshi[0])
+  const branchIdx = BRANCHES.indexOf(kanshi[1])
+  if (stemIdx < 0 || branchIdx < 0) throw new Error(`不正な干支です: ${kanshi}`)
+  return makePillar(stemIdx, branchIdx)
+}
+
+function toChineseStandardTime(year: number, month: number, day: number, hour: number, minute: number) {
+  const shifted = new Date(Date.UTC(year, month - 1, day, hour - 1, minute))
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  }
+}
+
 function makePillar(stemIdx: number, branchIdx: number) {
   const si = ((stemIdx % 10) + 10) % 10
   const bi = ((branchIdx % 12) + 12) % 12
@@ -33,26 +52,17 @@ function makePillar(stemIdx: number, branchIdx: number) {
   }
 }
 
-export function calcShichu(year: number, month: number, day: number, hour?: number) {
-  const yearStemIdx = ((year - 1984) % 10 + 10) % 10
-  const yearBranchIdx = ((year - 1984) % 12 + 12) % 12
-  const yearPillar = makePillar(yearStemIdx, yearBranchIdx)
+export function calcShichu(year: number, month: number, day: number, hour?: number, minute = 0) {
+  const localHour = hour ?? 12
+  const localLunar = Solar.fromYmdHms(year, month, day, localHour, minute, 0).getLunar()
+  const localEightChar = localLunar.getEightChar()
+  const cst = toChineseStandardTime(year, month, day, localHour, minute)
+  const solarTermLunar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0).getLunar()
 
-  const monthBranchIdx = month % 12
-  const monthStemIdx = (yearStemIdx % 5 * 2 + monthBranchIdx) % 10
-  const monthPillar = makePillar(monthStemIdx, monthBranchIdx)
-
-  const JDN = calcJDN(year, month, day)
-  const dayStemIdx = ((JDN - 11) % 10 + 10) % 10
-  const dayBranchIdx = ((JDN - 11) % 12 + 12) % 12
-  const dayPillar = makePillar(dayStemIdx, dayBranchIdx)
-
-  let hourPillar = null
-  if (hour !== undefined) {
-    const hourBranchIdx = Math.floor((hour + 1) / 2) % 12
-    const hourStemIdx = (dayStemIdx % 5 * 2 + hourBranchIdx) % 10
-    hourPillar = makePillar(hourStemIdx, hourBranchIdx)
-  }
+  const yearPillar = pillarFromKanshi(solarTermLunar.getYearInGanZhiExact())
+  const monthPillar = pillarFromKanshi(solarTermLunar.getMonthInGanZhiExact())
+  const dayPillar = pillarFromKanshi(localEightChar.getDay())
+  const hourPillar = hour === undefined ? null : pillarFromKanshi(localEightChar.getTime())
 
   return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar }
 }
@@ -74,17 +84,9 @@ export function calcNayin(stemIdx: number, branchIdx: number): string {
 
 // ===== 算命学 宿命星 =====
 export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: number) {
-  const BRANCH_HONKI = [9, 5, 0, 1, 4, 2, 5, 5, 6, 7, 4, 8]
+  const BRANCH_HONKI = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8]
   const GEN = [1, 2, 3, 4, 0]
   const CTRL = [2, 3, 4, 0, 1]
-  const CHUSATSU: { [key: string]: string } = {
-    "子": "申酉天中殺", "丑": "申酉天中殺",
-    "寅": "午未天中殺", "卯": "午未天中殺",
-    "辰": "辰巳天中殺", "巳": "辰巳天中殺",
-    "午": "寅卯天中殺", "未": "寅卯天中殺",
-    "申": "子丑天中殺", "酉": "子丑天中殺",
-    "戌": "戌亥天中殺", "亥": "戌亥天中殺",
-  }
 
   const tgt = BRANCH_HONKI[monthBranchIdx]
   const de = Math.floor(dayStemIdx / 2)
@@ -98,8 +100,10 @@ export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranch
   else if (CTRL[de] === te) shukumeiStar = sameYY ? '禄存星' : '司禄星'
   else shukumeiStar = sameYY ? '車騎星' : '牽牛星'
 
-  const dayBranch = BRANCHES[dayBranchIdx]
-  const chusatsu = CHUSATSU[dayBranch] ?? "不明"
+  const kanshiIndex = Array.from({ length: 60 }, (_, i) => i)
+    .find(i => i % 10 === dayStemIdx && i % 12 === dayBranchIdx)
+  const chusatsuByJun = ['戌亥天中殺', '申酉天中殺', '午未天中殺', '辰巳天中殺', '寅卯天中殺', '子丑天中殺']
+  const chusatsu = kanshiIndex === undefined ? '不明' : chusatsuByJun[Math.floor(kanshiIndex / 10)]
 
   return { shukumeiStar, chusatsu }
 }
@@ -212,7 +216,7 @@ export function calcHonmeiStar(birthYear: number, birthMonth: number, birthDay: 
 // ===== エンドポイント =====
 calcRouter.post('/divination', (req, res) => {
   try {
-    const { birthDate, gender } = req.body as { birthDate?: string; gender?: string }
+    const { birthDate, birthTime, gender } = req.body as { birthDate?: string; birthTime?: string; gender?: string }
 
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
@@ -225,7 +229,10 @@ calcRouter.post('/divination', (req, res) => {
       return
     }
 
-    const shichu = calcShichu(year, month, day)
+    const [birthHour, birthMinute] = birthTime
+      ? birthTime.split(':').map(Number)
+      : [undefined, 0]
+    const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
     const sukuyo = getSukuyo(year, month, day)
@@ -246,6 +253,7 @@ calcRouter.post('/divination', (req, res) => {
       shichuYear: shichu.year.kanshi,
       shichuMonth: shichu.month.kanshi,
       shichuDay: shichu.day.kanshi,
+      shichuHour: shichu.hour?.kanshi ?? null,
       nayin,
       sanmeiStar: sanmei.shukumeiStar,
       chusatsu: sanmei.chusatsu,
