@@ -638,6 +638,7 @@ export function TopPage() {
         <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '4rem' }}>
         {/* ★ プレビュー表示（生成後） - 順序を逆にして表示 */}
         {(previewContent || isStreaming) && (
+          <>
           <section ref={previewRef} className="pb-16">
           <div className="flex items-center gap-4 mb-8">
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.3))' }} />
@@ -953,6 +954,7 @@ export function TopPage() {
               </div>
             </div>
           </section>
+          </>
         )}
         </div>
 

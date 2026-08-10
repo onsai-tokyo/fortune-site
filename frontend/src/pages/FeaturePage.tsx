@@ -20,6 +20,7 @@ import { getSukuyo } from '../lib/sukuyo'
 import { calcLifePathNumber } from '../lib/numerology'
 import { calcHonmeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail, getAnimalFortune } from '../lib/archetype'
+import { Seo } from '../components/Seo'
 
 type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'recruit' | 'boss' | 'subordinate' | 'client' | 'direction'
 
@@ -407,6 +408,12 @@ export function FeaturePage() {
 
   return (
     <div className="min-h-screen">
+      <Seo
+        title={`${meta.label}｜生年月日で診断｜Fate Lab`}
+        description={meta.description}
+        canonicalPath={`/feature/${featureId}`}
+        noindex
+      />
       {/* Pay.jp モーダル */}
       {showPayjpModal && (
         <PayjpModal
