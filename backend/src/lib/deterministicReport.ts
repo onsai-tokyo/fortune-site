@@ -6,6 +6,13 @@ interface ReportInput {
   sukuyo: string
   lifePathNumber: number
   honmeiName: string
+  fourPillars?: Array<{ label: string; kanshi: string; stemTenGod: string; hiddenStems: Array<{ stem: string; tenGod: string }> }>
+  elementBalance?: { scores: Record<string, number>; method: string }
+  strength?: { label: string; supportRatio: number; favorableElements: string[]; note: string }
+  sanmeiChart?: {
+    bodyChart: Record<string, { label: string; star: string }>
+    subordinateStars: Record<string, { label: string; star: string; stage: string }>
+  }
 }
 
 const DAY_STEM: Record<string, { core: string; strength: string; caution: string; work: string; love: string }> = {
@@ -37,9 +44,28 @@ export function buildDeterministicReport(input: ReportInput): string {
   const day = DAY_STEM[input.shichuDay[0]] ?? DAY_STEM.甲
   const sanmei = SANMEI[input.sanmeiStar] ?? '資質を着実に活かす力'
   const mission = LIFE_PATH[input.lifePathNumber] ?? LIFE_PATH[1]
+  const pillarDetail = input.fourPillars?.map(pillar =>
+    `${pillar.label}${pillar.kanshi}：天干=${pillar.stemTenGod}、蔵干=${pillar.hiddenStems.map(item => `${item.stem}（${item.tenGod}）`).join('・')}`
+  ).join('\n') ?? '出生データから詳細命式を算出できませんでした。'
+  const elementDetail = input.elementBalance
+    ? Object.entries(input.elementBalance.scores).map(([element, score]) => `${element}${score}`).join('・')
+    : '算出なし'
+  const bodyChartDetail = input.sanmeiChart
+    ? Object.values(input.sanmeiChart.bodyChart).map(item => `${item.label}=${item.star}`).join('、')
+    : '算出なし'
+  const subordinateDetail = input.sanmeiChart
+    ? Object.values(input.sanmeiChart.subordinateStars).map(item => `${item.label}=${item.star}（${item.stage}）`).join('、')
+    : '算出なし'
 
   return `【性格特性 — あなたの本質と気質】
 あなたの中心には、**${day.core}**という性質があります。最大の強みは、${day.strength}です。算命学の${input.sanmeiStar}が示す${sanmei}も重なるため、自分の資質を発揮できる環境では周囲に明確な影響を与えます。注意点は、${day.caution}です。得意な方法だけに頼らず、別の視点を取り入れるほど本来の強みが安定します。
+
+【四柱推命詳細 — 通変星・蔵干・五行バランス】
+${pillarDetail}
+五行バランスは **${elementDetail}** です（${input.elementBalance?.method ?? '簡易集計'}）。月令を加味した扶助比率は${input.strength?.supportRatio ?? '-'}%で、判定は **${input.strength?.label ?? '算出なし'}**。補いやすい五行の目安は${input.strength?.favorableElements.join('・') ?? '算出なし'}です。これは格局や調候まで含めた喜神・忌神の断定ではなく、五行の偏りを見るための補助指標です。
+
+【算命学詳細 — 人体星図・十二大従星】
+十大主星の人体星図は、${bodyChartDetail}です。十二大従星は、${subordinateDetail}です。中央の星だけで性格を固定せず、場所ごとの役割と人生段階を合わせて読みます。
 
 【周りから見たあなた — 外面と内面のギャップ】
 周囲からは、${sanmei}を備えた人として見られやすい傾向があります。内側では表面上の印象より深く状況を観察しています。**外から期待される役割と、自分が守りたい感覚を分けること**が人間関係の鍵です。判断の理由を短い言葉で共有すると誤解が減ります。

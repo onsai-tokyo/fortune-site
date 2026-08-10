@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
-import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 
 export const previewRouter = Router()
@@ -98,6 +98,7 @@ previewRouter.post('/generate', async (req, res) => {
     const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+    const expanded = calcExpandedDivination(shichu)
     const sukuyo = getSukuyo(year, month, day)
     const honmei = calcHonmeiStar(year, month, day)
 
@@ -113,6 +114,7 @@ previewRouter.post('/generate', async (req, res) => {
       sukuyo,
       lifePathNumber,
       honmeiName: KYUSEI_NAMES[honmei],
+      ...expanded,
     })
 
     res.setHeader('Content-Type', 'text/event-stream')

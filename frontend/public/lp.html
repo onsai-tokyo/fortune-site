@@ -1571,13 +1571,25 @@
         let calcData;
         if (calcResponse.ok) {
           calcData = await calcResponse.json();
+          const elementScores = calcData.elementBalance?.scores || {};
+          const bodyChart = calcData.sanmeiChart?.bodyChart || {};
+          const subordinateStars = calcData.sanmeiChart?.subordinateStars || {};
+          const pillarDetails = (calcData.fourPillars || []).map(pillar =>
+            `${pillar.label}${pillar.kanshi} ${pillar.stemTenGod}／蔵干 ${pillar.hiddenStems.map(item => `${item.stem}(${item.tenGod})`).join('・')}`
+          ).join('｜');
           const divinationData = {
             '四柱推命（年柱）': calcData.shichuYear,
             '四柱推命（月柱）': calcData.shichuMonth,
             '四柱推命（日柱）': calcData.shichuDay,
             ...(calcData.shichuHour ? { '四柱推命（時柱）': calcData.shichuHour } : {}),
+            '四柱推命（通変星・蔵干）': pillarDetails,
             '納音': calcData.nayin,
             '算命学（宿命星）': calcData.sanmeiStar,
+            '算命学（人体星図）': Object.values(bodyChart).map(item => `${item.label} ${item.star}`).join('／'),
+            '算命学（十二大従星）': Object.values(subordinateStars).map(item => `${item.label} ${item.star}`).join('／'),
+            '五行バランス': Object.entries(elementScores).map(([element, score]) => `${element}${score}`).join('・'),
+            '旺衰（簡易判定）': calcData.strength ? `${calcData.strength.label}（扶助${calcData.strength.supportRatio}%）` : '算出なし',
+            '補う五行の目安': calcData.strength?.favorableElements?.join('・') || '算出なし',
             '宿曜': calcData.sukuyo,
             '数秘術（運命数）': calcData.lifePathNumber,
             '九星気学（本命星）': calcData.honmeiName

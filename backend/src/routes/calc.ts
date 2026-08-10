@@ -67,6 +67,113 @@ export function calcShichu(year: number, month: number, day: number, hour?: numb
   return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar }
 }
 
+// ===== 四柱推命・算命学 詳細計算 =====
+// 蔵干は本気・中気・余気の順。五行配点では順に 0.6 / 0.3 / 0.1 とする。
+const HIDDEN_STEMS = [
+  [9], [5, 9, 7], [0, 2, 4], [1], [4, 1, 9], [2, 4, 6],
+  [3, 5], [5, 3, 1], [6, 8, 4], [7], [4, 7, 3], [8, 0],
+]
+const ELEMENT_ORDER = ['木', '火', '土', '金', '水']
+const GENERATES = [1, 2, 3, 4, 0]
+const CONTROLS = [2, 3, 4, 0, 1]
+
+export function calcTenGod(dayStemIdx: number, targetStemIdx: number): string {
+  const dayElement = Math.floor(dayStemIdx / 2)
+  const targetElement = Math.floor(targetStemIdx / 2)
+  const samePolarity = dayStemIdx % 2 === targetStemIdx % 2
+  if (dayElement === targetElement) return samePolarity ? '比肩' : '劫財'
+  if (GENERATES[dayElement] === targetElement) return samePolarity ? '食神' : '傷官'
+  if (CONTROLS[dayElement] === targetElement) return samePolarity ? '偏財' : '正財'
+  if (CONTROLS[targetElement] === dayElement) return samePolarity ? '偏官' : '正官'
+  return samePolarity ? '偏印' : '正印'
+}
+
+function calcPrimaryStar(dayStemIdx: number, targetStemIdx: number): string {
+  const dayElement = Math.floor(dayStemIdx / 2)
+  const targetElement = Math.floor(targetStemIdx / 2)
+  const samePolarity = dayStemIdx % 2 === targetStemIdx % 2
+  if (dayElement === targetElement) return samePolarity ? '貫索星' : '石門星'
+  if (GENERATES[dayElement] === targetElement) return samePolarity ? '鳳閣星' : '調舒星'
+  if (CONTROLS[dayElement] === targetElement) return samePolarity ? '禄存星' : '司禄星'
+  if (CONTROLS[targetElement] === dayElement) return samePolarity ? '車騎星' : '牽牛星'
+  return samePolarity ? '龍高星' : '玉堂星'
+}
+
+const GROWTH_STAGES = ['長生', '沐浴', '冠帯', '建禄', '帝旺', '衰', '病', '死', '墓', '絶', '胎', '養']
+const SUBORDINATE_STARS: Record<string, string> = {
+  長生: '天貴星', 沐浴: '天恍星', 冠帯: '天南星', 建禄: '天禄星', 帝旺: '天将星', 衰: '天堂星',
+  病: '天胡星', 死: '天極星', 墓: '天庫星', 絶: '天馳星', 胎: '天報星', 養: '天印星',
+}
+const GROWTH_START_BRANCH = [11, 6, 2, 9, 2, 9, 5, 0, 8, 3]
+
+function calcSubordinateStar(dayStemIdx: number, branchIdx: number) {
+  const direction = dayStemIdx % 2 === 0 ? 1 : -1
+  const stageIdx = ((direction * (branchIdx - GROWTH_START_BRANCH[dayStemIdx])) % 12 + 12) % 12
+  const stage = GROWTH_STAGES[stageIdx]
+  return { star: SUBORDINATE_STARS[stage], stage }
+}
+
+export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
+  const dayStemIdx = shichu.day.stemIdx
+  const entries = [
+    ['year', '年柱', shichu.year], ['month', '月柱', shichu.month],
+    ['day', '日柱', shichu.day], ...(shichu.hour ? [['hour', '時柱', shichu.hour] as const] : []),
+  ] as const
+  const hiddenWeights = [0.6, 0.3, 0.1]
+  const elementScores = Object.fromEntries(ELEMENT_ORDER.map(element => [element, 0])) as Record<string, number>
+
+  const pillars = entries.map(([key, label, pillar]) => {
+    elementScores[pillar.element] += 1
+    const hiddenStems = HIDDEN_STEMS[pillar.branchIdx].map((stemIdx, index) => {
+      elementScores[ELEMENTS[stemIdx]] += hiddenWeights[index] ?? 0.1
+      return { stem: STEMS[stemIdx], element: ELEMENTS[stemIdx], tenGod: calcTenGod(dayStemIdx, stemIdx) }
+    })
+    return {
+      key, label, kanshi: pillar.kanshi, stem: pillar.stem, branch: pillar.branch,
+      stemTenGod: key === 'day' ? '日主' : calcTenGod(dayStemIdx, pillar.stemIdx), hiddenStems,
+    }
+  })
+  for (const element of ELEMENT_ORDER) elementScores[element] = Math.round(elementScores[element] * 10) / 10
+
+  // 月支の本気を季節の強さとして 1.5 加点し、扶助側（日主と印）とそれ以外を比較する簡易判定。
+  const seasonalScores = { ...elementScores }
+  seasonalScores[ELEMENTS[HIDDEN_STEMS[shichu.month.branchIdx][0]]] += 1.5
+  const dayElementIdx = Math.floor(dayStemIdx / 2)
+  const resourceElementIdx = (dayElementIdx + 4) % 5
+  const support = seasonalScores[ELEMENT_ORDER[dayElementIdx]] + seasonalScores[ELEMENT_ORDER[resourceElementIdx]]
+  const total = Object.values(seasonalScores).reduce((sum, score) => sum + score, 0)
+  const ratio = support / total
+  const strengthLabel = ratio >= 0.56 ? '身旺寄り' : ratio <= 0.44 ? '身弱寄り' : '中和寄り'
+  const favorableElements = strengthLabel === '身弱寄り'
+    ? [ELEMENT_ORDER[resourceElementIdx], ELEMENT_ORDER[dayElementIdx]]
+    : strengthLabel === '身旺寄り'
+      ? [ELEMENT_ORDER[GENERATES[dayElementIdx]], ELEMENT_ORDER[CONTROLS[dayElementIdx]]]
+      : [...ELEMENT_ORDER].sort((a, b) => elementScores[a] - elementScores[b]).slice(0, 2)
+
+  const bodyChart = {
+    north: { label: '北（頭）', star: calcPrimaryStar(dayStemIdx, shichu.year.stemIdx) },
+    east: { label: '東（左手）', star: calcPrimaryStar(dayStemIdx, shichu.month.stemIdx) },
+    center: { label: '中央（胸）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.month.branchIdx][0]) },
+    south: { label: '南（腹）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.day.branchIdx][0]) },
+    west: { label: '西（右手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.year.branchIdx][0]) },
+  }
+  const subordinateStars = {
+    early: { label: '初年期', ...calcSubordinateStar(dayStemIdx, shichu.year.branchIdx) },
+    middle: { label: '中年期', ...calcSubordinateStar(dayStemIdx, shichu.month.branchIdx) },
+    late: { label: '晩年期', ...calcSubordinateStar(dayStemIdx, shichu.day.branchIdx) },
+  }
+
+  return {
+    fourPillars: pillars,
+    elementBalance: { scores: elementScores, method: '天干1.0、蔵干は本気0.6・中気0.3・余気0.1で集計' },
+    strength: {
+      label: strengthLabel, supportRatio: Math.round(ratio * 100), favorableElements,
+      note: '月令を加味した簡易旺衰です。格局・調候を含む流派固有の喜神／忌神の確定ではありません。',
+    },
+    sanmeiChart: { bodyChart, subordinateStars },
+  }
+}
+
 // ===== 納音計算 =====
 export function calcNayin(stemIdx: number, branchIdx: number): string {
   const NAYIN = [
@@ -248,6 +355,7 @@ calcRouter.post('/divination', (req, res) => {
     const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+    const expanded = calcExpandedDivination(shichu)
     const sukuyo = getSukuyo(year, month, day)
 
     const lifePathNumber = calcLifePathNumber(birthDate)
@@ -264,7 +372,8 @@ calcRouter.post('/divination', (req, res) => {
       chusatsu: sanmei.chusatsu,
       sukuyo,
       lifePathNumber,
-      honmeiName: KYUSEI_NAMES[honmei]
+      honmeiName: KYUSEI_NAMES[honmei],
+      ...expanded,
     })
   } catch (err) {
     console.error('Divination calc error:', err)

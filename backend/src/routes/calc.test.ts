@@ -5,6 +5,8 @@ import {
   calcLifePathNumber,
   calcNayin,
   calcSanmei,
+  calcExpandedDivination,
+  calcTenGod,
   calcShichu,
   getSukuyo,
 } from './calc.js'
@@ -45,4 +47,27 @@ test('数秘術は11・22・33をマスターナンバーとして保持する',
 test('九星気学の本命星は2月4日に年を切り替える', () => {
   assert.equal(calcHonmeiStar(2024, 2, 3), 4)
   assert.equal(calcHonmeiStar(2024, 2, 4), 3)
+})
+
+test('通変星は日主との五行生剋と陰陽から一意に決まる', () => {
+  assert.deepEqual([8, 9, 0, 1, 2, 3].map(target => calcTenGod(8, target)),
+    ['比肩', '劫財', '食神', '傷官', '偏財', '正財'])
+})
+
+test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
+  const expanded = calcExpandedDivination(calcShichu(1995, 2, 20, 5, 40))
+  assert.deepEqual(expanded.fourPillars.map(pillar => pillar.kanshi), ['乙亥', '戊寅', '壬午', '癸卯'])
+  assert.deepEqual(expanded.fourPillars.map(pillar => pillar.stemTenGod), ['傷官', '偏官', '日主', '劫財'])
+  assert.deepEqual(expanded.sanmeiChart.bodyChart, {
+    north: { label: '北（頭）', star: '調舒星' },
+    east: { label: '東（左手）', star: '車騎星' },
+    center: { label: '中央（胸）', star: '鳳閣星' },
+    south: { label: '南（腹）', star: '司禄星' },
+    west: { label: '西（右手）', star: '貫索星' },
+  })
+  assert.deepEqual(expanded.sanmeiChart.subordinateStars, {
+    early: { label: '初年期', star: '天禄星', stage: '建禄' },
+    middle: { label: '中年期', star: '天胡星', stage: '病' },
+    late: { label: '晩年期', star: '天報星', stage: '胎' },
+  })
 })
