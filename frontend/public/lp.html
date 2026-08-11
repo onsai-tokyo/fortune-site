@@ -934,13 +934,22 @@
       }
     }
     .divination-content { color: var(--text-sub); font-size: 14px; line-height: 1.6; }
-    .fortune-table-section + .fortune-table-section { margin-top: 28px; }
-    .fortune-table-section h4 { margin: 0 0 12px; color: var(--text-main); font-size: 17px; letter-spacing: .04em; }
+    .result-heading { margin: 0 0 20px; padding: 4px 54px 0 2px; }
+    .result-eyebrow { margin: 0 0 5px; color: var(--gold-dark); font-family: 'Noto Sans JP', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+    .result-heading .report-title { margin: 0; }
+    .result-lead { margin: 8px 0 0; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 12px; }
+    .result-card-title { display: flex; align-items: center; gap: 9px; margin: 0 0 20px; color: var(--text-main); font-size: 16px; }
+    .result-card-title::before { width: 4px; height: 20px; border-radius: 9px; background: var(--gold-primary); content: ''; }
+    .fortune-table-section + .fortune-table-section { margin-top: 32px; padding-top: 28px; border-top: 1px solid rgba(212,197,160,.65); }
+    .fortune-table-section h4 { margin: 0 0 4px; color: var(--text-main); font-size: 17px; letter-spacing: .04em; }
+    .section-caption { margin: 0 0 14px; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 11px; }
     .fortune-table-section h5 { margin: 18px 0 8px; color: var(--text-main); font-size: 14px; }
     .fortune-table-scroll { width: 100%; overflow: hidden; }
-    .fortune-table { width: 100%; table-layout: fixed; border-collapse: collapse; background: rgba(255,255,255,.45); }
-    .fortune-table th, .fortune-table td { padding: 11px 12px; border: 1px solid var(--border-gold); text-align: center; vertical-align: middle; }
-    .fortune-table thead th { background: rgba(186,151,74,.13); color: var(--text-main); font-size: 12px; letter-spacing: .04em; }
+    .fortune-table { width: 100%; table-layout: fixed; overflow: hidden; border: 1px solid var(--border-gold); border-radius: 8px; border-collapse: separate; border-spacing: 0; background: rgba(255,255,255,.5); }
+    .fortune-table th, .fortune-table td { padding: 11px 12px; border-right: 1px solid var(--border-gold); border-bottom: 1px solid var(--border-gold); text-align: center; vertical-align: middle; }
+    .fortune-table tr > :last-child { border-right: 0; }
+    .fortune-table tbody tr:last-child > * { border-bottom: 0; }
+    .fortune-table thead th { background: linear-gradient(180deg, rgba(201,169,97,.2), rgba(201,169,97,.1)); color: var(--text-main); font-family: 'Noto Sans JP', sans-serif; font-size: 11px; letter-spacing: .04em; }
     .fortune-table tbody th { width: 58px; color: var(--text-main); background: rgba(186,151,74,.07); white-space: nowrap; }
     .fortune-table .kanshi-cell { color: var(--text-main); font-family: serif; font-size: 18px; font-weight: 700; white-space: nowrap; }
     .fortune-table td small { display: block; color: var(--text-sub); font-size: 10px; white-space: nowrap; }
@@ -951,29 +960,35 @@
     .hidden-stems-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px 12px; }
     .hidden-stem-item { display: inline-flex; min-width: 32px; flex-direction: column; align-items: center; line-height: 1.3; }
     .hidden-stem-item b { color: var(--text-main); font-family: serif; font-size: 15px; }
-    .sanmei-body-chart { width: 100%; max-width: 520px; margin: 0 auto; table-layout: fixed; border-spacing: 8px; }
-    .sanmei-body-chart td { height: 78px; padding: 9px 5px; border: 1px solid var(--border-gold); border-radius: 7px; background: rgba(255,255,255,.48); text-align: center; vertical-align: middle; }
+    .sanmei-body-wrap { position: relative; max-width: 520px; margin: 6px auto 0; padding: 6px; border-radius: 14px; background: radial-gradient(circle at center, rgba(201,169,97,.12), transparent 62%); }
+    .sanmei-body-chart { position: relative; z-index: 1; width: 100%; table-layout: fixed; border-spacing: 8px; }
+    .sanmei-body-chart td { height: 78px; padding: 9px 5px; border: 1px solid var(--border-gold); border-radius: 9px; box-shadow: 0 3px 12px rgba(143,106,31,.05); background: rgba(255,253,248,.94); text-align: center; vertical-align: middle; }
     .sanmei-body-chart td.empty-cell { border-color: transparent; background: transparent; }
-    .sanmei-body-chart td.center-star { border: 2px solid var(--gold-primary); background: rgba(186,151,74,.14); }
+    .sanmei-body-chart td.center-star { border: 2px solid var(--gold-primary); box-shadow: 0 5px 18px rgba(143,106,31,.12); background: linear-gradient(145deg, #fffaf0, #f4ead1); }
     .sanmei-body-chart span, .subordinate-star-table span { display: block; color: var(--text-sub); font-size: 10px; }
     .sanmei-body-chart strong, .subordinate-star-table strong { display: block; margin-top: 3px; color: var(--text-main); font-family: serif; font-size: 17px; }
-    .subordinate-star-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .subordinate-star-table td { padding: 10px 5px; border: 1px solid var(--border-gold); background: rgba(255,255,255,.42); text-align: center; }
+    .subordinate-star-table { width: 100%; overflow: hidden; border: 1px solid var(--border-gold); border-radius: 8px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+    .subordinate-star-table td { padding: 12px 5px; border-right: 1px solid var(--border-gold); background: rgba(255,255,255,.42); text-align: center; }
+    .subordinate-star-table td:last-child { border-right: 0; }
     .subordinate-star-table small { color: var(--text-sub); font-size: 10px; }
-    .divination-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border-gold); }
-    .divination-summary-item { display: flex; flex-direction: column; line-height: 1.5; }
-    .divination-summary-item strong { color: var(--text-main); font-size: 11px; }
-    .divination-summary-item span { overflow-wrap: anywhere; }
+    .divination-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border-gold); }
+    .divination-summary-item { display: flex; min-height: 66px; padding: 11px 13px; border: 1px solid rgba(212,197,160,.7); border-radius: 8px; flex-direction: column; justify-content: center; line-height: 1.5; background: rgba(255,255,255,.48); }
+    .divination-summary-item strong { margin-bottom: 3px; color: var(--gold-dark); font-family: 'Noto Sans JP', sans-serif; font-size: 10px; letter-spacing: .03em; }
+    .divination-summary-item span { color: var(--text-main); font-weight: 600; overflow-wrap: anywhere; }
     .result-overlay { display: none; position: fixed; inset: 0; z-index: 1000; overflow-y: auto; padding: 20px; background: rgba(0,0,0,.7); }
-    .result-dialog { position: relative; width: min(900px, 100%); min-height: calc(100vh - 40px); margin: 0 auto; padding: 30px; border-radius: 12px; background: var(--bg-main); }
+    .result-dialog { position: relative; width: min(900px, 100%); min-height: calc(100vh - 40px); margin: 0 auto; padding: 32px; border: 1px solid rgba(212,197,160,.65); border-radius: 16px; box-shadow: 0 24px 80px rgba(0,0,0,.22); background: linear-gradient(180deg, #fbf8f0, var(--bg-main)); }
     .result-close { position: absolute; top: 18px; right: 18px; z-index: 2; width: 40px; height: 40px; border: 0; background: transparent; color: var(--text-main); font-size: 24px; cursor: pointer; }
-    .result-card { margin-bottom: 24px; padding: 20px; border: 1px solid var(--border-gold); border-radius: 10px; background: var(--bg-card); }
+    .result-card { margin-bottom: 24px; padding: 22px; border: 1px solid var(--border-gold); border-radius: 12px; box-shadow: 0 8px 26px rgba(143,106,31,.05); background: rgba(255,253,248,.94); }
+    .report-content { color: var(--text-sub); font-size: 15px; line-height: 1.95; white-space: pre-wrap; }
     @media (max-width: 540px) {
       .result-overlay { padding: 8px; }
       .result-dialog { min-height: calc(100vh - 16px); padding: 24px 10px 30px; border-radius: 10px; }
       .result-close { top: 8px; right: 8px; }
-      .result-card { padding: 14px 8px; }
-      .report-title { padding: 4px 42px 0 8px; font-size: 24px; }
+      .result-card { padding: 15px 8px; border-radius: 9px; }
+      .result-heading { padding: 2px 42px 0 8px; }
+      .result-heading .report-title { font-size: 24px; }
+      .result-lead { font-size: 11px; line-height: 1.7; }
+      .result-card-title { margin: 0 4px 18px; font-size: 15px; }
       .fortune-table-section h4 { padding-left: 2px; font-size: 15px; }
       .fortune-table th, .fortune-table td { padding: 8px 2px; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
       .fortune-table thead th { font-size: 10px; letter-spacing: 0; }
@@ -986,7 +1001,9 @@
       .sanmei-body-chart { border-spacing: 4px; }
       .sanmei-body-chart td { height: 67px; padding: 6px 2px; }
       .sanmei-body-chart strong, .subordinate-star-table strong { font-size: 14px; }
-      .divination-summary { grid-template-columns: 1fr; }
+      .divination-summary { grid-template-columns: 1fr 1fr; gap: 7px; }
+      .divination-summary-item { min-height: 58px; padding: 8px; font-size: 11px; }
+      .report-content { padding: 0 5px; font-size: 14px; line-height: 1.9; }
     }
   </style>
 </head>
@@ -1556,18 +1573,22 @@
   <section id="result" class="result-overlay">
     <div class="result-dialog">
       <button id="close-result" class="result-close" aria-label="鑑定結果を閉じる">✕</button>
-      <h2 class="report-title">鑑定結果</h2>
+      <header class="result-heading">
+        <p class="result-eyebrow">FATE LAB · PERSONAL REPORT</p>
+        <h2 class="report-title">鑑定結果</h2>
+        <p class="result-lead">生年月日と出生時刻から算出した、再現性のある統合鑑定です。</p>
+      </header>
 
       <!-- 占術データ表示 -->
       <div id="divination-data" class="result-card">
-        <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 16px;">📊 占術データ</h3>
+        <h3 class="result-card-title">命式・人体星図</h3>
         <div id="divination-content" class="divination-content"></div>
       </div>
 
       <!-- 固定ルールによる統合鑑定文 -->
       <div class="result-card">
-        <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 16px;">✨ 統合鑑定</h3>
-        <div id="result-content" style="font-size: 15px; color: var(--text-sub); line-height: 1.8; white-space: pre-wrap; max-height: 50vh; overflow-y: auto; padding-right: 15px;"></div>
+        <h3 class="result-card-title">統合鑑定</h3>
+        <div id="result-content" class="report-content"></div>
       </div>
     </div>
   </section>
@@ -1659,6 +1680,7 @@
           divinationContent.innerHTML = `
             <section class="fortune-table-section">
               <h4>四柱推命 命式表</h4>
+              <p class="section-caption">生まれた年・月・日・時刻を、干支と通変星で整理しています。</p>
               <div class="fortune-table-scroll">
                 <table class="fortune-table shichu-table">
                   <colgroup><col><col><col><col></colgroup>
@@ -1669,13 +1691,16 @@
             </section>
             <section class="fortune-table-section">
               <h4>算命学 人体星図</h4>
-              <table class="sanmei-body-chart" aria-label="算命学の人体星図">
-                <tbody>
-                  <tr><td class="empty-cell"></td><td>${starCell('north')}</td><td class="empty-cell"></td></tr>
-                  <tr><td>${starCell('west')}</td><td class="center-star">${starCell('center')}</td><td>${starCell('east')}</td></tr>
-                  <tr><td class="empty-cell"></td><td>${starCell('south')}</td><td class="empty-cell"></td></tr>
-                </tbody>
-              </table>
+              <p class="section-caption">本人と向かい合って見る配置です。中央は本質、周囲は関係性や表れ方を示します。</p>
+              <div class="sanmei-body-wrap">
+                <table class="sanmei-body-chart" aria-label="算命学の人体星図">
+                  <tbody>
+                    <tr><td class="empty-cell"></td><td>${starCell('north')}</td><td class="empty-cell"></td></tr>
+                    <tr><td>${starCell('west')}</td><td class="center-star">${starCell('center')}</td><td>${starCell('east')}</td></tr>
+                    <tr><td class="empty-cell"></td><td>${starCell('south')}</td><td class="empty-cell"></td></tr>
+                  </tbody>
+                </table>
+              </div>
               <h5>十二大従星</h5>
               <table class="subordinate-star-table" aria-label="初年期・中年期・晩年期の十二大従星"><tbody><tr>${subordinateHtml}</tr></tbody></table>
             </section>
