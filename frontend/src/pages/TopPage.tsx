@@ -29,12 +29,13 @@ interface FortuneCalcData {
 const TOC_ITEMS = [
   { num: '1', title: '全占術で一致した結論' },
   { num: '2', title: '共通して現れた本質' },
-  { num: '3', title: '運命・人生で果たしやすい役割' },
-  { num: '4', title: '仕事の傾向・適した環境' },
-  { num: '5', title: '恋愛・結婚の傾向' },
-  { num: '6', title: '友人・人間関係の傾向' },
-  { num: '7', title: '複数の時間運が重なる年' },
-  { num: '8', title: '人生への具体的なアドバイス' },
+  { num: '3', title: '2占術で重なる補助傾向' },
+  { num: '4', title: '運命・人生で果たしやすい役割' },
+  { num: '5', title: '仕事の傾向・適した環境' },
+  { num: '6', title: '恋愛・結婚の傾向' },
+  { num: '7', title: '友人・人間関係の傾向' },
+  { num: '8', title: '複数の時間運が重なる年' },
+  { num: '9', title: '人生への具体的なアドバイス' },
 ]
 
 

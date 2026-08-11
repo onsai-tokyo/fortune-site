@@ -343,6 +343,20 @@ export function buildDeterministicReport(input: ReportInput): string {
     independence: '既存の型に合わせるだけでなく、自分の基準を作ること', harmony: '違う立場の人をつなぎ、双方が続けられる関係を作ること', responsibility: '理想を責任ある仕組みや成果へ変えること', transformation: '終わった仕組みを見直し、次に必要な形へ再構築すること',
     creativity: '内側の感覚や理想を、他者が触れられる表現へ変えること', care: '人が安心して育つ環境を整えること', exploration: '未知の世界を学び、得た知識を次の可能性へつなぐこと', practicality: '抽象的な考えを、実際に使える方法と成果へ落とし込むこと',
   }
+  const dailyTendencies: Record<ConsensusKey, string> = {
+    initiative: '納得した瞬間の初動が速く、誰かの許可を待つより自分で試作品を作ると力が出ます。反面、周囲との速度差が大きいと孤立感を持ちやすいため、開始前に目的だけ共有すると進みやすくなります。',
+    communication: '頭の中では複数の情報を同時につなげています。会話・文章・図解などで外に出すと考えが整理され、周囲にも価値が伝わります。曖昧な空気を読み続けるより、言葉で確認できる状況の方が安心できます。',
+    insight: '表情、言葉の間、状況の矛盾など、他の人が見逃す細部を自然に拾います。深く理解できる反面、まだ確認していない相手の本音まで推測しやすいため、観察した事実と自分の解釈を分けることが重要です。',
+    stability: '派手な一発より、毎日の改善と信用の蓄積によって後から大きな差を作ります。急な変更には慎重ですが、変える理由と手順が明確なら粘り強く移行できます。',
+    independence: '自分なりの基準と集中できる時間が必要です。人を拒むというより、まず一人で考えてから関わることで質の高い判断ができます。助けを借りる基準を事前に決めると抱え込みを防げます。',
+    harmony: '相手ごとの事情を理解し、双方が受け入れられる着地点を探します。場を整える能力が高い一方、表面上の平和のために本音を飲み込むと後から疲れが出るため、自分の条件も同じ重さで扱う必要があります。',
+    responsibility: '頼まれたことを曖昧なままにせず、完了まで持っていこうとします。信用につながる長所ですが、期待を先回りして担当外まで背負いやすいため、役割・期限・完成条件を明文化すると能力が安定します。',
+    transformation: '違和感のある仕組みをそのまま受け入れず、根本から組み替える発想があります。転機では思い切った選択ができますが、全部を一度に変えず、残す資産を決めてから動くほど成果につながります。',
+    creativity: '既存の正解をなぞるより、感覚や経験を自分らしい表現へ変えると評価されます。完成度を高める力と未完成を見せる勇気を両立すると、才能が仕事や縁につながります。',
+    care: '人が困っている箇所を早く察し、安心して動けるよう環境を整えます。必要とされることが喜びになりやすい一方、与える量と受け取る量が偏らない関係を選ぶことが大切です。',
+    exploration: '未知の知識、人、場所との出会いが停滞を破ります。興味の幅は強みですが、学んだ内容を一つの成果物にまとめる期限を置くと、経験が確かな専門性になります。',
+    practicality: '理想論だけで終わらせず、手順・予算・期限へ落とすことで安心します。現実性は大きな強みですが、数字に表れにくい感情や納得感も判断材料として残すと選択の後悔が減ります。',
+  }
   const signals = new Map<ConsensusKey, Set<string>>()
   const addSignals = (source: string, keys: ConsensusKey[]) => keys.forEach(key => {
     if (!signals.has(key)) signals.set(key, new Set())
@@ -382,21 +396,28 @@ export function buildDeterministicReport(input: ReportInput): string {
     .map(([key, sources]) => ({ key, sources: [...sources], count: sources.size }))
     .filter(item => item.count >= 3)
     .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
-    .slice(0, 4)
+  const supportingConsensus = [...signals.entries()]
+    .map(([key, sources]) => ({ key, sources: [...sources], count: sources.size }))
+    .filter(item => item.count === 2)
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .slice(0, 5)
   const selectedConsensus = rankedConsensus.length >= 2
     ? rankedConsensus
     : [...signals.entries()].map(([key, sources]) => ({ key, sources: [...sources], count: sources.size })).sort((a, b) => b.count - a.count).slice(0, 3)
   const strongest = selectedConsensus[0]
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
-    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n一致した占術：${item.sources.join('・')}（${item.count}占術）`
+    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n**現実で活かす鍵：** ${detail.action}。\n一致した占術：${item.sources.join('・')}（${item.count}占術）`
   }).join('\n\n')
-  const workBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].work}`).join('\n')
-  const loveBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].love}`).join('\n')
-  const actionBlocks = selectedConsensus.slice(0, 3).map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**`).join('\n')
-  const destinyBlocks = selectedConsensus.slice(0, 3).map(item => `・${destinyTendencies[item.key]}`).join('\n')
-  const friendBlocks = selectedConsensus.slice(0, 3).map(item => `・${friendTendencies[item.key]}`).join('\n')
-  const shadowBlocks = selectedConsensus.slice(0, 3).map(item => `・${shadowTendencies[item.key]}`).join('\n')
+  const supportingBlocks = supportingConsensus.length
+    ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（2占術）`).join('\n\n')
+    : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
+  const workBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${consensusLabels[item.key].work}。${dailyTendencies[item.key]}`).join('\n\n')
+  const loveBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${consensusLabels[item.key].love}。${friendTendencies[item.key]}`).join('\n\n')
+  const actionBlocks = selectedConsensus.map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**\nこの行動は「${consensusLabels[item.key].title}」を長所として使い、${shadowTendencies[item.key]}を防ぐためのものです。`).join('\n\n')
+  const destinyBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${destinyTendencies[item.key]}。${dailyTendencies[item.key]}`).join('\n\n')
+  const friendBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${friendTendencies[item.key]}`).join('\n\n')
+  const shadowBlocks = selectedConsensus.map(item => `・**${consensusLabels[item.key].title}が過剰になると：** ${shadowTendencies[item.key]}`).join('\n')
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
     const text = themes.join('、')
@@ -433,6 +454,10 @@ ${strongest ? `複数の占術で最も強く一致したのは、**「${consens
 【共通して現れた本質】
 ${traitBlocks}
 
+【2つの占術で重なる補助傾向】
+${supportingBlocks}
+ここは3占術以上の「強い一致」より確度を一段下げた補足です。ただし、一つの占術だけの解釈より再現性があるため、日常で心当たりがある項目を強い一致と組み合わせて読んでください。
+
 【運命・人生で果たしやすい役割】
 ${destinyBlocks}
 **人生の軸：自分の強みを自分だけの能力で終わらせず、人や社会が使える形にしたときに運命の共通テーマが完成します。**
@@ -445,11 +470,17 @@ ${workBlocks}
 【恋愛・結婚の傾向】
 ${loveBlocks}
 **惹かれやすさ：** 会話や価値観に刺激がありながら、約束や生活面では信頼できる相手を求めます。
+**恋の始まり方：** 相手の考え方や言葉の奥行きに関心を持ち、会話が重なるほど気持ちが深まりやすい傾向です。最初から感情だけで進むより、友人のような対話と信頼を経て関係が育つ方が本来の魅力を発揮できます。
+**すれ違いやすい場面：** 相手を深く理解しようとするほど「言わなくても分かるはず」「確認すると関係を壊すかもしれない」と考えやすくなります。沈黙で調整せず、事実・気持ち・希望の順で短く伝えることが修復の鍵です。
+**結婚相手を選ぶ基準：** 強い刺激だけでなく、問題が起きたときに話し合えるか、約束を行動で守るか、互いの仕事と一人の時間を尊重できるかを見てください。
 **長続きの条件：** 気持ちを推測だけで決めず、連絡頻度、金銭感覚、仕事への理解、一人の時間を具体的に話せること。
 **注意点：** 強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。
 
 【友人・人間関係の傾向】
 ${friendBlocks}
+**集団の中での役割：** 情報を整理して話を前へ進めたり、表面化していない違和感を見つけたりする役になりやすい人です。全員の感情まで管理しようとせず、論点を渡した後は相手の責任を残してください。
+**相性のよい友人：** 好奇心があり、秘密や弱さを軽く扱わず、頻繁に会わなくても約束を守る人。意見が違っても質問し合える関係が長続きします。
+**距離を置いた方がよい関係：** 曖昧な依頼を繰り返す人、相談だけして責任をすべて預ける人、あなたの一人の時間や境界線を尊重しない関係です。
 **人間関係の結論：人数の多さより、互いの違いと境界線を尊重しながら、言葉と行動の両方で信頼を示せる関係が合います。**
 
 【複数の時間運が重なる年】
