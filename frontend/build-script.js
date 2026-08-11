@@ -7,7 +7,7 @@ const UPDATED = '2026-08-11';
 const distDir = path.join(process.cwd(), 'dist');
 const lpPath = path.join(distDir, 'lp.html');
 const indexPath = path.join(distDir, 'index.html');
-const topPagePath = path.join(process.cwd(), 'public', 'index.html');
+const topPagePath = path.join(process.cwd(), 'public', 'lp.html');
 
 const appRoutes = [
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
