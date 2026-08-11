@@ -447,6 +447,37 @@ export function buildDeterministicReport(input: ReportInput): string {
     .filter((item): item is string => Boolean(item))
     .join('\n\n') || '今後7年間では、二つの時間運が明確に同じテーマを示す年はありません。出来事を無理に断定せず、生活上の変化を優先して判断してください。'
 
+  // 「共通テーマ」は同じでも、実際の現れ方は命式・星図・天体の組み合わせで変わる。
+  // 以下は入力ごとの実データを交差させ、テンプレートだけでは出ない個人差を文章化する層。
+  const centerStarDetail = SANMEI_DETAIL[input.sanmeiStar] ?? sanmei
+  const westStarDetail = LOVE_STYLE[westStar] ?? SANMEI_DETAIL[westStar] ?? sanmei
+  const eastStarDetail = WORK_STYLE[eastStar] ?? SANMEI_DETAIL[eastStar] ?? sanmei
+  const northStarDetail = SANMEI_DETAIL[northStar] ?? sanmei
+  const southStarDetail = SANMEI_DETAIL[southStar] ?? sanmei
+  const westernMoonDetail = ASTRO_SIGN[westernMoon?.sign ?? ''] ?? '感情を言葉と生活の両面から整える力'
+  const westernVenusDetail = ASTRO_SIGN[westernVenus?.sign ?? ''] ?? '信頼できる価値観を育てる力'
+  const westernMarsDetail = ASTRO_SIGN[westernMars?.sign ?? ''] ?? '意思を現実の行動へ変える力'
+  const vedicMoonDetail = ASTRO_SIGN[vedicMoon?.sign ?? ''] ?? '日々の習慣から安心を作る力'
+  const nakshatraDetail = NAKSHATRA_DETAIL[vedic?.moonNakshatra ?? ''] ?? '心の反応を経験へ変える力'
+  const lifeNumberDetail = NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission
+  const birthNumber = input.numerologyProfile?.birthDayNumber
+  const attitudeNumber = input.numerologyProfile?.attitudeNumber
+  const currentPhaseDetail = SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の人生段階に必要な力を経験から育てる時期'
+  const strongestDetail = ELEMENT_DETAIL[strongestElement] ?? '自然に使いやすい機能'
+  const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
+  const primaryKey = selectedConsensus[0]?.key
+  const secondaryKey = selectedConsensus[1]?.key
+  const personalizedCore = `四柱推命の日主**${input.shichuDay[0]}**が示す「${day.core}」に、算命学の中心星**${input.sanmeiStar}**の「${centerStarDetail}」が重なります。つまり、外からは${day.strength}が見えやすい一方、内側では${centerStarDetail}を基準に納得できる形を探します。数秘術の運命数**${input.lifePathNumber}**は「${lifeNumberDetail}」を人生全体の課題にするため、能力を持っているだけでなく、${mission}へ結びつけたときに本人らしさが強く出ます。`
+  const personalizedContrast = primaryKey && secondaryKey
+    ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と**${consensusLabels[secondaryKey].title}**を同時に持つ点にあります。${consensusLabels[primaryKey].summary}${consensusLabels[secondaryKey].summary} 一方だけを選ぶのではなく、「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番で使うと、内面の迷いを行動へ変えやすくなります。`
+    : ''
+  const personalizedEmotion = `西洋占星術の月**${westernMoon?.sign ?? '算出なし'}**は「${westernMoonDetail}」、インド占星術の月**${vedicMoon?.sign ?? '算出なし'}**とナクシャトラ**${vedic?.moonNakshatra ?? '算出なし'}**は「${vedicMoonDetail}」「${nakshatraDetail}」を示します。感情は一つの理由だけで動くというより、周囲との釣り合いと、自分の中で意味が通るかの両方を確認してから落ち着くタイプです。疲れているときは答えを急がず、まず感情を言葉にし、その後で事実を整理する順序が合います。`
+  const personalizedElements = `五行では**${strongestElement}**が最も強く「${strongestDetail}」を自然に使えます。反対に**${weakestElement}**の「${weakestDetail}」は、能力がないという意味ではなく、環境・習慣・協力者によって補うほど全体が整う領域です。強い要素だけで突破し続けず、不足側を予定や仕組みに組み込むことが、この命式固有のバランス調整になります。`
+  const personalizedLove = `算命学の配偶者位置は**${westStar}**で、「${westStarDetail}」という関係の築き方が出ます。西洋占星術の金星**${westernVenus?.sign ?? '算出なし'}**は「${westernVenusDetail}」を愛情の価値基準にし、火星**${westernMars?.sign ?? '算出なし'}${westernMars?.retrograde ? '・逆行' : ''}**は「${westernMarsDetail}」として、欲しいものへ向かう際の反応を示します。さらに紫微斗数の夫妻宮は**${couplePalaceStars}**です。この組み合わせでは、単に優しい相手より、会話と行動が一致し、現実的な約束を更新できる相手かどうかが重要になります。`
+  const personalizedWork = `算命学の社会位置は**${eastStar}**で「${eastStarDetail}」、紫微斗数の官禄宮は**${careerPalaceStars}**、財帛宮は**${wealthPalaceStars}**です。四柱推命の日主${input.shichuDay[0]}が持つ「${day.work}」への適性と合わせると、肩書だけで職業を選ぶより、**${eastStarDetail}を使いながら、${day.strength}を成果として確認できる仕事**で力が出ます。収入面では、得意なことを無制限に引き受けるより、担当範囲・納品物・対価を明確にするほど安定します。`
+  const personalizedRelations = `算命学では、友人・社会との接点に**${eastStar}**、親・目上との関係に**${northStar}**、未来へ向けた表現に**${southStar}**が配置されています。友人には「${eastStarDetail}」が出やすく、目上の人には「${northStarDetail}」、後輩や守る相手には「${southStarDetail}」が出やすいため、相手によって別人のように振る舞う感覚があっても矛盾ではありません。すべての関係で同じ役を演じず、どの立場で何を引き受けるかを切り替える方が自然です。`
+  const personalizedLifeStage = `${currentPhaseLabel}は**${currentPhase?.star ?? '算出なし'}**の「${currentPhaseDetail}」が表に出やすい段階です。現在の時間運は${currentTimingSummary || '算出された人生段階のテーマを確認する時期'}。生まれ持った資質をそのまま繰り返すのではなく、今の期間に求められる役割へ翻訳することが大切です。${birthNumber ? `誕生数${birthNumber}（${NUMEROLOGY_DETAIL[birthNumber] ?? '生得的な得意分野'}）` : ''}${attitudeNumber ? `と態度数${attitudeNumber}（${NUMEROLOGY_DETAIL[attitudeNumber] ?? '人から見えやすい入口'}）` : ''}も、現在の選択で最初に使いやすい方法を補足します。`
+
   return `【全占術一致鑑定 — 結論】
 ${strongest ? `複数の占術で最も強く一致したのは、**「${consensusLabels[strongest.key].title}」**です。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
 この鑑定書は、四柱推命・算命学・紫微斗数・宿曜・九星気学・数秘術・西洋占星術・インド占星術を比較し、**3種類以上で同じ方向が出た内容だけ**を表示しています。
@@ -458,11 +489,25 @@ ${traitBlocks}
 ${supportingBlocks}
 ここは3占術以上の「強い一致」より確度を一段下げた補足です。ただし、一つの占術だけの解釈より再現性があるため、日常で心当たりがある項目を強い一致と組み合わせて読んでください。
 
+【この人固有の資質の組み合わせ】
+${personalizedCore}
+
+${personalizedContrast}
+
+${personalizedEmotion}
+
+${personalizedElements}
+
+【この人固有の恋愛パターン】
+${personalizedLove}
+
 【運命・人生で果たしやすい役割】
 ${destinyBlocks}
 **人生の軸：自分の強みを自分だけの能力で終わらせず、人や社会が使える形にしたときに運命の共通テーマが完成します。**
 
 【仕事の傾向・適した環境】
+${personalizedWork}
+
 ${workBlocks}
 **働き方：** 目的と評価基準は明確でありながら、進め方には自分の裁量がある環境が向きます。短期的な肩書より、上記の力を日常的に使える仕事内容を選ぶことが重要です。
 **仕事での注意点：**\n${shadowBlocks}
@@ -477,6 +522,8 @@ ${loveBlocks}
 **注意点：** 強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。
 
 【友人・人間関係の傾向】
+${personalizedRelations}
+
 ${friendBlocks}
 **集団の中での役割：** 情報を整理して話を前へ進めたり、表面化していない違和感を見つけたりする役になりやすい人です。全員の感情まで管理しようとせず、論点を渡した後は相手の責任を残してください。
 **相性のよい友人：** 好奇心があり、秘密や弱さを軽く扱わず、頻繁に会わなくても約束を守る人。意見が違っても質問し合える関係が長続きします。
@@ -484,6 +531,8 @@ ${friendBlocks}
 **人間関係の結論：人数の多さより、互いの違いと境界線を尊重しながら、言葉と行動の両方で信頼を示せる関係が合います。**
 
 【複数の時間運が重なる年】
+${personalizedLifeStage}
+
 ${timingBlocks}
 年の切り替わりは占術ごとに異なります。ここに表示する年は出来事の確定ではなく、二つ以上の時間運で同じ行動テーマが強まりやすい期間です。
 

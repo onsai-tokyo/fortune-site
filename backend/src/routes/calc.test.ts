@@ -103,11 +103,16 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     ...expanded,
   })
 
-  for (const heading of ['全占術一致鑑定 — 結論', '共通して現れた本質', '2つの占術で重なる補助傾向', '運命・人生で果たしやすい役割', '仕事の傾向・適した環境', '恋愛・結婚の傾向', '友人・人間関係の傾向', '複数の時間運が重なる年', '人生への具体的なアドバイス', 'この鑑定書に表示していないもの']) {
+  for (const heading of ['全占術一致鑑定 — 結論', '共通して現れた本質', '2つの占術で重なる補助傾向', 'この人固有の資質の組み合わせ', 'この人固有の恋愛パターン', '運命・人生で果たしやすい役割', '仕事の傾向・適した環境', '恋愛・結婚の傾向', '友人・人間関係の傾向', '複数の時間運が重なる年', '人生への具体的なアドバイス', 'この鑑定書に表示していないもの']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /3種類以上で同じ方向が出た内容だけ/)
   assert.match(report, /一致した占術：.+（[3-9]占術）/)
+  assert.match(report, /日主\*\*壬\*\*.+中心星\*\*鳳閣星\*\*/s)
+  assert.match(report, /配偶者位置は\*\*司禄星\*\*/)
+  assert.match(report, /社会位置は\*\*貫索星\*\*/)
+  assert.match(report, /西洋占星術の月\*\*天秤座\*\*/)
+  assert.match(report, /ナクシャトラ\*\*チトラー\*\*/)
   assert.doesNotMatch(report, /【鑑定根拠/)
   assert.doesNotMatch(report, /【四柱推命詳細/)
   assert.doesNotMatch(report, /【インド占星術/)
