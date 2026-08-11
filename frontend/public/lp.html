@@ -937,14 +937,20 @@
     .fortune-table-section + .fortune-table-section { margin-top: 28px; }
     .fortune-table-section h4 { margin: 0 0 12px; color: var(--text-main); font-size: 17px; letter-spacing: .04em; }
     .fortune-table-section h5 { margin: 18px 0 8px; color: var(--text-main); font-size: 14px; }
-    .fortune-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .fortune-table { width: 100%; min-width: 560px; border-collapse: collapse; background: rgba(255,255,255,.45); }
+    .fortune-table-scroll { width: 100%; overflow: hidden; }
+    .fortune-table { width: 100%; table-layout: fixed; border-collapse: collapse; background: rgba(255,255,255,.45); }
     .fortune-table th, .fortune-table td { padding: 11px 12px; border: 1px solid var(--border-gold); text-align: center; vertical-align: middle; }
     .fortune-table thead th { background: rgba(186,151,74,.13); color: var(--text-main); font-size: 12px; letter-spacing: .04em; }
     .fortune-table tbody th { width: 58px; color: var(--text-main); background: rgba(186,151,74,.07); white-space: nowrap; }
     .fortune-table .kanshi-cell { color: var(--text-main); font-family: serif; font-size: 18px; font-weight: 700; white-space: nowrap; }
     .fortune-table td small { display: block; color: var(--text-sub); font-size: 10px; white-space: nowrap; }
-    .hidden-stem-separator { display: inline-block; margin: 0 5px; color: var(--border-gold); }
+    .shichu-table col:nth-child(1) { width: 11%; }
+    .shichu-table col:nth-child(2) { width: 20%; }
+    .shichu-table col:nth-child(3) { width: 20%; }
+    .shichu-table col:nth-child(4) { width: 49%; }
+    .hidden-stems-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px 12px; }
+    .hidden-stem-item { display: inline-flex; min-width: 32px; flex-direction: column; align-items: center; line-height: 1.3; }
+    .hidden-stem-item b { color: var(--text-main); font-family: serif; font-size: 15px; }
     .sanmei-body-chart { width: 100%; max-width: 520px; margin: 0 auto; table-layout: fixed; border-spacing: 8px; }
     .sanmei-body-chart td { height: 78px; padding: 9px 5px; border: 1px solid var(--border-gold); border-radius: 7px; background: rgba(255,255,255,.48); text-align: center; vertical-align: middle; }
     .sanmei-body-chart td.empty-cell { border-color: transparent; background: transparent; }
@@ -958,7 +964,25 @@
     .divination-summary-item { display: flex; flex-direction: column; line-height: 1.5; }
     .divination-summary-item strong { color: var(--text-main); font-size: 11px; }
     .divination-summary-item span { overflow-wrap: anywhere; }
+    .result-overlay { display: none; position: fixed; inset: 0; z-index: 1000; overflow-y: auto; padding: 20px; background: rgba(0,0,0,.7); }
+    .result-dialog { position: relative; width: min(900px, 100%); min-height: calc(100vh - 40px); margin: 0 auto; padding: 30px; border-radius: 12px; background: var(--bg-main); }
+    .result-close { position: absolute; top: 18px; right: 18px; z-index: 2; width: 40px; height: 40px; border: 0; background: transparent; color: var(--text-main); font-size: 24px; cursor: pointer; }
+    .result-card { margin-bottom: 24px; padding: 20px; border: 1px solid var(--border-gold); border-radius: 10px; background: var(--bg-card); }
     @media (max-width: 540px) {
+      .result-overlay { padding: 8px; }
+      .result-dialog { min-height: calc(100vh - 16px); padding: 24px 10px 30px; border-radius: 10px; }
+      .result-close { top: 8px; right: 8px; }
+      .result-card { padding: 14px 8px; }
+      .report-title { padding: 4px 42px 0 8px; font-size: 24px; }
+      .fortune-table-section h4 { padding-left: 2px; font-size: 15px; }
+      .fortune-table th, .fortune-table td { padding: 8px 2px; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+      .fortune-table thead th { font-size: 10px; letter-spacing: 0; }
+      .fortune-table tbody th { width: auto; font-size: 11px; }
+      .fortune-table .kanshi-cell { font-size: 15px; }
+      .hidden-stems-list { gap: 5px 7px; }
+      .hidden-stem-item { min-width: 25px; }
+      .hidden-stem-item b { font-size: 13px; }
+      .fortune-table td small { font-size: 8px; }
       .sanmei-body-chart { border-spacing: 4px; }
       .sanmei-body-chart td { height: 67px; padding: 6px 2px; }
       .sanmei-body-chart strong, .subordinate-star-table strong { font-size: 14px; }
@@ -1529,19 +1553,19 @@
   </section>
 
   <!-- 鑑定結果表示 -->
-  <section class="section" id="result" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; overflow-y: auto; padding: 20px;">
-    <div style="max-width: 800px; margin: 0 auto; background: var(--bg-main); border-radius: 12px; padding: 30px; min-height: 100vh; position: relative;">
-      <button id="close-result" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main);">✕</button>
+  <section id="result" class="result-overlay">
+    <div class="result-dialog">
+      <button id="close-result" class="result-close" aria-label="鑑定結果を閉じる">✕</button>
       <h2 class="report-title">鑑定結果</h2>
 
       <!-- 占術データ表示 -->
-      <div id="divination-data" style="margin-bottom: 30px; padding: 20px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-gold);">
+      <div id="divination-data" class="result-card">
         <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 16px;">📊 占術データ</h3>
         <div id="divination-content" class="divination-content"></div>
       </div>
 
       <!-- 固定ルールによる統合鑑定文 -->
-      <div style="padding: 20px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-gold);">
+      <div class="result-card">
         <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 16px;">✨ 統合鑑定</h3>
         <div id="result-content" style="font-size: 15px; color: var(--text-sub); line-height: 1.8; white-space: pre-wrap; max-height: 50vh; overflow-y: auto; padding-right: 15px;"></div>
       </div>
@@ -1623,7 +1647,7 @@
               <th scope="row">${pillar.label}</th>
               <td class="kanshi-cell">${pillar.kanshi}</td>
               <td>${pillar.stemTenGod}</td>
-              <td>${pillar.hiddenStems.map(item => `${item.stem}<small>${item.tenGod}</small>`).join('<span class="hidden-stem-separator">／</span>')}</td>
+              <td><div class="hidden-stems-list">${pillar.hiddenStems.map(item => `<span class="hidden-stem-item"><b>${item.stem}</b><small>${item.tenGod}</small></span>`).join('')}</div></td>
             </tr>`).join('');
           const starCell = (position, fallback = '—') => {
             const item = bodyChart[position];
@@ -1637,6 +1661,7 @@
               <h4>四柱推命 命式表</h4>
               <div class="fortune-table-scroll">
                 <table class="fortune-table shichu-table">
+                  <colgroup><col><col><col><col></colgroup>
                   <thead><tr><th>柱</th><th>干支</th><th>通変星</th><th>蔵干・通変星</th></tr></thead>
                   <tbody>${pillarsHtml}</tbody>
                 </table>
