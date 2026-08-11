@@ -21,6 +21,31 @@ interface ReportInput {
     annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
     marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
   }
+  sanmeiRelations?: {
+    relations: Array<{ pillars: string; branches: string; relation: string; meaning: string }>
+    voidBranches: string[]
+    affectedPillars: string[]
+  }
+  ziwei?: {
+    available: boolean
+    birthplace: string
+    reason?: string
+    standardTimeNote?: string
+    lunarDate?: string
+    time?: string
+    timeRange?: string
+    fiveElementsClass?: string
+    soul?: string
+    body?: string
+    earthlyBranchOfSoulPalace?: string
+    earthlyBranchOfBodyPalace?: string
+    palaces?: Array<{
+      name: string; heavenlyStem: string; earthlyBranch: string; isBodyPalace: boolean
+      majorStars: Array<{ name: string; brightness: string; mutagen: string; detail: string }>
+      minorStars: string[]
+      decadal: { range: number[]; heavenlyStem: string; earthlyBranch: string }
+    }>
+  }
 }
 
 const DAY_STEM: Record<string, { core: string; strength: string; caution: string; work: string; love: string }> = {
@@ -157,6 +182,21 @@ export function buildDeterministicReport(input: ReportInput): string {
     const relationship = item.relationshipSignals.length ? ` 恋愛・結婚面では${item.relationshipSignals.join('、')}。` : ''
     return `**${item.year}年（${item.ageRange}）${item.kanshi}・${item.tenGod}：** ${item.themes.join('、')}。${relationship}`
   }).join('\n') || '近年の年運を算出できませんでした。'
+  const sanmeiRelationDetail = input.sanmeiRelations?.relations.length
+    ? input.sanmeiRelations.relations.map(item => `**${item.pillars}の${item.branches}・${item.relation}：** ${item.meaning}`).join('\n')
+    : '命式内に六合・冲・害・刑の強い重なりはありません。'
+  const tenchuAffected = input.sanmeiRelations?.affectedPillars.length
+    ? input.sanmeiRelations.affectedPillars.join('・')
+    : '命式の年支・月支・日支・時支には直接該当しません'
+  const ziweiPalaceDetail = input.ziwei?.available
+    ? input.ziwei.palaces?.map(palace => {
+        const major = palace.majorStars.length
+          ? palace.majorStars.map(star => `${star.name}${star.brightness ? `（${star.brightness}）` : ''}${star.mutagen ? `・化${star.mutagen}` : ''}：${star.detail}`).join('／')
+          : '主星なし（対宮と三方四正を合わせて読みます）'
+        const minor = palace.minorStars.slice(0, 4).join('・') || 'なし'
+        return `**${palace.name}${palace.isBodyPalace ? '［身宮］' : ''}（${palace.heavenlyStem}${palace.earthlyBranch}）：** ${major}。主な補助星は${minor}。大限${palace.decadal.range?.join('〜') ?? '算出なし'}歳。`
+      }).join('\n')
+    : input.ziwei?.reason ?? '出生時刻がないため算出できません。'
 
   return `【性格特性 — あなたの本質と気質】
 あなたの中心には、**${day.core}**という性質があります。日主${input.shichuDay[0]}は、状況に対する基本姿勢を表します。
@@ -177,6 +217,15 @@ ${subordinateDetail}
 
 【周りから見たあなた — 外面と内面のギャップ】
 周囲からは、${sanmei}を備えた人として見られやすい傾向があります。内側では表面上の印象より深く状況を観察しています。**人間関係の鍵は、外から期待される役割と、自分が守りたい感覚を分けること。** 判断の理由を短い言葉で共有すると誤解が減ります。
+
+【算命学詳細 — 位相法と天中殺の作用点】
+${sanmeiRelationDetail}
+あなたの天中殺は${input.chusatsu}で、対象となる地支は${input.sanmeiRelations?.voidBranches.join('・') ?? '算出なし'}です。命式内での作用点は、**${tenchuAffected}**。天中殺は欠落や不幸の断定ではなく、その領域で既存の型に収まりにくく、経験を通じて独自の形を作りやすいという読み方をします。
+
+【紫微斗数 — 十二宮・主星・四化・大限】
+${input.ziwei?.available ? `出生地${input.ziwei.birthplace}、${input.ziwei.standardTimeNote}。旧暦は${input.ziwei.lunarDate}、出生時辰は${input.ziwei.time}（${input.ziwei.timeRange}）、${input.ziwei.fiveElementsClass}です。命主は**${input.ziwei.soul}**、身主は**${input.ziwei.body}**。命宮は${input.ziwei.earthlyBranchOfSoulPalace}、身宮は${input.ziwei.earthlyBranchOfBodyPalace}にあります。` : ''}
+${ziweiPalaceDetail}
+紫微斗数は一つの星だけで吉凶を断定せず、本宮・対宮・三方四正、四化、大限を重ねて読みます。ここでは命盤を固定計算し、各宮の主要テーマを表示しています。
 
 【仕事・適職 — 才能が開花する環境と職種】
 東方の${eastStar}は社会へ向かう行動に${SANMEI[eastStar] ?? '固有の強み'}が出やすいことを示します。仕事では、${WORK_STYLE[eastStar] ?? '自分の資質を活かせる働き方'}が成果につながります。南方の${southStar}は、部下や顧客へ働きかける際に${SANMEI[southStar] ?? '持ち味'}を使う傾向です。

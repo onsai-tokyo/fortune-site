@@ -1,8 +1,9 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
-import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcTimingCycles, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
+import { calcZiwei } from '../lib/ziwei.js'
 
 export const previewRouter = Router()
 
@@ -61,9 +62,10 @@ interface CalculatedData {
 // POST /api/preview/generate
 previewRouter.post('/generate', async (req, res) => {
   try {
-    const { birthDate, birthTime, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
+    const { birthDate, birthTime, birthplace, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
       birthDate?: string
       birthTime?: string
+      birthplace?: string
       gender?: string
       partnerBirthDate?: string
       partnerBirthTime?: string
@@ -107,6 +109,8 @@ previewRouter.post('/generate', async (req, res) => {
 
     // 初回鑑定は計算結果から固定文を生成する。AI APIは使用せず、同じ入力には同じ結果を返す。
     const timing = calcTimingCycles(year, month, day, birthHour, birthMinute, gender === 'male' ? 'male' : 'female')
+    const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
+    const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const deterministicReport = buildDeterministicReport({
       age,
       shichuDay: shichu.day.kanshi,
@@ -117,6 +121,8 @@ previewRouter.post('/generate', async (req, res) => {
       lifePathNumber,
       honmeiName: KYUSEI_NAMES[honmei],
       timing,
+      sanmeiRelations,
+      ziwei,
       ...expanded,
     })
 

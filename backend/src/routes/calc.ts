@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { Solar } from 'lunar-javascript'
+import { calcZiwei } from '../lib/ziwei.js'
 
 export const calcRouter = Router()
 
@@ -172,6 +173,31 @@ export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
     },
     sanmeiChart: { bodyChart, subordinateStars },
   }
+}
+
+const BRANCH_HARM: Record<string, string> = { 子: '未', 未: '子', 丑: '午', 午: '丑', 寅: '巳', 巳: '寅', 卯: '辰', 辰: '卯', 申: '亥', 亥: '申', 酉: '戌', 戌: '酉' }
+const PUNISH_PAIRS = new Set(['子卯', '卯子', '寅巳', '巳寅', '巳申', '申巳', '申寅', '寅申', '丑戌', '戌丑', '戌未', '未戌', '未丑', '丑未'])
+
+export function calcSanmeiRelations(shichu: ReturnType<typeof calcShichu>, chusatsu: string) {
+  const pillars = [
+    { label: '年支', branch: shichu.year.branch, branchIdx: shichu.year.branchIdx },
+    { label: '月支', branch: shichu.month.branch, branchIdx: shichu.month.branchIdx },
+    { label: '日支', branch: shichu.day.branch, branchIdx: shichu.day.branchIdx },
+    ...(shichu.hour ? [{ label: '時支', branch: shichu.hour.branch, branchIdx: shichu.hour.branchIdx }] : []),
+  ]
+  const relations: Array<{ pillars: string; branches: string; relation: string; meaning: string }> = []
+  for (let i = 0; i < pillars.length; i++) {
+    for (let j = i + 1; j < pillars.length; j++) {
+      const a = pillars[i], b = pillars[j]
+      if (BRANCH_COMBINE[a.branch] === b.branch) relations.push({ pillars: `${a.label}・${b.label}`, branches: `${a.branch}${b.branch}`, relation: '六合', meaning: '異なる領域が結びつき、協力や縁としてまとまりやすい' })
+      if ((a.branchIdx - b.branchIdx + 12) % 12 === 6) relations.push({ pillars: `${a.label}・${b.label}`, branches: `${a.branch}${b.branch}`, relation: '冲', meaning: '二つの領域が刺激し合い、移動・変更・再編を起こしやすい' })
+      if (BRANCH_HARM[a.branch] === b.branch) relations.push({ pillars: `${a.label}・${b.label}`, branches: `${a.branch}${b.branch}`, relation: '害', meaning: '表面化しにくい違和感を、対話と確認で調整する課題' })
+      if (PUNISH_PAIRS.has(`${a.branch}${b.branch}`) || (a.branch === b.branch && ['辰', '午', '酉', '亥'].includes(a.branch))) relations.push({ pillars: `${a.label}・${b.label}`, branches: `${a.branch}${b.branch}`, relation: '刑', meaning: 'こだわりや緊張を、訓練・専門性・境界線へ変えるテーマ' })
+    }
+  }
+  const voidBranches = chusatsu.slice(0, 2).split('')
+  const affectedPillars = pillars.filter(pillar => voidBranches.includes(pillar.branch)).map(pillar => `${pillar.label}${pillar.branch}`)
+  return { relations, voidBranches, affectedPillars }
 }
 
 export interface TimingPeriod {
@@ -433,7 +459,7 @@ export function calcHonmeiStar(birthYear: number, birthMonth: number, birthDay: 
 // ===== エンドポイント =====
 calcRouter.post('/divination', (req, res) => {
   try {
-    const { birthDate, birthTime, gender } = req.body as { birthDate?: string; birthTime?: string; gender?: string }
+    const { birthDate, birthTime, birthplace, gender } = req.body as { birthDate?: string; birthTime?: string; birthplace?: string; gender?: string }
 
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
@@ -458,6 +484,8 @@ calcRouter.post('/divination', (req, res) => {
     const lifePathNumber = calcLifePathNumber(birthDate)
 
     const honmei = calcHonmeiStar(year, month, day)
+    const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
+    const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
 
     res.json({
       shichuYear: shichu.year.kanshi,
@@ -470,6 +498,9 @@ calcRouter.post('/divination', (req, res) => {
       sukuyo,
       lifePathNumber,
       honmeiName: KYUSEI_NAMES[honmei],
+      birthplace: birthplace || null,
+      sanmeiRelations,
+      ziwei,
       ...expanded,
     })
   } catch (err) {

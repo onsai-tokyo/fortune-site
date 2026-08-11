@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fate Lab｜四柱推命・算命学・宿曜・数秘術の無料統合占い</title>
-  <meta name="description" content="四柱推命・算命学・宿曜・数秘術・九星気学・納音を、生年月日と出生時刻から無料で計算。同じ入力なら同じ結果になる固定ルールの統合鑑定です。">
+  <title>Fate Lab｜紫微斗数・四柱推命・算命学の無料統合占い</title>
+  <meta name="description" content="紫微斗数・四柱推命・算命学・宿曜・数秘術・九星気学・納音を、生年月日・出生時刻・出生地から無料で計算。同じ入力なら同じ結果になる固定ルールの統合鑑定です。">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="https://fate-lab.com/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ja_JP">
   <meta property="og:site_name" content="Fate Lab 無料統合占い">
   <meta property="og:title" content="Fate Lab｜生年月日でわかる無料の統合占い">
-  <meta property="og:description" content="四柱推命・算命学・宿曜・数秘術などを固定ルールで統合。同じ入力なら同じ結果になる無料鑑定です。">
+  <meta property="og:description" content="紫微斗数・四柱推命・算命学・宿曜・数秘術などを固定ルールで統合。同じ入力なら同じ結果になる無料鑑定です。">
   <meta property="og:url" content="https://fate-lab.com/">
   <meta name="twitter:card" content="summary">
   <!-- Google Analytics 4 -->
@@ -48,7 +48,7 @@
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "Web",
         "inLanguage": "ja",
-        "description": "四柱推命・算命学・納音・宿曜・九星気学・数秘術を固定ルールで組み合わせる、無料のオンライン統合鑑定です。",
+        "description": "紫微斗数・四柱推命・算命学・納音・宿曜・九星気学・数秘術を固定ルールで組み合わせる、無料のオンライン統合鑑定です。",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
         "publisher": { "@id": "https://fate-lab.com/#organization" }
       },
@@ -1051,7 +1051,7 @@
     <div class="section-inner" style="text-align: center;">
       <h1 class="hero-title">生年月日から読み解く、<br>ぶれない統合鑑定。</h1>
       <p class="hero-desc" style="font-size: 14px; line-height: 1.9; margin-bottom: 16px;">
-        四柱推命・算命学・納音・宿曜・九星気学・数秘術。各占術の計算結果を固定ルールでまとめるため、<br class="sp-break">同じ生年月日・出生時刻・性別なら、毎回同じ鑑定結果になります。
+        紫微斗数・四柱推命・算命学・納音・宿曜・九星気学・数秘術。各占術の計算結果を固定ルールでまとめるため、<br class="sp-break">同じ生年月日・出生時刻・出生地・性別なら、毎回同じ鑑定結果になります。
       </p>
       <p class="hero-desc" style="margin-bottom: 32px;">
         性格・仕事・恋愛・人生の使命まで、<br class="sp-break">無料・登録不要で鑑定します
@@ -1251,8 +1251,14 @@
                 <option value="50">50分</option>
                 <option value="55">55分</option>
               </select>
-              <select style="display:none" aria-hidden="true" tabindex="-1">
-                <option>出生地を選択</option>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="birthplace">出生地（都道府県）<span class="required">*</span></label>
+            <div class="form-row">
+              <select id="birthplace" required>
+                <option value="">出生地を選択</option>
                 <option>北海道</option>
                 <option>青森県</option>
                 <option>岩手県</option>
@@ -1352,6 +1358,7 @@
         <div class="tags">
           <span class="tag">四柱推命</span>
           <span class="tag">算命学</span>
+          <span class="tag">紫微斗数</span>
           <span class="tag">宿曜</span>
           <span class="tag">納音</span>
           <span class="tag">九星気学</span>
@@ -1630,11 +1637,12 @@
       const day = formEl.querySelectorAll('select')[2].value;
       const hour = formEl.querySelectorAll('select')[3].value;
       const minute = formEl.querySelectorAll('select')[4].value;
+      const birthplace = document.getElementById('birthplace').value;
       const genderMale = formEl.querySelector('input[value="male"]').checked;
       const gender = genderMale ? 'male' : 'female';
 
-      if (!year || !month || !day) {
-        alert('生年月日を入力してください');
+      if (!year || !month || !day || !birthplace) {
+        alert('生年月日と出生地を入力してください');
         return;
       }
 
@@ -1657,7 +1665,7 @@
         const calcResponse = await fetch('/api/calc/divination', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ birthDate, birthTime, gender })
+          body: JSON.stringify({ birthDate, birthTime, birthplace, gender })
         });
 
         let calcData;
@@ -1692,6 +1700,15 @@
           };
           const subordinateHtml = Object.values(subordinateStars).map(item => `
             <td><span>${item.label}</span><strong>${item.star}</strong><small>${item.stage}</small></td>`).join('');
+          const ziwei = calcData.ziwei;
+          const ziweiRows = ziwei?.available ? ziwei.palaces.map(palace => `
+            <tr>
+              <th scope="row">${palace.name}${palace.isBodyPalace ? '<small>身宮</small>' : ''}</th>
+              <td class="kanshi-cell">${palace.heavenlyStem}${palace.earthlyBranch}</td>
+              <td>${palace.majorStars.length ? palace.majorStars.map(star => `<strong>${star.name}</strong><small>${star.brightness || ''}${star.mutagen ? `・化${star.mutagen}` : ''}</small>`).join('<br>') : '主星なし'}</td>
+              <td>${palace.minorStars.slice(0, 4).join('・') || '—'}</td>
+              <td>${palace.decadal?.range?.join('〜') || '—'}歳</td>
+            </tr>`).join('') : '';
 
           divinationContent.innerHTML = `
             <section class="fortune-table-section">
@@ -1720,6 +1737,11 @@
               <h5>十二大従星</h5>
               <table class="subordinate-star-table" aria-label="初年期・中年期・晩年期の十二大従星"><tbody><tr>${subordinateHtml}</tr></tbody></table>
             </section>
+            <section class="fortune-table-section">
+              <h4>紫微斗数 十二宮命盤</h4>
+              <p class="section-caption">${ziwei?.available ? `${ziwei.lunarDate}・${ziwei.time}（${ziwei.timeRange}）・${ziwei.fiveElementsClass}／命主 ${ziwei.soul}・身主 ${ziwei.body}` : ziwei?.reason || '出生時刻を入力すると表示されます。'}</p>
+              ${ziwei?.available ? `<div class="fortune-table-scroll"><table class="fortune-table ziwei-table"><thead><tr><th>宮</th><th>干支</th><th>主星・四化</th><th>補助星</th><th>大限</th></tr></thead><tbody>${ziweiRows}</tbody></table></div>` : ''}
+            </section>
             <div class="divination-summary">${summaryHtml}</div>`;
         } else {
           divinationContent.innerHTML = '<div style="color: red;">占術データの計算に失敗しました</div>';
@@ -1732,6 +1754,7 @@
           body: JSON.stringify({
             birthDate: birthDate,
             birthTime: birthTime,
+            birthplace: birthplace,
             gender: gender,
             question: '',
             calculatedData: calcData

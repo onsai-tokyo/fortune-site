@@ -6,12 +6,14 @@ import {
   calcNayin,
   calcSanmei,
   calcExpandedDivination,
+  calcSanmeiRelations,
   calcTimingCycles,
   calcTenGod,
   calcShichu,
   getSukuyo,
 } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
+import { calcZiwei } from '../lib/ziwei.js'
 
 test('立春の直前までは前年・前月の干支を使う', () => {
   const result = calcShichu(2024, 2, 4, 17, 27)
@@ -78,6 +80,7 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   const shichu = calcShichu(1995, 2, 20, 5, 40)
   const expanded = calcExpandedDivination(shichu)
   const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+  const ziwei = calcZiwei(1995, 2, 20, 5, 'female', '東京都')
   const report = buildDeterministicReport({
     age: 31,
     shichuDay: shichu.day.kanshi,
@@ -88,10 +91,12 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
     lifePathNumber: calcLifePathNumber('1995-02-20'),
     honmeiName: '五黄土星',
     timing: calcTimingCycles(1995, 2, 20, 5, 40, 'female'),
+    sanmeiRelations: calcSanmeiRelations(shichu, sanmei.chusatsu),
+    ziwei,
     ...expanded,
   })
 
-  for (const heading of ['仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来', '大運', '婚期の候補', '年運']) {
+  for (const heading of ['算命学詳細', '紫微斗数', '仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来', '大運', '婚期の候補', '年運']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /西方（右手）の司禄星/)
@@ -99,6 +104,8 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   assert.match(report, /天胡星（病）/)
   assert.match(report, /起運日は1999-11-12、運行は順行/)
   assert.match(report, /2027年（31〜32歳）丁未/)
+  assert.match(report, /命主は\*\*巨門\*\*、身主は\*\*天機\*\*/)
+  assert.match(report, /\*\*夫妻（乙酉）：\*\* 天機/)
 })
 
 test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () => {
@@ -112,4 +119,26 @@ test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () 
   assert.equal(year2027?.kanshi, '丁未')
   assert.deepEqual(year2027?.relationshipSignals, ['地支に配偶者星の正官', '日支と六合（縁がまとまりやすい）'])
   assert.ok(timing.marriageCandidates.some(item => item.year === 2027))
+})
+
+test('1995-02-20 05:40 女性の紫微斗数十二宮を固定値で再現する', () => {
+  const ziwei = calcZiwei(1995, 2, 20, 5, 'female', '東京都')
+  assert.equal(ziwei.available, true)
+  if (!ziwei.available) return
+  assert.equal(ziwei.lunarDate, '一九九五年正月廿一')
+  assert.equal(ziwei.time, '卯時')
+  assert.equal(ziwei.fiveElementsClass, '土の五局')
+  assert.equal(ziwei.soul, '巨門')
+  assert.equal(ziwei.body, '天機')
+  assert.equal(ziwei.palaces.length, 12)
+  assert.deepEqual(ziwei.palaces.find(palace => palace.name === '命宮')?.majorStars.map(star => [star.name, star.brightness, star.mutagen]), [['天梁', '陷', '權']])
+  assert.deepEqual(ziwei.palaces.find(palace => palace.name === '夫妻')?.majorStars.map(star => [star.name, star.mutagen]), [['天機', '祿'], ['巨門', '']])
+})
+
+test('算命学の位相法と天中殺の作用点を算出する', () => {
+  const shichu = calcShichu(1995, 2, 20, 5, 40)
+  const details = calcSanmeiRelations(shichu, '申酉天中殺')
+  assert.deepEqual(details.voidBranches, ['申', '酉'])
+  assert.deepEqual(details.affectedPillars, [])
+  assert.deepEqual(details.relations, [{ pillars: '年支・月支', branches: '亥寅', relation: '六合', meaning: '異なる領域が結びつき、協力や縁としてまとまりやすい' }])
 })
