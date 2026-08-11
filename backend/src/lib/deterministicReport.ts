@@ -523,7 +523,8 @@ export function buildDeterministicReport(input: ReportInput): string {
     if (/責任|肩書|正式/.test(text)) keys.push('responsibility', 'stability')
     if (/学び|資格|支援/.test(text)) keys.push('exploration', 'insight')
     if (/自立|仲間|活動範囲|組み替え/.test(text)) keys.push('independence', 'transformation')
-    if (/縁|まとまり/.test(text)) keys.push('harmony', 'stability')
+    if (/隠れていたずれ|前提の見直し/.test(text)) keys.push('transformation', 'insight')
+    if (/縁|まとまり|関係の正式化/.test(text)) keys.push('harmony', 'stability')
     return [...new Set(keys)]
   }
   const basePersonalYear = input.numerologyProfile?.personalYearNumber
@@ -532,7 +533,15 @@ export function buildDeterministicReport(input: ReportInput): string {
     .filter(item => item.year >= currentYear - 15 && item.year <= currentYear + 20)
     .map(item => {
       const personalYear = basePersonalYear ? ((basePersonalYear - 1 + item.year - basePersonalYearCalendar) % 9 + 9) % 9 + 1 : null
-      const shared = personalYear ? annualSignals(item.themes).filter(key => personalYearSignals[personalYear]?.includes(key)) : []
+      const decade = input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)
+      const personalSignals = personalYear ? personalYearSignals[personalYear] ?? [] : []
+      const annualShared = annualSignals(item.themes).filter(key => personalSignals.includes(key))
+      const decadeShared = annualSignals(decade?.themes ?? []).filter(key => personalSignals.includes(key))
+      const hasRelationshipBreak = item.relationshipSignals.some(signal => /破|冲/.test(signal))
+      const relationshipOverlap: ConsensusKey[] = item.relationshipSignals.length && [2, 6].includes(personalYear ?? 0)
+        ? [hasRelationshipBreak ? 'transformation' : 'harmony']
+        : []
+      const shared = [...new Set([...annualShared, ...decadeShared, ...relationshipOverlap])]
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
       const yearHeadline = item.themes.slice(0, 2).join('・') || sharedLabels
@@ -559,11 +568,17 @@ export function buildDeterministicReport(input: ReportInput): string {
         showLove ? forThisYear(domain.love) : '',
         showRelation ? forThisYear(domain.relation) : '',
       ].filter(Boolean).join(' ')
-      const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
-        ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
+      const relationship = hasRelationshipBreak
+        ? ` ${item.year}年は、関係の前提や隠れていたずれが表面化し、続け方を見直す動きも起こりやすくなります。`
+        : item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+          ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
+          : ''
+      const longTermNote = decadeShared.length && decade
+        ? ` ${item.year}年は長期の流れでも${decade.themes.join('、')}が続いており、年単独より影響が残りやすい時期です。`
         : ''
-      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n起こりやすいこと：${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
+      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${longTermNote}${relationship}\n起こりやすいこと：${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
+        ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
       return { year: item.year, text }

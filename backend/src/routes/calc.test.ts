@@ -174,6 +174,9 @@ test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () 
   assert.deepEqual(timing.decades.slice(0, 3).map(item => [item.kanshi, item.startYear, item.endYear]), [
     ['己卯', 1999, 2008], ['庚辰', 2009, 2018], ['辛巳', 2019, 2028],
   ])
+  const year2023 = timing.annual.find(item => item.year === 2023)
+  assert.ok(year2023?.relationshipSignals.some(signal => signal.includes('日支と破')))
+  assert.ok(year2023?.themes.some(theme => theme.includes('隠れていたずれ')))
   const year2027 = timing.annual.find(item => item.year === 2027)
   assert.equal(year2027?.kanshi, '丁未')
   assert.deepEqual(year2027?.relationshipSignals, ['地支に配偶者星の正官', '日支と六合（縁がまとまりやすい）'])

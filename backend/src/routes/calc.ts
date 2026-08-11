@@ -252,6 +252,9 @@ export interface AnnualTiming {
 const BRANCH_COMBINE: Record<string, string> = {
   子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午',
 }
+const BRANCH_BREAK: Record<string, string> = {
+  子: '酉', 酉: '子', 丑: '辰', 辰: '丑', 寅: '亥', 亥: '寅', 卯: '午', 午: '卯', 巳: '申', 申: '巳', 未: '戌', 戌: '未',
+}
 const PEACH_BLOSSOM: Record<string, string> = {
   申: '酉', 子: '酉', 辰: '酉', 寅: '卯', 午: '卯', 戌: '卯', 亥: '子', 卯: '子', 未: '子', 巳: '午', 酉: '午', 丑: '午',
 }
@@ -268,6 +271,7 @@ function timingThemes(tenGod: string, branchRelation?: string): string[] {
           : ['自立・仲間・活動範囲の変化']
   if (branchRelation === '六合') themes.push('縁がまとまりやすい')
   if (branchRelation === '冲') themes.push('環境や関係の組み替え')
+  if (branchRelation === '破') themes.push('隠れていたずれや前提の見直し')
   return themes
 }
 
@@ -309,6 +313,7 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
       let relation: string | undefined
       if (BRANCH_COMBINE[dayBranch] === pillar.branch) { score += 2; relation = '六合'; relationshipSignals.push('日支と六合（縁がまとまりやすい）') }
       if ((pillar.branchIdx - shichu.day.branchIdx + 12) % 12 === 6) { score += 1; relation = '冲'; relationshipSignals.push('日支と冲（関係が動きやすい）') }
+      if (BRANCH_BREAK[dayBranch] === pillar.branch) { score += 1; relation = '破'; relationshipSignals.push('日支と破（隠れていたずれが表面化しやすい）') }
       if (PEACH_BLOSSOM[dayBranch] === pillar.branch) { score += 1; relationshipSignals.push('桃花（交流や注目が増えやすい）') }
       if (favorable.includes(pillar.element)) score += 1
       return {
