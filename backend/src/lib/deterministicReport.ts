@@ -158,6 +158,19 @@ const TEN_GOD_DETAIL: Record<string, string> = {
   偏印: '独創的な学習・転換', 正印: '知識・保護・継承', 日主: '本人自身',
 }
 
+const YEAR_DOMAIN_DETAIL: Record<string, { work: string; love: string; relation: string; caution: string }> = {
+  比肩: { work: '自分の判断で進める仕事や、新しい担当を持つ機会が増えやすい年です。', love: '相手に合わせるより、自分が望む関係をはっきりさせることが進展につながります。', relation: '対等に付き合える人との縁が残り、依存的な関係とは距離が生まれやすくなります。', caution: '一人で決め切らず、重要な場面では第三者の意見も確認してください。' },
+  劫財: { work: '仲間との共同作業や競争が増え、人を通じて仕事の範囲が広がりやすい年です。', love: '友人関係から恋へ進む一方、周囲の意見に関係が揺れやすい面もあります。', relation: '新しい集まりへ入る機会が増えますが、費用や役割の曖昧さには注意が必要です。', caution: '勢いで約束せず、お金と担当範囲を先に確認してください。' },
+  食神: { work: '発信、企画、接客など、楽しさや分かりやすさを届ける仕事が評価されやすい年です。', love: '一緒に食事や趣味を楽しめる相手と自然に距離が縮まりやすくなります。', relation: '気楽に話せる人が増え、紹介や集まりから新しい縁が生まれやすい時期です。', caution: '楽しい予定を増やしすぎず、最後まで仕上げる時間を確保してください。' },
+  傷官: { work: '改善点を見抜く力や表現力が強まり、企画の見直しや専門的な発信で注目されやすい年です。', love: '言葉の感度が上がるぶん、相手の何気ない一言を深く受け取りやすくなります。', relation: '価値観の違いがはっきりし、本音で話せる関係と無理をしていた関係が分かれます。', caution: '正しさをそのままぶつけず、要望として伝えると関係が整います。' },
+  偏財: { work: '顧客、取引先、新しい人脈から仕事や収入の機会が広がりやすい年です。', love: '出会いの数が増え、行動範囲を広げるほど恋が始まりやすくなります。', relation: '人付き合いが活発になり、誘いを受ける機会も増えます。', caution: '交際費や予定を広げすぎず、本当に大切な縁へ時間を残してください。' },
+  正財: { work: '収入、契約、継続案件など、成果を現実的な形へまとめやすい年です。', love: '交際を生活の一部として考えやすく、同居、婚約、結婚の具体的な話が進みやすくなります。', relation: '約束を守り合える堅実な人との関係が深まりやすい時期です。', caution: '条件だけで決めず、気持ちが置き去りになっていないかも確認してください。' },
+  偏官: { work: '責任の重い依頼や短期間で結果を求められる場面が増え、行動力が試される年です。', love: '強く惹かれる相手が現れやすい一方、関係を急ぎすぎると衝突も起こりやすくなります。', relation: '頼られる場面が増えますが、無理な要求には早めに線を引く必要があります。', caution: '疲れたまま即決せず、期限と負担を確認してから引き受けてください。' },
+  正官: { work: '昇進、肩書、正式な契約など、責任と評価が目に見える形になりやすい年です。', love: '曖昧な関係に結論が出やすく、正式な交際や結婚へ進む話がまとまりやすくなります。', relation: '信頼できる人や組織とのつながりが強まり、紹介にも恵まれやすい時期です。', caution: '期待に応えようとして、自分の希望まで後回しにしないでください。' },
+  偏印: { work: '新しい技術や分野を学び、働き方そのものを組み替えるきっかけが生まれやすい年です。', love: 'これまで選ばなかったタイプに惹かれ、恋愛観が変わる可能性があります。', relation: '異なる業界や環境の人との交流が、新しい考え方を運んできます。', caution: '興味だけで次々に移らず、一つは形にしてから次へ進んでください。' },
+  正印: { work: '学び直し、資格取得、上司や専門家からの支援が仕事の土台になりやすい年です。', love: '安心して相談できる相手との信頼が育ち、急がない関係ほど深まりやすくなります。', relation: '助言をくれる年上の人や、落ち着いて話せる人との縁が支えになります。', caution: '準備だけで満足せず、学んだことを小さく実践してください。' },
+}
+
 const ELEMENT_DETAIL: Record<string, string> = {
   木: '成長・企画・人を育てる力', 火: '表現・情熱・認知を広げる力', 土: '安定・管理・現実化する力',
   金: '判断・品質・不要なものを整える力', 水: '知恵・柔軟性・情報をつなぐ力',
@@ -522,10 +535,17 @@ export function buildDeterministicReport(input: ReportInput): string {
       const shared = personalYear ? annualSignals(item.themes).filter(key => personalYearSignals[personalYear]?.includes(key)) : []
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
+      const domain = YEAR_DOMAIN_DETAIL[item.tenGod] ?? {
+        work: '役割や優先順位を見直し、今後に残す仕事を選ぶ年です。',
+        love: '相手との距離や、これから望む関係を言葉にすると動きが生まれます。',
+        relation: '付き合う人や所属する場所を見直す機会が増えます。',
+        caution: 'その場の勢いだけで決めず、現実的な条件を確認してください。',
+      }
+      const yearAction = consensusLabels[shared[0]]?.action ?? 'その年に優先することを一つ決める'
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
         ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
         : ''
-      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は複数の計算結果が同じ流れを示しています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n${evidenceMarker([
+      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は複数の計算結果が同じ流れを示しています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n仕事運：${domain.work}\n恋愛・結婚運：${domain.love}\n人間関係：${domain.relation}\n気をつけること：${domain.caution}\n${item.year}年に意識すること：${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
