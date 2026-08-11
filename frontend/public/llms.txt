@@ -20,6 +20,8 @@
 - [宿曜占星術](https://fate-lab.com/guides/sukuyo): 二十七宿と相性関係を説明します。
 - [算命学](https://fate-lab.com/guides/sanmeigaku): 陰陽五行と天中殺を説明します。
 - [納音](https://fate-lab.com/guides/nayin): 六十干支を30種類に分類する見方を説明します。
+- [立春前後の節入り検証](https://fate-lab.com/guides/setsuiri-boundary): 年柱・月柱の境界条件と自動テストを説明します。
+- [同じ生年月日でも人生が違う理由](https://fate-lab.com/guides/same-birthdate): 計算の再現性と人生の決定論の違いを説明します。
 
 ## サービスについて
 
@@ -31,6 +33,7 @@
 - [鑑定ロジックと計算方針](https://fate-lab.com/methodology)
 - [コンテンツ制作方針](https://fate-lab.com/editorial-policy)
 - [お問い合わせ](https://fate-lab.com/contact)
+- [プレスキット](https://fate-lab.com/press)
 - [利用規約](https://fate-lab.com/terms)
 - [プライバシーポリシー](https://fate-lab.com/privacy)
 - [特定商取引法に基づく表記](https://fate-lab.com/tokushohou)
