@@ -998,9 +998,7 @@
     .report-section-title:first-child { margin-top: 0; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
-    .report-evidence { margin: 10px 0 18px; padding: 10px 12px; border: 1px solid rgba(212,197,160,.7); border-radius: 7px; background: rgba(255,255,255,.46); font-size: 12px; }
-    .report-evidence summary, .data-summary { color: var(--gold-dark); font-weight: 700; cursor: pointer; }
-    .evidence-list { margin-top: 8px; line-height: 1.7; }
+    .data-summary { color: var(--gold-dark); font-weight: 700; cursor: pointer; }
     .data-summary { list-style-position: inside; font-family: serif; font-size: 17px; }
     #divination-data[open] .data-summary { margin-bottom: 18px; }
     .ziwei-late-row { display: none; }
@@ -1670,13 +1668,7 @@
         let highlights = 0;
         return section.replace(/\*\*(.+?)\*\*/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
       }).join('');
-      const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:(.+?)\]\]/g, (_, encoded) => {
-        const rows = encoded.split('||').map(item => {
-          const [lineage, system, factor] = item.split('｜');
-          return `<div>${lineage}｜${system}｜${factor}</div>`;
-        }).join('');
-        return `<details class="report-evidence"><summary>根拠を見る</summary><div class="evidence-list">${rows}</div></details>`;
-      });
+      const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:.+?\]\]/g, '');
       const withGlossary = withEvidence.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
