@@ -316,6 +316,10 @@ export function buildDeterministicReport(input: ReportInput): string {
     currentAnnual ? `${currentYear}年${currentAnnual.kanshi}・${currentAnnual.tenGod}（${currentAnnual.themes.join('、')}）` : '',
     input.numerologyProfile ? `個人年${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）` : '',
   ].filter(Boolean).join('、')
+  const currentTimingThemes = [...new Set([
+    ...(currentDecade?.themes ?? []),
+    ...(currentAnnual?.themes ?? []),
+  ])].join('、')
   const western = input.astrology?.western
   const vedic = input.astrology?.vedic
   const westernPlanet = (name: string) => western?.planets.find(planet => planet.name === name)
@@ -545,22 +549,22 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `四柱推命の日主**${input.shichuDay[0]}**は「${day.core}」。そこに算命学の中心星**${input.sanmeiStar}**の${centerStarLabel}が重なります。外からは視野の広い判断役に見える一方、内側では「飾らずに言えているか」を基準に納得できる形を探します。数秘術の運命数${input.lifePathNumber}が示す${lifeNumberDetail}へ結びつけたとき、この組み合わせが本人らしさとして表れます。`
+  const personalizedCore = `生来の判断軸は「${day.core}」、内面の核は「${centerStarLabel}」です。広い視野で選択肢を捉えながらも、最後は自分の言葉として無理なく表現できるかを確かめます。さらに「${lifeNumberDetail}」という人生課題が重なるため、知ったことを自分の中だけに置かず、誰かが使える形まで整えたときに個性が完成します。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
   const personalizedEmotion = westernMoon?.sign === vedicMoon?.sign
-    ? `西洋・インドとも月は**${westernMoon?.sign ?? '算出なし'}**です。${westernMoonDetail} ナクシャトラ${vedic?.moonNakshatra ?? '算出なし'}は${nakshatraDetail}を補足します。疲れているときは答えを急がず、感情を言葉にしてから事実を整理する順序が合います。`
-    : `西洋の月は**${westernMoon?.sign ?? '算出なし'}**、インドの月は**${vedicMoon?.sign ?? '算出なし'}**です。西洋とインドでは基準が異なるためサイン名がずれます。西洋では${westernMoonDetail} インドでは${vedicMoonDetail} ナクシャトラ${vedic?.moonNakshatra ?? '算出なし'}の${nakshatraDetail}も合わせ、感情を言葉にしてから事実を整理すると落ち着きます。`
+    ? `心の安心条件は二つの天体計算で同じ方向が強調されています。${westernMoonDetail} 加えて「${nakshatraDetail}」という無意識の反応があるため、疲れているときほど答えを急がず、感情を言葉にしてから事実を整理する順序が合います。`
+    : `心には、周囲との均衡を取りたい面と、自分のペースで現実を確かめたい面があります。前者は${westernMoonDetail} 後者は${vedicMoonDetail} さらに「${nakshatraDetail}」という反応も重なるため、感情・事実・希望を順番に分けると落ち着きます。`
   const strongestIsFavorable = input.strength?.favorableElements.includes(strongestElement)
   const favorableBridge = strongestIsFavorable
     ? `${strongestElement}は最も強い五行であり、同時に${input.strength?.label ?? '旺衰'}の観点では味方として活かしたい五行でもあります。強いことと、味方になることは矛盾しません。`
     : `活かす五行は${strongestElement}、補う五行の目安は${input.strength?.favorableElements.filter(item => item !== strongestElement).join('・') || input.strength?.favorableElements.join('・') || '算出なし'}です。`
   const personalizedElements = `五行では**${strongestElement}**が最も強く「${strongestDetail}」を自然に使えます。${favorableBridge} 一方、最も少ない${weakestElement}の「${weakestDetail}」は、環境・習慣・協力者で補うと全体が整います。`
-  const personalizedLove = `関係が深まるほど、算命学の西方${westStar}らしく${westStarDetail}。金星：${westernVenus?.sign ?? '算出なし'}${westernVenus ? westernVenus.degree.toFixed(1) : ''}°（西洋／トロピカル）では${westernVenusDetail} 火星：${westernMars?.sign ?? '算出なし'}${westernMars ? westernMars.degree.toFixed(1) : ''}°${westernMars?.retrograde ? '・逆行' : ''}（西洋／トロピカル）では${westernMarsDetail}。西洋とインドでは基準が異なるためサイン名がずれます。会話と行動が一致し、現実的な約束を更新できる相手かを見てください。`
-  const personalizedWork = `打ち合わせでは、算命学の社会位置${eastStar}らしく${eastStarDetail}。紫微斗数の官禄宮${careerPalaceStars}・財帛宮${wealthPalaceStars}も踏まえると、論点を整理して担当範囲・納品物・対価を決める場面で評価が積み上がります。肩書より、裁量と完了条件が明確な仕事を選ぶと安定します。`
-  const personalizedRelations = `友人の前では**${SANMEI[eastStar] ?? eastStar}**、目上の人には${SANMEI[northStar] ?? northStar}、後輩や守る相手には${SANMEI[southStar] ?? southStar}が出やすい配置です。相手によって振る舞いが変わっても矛盾ではありません。集まりでは自分の担当を言葉にし、全員の課題まで引き受けない方が関係が長続きします。`
-  const personalizedLifeStage = `${currentPhaseLabel}は**${currentPhase?.star ?? '算出なし'}**の「${currentPhaseDetail}」が表に出やすい段階です。現在の時間運は${currentTimingSummary || '算出された人生段階のテーマを確認する時期'}。生まれ持った資質をそのまま繰り返すのではなく、今の期間に求められる役割へ翻訳することが大切です。${birthNumber ? `誕生数${birthNumber}（${NUMEROLOGY_DETAIL[birthNumber] ?? '生得的な得意分野'}）` : ''}${attitudeNumber ? `と態度数${attitudeNumber}（${NUMEROLOGY_DETAIL[attitudeNumber] ?? '人から見えやすい入口'}）` : ''}も、現在の選択で最初に使いやすい方法を補足します。`
+  const personalizedLove = `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。会話と行動が一致し、現実的な約束を更新できる相手かを時間をかけて見てください。`
+  const personalizedWork = `社会では「${eastStarDetail}」という進め方が評価につながります。役割や収入に関する配置も、肩書そのものより、論点を整理して担当範囲・納品物・対価を決める働き方を後押ししています。最初に全体像をつかみ、次に手順へ落とし、最後まで仕上げる流れを自分の型にすると成果が安定します。`
+  const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} 関係によって役割が変わるのは矛盾ではなく、相手との距離を細かく読み分ける性質です。ただし全員に最適な対応をしようとせず、自分が引き受ける範囲を先に示す方が関係は長続きします。`
+  const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
   const vedicDetailBlock = vedic
     ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
 
@@ -593,13 +597,15 @@ ${traitBlocks}
 
 【あなた固有の組み合わせ】
 ${primaryKey && secondaryKey ? `**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点が、この人らしさです。まず「${consensusLabels[primaryKey].action}」、次に「${consensusLabels[secondaryKey].action}」の順で進めると、考えを現実の選択へ移しやすくなります。` : '共通して現れた本質を、状況に応じて組み合わせて使う人です。'}
-感情が揺れたときは、周囲との釣り合いと自分の納得を同時に確認します。答えを急がず、気持ちを言葉にしてから事実を整理すると落ち着きます。
+${personalizedCore}
+${personalizedEmotion}
 ${personalizedElements}
 ${combinedEvidence}
 
 【仕事】
 ${workBlocks}
 
+${personalizedWork}
 向いているのは、目的・担当範囲・完了条件がはっきりした役割です。管理や専門実務のように品質を積み上げる仕事、企画や編集のように考えを価値へ変える仕事、顧客対応や交渉のように利害を整理する仕事のいずれでも、進め方に裁量があるほど力を発揮します。
 収入面では、得意なことを無制限に引き受けず、納品物と対価を先に決めると安定します。
 ${combinedEvidence}
@@ -608,6 +614,7 @@ ${combinedEvidence}
 **惹かれやすさ：** 会話と行動が一致し、誠実に約束を守る人へ気持ちが動きます。
 **恋の始まり方：** 考え方や言葉の奥行きに関心を持ち、友人のような対話を重ねるほど関係が育ちます。
 **関係が安定する条件：** ${loveBlocks}
+${personalizedLove}
 **すれ違いやすい場面：** 相手を理解しようとするほど、確認前に本音を推測したり、自分の希望を後回しにしたりしがちです。事実・気持ち・希望の順で短く伝えてください。
 **長く続けるために話しておくこと：** 連絡頻度、金銭感覚、生活分担、仕事への理解、一人で過ごす時間を具体的に決めておくと安心です。
 ${combinedEvidence}
@@ -615,10 +622,13 @@ ${combinedEvidence}
 【人間関係】
 ${friendBlocks}
 
+${personalizedRelations}
 集まりでは話を整理したり、まだ言葉になっていない違和感を見つけたりする役に回りやすい人です。人数の多さより、互いの違いと境界線を尊重し、言葉と行動の両方で信頼を示せる関係が合います。曖昧な依頼や相談をすべて背負わず、自分の担当を明確にしてください。
 ${combinedEvidence}
 
 【時期 — 重なりの強い年】
+${personalizedLifeStage}
+
 ${timingBlocks}
 ここに表示する年は出来事の確定ではありません。二つ以上の独立した系統で、同じ行動テーマが強まりやすい期間だけを載せています。
 
