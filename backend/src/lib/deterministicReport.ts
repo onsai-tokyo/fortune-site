@@ -477,6 +477,26 @@ export function buildDeterministicReport(input: ReportInput): string {
   const personalizedWork = `算命学の社会位置は**${eastStar}**で「${eastStarDetail}」、紫微斗数の官禄宮は**${careerPalaceStars}**、財帛宮は**${wealthPalaceStars}**です。四柱推命の日主${input.shichuDay[0]}が持つ「${day.work}」への適性と合わせると、肩書だけで職業を選ぶより、**${eastStarDetail}を使いながら、${day.strength}を成果として確認できる仕事**で力が出ます。収入面では、得意なことを無制限に引き受けるより、担当範囲・納品物・対価を明確にするほど安定します。`
   const personalizedRelations = `算命学では、友人・社会との接点に**${eastStar}**、親・目上との関係に**${northStar}**、未来へ向けた表現に**${southStar}**が配置されています。友人には「${eastStarDetail}」が出やすく、目上の人には「${northStarDetail}」、後輩や守る相手には「${southStarDetail}」が出やすいため、相手によって別人のように振る舞う感覚があっても矛盾ではありません。すべての関係で同じ役を演じず、どの立場で何を引き受けるかを切り替える方が自然です。`
   const personalizedLifeStage = `${currentPhaseLabel}は**${currentPhase?.star ?? '算出なし'}**の「${currentPhaseDetail}」が表に出やすい段階です。現在の時間運は${currentTimingSummary || '算出された人生段階のテーマを確認する時期'}。生まれ持った資質をそのまま繰り返すのではなく、今の期間に求められる役割へ翻訳することが大切です。${birthNumber ? `誕生数${birthNumber}（${NUMEROLOGY_DETAIL[birthNumber] ?? '生得的な得意分野'}）` : ''}${attitudeNumber ? `と態度数${attitudeNumber}（${NUMEROLOGY_DETAIL[attitudeNumber] ?? '人から見えやすい入口'}）` : ''}も、現在の選択で最初に使いやすい方法を補足します。`
+  const vedicDetailBlock = vedic
+    ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
+
+**ラグナ（生き方・外への現れ方）：** ${vedic.ascendant.sign}の「${ASTRO_SIGN[vedic.ascendant.sign] ?? '人生の課題へ現実的に取り組む力'}」。第一印象だけでなく、物事へ取り組む基本姿勢を表します。
+**太陽（目的意識）：** ${vedicSun?.sign ?? '算出なし'}${vedicSun ? `${vedicSun.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicSun?.sign ?? ''] ?? '自分の軸と社会的な目的を育てる力'}」を人生の目的へ向けて育てます。
+**月（心・習慣）：** ${vedicMoon?.sign ?? '算出なし'}${vedicMoon ? `${vedicMoon.degree.toFixed(1)}°` : ''}。「${vedicMoonDetail}」が安心の条件と感情の整え方に表れます。
+**ナクシャトラ：** **${vedic.moonNakshatra} 第${vedic.moonPada}パーダ**。「${nakshatraDetail}」が、無意識の反応、縁の感じ方、習慣に現れます。
+**水星（思考・伝達）：** ${vedicMercury?.sign ?? '算出なし'}${vedicMercury ? `${vedicMercury.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicMercury?.sign ?? ''] ?? '情報を整理して伝える力'}」。
+**金星（愛情・価値観）：** ${vedicVenus?.sign ?? '算出なし'}${vedicVenus ? `${vedicVenus.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicVenus?.sign ?? ''] ?? '関係と価値を育てる力'}」。
+**火星（行動・衝突時の反応）：** ${vedicMars?.sign ?? '算出なし'}${vedicMars ? `${vedicMars.degree.toFixed(1)}°` : ''}${vedicMars?.retrograde ? '・逆行' : ''}。「${ASTRO_SIGN[vedicMars?.sign ?? ''] ?? '意思を行動へ変える力'}」。逆行は弱さではなく、衝動を内側で検討してから表しやすい配置として読みます。
+**木星（発展・学び）：** ${vedicJupiter?.sign ?? '算出なし'}${vedicJupiter ? `${vedicJupiter.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicJupiter?.sign ?? ''] ?? '経験から可能性を広げる力'}」。
+**土星（責任・成熟）：** ${vedicSaturn?.sign ?? '算出なし'}${vedicSaturn ? `${vedicSaturn.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicSaturn?.sign ?? ''] ?? '時間をかけて責任を形にする力'}」。
+
+**インド占星術から見る仕事：** ラグナの行動様式、木星の発展方向、土星の成熟課題を合わせ、短期的な職業名よりも、長期的に学びと責任を積み上げられる環境を重視します。
+**インド占星術から見る恋愛：** 金星が求める価値と火星の行動反応に加え、月とナクシャトラが示す安心条件を確認します。強く惹かれるかだけでなく、日常で感情を安全に扱える関係かが重要です。
+
+主要天体：${planetLine(vedic.planets)}
+
+この欄はラーシ（サイン）、ラグナ、月のナクシャトラを表示しています。ダシャーや分割図は、出生地点を市区町村単位で確認してから扱う必要があるため、現在は断定表示していません。`
+    : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
   return `【全占術一致鑑定 — 結論】
 ${strongest ? `複数の占術で最も強く一致したのは、**「${consensusLabels[strongest.key].title}」**です。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
@@ -500,6 +520,9 @@ ${personalizedElements}
 
 【この人固有の恋愛パターン】
 ${personalizedLove}
+
+【インド占星術 — 個別結果】
+${vedicDetailBlock}
 
 【運命・人生で果たしやすい役割】
 ${destinyBlocks}
