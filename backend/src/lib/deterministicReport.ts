@@ -488,7 +488,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
     const expression = item.lineageCount >= 3
-      ? '考える前の反応、日常の選択、長期的な決断のすべてに表れやすい中核的な性質です。'
+      ? '普段の何気ない反応から大きな決断まで、幅広い場面に表れやすい性格です。'
       : item.count >= 4
         ? '複数の見方が同じ方向を示しますが、環境や相手によって表れ方の強さが変わります。'
         : '特定の場面で輪郭がはっきりする性質で、意識して使うほど長所になります。'
@@ -523,9 +523,9 @@ export function buildDeterministicReport(input: ReportInput): string {
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
-        ? ` ${item.year}年には、関係が正式な形へ進みやすい配置も重なります。`
+        ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
         : ''
-      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は2系統で同じ方向が出ています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n${evidenceMarker([
+      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は複数の計算結果が同じ流れを示しています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
@@ -550,9 +550,9 @@ export function buildDeterministicReport(input: ReportInput): string {
   const profileNumber = dayStemIndex * 100 + centerStarIndex * 10 + elementModeIndex + 1
   const profileCode = `FL-${String(profileNumber).padStart(4, '0')}`
   const elementModeLabel = activeElementUse
-    ? `${strongestElement}の性質を前面に使う`
-    : `${strongestElement}の性質を土台として整える`
-  const profileTitle = `${day.core} × ${centerStarLabel} × ${elementModeLabel}型`
+    ? `${ELEMENT_DETAIL[strongestElement] ?? '得意な力'}を積極的に使う`
+    : `${ELEMENT_DETAIL[strongestElement] ?? '得意な力'}を自分の土台にする`
+  const profileTitle = `${day.core}で、${centerStarLabel}を自分らしく活かす人`
   const westStarDetail = LOVE_STYLE[westStar] ?? SANMEI_DETAIL[westStar] ?? sanmei
   const eastStarDetail = WORK_STYLE[eastStar] ?? SANMEI_DETAIL[eastStar] ?? sanmei
   const northStarDetail = SANMEI_DETAIL[northStar] ?? sanmei
@@ -572,20 +572,20 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `鑑定タイプ ${profileCode}「${profileTitle}」。生来の判断軸は「${day.core}」、内面の核は「${centerStarLabel}」です。広い視野で選択肢を捉えながらも、最後は自分の言葉として無理なく表現できるかを確かめます。さらに「${lifeNumberDetail}」という人生課題が重なるため、知ったことを自分の中だけに置かず、誰かが使える形まで整えたときに個性が完成します。`
+  const personalizedCore = `あなたは「${profileTitle}」です（タイプ番号 ${profileCode}）。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}と持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
   const personalizedEmotion = westernMoon?.sign === vedicMoon?.sign
-    ? `心の安心条件は二つの天体計算で同じ方向が強調されています。${westernMoonDetail} 加えて「${nakshatraDetail}」という無意識の反応があるため、疲れているときほど答えを急がず、感情を言葉にしてから事実を整理する順序が合います。`
+    ? `心の落ち着き方を別々の方法で見ると、どちらも同じ傾向が出ています。${westernMoonDetail} 加えて、無意識には「${nakshatraDetail}」という反応もあります。疲れているときほど答えを急がず、まず気持ちを言葉にし、その後で事実を整理すると落ち着きます。`
     : `心には、周囲との均衡を取りたい面と、自分のペースで現実を確かめたい面があります。前者は${westernMoonDetail} 後者は${vedicMoonDetail} さらに「${nakshatraDetail}」という反応も重なるため、感情・事実・希望を順番に分けると落ち着きます。`
   const strongestIsFavorable = input.strength?.favorableElements.includes(strongestElement)
   const favorableBridge = strongestIsFavorable
-    ? `${strongestElement}は最も強い五行であり、同時に${input.strength?.label ?? '旺衰'}の観点では味方として活かしたい五行でもあります。強いことと、味方になることは矛盾しません。`
-    : `活かす五行は${strongestElement}、補う五行の目安は${input.strength?.favorableElements.filter(item => item !== strongestElement).join('・') || input.strength?.favorableElements.join('・') || '算出なし'}です。`
-  const personalizedElements = `五行では**${strongestElement}**が最も強く「${strongestDetail}」を自然に使えます。${favorableBridge} 一方、最も少ない${weakestElement}の「${weakestDetail}」は、環境・習慣・協力者で補うと全体が整います。`
+    ? `これはもともと得意なうえ、意識して使うほど自分を支えてくれる長所です。強く出ていることと、味方になることは矛盾しません。`
+    : `一方で、別の力を意識して取り入れると、得意なことへ偏りすぎずに済みます。`
+  const personalizedElements = `考え方と行動のバランスを見ると、**「${strongestDetail}」**がいちばん自然に使えます。${favorableBridge} 反対に「${weakestDetail}」は不足しやすいため、習慣にする、道具を使う、得意な人に頼るなど、外から補うと全体が整います。`
   const personalizedLove = `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。会話と行動が一致し、現実的な約束を更新できる相手かを時間をかけて見てください。`
-  const personalizedWork = `社会では「${eastStarDetail}」という進め方が評価につながります。役割や収入に関する配置も、肩書そのものより、論点を整理して担当範囲・納品物・対価を決める働き方を後押ししています。最初に全体像をつかみ、次に手順へ落とし、最後まで仕上げる流れを自分の型にすると成果が安定します。`
+  const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。肩書そのものより、何をどこまで担当するか、何を完成品とするか、報酬はいくらかが明確な働き方に向いています。最初に全体像をつかみ、次に手順へ落とし、最後まで仕上げる流れを自分の型にすると成果が安定します。`
   const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} 関係によって役割が変わるのは矛盾ではなく、相手との距離を細かく読み分ける性質です。ただし全員に最適な対応をしようとせず、自分が引き受ける範囲を先に示す方が関係は長続きします。`
   const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
   const uniqueWorkPattern = `得意領域は${day.work}です。共通するのは職種名ではなく、「${day.strength}」を使えること。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
@@ -613,7 +613,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
   return `【先に読む要約】
-${strongest ? `**結論：${consensusLabels[strongest.key].title}が、この命式の中心テーマです。**` : '**結論：複数の系統に共通する傾向を中心に読みます。**'}
+${strongest ? `**結論：あなたに最も強く表れているのは「${consensusLabels[strongest.key].title}」です。**` : '**結論：いくつかの計算で共通した傾向を中心にまとめています。**'}
 人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
 注意点：${strongest ? shadowTendencies[strongest.key] : day.caution}。
 今日から試すこと：**${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}**。
@@ -659,12 +659,12 @@ ${combinedEvidence}
 ${personalizedLifeStage}
 
 ${timingBlocks}
-ここに表示する年は出来事の確定ではありません。二つ以上の独立した系統で、同じ行動テーマが強まりやすい期間だけを載せています。
+ここに表示する年は、出来事が必ず起こるという意味ではありません。複数の計算で同じテーマが強く出た期間だけを載せています。
 
 【迷ったときの順序・注記】
 **自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。**
 
-一つの系統だけに現れた特徴は本文へ載せていません。同じ入力条件では毎回同じ結果になります。この鑑定は将来を保証するものではなく、選択肢を整理するための参考情報です。
+一つの見方だけに出た特徴は本文へ載せていません。同じ情報を入力すれば、毎回同じ結果になります。この鑑定は将来を決めつけるものではなく、自分の気持ちや選択肢を整理するための参考情報です。
 
 【命式・計算データとの境界】
 この見出しより上が統合鑑定文です。詳しい計算要素は、画面上部の「命式・計算データ」で確認できます。`
