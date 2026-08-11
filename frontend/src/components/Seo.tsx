@@ -20,6 +20,8 @@ export function Seo({ title, description, canonicalPath, noindex = false }: SeoP
     setMeta('meta[property="og:title"]', title)
     setMeta('meta[property="og:description"]', description)
     setMeta('meta[property="og:url"]', canonicalUrl)
+    setMeta('meta[property="og:image"]', 'https://fate-lab.com/og-fate-lab.png')
+    setMeta('meta[name="twitter:image"]', 'https://fate-lab.com/og-fate-lab.png')
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
     if (canonical) canonical.href = canonicalUrl
   }, [title, description, canonicalPath, noindex])

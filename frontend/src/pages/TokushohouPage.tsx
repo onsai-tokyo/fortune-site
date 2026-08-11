@@ -22,7 +22,7 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">販売業者</h2>
-            <p className="text-white/70 text-sm">fate-lab運営事務局</p>
+            <p className="text-white/70 text-sm">Fate Lab運営事務局</p>
           </section>
 
           <section>
@@ -126,7 +126,7 @@ export function TokushohouPage() {
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">表現および商品に関する注意事項</h2>
             <div className="text-white/70 text-sm space-y-2">
-              <p>本サービスは占術データをもとにした統計的分析を提供するものであり、将来の結果を保証するものではありません。</p>
+              <p>本サービスは複数の占術データを固定ルールで統合した参考情報を提供するものであり、将来の結果を保証するものではありません。</p>
               <p>提供される情報は参考情報としてご活用いただき、最終的な判断はお客様ご自身でお願いいたします。</p>
             </div>
           </section>

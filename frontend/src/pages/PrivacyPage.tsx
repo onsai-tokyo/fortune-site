@@ -22,7 +22,7 @@ export function PrivacyPage() {
 
           <section>
             <p className="text-white/70 text-sm leading-relaxed">
-              fate-lab運営事務局（以下「当社」）は、本ウェブサービス「fate-lab」（以下「本サービス」）における、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」）を定めます。
+              Fate Lab運営事務局（以下「当社」）は、本ウェブサービス「Fate Lab」（以下「本サービス」）における、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下「本ポリシー」）を定めます。
             </p>
           </section>
 
@@ -124,7 +124,7 @@ export function PrivacyPage() {
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">第10条（お問い合わせ窓口）</h2>
             <div className="text-white/70 text-sm space-y-1">
               <p>本ポリシーに関するお問い合わせは、下記の窓口までお願いいたします。</p>
-              <p className="mt-2">fate-lab運営事務局</p>
+              <p className="mt-2">Fate Lab運営事務局</p>
               <p>メールアドレス：support@fate-lab.com</p>
             </div>
           </section>

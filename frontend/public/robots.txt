@@ -9,7 +9,6 @@ Disallow: /payment/
 Disallow: /result
 Disallow: /analyze
 Disallow: /compat-report
-Disallow: /feature/
 Disallow: /debug.html
 Disallow: /auto-test.html
 Disallow: /final-check.html

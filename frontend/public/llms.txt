@@ -1,13 +1,18 @@
-# Fate Lab 統計学鑑定
+# Fate Lab（フェイトラボ）
 
-> Fate Labは、生年月日をもとに複数の東洋・西洋占術を組み合わせて結果を提示する日本語のオンライン鑑定サービスです。
+> Fate Labは、生年月日・出生時刻・出生地をもとに、東洋・西洋・インドの9つの占術を固定ルールで統合する日本語の無料オンライン占いです。
 
 ## 主な内容
 
-- [無料の統計学鑑定](https://fate-lab.com/): 四柱推命、算命学、納音、宿曜、九星気学、数秘術を統合した鑑定書を生成します。
+- [無料の生年月日占い](https://fate-lab.com/): 9つの占術を統合した、同じ入力なら同じ結果になる鑑定書を生成します。
+- [占い解説一覧](https://fate-lab.com/guides/): 命式、日干、五行、性格、適職、相性などの基礎知識をまとめています。
 - [四柱推命とは](https://fate-lab.com/guides/shichu-suimei): 命式の四柱と、出生時間が不明な場合の見方を説明します。
 - [生年月日占いでわかること](https://fate-lab.com/guides/birthdate-fortune): 複数占術の違いと、結果の活用方法を説明します。
 - [生年月日による相性占い](https://fate-lab.com/guides/compatibility): 相性を見る観点と、診断結果との付き合い方を説明します。
+- [命式とは](https://fate-lab.com/guides/birth-chart): 年柱・月柱・日柱・時柱の見方を説明します。
+- [日干とは](https://fate-lab.com/guides/day-master): 十干と本人の本質の見方を説明します。
+- [五行バランス](https://fate-lab.com/guides/five-elements): 木・火・土・金・水の読み方を説明します。
+- [出生時間が不明な場合](https://fate-lab.com/guides/unknown-birth-time): 時刻が必要な項目と省略される項目を説明します。
 
 ## サービスについて
 
@@ -15,6 +20,10 @@
 
 ## 公式情報
 
+- [Fate Labについて](https://fate-lab.com/about)
+- [鑑定ロジックと計算方針](https://fate-lab.com/methodology)
+- [コンテンツ制作方針](https://fate-lab.com/editorial-policy)
+- [お問い合わせ](https://fate-lab.com/contact)
 - [利用規約](https://fate-lab.com/terms)
 - [プライバシーポリシー](https://fate-lab.com/privacy)
 - [特定商取引法に基づく表記](https://fate-lab.com/tokushohou)
