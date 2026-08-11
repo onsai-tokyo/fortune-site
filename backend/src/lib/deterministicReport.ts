@@ -249,6 +249,10 @@ export function buildDeterministicReport(input: ReportInput): string {
   const careerPalaceStars = palaceStars('官祿')
   const wealthPalaceStars = palaceStars('財帛')
   const couplePalaceStars = palaceStars('夫妻')
+  const healthPalaceStars = palaceStars('疾厄')
+  const homePalaceStars = palaceStars('田宅')
+  const friendsPalaceStars = palaceStars('僕役')
+  const parentsPalaceStars = palaceStars('父母')
   const currentDecade = input.timing?.decades.find(period => currentYear >= period.startYear && currentYear <= period.endYear)
   const currentAnnual = input.timing?.annual.find(item => item.year === currentYear)
   const currentTimingSummary = [
@@ -262,17 +266,46 @@ export function buildDeterministicReport(input: ReportInput): string {
 これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
 **最大の強みは${day.strength}。注意点は${day.caution}です。** 外から期待される役割と自分が守りたい感覚を分け、判断の理由を短く言葉にすると、持ち味が安定して発揮されます。
 
+【全占術統合鑑定 — 思考・感情・行動・対人】
+**思考：** 算命学の北方${northStar}は「${SANMEI[northStar] ?? '自分なりの視点'}」を示し、日主${input.shichuDay[0]}の${day.core}と重なります。情報を広く集めてから本質を選び取る一方、選択肢が増えるほど結論が遅れやすいため、判断期限と基準を先に決めると力を活かせます。
+**感情：** 中心星${input.sanmeiStar}の${sanmei}と宿曜${input.sukuyo}宿の「${sukuyoDetail}」から、表面は自然体でも内側では人や場の変化を細かく感じ取る傾向があります。感情をすぐ結論にせず、事実・解釈・希望の三つに分けて言葉にすると安定します。
+**行動：** 南方${southStar}の「${SANMEI[southStar] ?? '行動力'}」と数秘${input.lifePathNumber}の「${mission}」が、受け身より自分で始めるほど運が動くことを示します。大きく賭けるより、小さく開始して改善する方法が向きます。
+**対人：** 東方${eastStar}は社会での距離感、西方${westStar}は近しい相手への接し方です。外では${WORK_STYLE[eastStar] ?? '自分の方針を保つ'}、内では${LOVE_STYLE[westStar] ?? '信頼を積み重ねる'}という使い分けがあり、親しくなるほど約束と継続を重視します。
+
 【全占術統合鑑定 — 才能・仕事・お金】
 四柱推命では${day.work}、算命学では東方${eastStar}の「${WORK_STYLE[eastStar] ?? SANMEI[eastStar]}」、紫微斗数では官祿宮${careerPalaceStars}・財帛宮${wealthPalaceStars}が仕事と収入の使い方を示します。九星の${input.kyuseiProfile?.yearStar ?? input.honmeiName}は、社会の中心で責任を引き受ける動き方を補足します。
 **仕事の総合結論は、${day.strength}を、${WORK_STYLE[eastStar] ?? '自分の専門性を活かす働き方'}へつなげること。** 得意な${strongestElement}を軸に、少ない${weakestElement}の「${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}」は手順・道具・協力者で補うと成果と収入が安定します。肩書より、裁量・評価基準・価値提供の方法が自分に合うかを重視してください。
+**向く役割：** 情報整理、企画、改善、専門分野の発信、複数の人や領域をつなぐ役割。${day.work}のように、知識を現実の判断へ変える仕事で強みが出ます。
+**向く環境：** 目的と評価基準は明確だが、進め方には裁量がある環境。短期成果だけを競うより、専門性と信頼を積み上げられる場が合います。
+**お金の扱い：** 財帛宮${wealthPalaceStars}は、発信・行動と蓄積・配慮の両方を求めます。収入源と生活防衛資金を分け、感情で使う予算をあらかじめ決めると、稼ぐ力と守る力のバランスが整います。
+**つまずきやすい点：** ${day.caution}。完成度を上げ続ける前に、締切・採算・終了条件を数値で置くことが重要です。
 
 【全占術統合鑑定 — 恋愛・結婚・パートナーシップ】
 算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${input.sukuyo}宿は、相手の本音や場の機微を読む対人感覚を加えます。
 **恋愛・結婚の総合結論は、安心できる日常と互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を具体的に話すほど長続きします。婚期候補は確定日ではなく、出会い・進展・見直しが起こりやすい期間として活用してください。
+**惹かれやすい相手：** 会話が成立し、考えを更新でき、約束を行動で守る人。夫妻宮${couplePalaceStars}から、知性・企画力・言葉の相性が関係の入口になりやすい傾向です。
+**愛情表現：** 西方${westStar}の性質から、派手な演出より、連絡・生活・気遣いを継続することで愛情を示します。相手にも同じ表現を無意識に求めすぎないことが大切です。
+**関係の課題：** 相手の本音を読みすぎて確認を省くこと、または考えがまとまるまで話さないこと。推測ではなく「私はこう感じた」「あなたはどう考える」の順で確認すると誤解が減ります。
+**結婚生活：** 家事、固定費、貯蓄、一人の時間、仕事の繁忙期を具体的に合意できる相手ほど安定します。婚期の年は関係を急いで決める年ではなく、現実条件を話し合う好機です。
+
+【全占術統合鑑定 — 家族・居場所・人間関係】
+紫微斗数では父母宮${parentsPalaceStars}、田宅宮${homePalaceStars}、交友関係を示す僕役宮${friendsPalaceStars}です。算命学では北方${northStar}が親・目上、東方${eastStar}が友人・社会との接点を示します。
+**家族・目上との関係：** 尊敬と自立の両方が必要です。役割を引き受けすぎず、できること・できないこと・期限を先に伝えると関係が整います。
+**居場所：** 休む場所と考える場所を分け、物や情報の定位置を決めるほど回復しやすくなります。住環境は見栄より、静けさ・動線・自分で整えられる範囲を優先してください。
+**友人・仲間：** 変化や挑戦を恐れない人との縁が刺激になります。ただし、広く関わり続けるより、目的と信頼が一致する少人数と長く協力する方が力を発揮できます。
+
+【全占術統合鑑定 — 心身の整え方】
+紫微斗数の疾厄宮は${healthPalaceStars}、五行では${strongestElement}が強く${weakestElement}が少ない配置です。これは病気の診断ではなく、生活の偏りを振り返るための補助線として読みます。
+**疲れのサイン：** 情報を集め続ける、決められない、他人の反応を先回りして考える状態。思考量が増えたときほど、睡眠・食事・移動・予定数など測れる生活条件から整えてください。
+**回復方法：** 一人で情報を整理する時間と、身体を動かして思考を止める時間を分けること。休息にも終了時刻を作り、翌日に持ち越す判断を明文化すると回復しやすくなります。
+**注意：** 体調上の不安や症状は占術で判断せず、医療機関など専門家へ相談してください。
 
 【全占術統合鑑定 — 過去・現在・これから】
 初年期の${earlyStar?.star ?? '従星'}は「${SUBORDINATE_DETAIL[earlyStar?.star ?? ''] ?? '経験を自分の力へ変える傾向'}」、${currentPhaseLabel}の${currentPhase?.star ?? '従星'}は「${SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の役割に必要な力'}」を示します。現在は${currentTimingSummary || '人生段階と年運を重ねて確認する時期'}です。
 **今の総合テーマは、${currentAnnual?.themes.join('、') ?? currentDecade?.themes.join('、') ?? '現在の強みを再現できる形へ整えること'}。** 四柱推命の大運・年運、算命学の従星、紫微斗数の大限、数秘術の個人年は時間幅が異なるため、共通して現れるテーマを優先し、現実の行動計画へ落とし込みます。
+**過去から持ち越しやすいもの：** 初年期に身につけた責任感や安定を守る力。現在は、それを「全部自分で守る」から「仕組みにして人と共有する」方向へ更新する時期です。
+**現在の使い方：** 学ぶだけで終わらせず、成果物・収入・契約・役割など目に見える形へ変えること。個人年の変化性は、無計画な方向転換ではなく、小さな実験に使うと活きます。
+**次の段階への準備：** 現在の大運が切り替わる前に、続ける専門性、手放す役割、守る生活条件の三つを整理してください。年運一覧では、複数のサインが重なる年を優先して確認します。
 
 【全占術統合鑑定 — 開運アクション】
 **最初に行うこと：${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}を補う小さな習慣を一つ決める。**
