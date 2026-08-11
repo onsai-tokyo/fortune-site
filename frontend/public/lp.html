@@ -933,6 +933,37 @@
         padding: 80px 40px;
       }
     }
+    .divination-content { color: var(--text-sub); font-size: 14px; line-height: 1.6; }
+    .fortune-table-section + .fortune-table-section { margin-top: 28px; }
+    .fortune-table-section h4 { margin: 0 0 12px; color: var(--text-main); font-size: 17px; letter-spacing: .04em; }
+    .fortune-table-section h5 { margin: 18px 0 8px; color: var(--text-main); font-size: 14px; }
+    .fortune-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .fortune-table { width: 100%; min-width: 560px; border-collapse: collapse; background: rgba(255,255,255,.45); }
+    .fortune-table th, .fortune-table td { padding: 11px 12px; border: 1px solid var(--border-gold); text-align: center; vertical-align: middle; }
+    .fortune-table thead th { background: rgba(186,151,74,.13); color: var(--text-main); font-size: 12px; letter-spacing: .04em; }
+    .fortune-table tbody th { width: 58px; color: var(--text-main); background: rgba(186,151,74,.07); white-space: nowrap; }
+    .fortune-table .kanshi-cell { color: var(--text-main); font-family: serif; font-size: 18px; font-weight: 700; white-space: nowrap; }
+    .fortune-table td small { display: block; color: var(--text-sub); font-size: 10px; white-space: nowrap; }
+    .hidden-stem-separator { display: inline-block; margin: 0 5px; color: var(--border-gold); }
+    .sanmei-body-chart { width: 100%; max-width: 520px; margin: 0 auto; table-layout: fixed; border-spacing: 8px; }
+    .sanmei-body-chart td { height: 78px; padding: 9px 5px; border: 1px solid var(--border-gold); border-radius: 7px; background: rgba(255,255,255,.48); text-align: center; vertical-align: middle; }
+    .sanmei-body-chart td.empty-cell { border-color: transparent; background: transparent; }
+    .sanmei-body-chart td.center-star { border: 2px solid var(--gold-primary); background: rgba(186,151,74,.14); }
+    .sanmei-body-chart span, .subordinate-star-table span { display: block; color: var(--text-sub); font-size: 10px; }
+    .sanmei-body-chart strong, .subordinate-star-table strong { display: block; margin-top: 3px; color: var(--text-main); font-family: serif; font-size: 17px; }
+    .subordinate-star-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .subordinate-star-table td { padding: 10px 5px; border: 1px solid var(--border-gold); background: rgba(255,255,255,.42); text-align: center; }
+    .subordinate-star-table small { color: var(--text-sub); font-size: 10px; }
+    .divination-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border-gold); }
+    .divination-summary-item { display: flex; flex-direction: column; line-height: 1.5; }
+    .divination-summary-item strong { color: var(--text-main); font-size: 11px; }
+    .divination-summary-item span { overflow-wrap: anywhere; }
+    @media (max-width: 540px) {
+      .sanmei-body-chart { border-spacing: 4px; }
+      .sanmei-body-chart td { height: 67px; padding: 6px 2px; }
+      .sanmei-body-chart strong, .subordinate-star-table strong { font-size: 14px; }
+      .divination-summary { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1506,7 +1537,7 @@
       <!-- 占術データ表示 -->
       <div id="divination-data" style="margin-bottom: 30px; padding: 20px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-gold);">
         <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 16px;">📊 占術データ</h3>
-        <div id="divination-content" style="font-size: 14px; color: var(--text-sub); line-height: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+        <div id="divination-content" class="divination-content"></div>
       </div>
 
       <!-- 固定ルールによる統合鑑定文 -->
@@ -1574,19 +1605,9 @@
           const elementScores = calcData.elementBalance?.scores || {};
           const bodyChart = calcData.sanmeiChart?.bodyChart || {};
           const subordinateStars = calcData.sanmeiChart?.subordinateStars || {};
-          const pillarDetails = (calcData.fourPillars || []).map(pillar =>
-            `${pillar.label}${pillar.kanshi} ${pillar.stemTenGod}／蔵干 ${pillar.hiddenStems.map(item => `${item.stem}(${item.tenGod})`).join('・')}`
-          ).join('｜');
           const divinationData = {
-            '四柱推命（年柱）': calcData.shichuYear,
-            '四柱推命（月柱）': calcData.shichuMonth,
-            '四柱推命（日柱）': calcData.shichuDay,
-            ...(calcData.shichuHour ? { '四柱推命（時柱）': calcData.shichuHour } : {}),
-            '四柱推命（通変星・蔵干）': pillarDetails,
             '納音': calcData.nayin,
             '算命学（宿命星）': calcData.sanmeiStar,
-            '算命学（人体星図）': Object.values(bodyChart).map(item => `${item.label} ${item.star}`).join('／'),
-            '算命学（十二大従星）': Object.values(subordinateStars).map(item => `${item.label} ${item.star}`).join('／'),
             '五行バランス': Object.entries(elementScores).map(([element, score]) => `${element}${score}`).join('・'),
             '旺衰（簡易判定）': calcData.strength ? `${calcData.strength.label}（扶助${calcData.strength.supportRatio}%）` : '算出なし',
             '補う五行の目安': calcData.strength?.favorableElements?.join('・') || '算出なし',
@@ -1594,9 +1615,46 @@
             '数秘術（運命数）': calcData.lifePathNumber,
             '九星気学（本命星）': calcData.honmeiName
           };
-          divinationContent.innerHTML = Object.entries(divinationData).map(([key, val]) =>
-            `<div><strong>${key}：</strong>${val}</div>`
+          const summaryHtml = Object.entries(divinationData).map(([key, val]) =>
+            `<div class="divination-summary-item"><strong>${key}</strong><span>${val}</span></div>`
           ).join('');
+          const pillarsHtml = (calcData.fourPillars || []).map(pillar => `
+            <tr>
+              <th scope="row">${pillar.label}</th>
+              <td class="kanshi-cell">${pillar.kanshi}</td>
+              <td>${pillar.stemTenGod}</td>
+              <td>${pillar.hiddenStems.map(item => `${item.stem}<small>${item.tenGod}</small>`).join('<span class="hidden-stem-separator">／</span>')}</td>
+            </tr>`).join('');
+          const starCell = (position, fallback = '—') => {
+            const item = bodyChart[position];
+            return `<span>${item?.label || ''}</span><strong>${item?.star || fallback}</strong>`;
+          };
+          const subordinateHtml = Object.values(subordinateStars).map(item => `
+            <td><span>${item.label}</span><strong>${item.star}</strong><small>${item.stage}</small></td>`).join('');
+
+          divinationContent.innerHTML = `
+            <section class="fortune-table-section">
+              <h4>四柱推命 命式表</h4>
+              <div class="fortune-table-scroll">
+                <table class="fortune-table shichu-table">
+                  <thead><tr><th>柱</th><th>干支</th><th>通変星</th><th>蔵干・通変星</th></tr></thead>
+                  <tbody>${pillarsHtml}</tbody>
+                </table>
+              </div>
+            </section>
+            <section class="fortune-table-section">
+              <h4>算命学 人体星図</h4>
+              <table class="sanmei-body-chart" aria-label="算命学の人体星図">
+                <tbody>
+                  <tr><td class="empty-cell"></td><td>${starCell('north')}</td><td class="empty-cell"></td></tr>
+                  <tr><td>${starCell('east')}</td><td class="center-star">${starCell('center')}</td><td>${starCell('west')}</td></tr>
+                  <tr><td class="empty-cell"></td><td>${starCell('south')}</td><td class="empty-cell"></td></tr>
+                </tbody>
+              </table>
+              <h5>十二大従星</h5>
+              <table class="subordinate-star-table" aria-label="初年期・中年期・晩年期の十二大従星"><tbody><tr>${subordinateHtml}</tr></tbody></table>
+            </section>
+            <div class="divination-summary">${summaryHtml}</div>`;
         } else {
           divinationContent.innerHTML = '<div style="color: red;">占術データの計算に失敗しました</div>';
           throw new Error('占術データの計算に失敗しました');
