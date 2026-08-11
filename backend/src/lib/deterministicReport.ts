@@ -92,6 +92,29 @@ const ASTRO_SIGN: Record<string, string> = {
   射手座: '視野を広げ、意味や可能性を探究する力', 山羊座: '目標を現実の仕組みへ変え、責任を果たす力', 水瓶座: '既存の枠を越え、独自の仕組みを考える力', 魚座: '境界を越えて感じ取り、想像力で包み込む力',
 }
 
+type PlanetRole = 'lagna' | 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn'
+const PLANET_ROLE_PREFIX: Record<PlanetRole, string> = {
+  lagna: '物事に取り組むときは', sun: '人生の軸として', moon: '心を落ち着けるには', mercury: '考えを伝えるときは',
+  venus: '人や物を大切にするときは', mars: '行動を起こすときは', jupiter: '可能性を伸ばすときは', saturn: '成熟の課題として',
+}
+const SIGN_BEHAVIOR: Record<string, Record<PlanetRole, string>> = {
+  牡羊座: { lagna: 'まず動いて手応えを確かめます', sun: '自分で先頭に立つ経験を選びます', moon: '率直に反応できる余白が必要です', mercury: '結論を素早く言葉にします', venus: '熱意が伝わる相手へ惹かれます', mars: '迷う前に最初の一歩を踏み出します', jupiter: '挑戦の数だけ視野が広がります', saturn: '衝動を持続力へ変えていきます' },
+  牡牛座: { lagna: '感覚を確かめてから腰を据えます', sun: '確かな価値を育て続けます', moon: '五感と生活の安定が必要です', mercury: '実例を交えて着実に話します', venus: '安心と誠実さを感じる相手を選びます', mars: '急がず粘り強く進めます', jupiter: '資源を育てるほど豊かさが増します', saturn: '執着と継続を見分けていきます' },
+  双子座: { lagna: '情報を集めながら入口を探します', sun: '学びと対話で世界を更新します', moon: '話して整理できると安心します', mercury: '複数の話題を素早く結びます', venus: '会話が弾む相手へ惹かれます', mars: '言葉と機転で状況を動かします', jupiter: '好奇心を共有するほど発展します', saturn: '情報を選び抜く力を育てます' },
+  蟹座: { lagna: '安全な場を確かめてから関わります', sun: '守り育てる対象を人生の軸にします', moon: '親しい人との感情共有が必要です', mercury: '相手の気持ちを汲んで話します', venus: '家庭的な安心をくれる相手を選びます', mars: '大切なものを守るために動きます', jupiter: '居場所を育てるほど発展します', saturn: '感情と責任の境界を学びます' },
+  獅子座: { lagna: '自分らしさが伝わる形で始めます', sun: '創造と自己表現を人生の軸にします', moon: '認められ誇りを保てると安心します', mercury: '物語と自信を持って伝えます', venus: '敬意と喜びを示す相手へ惹かれます', mars: '誇りを賭けて正面から動きます', jupiter: '人を励ますほど可能性が広がります', saturn: '評価に頼らない自信を育てます' },
+  乙女座: { lagna: '必要な手順を整えてから始めます', sun: '改善と実用性を人生の軸にします', moon: '生活が整うと心も落ち着きます', mercury: '細部を確認し正確に説明します', venus: '誠実な気遣いを示す相手を選びます', mars: '問題を分解して一つずつ片づけます', jupiter: '技術を磨き人に役立てるほど伸びます', saturn: '完璧さより適切さを学びます' },
+  天秤座: { lagna: '相手との釣り合いを見て進めます', sun: '公平な関係づくりを人生の軸にします', moon: '対話で均衡が戻ると安心します', mercury: '双方の論点を並べて説明します', venus: '品位と対等さのある相手を選びます', mars: '合意できる線を探して動きます', jupiter: '協力関係を広げるほど発展します', saturn: '迎合せず選ぶ力を育てます' },
+  蠍座: { lagna: '表面より核心を確かめて関わります', sun: '深い変容を人生の軸にします', moon: '本音を共有できると安心します', mercury: '背景と動機まで掘って考えます', venus: '強い信頼を結べる相手を選びます', mars: '一点へ集中して状況を変えます', jupiter: '深い研究と継承によって伸びます', saturn: '執着を覚悟へ変えていきます' },
+  射手座: { lagna: 'まず全体像と可能性を見ます', sun: '探究と自由を人生の軸にします', moon: '意味と見通しがあると安心します', mercury: '大きな文脈から率直に話します', venus: '成長を応援し合える相手を選びます', mars: '目標へ向かって大胆に動きます', jupiter: '学びと越境によって大きく伸びます', saturn: '理想を継続可能な信念へ育てます' },
+  山羊座: { lagna: '段取りから入り続けられる形にします', sun: '積み上げた実績を人生の軸にします', moon: '先の見通しが立つと安心します', mercury: '話を具体化し結論から伝えます', venus: '約束を守る人に信頼を感じます', mars: '順番を踏み着実に押し切ります', jupiter: '経験を体系にまとめて伸びます', saturn: '責任を引き受けることで成熟します' },
+  水瓶座: { lagna: '既存の前提から距離を取って始めます', sun: '独自の仕組みを人生の軸にします', moon: '自由な距離感があると安心します', mercury: '俯瞰して新しい接続を考えます', venus: '対等で個性を尊重する相手を選びます', mars: '合理的な改革へ向けて動きます', jupiter: '仲間と未来像を共有して伸びます', saturn: '理想を社会で機能する形へ育てます' },
+  魚座: { lagna: '場の空気を感じながら入り口を選びます', sun: '共感と想像力を人生の軸にします', moon: '境界を緩めて休めると安心します', mercury: 'イメージや感覚を言葉にします', venus: '優しさと精神的な響きを求めます', mars: '直感に導かれて柔軟に動きます', jupiter: '受容と創造によって可能性が広がります', saturn: '共感と境界線の両立を学びます' },
+}
+const astroPhrase = (sign: string | undefined, role: PlanetRole) => sign && SIGN_BEHAVIOR[sign]?.[role]
+  ? `${PLANET_ROLE_PREFIX[role]}${SIGN_BEHAVIOR[sign][role]}`
+  : ASTRO_SIGN[sign ?? ''] ?? '出生条件に応じた固有の傾向が表れます'
+
 const NAKSHATRA_DETAIL: Record<string, string> = {
   アシュヴィニー: '素早く始め、停滞を動かす力', バラニー: '責任を引き受け、最後まで変化を通過する力', クリッティカー: '不要なものを切り分け、本質を磨く力', ローヒニー: '魅力や資源を育て、形ある豊かさへつなげる力',
   ムリガシーラ: '問いを持ち続け、未知の答えを探す力', アールドラー: '混乱の中から真実を見つけ、再構築する力', プナルヴァス: '原点へ戻り、何度でも立て直す力', プシャ: '人や仕組みを養い、安定して成長させる力',
@@ -263,13 +286,13 @@ export function buildDeterministicReport(input: ReportInput): string {
     ? input.sanmeiRelations.affectedPillars.join('・')
     : '命式の年支・月支・日支・時支には直接該当しません'
   const ziweiPalaceDetail = input.ziwei?.available
-    ? input.ziwei.palaces?.map(palace => {
+    ? input.ziwei.palaces?.slice().sort((a, b) => (a.name === '命宮' ? -1 : b.name === '命宮' ? 1 : 0)).filter(palace => (palace.decadal.range?.[0] ?? 0) < 85).map(palace => {
         const major = palace.majorStars.length
           ? palace.majorStars.map(star => `${star.name}${star.brightness ? `（${star.brightness}）` : ''}${star.mutagen ? `・化${star.mutagen}` : ''}：${star.detail}`).join('／')
           : '主星なし（対宮と三方四正を合わせて読みます）'
         const minor = palace.minorStars.slice(0, 4).join('・') || 'なし'
         return `**${palace.name}${palace.isBodyPalace ? '［身宮］' : ''}（${palace.heavenlyStem}${palace.earthlyBranch}）：** ${major}。主な補助星は${minor}。大限${palace.decadal.range?.join('〜') ?? '算出なし'}歳。`
-      }).join('\n')
+      }).join('\n') + '\n85歳以降の大限は、初期表示では省略しています。'
     : input.ziwei?.reason ?? '出生時刻がないため算出できません。'
   const ziweiPalaces = input.ziwei?.available ? input.ziwei.palaces ?? [] : []
   const palaceStars = (name: string) => {
@@ -297,8 +320,8 @@ export function buildDeterministicReport(input: ReportInput): string {
   const vedic = input.astrology?.vedic
   const westernPlanet = (name: string) => western?.planets.find(planet => planet.name === name)
   const vedicPlanet = (name: string) => vedic?.planets.find(planet => planet.name === name)
-  const planetLine = (planets: NonNullable<typeof western>['planets']) => planets.map(planet =>
-    `${planet.name}：${planet.sign}${planet.degree.toFixed(1)}°${planet.retrograde ? '（逆行）' : ''}`
+  const planetLine = (planets: NonNullable<typeof western>['planets'], system: '西洋／トロピカル' | 'インド／サイデリアル') => planets.map(planet =>
+    `${planet.name}：${planet.sign}${planet.degree.toFixed(1)}°${planet.retrograde ? '（逆行）' : ''}（${system}）`
   ).join('／')
   const westernSun = westernPlanet('太陽')
   const westernMoon = westernPlanet('月')
@@ -406,32 +429,40 @@ export function buildDeterministicReport(input: ReportInput): string {
   if (/安定|堅実|継続|守/.test(sukuyoDetail)) sukuyoSignals.push('stability')
   if (/学|探究|知識|未知/.test(sukuyoDetail)) sukuyoSignals.push('exploration')
   addSignals('宿曜', [...new Set(sukuyoSignals)])
-  const rankedConsensus = [...signals.entries()]
-    .map(([key, sources]) => ({ key, sources: [...sources], count: sources.size }))
-    .filter(item => item.count >= 3)
-    .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
-  const supportingConsensus = [...signals.entries()]
-    .map(([key, sources]) => ({ key, sources: [...sources], count: sources.size }))
-    .filter(item => item.count === 2)
-    .sort((a, b) => a.key.localeCompare(b.key))
+  type Lineage = 'stems' | 'ephemeris' | 'number' | 'lunar'
+  const sourceLineage: Record<string, Lineage> = {
+    四柱推命: 'stems', 算命学: 'stems', 紫微斗数: 'stems', 西洋占星術: 'ephemeris', インド占星術: 'ephemeris',
+    数秘術: 'number', 九星気学: 'number', 宿曜: 'lunar',
+  }
+  const lineageName: Record<Lineage, string> = { stems: '干支系', ephemeris: '天体系', number: '数理系', lunar: '宿曜系' }
+  const consensusItems = [...signals.entries()].map(([key, sourceSet]) => {
+    const sources = [...sourceSet]
+    const lineages = [...new Set(sources.map(source => sourceLineage[source]))]
+    const score = lineages.length + (sources.length - lineages.length) * 0.3
+    return { key, sources, count: sources.length, lineages, lineageCount: lineages.length, score }
+  })
+  const rankedConsensus = consensusItems
+    .filter(item => item.lineageCount >= 2)
+    .sort((a, b) => b.score - a.score || b.lineageCount - a.lineageCount || a.key.localeCompare(b.key))
+  const supportingConsensus = consensusItems
+    .filter(item => item.lineageCount < 2 || !rankedConsensus.includes(item))
+    .sort((a, b) => b.score - a.score || a.key.localeCompare(b.key))
     .slice(0, 5)
   const selectedConsensus = rankedConsensus.length >= 2
-    ? rankedConsensus
-    : [...signals.entries()].map(([key, sources]) => ({ key, sources: [...sources], count: sources.size })).sort((a, b) => b.count - a.count).slice(0, 3)
+    ? rankedConsensus.slice(0, 3)
+    : consensusItems.sort((a, b) => b.score - a.score).slice(0, 3)
   const strongest = selectedConsensus[0]
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
-    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n**現実で活かす鍵：** ${detail.action}。\n一致した占術：${item.sources.join('・')}（${item.count}占術）`
+    const lineageSummary = item.lineages.map(lineage => lineageName[lineage]).join('・')
+    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n一致：${lineageSummary}の${item.lineageCount}系統・${item.count}占術（${item.sources.join('・')}）`
   }).join('\n\n')
   const supportingBlocks = supportingConsensus.length
-    ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（2占術）`).join('\n\n')
+    ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const workBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].work}：** ${consensusLabels[item.key].work}。`).join('\n\n')
-  const loveBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].love}：** ${consensusLabels[item.key].love}。`).join('\n\n')
-  const actionBlocks = selectedConsensus.map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**\nこの行動は持ち味を現実で使いやすくし、${shadowTendencies[item.key]}を防ぐためのものです。`).join('\n\n')
-  const destinyBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].destiny}：** ${destinyTendencies[item.key]}。`).join('\n\n')
-  const friendBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].friend}：** ${friendTendencies[item.key]}`).join('\n\n')
-  const shadowBlocks = selectedConsensus.map(item => `・**${sectionLabels[item.key].shadow}：** ${shadowTendencies[item.key]}`).join('\n')
+  const workBlocks = selectedConsensus.map(item => `打ち合わせや実務では、${consensusLabels[item.key].work}を任されると持ち味が出ます。`).join('\n\n')
+  const loveBlocks = selectedConsensus.map(item => `二人で判断が必要な場面では、${consensusLabels[item.key].love}を選ぶと関係が安定します。`).join('\n\n')
+  const friendBlocks = selectedConsensus.map(item => friendTendencies[item.key]).join('\n\n')
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
     const text = themes.join('、')
@@ -464,14 +495,15 @@ export function buildDeterministicReport(input: ReportInput): string {
   // 「共通テーマ」は同じでも、実際の現れ方は命式・星図・天体の組み合わせで変わる。
   // 以下は入力ごとの実データを交差させ、テンプレートだけでは出ない個人差を文章化する層。
   const centerStarDetail = SANMEI_DETAIL[input.sanmeiStar] ?? sanmei
+  const centerStarLabel = SANMEI[input.sanmeiStar] ?? input.sanmeiStar
   const westStarDetail = LOVE_STYLE[westStar] ?? SANMEI_DETAIL[westStar] ?? sanmei
   const eastStarDetail = WORK_STYLE[eastStar] ?? SANMEI_DETAIL[eastStar] ?? sanmei
   const northStarDetail = SANMEI_DETAIL[northStar] ?? sanmei
   const southStarDetail = SANMEI_DETAIL[southStar] ?? sanmei
-  const westernMoonDetail = ASTRO_SIGN[westernMoon?.sign ?? ''] ?? '感情を言葉と生活の両面から整える力'
-  const westernVenusDetail = ASTRO_SIGN[westernVenus?.sign ?? ''] ?? '信頼できる価値観を育てる力'
-  const westernMarsDetail = ASTRO_SIGN[westernMars?.sign ?? ''] ?? '意思を現実の行動へ変える力'
-  const vedicMoonDetail = ASTRO_SIGN[vedicMoon?.sign ?? ''] ?? '日々の習慣から安心を作る力'
+  const westernMoonDetail = astroPhrase(westernMoon?.sign, 'moon')
+  const westernVenusDetail = astroPhrase(westernVenus?.sign, 'venus')
+  const westernMarsDetail = astroPhrase(westernMars?.sign, 'mars')
+  const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
   const nakshatraDetail = NAKSHATRA_DETAIL[vedic?.moonNakshatra ?? ''] ?? '心の反応を経験へ変える力'
   const lifeNumberDetail = NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission
   const birthNumber = input.numerologyProfile?.birthDayNumber
@@ -481,47 +513,59 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `四柱推命の日主**${input.shichuDay[0]}**が示す「${day.core}」に、算命学の中心星**${input.sanmeiStar}**の「${centerStarDetail}」が重なります。つまり、外からは${day.strength}が見えやすい一方、内側では${centerStarDetail}を基準に納得できる形を探します。数秘術の運命数**${input.lifePathNumber}**は「${lifeNumberDetail}」を人生全体の課題にするため、能力を持っているだけでなく、${mission}へ結びつけたときに本人らしさが強く出ます。`
+  const personalizedCore = `四柱推命の日主**${input.shichuDay[0]}**は「${day.core}」。そこに算命学の中心星**${input.sanmeiStar}**の${centerStarLabel}が重なります。外からは視野の広い判断役に見える一方、内側では「飾らずに言えているか」を基準に納得できる形を探します。数秘術の運命数${input.lifePathNumber}が示す${lifeNumberDetail}へ結びつけたとき、この組み合わせが本人らしさとして表れます。`
   const personalizedContrast = primaryKey && secondaryKey
-    ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と**${consensusLabels[secondaryKey].title}**を同時に持つ点にあります。${consensusLabels[primaryKey].summary}${consensusLabels[secondaryKey].summary} 一方だけを選ぶのではなく、「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番で使うと、内面の迷いを行動へ変えやすくなります。`
+    ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
-  const personalizedEmotion = `西洋占星術の月**${westernMoon?.sign ?? '算出なし'}**は「${westernMoonDetail}」、インド占星術の月**${vedicMoon?.sign ?? '算出なし'}**とナクシャトラ**${vedic?.moonNakshatra ?? '算出なし'}**は「${vedicMoonDetail}」「${nakshatraDetail}」を示します。感情は一つの理由だけで動くというより、周囲との釣り合いと、自分の中で意味が通るかの両方を確認してから落ち着くタイプです。疲れているときは答えを急がず、まず感情を言葉にし、その後で事実を整理する順序が合います。`
-  const personalizedElements = `五行では**${strongestElement}**が最も強く「${strongestDetail}」を自然に使えます。反対に**${weakestElement}**の「${weakestDetail}」は、能力がないという意味ではなく、環境・習慣・協力者によって補うほど全体が整う領域です。強い要素だけで突破し続けず、不足側を予定や仕組みに組み込むことが、この命式固有のバランス調整になります。`
-  const personalizedLove = `算命学で配偶者との関係を表す西方は**${westStar}**で、「${westStarDetail}」という本人側の関係の築き方が出ます。これは相手本人を表す「配偶者星」とは区別して読みます。西洋占星術の金星**${westernVenus?.sign ?? '算出なし'}**は「${westernVenusDetail}」を愛情の価値基準にし、火星**${westernMars?.sign ?? '算出なし'}${westernMars?.retrograde ? '・逆行' : ''}**は「${westernMarsDetail}」として、欲しいものへ向かう際の反応を示します。さらに紫微斗数の夫妻宮は**${couplePalaceStars}**です。この組み合わせでは、単に優しい相手より、会話と行動が一致し、現実的な約束を更新できる相手かどうかが重要になります。`
-  const personalizedWork = `算命学の社会位置は**${eastStar}**で「${eastStarDetail}」、紫微斗数の官禄宮は**${careerPalaceStars}**、財帛宮は**${wealthPalaceStars}**です。四柱推命の日主${input.shichuDay[0]}が持つ「${day.work}」への適性と合わせると、肩書だけで職業を選ぶより、**${eastStarDetail}を使いながら、${day.strength}を成果として確認できる仕事**で力が出ます。収入面では、得意なことを無制限に引き受けるより、担当範囲・納品物・対価を明確にするほど安定します。`
-  const personalizedRelations = `算命学では、友人・社会との接点に**${eastStar}**、親・目上との関係に**${northStar}**、未来へ向けた表現に**${southStar}**が配置されています。友人には「${eastStarDetail}」が出やすく、目上の人には「${northStarDetail}」、後輩や守る相手には「${southStarDetail}」が出やすいため、相手によって別人のように振る舞う感覚があっても矛盾ではありません。すべての関係で同じ役を演じず、どの立場で何を引き受けるかを切り替える方が自然です。`
+  const personalizedEmotion = westernMoon?.sign === vedicMoon?.sign
+    ? `西洋・インドとも月は**${westernMoon?.sign ?? '算出なし'}**です。${westernMoonDetail} ナクシャトラ${vedic?.moonNakshatra ?? '算出なし'}は${nakshatraDetail}を補足します。疲れているときは答えを急がず、感情を言葉にしてから事実を整理する順序が合います。`
+    : `西洋の月は**${westernMoon?.sign ?? '算出なし'}**、インドの月は**${vedicMoon?.sign ?? '算出なし'}**です。西洋とインドでは基準が異なるためサイン名がずれます。西洋では${westernMoonDetail} インドでは${vedicMoonDetail} ナクシャトラ${vedic?.moonNakshatra ?? '算出なし'}の${nakshatraDetail}も合わせ、感情を言葉にしてから事実を整理すると落ち着きます。`
+  const strongestIsFavorable = input.strength?.favorableElements.includes(strongestElement)
+  const favorableBridge = strongestIsFavorable
+    ? `${strongestElement}は最も強い五行であり、同時に${input.strength?.label ?? '旺衰'}の観点では味方として活かしたい五行でもあります。強いことと、味方になることは矛盾しません。`
+    : `活かす五行は${strongestElement}、補う五行の目安は${input.strength?.favorableElements.filter(item => item !== strongestElement).join('・') || input.strength?.favorableElements.join('・') || '算出なし'}です。`
+  const personalizedElements = `五行では**${strongestElement}**が最も強く「${strongestDetail}」を自然に使えます。${favorableBridge} 一方、最も少ない${weakestElement}の「${weakestDetail}」は、環境・習慣・協力者で補うと全体が整います。`
+  const personalizedLove = `関係が深まるほど、算命学の西方${westStar}らしく${westStarDetail}。金星：${westernVenus?.sign ?? '算出なし'}${westernVenus ? westernVenus.degree.toFixed(1) : ''}°（西洋／トロピカル）では${westernVenusDetail} 火星：${westernMars?.sign ?? '算出なし'}${westernMars ? westernMars.degree.toFixed(1) : ''}°${westernMars?.retrograde ? '・逆行' : ''}（西洋／トロピカル）では${westernMarsDetail}。西洋とインドでは基準が異なるためサイン名がずれます。会話と行動が一致し、現実的な約束を更新できる相手かを見てください。`
+  const personalizedWork = `打ち合わせでは、算命学の社会位置${eastStar}らしく${eastStarDetail}。紫微斗数の官禄宮${careerPalaceStars}・財帛宮${wealthPalaceStars}も踏まえると、論点を整理して担当範囲・納品物・対価を決める場面で評価が積み上がります。肩書より、裁量と完了条件が明確な仕事を選ぶと安定します。`
+  const personalizedRelations = `友人の前では**${SANMEI[eastStar] ?? eastStar}**、目上の人には${SANMEI[northStar] ?? northStar}、後輩や守る相手には${SANMEI[southStar] ?? southStar}が出やすい配置です。相手によって振る舞いが変わっても矛盾ではありません。集まりでは自分の担当を言葉にし、全員の課題まで引き受けない方が関係が長続きします。`
   const personalizedLifeStage = `${currentPhaseLabel}は**${currentPhase?.star ?? '算出なし'}**の「${currentPhaseDetail}」が表に出やすい段階です。現在の時間運は${currentTimingSummary || '算出された人生段階のテーマを確認する時期'}。生まれ持った資質をそのまま繰り返すのではなく、今の期間に求められる役割へ翻訳することが大切です。${birthNumber ? `誕生数${birthNumber}（${NUMEROLOGY_DETAIL[birthNumber] ?? '生得的な得意分野'}）` : ''}${attitudeNumber ? `と態度数${attitudeNumber}（${NUMEROLOGY_DETAIL[attitudeNumber] ?? '人から見えやすい入口'}）` : ''}も、現在の選択で最初に使いやすい方法を補足します。`
   const vedicDetailBlock = vedic
     ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
 
-**ラグナ（生き方・外への現れ方）：** ${vedic.ascendant.sign}の「${ASTRO_SIGN[vedic.ascendant.sign] ?? '人生の課題へ現実的に取り組む力'}」。第一印象だけでなく、物事へ取り組む基本姿勢を表します。
-**太陽（目的意識）：** ${vedicSun?.sign ?? '算出なし'}${vedicSun ? `${vedicSun.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicSun?.sign ?? ''] ?? '自分の軸と社会的な目的を育てる力'}」を人生の目的へ向けて育てます。
+**ラグナ（生き方・外への現れ方）：** ${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°（インド／サイデリアル）。${astroPhrase(vedic.ascendant.sign, 'lagna')}。
+**太陽（目的意識）：** ${vedicSun?.sign ?? '算出なし'}${vedicSun ? `${vedicSun.degree.toFixed(1)}°` : ''}（インド／サイデリアル）。${astroPhrase(vedicSun?.sign, 'sun')}。
 **月（心・習慣）：** ${vedicMoon?.sign ?? '算出なし'}${vedicMoon ? `${vedicMoon.degree.toFixed(1)}°` : ''}。「${vedicMoonDetail}」が安心の条件と感情の整え方に表れます。
 **ナクシャトラ：** **${vedic.moonNakshatra} 第${vedic.moonPada}パーダ**。「${nakshatraDetail}」が、無意識の反応、縁の感じ方、習慣に現れます。
-**水星（思考・伝達）：** ${vedicMercury?.sign ?? '算出なし'}${vedicMercury ? `${vedicMercury.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicMercury?.sign ?? ''] ?? '情報を整理して伝える力'}」。
-**金星（愛情・価値観）：** ${vedicVenus?.sign ?? '算出なし'}${vedicVenus ? `${vedicVenus.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicVenus?.sign ?? ''] ?? '関係と価値を育てる力'}」。
-**火星（行動・衝突時の反応）：** ${vedicMars?.sign ?? '算出なし'}${vedicMars ? `${vedicMars.degree.toFixed(1)}°` : ''}${vedicMars?.retrograde ? '・逆行' : ''}。「${ASTRO_SIGN[vedicMars?.sign ?? ''] ?? '意思を行動へ変える力'}」。逆行は弱さではなく、衝動を内側で検討してから表しやすい配置として読みます。
-**木星（発展・学び）：** ${vedicJupiter?.sign ?? '算出なし'}${vedicJupiter ? `${vedicJupiter.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicJupiter?.sign ?? ''] ?? '経験から可能性を広げる力'}」。
-**土星（責任・成熟）：** ${vedicSaturn?.sign ?? '算出なし'}${vedicSaturn ? `${vedicSaturn.degree.toFixed(1)}°` : ''}。「${ASTRO_SIGN[vedicSaturn?.sign ?? ''] ?? '時間をかけて責任を形にする力'}」。
+**水星（思考・伝達）：** ${vedicMercury?.sign ?? '算出なし'}${vedicMercury ? `${vedicMercury.degree.toFixed(1)}°` : ''}（インド／サイデリアル）。${astroPhrase(vedicMercury?.sign, 'mercury')}。
+**金星（愛情・価値観）：** ${vedicVenus?.sign ?? '算出なし'}${vedicVenus ? `${vedicVenus.degree.toFixed(1)}°` : ''}（インド／サイデリアル）。${astroPhrase(vedicVenus?.sign, 'venus')}。
+**火星（行動・衝突時の反応）：** ${vedicMars?.sign ?? '算出なし'}${vedicMars ? `${vedicMars.degree.toFixed(1)}°` : ''}${vedicMars?.retrograde ? '・逆行' : ''}（インド／サイデリアル）。${astroPhrase(vedicMars?.sign, 'mars')}。逆行は弱さではなく、衝動を内側で検討してから表しやすい配置として読みます。
+**木星（発展・学び）：** ${vedicJupiter?.sign ?? '算出なし'}${vedicJupiter ? `${vedicJupiter.degree.toFixed(1)}°` : ''}（インド／サイデリアル）。${astroPhrase(vedicJupiter?.sign, 'jupiter')}。
+**土星（責任・成熟）：** ${vedicSaturn?.sign ?? '算出なし'}${vedicSaturn ? `${vedicSaturn.degree.toFixed(1)}°` : ''}（インド／サイデリアル）。${astroPhrase(vedicSaturn?.sign, 'saturn')}。
 
 **インド占星術から見る仕事：** ラグナの行動様式、木星の発展方向、土星の成熟課題を合わせ、短期的な職業名よりも、長期的に学びと責任を積み上げられる環境を重視します。
 **インド占星術から見る恋愛：** 金星が求める価値と火星の行動反応に加え、月とナクシャトラが示す安心条件を確認します。強く惹かれるかだけでなく、日常で感情を安全に扱える関係かが重要です。
 
-主要天体：${planetLine(vedic.planets)}
+主要天体：${planetLine(vedic.planets, 'インド／サイデリアル')}
 
 この欄はラーシ（サイン）、ラグナ、月のナクシャトラを表示しています。ダシャーや分割図は、出生地点を市区町村単位で確認してから扱う必要があるため、現在は断定表示していません。`
     : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
-  return `【全占術一致鑑定 — 結論】
-${strongest ? `複数の占術で最も強く一致したのは、**「${consensusLabels[strongest.key].title}」**です。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
-この鑑定書は、四柱推命・算命学・紫微斗数・宿曜・九星気学・数秘術・西洋占星術・インド占星術を比較し、**3種類以上で同じ方向が出た内容だけ**を表示しています。
+  return `【先に読む要約】
+${strongest ? `**結論：${consensusLabels[strongest.key].title}が、この命式の中心テーマです。**` : '**結論：複数の系統に共通する傾向を中心に読みます。**'}
+人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
+注意点：${strongest ? shadowTendencies[strongest.key] : day.caution}。
+今日から試すこと：**${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}**。
+
+【全占術一致鑑定 — 結論】
+${strongest ? `最も強い一致は、**「${consensusLabels[strongest.key].title}」**です。${strongest.lineageCount}系統・${strongest.count}占術で確認しました。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
+この鑑定書は、干支・天体・数理・宿曜という独立系統を比較し、**2系統以上で同じ方向が出た内容を強い一致**として表示しています。同じ系統内の追加一致は0.3票として扱います。
 
 【共通して現れた本質】
 ${traitBlocks}
 
-【2つの占術で重なる補助傾向】
+【補助傾向】
 ${supportingBlocks}
-ここは3占術以上の「強い一致」より確度を一段下げた補足です。ただし、一つの占術だけの解釈より再現性があるため、日常で心当たりがある項目を強い一致と組み合わせて読んでください。
+ここは独立した2系統に届かない項目です。強い一致とは区別し、日常で心当たりがある場合だけ補助線として使ってください。
 
 【この人固有の資質の組み合わせ】
 ${personalizedCore}
@@ -538,16 +582,11 @@ ${personalizedLove}
 【インド占星術 — 個別結果】
 ${vedicDetailBlock}
 
-【運命・人生で果たしやすい役割】
-${destinyBlocks}
-**人生の軸：自分の強みを自分だけの能力で終わらせず、人や社会が使える形にしたときに運命の共通テーマが完成します。**
-
 【仕事の傾向・適した環境】
 ${personalizedWork}
 
 ${workBlocks}
 **働き方：** 目的と評価基準は明確でありながら、進め方には自分の裁量がある環境が向きます。短期的な肩書より、上記の力を日常的に使える仕事内容を選ぶことが重要です。
-**仕事での注意点：**\n${shadowBlocks}
 
 【恋愛・結婚の傾向】
 ${loveBlocks}
@@ -573,12 +612,11 @@ ${personalizedLifeStage}
 ${timingBlocks}
 年の切り替わりは占術ごとに異なります。ここに表示する年は出来事の確定ではなく、二つ以上の時間運で同じ行動テーマが強まりやすい期間です。
 
-【人生への具体的なアドバイス】
-${actionBlocks}
-**迷ったときの順序：** 自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。この順序を守ると、共通して出ている強みを過不足なく使えます。
-
 【この鑑定書に表示していないもの】
-一つの占術だけに現れた特徴、他の占術と方向が一致しない解釈、根拠が2種類以下の内容は、混乱を避けるため表示していません。時期や出来事も、複数の異なる占術で同じテーマを固定計算できる場合を除き断定しません。
+一つの系統だけに現れた特徴、他の系統と方向が一致しない解釈は、強い一致として表示していません。時期や出来事も、複数の異なる系統で同じテーマを固定計算できる場合を除き断定しません。
+
+【迷ったときの順序】
+**自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。**
 
 同じ生年月日・出生時刻・出生地・性別では、毎回同じ結果になります。占術は将来を保証するものではなく、自分の選択肢を整理するための参考情報として利用してください。`
 
@@ -664,7 +702,7 @@ ${ziweiPalaceDetail}
 【鑑定根拠 — 西洋占星術（トロピカル）】
 ${western ? `計算条件は${input.astrology?.method}。ASCは**${western.ascendant.sign}${western.ascendant.degree.toFixed(1)}°**で、第一印象と物事の始め方には「${ASTRO_SIGN[western.ascendant.sign]}」が表れます。
 太陽${westernSun?.sign}は人生で育てる中心意識、月${westernMoon?.sign}は安心を感じる条件です。**太陽は「${ASTRO_SIGN[westernSun?.sign ?? ''] ?? '目的意識'}」、月は「${ASTRO_SIGN[westernMoon?.sign ?? ''] ?? '感情の反応'}」として働きます。**
-${planetLine(western.planets)}
+${planetLine(western.planets, '西洋／トロピカル')}
 主要アスペクト：${western.aspects.join('／') || '設定オーブ内に主要アスペクトなし'}。アスペクトは天体同士の力の使い方を示し、ソフト・ハードだけで吉凶を固定しません。` : input.astrology?.reason ?? '出生条件から算出できません。'}
 
 【鑑定根拠 — インド占星術（ラヒリ・サイデリアル）】
@@ -678,7 +716,7 @@ ${vedic ? `ラヒリ・アヤナーンシャ${vedic.ayanamsha.toFixed(3)}°を�
 **火星（行動・競争）：** ${vedicMars?.sign}${vedicMars?.retrograde ? '・逆行' : ''}の「${ASTRO_SIGN[vedicMars?.sign ?? ''] ?? '行動を起こす力'}」。逆行は力が弱いという意味ではなく、衝動や怒りを内側で検討してから出しやすい配置として扱います。
 **木星（発展・学び）：** ${vedicJupiter?.sign}の「${ASTRO_SIGN[vedicJupiter?.sign ?? ''] ?? '可能性を広げる力'}」。
 **土星（責任・成熟）：** ${vedicSaturn?.sign}の「${ASTRO_SIGN[vedicSaturn?.sign ?? ''] ?? '時間をかけて形にする力'}」。
-${planetLine(vedic.planets)}
+${planetLine(vedic.planets, 'インド／サイデリアル')}
 ここではラーシ（サイン）とナクシャトラを固定計算しています。ダシャーや分割図まで断定する場合は、出生時刻の誤差と出生地点を市区町村単位で確認する必要があります。` : input.astrology?.reason ?? '出生条件から算出できません。'}
 
 【大運 — 10年ごとに変わる人生テーマ】

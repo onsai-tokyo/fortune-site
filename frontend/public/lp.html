@@ -997,6 +997,10 @@
     .report-section-title { margin: 30px 0 12px; padding: 0 0 8px 13px; border-bottom: 1px solid rgba(212,197,160,.7); border-left: 3px solid var(--gold-primary); color: var(--text-main); font-size: 17px; line-height: 1.5; }
     .report-section-title:first-child { margin-top: 0; }
     .report-spacer { height: 14px; }
+    .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
+    .ziwei-late-row { display: none; }
+    .ziwei-table.show-all .ziwei-late-row { display: table-row; }
+    .ziwei-toggle { margin-top: 10px; padding: 8px 12px; border: 1px solid var(--border-gold); border-radius: 6px; background: #fffdf8; color: var(--text-main); cursor: pointer; }
     @media (max-width: 540px) {
       .result-overlay { padding: 8px; }
       .result-dialog { min-height: calc(100vh - 16px); padding: 24px 10px 30px; border-radius: 10px; }
@@ -1643,14 +1647,30 @@
 
   <script>
     const formEl = document.querySelector('form');
+    const fortuneTerms = {
+      '傷官': '四柱推命の通変星。感性、表現、改善意識が表れやすい性質です。',
+      '化忌': '紫微斗数の四化の一つ。執着や課題が集中しやすい領域を示します。',
+      '六合': '十二支どうしが調和し、結びつきやまとまりが生じやすい関係です。',
+      'ナクシャトラ': 'インド占星術で月の位置を27区分したもの。心の反応や習慣を読みます。',
+      'パーダ': '一つのナクシャトラをさらに4分した位置で、表れ方の違いを補足します。',
+      '納音': '干支60組を30種類の自然イメージに分類する補助的な見方です。',
+      '建禄': '十二運の一つ。自立して能力を現実で使いやすい段階を示します。'
+    };
     const renderReport = (value) => {
       const escaped = value
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
-      return escaped
+      const limitedHighlights = escaped.split(/(?=^【.+?】$)/gm).map(section => {
+        let highlights = 0;
+        return section.replace(/\*\*(.+?)\*\*/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
+      }).join('');
+      const withGlossary = limitedHighlights.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
+        const desc = fortuneTerms[term];
+        return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
+      });
+      return withGlossary
         .replace(/^【(.+?)】$/gm, '<h4 class="report-section-title">$1</h4>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n\n/g, '<div class="report-spacer"></div>')
         .replace(/\n/g, '<br>');
     };
@@ -1730,8 +1750,9 @@
           const subordinateHtml = Object.values(subordinateStars).map(item => `
             <td><span>${item.label}</span><strong>${item.star}</strong><small>${item.stage}</small></td>`).join('');
           const ziwei = calcData.ziwei;
-          const ziweiRows = ziwei?.available ? ziwei.palaces.map(palace => `
-            <tr>
+          const ziweiPalaces = ziwei?.available ? [...ziwei.palaces].sort((a, b) => a.name === '命宮' ? -1 : b.name === '命宮' ? 1 : 0) : [];
+          const ziweiRows = ziweiPalaces.map(palace => `
+            <tr class="${(palace.decadal?.range?.[0] || 0) >= 85 ? 'ziwei-late-row' : ''}">
               <th scope="row">${palace.name}${palace.isBodyPalace ? '<small>身宮</small>' : ''}</th>
               <td class="kanshi-cell">${palace.heavenlyStem}${palace.earthlyBranch}</td>
               <td>${palace.majorStars.length ? palace.majorStars.map(star => `<strong>${star.name}</strong><small>${star.brightness || ''}${star.mutagen ? `・化${star.mutagen}` : ''}</small>`).join('<br>') : '主星なし'}</td>
@@ -1769,13 +1790,18 @@
             <section class="fortune-table-section">
               <h4>紫微斗数 十二宮命盤</h4>
               <p class="section-caption">${ziwei?.available ? `${ziwei.lunarDate}・${ziwei.time}（${ziwei.timeRange}）・${ziwei.fiveElementsClass}／命主 ${ziwei.soul}・身主 ${ziwei.body}` : ziwei?.reason || '出生時刻を入力すると表示されます。'}</p>
-              ${ziwei?.available ? `<div class="fortune-table-scroll"><table class="fortune-table ziwei-table"><thead><tr><th>宮</th><th>干支</th><th>主星・四化</th><th>補助星</th><th>大限</th></tr></thead><tbody>${ziweiRows}</tbody></table></div>` : ''}
+              ${ziwei?.available ? `<div class="fortune-table-scroll"><table class="fortune-table ziwei-table"><thead><tr><th>宮</th><th>干支</th><th>主星・四化</th><th>補助星</th><th>大限</th></tr></thead><tbody>${ziweiRows}</tbody></table></div><button type="button" class="ziwei-toggle">すべての大限を見る</button>` : ''}
             </section>
             <div class="divination-summary">${summaryHtml}</div>`;
         } else {
           divinationContent.innerHTML = '<div style="color: red;">占術データの計算に失敗しました</div>';
           throw new Error('占術データの計算に失敗しました');
         }
+        divinationContent.querySelector('.ziwei-toggle')?.addEventListener('click', event => {
+          const table = divinationContent.querySelector('.ziwei-table');
+          const showing = table?.classList.toggle('show-all');
+          event.currentTarget.textContent = showing ? '85歳以降を閉じる' : 'すべての大限を見る';
+        });
 
         const response = await fetch('/api/preview/generate?v=2', {
           method: 'POST',
