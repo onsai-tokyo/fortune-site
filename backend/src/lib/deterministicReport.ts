@@ -327,6 +327,20 @@ export function buildDeterministicReport(input: ReportInput): string {
     exploration: { title: '世界を広げる探究心', summary: '未知の知識や環境に触れ、可能性を広げることで成長します。', work: '研究、海外、教育、IT、メディアなど学び続ける役割', love: '互いの成長や新しい経験を応援できる関係', action: '今月試す新しい経験を一つ選ぶ' },
     practicality: { title: '考えを現実の形にする力', summary: '抽象的な考えを手順・数字・成果物へ落とし込むことで強みが完成します。', work: '実務設計、運営、財務、制作など成果が確認できる役割', love: '気持ちだけでなく、行動と生活設計で信頼を示す関係', action: '次の行動を期限と数値で決める' },
   }
+  const sectionLabels: Record<ConsensusKey, { destiny: string; work: string; love: string; friend: string; shadow: string }> = {
+    initiative: { destiny: 'まだない流れを起こす', work: '企画を立ち上げて最初の形を作る', love: '好意と希望を率直に示す', friend: '新しい体験を一緒に始める', shadow: '先に走りすぎると' },
+    communication: { destiny: '複雑さを翻訳して届ける', work: '企画・編集・説明で価値を作る', love: '言葉で安心を確認する', friend: '会話と知的刺激を共有する', shadow: '情報を扱いすぎると' },
+    insight: { destiny: '見過ごされた原因を見つける', work: '分析と研究で本質を掘る', love: '推測せず本音を確かめる', friend: '少人数で深く理解し合う', shadow: '深読みが過ぎると' },
+    stability: { destiny: '時間を味方にして育てる', work: '運用と改善を継続する', love: '約束と日常を積み重ねる', friend: '長く続く信頼を選ぶ', shadow: '安定を守りすぎると' },
+    independence: { destiny: '自分の基準を作る', work: '裁量と専門性を確保する', love: '自由と距離感を尊重する', friend: '互いの世界を守って付き合う', shadow: '一人で抱えすぎると' },
+    harmony: { destiny: '異なる立場の接点を作る', work: '利害を整理して合意を作る', love: '対等な落とし所を探す', friend: '違いを尊重して場を整える', shadow: '周囲を優先しすぎると' },
+    responsibility: { destiny: '理想を続けられる仕組みにする', work: '完了条件を定めて仕上げる', love: '将来と生活を具体化する', friend: '助ける範囲を決めて支える', shadow: '責任を背負いすぎると' },
+    transformation: { destiny: '古い前提を次の形へ更新する', work: '改革と再設計を担う', love: '変化を話し合って関係を更新する', friend: '転機を支え合う', shadow: '変化を急ぎすぎると' },
+    creativity: { destiny: '内側の感覚を作品へ変える', work: '独自性を企画や表現にする', love: '感性を否定せず刺激し合う', friend: '作品と価値観を共有する', shadow: '完成を求めすぎると' },
+    care: { destiny: '人が育つ環境を整える', work: '支援と育成で力を引き出す', love: '与えるだけでなく頼り合う', friend: '安心できる居場所を作る', shadow: '世話を引き受けすぎると' },
+    exploration: { destiny: '未知を学び可能性を広げる', work: '学びを専門性へ変える', love: '互いの成長と挑戦を応援する', friend: '違う世界から刺激を受ける', shadow: '可能性を広げすぎると' },
+    practicality: { destiny: '抽象を使える方法へ落とす', work: '手順・数字・成果物に変える', love: '行動と生活設計で信頼を示す', friend: '口約束より行動で助け合う', shadow: '効率を優先しすぎると' },
+  }
   const friendTendencies: Record<ConsensusKey, string> = {
     initiative: '一緒に新しいことを始められ、率直に刺激し合える友人を求めます。停滞した関係からは自然に距離ができます。', communication: '会話のテンポと情報交換を重視します。話題が豊富で、考えを言葉にできる相手と友情が続きます。', insight: '広く浅い関係より、本音や背景まで話せる少人数との深い友情を好みます。',
     stability: '頻繁に会わなくても約束を守り、長く付き合える友人を大切にします。', independence: '常に一緒にいる関係より、互いの世界と距離感を尊重できる友情が合います。', harmony: 'グループの空気を読み、対立を調整する役になりやすい一方、我慢のしすぎには注意が必要です。',
@@ -412,12 +426,12 @@ export function buildDeterministicReport(input: ReportInput): string {
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（2占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const workBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${consensusLabels[item.key].work}。${dailyTendencies[item.key]}`).join('\n\n')
-  const loveBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${consensusLabels[item.key].love}。${friendTendencies[item.key]}`).join('\n\n')
-  const actionBlocks = selectedConsensus.map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**\nこの行動は「${consensusLabels[item.key].title}」を長所として使い、${shadowTendencies[item.key]}を防ぐためのものです。`).join('\n\n')
-  const destinyBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${destinyTendencies[item.key]}。${dailyTendencies[item.key]}`).join('\n\n')
-  const friendBlocks = selectedConsensus.map(item => `**${consensusLabels[item.key].title}：** ${friendTendencies[item.key]}`).join('\n\n')
-  const shadowBlocks = selectedConsensus.map(item => `・**${consensusLabels[item.key].title}が過剰になると：** ${shadowTendencies[item.key]}`).join('\n')
+  const workBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].work}：** ${consensusLabels[item.key].work}。`).join('\n\n')
+  const loveBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].love}：** ${consensusLabels[item.key].love}。`).join('\n\n')
+  const actionBlocks = selectedConsensus.map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**\nこの行動は持ち味を現実で使いやすくし、${shadowTendencies[item.key]}を防ぐためのものです。`).join('\n\n')
+  const destinyBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].destiny}：** ${destinyTendencies[item.key]}。`).join('\n\n')
+  const friendBlocks = selectedConsensus.map(item => `**${sectionLabels[item.key].friend}：** ${friendTendencies[item.key]}`).join('\n\n')
+  const shadowBlocks = selectedConsensus.map(item => `・**${sectionLabels[item.key].shadow}：** ${shadowTendencies[item.key]}`).join('\n')
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
     const text = themes.join('、')

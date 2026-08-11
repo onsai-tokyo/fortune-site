@@ -122,6 +122,12 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /インド占星術から見る恋愛/)
   assert.match(report, /四柱推命の年運.+数秘術の個人年/)
   assert.match(report, /\*\*迷ったときの順序：\*\*/)
+  assert.match(report, /企画・編集・説明で価値を作る/)
+  assert.match(report, /言葉で安心を確認する/)
+  assert.match(report, /会話と知的刺激を共有する/)
+  assert.match(report, /複雑さを翻訳して届ける/)
+  assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
+  assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
 })
 
 test('算命学の人体星図は節入り後の日数に応じて二十八元を切り替える', () => {
