@@ -7,6 +7,8 @@ interface ReportInput {
   sukuyo: string
   lifePathNumber: number
   honmeiName: string
+  numerologyProfile?: { birthDayNumber: number; attitudeNumber: number; personalYearNumber: number; personalYear: number }
+  kyuseiProfile?: { yearStar: string; monthStar: string; dayStar: string; timeStar: string | null }
   fourPillars?: Array<{ label: string; kanshi: string; stemTenGod: string; hiddenStems: Array<{ stem: string; tenGod: string }> }>
   elementBalance?: { scores: Record<string, number>; method: string }
   strength?: { label: string; supportRatio: number; favorableElements: string[]; note: string }
@@ -132,10 +134,49 @@ const LIFE_PATH: Record<number, string> = {
   9: '広い視野で人や社会に還元すること', 11: '直感を言葉や創造へ変えること', 22: '大きな構想を現実の仕組みにすること', 33: '包容力を通して人を癒やし育てること',
 }
 
+const SUKUYO_DETAIL: Record<string, string> = {
+  婁: '観察力と実務感覚で、細部を整えながら信頼を築く宿', 胃: '目標へ向かう意欲が強く、現実的な成果を取りにいく宿', 昴: '品位と美意識を備え、人から注目されやすい宿',
+  畢: '粘り強く基盤を守り、時間をかけて完成させる宿', 觜: '言葉と分析に優れ、交渉や説明で力を発揮する宿', 参: '好奇心と行動力が強く、新しい環境を切り開く宿',
+  井: '秩序と公平性を重視し、集団の仕組みを整える宿', 鬼: '感受性と奉仕性が高く、人の気持ちを支える宿', 柳: '情熱と集中力が強く、感情を創造へ変える宿',
+  星: '自尊心と統率力を持ち、自分の役割を堂々と果たす宿', 張: '華やかな表現力と社交性で、人を引きつける宿', 翼: '理想と慎重さを併せ持ち、長期的に信用を育てる宿',
+  軫: '対話と移動によって情報をつなぎ、状況へ柔軟に適応する宿', 角: '独立心と先駆性を持ち、新しい流れを始める宿', 亢: '正義感と責任感が強く、筋道を守ろうとする宿',
+  氐: '逆境への耐久力があり、現実を立て直す力を持つ宿', 房: '愛情と包容力が豊かで、人との縁を育てる宿', 心: '洞察力と魅力を備え、相手の本音や場の機微を読む宿',
+  尾: '一つのことを深く追い、最後までやり抜く宿', 箕: '自由と率直さを重視し、広い世界へ動く宿', 斗: '戦略性と管理力を持ち、先を見て資源を配分する宿',
+  女: '規律と堅実さを大切にし、日常を正確に守る宿', 虚: '精神性と想像力が高く、目に見えない価値を探る宿', 危: '独創性と変化への感度を持ち、既成概念を越える宿',
+  室: '蓄積と保護の力が強く、安心できる領域を築く宿', 壁: '学習と伝承を重視し、知識で人を支える宿', 奎: '美意識と言語感覚に優れ、文化や表現を磨く宿',
+}
+
+const KYUSEI_DETAIL: Record<string, string> = {
+  一白水星: '柔軟性・秘密・人脈。環境に浸透しながら機会をつかむ', 二黒土星: '育成・継続・受容。地道な積み重ねで土台を作る', 三碧木星: '始動・発言・スピード。新しい流れを素早く起こす',
+  四緑木星: '信用・調整・遠方との縁。対話で人と情報をつなぐ', 五黄土星: '中心性・再生・影響力。責任を引き受け状況を動かす', 六白金星: '決断・規律・統率。高い基準で物事を完成へ導く',
+  七赤金星: '会話・喜び・商才。人が集まる場で価値を循環させる', 八白土星: '継承・転換・蓄積。節目で仕組みを作り替える', 九紫火星: '知性・評価・美意識。物事を明らかにして魅力を伝える',
+}
+
+const NUMEROLOGY_DETAIL: Record<number, string> = {
+  1: '主体性と開始', 2: '協調と感受性', 3: '表現と創造性', 4: '秩序と継続', 5: '変化と自由', 6: '愛情と責任', 7: '探究と内省', 8: '成果と経営', 9: '統合と奉仕',
+  11: '直感と啓発', 22: '大きな構想の現実化', 33: '無条件の包容と育成',
+}
+
+const NAYIN_DETAIL: Record<string, string> = {
+  海中金: '海中に眠る金。価値を内側で育て、時機を待って形にする', 炉中火: '炉の火。集中と鍛錬によって素材を変化させる', 大林木: '広い森林。人や企画を育て、長期的な広がりを作る',
+  路旁土: '道を支える土。生活や組織の基盤を実務で整える', 剣鋒金: '刃先の金。判断力を磨き、曖昧さを切り分ける', 山頭火: '山上の火。遠くまで届く目標や理念を掲げる',
+  涧下水: '谷間の水。細い流れから知識や縁をつないでいく', 城頭土: '城壁の土。境界線と責任範囲を守る', 白蜡金: '精製途中の金。経験と技術によって完成度を高める',
+  楊柳木: 'しなやかな柳。環境へ適応しながら折れずに伸びる', 泉中水: '湧き出る泉。内側の知恵や感性を人へ届ける', 屋上土: '屋根を覆う土。人の暮らしや安心を保護する',
+  霹靂火: '雷の火。停滞を一気に破り、状況を転換させる', 松柏木: '常緑の木。逆境でも原則を守り、長く継続する', 長流水: '大きく続く水。情報や経験を絶えず循環させる',
+  砂中金: '砂中の金。多くの選択肢から本当に価値あるものを選ぶ', 山下火: '山麓の火。身近な場を照らし、実用的な熱を届ける', 平地木: '平地に育つ木。協力できる環境で可能性を大きく広げる',
+  壁上土: '壁の土。役割や仕組みを明確にし、場を守る', 金箔金: '薄く輝く金。美意識や見せ方によって価値を高める', 覆燈火: '灯火。小さくても必要な場所を継続して照らす',
+  天河水: '天上の川。大きな発想や理想を現実へ降ろす', 大駅土: '往来を支える土。人と資源が動く拠点を整える', 釵釧金: '装飾の金。洗練と対人感覚で魅力を形にする',
+  桑柘木: '暮らしを支える木。役立つ技能や成果を着実に育てる', 大溪水: '渓谷の大水。変化の中で道を切り開き、流れを作る', 沙中土: '砂の中の土。柔軟に形を変えながら足場を固める',
+  天上火: '天の火。広い視野と影響力で周囲を明るくする', 石榴木: '実を結ぶ木。内に蓄えた力を成果として結実させる', 大海水: '大海の水。多様性を受け入れ、大きな可能性を包む',
+}
+
 export function buildDeterministicReport(input: ReportInput): string {
   const day = DAY_STEM[input.shichuDay[0]] ?? DAY_STEM.甲
   const sanmei = SANMEI[input.sanmeiStar] ?? '資質を着実に活かす力'
   const mission = LIFE_PATH[input.lifePathNumber] ?? LIFE_PATH[1]
+  const sukuyoDetail = SUKUYO_DETAIL[input.sukuyo] ?? '本命宿の性質を、対人関係と行動傾向の補助線として読みます'
+  const nayinDetail = NAYIN_DETAIL[input.nayin] ?? '干支の組み合わせを自然界のイメージへ置き換えた分類です'
+  const honmeiDetail = KYUSEI_DETAIL[input.honmeiName] ?? '社会で繰り返しやすい行動パターンを表します'
   const pillarDetail = input.fourPillars?.map(pillar => {
     const tenGodMeaning = TEN_GOD_DETAIL[pillar.stemTenGod] ?? '命式全体を補う性質'
     return `${pillar.label}${pillar.kanshi}：表に出やすい通変星は${pillar.stemTenGod}（${tenGodMeaning}）。内側には${pillar.hiddenStems.map(item => `${item.stem}の${item.tenGod}`).join('、')}を持ちます。`
@@ -145,7 +186,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     : '算出なし'
   const bodyChartDetail = input.sanmeiChart
     ? Object.entries(input.sanmeiChart.bodyChart).map(([position, item]) =>
-        `${item.label}の${item.star}：${POSITION_MEANING[position] ?? 'この場所での表れ方'}に、${SANMEI_DETAIL[item.star] ?? SANMEI[item.star] ?? '固有の性質'}が現れます。`
+        `${item.label}の${item.star}：${POSITION_MEANING[position] ?? 'この場所での表れ方'}では、${SANMEI_DETAIL[item.star] ?? SANMEI[item.star] ?? '固有の性質が表れます。'}`
       ).join('\n')
     : '算出なし'
   const subordinateDetail = input.sanmeiChart
@@ -260,6 +301,22 @@ ${marriageDetail}
 【年運 — 過去3年とこれから8年】
 ${annualDetail}
 年運は立春前後で切り替わります。仕事・恋愛・結婚の判断は、この傾向だけで決めず、本人の希望、相手との関係、健康、資金、契約など現実条件を優先してください。
+
+【宿曜詳細 — 本命宿の気質と対人傾向】
+あなたの本命宿は**${input.sukuyo}宿**です。${sukuyoDetail}。
+宿曜では本命宿だけで運命を断定せず、相手の宿との距離と関係分類を重ねて相性を見ます。単独鑑定では、${input.sukuyo}宿の長所を発揮できる環境と、感情・行動の偏りを確認するために使います。
+
+【九星気学詳細 — 本命・月命・日命・時命】
+本命星は**${input.kyuseiProfile?.yearStar ?? input.honmeiName}**です。${honmeiDetail}。
+月命星は**${input.kyuseiProfile?.monthStar ?? '算出なし'}**で、内面や若年期に出やすい反応を補足します。日命星は${input.kyuseiProfile?.dayStar ?? '算出なし'}、${input.kyuseiProfile?.timeStar ? `時命星は${input.kyuseiProfile.timeStar}` : '出生時刻不明のため時命星は省略'}です。方位の吉凶は本命星だけで固定せず、移動する年月日の盤と目的地を別途重ねて判断します。
+
+【数秘術詳細 — 運命数・誕生数・態度数・個人年】
+運命数は**${input.lifePathNumber}（${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}）**で、人生全体では${mission}が中心テーマです。
+誕生日の日付から見る誕生数は**${input.numerologyProfile?.birthDayNumber ?? '算出なし'}（${NUMEROLOGY_DETAIL[input.numerologyProfile?.birthDayNumber ?? 0] ?? '生まれ持った得意分野'}）**、月と日から見る態度数は**${input.numerologyProfile?.attitudeNumber ?? '算出なし'}（${NUMEROLOGY_DETAIL[input.numerologyProfile?.attitudeNumber ?? 0] ?? '第一印象と行動の入口'}）**です。${input.numerologyProfile ? `${input.numerologyProfile.personalYear}年の個人年は**${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）**です。` : ''}
+
+【納音詳細 — 干支が示す自然界のイメージ】
+あなたの納音は**${input.nayin}**です。${nayinDetail}。
+納音は日柱の干支を二つ一組で分類する補助的な見方です。四柱推命の旺衰や通変星より優先して吉凶を決めず、**自分の資質をどのような環境で形にしやすいか**をイメージするために使います。
 
 【人生の使命 — 生まれ持ったテーマ】
 数秘術の運命数${input.lifePathNumber}が示す中心テーマは、**${mission}**です。宿曜の${input.sukuyo}宿と算命学の${sanmei}を組み合わせると、培った力を周囲へ渡したときに人生の手応えが強まります。大きな目標ほど、小さく再現できる行動へ分解することが使命を現実へつなぐ方法です。

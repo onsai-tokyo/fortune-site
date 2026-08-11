@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
-import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, calcNumerologyProfile, calcKyuseiProfile, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 
@@ -103,9 +103,11 @@ previewRouter.post('/generate', async (req, res) => {
     const expanded = calcExpandedDivination(shichu)
     const sukuyo = getSukuyo(year, month, day)
     const honmei = calcHonmeiStar(year, month, day)
+    const kyuseiProfile = calcKyuseiProfile(year, month, day, birthHour, birthMinute)
 
     // 運命数の計算（既存ロジック）
     const lifePathNumber = calcLifePathNumber(birthDate)
+    const numerologyProfile = calcNumerologyProfile(year, month, day)
 
     // 初回鑑定は計算結果から固定文を生成する。AI APIは使用せず、同じ入力には同じ結果を返す。
     const timing = calcTimingCycles(year, month, day, birthHour, birthMinute, gender === 'male' ? 'male' : 'female')
@@ -119,7 +121,9 @@ previewRouter.post('/generate', async (req, res) => {
       chusatsu: sanmei.chusatsu,
       sukuyo,
       lifePathNumber,
+      numerologyProfile,
       honmeiName: KYUSEI_NAMES[honmei],
+      kyuseiProfile,
       timing,
       sanmeiRelations,
       ziwei,

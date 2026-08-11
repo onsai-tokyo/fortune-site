@@ -348,6 +348,24 @@ export function calcLifePathNumber(birthDate: string): number {
   return sum
 }
 
+function reduceNumerology(value: number, keepMaster = true): number {
+  let result = value
+  while (result > 9 && !(keepMaster && [11, 22, 33].includes(result))) {
+    result = String(result).split('').reduce((sum, digit) => sum + Number(digit), 0)
+  }
+  return result
+}
+
+export function calcNumerologyProfile(year: number, month: number, day: number, targetYear = new Date().getFullYear()) {
+  const yearDigitSum = String(targetYear).split('').reduce((sum, digit) => sum + Number(digit), 0)
+  return {
+    birthDayNumber: reduceNumerology(day),
+    attitudeNumber: reduceNumerology(month + day),
+    personalYearNumber: reduceNumerology(month + day + yearDigitSum, false),
+    personalYear: targetYear,
+  }
+}
+
 // ===== 宿曜計算（フロントと同一の正確な計算） =====
 function newMoonJDE(k: number): number {
   const T = k / 1236.85
@@ -456,6 +474,21 @@ export function calcHonmeiStar(birthYear: number, birthMonth: number, birthDay: 
   return ((1999 - year) % 9 + 9) % 9 + 1
 }
 
+function nineStarName(star: any): string {
+  const color = ({ 绿: '緑', 黑: '黒' } as Record<string, string>)[star.getColor()] ?? star.getColor()
+  return `${star.getNumber()}${color}${star.getWuXing()}星`
+}
+
+export function calcKyuseiProfile(year: number, month: number, day: number, hour?: number, minute = 0) {
+  const lunar: any = Solar.fromYmdHms(year, month, day, hour ?? 12, minute, 0).getLunar()
+  return {
+    yearStar: nineStarName(lunar.getYearNineStar(2)),
+    monthStar: nineStarName(lunar.getMonthNineStar(2)),
+    dayStar: nineStarName(lunar.getDayNineStar()),
+    timeStar: hour === undefined ? null : nineStarName(lunar.getTimeNineStar()),
+  }
+}
+
 // ===== エンドポイント =====
 calcRouter.post('/divination', (req, res) => {
   try {
@@ -482,8 +515,10 @@ calcRouter.post('/divination', (req, res) => {
     const sukuyo = getSukuyo(year, month, day)
 
     const lifePathNumber = calcLifePathNumber(birthDate)
+    const numerologyProfile = calcNumerologyProfile(year, month, day)
 
     const honmei = calcHonmeiStar(year, month, day)
+    const kyuseiProfile = calcKyuseiProfile(year, month, day, birthHour, birthMinute)
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
 
@@ -497,7 +532,9 @@ calcRouter.post('/divination', (req, res) => {
       chusatsu: sanmei.chusatsu,
       sukuyo,
       lifePathNumber,
+      numerologyProfile,
       honmeiName: KYUSEI_NAMES[honmei],
+      kyuseiProfile,
       birthplace: birthplace || null,
       sanmeiRelations,
       ziwei,

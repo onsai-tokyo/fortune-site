@@ -8,6 +8,8 @@ import {
   calcExpandedDivination,
   calcSanmeiRelations,
   calcTimingCycles,
+  calcNumerologyProfile,
+  calcKyuseiProfile,
   calcTenGod,
   calcShichu,
   getSukuyo,
@@ -89,14 +91,16 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
     chusatsu: sanmei.chusatsu,
     sukuyo: getSukuyo(1995, 2, 20),
     lifePathNumber: calcLifePathNumber('1995-02-20'),
+    numerologyProfile: calcNumerologyProfile(1995, 2, 20, 2026),
     honmeiName: '五黄土星',
+    kyuseiProfile: calcKyuseiProfile(1995, 2, 20, 5, 40),
     timing: calcTimingCycles(1995, 2, 20, 5, 40, 'female'),
     sanmeiRelations: calcSanmeiRelations(shichu, sanmei.chusatsu),
     ziwei,
     ...expanded,
   })
 
-  for (const heading of ['算命学詳細', '紫微斗数', '仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来', '大運', '婚期の候補', '年運']) {
+  for (const heading of ['算命学詳細', '紫微斗数', '仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来', '大運', '婚期の候補', '年運', '宿曜詳細', '九星気学詳細', '数秘術詳細', '納音詳細']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /西方（右手）の司禄星/)
@@ -106,6 +110,10 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   assert.match(report, /2027年（31〜32歳）丁未/)
   assert.match(report, /命主は\*\*巨門\*\*、身主は\*\*天機\*\*/)
   assert.match(report, /\*\*夫妻（乙酉）：\*\* 天機/)
+  assert.match(report, /本命宿は\*\*心宿\*\*/)
+  assert.match(report, /月命星は\*\*二黒土星\*\*/)
+  assert.match(report, /2026年の個人年は\*\*5（変化と自由）\*\*/)
+  assert.match(report, /納音は\*\*楊柳木\*\*/)
 })
 
 test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () => {
@@ -141,4 +149,13 @@ test('算命学の位相法と天中殺の作用点を算出する', () => {
   assert.deepEqual(details.voidBranches, ['申', '酉'])
   assert.deepEqual(details.affectedPillars, [])
   assert.deepEqual(details.relations, [{ pillars: '年支・月支', branches: '亥寅', relation: '六合', meaning: '異なる領域が結びつき、協力や縁としてまとまりやすい' }])
+})
+
+test('数秘術の複数指標と九星の年月日時盤を固定値で再現する', () => {
+  assert.deepEqual(calcNumerologyProfile(1995, 2, 20, 2026), {
+    birthDayNumber: 2, attitudeNumber: 22, personalYearNumber: 5, personalYear: 2026,
+  })
+  assert.deepEqual(calcKyuseiProfile(1995, 2, 20, 5, 40), {
+    yearStar: '五黄土星', monthStar: '二黒土星', dayStar: '七赤金星', timeStar: '四緑木星',
+  })
 })

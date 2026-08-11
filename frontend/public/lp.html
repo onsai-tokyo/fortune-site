@@ -1682,7 +1682,10 @@
             '補う五行の目安': calcData.strength?.favorableElements?.join('・') || '算出なし',
             '宿曜': calcData.sukuyo,
             '数秘術（運命数）': calcData.lifePathNumber,
-            '九星気学（本命星）': calcData.honmeiName
+            '数秘術（誕生数・態度数）': calcData.numerologyProfile ? `${calcData.numerologyProfile.birthDayNumber}・${calcData.numerologyProfile.attitudeNumber}` : '算出なし',
+            '数秘術（今年の個人年）': calcData.numerologyProfile ? `${calcData.numerologyProfile.personalYearNumber}` : '算出なし',
+            '九星気学（本命星）': calcData.kyuseiProfile?.yearStar || calcData.honmeiName,
+            '九星気学（月命・日命）': calcData.kyuseiProfile ? `${calcData.kyuseiProfile.monthStar}・${calcData.kyuseiProfile.dayStar}` : '算出なし'
           };
           const summaryHtml = Object.entries(divinationData).map(([key, val]) =>
             `<div class="divination-summary-item"><strong>${key}</strong><span>${val}</span></div>`
