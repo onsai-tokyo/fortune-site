@@ -3,7 +3,7 @@
     { "source": "/api/:path*", "destination": "https://fortune-site-iuzo.onrender.com/api/:path*" },
     { "source": "/health", "destination": "https://fortune-site-iuzo.onrender.com/health" },
     { "source": "/lp", "destination": "/lp.html" },
-    { "source": "/(.+)", "destination": "/index.html" }
+    { "source": "/(.+)", "destination": "/app.html" }
   ],
   "headers": [
     { "source": "/auth", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },

@@ -175,6 +175,7 @@ if (!fs.existsSync(lpPath) || !fs.existsSync(indexPath) || !fs.existsSync(topPag
 }
 
 const appTemplate = fs.readFileSync(indexPath, 'utf-8');
+fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate);
 for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, route));
 for (const guide of guides) writePage(guide.path, staticHtml(guide));
 for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
