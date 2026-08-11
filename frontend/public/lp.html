@@ -1814,7 +1814,7 @@
           event.currentTarget.textContent = showing ? '85歳以降を閉じる' : 'すべての大限を見る';
         });
 
-        const response = await fetch('/api/preview/generate?v=2', {
+        const response = await fetch('/api/preview/generate?v=3', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1829,11 +1829,7 @@
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
         let fullContent = '';
-        let streamBuffer = '';
-
         const consumeSseLine = (line) => {
           if (!line.startsWith('data: ')) return;
           const jsonStr = line.slice(6);
@@ -1842,20 +1838,11 @@
           if (obj.delta && obj.delta.text) fullContent += obj.delta.text;
         };
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          streamBuffer += decoder.decode(value, { stream: true });
-          let newlineIndex;
-          while ((newlineIndex = streamBuffer.indexOf('\n')) >= 0) {
-            const line = streamBuffer.slice(0, newlineIndex).replace(/\r$/, '');
-            streamBuffer = streamBuffer.slice(newlineIndex + 1);
-            consumeSseLine(line);
-          }
-          resultContent.innerHTML = renderReport(fullContent);
-        }
-        streamBuffer += decoder.decode();
-        if (streamBuffer.trim()) consumeSseLine(streamBuffer.replace(/\r$/, ''));
+        // 固定鑑定は小さなレスポンスなので、完了後に一括処理する。
+        // SafariでReadableStreamの終了通知が止まり「鑑定中」のままになる事象を避ける。
+        const responseText = await response.text();
+        responseText.split(/\r?\n/).forEach(consumeSseLine);
+        if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
         if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
       } catch (err) {
