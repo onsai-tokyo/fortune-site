@@ -1795,30 +1795,31 @@
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullContent = '';
+        let streamBuffer = '';
+
+        const consumeSseLine = (line) => {
+          if (!line.startsWith('data: ')) return;
+          const jsonStr = line.slice(6);
+          if (!jsonStr.trim() || jsonStr === '[DONE]') return;
+          const obj = JSON.parse(jsonStr);
+          if (obj.delta && obj.delta.text) fullContent += obj.delta.text;
+        };
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6);
-              if (jsonStr === '[DONE]') continue;
-              if (jsonStr.trim()) {
-                try {
-                  const obj = JSON.parse(jsonStr);
-                  if (obj.delta && obj.delta.text) {
-                    fullContent += obj.delta.text;
-                  }
-                } catch (e) {
-                  console.error('Parse error:', e);
-                }
-              }
-            }
+          streamBuffer += decoder.decode(value, { stream: true });
+          let newlineIndex;
+          while ((newlineIndex = streamBuffer.indexOf('\n')) >= 0) {
+            const line = streamBuffer.slice(0, newlineIndex).replace(/\r$/, '');
+            streamBuffer = streamBuffer.slice(newlineIndex + 1);
+            consumeSseLine(line);
           }
           resultContent.innerHTML = renderReport(fullContent);
         }
+        streamBuffer += decoder.decode();
+        if (streamBuffer.trim()) consumeSseLine(streamBuffer.replace(/\r$/, ''));
+        resultContent.innerHTML = renderReport(fullContent);
         if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
       } catch (err) {
         resultContent.textContent = '通信が混み合っています。少し時間をおいて、もう一度お試しください。';
