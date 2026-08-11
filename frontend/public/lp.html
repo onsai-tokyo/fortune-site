@@ -998,9 +998,7 @@
     .report-section-title:first-child { margin-top: 0; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
-    .data-summary { color: var(--gold-dark); font-weight: 700; cursor: pointer; }
-    .data-summary { list-style-position: inside; font-family: serif; font-size: 17px; }
-    #divination-data[open] .data-summary { margin-bottom: 18px; }
+    .data-summary { margin: 0 0 18px; color: var(--gold-dark); font-family: serif; font-size: 17px; font-weight: 700; }
     .ziwei-late-row { display: none; }
     .ziwei-table.show-all .ziwei-late-row { display: table-row; }
     .ziwei-toggle { margin-top: 10px; padding: 8px 12px; border: 1px solid var(--border-gold); border-radius: 6px; background: #fffdf8; color: var(--text-main); cursor: pointer; }
@@ -1618,10 +1616,10 @@
       </header>
 
       <!-- 占術データ表示：鑑定文とは分離した根拠レイヤー -->
-      <details id="divination-data" class="result-card">
-        <summary class="data-summary">命式・計算データ（根拠）</summary>
+      <div id="divination-data" class="result-card">
+        <h3 class="data-summary">命式・計算データ（根拠）</h3>
         <div id="divination-content" class="divination-content"></div>
-      </details>
+      </div>
 
       <!-- 固定ルールによる統合鑑定文 -->
       <div class="result-card">
