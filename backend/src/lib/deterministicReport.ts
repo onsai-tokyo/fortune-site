@@ -327,6 +327,22 @@ export function buildDeterministicReport(input: ReportInput): string {
     exploration: { title: '世界を広げる探究心', summary: '未知の知識や環境に触れ、可能性を広げることで成長します。', work: '研究、海外、教育、IT、メディアなど学び続ける役割', love: '互いの成長や新しい経験を応援できる関係', action: '今月試す新しい経験を一つ選ぶ' },
     practicality: { title: '考えを現実の形にする力', summary: '抽象的な考えを手順・数字・成果物へ落とし込むことで強みが完成します。', work: '実務設計、運営、財務、制作など成果が確認できる役割', love: '気持ちだけでなく、行動と生活設計で信頼を示す関係', action: '次の行動を期限と数値で決める' },
   }
+  const friendTendencies: Record<ConsensusKey, string> = {
+    initiative: '一緒に新しいことを始められ、率直に刺激し合える友人を求めます。停滞した関係からは自然に距離ができます。', communication: '会話のテンポと情報交換を重視します。話題が豊富で、考えを言葉にできる相手と友情が続きます。', insight: '広く浅い関係より、本音や背景まで話せる少人数との深い友情を好みます。',
+    stability: '頻繁に会わなくても約束を守り、長く付き合える友人を大切にします。', independence: '常に一緒にいる関係より、互いの世界と距離感を尊重できる友情が合います。', harmony: 'グループの空気を読み、対立を調整する役になりやすい一方、我慢のしすぎには注意が必要です。',
+    responsibility: '頼られると力を貸しますが、友人の問題まで背負わない境界線が必要です。', transformation: '人生の転換期に現れる友人から大きな影響を受けます。古い関係を無理に維持する必要はありません。', creativity: '感性や作品、独自の価値観を共有できる友人との交流が活力になります。',
+    care: '相談を受ける側になりやすく、安心できる居場所を作ります。自分から助けを求めることも友情の一部です。', exploration: '異なる業界・地域・文化の友人が視野を広げます。学びを共有できる関係が長続きします。', practicality: '口約束より、行動で助け合える現実的な友情を信頼します。',
+  }
+  const shadowTendencies: Record<ConsensusKey, string> = {
+    initiative: '結論や開始を急ぎ、周囲の準備を待てなくなること', communication: '情報を増やしすぎて、本当に伝えるべき結論がぼやけること', insight: '相手の気持ちを読みすぎ、確認前に答えを決めてしまうこと', stability: '慣れた方法を守るため、必要な変化まで遅らせること',
+    independence: '一人で抱え込み、助けを求める時期が遅くなること', harmony: '関係を壊さないために、自分の希望を後回しにすること', responsibility: '自分の担当範囲を越えて責任を背負うこと', transformation: '変えること自体が目的になり、残す価値まで切ってしまうこと',
+    creativity: '理想の完成形を求め、途中段階を外へ出せなくなること', care: '与えることに偏り、疲れや不満へ気づくのが遅れること', exploration: '可能性を広げすぎ、ひとつを完成させる前に次へ移ること', practicality: '正解や効率を重視しすぎ、感情の処理を後回しにすること',
+  }
+  const destinyTendencies: Record<ConsensusKey, string> = {
+    initiative: 'まだ形のないものに最初の動きを与えること', communication: '複雑なものを理解し、人へ届く言葉に翻訳すること', insight: '見過ごされている原因や本音を見つけ、理解へ導くこと', stability: '人・技術・信頼を時間をかけて育てること',
+    independence: '既存の型に合わせるだけでなく、自分の基準を作ること', harmony: '違う立場の人をつなぎ、双方が続けられる関係を作ること', responsibility: '理想を責任ある仕組みや成果へ変えること', transformation: '終わった仕組みを見直し、次に必要な形へ再構築すること',
+    creativity: '内側の感覚や理想を、他者が触れられる表現へ変えること', care: '人が安心して育つ環境を整えること', exploration: '未知の世界を学び、得た知識を次の可能性へつなぐこと', practicality: '抽象的な考えを、実際に使える方法と成果へ落とし込むこと',
+  }
   const signals = new Map<ConsensusKey, Set<string>>()
   const addSignals = (source: string, keys: ConsensusKey[]) => keys.forEach(key => {
     if (!signals.has(key)) signals.set(key, new Set())
@@ -378,6 +394,37 @@ export function buildDeterministicReport(input: ReportInput): string {
   const workBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].work}`).join('\n')
   const loveBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].love}`).join('\n')
   const actionBlocks = selectedConsensus.slice(0, 3).map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**`).join('\n')
+  const destinyBlocks = selectedConsensus.slice(0, 3).map(item => `・${destinyTendencies[item.key]}`).join('\n')
+  const friendBlocks = selectedConsensus.slice(0, 3).map(item => `・${friendTendencies[item.key]}`).join('\n')
+  const shadowBlocks = selectedConsensus.slice(0, 3).map(item => `・${shadowTendencies[item.key]}`).join('\n')
+  const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
+  const annualSignals = (themes: string[]) => {
+    const text = themes.join('、')
+    const keys: ConsensusKey[] = []
+    if (/発信|創作|挑戦/.test(text)) keys.push('communication', 'creativity', 'initiative')
+    if (/成果|収入|現実/.test(text)) keys.push('practicality', 'responsibility')
+    if (/責任|肩書|正式/.test(text)) keys.push('responsibility', 'stability')
+    if (/学び|資格|支援/.test(text)) keys.push('exploration', 'insight')
+    if (/自立|仲間|活動範囲|組み替え/.test(text)) keys.push('independence', 'transformation')
+    if (/縁|まとまり/.test(text)) keys.push('harmony', 'stability')
+    return [...new Set(keys)]
+  }
+  const basePersonalYear = input.numerologyProfile?.personalYearNumber
+  const basePersonalYearCalendar = input.numerologyProfile?.personalYear ?? currentYear
+  const timingBlocks = (input.timing?.annual ?? [])
+    .filter(item => item.year >= currentYear && item.year <= currentYear + 7)
+    .map(item => {
+      const personalYear = basePersonalYear ? ((basePersonalYear - 1 + item.year - basePersonalYearCalendar) % 9 + 9) % 9 + 1 : null
+      const shared = personalYear ? annualSignals(item.themes).filter(key => personalYearSignals[personalYear]?.includes(key)) : []
+      if (!personalYear || !shared.length) return null
+      const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
+      const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+        ? ` 恋愛・結婚では${item.relationshipSignals.join('、')}が重なります。`
+        : ''
+      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n四柱推命の年運「${item.themes.join('、')}」と数秘術の個人年${personalYear}が同じ方向を示します。${relationship}`
+    })
+    .filter((item): item is string => Boolean(item))
+    .join('\n\n') || '今後7年間では、二つの時間運が明確に同じテーマを示す年はありません。出来事を無理に断定せず、生活上の変化を優先して判断してください。'
 
   return `【全占術一致鑑定 — 結論】
 ${strongest ? `複数の占術で最も強く一致したのは、**「${consensusLabels[strongest.key].title}」**です。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
@@ -386,16 +433,32 @@ ${strongest ? `複数の占術で最も強く一致したのは、**「${consens
 【共通して現れた本質】
 ${traitBlocks}
 
-【仕事で共通して活かせること】
+【運命・人生で果たしやすい役割】
+${destinyBlocks}
+**人生の軸：自分の強みを自分だけの能力で終わらせず、人や社会が使える形にしたときに運命の共通テーマが完成します。**
+
+【仕事の傾向・適した環境】
 ${workBlocks}
-**結論：肩書ではなく、上記の力を日常的に使える仕事内容を選ぶことが重要です。**
+**働き方：** 目的と評価基準は明確でありながら、進め方には自分の裁量がある環境が向きます。短期的な肩書より、上記の力を日常的に使える仕事内容を選ぶことが重要です。
+**仕事での注意点：**\n${shadowBlocks}
 
-【恋愛・結婚で共通して大切なこと】
+【恋愛・結婚の傾向】
 ${loveBlocks}
-**結論：強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。**
+**惹かれやすさ：** 会話や価値観に刺激がありながら、約束や生活面では信頼できる相手を求めます。
+**長続きの条件：** 気持ちを推測だけで決めず、連絡頻度、金銭感覚、仕事への理解、一人の時間を具体的に話せること。
+**注意点：** 強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。
 
-【今から行うこと】
+【友人・人間関係の傾向】
+${friendBlocks}
+**人間関係の結論：人数の多さより、互いの違いと境界線を尊重しながら、言葉と行動の両方で信頼を示せる関係が合います。**
+
+【複数の時間運が重なる年】
+${timingBlocks}
+年の切り替わりは占術ごとに異なります。ここに表示する年は出来事の確定ではなく、二つ以上の時間運で同じ行動テーマが強まりやすい期間です。
+
+【人生への具体的なアドバイス】
 ${actionBlocks}
+**迷ったときの順序：** 自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。この順序を守ると、共通して出ている強みを過不足なく使えます。
 
 【この鑑定書に表示していないもの】
 一つの占術だけに現れた特徴、他の占術と方向が一致しない解釈、根拠が2種類以下の内容は、混乱を避けるため表示していません。時期や出来事も、複数の異なる占術で同じテーマを固定計算できる場合を除き断定しません。

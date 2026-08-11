@@ -103,7 +103,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     ...expanded,
   })
 
-  for (const heading of ['全占術一致鑑定 — 結論', '共通して現れた本質', '仕事で共通して活かせること', '恋愛・結婚で共通して大切なこと', '今から行うこと', 'この鑑定書に表示していないもの']) {
+  for (const heading of ['全占術一致鑑定 — 結論', '共通して現れた本質', '運命・人生で果たしやすい役割', '仕事の傾向・適した環境', '恋愛・結婚の傾向', '友人・人間関係の傾向', '複数の時間運が重なる年', '人生への具体的なアドバイス', 'この鑑定書に表示していないもの']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /3種類以上で同じ方向が出た内容だけ/)
@@ -111,6 +111,8 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /【鑑定根拠/)
   assert.doesNotMatch(report, /【四柱推命詳細/)
   assert.doesNotMatch(report, /【インド占星術/)
+  assert.match(report, /四柱推命の年運.+数秘術の個人年/)
+  assert.match(report, /\*\*迷ったときの順序：\*\*/)
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {
