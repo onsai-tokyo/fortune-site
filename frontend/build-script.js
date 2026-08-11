@@ -7,6 +7,7 @@ const UPDATED = '2026-08-11';
 const distDir = path.join(process.cwd(), 'dist');
 const lpPath = path.join(distDir, 'lp.html');
 const indexPath = path.join(distDir, 'index.html');
+const topPagePath = path.join(process.cwd(), 'public', 'index.html');
 
 const appRoutes = [
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
@@ -77,11 +78,46 @@ const guides = [
     description: '四柱推命と西洋占星術の計算方法、得意な見方、結果が異なる理由を初心者向けに解説します。',
     body: `<p>四柱推命は生年月日時を干支と節気の暦へ置き換え、西洋占星術は出生時の太陽・月・惑星の位置を円形のチャートに表します。前提となる体系が違うため、同じ人物を別の言葉で説明します。</p><h2>四柱推命が見るもの</h2><p>日干を中心に、季節、五行、陰陽、干支同士の関係を読みます。10年単位の大運など、時間の流れを段階的に捉える仕組みがあります。</p><h2>西洋占星術が見るもの</h2><p>惑星がどの星座やハウスにあるか、惑星同士がどの角度を作るかを見ます。出生時間が分かると、上昇星座やハウスを詳しく確認できます。</p><h2>統合する際の注意</h2><p>異なる体系を無理に一対一対応させず、独立して計算したうえで、複数の結果に共通する行動傾向を抽出することが大切です。</p>`
   },
+  {
+    path: 'guides/ziwei-doushu', title: '紫微斗数とは？十二宮と主星から命盤を読む基本',
+    description: '紫微斗数の命宮・官禄宮・夫妻宮など十二宮、主星、出生時間が重要になる理由を解説します。',
+    body: `<p>紫微斗数は、生年月日と出生時刻から十二の宮を配置し、紫微星をはじめとする星の組み合わせで人生の領域ごとの傾向を整理する東洋占術です。</p><h2>十二宮が表す領域</h2><p>本人の性質を見る命宮、仕事を見る官禄宮、対人関係を見る交友宮、パートナーシップを見る夫妻宮など、宮ごとに観察するテーマが異なります。ひとつの星だけで結論を出さず、宮・主星・補助星の組み合わせを確認します。</p><h2>出生時刻が必要な理由</h2><p>出生時刻によって命宮などの配置が変わるため、時刻が不明な場合に確定命盤を表示することはできません。Fate Labでは推測時刻による命盤を確定結果として扱いません。</p><h2>統合鑑定での役割</h2><p>十二宮から得た領域別の傾向を、四柱推命や西洋占星術など独立した計算結果と照合し、共通点がある場合に鑑定文へ反映します。</p>`
+  },
+  {
+    path: 'guides/vedic-astrology', title: 'インド占星術とは？西洋占星術との違いと出生図の見方',
+    description: 'インド占星術の恒星黄道、ラグナ、ナクシャトラと、西洋占星術との計算上の違いを解説します。',
+    body: `<p>インド占星術（ジョーティッシュ）は、惑星と星座の位置から性質や時期を読む体系です。一般に恒星黄道を採用するため、回帰黄道を使う西洋占星術とは同じ出生条件でも星座位置が異なることがあります。</p><h2>ラグナと月の役割</h2><p>出生時刻と場所から算出するラグナは、本人の表れ方や人生全体を見る基準です。月の位置やナクシャトラも心理傾向や時期判断の重要な手がかりになります。</p><h2>結果が違って見える理由</h2><p>黄道の基準、ハウスやアスペクトの扱い、重視する天体が異なるため、西洋占星術と結果を単純に一致させることはできません。Fate Labでは両方を独立計算します。</p><h2>使う際の注意</h2><p>流派によってアヤナーンシャなどの設定が異なります。計算条件を明示し、異なる方式の結果を混同しないことが重要です。</p>`
+  },
+  {
+    path: 'guides/kyusei-kigaku', title: '九星気学とは？本命星・月命星と節入りの基本',
+    description: '九星気学の本命星と月命星、立春で年が切り替わる考え方、吉方位を見る際の注意点を解説します。',
+    body: `<p>九星気学は、生年月日を一白水星から九紫火星までの九星へ対応させ、性質や方位、時間の巡りを考える体系です。</p><h2>1月1日では切り替わらない</h2><p>本命星の年は一般に立春を境に切り替えます。そのため1月から立春前に生まれた人は、暦年だけで計算すると異なる星になる場合があります。月命星も節入りを基準にします。</p><h2>本命星と月命星</h2><p>本命星は大きな性質、月命星は内面や若年期の傾向を見る手がかりとされます。実際の判断では盤の巡りや他の条件も合わせます。</p><h2>方位結果の注意点</h2><p>引越しや旅行は距離・期間・出発日などでも条件が変わります。安全、費用、生活条件を優先し、方位だけで重要な移動を決めないでください。</p>`
+  },
+  {
+    path: 'guides/numerology', title: '数秘術とは？ライフパスナンバーの計算と読み方',
+    description: '生年月日からライフパスナンバーを計算する方法と、11・22・33のマスターナンバーの扱いを解説します。',
+    body: `<p>数秘術は、生年月日や名前を数へ置き換えて性質やテーマを整理する方法です。Fate Labでは生年月日の数字を合計するライフパスを主要指標のひとつとして扱います。</p><h2>計算例</h2><p>1995年2月20日なら、1＋9＋9＋5＋2＋2＋0＝28、2＋8＝10、1＋0＝1となります。方式によって途中のまとめ方が異なるため、比較するときは計算規則を揃える必要があります。</p><h2>マスターナンバー</h2><p>11・22・33を一桁へ縮約せず残す方式があります。Fate Labもこの規則を採用しますが、通常数より優れているという意味ではありません。</p><h2>単独で断定しない</h2><p>同じ数字でも環境や経験で表れ方は変わります。他の占術との共通点を確認し、自己理解の仮説として利用してください。</p>`
+  },
+  {
+    path: 'guides/sukuyo', title: '宿曜占星術とは？二十七宿と相性の基本',
+    description: '月の位置を基にした二十七宿、命宿、相性関係の基本と、暦による違いを解説します。',
+    body: `<p>宿曜占星術は、月の運行と二十七宿を基に性質や人間関係を整理する占術です。生まれた日の宿である命宿を入口にします。</p><h2>二十七宿と暦</h2><p>宿の算出は旧暦との対応を含み、採用する暦や方式によって境界日の結果が異なる場合があります。サイト間で結果を比較するときは計算基準を確認してください。</p><h2>相性は関係の型を見る</h2><p>栄親・友衰・安壊などの関係は、二人の関係に出やすい動きを表す分類です。良い・悪いの一語で人間関係を決めるものではありません。</p><h2>Fate Labでの扱い</h2><p>宿曜単独の評価は行わず、四柱推命や数秘術などから得た対人傾向と照合して、共通する特徴をまとめます。</p>`
+  },
+  {
+    path: 'guides/sanmeigaku', title: '算命学とは？陰陽五行と天中殺の読み方',
+    description: '算命学で使われる陰陽五行、十大主星、十二大従星、天中殺を読む際の基本姿勢を解説します。',
+    body: `<p>算命学は、生年月日を干支へ置き換え、陰陽五行の関係から性質や環境との関わりを考える体系です。四柱推命と共通する素材を使いますが、解釈体系は同一ではありません。</p><h2>星は役割を整理する記号</h2><p>十大主星は行動や才能の方向、十二大従星はエネルギーの質を表す手がかりとされます。星名の印象だけで吉凶を決めず、配置と全体の関係を見ます。</p><h2>天中殺を怖がらない</h2><p>天中殺は一定の周期を示す概念であり、必ず不幸が起きる期間ではありません。大きな決断では現実の条件と専門家の助言を優先してください。</p><h2>四柱推命との統合</h2><p>同じ干支を使う結果を重複票として数えすぎないよう、Fate Labでは近い体系同士の関連性を考慮して文章化します。</p>`
+  },
+  {
+    path: 'guides/nayin', title: '納音とは？六十干支を30種類に分類する見方',
+    description: '納音が六十干支を海中金・炉中火など30種類の象意へ分類する仕組みと活用上の注意を解説します。',
+    body: `<p>納音は、六十干支を二つずつ組にして30種類の象意へ対応させる考え方です。海中金、炉中火、大林木など、自然物にたとえた名称が使われます。</p><h2>日干や五行とは別の分類</h2><p>納音の名称に含まれる木・火・土・金・水は、命式全体の五行バランスをそのまま示すものではありません。異なる分類を混同しないことが大切です。</p><h2>象意の使い方</h2><p>自然物のイメージを、性質を考える補助線として使います。一つの納音だけで職業、結婚、健康などを断定することはできません。</p><h2>統合時の位置づけ</h2><p>Fate Labでは納音を補助的な情報として扱い、独立性の高い複数占術で同様の傾向が確認できた場合に説明へ加えます。</p>`
+  },
 ];
 
 const infoPages = [
-  { path: 'about', title: 'Fate Labについて', description: 'Fate Labの目的、提供する無料統合占い、運営方針についてご案内します。', body: `<p>Fate Lab（フェイトラボ）は、生年月日・出生時刻・出生地から複数の占術を計算し、自己理解の材料を提供するオンラインサービスです。</p><h2>提供するもの</h2><p>東洋・西洋・インドの9つの占術を独立して計算し、複数の体系で共通して現れた本質・仕事・恋愛などの傾向を統合鑑定書として表示します。</p><h2>大切にしていること</h2><p>同じ入力条件には同じ結果を返すこと、計算できない項目を推測で埋めないこと、結果を人生の断定ではなく対話の出発点として提示することを大切にしています。</p><h2>運営</h2><p>Fate Lab運営事務局が企画・開発・運営しています。お問い合わせは<a href="/contact">お問い合わせページ</a>をご覧ください。</p>` },
-  { path: 'methodology', title: '鑑定ロジックと計算方針', description: 'Fate Labが複数占術を計算・統合する方法、再現性、出生時間が不明な場合の扱いを説明します。', body: `<p>Fate Labは、入力された生年月日・出生時刻・出生地・性別から各占術を個別に計算し、定めた解釈ルールで結果を統合します。</p><h2>独立計算</h2><p>四柱推命、算命学、納音、宿曜、九星気学、数秘術、紫微斗数、西洋占星術、インド占星術を、それぞれの前提に沿って計算します。異なる体系の記号を無理に同一視しません。</p><h2>一致する傾向を優先</h2><p>3種類以上の占術で共通して現れる行動傾向を中心に鑑定書へ反映します。単独の結果は補足として扱い、強い断定を避けます。</p><h2>不明情報の扱い</h2><p>出生時間が不明な場合、時柱、ハウスなど時刻に依存する項目を省略します。推測した時刻を確定情報として使用しません。</p><h2>限界</h2><p>占術は科学的な性格検査や医療診断ではありません。結果はエンターテインメントおよび自己理解を目的とし、重要な意思決定の唯一の根拠にはできません。</p>` },
+  { path: 'about', title: 'Fate Labについて', description: 'Fate Labの目的、提供する無料統合占い、運営会社と運営方針についてご案内します。', body: `<p>Fate Lab（フェイトラボ）は、生年月日・出生時刻・出生地から複数の占術を計算し、自己理解の材料を提供するオンラインサービスです。</p><h2>提供するもの</h2><p>東洋・西洋・インドの9つの占術を独立して計算し、複数の体系で共通して現れた本質・仕事・恋愛などの傾向を統合鑑定書として表示します。</p><h2>大切にしていること</h2><p>同じ入力条件には同じ結果を返すこと、計算できない項目を推測で埋めないこと、結果を人生の断定ではなく対話の出発点として提示することを大切にしています。</p><h2>運営会社</h2><p>Fate Labは温齋株式会社が企画・開発・運営し、Fate Lab編集部が解説コンテンツの制作と計算仕様の確認を行っています。運営情報は<a href="/tokushohou">特定商取引法に基づく表記</a>、ご連絡は<a href="/contact">お問い合わせページ</a>をご覧ください。</p>` },
+  { path: 'methodology', title: '鑑定ロジックと計算方針', description: 'Fate Labが9つの占術を計算・統合する方法、境界日の検証、再現性、出生時間が不明な場合の扱いを説明します。', body: `<p>Fate Labは、入力された生年月日・出生時刻・出生地・性別から各占術を個別に計算し、定めた解釈ルールで結果を統合します。</p><h2>独立計算</h2><p>四柱推命、算命学、納音、宿曜、九星気学、数秘術、紫微斗数、西洋占星術、インド占星術を、それぞれの前提に沿って計算します。異なる体系の記号を無理に同一視しません。</p><h2>境界条件と再現テスト</h2><p>立春の直前と直後における年柱・月柱の切り替え、出生時刻がある場合だけ返す時柱、11・22・33を保持する数秘術、代表日の宿曜・納音・九星を固定テストで検証します。1995年2月20日5時40分など基準となる出生条件では、詳細命式、西洋・インド占星術の天体位置、紫微斗数十二宮まで同じ結果を再現できることを確認しています。</p><h2>一致する傾向を優先</h2><p>3種類以上の占術で共通して現れる行動傾向を中心に鑑定書へ反映します。ただし四柱推命と算命学のように素材を共有する体系は、完全に独立した証拠として過大評価しません。単独の結果は補足として扱い、強い断定を避けます。</p><h2>不明情報の扱い</h2><p>出生時間が不明な場合、時柱、ハウス、紫微斗数命盤など時刻に依存する項目を省略します。推測した時刻を確定情報として使用しません。</p><h2>限界</h2><p>占術は科学的な性格検査や医療診断ではありません。結果はエンターテインメントおよび自己理解を目的とし、重要な意思決定の唯一の根拠にはできません。</p>` },
   { path: 'editorial-policy', title: 'コンテンツ制作方針', description: 'Fate Labの占い解説記事、計算根拠、更新、表現、免責に関する制作方針です。', body: `<p>Fate Labは、読者が占術の前提と限界を理解し、結果を安全に活用できるコンテンツを目指します。</p><h2>制作原則</h2><p>計算方法と解釈を区別し、複数の流派がある事項は一つを絶対視しません。恐怖をあおる表現、健康・投資・法律上の結果を保証する表現を使用しません。</p><h2>更新と訂正</h2><p>計算仕様や解説を変更した場合は内容を見直し、記事の更新日を表示します。誤りのご連絡は<a href="/contact">お問い合わせページ</a>から受け付けます。</p><h2>AIの扱い</h2><p>初回の統合鑑定書は各占術の計算結果と固定ルールから生成します。記事や結果は、最終的に利用者自身が経験や客観情報と照合できる表現にします。</p>` },
   { path: 'contact', title: 'お問い合わせ', description: 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。', body: `<p>サービスに関するご質問、表示内容の訂正、個人情報に関するご相談は、下記窓口へご連絡ください。</p><h2>メール窓口</h2><p><a href="mailto:support@fate-lab.com">support@fate-lab.com</a></p><p>お問い合わせの際は、対象ページのURLと状況をお書きください。パスワード、クレジットカード番号などの機密情報は送信しないでください。</p><h2>返信について</h2><p>内容を確認のうえ順次返信します。営業・勧誘、鑑定結果の個別解釈、緊急性の高い医療・法律相談には対応できません。</p>` },
 ];
@@ -107,21 +143,23 @@ function appPageHtml(template, route) {
     .replace(/<meta property="og:url" content="[^"]*"\s*\/>/, `<meta property="og:url" content="${canonical}" />`);
 }
 
-const sharedStyle = `body{margin:0;background:#faf7ef;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;line-height:1.9}header,main,footer{max-width:820px;margin:auto;padding:20px 24px}header{border-bottom:1px solid #d4c5a0}a{color:#72500f}h1{font-size:clamp(28px,6vw,42px);line-height:1.4;margin:44px 0 20px}h2{font-size:24px;margin-top:44px;border-left:4px solid #c9a961;padding-left:14px}p{margin:18px 0}nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}.breadcrumb{font-size:13px;color:#685f55;margin-top:24px}.cta{display:block;margin:48px 0 24px;padding:18px;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;border-radius:6px}.related{padding:20px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:8px}.related a{display:block;margin:8px 0}footer{margin-top:48px;border-top:1px solid #d4c5a0;font-size:13px;color:#5f564c}`;
+const sharedStyle = `body{margin:0;background:#faf7ef;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;line-height:1.9}header,main,footer{max-width:820px;margin:auto;padding:20px 24px}header{border-bottom:1px solid #d4c5a0}a{color:#72500f;text-underline-offset:3px}h1{font-size:clamp(28px,6vw,42px);line-height:1.4;margin:44px 0 20px}h2{font-size:24px;margin-top:44px;border-left:4px solid #c9a961;padding-left:14px}p{margin:18px 0}nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}.breadcrumb{font-size:13px;color:#685f55;margin-top:24px}.meta{font-size:13px;color:#685f55;border-block:1px solid #e2d8c4;padding:12px 0}.cta{display:block;margin:48px 0 24px;padding:18px;text-align:center;background:#1a1a1a;color:#fff;text-decoration:none;border-radius:6px}.author,.sources,.related{margin-top:34px;padding:20px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:8px}.author p,.sources p{margin:8px 0}.sources ul{margin:8px 0;padding-left:22px}.related a{display:block;margin:8px 0}footer{margin-top:48px;border-top:1px solid #d4c5a0;font-size:13px;color:#5f564c}@media(max-width:560px){header,main,footer{padding-inline:18px}h2{font-size:21px}}`;
 const nav = `<nav><a href="/">Fate Lab</a><a href="/guides/">占い解説</a><a href="/methodology">鑑定ロジック</a><a href="/about">運営情報</a></nav>`;
 const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
+const analytics = `<script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 function staticHtml(page, type = 'Article') {
   const canonical = `${SITE_URL}/${page.path}`;
   const title = `${page.title}｜${SITE_NAME}`;
   const schema = {
     '@context': 'https://schema.org', '@graph': [
-      { '@type': type, headline: page.title, name: page.title, description: page.description, inLanguage: 'ja', mainEntityOfPage: canonical, datePublished: '2026-08-10', dateModified: UPDATED, author: { '@type': 'Organization', name: SITE_NAME, url: `${SITE_URL}/` }, publisher: { '@type': 'Organization', name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png` } }, image: `${SITE_URL}/og-fate-lab.png` },
-      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: page.title, item: canonical }] }
+      { '@type': type, headline: page.title, name: page.title, description: page.description, inLanguage: 'ja', mainEntityOfPage: canonical, datePublished: '2026-08-10', dateModified: UPDATED, author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
+      { '@type': 'BreadcrumbList', itemListElement: type === 'Article' ? [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: '占い解説', item: `${SITE_URL}/guides/` }, { '@type': 'ListItem', position: 3, name: page.title, item: canonical }] : [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: page.title, item: canonical }] }
     ]
   };
   const related = guides.filter(g => g.path !== page.path).slice(0, 4).map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/og-fate-lab.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/og-fate-lab.png"><style>${sharedStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body><header>${nav}</header><main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1><p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="/#form">生年月日を入力して無料で鑑定する</a><p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
+  const editorial = type === 'Article' ? `<div class="meta">公開日：2026-08-10　更新日：${UPDATED}</div><aside class="author"><strong>執筆・検証：Fate Lab編集部</strong><p>温齋株式会社が運営するFate Labの計算仕様と検証用固定データを基に制作しています。複数流派がある事項は断定を避け、計算方法と解釈を区別します。</p><a href="/editorial-policy">コンテンツ制作・検証方針</a>　<a href="/methodology">鑑定ロジック</a></aside><aside class="sources"><strong>参考情報と検証方針</strong><ul><li>各占術の暦・天体・干支計算は、公開された暦法と実装ライブラリの固定テストで検証</li><li>境界日や出生時間の有無で結果が変わる条件を明示</li><li>占術は科学的診断ではなく、自己理解の参考情報として提供</li></ul></aside>` : '';
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#faf7ef"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/og-fate-lab.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/og-fate-lab.png">${analytics}<style>${sharedStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body><header>${nav}</header><main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1><p>${escapeHtml(page.description)}</p>${editorial}${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="/#form">生年月日を入力して無料で鑑定する</a><p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
 }
 
 function guideIndexHtml() {
@@ -131,8 +169,8 @@ function guideIndexHtml() {
   return staticHtml(page, 'CollectionPage');
 }
 
-if (!fs.existsSync(lpPath) || !fs.existsSync(indexPath)) {
-  console.error('Build output is missing index.html or lp.html');
+if (!fs.existsSync(lpPath) || !fs.existsSync(indexPath) || !fs.existsSync(topPagePath)) {
+  console.error('Build output or top page source is missing');
   process.exit(1);
 }
 
@@ -141,5 +179,5 @@ for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, ro
 for (const guide of guides) writePage(guide.path, staticHtml(guide));
 for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
 writePage('guides', guideIndexHtml());
-fs.copyFileSync(lpPath, indexPath);
+fs.copyFileSync(topPagePath, indexPath);
 console.log(`Generated SEO HTML for /, ${appRoutes.length} app routes, ${guides.length} guides, and ${infoPages.length} information pages`);

@@ -1,0 +1,10 @@
+{
+  "name": "Fate Lab（フェイトラボ）",
+  "short_name": "Fate Lab",
+  "description": "東洋・西洋・インドの9つの占術による無料統合占い",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7ef",
+  "theme_color": "#faf7ef",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

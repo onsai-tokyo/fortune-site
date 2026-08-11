@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#faf7ef">
   <title>無料の生年月日占い｜9つの占術による統合鑑定｜Fate Lab</title>
   <meta name="description" content="生年月日・出生時刻・出生地から、四柱推命、紫微斗数、西洋占星術、インド占星術など9つの占術を統合。性格・才能・適職・恋愛・人生の転機を無料・登録不要で鑑定します。">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
@@ -1544,6 +1547,7 @@
     const formEl = document.querySelector('form');
     formEl.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (typeof gtag === 'function') gtag('event', 'fortune_form_submit', { form_name: 'top_fortune' });
 
       const year = formEl.querySelector('select').value;
       const month = formEl.querySelectorAll('select')[1].value;
@@ -1648,6 +1652,7 @@
           // テキストボックス内で最下部にスクロール
           resultContent.parentElement.scrollTop = resultContent.parentElement.scrollHeight;
         }
+        if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
       } catch (err) {
         alert('エラーが発生しました: ' + err.message);
       }

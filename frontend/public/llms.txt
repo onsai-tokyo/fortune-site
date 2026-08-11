@@ -13,6 +13,13 @@
 - [日干とは](https://fate-lab.com/guides/day-master): 十干と本人の本質の見方を説明します。
 - [五行バランス](https://fate-lab.com/guides/five-elements): 木・火・土・金・水の読み方を説明します。
 - [出生時間が不明な場合](https://fate-lab.com/guides/unknown-birth-time): 時刻が必要な項目と省略される項目を説明します。
+- [紫微斗数](https://fate-lab.com/guides/ziwei-doushu): 十二宮と出生時刻の重要性を説明します。
+- [インド占星術](https://fate-lab.com/guides/vedic-astrology): 恒星黄道と西洋占星術との違いを説明します。
+- [九星気学](https://fate-lab.com/guides/kyusei-kigaku): 本命星、月命星、節入りを説明します。
+- [数秘術](https://fate-lab.com/guides/numerology): ライフパスとマスターナンバーを説明します。
+- [宿曜占星術](https://fate-lab.com/guides/sukuyo): 二十七宿と相性関係を説明します。
+- [算命学](https://fate-lab.com/guides/sanmeigaku): 陰陽五行と天中殺を説明します。
+- [納音](https://fate-lab.com/guides/nayin): 六十干支を30種類に分類する見方を説明します。
 
 ## サービスについて
 
