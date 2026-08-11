@@ -78,3 +78,134 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(59, 130, 246, 0.7);
 }
+
+/* Ivory theme shared by every React route. The static landing page uses the same palette. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: #faf7ef !important;
+  color: #28231d !important;
+  background-image:
+    radial-gradient(ellipse 85% 55% at 50% -8%, rgba(201, 169, 97, 0.14) 0%, transparent 62%),
+    linear-gradient(180deg, #fffdf8 0%, #faf7ef 48%, #f5efe3 100%) !important;
+}
+
+.bg-deep-navy,
+.bg-navy {
+  background-color: #faf7ef !important;
+}
+
+.bg-deep-navy\/60,
+.bg-deep-navy\/50,
+.bg-navy-light {
+  background-color: #f3ecdf !important;
+}
+
+.glass-card,
+.glass-card-hover {
+  background: rgba(255, 253, 248, 0.92) !important;
+  border-color: rgba(155, 130, 77, 0.24) !important;
+  box-shadow: 0 12px 36px rgba(83, 65, 36, 0.07);
+}
+
+.glass-card-hover:hover {
+  background: #fffdf8 !important;
+  border-color: rgba(155, 130, 77, 0.42) !important;
+}
+
+.bg-white\/3,
+.bg-white\/5,
+.bg-white\/8,
+.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.bg-white\/20,
+.bg-white\/30 {
+  background-color: rgba(223, 211, 187, 0.72) !important;
+}
+
+.text-white,
+.text-white\/90,
+.text-white\/85,
+.text-white\/80 {
+  color: #28231d !important;
+}
+
+.text-white\/70,
+.text-white\/65,
+.text-white\/60 {
+  color: #51483d !important;
+}
+
+.text-white\/55,
+.text-white\/50,
+.text-white\/45,
+.text-white\/40 {
+  color: #73695c !important;
+}
+
+.text-white\/35,
+.text-white\/30,
+.text-white\/25,
+.text-white\/20,
+.text-white\/15 {
+  color: #968a79 !important;
+}
+
+.border-white\/5,
+.border-white\/8,
+.border-white\/10,
+.border-white\/15,
+.border-white\/20,
+.border-white\/25,
+.border-white\/30,
+.border-navy-light {
+  border-color: rgba(155, 130, 77, 0.25) !important;
+}
+
+input,
+select,
+textarea {
+  background-color: #fffdf8 !important;
+  color: #28231d !important;
+  border-color: rgba(155, 130, 77, 0.34) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #a09687 !important;
+}
+
+option {
+  background: #fffdf8;
+  color: #28231d;
+}
+
+[style*="rgba(8,15,40"],
+[style*="rgba(6,11,28"],
+[style*="#060b1c"] {
+  background: rgba(250, 247, 239, 0.96) !important;
+}
+
+.bg-accent.text-white,
+.bg-accent-dark.text-white,
+.bg-blue-500.text-white,
+.bg-purple-500.text-white,
+.bg-emerald-500.text-white,
+.bg-green-500.text-white,
+.bg-red-500.text-white,
+button.bg-accent,
+button.bg-accent-dark {
+  color: #ffffff !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #efe7d8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(155, 130, 77, 0.5);
+}
