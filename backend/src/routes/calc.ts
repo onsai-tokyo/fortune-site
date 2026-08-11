@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { calcAstrology } from '../lib/astrology.js'
 import { Solar } from 'lunar-javascript'
 import { calcZiwei } from '../lib/ziwei.js'
 
@@ -521,6 +522,7 @@ calcRouter.post('/divination', (req, res) => {
     const kyuseiProfile = calcKyuseiProfile(year, month, day, birthHour, birthMinute)
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
+    const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
 
     res.json({
       shichuYear: shichu.year.kanshi,
@@ -538,6 +540,7 @@ calcRouter.post('/divination', (req, res) => {
       birthplace: birthplace || null,
       sanmeiRelations,
       ziwei,
+      astrology,
       ...expanded,
     })
   } catch (err) {

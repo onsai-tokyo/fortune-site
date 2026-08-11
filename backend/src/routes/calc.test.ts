@@ -16,6 +16,7 @@ import {
 } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
+import { calcAstrology } from '../lib/astrology.js'
 
 test('立春の直前までは前年・前月の干支を使う', () => {
   const result = calcShichu(2024, 2, 4, 17, 27)
@@ -83,6 +84,7 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   const expanded = calcExpandedDivination(shichu)
   const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
   const ziwei = calcZiwei(1995, 2, 20, 5, 'female', '東京都')
+  const astrology = calcAstrology(1995, 2, 20, 5, 40, '東京都')
   const report = buildDeterministicReport({
     age: 31,
     shichuDay: shichu.day.kanshi,
@@ -97,10 +99,11 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
     timing: calcTimingCycles(1995, 2, 20, 5, 40, 'female'),
     sanmeiRelations: calcSanmeiRelations(shichu, sanmei.chusatsu),
     ziwei,
+    astrology,
     ...expanded,
   })
 
-  for (const heading of ['全占術統合鑑定 — 総合結論', '全占術統合鑑定 — 思考', '全占術統合鑑定 — 才能', '全占術統合鑑定 — 恋愛', '全占術統合鑑定 — 家族', '全占術統合鑑定 — 心身', '全占術統合鑑定 — 過去', '全占術統合鑑定 — 開運', '鑑定根拠 — 四柱推命', '鑑定根拠 — 算命学', '鑑定根拠 — 紫微斗数', '大運', '婚期の候補', '年運', '宿曜詳細', '九星気学詳細', '数秘術詳細', '納音詳細']) {
+  for (const heading of ['全占術統合鑑定 — 総合結論', '全占術統合鑑定 — 思考', '全占術統合鑑定 — 才能', '全占術統合鑑定 — 恋愛', '全占術統合鑑定 — 家族', '全占術統合鑑定 — 心身', '全占術統合鑑定 — 過去', '全占術統合鑑定 — 開運', '鑑定根拠 — 四柱推命', '鑑定根拠 — 算命学', '鑑定根拠 — 紫微斗数', '鑑定根拠 — 西洋占星術', '鑑定根拠 — インド占星術', '大運', '婚期の候補', '年運', '宿曜詳細', '九星気学詳細', '数秘術詳細', '納音詳細']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /算命学の西方司禄星/)
@@ -121,6 +124,16 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   assert.match(report, /疾厄宮は武曲・天府/)
   assert.match(report, /父母宮七殺、田宅宮廉貞/)
   assert.match(report, /夫妻宮天機（化祿）・巨門/)
+  assert.match(report, /西洋占星術では太陽魚座・月天秤座/)
+  assert.match(report, /ナクシャトラは\*\*/)
+})
+
+test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {
+  const astrology = calcAstrology(1995, 2, 20, 5, 40, '東京都')
+  assert.equal(astrology.available, true)
+  assert.equal(astrology.western?.planets.find(planet => planet.name === '太陽')?.sign, '魚座')
+  assert.equal(astrology.vedic?.planets.find(planet => planet.name === '太陽')?.sign, '水瓶座')
+  assert.ok(astrology.vedic?.moonNakshatra)
 })
 
 test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () => {

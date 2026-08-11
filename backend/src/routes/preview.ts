@@ -4,6 +4,7 @@ import { verifyPaidToken } from './payment.js'
 import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, calcNumerologyProfile, calcKyuseiProfile, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
+import { calcAstrology } from '../lib/astrology.js'
 
 export const previewRouter = Router()
 
@@ -113,6 +114,7 @@ previewRouter.post('/generate', async (req, res) => {
     const timing = calcTimingCycles(year, month, day, birthHour, birthMinute, gender === 'male' ? 'male' : 'female')
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
+    const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
     const deterministicReport = buildDeterministicReport({
       age,
       shichuDay: shichu.day.kanshi,
@@ -127,6 +129,7 @@ previewRouter.post('/generate', async (req, res) => {
       timing,
       sanmeiRelations,
       ziwei,
+      astrology,
       ...expanded,
     })
 

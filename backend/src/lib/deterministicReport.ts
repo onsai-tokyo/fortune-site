@@ -48,6 +48,23 @@ interface ReportInput {
       decadal: { range: number[]; heavenlyStem: string; earthlyBranch: string }
     }>
   }
+  astrology?: {
+    available: boolean
+    reason?: string
+    method: string
+    western?: {
+      ascendant: { sign: string; degree: number }
+      planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
+      aspects: string[]
+    }
+    vedic?: {
+      ayanamsha: number
+      ascendant: { sign: string; degree: number }
+      planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
+      moonNakshatra: string
+      moonPada: number
+    }
+  }
 }
 
 const DAY_STEM: Record<string, { core: string; strength: string; caution: string; work: string; love: string }> = {
@@ -67,6 +84,12 @@ const SANMEI: Record<string, string> = {
   貫索星: '自立心と一貫性', 石門星: '協調性と人脈形成', 鳳閣星: '自然体の表現力', 調舒星: '鋭い感性と独創性',
   禄存星: '人を引きつける奉仕性', 司禄星: '蓄積と生活設計', 車騎星: '即断即決の行動力', 牽牛星: '責任感と役割意識',
   龍高星: '未知を学ぶ改革性', 玉堂星: '知識を受け継ぎ伝える力',
+}
+
+const ASTRO_SIGN: Record<string, string> = {
+  牡羊座: '自分から始め、率直に切り開く力', 牡牛座: '感覚と現実性を大切にし、価値を育てる力', 双子座: '情報を集め、言葉でつなぐ力', 蟹座: '身近な人を守り、安心できる場を作る力',
+  獅子座: '創造性と誇りを表現し、周囲を照らす力', 乙女座: '細部を整え、役に立つ形へ改善する力', 天秤座: '複数の立場を調整し、美しい均衡を作る力', 蠍座: '一つの対象を深く掘り、根本から変える力',
+  射手座: '視野を広げ、意味や可能性を探究する力', 山羊座: '目標を現実の仕組みへ変え、責任を果たす力', 水瓶座: '既存の枠を越え、独自の仕組みを考える力', 魚座: '境界を越えて感じ取り、想像力で包み込む力',
 }
 
 const SANMEI_DETAIL: Record<string, string> = {
@@ -260,11 +283,25 @@ export function buildDeterministicReport(input: ReportInput): string {
     currentAnnual ? `${currentYear}年${currentAnnual.kanshi}・${currentAnnual.tenGod}（${currentAnnual.themes.join('、')}）` : '',
     input.numerologyProfile ? `個人年${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）` : '',
   ].filter(Boolean).join('、')
+  const western = input.astrology?.western
+  const vedic = input.astrology?.vedic
+  const westernPlanet = (name: string) => western?.planets.find(planet => planet.name === name)
+  const vedicPlanet = (name: string) => vedic?.planets.find(planet => planet.name === name)
+  const planetLine = (planets: NonNullable<typeof western>['planets']) => planets.map(planet =>
+    `${planet.name}：${planet.sign}${planet.degree.toFixed(1)}°${planet.retrograde ? '（逆行）' : ''}`
+  ).join('／')
+  const westernSun = westernPlanet('太陽')
+  const westernMoon = westernPlanet('月')
+  const westernVenus = westernPlanet('金星')
+  const westernMars = westernPlanet('火星')
+  const vedicSun = vedicPlanet('太陽')
+  const vedicMoon = vedicPlanet('月')
 
   return `【全占術統合鑑定 — 総合結論】
 四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
 これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
 **最大の強みは${day.strength}。注意点は${day.caution}です。** 外から期待される役割と自分が守りたい感覚を分け、判断の理由を短く言葉にすると、持ち味が安定して発揮されます。
+${western && vedic ? `西洋占星術では太陽${westernSun?.sign}・月${westernMoon?.sign}・ASC${western.ascendant.sign}、インド占星術では太陽${vedicSun?.sign}・月${vedicMoon?.sign}・ラグナ${vedic.ascendant.sign}です。**東洋の命式が示す資質に、太陽の目的意識、月の感情反応、ASC／ラグナの外への見せ方を重ねて総合判断しています。**` : ''}
 
 【全占術統合鑑定 — 思考・感情・行動・対人】
 **思考：** 算命学の北方${northStar}は「${SANMEI[northStar] ?? '自分なりの視点'}」を示し、日主${input.shichuDay[0]}の${day.core}と重なります。情報を広く集めてから本質を選び取る一方、選択肢が増えるほど結論が遅れやすいため、判断期限と基準を先に決めると力を活かせます。
@@ -282,6 +319,7 @@ export function buildDeterministicReport(input: ReportInput): string {
 
 【全占術統合鑑定 — 恋愛・結婚・パートナーシップ】
 算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${input.sukuyo}宿は、相手の本音や場の機微を読む対人感覚を加えます。
+${westernVenus && westernMars ? `西洋占星術では、金星${westernVenus.sign}が「好み・受け取る愛情」、火星${westernMars.sign}が「欲求・自分から動く方法」を示します。金星の${ASTRO_SIGN[westernVenus.sign]}と火星の${ASTRO_SIGN[westernMars.sign]}を両立できる関係が自然です。` : ''}
 **恋愛・結婚の総合結論は、安心できる日常と互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を具体的に話すほど長続きします。婚期候補は確定日ではなく、出会い・進展・見直しが起こりやすい期間として活用してください。
 **惹かれやすい相手：** 会話が成立し、考えを更新でき、約束を行動で守る人。夫妻宮${couplePalaceStars}から、知性・企画力・言葉の相性が関係の入口になりやすい傾向です。
 **愛情表現：** 西方${westStar}の性質から、派手な演出より、連絡・生活・気遣いを継続することで愛情を示します。相手にも同じ表現を無意識に求めすぎないことが大切です。
@@ -334,6 +372,18 @@ ${sanmeiRelationDetail}
 ${input.ziwei?.available ? `出生地${input.ziwei.birthplace}、${input.ziwei.standardTimeNote}。旧暦は${input.ziwei.lunarDate}、出生時辰は${input.ziwei.time}（${input.ziwei.timeRange}）、${input.ziwei.fiveElementsClass}です。命主は**${input.ziwei.soul}**、身主は**${input.ziwei.body}**。命宮は${input.ziwei.earthlyBranchOfSoulPalace}、身宮は${input.ziwei.earthlyBranchOfBodyPalace}にあります。` : ''}
 ${ziweiPalaceDetail}
 紫微斗数は一つの星だけで吉凶を断定せず、本宮・対宮・三方四正、四化、大限を重ねて読みます。ここでは命盤を固定計算し、各宮の主要テーマを表示しています。
+
+【鑑定根拠 — 西洋占星術（トロピカル）】
+${western ? `計算条件は${input.astrology?.method}。ASCは**${western.ascendant.sign}${western.ascendant.degree.toFixed(1)}°**で、第一印象と物事の始め方には「${ASTRO_SIGN[western.ascendant.sign]}」が表れます。
+太陽${westernSun?.sign}は人生で育てる中心意識、月${westernMoon?.sign}は安心を感じる条件です。**太陽は「${ASTRO_SIGN[westernSun?.sign ?? ''] ?? '目的意識'}」、月は「${ASTRO_SIGN[westernMoon?.sign ?? ''] ?? '感情の反応'}」として働きます。**
+${planetLine(western.planets)}
+主要アスペクト：${western.aspects.join('／') || '設定オーブ内に主要アスペクトなし'}。アスペクトは天体同士の力の使い方を示し、ソフト・ハードだけで吉凶を固定しません。` : input.astrology?.reason ?? '出生条件から算出できません。'}
+
+【鑑定根拠 — インド占星術（ラヒリ・サイデリアル）】
+${vedic ? `ラヒリ・アヤナーンシャ${vedic.ayanamsha.toFixed(3)}°を使用。ラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**、月は**${vedicMoon?.sign}**、太陽は**${vedicSun?.sign}**です。
+月のナクシャトラは**${vedic.moonNakshatra}第${vedic.moonPada}パーダ**。心の反応、習慣、縁の感じ方を読む中心指標として扱います。
+${planetLine(vedic.planets)}
+ここではラーシ（サイン）とナクシャトラを固定計算しています。ダシャーや分割図まで断定する場合は、出生時刻の誤差と出生地点を市区町村単位で確認する必要があります。` : input.astrology?.reason ?? '出生条件から算出できません。'}
 
 【大運 — 10年ごとに変わる人生テーマ】
 起運日は${input.timing?.startDate ?? '算出なし'}、運行は${input.timing?.direction ?? '算出なし'}です。大運は出来事そのものではなく、その10年間で使いやすくなる役割やテーマを表します。
