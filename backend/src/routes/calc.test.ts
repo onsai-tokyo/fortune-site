@@ -110,6 +110,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
   assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
   assert.match(report, /向いているのは、目的・担当範囲・完了条件がはっきりした役割/)
+  assert.match(report, /鑑定タイプ FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
   assert.match(report, /年は2系統で同じ方向が出ています/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)

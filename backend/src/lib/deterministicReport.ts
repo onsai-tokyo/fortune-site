@@ -537,6 +537,22 @@ export function buildDeterministicReport(input: ReportInput): string {
   // 以下は入力ごとの実データを交差させ、テンプレートだけでは出ない個人差を文章化する層。
   const centerStarDetail = SANMEI_DETAIL[input.sanmeiStar] ?? sanmei
   const centerStarLabel = SANMEI[input.sanmeiStar] ?? input.sanmeiStar
+  // 10（生来の判断軸）× 10（内面の表現傾向）× 10（五行5種×運用2種）= 1000タイプ。
+  // 番号は入力から一意に決まり、文章のランダム化には使わない。
+  const dayStemOrder = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+  const centerStarOrder = ['貫索星', '石門星', '鳳閣星', '調舒星', '禄存星', '司禄星', '車騎星', '牽牛星', '龍高星', '玉堂星']
+  const elementOrder = ['木', '火', '土', '金', '水']
+  const dayStemIndex = Math.max(0, dayStemOrder.indexOf(input.shichuDay[0]))
+  const centerStarIndex = Math.max(0, centerStarOrder.indexOf(input.sanmeiStar))
+  const elementIndex = Math.max(0, elementOrder.indexOf(strongestElement))
+  const activeElementUse = (input.strength?.supportRatio ?? 50) >= 50
+  const elementModeIndex = elementIndex * 2 + (activeElementUse ? 0 : 1)
+  const profileNumber = dayStemIndex * 100 + centerStarIndex * 10 + elementModeIndex + 1
+  const profileCode = `FL-${String(profileNumber).padStart(4, '0')}`
+  const elementModeLabel = activeElementUse
+    ? `${strongestElement}の性質を前面に使う`
+    : `${strongestElement}の性質を土台として整える`
+  const profileTitle = `${day.core} × ${centerStarLabel} × ${elementModeLabel}型`
   const westStarDetail = LOVE_STYLE[westStar] ?? SANMEI_DETAIL[westStar] ?? sanmei
   const eastStarDetail = WORK_STYLE[eastStar] ?? SANMEI_DETAIL[eastStar] ?? sanmei
   const northStarDetail = SANMEI_DETAIL[northStar] ?? sanmei
@@ -556,7 +572,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `生来の判断軸は「${day.core}」、内面の核は「${centerStarLabel}」です。広い視野で選択肢を捉えながらも、最後は自分の言葉として無理なく表現できるかを確かめます。さらに「${lifeNumberDetail}」という人生課題が重なるため、知ったことを自分の中だけに置かず、誰かが使える形まで整えたときに個性が完成します。`
+  const personalizedCore = `鑑定タイプ ${profileCode}「${profileTitle}」。生来の判断軸は「${day.core}」、内面の核は「${centerStarLabel}」です。広い視野で選択肢を捉えながらも、最後は自分の言葉として無理なく表現できるかを確かめます。さらに「${lifeNumberDetail}」という人生課題が重なるため、知ったことを自分の中だけに置かず、誰かが使える形まで整えたときに個性が完成します。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
