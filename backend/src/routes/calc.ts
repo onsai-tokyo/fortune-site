@@ -56,17 +56,22 @@ function makePillar(stemIdx: number, branchIdx: number) {
 
 export function calcShichu(year: number, month: number, day: number, hour?: number, minute = 0) {
   const localHour = hour ?? 12
-  const localLunar = Solar.fromYmdHms(year, month, day, localHour, minute, 0).getLunar()
+  const localSolar = Solar.fromYmdHms(year, month, day, localHour, minute, 0)
+  const localLunar = localSolar.getLunar()
   const localEightChar = localLunar.getEightChar()
   const cst = toChineseStandardTime(year, month, day, localHour, minute)
-  const solarTermLunar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0).getLunar()
+  const solarTermSolar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0)
+  const solarTermLunar = solarTermSolar.getLunar()
+  // Runtime API has exact solar-term helpers that are missing from the bundled type declaration.
+  const prevJie = (solarTermLunar as any).getPrevJie(false).getSolar()
+  const jieDays = Math.max(0, Math.floor((solarTermSolar as any).getJulianDay() - prevJie.getJulianDay()))
 
   const yearPillar = pillarFromKanshi(solarTermLunar.getYearInGanZhiExact())
   const monthPillar = pillarFromKanshi(solarTermLunar.getMonthInGanZhiExact())
   const dayPillar = pillarFromKanshi(localEightChar.getDay())
   const hourPillar = hour === undefined ? null : pillarFromKanshi(localEightChar.getTime())
 
-  return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar }
+  return { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar, jieDays }
 }
 
 // ===== 四柱推命・算命学 詳細計算 =====
@@ -75,6 +80,28 @@ const HIDDEN_STEMS = [
   [9], [5, 9, 7], [0, 2, 4], [1], [4, 1, 9], [2, 4, 6],
   [3, 5], [5, 3, 1], [6, 8, 4], [7], [4, 7, 3], [8, 0],
 ]
+
+// 算命学の陽占では、地支から採る蔵干（二十八元）を節入り後の日数で切り替える。
+// 日数は節入り瞬間を0日目として扱う。配列は [終了日, 天干index]（最後はInfinity）。
+const TWENTY_EIGHT_ELEMENTS: Array<Array<[number, number]>> = [
+  [[Infinity, 9]],                         // 子: 癸
+  [[9, 9], [12, 7], [Infinity, 5]],       // 丑: 癸→辛→己
+  [[7, 4], [14, 2], [Infinity, 0]],       // 寅: 戊→丙→甲
+  [[Infinity, 1]],                         // 卯: 乙
+  [[9, 1], [12, 9], [Infinity, 4]],       // 辰: 乙→癸→戊
+  [[5, 4], [14, 6], [Infinity, 2]],       // 巳: 戊→庚→丙
+  [[19, 5], [Infinity, 3]],                // 午: 己→丁
+  [[9, 3], [12, 1], [Infinity, 5]],       // 未: 丁→乙→己
+  [[10, 4], [13, 8], [Infinity, 6]],      // 申: 戊→壬→庚
+  [[Infinity, 7]],                         // 酉: 辛
+  [[9, 7], [12, 3], [Infinity, 4]],       // 戌: 辛→丁→戊
+  [[12, 0], [Infinity, 8]],                // 亥: 甲→壬
+]
+
+function activeHiddenStem(branchIdx: number, jieDays: number): number {
+  return TWENTY_EIGHT_ELEMENTS[branchIdx].find(([endDay]) => jieDays <= endDay)?.[1]
+    ?? HIDDEN_STEMS[branchIdx][0]
+}
 const ELEMENT_ORDER = ['木', '火', '土', '金', '水']
 const GENERATES = [1, 2, 3, 4, 0]
 const CONTROLS = [2, 3, 4, 0, 1]
@@ -117,6 +144,7 @@ function calcSubordinateStar(dayStemIdx: number, branchIdx: number) {
 
 export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
   const dayStemIdx = shichu.day.stemIdx
+  const activeStem = (branchIdx: number) => activeHiddenStem(branchIdx, shichu.jieDays)
   const entries = [
     ['year', '年柱', shichu.year], ['month', '月柱', shichu.month],
     ['day', '日柱', shichu.day], ...(shichu.hour ? [['hour', '時柱', shichu.hour] as const] : []),
@@ -154,9 +182,9 @@ export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
 
   const bodyChart = {
     north: { label: '北（頭）', star: calcPrimaryStar(dayStemIdx, shichu.year.stemIdx) },
-    west: { label: '西（右手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.day.branchIdx][0]) },
-    center: { label: '中央（胸）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.month.branchIdx][0]) },
-    east: { label: '東（左手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.year.branchIdx][0]) },
+    west: { label: '西（右手）', star: calcPrimaryStar(dayStemIdx, activeStem(shichu.day.branchIdx)) },
+    center: { label: '中央（胸）', star: calcPrimaryStar(dayStemIdx, activeStem(shichu.month.branchIdx)) },
+    east: { label: '東（左手）', star: calcPrimaryStar(dayStemIdx, activeStem(shichu.year.branchIdx)) },
     south: { label: '南（腹）', star: calcPrimaryStar(dayStemIdx, shichu.month.stemIdx) },
   }
   const subordinateStars = {
@@ -229,9 +257,9 @@ const PEACH_BLOSSOM: Record<string, string> = {
 }
 
 function timingThemes(tenGod: string, branchRelation?: string): string[] {
-  const themes = tenGod.includes('財')
+  const themes = ['偏財', '正財'].includes(tenGod)
     ? ['成果・収入・現実的な選択']
-    : tenGod.includes('官')
+    : ['偏官', '正官'].includes(tenGod)
       ? ['責任・肩書・関係の正式化']
       : ['食神', '傷官'].includes(tenGod)
         ? ['発信・創作・新しい挑戦']
@@ -314,12 +342,11 @@ export function calcNayin(stemIdx: number, branchIdx: number): string {
 }
 
 // ===== 算命学 宿命星 =====
-export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: number) {
-  const BRANCH_HONKI = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8]
+export function calcSanmei(dayStemIdx: number, dayBranchIdx: number, monthBranchIdx: number, jieDays = 30) {
   const GEN = [1, 2, 3, 4, 0]
   const CTRL = [2, 3, 4, 0, 1]
 
-  const tgt = BRANCH_HONKI[monthBranchIdx]
+  const tgt = activeHiddenStem(monthBranchIdx, jieDays)
   const de = Math.floor(dayStemIdx / 2)
   const te = Math.floor(tgt / 2)
   const sameYY = (dayStemIdx % 2) === (tgt % 2)
@@ -511,7 +538,7 @@ calcRouter.post('/divination', (req, res) => {
       : [undefined, 0]
     const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
     const expanded = calcExpandedDivination(shichu)
     const sukuyo = getSukuyo(year, month, day)
 

@@ -39,7 +39,7 @@ test('代表日の納音・算命学・宿曜を再現する', () => {
   const shichu = calcShichu(2024, 2, 4, 17, 25)
   assert.equal(calcNayin(shichu.day.stemIdx, shichu.day.branchIdx), '平地木')
   assert.deepEqual(
-    calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx),
+    calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays),
     { shukumeiStar: '石門星', chusatsu: '辰巳天中殺' },
   )
   assert.equal(getSukuyo(2024, 2, 4), '箕')
@@ -67,7 +67,7 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
   assert.deepEqual(expanded.fourPillars.map(pillar => pillar.stemTenGod), ['傷官', '偏官', '日主', '劫財'])
   assert.deepEqual(expanded.sanmeiChart.bodyChart, {
     north: { label: '北（頭）', star: '調舒星' },
-    west: { label: '西（右手）', star: '司禄星' },
+    west: { label: '西（右手）', star: '牽牛星' },
     center: { label: '中央（胸）', star: '鳳閣星' },
     east: { label: '東（左手）', star: '貫索星' },
     south: { label: '南（腹）', star: '車騎星' },
@@ -82,7 +82,7 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
 test('複数占術で一致した内容だけを鑑定書に表示する', () => {
   const shichu = calcShichu(1995, 2, 20, 5, 40)
   const expanded = calcExpandedDivination(shichu)
-  const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+  const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
   const ziwei = calcZiwei(1995, 2, 20, 5, 'female', '東京都')
   const astrology = calcAstrology(1995, 2, 20, 5, 40, '東京都')
   const report = buildDeterministicReport({
@@ -109,7 +109,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /3種類以上で同じ方向が出た内容だけ/)
   assert.match(report, /一致した占術：.+（[3-9]占術）/)
   assert.match(report, /日主\*\*壬\*\*.+中心星\*\*鳳閣星\*\*/s)
-  assert.match(report, /配偶者位置は\*\*司禄星\*\*/)
+  assert.match(report, /配偶者との関係を表す西方は\*\*牽牛星\*\*/)
   assert.match(report, /社会位置は\*\*貫索星\*\*/)
   assert.match(report, /西洋占星術の月\*\*天秤座\*\*/)
   assert.match(report, /ナクシャトラ\*\*チトラー\*\*/)
@@ -118,6 +118,26 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /【インド占星術/)
   assert.match(report, /四柱推命の年運.+数秘術の個人年/)
   assert.match(report, /\*\*迷ったときの順序：\*\*/)
+})
+
+test('算命学の人体星図は節入り後の日数に応じて二十八元を切り替える', () => {
+  const february = calcExpandedDivination(calcShichu(1995, 2, 20, 5, 40))
+  assert.equal(february.sanmeiChart.bodyChart.west.star, '牽牛星')
+  assert.deepEqual(Object.fromEntries(Object.entries(february.sanmeiChart.bodyChart).map(([key, value]) => [key, value.star])), {
+    north: '調舒星', west: '牽牛星', center: '鳳閣星', east: '貫索星', south: '車騎星',
+  })
+
+  const march = calcExpandedDivination(calcShichu(1995, 3, 16))
+  assert.deepEqual(Object.fromEntries(Object.entries(march.sanmeiChart.bodyChart).map(([key, value]) => [key, value.star])), {
+    north: '玉堂星', west: '調舒星', center: '玉堂星', east: '龍高星', south: '調舒星',
+  })
+  assert.deepEqual(Object.values(march.sanmeiChart.subordinateStars).map(value => value.star), ['天馳星', '天恍星', '天将星'])
+})
+
+test('傷官と劫財を官星・財星として誤分類しない', () => {
+  const timing = calcTimingCycles(1995, 2, 20, 5, 40, 'female')
+  assert.deepEqual(timing.annual.find(item => item.year === 2025)?.themes, ['発信・創作・新しい挑戦'])
+  assert.deepEqual(timing.annual.find(item => item.year === 2013)?.themes, ['自立・仲間・活動範囲の変化'])
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {

@@ -100,7 +100,7 @@ previewRouter.post('/generate', async (req, res) => {
       : [undefined, 0]
     const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
     const expanded = calcExpandedDivination(shichu)
     const sukuyo = getSukuyo(year, month, day)
     const honmei = calcHonmeiStar(year, month, day)
