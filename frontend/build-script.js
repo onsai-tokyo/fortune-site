@@ -141,4 +141,5 @@ for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, ro
 for (const guide of guides) writePage(guide.path, staticHtml(guide));
 for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
 writePage('guides', guideIndexHtml());
-console.log(`Generated SEO HTML for ${appRoutes.length} app routes, ${guides.length} guides, and ${infoPages.length} information pages; preserved the React app at /`);
+fs.copyFileSync(lpPath, indexPath);
+console.log(`Generated SEO HTML for /, ${appRoutes.length} app routes, ${guides.length} guides, and ${infoPages.length} information pages`);
