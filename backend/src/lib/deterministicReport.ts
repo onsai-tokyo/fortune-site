@@ -553,15 +553,16 @@ export function buildDeterministicReport(input: ReportInput): string {
       const showWork = workScore >= 2 || (workScore === strongestDomainScore && strongestDomainScore < 2)
       const showLove = loveScore >= 2
       const showRelation = relationScore >= 2 && relationScore >= Math.max(workScore, loveScore)
+      const forThisYear = (text: string) => `${item.year}年は、${text.replace(/年です。$/, '流れです。')}`
       const domainLines = [
-        showWork ? `仕事の動き（${item.year}年）：${domain.work}` : '',
-        showLove ? `恋愛・結婚の動き（${item.year}年）：${domain.love}` : '',
-        showRelation ? `人間関係の動き（${item.year}年）：${domain.relation}` : '',
-      ].filter(Boolean).join('\n')
+        showWork ? forThisYear(domain.work) : '',
+        showLove ? forThisYear(domain.love) : '',
+        showRelation ? forThisYear(domain.relation) : '',
+      ].filter(Boolean).join(' ')
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
         ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
         : ''
-      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
+      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n起こりやすいこと：${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
