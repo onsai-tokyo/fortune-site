@@ -1758,7 +1758,7 @@
               <td>${palace.majorStars.length ? palace.majorStars.map(star => `<strong>${star.name}</strong><small>${star.brightness || ''}${star.mutagen ? `・化${star.mutagen}` : ''}</small>`).join('<br>') : '主星なし'}</td>
               <td>${palace.minorStars.slice(0, 4).join('・') || '—'}</td>
               <td>${palace.decadal?.range?.join('〜') || '—'}歳</td>
-            </tr>`).join('') : '';
+            </tr>`).join('');
 
           divinationContent.innerHTML = `
             <section class="fortune-table-section">
