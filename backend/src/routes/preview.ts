@@ -107,6 +107,7 @@ previewRouter.post('/generate', async (req, res) => {
 
     // 初回鑑定は計算結果から固定文を生成する。AI APIは使用せず、同じ入力には同じ結果を返す。
     const deterministicReport = buildDeterministicReport({
+      age,
       shichuDay: shichu.day.kanshi,
       nayin,
       sanmeiStar: sanmei.shukumeiStar,

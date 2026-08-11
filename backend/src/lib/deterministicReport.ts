@@ -1,4 +1,5 @@
 interface ReportInput {
+  age?: number
   shichuDay: string
   nayin: string
   sanmeiStar: string
@@ -72,6 +73,27 @@ const ELEMENT_DETAIL: Record<string, string> = {
   金: '判断・品質・不要なものを整える力', 水: '知恵・柔軟性・情報をつなぐ力',
 }
 
+const LOVE_STYLE: Record<string, string> = {
+  貫索星: '距離を急に縮めるより、互いの生活と価値観を尊重しながら信頼を育てるタイプ',
+  石門星: '友達のように何でも話せる対等さから、恋愛関係を深めるタイプ',
+  鳳閣星: '自然体で一緒に楽しめること、穏やかな会話を大切にするタイプ',
+  調舒星: '表面的な条件より感性の一致を重視し、深く繊細につながるタイプ',
+  禄存星: '愛情を行動で与え、相手から必要とされることで絆を感じるタイプ',
+  司禄星: '日常の安心、約束、生活の積み重ねによって愛情を確かめるタイプ',
+  車騎星: '好意が行動に出やすく、率直でテンポのよい関係を好むタイプ',
+  牽牛星: '誠実さと将来性を重視し、正式な関係を丁寧に築くタイプ',
+  龍高星: '互いの自由や挑戦を認め、新しい経験を共有したいタイプ',
+  玉堂星: '落ち着いた会話と精神的な理解を重ね、安心を育てるタイプ',
+}
+
+const WORK_STYLE: Record<string, string> = {
+  貫索星: '専門性を磨き、自分の裁量で一貫して進める働き方', 石門星: '人をつなぎ、チームの合意をつくる働き方',
+  鳳閣星: '情報や魅力をわかりやすく伝える働き方', 調舒星: '独自の感性や問題意識を企画・表現へ変える働き方',
+  禄存星: '顧客や周囲のニーズを捉え、価値を提供する働き方', 司禄星: '運用・管理・改善を積み重ねる働き方',
+  車騎星: '現場で素早く動き、課題を突破する働き方', 牽牛星: '責任範囲を明確にし、品質と信用を守る働き方',
+  龍高星: '新分野を開拓し、変化の中で学び続ける働き方', 玉堂星: '知識を蓄え、教える・伝承する働き方',
+}
+
 const LIFE_PATH: Record<number, string> = {
   1: '自分で始めること', 2: '人をつなぎ調和をつくること', 3: '喜びや発想を表現すること', 4: '確かな仕組みを築くこと',
   5: '変化を経験し自由を広げること', 6: '愛情と責任で場を整えること', 7: '本質を探究し知恵を深めること', 8: '現実的な成果と影響力を扱うこと',
@@ -104,6 +126,18 @@ export function buildDeterministicReport(input: ReportInput): string {
     : []
   const strongestElement = sortedElements[0]?.[0] ?? '算出なし'
   const weakestElement = sortedElements.at(-1)?.[0] ?? '算出なし'
+  const bodyChart = input.sanmeiChart?.bodyChart
+  const subordinateStars = input.sanmeiChart?.subordinateStars
+  const westStar = bodyChart?.west?.star ?? input.sanmeiStar
+  const eastStar = bodyChart?.east?.star ?? input.sanmeiStar
+  const southStar = bodyChart?.south?.star ?? input.sanmeiStar
+  const northStar = bodyChart?.north?.star ?? input.sanmeiStar
+  const earlyStar = subordinateStars?.early
+  const middleStar = subordinateStars?.middle
+  const lateStar = subordinateStars?.late
+  const age = input.age
+  const currentPhase = age === undefined ? middleStar : age < 30 ? earlyStar : age < 60 ? middleStar : lateStar
+  const currentPhaseLabel = age === undefined ? '現在' : `${age}歳現在（人生段階は30年ごとの目安）`
 
   return `【性格特性 — あなたの本質と気質】
 あなたの中心には、**${day.core}**という性質があります。日主${input.shichuDay[0]}は、状況に対する基本姿勢を表します。
@@ -126,10 +160,26 @@ ${subordinateDetail}
 周囲からは、${sanmei}を備えた人として見られやすい傾向があります。内側では表面上の印象より深く状況を観察しています。**人間関係の鍵は、外から期待される役割と、自分が守りたい感覚を分けること。** 判断の理由を短い言葉で共有すると誤解が減ります。
 
 【仕事・適職 — 才能が開花する環境と職種】
-**適性が活きる分野：${day.work}。** 職種名そのものより、${day.strength}を使えるかどうかが重要です。${input.honmeiName}の性質は、社会の中で自分の役割を形にする際の補助線になります。裁量の範囲、成果の基準、協力相手が明確な環境を選ぶと力が安定します。
+東方の${eastStar}は社会へ向かう行動に${SANMEI[eastStar] ?? '固有の強み'}が出やすいことを示します。仕事では、${WORK_STYLE[eastStar] ?? '自分の資質を活かせる働き方'}が成果につながります。南方の${southStar}は、部下や顧客へ働きかける際に${SANMEI[southStar] ?? '持ち味'}を使う傾向です。
+**適性が活きる分野：${day.work}。** 職種名そのものより、${day.strength}を使えるかどうかが重要です。${input.honmeiName}の性質も、社会の中で役割を形にする際の補助線になります。
+働く環境は、裁量の範囲、成果の基準、協力相手が明確であるほど安定します。苦手な${weakestElement}の働き（${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}）は、仕組み化や得意な人との協力で補うと無理がありません。
 
-【恋愛とパートナーシップ】
-**安心を感じやすい関係：${day.love}。** 相手に合わせることだけを愛情にせず、互いの違いを確認できる関係が長続きします。相性は生年月日だけで断定せず、二人の命式と実際の対話を合わせて判断します。
+【恋愛 — 好きになり方と関係の育て方】
+西方（右手）の${westStar}は、恋愛や身近なパートナーとの関わり方を表します。あなたは、${LOVE_STYLE[westStar] ?? '信頼を少しずつ育てるタイプ'}です。日主${input.shichuDay[0]}の性質から、気持ちが動いても自分なりに状況を整理してから関係へ踏み込む傾向があります。
+**恋愛で安心を感じやすいのは、${day.love}。** 相手に合わせることだけを愛情にせず、希望や不安を短い言葉で共有すると関係が安定します。${westStar}の長所が強く出すぎたときは、${SANMEI_DETAIL[westStar] ?? '自分と相手のペースを確認すること'}を意識してください。
+
+【結婚 — 長く暮らすための相性と課題】
+結婚生活では、恋愛感情に加えて生活の分担、金銭感覚、一人で回復する時間を先に話し合うことが重要です。西方の${westStar}が示す${SANMEI[westStar] ?? '関係性の特徴'}を夫婦関係で発揮しやすいため、相手には「察してもらう」より、自分が守りたい日常を具体的に伝える方が合います。
+**結婚を安定させる鍵は、互いの自由と約束の範囲を明確にすること。** 五行で少ない${weakestElement}の役割をどちらが担うか決めておくと、負担の偏りを減らせます。結婚時期や特定の相手との相性は、本人だけの命式では断定せず、二人分の命式と実際の状況を合わせて見ます。
+
+【過去の傾向 — 初年期に身につけたもの】
+北方の${northStar}は、親・目上との関係や思考の土台に${SANMEI[northStar] ?? '固有の性質'}が現れやすいことを示します。初年期の${earlyStar?.star ?? '従星'}（${earlyStar?.stage ?? '十二運'}）は、${SUBORDINATE_DETAIL[earlyStar?.star ?? ''] ?? '環境から受け取った経験を自分の力へ変える傾向'}です。
+**過去から受け継いだ強みは、${day.strength}。** 一方で、当時の環境に適応するために身につけた反応を、現在も必要以上に続けていないか確認すると選択肢が増えます。ここで示すのは出来事の断定ではなく、年柱と初年期の星から見た感じ方・行動の傾向です。
+
+【現在から未来 — エネルギーの移り変わり】
+${currentPhaseLabel}は${currentPhase?.star ?? '中年期の従星'}（${currentPhase?.stage ?? '十二運'}）の性質である「${SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の役割に必要な力を育てること'}」がテーマになりやすい段階です。中年期の${middleStar?.star ?? '従星'}は仕事・家庭・社会的役割、晩年期の${lateStar?.star ?? '従星'}は経験をどう自分らしく活かすかに関係します。
+未来へ向かう南方の${southStar}は、${SANMEI_DETAIL[southStar] ?? '次の世代や周囲へ自分の力を渡す性質'}を示します。**未来の方向性は、${WORK_STYLE[southStar] ?? '自分の経験を周囲へ還元すること'}。** 急いで結果を当てにいくより、現在の強みを繰り返せる形にするほど次の段階へつながります。
+この未来傾向は人生段階を示す固定鑑定です。特定の年の出来事を見るには、大運・年運の追加計算が必要です。
 
 【人生の使命 — 生まれ持ったテーマ】
 数秘術の運命数${input.lifePathNumber}が示す中心テーマは、**${mission}**です。宿曜の${input.sukuyo}宿と算命学の${sanmei}を組み合わせると、培った力を周囲へ渡したときに人生の手応えが強まります。大きな目標ほど、小さく再現できる行動へ分解することが使命を現実へつなぐ方法です。

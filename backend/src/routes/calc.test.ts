@@ -10,6 +10,7 @@ import {
   calcShichu,
   getSukuyo,
 } from './calc.js'
+import { buildDeterministicReport } from '../lib/deterministicReport.js'
 
 test('立春の直前までは前年・前月の干支を使う', () => {
   const result = calcShichu(2024, 2, 4, 17, 27)
@@ -70,4 +71,29 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
     middle: { label: '中年期', star: '天胡星', stage: '病' },
     late: { label: '晩年期', star: '天報星', stage: '胎' },
   })
+})
+
+test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含める', () => {
+  const shichu = calcShichu(1995, 2, 20, 5, 40)
+  const expanded = calcExpandedDivination(shichu)
+  const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
+  const report = buildDeterministicReport({
+    age: 31,
+    shichuDay: shichu.day.kanshi,
+    nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
+    sanmeiStar: sanmei.shukumeiStar,
+    chusatsu: sanmei.chusatsu,
+    sukuyo: getSukuyo(1995, 2, 20),
+    lifePathNumber: calcLifePathNumber('1995-02-20'),
+    honmeiName: '五黄土星',
+    ...expanded,
+  })
+
+  for (const heading of ['仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来']) {
+    assert.match(report, new RegExp(`【${heading}`))
+  }
+  assert.match(report, /西方（右手）の司禄星/)
+  assert.match(report, /31歳現在（人生段階は30年ごとの目安）/)
+  assert.match(report, /天胡星（病）/)
+  assert.match(report, /特定の年の出来事を見るには、大運・年運の追加計算が必要/)
 })
