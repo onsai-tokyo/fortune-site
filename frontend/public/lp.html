@@ -998,6 +998,11 @@
     .report-section-title:first-child { margin-top: 0; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
+    .report-evidence { margin: 10px 0 18px; padding: 10px 12px; border: 1px solid rgba(212,197,160,.7); border-radius: 7px; background: rgba(255,255,255,.46); font-size: 12px; }
+    .report-evidence summary, .data-summary { color: var(--gold-dark); font-weight: 700; cursor: pointer; }
+    .evidence-list { margin-top: 8px; line-height: 1.7; }
+    .data-summary { list-style-position: inside; font-family: serif; font-size: 17px; }
+    #divination-data[open] .data-summary { margin-bottom: 18px; }
     .ziwei-late-row { display: none; }
     .ziwei-table.show-all .ziwei-late-row { display: table-row; }
     .ziwei-toggle { margin-top: 10px; padding: 8px 12px; border: 1px solid var(--border-gold); border-radius: 6px; background: #fffdf8; color: var(--text-main); cursor: pointer; }
@@ -1614,17 +1619,17 @@
         <p class="result-lead">生年月日と出生時刻から算出した、再現性のある統合鑑定です。</p>
       </header>
 
-      <!-- 占術データ表示 -->
-      <div id="divination-data" class="result-card">
-        <h3 class="result-card-title">命式・人体星図</h3>
-        <div id="divination-content" class="divination-content"></div>
-      </div>
-
       <!-- 固定ルールによる統合鑑定文 -->
       <div class="result-card">
         <h3 class="result-card-title">統合鑑定</h3>
         <div id="result-content" class="report-content"></div>
       </div>
+
+      <!-- 占術データ表示：鑑定文とは分離した根拠レイヤー -->
+      <details id="divination-data" class="result-card">
+        <summary class="data-summary">命式・計算データ（根拠）</summary>
+        <div id="divination-content" class="divination-content"></div>
+      </details>
     </div>
   </section>
 
@@ -1665,7 +1670,14 @@
         let highlights = 0;
         return section.replace(/\*\*(.+?)\*\*/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
       }).join('');
-      const withGlossary = limitedHighlights.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
+      const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:(.+?)\]\]/g, (_, encoded) => {
+        const rows = encoded.split('||').map(item => {
+          const [lineage, system, factor] = item.split('｜');
+          return `<div>${lineage}｜${system}｜${factor}</div>`;
+        }).join('');
+        return `<details class="report-evidence"><summary>根拠を見る</summary><div class="evidence-list">${rows}</div></details>`;
+      });
+      const withGlossary = withEvidence.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
       });
@@ -1759,6 +1771,10 @@
               <td>${palace.minorStars.slice(0, 4).join('・') || '—'}</td>
               <td>${palace.decadal?.range?.join('〜') || '—'}歳</td>
             </tr>`).join('');
+          const astrology = calcData.astrology;
+          const planetRows = (planets, method) => (planets || []).map(planet => `<tr><th scope="row">${planet.name}</th><td>${planet.sign}${planet.degree.toFixed(1)}°${planet.retrograde ? '・逆行' : ''}</td><td>${method}</td></tr>`).join('');
+          const westernPlanetRows = planetRows(astrology?.western?.planets, '西洋／トロピカル');
+          const vedicPlanetRows = planetRows(astrology?.vedic?.planets, 'インド／サイデリアル');
 
           divinationContent.innerHTML = `
             <section class="fortune-table-section">
@@ -1791,6 +1807,11 @@
               <h4>紫微斗数 十二宮命盤</h4>
               <p class="section-caption">${ziwei?.available ? `${ziwei.lunarDate}・${ziwei.time}（${ziwei.timeRange}）・${ziwei.fiveElementsClass}／命主 ${ziwei.soul}・身主 ${ziwei.body}` : ziwei?.reason || '出生時刻を入力すると表示されます。'}</p>
               ${ziwei?.available ? `<div class="fortune-table-scroll"><table class="fortune-table ziwei-table"><thead><tr><th>宮</th><th>干支</th><th>主星・四化</th><th>補助星</th><th>大限</th></tr></thead><tbody>${ziweiRows}</tbody></table></div><button type="button" class="ziwei-toggle">すべての大限を見る</button>` : ''}
+            </section>
+            <section class="fortune-table-section">
+              <h4>西洋・インド占星術 天体データ</h4>
+              <p class="section-caption">方式の違いによるサイン位置を、生データとして分けて表示します。</p>
+              ${astrology?.available ? `<div class="fortune-table-scroll"><table class="fortune-table"><thead><tr><th>天体</th><th>位置</th><th>方式</th></tr></thead><tbody>${westernPlanetRows}${vedicPlanetRows}</tbody></table></div>${astrology?.vedic ? `<p class="section-caption">ラヒリ・アヤナーンシャ ${astrology.vedic.ayanamsha.toFixed(3)}°／月のナクシャトラ ${astrology.vedic.moonNakshatra} 第${astrology.vedic.moonPada}パーダ。ダシャーと分割図は現在の鑑定対象外です。</p>` : ''}` : `<p>${astrology?.reason || '出生条件から算出できませんでした。'}</p>`}
             </section>
             <div class="divination-summary">${summaryHtml}</div>`;
         } else {

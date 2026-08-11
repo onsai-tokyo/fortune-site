@@ -452,17 +452,46 @@ export function buildDeterministicReport(input: ReportInput): string {
     ? rankedConsensus.slice(0, 3)
     : consensusItems.sort((a, b) => b.score - a.score).slice(0, 3)
   const strongest = selectedConsensus[0]
+  const sourceFactor = (source: string) => {
+    if (source === '四柱推命') return `日柱 ${input.shichuDay}`
+    if (source === '算命学') return `中心星 ${input.sanmeiStar}`
+    if (source === '紫微斗数') return `命宮 ${soulPalaceStars}／官禄宮 ${careerPalaceStars}`
+    if (source === '西洋占星術') return `月 ${westernMoon?.sign ?? '算出なし'}${westernMoon ? westernMoon.degree.toFixed(1) : ''}°`
+    if (source === 'インド占星術') return `月 ${vedicMoon?.sign ?? '算出なし'}${vedicMoon ? vedicMoon.degree.toFixed(1) : ''}°／土星 ${vedicSaturn?.sign ?? '算出なし'}${vedicSaturn ? vedicSaturn.degree.toFixed(1) : ''}°`
+    if (source === '数秘術') return `運命数 ${input.lifePathNumber}`
+    if (source === '九星気学') return input.kyuseiProfile?.yearStar ?? input.honmeiName
+    return `${input.sukuyo}宿`
+  }
+  const evidenceMarker = (items: Array<{ lineage: Lineage; system: string; factor: string }>) =>
+    `[[EVIDENCE:${items.map(item => `${lineageName[item.lineage]}｜${item.system}｜${item.factor}`).join('||')}]]`
+  const evidenceFor = (item: typeof selectedConsensus[number]) => evidenceMarker(item.sources.map(source => ({
+    lineage: sourceLineage[source], system: source, factor: sourceFactor(source),
+  })))
+  const domainProjection: Record<ConsensusKey, { work: string; love: string; friend: string }> = {
+    initiative: { work: '停滞した場面では、最初の試作品を出して流れを作ります。', love: '好意や希望を遠回しにせず示せる関係を好みます。', friend: '新しい体験を一緒に始められる相手から刺激を受けます。' },
+    communication: { work: '論点を整理し、話し合いを前へ進める役に回りやすい人です。', love: '察し合うより、言葉で確認できる関係のほうが安心できます。', friend: '考えを言葉にできる相手と、友情が長く続きます。' },
+    insight: { work: '表面化していない原因を見つけ、改善の糸口を示します。', love: '相手を深く理解しようとするぶん、推測だけで結論を出しやすい面があります。', friend: '広く浅く付き合うより、本音を扱える少人数を選びます。' },
+    stability: { work: '毎日の運用と改善を続け、後から大きな差を作ります。', love: '日々の約束と生活の安定を重ねるほど、愛情を実感します。', friend: '頻繁に会わなくても、約束を守る相手を長く大切にします。' },
+    independence: { work: '進め方に裁量があると、専門性と集中力を発揮できます。', love: '親密さと一人で考える時間の両方を必要とします。', friend: '互いの生活へ踏み込みすぎない距離感を好みます。' },
+    harmony: { work: '意見が割れたとき、両者が受け入れられる線を探します。', love: '二人の希望を同じ重さで扱えると、関係が安定します。', friend: '場の空気を整えますが、自分の希望を後回しにしがちです。' },
+    responsibility: { work: '任された範囲を最後まで持ち、締め切りと品質で信頼を得ます。', love: '口にした約束を行動で守るぶん、相手にも同じ一貫性を求めます。', friend: '頼られると引き受けますが、相手の課題まで抱えがちです。' },
+    transformation: { work: '古くなった手順を見直し、次に使える形へ組み替えます。', love: '変化を避けず、話し合いながら関係を更新します。', friend: '転機を支え合える一方、役目を終えた縁は手放します。' },
+    creativity: { work: '経験や感覚を独自の企画・表現へ変えると評価されます。', love: '互いの感性を否定せず、刺激し合える相手に惹かれます。', friend: '作品や価値観を共有できる交流が活力になります。' },
+    care: { work: '周囲が安心して動ける環境を整え、力を引き出します。', love: '与えるだけでなく、自分も頼れる関係を必要とします。', friend: '相談を受ける側になりやすく、居場所を作ります。' },
+    exploration: { work: '新しい知識を取り込み、一つの専門性へ育てます。', love: '互いの挑戦と成長を応援できる関係を選びます。', friend: '異なる業界や地域の相手から視野を広げます。' },
+    practicality: { work: '考えを手順・数字・成果物へ落とし込みます。', love: '気持ちだけでなく、日々の行動で信頼を確かめます。', friend: '口約束より、必要なときに動ける関係を信頼します。' },
+  }
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
-    const lineageSummary = item.lineages.map(lineage => lineageName[lineage]).join('・')
-    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n一致：${lineageSummary}の${item.lineageCount}系統・${item.count}占術（${item.sources.join('・')}）`
+    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
   }).join('\n\n')
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const workBlocks = selectedConsensus.map(item => `打ち合わせや実務では、${consensusLabels[item.key].work}を任されると持ち味が出ます。`).join('\n\n')
-  const loveBlocks = selectedConsensus.map(item => `二人で判断が必要な場面では、${consensusLabels[item.key].love}を選ぶと関係が安定します。`).join('\n\n')
-  const friendBlocks = selectedConsensus.map(item => friendTendencies[item.key]).join('\n\n')
+  const workBlocks = selectedConsensus.map(item => domainProjection[item.key].work).join(' ')
+  const loveBlocks = selectedConsensus.map(item => domainProjection[item.key].love).join(' ')
+  const friendBlocks = selectedConsensus.map(item => domainProjection[item.key].friend).join(' ')
+  const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
     const text = themes.join('、')
@@ -485,9 +514,12 @@ export function buildDeterministicReport(input: ReportInput): string {
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
-        ? ` 恋愛・結婚では${item.relationshipSignals.join('、')}が重なります。`
+        ? ` ${item.year}年には、関係が正式な形へ進みやすい配置も重なります。`
         : ''
-      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n四柱推命の年運「${item.themes.join('、')}」と数秘術の個人年${personalYear}が同じ方向を示します。${relationship}`
+      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は2系統で同じ方向が出ています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n${evidenceMarker([
+        { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
+        { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
+      ])}`
     })
     .filter((item): item is string => Boolean(item))
     .join('\n\n') || '今後7年間では、二つの時間運が明確に同じテーマを示す年はありません。出来事を無理に断定せず、生活上の変化を優先して判断してください。'
@@ -556,69 +588,47 @@ ${strongest ? `**結論：${consensusLabels[strongest.key].title}が、この命
 注意点：${strongest ? shadowTendencies[strongest.key] : day.caution}。
 今日から試すこと：**${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}**。
 
-【全占術一致鑑定 — 結論】
-${strongest ? `最も強い一致は、**「${consensusLabels[strongest.key].title}」**です。${strongest.lineageCount}系統・${strongest.count}占術で確認しました。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
-この鑑定書は、干支・天体・数理・宿曜という独立系統を比較し、**2系統以上で同じ方向が出た内容を強い一致**として表示しています。同じ系統内の追加一致は0.3票として扱います。
-
 【共通して現れた本質】
 ${traitBlocks}
 
-【補助傾向】
-${supportingBlocks}
-ここは独立した2系統に届かない項目です。強い一致とは区別し、日常で心当たりがある場合だけ補助線として使ってください。
-
-【この人固有の資質の組み合わせ】
-${personalizedCore}
-
-${personalizedContrast}
-
-${personalizedEmotion}
-
+【あなた固有の組み合わせ】
+${primaryKey && secondaryKey ? `**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点が、この人らしさです。まず「${consensusLabels[primaryKey].action}」、次に「${consensusLabels[secondaryKey].action}」の順で進めると、考えを現実の選択へ移しやすくなります。` : '共通して現れた本質を、状況に応じて組み合わせて使う人です。'}
+感情が揺れたときは、周囲との釣り合いと自分の納得を同時に確認します。答えを急がず、気持ちを言葉にしてから事実を整理すると落ち着きます。
 ${personalizedElements}
+${combinedEvidence}
 
-【この人固有の恋愛パターン】
-${personalizedLove}
-
-【インド占星術 — 個別結果】
-${vedicDetailBlock}
-
-【仕事の傾向・適した環境】
-${personalizedWork}
-
+【仕事】
 ${workBlocks}
-**働き方：** 目的と評価基準は明確でありながら、進め方には自分の裁量がある環境が向きます。短期的な肩書より、上記の力を日常的に使える仕事内容を選ぶことが重要です。
 
-【恋愛・結婚の傾向】
-${loveBlocks}
-**惹かれやすさ：** 会話や価値観に刺激がありながら、約束や生活面では信頼できる相手を求めます。
-**恋の始まり方：** 相手の考え方や言葉の奥行きに関心を持ち、会話が重なるほど気持ちが深まりやすい傾向です。最初から感情だけで進むより、友人のような対話と信頼を経て関係が育つ方が本来の魅力を発揮できます。
-**すれ違いやすい場面：** 相手を深く理解しようとするほど「言わなくても分かるはず」「確認すると関係を壊すかもしれない」と考えやすくなります。沈黙で調整せず、事実・気持ち・希望の順で短く伝えることが修復の鍵です。
-**結婚相手を選ぶ基準：** 強い刺激だけでなく、問題が起きたときに話し合えるか、約束を行動で守るか、互いの仕事と一人の時間を尊重できるかを見てください。
-**長続きの条件：** 気持ちを推測だけで決めず、連絡頻度、金銭感覚、仕事への理解、一人の時間を具体的に話せること。
-**注意点：** 強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。
+向いているのは、目的・担当範囲・完了条件がはっきりした役割です。管理や専門実務のように品質を積み上げる仕事、企画や編集のように考えを価値へ変える仕事、顧客対応や交渉のように利害を整理する仕事のいずれでも、進め方に裁量があるほど力を発揮します。
+収入面では、得意なことを無制限に引き受けず、納品物と対価を先に決めると安定します。
+${combinedEvidence}
 
-【友人・人間関係の傾向】
-${personalizedRelations}
+【恋愛・結婚】
+**惹かれやすさ：** 会話と行動が一致し、誠実に約束を守る人へ気持ちが動きます。
+**恋の始まり方：** 考え方や言葉の奥行きに関心を持ち、友人のような対話を重ねるほど関係が育ちます。
+**関係が安定する条件：** ${loveBlocks}
+**すれ違いやすい場面：** 相手を理解しようとするほど、確認前に本音を推測したり、自分の希望を後回しにしたりしがちです。事実・気持ち・希望の順で短く伝えてください。
+**長く続けるために話しておくこと：** 連絡頻度、金銭感覚、生活分担、仕事への理解、一人で過ごす時間を具体的に決めておくと安心です。
+${combinedEvidence}
 
+【人間関係】
 ${friendBlocks}
-**集団の中での役割：** 情報を整理して話を前へ進めたり、表面化していない違和感を見つけたりする役になりやすい人です。全員の感情まで管理しようとせず、論点を渡した後は相手の責任を残してください。
-**相性のよい友人：** 好奇心があり、秘密や弱さを軽く扱わず、頻繁に会わなくても約束を守る人。意見が違っても質問し合える関係が長続きします。
-**距離を置いた方がよい関係：** 曖昧な依頼を繰り返す人、相談だけして責任をすべて預ける人、あなたの一人の時間や境界線を尊重しない関係です。
-**人間関係の結論：人数の多さより、互いの違いと境界線を尊重しながら、言葉と行動の両方で信頼を示せる関係が合います。**
 
-【複数の時間運が重なる年】
-${personalizedLifeStage}
+集まりでは話を整理したり、まだ言葉になっていない違和感を見つけたりする役に回りやすい人です。人数の多さより、互いの違いと境界線を尊重し、言葉と行動の両方で信頼を示せる関係が合います。曖昧な依頼や相談をすべて背負わず、自分の担当を明確にしてください。
+${combinedEvidence}
 
+【時期 — 重なりの強い年】
 ${timingBlocks}
-年の切り替わりは占術ごとに異なります。ここに表示する年は出来事の確定ではなく、二つ以上の時間運で同じ行動テーマが強まりやすい期間です。
+ここに表示する年は出来事の確定ではありません。二つ以上の独立した系統で、同じ行動テーマが強まりやすい期間だけを載せています。
 
-【この鑑定書に表示していないもの】
-一つの系統だけに現れた特徴、他の系統と方向が一致しない解釈は、強い一致として表示していません。時期や出来事も、複数の異なる系統で同じテーマを固定計算できる場合を除き断定しません。
-
-【迷ったときの順序】
+【迷ったときの順序・注記】
 **自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。**
 
-同じ生年月日・出生時刻・出生地・性別では、毎回同じ結果になります。占術は将来を保証するものではなく、自分の選択肢を整理するための参考情報として利用してください。`
+一つの系統だけに現れた特徴は本文へ載せていません。同じ入力条件では毎回同じ結果になります。この鑑定は将来を保証するものではなく、選択肢を整理するための参考情報です。
+
+【命式・計算データとの境界】
+この見出しより上が統合鑑定文です。詳しい計算要素は、画面内の「命式・計算データ」と各「根拠を見る」で確認できます。`
 
   /* 旧・占術別詳細レポート（全占術一致版への移行履歴として一時保持）
   return `【全占術統合鑑定 — 総合結論】

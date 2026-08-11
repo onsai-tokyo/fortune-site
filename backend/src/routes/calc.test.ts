@@ -103,39 +103,39 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     ...expanded,
   })
 
-  for (const heading of ['先に読む要約', '全占術一致鑑定 — 結論', '共通して現れた本質', '補助傾向', 'この人固有の資質の組み合わせ', 'この人固有の恋愛パターン', '仕事の傾向・適した環境', '恋愛・結婚の傾向', '友人・人間関係の傾向', '複数の時間運が重なる年', 'この鑑定書に表示していないもの', '迷ったときの順序']) {
+  for (const heading of ['先に読む要約', '共通して現れた本質', 'あなた固有の組み合わせ', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年', '迷ったときの順序・注記', '命式・計算データとの境界']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
-  assert.match(report, /2系統以上で同じ方向が出た内容を強い一致/)
-  assert.match(report, /一致：.+の2系統・[2-9]占術/)
-  assert.match(report, /日主\*\*壬\*\*.+中心星\*\*鳳閣星\*\*/s)
-  assert.match(report, /算命学の西方牽牛星らしく誠実さと将来性/)
-  assert.match(report, /社会位置貫索星らしく専門性を磨き/)
-  assert.match(report, /西洋・インドとも月は\*\*天秤座\*\*/)
-  assert.doesNotMatch(report, /【鑑定根拠/)
-  assert.doesNotMatch(report, /【四柱推命詳細/)
-  assert.match(report, /【インド占星術 — 個別結果】/)
-  assert.match(report, /ラグナは\*\*山羊座/)
-  assert.match(report, /ナクシャトラ：\*\* \*\*チトラー 第/)
-  assert.match(report, /インド占星術から見る仕事/)
-  assert.match(report, /インド占星術から見る恋愛/)
-  assert.match(report, /四柱推命の年運.+数秘術の個人年/)
-  assert.match(report, /【迷ったときの順序】/)
-  assert.match(report, /打ち合わせや実務では、企画、編集、発信/)
-  assert.match(report, /二人で判断が必要な場面では、察し合うだけでなく/)
-  assert.match(report, /会話のテンポと情報交換を重視します/)
+  assert.doesNotMatch(report, /【補助傾向】/)
+  assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
+  assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
+  assert.match(report, /向いているのは、目的・担当範囲・完了条件がはっきりした役割/)
+  assert.match(report, /関係が安定する条件：/)
+  assert.match(report, /年は2系統で同じ方向が出ています/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
-  assert.doesNotMatch(report, /【人生への具体的なアドバイス】/)
-  assert.doesNotMatch(report, /【運命・人生で果たしやすい役割】/)
-  assert.doesNotMatch(report, /感じたことを自然な言葉で伝え.+を基準に/s)
-  assert.match(report, /中心星\*\*鳳閣星\*\*の自然体の表現力/)
-  assert.match(report, /火星：獅子座.+（西洋／トロピカル）/)
-  assert.match(report, /火星（行動・衝突時の反応）：.+（インド／サイデリアル）/)
   assert.match(report, /強いことと、味方になることは矛盾しません/)
-  const longSentences = report.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 15 && !/^(【|根拠：|一致：)/.test(item))
+  const evidenceMarkers = [...report.matchAll(/\[\[EVIDENCE:(.+?)\]\]/g)].map(match => match[1])
+  assert.ok(evidenceMarkers.length >= 7)
+  for (const evidence of evidenceMarkers) {
+    const lineages = new Set(evidence.split('||').map(item => item.split('｜')[0]))
+    assert.ok(lineages.size >= 2, `根拠が2系統未満です: ${evidence}`)
+  }
+  const visibleReport = report.replace(/\[\[EVIDENCE:.+?\]\]/g, '')
+  const forbidden = /四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音|日主|通変星|鳳閣星|貫索星|牽牛星|官禄宮|財帛宮|化忌|ラグナ|ナクシャトラ|運命数|大運|°/
+  assert.doesNotMatch(visibleReport, forbidden)
+  for (const heading of ['仕事', '恋愛・結婚', '人間関係']) {
+    assert.equal((visibleReport.match(new RegExp(`【${heading}】`, 'g')) ?? []).length, 1)
+  }
+  const longSentences = visibleReport.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 15 && !/^(【|根拠：|一致：)/.test(item))
   const duplicateSentences = longSentences.filter((item, index) => longSentences.indexOf(item) !== index)
   assert.deepEqual(duplicateSentences, [], `15文字以上の同一文が重複しています: ${duplicateSentences.join(' / ')}`)
+  const sentences = visibleReport.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 12 && !item.startsWith('【'))
+  for (let index = 0; index <= sentences.length - 3; index += 1) {
+    const three = sentences.slice(index, index + 3)
+    assert.notEqual(new Set(three.map(item => item.slice(0, 10))).size, 1, `3文連続で導入句が同じです: ${three.join(' / ')}`)
+    assert.notEqual(new Set(three.map(item => item.slice(-10))).size, 1, `3文連続で文末が同じです: ${three.join(' / ')}`)
+  }
 })
 
 test('算命学の人体星図は節入り後の日数に応じて二十八元を切り替える', () => {
