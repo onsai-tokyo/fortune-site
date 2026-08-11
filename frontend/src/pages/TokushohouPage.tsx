@@ -27,7 +27,7 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">運営責任者</h2>
-            <p className="text-white/70 text-sm">山崎愛美</p>
+            <p className="text-white/70 text-sm">温齋株式会社</p>
           </section>
 
           <section>
