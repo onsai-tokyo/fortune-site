@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
-import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcTimingCycles, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 
 export const previewRouter = Router()
@@ -106,6 +106,7 @@ previewRouter.post('/generate', async (req, res) => {
     const lifePathNumber = calcLifePathNumber(birthDate)
 
     // 初回鑑定は計算結果から固定文を生成する。AI APIは使用せず、同じ入力には同じ結果を返す。
+    const timing = calcTimingCycles(year, month, day, birthHour, birthMinute, gender === 'male' ? 'male' : 'female')
     const deterministicReport = buildDeterministicReport({
       age,
       shichuDay: shichu.day.kanshi,
@@ -115,6 +116,7 @@ previewRouter.post('/generate', async (req, res) => {
       sukuyo,
       lifePathNumber,
       honmeiName: KYUSEI_NAMES[honmei],
+      timing,
       ...expanded,
     })
 

@@ -14,6 +14,13 @@ interface ReportInput {
     bodyChart: Record<string, { label: string; star: string }>
     subordinateStars: Record<string, { label: string; star: string; stage: string }>
   }
+  timing?: {
+    direction: string
+    startDate: string
+    decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
+    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
+    marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
+  }
 }
 
 const DAY_STEM: Record<string, { core: string; strength: string; caution: string; work: string; love: string }> = {
@@ -138,6 +145,18 @@ export function buildDeterministicReport(input: ReportInput): string {
   const age = input.age
   const currentPhase = age === undefined ? middleStar : age < 30 ? earlyStar : age < 60 ? middleStar : lateStar
   const currentPhaseLabel = age === undefined ? '現在' : `${age}歳現在（人生段階は30年ごとの目安）`
+  const currentYear = new Date().getFullYear()
+  const decadeDetail = input.timing?.decades.map(period =>
+    `**${period.startYear}〜${period.endYear}年（約${period.startAge}〜${period.endAge}歳）${period.kanshi}・${period.tenGod}：** ${period.themes.join('、')}`
+  ).join('\n') ?? '出生データから大運を算出できませんでした。'
+  const marriageDetail = input.timing?.marriageCandidates.map(item =>
+    `**${item.year}年（${item.ageRange}）${item.kanshi}：** ${item.relationshipSignals.join('、')}。${item.themes.join('、')}が重なる候補年です。`
+  ).join('\n') || '単独で強く重なる候補年はありません。大運の切り替わりと実際の出会い・関係性を合わせて判断してください。'
+  const nearbyAnnual = input.timing?.annual.filter(item => item.year >= currentYear - 3 && item.year <= currentYear + 8) ?? []
+  const annualDetail = nearbyAnnual.map(item => {
+    const relationship = item.relationshipSignals.length ? ` 恋愛・結婚面では${item.relationshipSignals.join('、')}。` : ''
+    return `**${item.year}年（${item.ageRange}）${item.kanshi}・${item.tenGod}：** ${item.themes.join('、')}。${relationship}`
+  }).join('\n') || '近年の年運を算出できませんでした。'
 
   return `【性格特性 — あなたの本質と気質】
 あなたの中心には、**${day.core}**という性質があります。日主${input.shichuDay[0]}は、状況に対する基本姿勢を表します。
@@ -179,7 +198,19 @@ ${subordinateDetail}
 【現在から未来 — エネルギーの移り変わり】
 ${currentPhaseLabel}は${currentPhase?.star ?? '中年期の従星'}（${currentPhase?.stage ?? '十二運'}）の性質である「${SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の役割に必要な力を育てること'}」がテーマになりやすい段階です。中年期の${middleStar?.star ?? '従星'}は仕事・家庭・社会的役割、晩年期の${lateStar?.star ?? '従星'}は経験をどう自分らしく活かすかに関係します。
 未来へ向かう南方の${southStar}は、${SANMEI[southStar] ?? '次の世代や周囲へ自分の力を渡す性質'}を示します。**未来の方向性は、${WORK_STYLE[southStar] ?? '自分の経験を周囲へ還元すること'}。** 急いで結果を当てにいくより、現在の強みを繰り返せる形にするほど次の段階へつながります。
-この未来傾向は人生段階を示す固定鑑定です。特定の年の出来事を見るには、大運・年運の追加計算が必要です。
+ここまでは人生段階を示す固定鑑定です。以下では、大運・年運を重ねて具体的な時期を確認します。
+
+【大運 — 10年ごとに変わる人生テーマ】
+起運日は${input.timing?.startDate ?? '算出なし'}、運行は${input.timing?.direction ?? '算出なし'}です。大運は出来事そのものではなく、その10年間で使いやすくなる役割やテーマを表します。
+${decadeDetail}
+
+【婚期の候補 — 縁が動きやすい時期】
+${marriageDetail}
+**婚期は確定日ではなく、出会い・交際の進展・同居・婚約・結婚、または関係の見直しが起こりやすい候補です。** 配偶者星、日支との六合・冲、桃花、五行の補完が複数重なる年を抽出しています。特に「冲」は変化を示すため、結婚だけでなく別離や生活環境の変更として現れる場合もあります。
+
+【年運 — 過去3年とこれから8年】
+${annualDetail}
+年運は立春前後で切り替わります。仕事・恋愛・結婚の判断は、この傾向だけで決めず、本人の希望、相手との関係、健康、資金、契約など現実条件を優先してください。
 
 【人生の使命 — 生まれ持ったテーマ】
 数秘術の運命数${input.lifePathNumber}が示す中心テーマは、**${mission}**です。宿曜の${input.sukuyo}宿と算命学の${sanmei}を組み合わせると、培った力を周囲へ渡したときに人生の手応えが強まります。大きな目標ほど、小さく再現できる行動へ分解することが使命を現実へつなぐ方法です。

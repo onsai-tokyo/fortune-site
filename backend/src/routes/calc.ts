@@ -174,6 +174,103 @@ export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
   }
 }
 
+export interface TimingPeriod {
+  startYear: number
+  endYear: number
+  startAge: number
+  endAge: number
+  kanshi: string
+  tenGod: string
+  themes: string[]
+}
+
+export interface AnnualTiming {
+  year: number
+  ageRange: string
+  kanshi: string
+  tenGod: string
+  score: number
+  relationshipSignals: string[]
+  themes: string[]
+}
+
+const BRANCH_COMBINE: Record<string, string> = {
+  子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午',
+}
+const PEACH_BLOSSOM: Record<string, string> = {
+  申: '酉', 子: '酉', 辰: '酉', 寅: '卯', 午: '卯', 戌: '卯', 亥: '子', 卯: '子', 未: '子', 巳: '午', 酉: '午', 丑: '午',
+}
+
+function timingThemes(tenGod: string, branchRelation?: string): string[] {
+  const themes = tenGod.includes('財')
+    ? ['成果・収入・現実的な選択']
+    : tenGod.includes('官')
+      ? ['責任・肩書・関係の正式化']
+      : ['食神', '傷官'].includes(tenGod)
+        ? ['発信・創作・新しい挑戦']
+        : tenGod.includes('印')
+          ? ['学び・資格・支援を受けること']
+          : ['自立・仲間・活動範囲の変化']
+  if (branchRelation === '六合') themes.push('縁がまとまりやすい')
+  if (branchRelation === '冲') themes.push('環境や関係の組み替え')
+  return themes
+}
+
+// 大運・流年は lunar-javascript の節入り基準（sect=2）で算出する。
+// 配偶者星は伝統的な男女別の見方で候補年を抽出するが、出来事の確定には用いない。
+export function calcTimingCycles(year: number, month: number, day: number, hour: number | undefined, minute: number, gender: 'male' | 'female') {
+  const localHour = hour ?? 12
+  const cst = toChineseStandardTime(year, month, day, localHour, minute)
+  const lunar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0).getLunar()
+  // The package runtime exposes getYun, but the bundled TypeScript declaration omits it.
+  const yun = (lunar.getEightChar() as any).getYun(gender === 'male' ? 1 : 0, 2)
+  const shichu = calcShichu(year, month, day, hour, minute)
+  const dayStemIdx = shichu.day.stemIdx
+  const dayBranch = shichu.day.branch
+  const spouseGods = gender === 'male' ? ['偏財', '正財'] : ['偏官', '正官']
+  const favorable = calcExpandedDivination(shichu).strength.favorableElements
+
+  const decades: TimingPeriod[] = yun.getDaYun(8).slice(1).map((period: any) => {
+    const pillar = pillarFromKanshi(period.getGanZhi())
+    const tenGod = calcTenGod(dayStemIdx, pillar.stemIdx)
+    const relation = BRANCH_COMBINE[dayBranch] === pillar.branch ? '六合' : ((pillar.branchIdx - shichu.day.branchIdx + 12) % 12 === 6 ? '冲' : undefined)
+    return {
+      startYear: period.getStartYear(), endYear: period.getEndYear(),
+      startAge: period.getStartYear() - year, endAge: period.getEndYear() - year,
+      kanshi: period.getGanZhi(), tenGod, themes: timingThemes(tenGod, relation),
+    }
+  })
+
+  const annual: AnnualTiming[] = yun.getDaYun(8).flatMap((period: any) => period.getLiuNian())
+    .filter((item: any) => item.getYear() >= year + 18 && item.getYear() <= year + 60)
+    .map((item: any) => {
+      const pillar = pillarFromKanshi(item.getGanZhi())
+      const tenGod = calcTenGod(dayStemIdx, pillar.stemIdx)
+      const hiddenTenGod = calcTenGod(dayStemIdx, HIDDEN_STEMS[pillar.branchIdx][0])
+      const relationshipSignals: string[] = []
+      let score = 0
+      if (spouseGods.includes(tenGod)) { score += 3; relationshipSignals.push(`天干に配偶者星の${tenGod}`) }
+      if (spouseGods.includes(hiddenTenGod)) { score += 2; relationshipSignals.push(`地支に配偶者星の${hiddenTenGod}`) }
+      let relation: string | undefined
+      if (BRANCH_COMBINE[dayBranch] === pillar.branch) { score += 2; relation = '六合'; relationshipSignals.push('日支と六合（縁がまとまりやすい）') }
+      if ((pillar.branchIdx - shichu.day.branchIdx + 12) % 12 === 6) { score += 1; relation = '冲'; relationshipSignals.push('日支と冲（関係が動きやすい）') }
+      if (PEACH_BLOSSOM[dayBranch] === pillar.branch) { score += 1; relationshipSignals.push('桃花（交流や注目が増えやすい）') }
+      if (favorable.includes(pillar.element)) score += 1
+      return {
+        year: item.getYear(), ageRange: `${item.getYear() - year - 1}〜${item.getYear() - year}歳`,
+        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, themes: timingThemes(tenGod, relation),
+      }
+    })
+
+  return {
+    direction: yun.isForward() ? '順行' : '逆行',
+    startDate: yun.getStartSolar().toYmd(),
+    decades,
+    annual,
+    marriageCandidates: annual.filter(item => item.score >= 4).sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 8).sort((a, b) => a.year - b.year),
+  }
+}
+
 // ===== 納音計算 =====
 export function calcNayin(stemIdx: number, branchIdx: number): string {
   const NAYIN = [

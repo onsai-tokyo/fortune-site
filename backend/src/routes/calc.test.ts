@@ -6,6 +6,7 @@ import {
   calcNayin,
   calcSanmei,
   calcExpandedDivination,
+  calcTimingCycles,
   calcTenGod,
   calcShichu,
   getSukuyo,
@@ -86,14 +87,29 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
     sukuyo: getSukuyo(1995, 2, 20),
     lifePathNumber: calcLifePathNumber('1995-02-20'),
     honmeiName: '五黄土星',
+    timing: calcTimingCycles(1995, 2, 20, 5, 40, 'female'),
     ...expanded,
   })
 
-  for (const heading of ['仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来']) {
+  for (const heading of ['仕事・適職', '恋愛', '結婚', '過去の傾向', '現在から未来', '大運', '婚期の候補', '年運']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.match(report, /西方（右手）の司禄星/)
   assert.match(report, /31歳現在（人生段階は30年ごとの目安）/)
   assert.match(report, /天胡星（病）/)
-  assert.match(report, /特定の年の出来事を見るには、大運・年運の追加計算が必要/)
+  assert.match(report, /起運日は1999-11-12、運行は順行/)
+  assert.match(report, /2027年（31〜32歳）丁未/)
+})
+
+test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () => {
+  const timing = calcTimingCycles(1995, 2, 20, 5, 40, 'female')
+  assert.equal(timing.direction, '順行')
+  assert.equal(timing.startDate, '1999-11-12')
+  assert.deepEqual(timing.decades.slice(0, 3).map(item => [item.kanshi, item.startYear, item.endYear]), [
+    ['己卯', 1999, 2008], ['庚辰', 2009, 2018], ['辛巳', 2019, 2028],
+  ])
+  const year2027 = timing.annual.find(item => item.year === 2027)
+  assert.equal(year2027?.kanshi, '丁未')
+  assert.deepEqual(year2027?.relationshipSignals, ['地支に配偶者星の正官', '日支と六合（縁がまとまりやすい）'])
+  assert.ok(timing.marriageCandidates.some(item => item.year === 2027))
 })
