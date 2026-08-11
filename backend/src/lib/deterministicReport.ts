@@ -487,7 +487,12 @@ export function buildDeterministicReport(input: ReportInput): string {
   }
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
-    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
+    const expression = item.lineageCount >= 3
+      ? '考える前の反応、日常の選択、長期的な決断のすべてに表れやすい中核的な性質です。'
+      : item.count >= 4
+        ? '複数の見方が同じ方向を示しますが、環境や相手によって表れ方の強さが変わります。'
+        : '特定の場面で輪郭がはっきりする性質で、意識して使うほど長所になります。'
+    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${expression}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
   }).join('\n\n')
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
@@ -539,6 +544,8 @@ export function buildDeterministicReport(input: ReportInput): string {
   const westernMoonDetail = astroPhrase(westernMoon?.sign, 'moon')
   const westernVenusDetail = astroPhrase(westernVenus?.sign, 'venus')
   const westernMarsDetail = astroPhrase(westernMars?.sign, 'mars')
+  const attractionDetail = SIGN_BEHAVIOR[westernVenus?.sign ?? '']?.venus ?? '言葉と行動が一致する相手を選びます'
+  const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars ?? '相手の反応を確かめながら関係を進めます'
   const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
   const nakshatraDetail = NAKSHATRA_DETAIL[vedic?.moonNakshatra ?? ''] ?? '心の反応を経験へ変える力'
   const lifeNumberDetail = NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission
@@ -565,6 +572,9 @@ export function buildDeterministicReport(input: ReportInput): string {
   const personalizedWork = `社会では「${eastStarDetail}」という進め方が評価につながります。役割や収入に関する配置も、肩書そのものより、論点を整理して担当範囲・納品物・対価を決める働き方を後押ししています。最初に全体像をつかみ、次に手順へ落とし、最後まで仕上げる流れを自分の型にすると成果が安定します。`
   const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} 関係によって役割が変わるのは矛盾ではなく、相手との距離を細かく読み分ける性質です。ただし全員に最適な対応をしようとせず、自分が引き受ける範囲を先に示す方が関係は長続きします。`
   const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
+  const uniqueWorkPattern = `得意領域は${day.work}です。共通するのは職種名ではなく、「${day.strength}」を使えること。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
+  const uniqueLovePattern = `もともと求めるのは${day.love}です。親密になるほど${westStarDetail} 惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
+  const uniqueRecoveryPattern = `負荷が高いときは「${day.caution}」が表れやすくなります。最も不足しやすい「${weakestDetail}」を、予定、道具、得意な人への依頼など外部の仕組みで補うと、本来の判断力へ戻りやすくなります。`
   const vedicDetailBlock = vedic
     ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
 
@@ -600,21 +610,24 @@ ${primaryKey && secondaryKey ? `**${consensusLabels[primaryKey].title}**と${con
 ${personalizedCore}
 ${personalizedEmotion}
 ${personalizedElements}
+${uniqueRecoveryPattern}
 ${combinedEvidence}
 
 【仕事】
 ${workBlocks}
 
 ${personalizedWork}
-向いているのは、目的・担当範囲・完了条件がはっきりした役割です。管理や専門実務のように品質を積み上げる仕事、企画や編集のように考えを価値へ変える仕事、顧客対応や交渉のように利害を整理する仕事のいずれでも、進め方に裁量があるほど力を発揮します。
+向いているのは、目的・担当範囲・完了条件がはっきりした役割です。
+${uniqueWorkPattern}
 収入面では、得意なことを無制限に引き受けず、納品物と対価を先に決めると安定します。
 ${combinedEvidence}
 
 【恋愛・結婚】
-**惹かれやすさ：** 会話と行動が一致し、誠実に約束を守る人へ気持ちが動きます。
-**恋の始まり方：** 考え方や言葉の奥行きに関心を持ち、友人のような対話を重ねるほど関係が育ちます。
+**惹かれやすさ：** ${attractionDetail}。外見や勢いだけでなく、その人が普段どのように約束を扱うかが決め手になります。
+**恋の始まり方：** ${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
 **関係が安定する条件：** ${loveBlocks}
 ${personalizedLove}
+${uniqueLovePattern}
 **すれ違いやすい場面：** 相手を理解しようとするほど、確認前に本音を推測したり、自分の希望を後回しにしたりしがちです。事実・気持ち・希望の順で短く伝えてください。
 **長く続けるために話しておくこと：** 連絡頻度、金銭感覚、生活分担、仕事への理解、一人で過ごす時間を具体的に決めておくと安心です。
 ${combinedEvidence}
