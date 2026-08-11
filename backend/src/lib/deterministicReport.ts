@@ -257,56 +257,50 @@ export function buildDeterministicReport(input: ReportInput): string {
     input.numerologyProfile ? `個人年${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）` : '',
   ].filter(Boolean).join('、')
 
-  return `【性格特性 — あなたの本質と気質】
-あなたの中心には、**${day.core}**という性質があります。日主${input.shichuDay[0]}は、状況に対する基本姿勢を表します。
-**最大の強み：${day.strength}。** 算命学の中心星${input.sanmeiStar}が示す${sanmei}も重なるため、自分の資質を発揮できる環境では周囲に明確な影響を与えます。
-**注意点：${day.caution}。** 得意な方法だけに頼らず、別の視点を取り入れるほど本来の強みが安定します。
+  return `【全占術統合鑑定 — 総合結論】
+四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
+これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
+**最大の強みは${day.strength}。注意点は${day.caution}です。** 外から期待される役割と自分が守りたい感覚を分け、判断の理由を短く言葉にすると、持ち味が安定して発揮されます。
 
-【四柱推命詳細 — 通変星・蔵干・五行バランス】
+【全占術統合鑑定 — 才能・仕事・お金】
+四柱推命では${day.work}、算命学では東方${eastStar}の「${WORK_STYLE[eastStar] ?? SANMEI[eastStar]}」、紫微斗数では官祿宮${careerPalaceStars}・財帛宮${wealthPalaceStars}が仕事と収入の使い方を示します。九星の${input.kyuseiProfile?.yearStar ?? input.honmeiName}は、社会の中心で責任を引き受ける動き方を補足します。
+**仕事の総合結論は、${day.strength}を、${WORK_STYLE[eastStar] ?? '自分の専門性を活かす働き方'}へつなげること。** 得意な${strongestElement}を軸に、少ない${weakestElement}の「${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}」は手順・道具・協力者で補うと成果と収入が安定します。肩書より、裁量・評価基準・価値提供の方法が自分に合うかを重視してください。
+
+【全占術統合鑑定 — 恋愛・結婚・パートナーシップ】
+算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${input.sukuyo}宿は、相手の本音や場の機微を読む対人感覚を加えます。
+**恋愛・結婚の総合結論は、安心できる日常と互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を具体的に話すほど長続きします。婚期候補は確定日ではなく、出会い・進展・見直しが起こりやすい期間として活用してください。
+
+【全占術統合鑑定 — 過去・現在・これから】
+初年期の${earlyStar?.star ?? '従星'}は「${SUBORDINATE_DETAIL[earlyStar?.star ?? ''] ?? '経験を自分の力へ変える傾向'}」、${currentPhaseLabel}の${currentPhase?.star ?? '従星'}は「${SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の役割に必要な力'}」を示します。現在は${currentTimingSummary || '人生段階と年運を重ねて確認する時期'}です。
+**今の総合テーマは、${currentAnnual?.themes.join('、') ?? currentDecade?.themes.join('、') ?? '現在の強みを再現できる形へ整えること'}。** 四柱推命の大運・年運、算命学の従星、紫微斗数の大限、数秘術の個人年は時間幅が異なるため、共通して現れるテーマを優先し、現実の行動計画へ落とし込みます。
+
+【全占術統合鑑定 — 開運アクション】
+**最初に行うこと：${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}を補う小さな習慣を一つ決める。**
+**仕事では：** ${WORK_STYLE[eastStar] ?? '強みを繰り返し使える環境を選ぶ'}。
+**恋愛・人間関係では：** 希望・不安・境界線を短い言葉で共有する。
+**運気の節目では：** 天中殺や冲だけで判断せず、資金・健康・契約を確認し、小さく試してから決断する。
+
+【鑑定根拠 — 四柱推命】
+
 ${pillarDetail}
 五行バランスは${elementDetail}です（${input.elementBalance?.method ?? '簡易集計'}）。最も強い${strongestElement}は「${ELEMENT_DETAIL[strongestElement] ?? '固有の働き'}」が自然に使いやすい一方、最も少ない${weakestElement}は意識的に補う余地があります。
 月令を加味した扶助比率は${input.strength?.supportRatio ?? '-'}%で、**旺衰の簡易判定は${input.strength?.label ?? '算出なし'}**です。**補う五行の目安は${input.strength?.favorableElements.join('・') ?? '算出なし'}**。これは格局や調候まで含めた喜神・忌神の断定ではなく、五行の偏りを見るための補助指標です。
 
-【算命学詳細 — 人体星図・十二大従星】
+【鑑定根拠 — 算命学の人体星図・十二大従星】
 ${bodyChartDetail}
 **中心星${input.sanmeiStar}の要点は、${sanmei}です。** 中央だけで性格を固定せず、北・西・東・南で異なる場面の表れ方も合わせて読みます。
 
 十二大従星は、人生段階ごとのエネルギーの使い方を表します。
 ${subordinateDetail}
 
-【周りから見たあなた — 外面と内面のギャップ】
-周囲からは、${sanmei}を備えた人として見られやすい傾向があります。内側では表面上の印象より深く状況を観察しています。**人間関係の鍵は、外から期待される役割と、自分が守りたい感覚を分けること。** 判断の理由を短い言葉で共有すると誤解が減ります。
-
-【算命学詳細 — 位相法と天中殺の作用点】
+【鑑定根拠 — 算命学の位相法と天中殺】
 ${sanmeiRelationDetail}
 あなたの天中殺は${input.chusatsu}で、対象となる地支は${input.sanmeiRelations?.voidBranches.join('・') ?? '算出なし'}です。命式内での作用点は、**${tenchuAffected}**。天中殺は欠落や不幸の断定ではなく、その領域で既存の型に収まりにくく、経験を通じて独自の形を作りやすいという読み方をします。
 
-【紫微斗数 — 十二宮・主星・四化・大限】
+【鑑定根拠 — 紫微斗数の十二宮・主星・四化・大限】
 ${input.ziwei?.available ? `出生地${input.ziwei.birthplace}、${input.ziwei.standardTimeNote}。旧暦は${input.ziwei.lunarDate}、出生時辰は${input.ziwei.time}（${input.ziwei.timeRange}）、${input.ziwei.fiveElementsClass}です。命主は**${input.ziwei.soul}**、身主は**${input.ziwei.body}**。命宮は${input.ziwei.earthlyBranchOfSoulPalace}、身宮は${input.ziwei.earthlyBranchOfBodyPalace}にあります。` : ''}
 ${ziweiPalaceDetail}
 紫微斗数は一つの星だけで吉凶を断定せず、本宮・対宮・三方四正、四化、大限を重ねて読みます。ここでは命盤を固定計算し、各宮の主要テーマを表示しています。
-
-【仕事・適職 — 才能が開花する環境と職種】
-東方の${eastStar}は社会へ向かう行動に${SANMEI[eastStar] ?? '固有の強み'}が出やすいことを示します。仕事では、${WORK_STYLE[eastStar] ?? '自分の資質を活かせる働き方'}が成果につながります。南方の${southStar}は、部下や顧客へ働きかける際に${SANMEI[southStar] ?? '持ち味'}を使う傾向です。
-**適性が活きる分野：${day.work}。** 職種名そのものより、${day.strength}を使えるかどうかが重要です。${input.honmeiName}の性質も、社会の中で役割を形にする際の補助線になります。
-働く環境は、裁量の範囲、成果の基準、協力相手が明確であるほど安定します。苦手な${weakestElement}の働き（${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}）は、仕組み化や得意な人との協力で補うと無理がありません。
-
-【恋愛 — 好きになり方と関係の育て方】
-西方（右手）の${westStar}は、恋愛や身近なパートナーとの関わり方を表します。あなたは、${LOVE_STYLE[westStar] ?? '信頼を少しずつ育てるタイプ'}です。日主${input.shichuDay[0]}の性質から、気持ちが動いても自分なりに状況を整理してから関係へ踏み込む傾向があります。
-**恋愛で安心を感じやすいのは、${day.love}。** 相手に合わせることだけを愛情にせず、希望や不安を短い言葉で共有すると関係が安定します。${westStar}の長所が強く出すぎたときは、自分のペースだけで進めず、相手の希望も具体的に確認してください。
-
-【結婚 — 長く暮らすための相性と課題】
-結婚生活では、恋愛感情に加えて生活の分担、金銭感覚、一人で回復する時間を先に話し合うことが重要です。西方の${westStar}が示す${SANMEI[westStar] ?? '関係性の特徴'}を夫婦関係で発揮しやすいため、相手には「察してもらう」より、自分が守りたい日常を具体的に伝える方が合います。
-**結婚を安定させる鍵は、互いの自由と約束の範囲を明確にすること。** 五行で少ない${weakestElement}の役割をどちらが担うか決めておくと、負担の偏りを減らせます。結婚時期や特定の相手との相性は、本人だけの命式では断定せず、二人分の命式と実際の状況を合わせて見ます。
-
-【過去の傾向 — 初年期に身につけたもの】
-北方の${northStar}は、親・目上との関係や思考の土台に${SANMEI[northStar] ?? '固有の性質'}が現れやすいことを示します。初年期の${earlyStar?.star ?? '従星'}（${earlyStar?.stage ?? '十二運'}）は、${SUBORDINATE_DETAIL[earlyStar?.star ?? ''] ?? '環境から受け取った経験を自分の力へ変える傾向'}です。
-**過去から受け継いだ強みは、${day.strength}。** 一方で、当時の環境に適応するために身につけた反応を、現在も必要以上に続けていないか確認すると選択肢が増えます。ここで示すのは出来事の断定ではなく、年柱と初年期の星から見た感じ方・行動の傾向です。
-
-【現在から未来 — エネルギーの移り変わり】
-${currentPhaseLabel}は${currentPhase?.star ?? '中年期の従星'}（${currentPhase?.stage ?? '十二運'}）の性質である「${SUBORDINATE_DETAIL[currentPhase?.star ?? ''] ?? '現在の役割に必要な力を育てること'}」がテーマになりやすい段階です。中年期の${middleStar?.star ?? '従星'}は仕事・家庭・社会的役割、晩年期の${lateStar?.star ?? '従星'}は経験をどう自分らしく活かすかに関係します。
-未来へ向かう南方の${southStar}は、${SANMEI[southStar] ?? '次の世代や周囲へ自分の力を渡す性質'}を示します。**未来の方向性は、${WORK_STYLE[southStar] ?? '自分の経験を周囲へ還元すること'}。** 急いで結果を当てにいくより、現在の強みを繰り返せる形にするほど次の段階へつながります。
-ここまでは人生段階を示す固定鑑定です。以下では、大運・年運を重ねて具体的な時期を確認します。
 
 【大運 — 10年ごとに変わる人生テーマ】
 起運日は${input.timing?.startDate ?? '算出なし'}、運行は${input.timing?.direction ?? '算出なし'}です。大運は出来事そのものではなく、その10年間で使いやすくなる役割やテーマを表します。
@@ -336,32 +330,8 @@ ${annualDetail}
 あなたの納音は**${input.nayin}**です。${nayinDetail}。
 納音は日柱の干支を二つ一組で分類する補助的な見方です。四柱推命の旺衰や通変星より優先して吉凶を決めず、**自分の資質をどのような環境で形にしやすいか**をイメージするために使います。
 
-【全占術統合鑑定 — あなたを一言で表すと】
-四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
-これらを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**とまとめられます。宿曜の「${sukuyoDetail}」という気質と、九星気学の「${honmeiDetail}」という社会的な動き方が、その軸を補強します。
-
-【全占術統合 — 才能・仕事・お金】
-四柱推命では${day.work}、算命学では東方${eastStar}の「${WORK_STYLE[eastStar] ?? SANMEI[eastStar]}」、紫微斗数では官祿宮${careerPalaceStars}・財帛宮${wealthPalaceStars}が仕事と収入の使い方を示します。
-**仕事の総合結論は、${day.strength}を、${WORK_STYLE[eastStar] ?? '自分の専門性を活かす働き方'}へつなげること。** 得意な${strongestElement}の力を中心に置き、少ない${weakestElement}は手順・道具・協力者で補うと成果が安定します。肩書よりも、実際に任される裁量と価値提供の方法が合っているかを重視してください。
-
-【全占術統合 — 恋愛・結婚・パートナーシップ】
-算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。
-**恋愛・結婚の総合結論は、安心できる日常と、互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を言葉にすると長続きします。婚期候補は出会いや関係が動きやすい時期であり、相手との現実的な合意が整ったときに活かされます。
-
-【全占術統合 — 現在の運気とこれから】
-現在は${currentTimingSummary || '人生段階と年運を重ねて確認する時期'}です。算命学では${currentPhase?.star ?? '現在の従星'}、紫微斗数では大限、四柱推命では大運・年運、数秘術では個人年がそれぞれ異なる時間幅を示します。
-**今の総合テーマは、${currentAnnual?.themes.join('、') ?? currentDecade?.themes.join('、') ?? '現在の強みを再現できる形へ整えること'}。** 一つの占術だけで時期を決めず、複数で重なるテーマを優先すると、予言ではなく行動計画として活用できます。
-
-【全占術統合 — 注意点と開運アクション】
-注意点は、${day.caution}です。命式で少ない${weakestElement}の「${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい働き'}」を意識し、天中殺や冲の時期は重大な判断を急がず確認工程を増やしてください。
-**最初に行うこと：** ${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}を補う小さな習慣を一つ決める。\n**仕事では：** ${WORK_STYLE[eastStar] ?? '強みを繰り返し使える環境を選ぶ'}。\n**人間関係では：** 希望・不安・境界線を短い言葉で共有する。\n**運気の節目では：** 現実条件を確認したうえで、小さく試してから決断する。
-
-【人生の使命 — 生まれ持ったテーマ】
-数秘術の運命数${input.lifePathNumber}が示す中心テーマは、**${mission}**です。宿曜の${input.sukuyo}宿と算命学の${sanmei}を組み合わせると、培った力を周囲へ渡したときに人生の手応えが強まります。大きな目標ほど、小さく再現できる行動へ分解することが使命を現実へつなぐ方法です。
-
 【運気を扱うときの注意】
 あなたの天中殺は${input.chusatsu}です。これは不幸を予告するものではなく、従来の前提を見直しやすい周期を示す分類です。時期だけで重大な決断をせず、資金、健康、契約、周囲への影響といった現実条件を確認してください。**占術は決断を代行するものではなく、見落としている観点を増やす道具**です。
 
-【統合結果】
-四柱推命の日柱${input.shichuDay}、納音${input.nayin}、算命学の${input.sanmeiStar}、宿曜の${input.sukuyo}宿、運命数${input.lifePathNumber}、九星気学の${input.honmeiName}を統合すると、**あなたの軸は「${day.core}として、${mission}」にあります。** 強みを再現できる環境を選び、少ない五行を習慣や協力者で補うことが、命式を現実へ活かす方法です。同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
+同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
 }
