@@ -112,7 +112,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /向いているのは、目的・担当範囲・完了条件がはっきりした役割/)
   assert.match(report, /タイプ番号 FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
-  assert.match(report, /年は複数の計算結果が同じ流れを示しています/)
+  assert.match(report, /年は複数の計算結果が同じ流れを示し/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
   assert.match(report, /強く出ていることと、味方になることは矛盾しません/)

@@ -996,6 +996,7 @@
     .report-content strong { color: var(--text-main); font-weight: 700; background: linear-gradient(transparent 68%, rgba(201,169,97,.22) 0); }
     .report-section-title { margin: 30px 0 12px; padding: 0 0 8px 13px; border-bottom: 1px solid rgba(212,197,160,.7); border-left: 3px solid var(--gold-primary); color: var(--text-main); font-size: 17px; line-height: 1.5; }
     .report-section-title:first-child { margin-top: 0; }
+    .report-subsection-title { margin: 24px 0 10px; color: var(--gold-dark); font-size: 15px; letter-spacing: .05em; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
     .data-summary { margin: 0 0 18px; color: var(--gold-dark); font-family: serif; font-size: 17px; font-weight: 700; }
@@ -1673,6 +1674,7 @@
       });
       return withGlossary
         .replace(/^【(.+?)】$/gm, '<h4 class="report-section-title">$1</h4>')
+        .replace(/^〈(.+?)〉$/gm, '<h5 class="report-subsection-title">$1</h5>')
         .replace(/\n\n/g, '<div class="report-spacer"></div>')
         .replace(/\n/g, '<br>');
     };

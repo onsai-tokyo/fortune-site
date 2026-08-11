@@ -528,13 +528,14 @@ export function buildDeterministicReport(input: ReportInput): string {
   }
   const basePersonalYear = input.numerologyProfile?.personalYearNumber
   const basePersonalYearCalendar = input.numerologyProfile?.personalYear ?? currentYear
-  const timingBlocks = (input.timing?.annual ?? [])
-    .filter(item => item.year >= currentYear && item.year <= currentYear + 7)
+  const timingEntries = (input.timing?.annual ?? [])
+    .filter(item => item.year >= currentYear - 15 && item.year <= currentYear + 20)
     .map(item => {
       const personalYear = basePersonalYear ? ((basePersonalYear - 1 + item.year - basePersonalYearCalendar) % 9 + 9) % 9 + 1 : null
       const shared = personalYear ? annualSignals(item.themes).filter(key => personalYearSignals[personalYear]?.includes(key)) : []
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
+      const yearHeadline = item.themes.slice(0, 2).join('・') || sharedLabels
       const domain = YEAR_DOMAIN_DETAIL[item.tenGod] ?? {
         work: '役割や優先順位を見直し、今後に残す仕事を選ぶ年です。',
         love: '相手との距離や、これから望む関係を言葉にすると動きが生まれます。',
@@ -545,13 +546,16 @@ export function buildDeterministicReport(input: ReportInput): string {
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
         ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
         : ''
-      return `**${item.year}年（${item.ageRange}）：${sharedLabels}**\n${item.year}年は複数の計算結果が同じ流れを示しています。${item.themes.join('、')}が動きやすい時期です。${relationship}\n仕事運：${domain.work}\n恋愛・結婚運：${domain.love}\n人間関係：${domain.relation}\n気をつけること：${domain.caution}\n${item.year}年に意識すること：${yearAction}。\n${evidenceMarker([
+      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n仕事運（${item.year}年）：${domain.work}\n恋愛・結婚運（${item.year}年）：${domain.love}\n人間関係（${item.year}年）：${domain.relation}\n気をつけること（${item.year}年）：${domain.caution}\n${item.year}年に意識すること：${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
+      return { year: item.year, text }
     })
-    .filter((item): item is string => Boolean(item))
-    .join('\n\n') || '今後7年間では、二つの時間運が明確に同じテーマを示す年はありません。出来事を無理に断定せず、生活上の変化を優先して判断してください。'
+    .filter((item): item is { year: number; text: string } => Boolean(item))
+  const pastTimingBlocks = timingEntries.filter(item => item.year < currentYear).map(item => item.text).join('\n\n')
+  const futureTimingBlocks = timingEntries.filter(item => item.year >= currentYear).map(item => item.text).join('\n\n')
+  const timingBlocks = `〈過去15年の振り返り〉\n${pastTimingBlocks || '過去15年には、複数の計算で同じテーマが強く重なる年はありませんでした。'}\n\n〈これから20年の流れ〉\n${futureTimingBlocks || 'これから20年には、複数の計算で同じテーマが強く重なる年はありません。日々の状況を優先して判断してください。'}`
 
   // 「共通テーマ」は同じでも、実際の現れ方は命式・星図・天体の組み合わせで変わる。
   // 以下は入力ごとの実データを交差させ、テンプレートだけでは出ない個人差を文章化する層。
