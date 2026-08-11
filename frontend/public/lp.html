@@ -1751,7 +1751,7 @@
           throw new Error('占術データの計算に失敗しました');
         }
 
-        const response = await fetch('/api/preview/generate', {
+        const response = await fetch('/api/preview/generate?v=2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

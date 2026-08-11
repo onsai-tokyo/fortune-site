@@ -276,7 +276,7 @@ export function TopPage() {
     setIsStreaming(true); setPreviewError(''); setPreviewContent('')
 
     try {
-      const res = await fetch('/api/preview/generate', {
+      const res = await fetch('/api/preview/generate?v=2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
