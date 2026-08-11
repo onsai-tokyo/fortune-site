@@ -27,13 +27,12 @@ interface FortuneCalcData {
 }
 
 const TOC_ITEMS = [
-  { num: '1',  title: '性格特性 — あなたの本質と気質' },
-  { num: '2',  title: '周りから見たあなた — 社会的ペルソナ' },
-  { num: '3',  title: '仕事・適職 — 才能が開花する職業領域' },
-  { num: '4',  title: '恋愛とパートナーシップ' },
-  { num: '5',  title: '人生の使命 — この世で活かしたい資質' },
-  { num: '6',  title: '運気を扱うときの注意' },
-  { num: '7',  title: '統合結果 — 複数占術に共通する傾向' },
+  { num: '1', title: '全占術で一致した結論' },
+  { num: '2', title: '共通して現れた本質' },
+  { num: '3', title: '仕事で共通して活かせること' },
+  { num: '4', title: '恋愛・結婚で共通して大切なこと' },
+  { num: '5', title: '今から行うこと' },
+  { num: '6', title: '表示対象と判定基準' },
 ]
 
 
@@ -608,7 +607,7 @@ export function TopPage() {
           </h1>
 
           <p className="text-white/50 text-base sm:text-lg leading-relaxed max-w-lg mx-auto mb-10">
-            四柱推命・算命学・宿曜・数秘術などの計算結果を、固定ルールで一つの鑑定書にまとめます。
+              複数の占術で同じ方向が出た内容だけを抽出し、一つの結論にまとめます。
           </p>
 
           <button

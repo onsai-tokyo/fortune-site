@@ -79,7 +79,7 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
   })
 })
 
-test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含める', () => {
+test('複数占術で一致した内容だけを鑑定書に表示する', () => {
   const shichu = calcShichu(1995, 2, 20, 5, 40)
   const expanded = calcExpandedDivination(shichu)
   const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
@@ -103,32 +103,14 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
     ...expanded,
   })
 
-  for (const heading of ['全占術統合鑑定 — 総合結論', '全占術統合鑑定 — 思考', '全占術統合鑑定 — 才能', '全占術統合鑑定 — 恋愛', '全占術統合鑑定 — 家族', '全占術統合鑑定 — 心身', '全占術統合鑑定 — 過去', '全占術統合鑑定 — 開運', '鑑定根拠 — 四柱推命', '鑑定根拠 — 算命学', '鑑定根拠 — 紫微斗数', '鑑定根拠 — 西洋占星術', '鑑定根拠 — インド占星術', '大運', '婚期の候補', '年運', '宿曜詳細', '九星気学詳細', '数秘術詳細', '納音詳細']) {
+  for (const heading of ['全占術一致鑑定 — 結論', '共通して現れた本質', '仕事で共通して活かせること', '恋愛・結婚で共通して大切なこと', '今から行うこと', 'この鑑定書に表示していないもの']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
-  assert.match(report, /算命学の西方司禄星/)
-  assert.match(report, /31歳現在（人生段階は30年ごとの目安）/)
-  assert.match(report, /現在.+天胡星は「感覚が鋭く/)
-  assert.match(report, /起運日は1999-11-12、運行は順行/)
-  assert.match(report, /2027年（31〜32歳）丁未/)
-  assert.match(report, /命主は\*\*巨門\*\*、身主は\*\*天機\*\*/)
-  assert.match(report, /\*\*夫妻（乙酉）：\*\* 天機/)
-  assert.match(report, /本命宿は\*\*心宿\*\*/)
-  assert.match(report, /月命星は\*\*二黒土星\*\*/)
-  assert.match(report, /2026年の個人年は\*\*5（変化と自由）\*\*/)
-  assert.match(report, /納音は\*\*楊柳木\*\*/)
-  assert.match(report, /官祿宮主星なし（対宮・三方四正を参照）・財帛宮太陽・太陰（化忌）/)
-  assert.match(report, /夫妻宮は天機（化祿）・巨門/)
-  assert.match(report, /現在は大運辛巳・正印/)
-  assert.match(report, /\*\*最初に行うこと：判断・品質/)
-  assert.match(report, /疾厄宮は武曲・天府/)
-  assert.match(report, /父母宮七殺、田宅宮廉貞/)
-  assert.match(report, /夫妻宮天機（化祿）・巨門/)
-  assert.match(report, /西洋占星術では太陽魚座・月天秤座/)
-  assert.match(report, /ナクシャトラは\*\*/)
-  assert.match(report, /\*\*ラグナ（生き方の入口）：\*\*/)
-  assert.match(report, /チトラー第3パーダ\*\*。「理想の像を描き/)
-  assert.match(report, /\*\*木星（発展・学び）：\*\*/)
+  assert.match(report, /3種類以上で同じ方向が出た内容だけ/)
+  assert.match(report, /一致した占術：.+（[3-9]占術）/)
+  assert.doesNotMatch(report, /【鑑定根拠/)
+  assert.doesNotMatch(report, /【四柱推命詳細/)
+  assert.doesNotMatch(report, /【インド占星術/)
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {

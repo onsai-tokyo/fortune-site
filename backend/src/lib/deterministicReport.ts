@@ -312,6 +312,97 @@ export function buildDeterministicReport(input: ReportInput): string {
   const vedicJupiter = vedicPlanet('木星')
   const vedicSaturn = vedicPlanet('土星')
 
+  type ConsensusKey = 'initiative' | 'communication' | 'insight' | 'stability' | 'independence' | 'harmony' | 'responsibility' | 'transformation' | 'creativity' | 'care' | 'exploration' | 'practicality'
+  const consensusLabels: Record<ConsensusKey, { title: string; summary: string; work: string; love: string; action: string }> = {
+    initiative: { title: '自分から始める力', summary: '受け身で待つより、自分で最初の一歩を決めたときに流れが生まれます。', work: '新しい企画や改善を立ち上げ、最初の形を作る役割', love: '遠回しに待つより、希望を率直に伝えられる関係', action: '小さくても自分で開始日を決める' },
+    communication: { title: '言葉と情報をつなぐ力', summary: '複雑な情報や人の考えを整理し、伝わる形へ変える力があります。', work: '企画、編集、発信、教育、調整など言葉を価値に変える役割', love: '察し合うだけでなく、考えや不安を言葉で確認できる関係', action: '判断理由を短い文章にして共有する' },
+    insight: { title: '表面の奥を読む洞察力', summary: '人や状況の小さな変化を捉え、見えにくい原因まで考える傾向があります。', work: '分析、研究、相談支援、戦略など深く掘る役割', love: '本音を推測だけで決めず、安心して確認できる関係', action: '事実・解釈・希望を分けて整理する' },
+    stability: { title: '積み重ねて安定させる力', summary: '一時的な勢いより、生活・信頼・技術を継続して育てる力があります。', work: '運用、管理、育成、品質改善など継続が成果になる役割', love: '約束や生活感覚を大切にし、安心を積み上げられる関係', action: '続ける習慣を一つだけ固定する' },
+    independence: { title: '自分の基準を守る力', summary: '周囲に流されず、納得できる方法と距離感を選ぶことで力を発揮します。', work: '裁量があり、専門性を自分の方法で磨ける役割', love: '互いの自由と一人の時間を尊重できる関係', action: '譲れる条件と譲れない条件を一つずつ決める' },
+    harmony: { title: '人と人を調整する力', summary: '異なる立場の共通点を見つけ、関係を滑らかに整える力があります。', work: '顧客対応、交渉、チーム連携、パートナー支援の役割', love: '対等に話し合い、二人の落とし所を作れる関係', action: '相手の希望と自分の希望を両方言語化する' },
+    responsibility: { title: '責任を現実へ変える力', summary: '任されたことを形にし、長期的な結果へつなげる力があります。', work: '管理、経営、専門職など基準と責任が明確な役割', love: '将来、金銭、生活分担を具体的に話せる関係', action: '責任の範囲と終了条件を先に決める' },
+    transformation: { title: '変化を再構築へつなげる力', summary: '古い前提を見直し、状況をより本質的な形へ作り直す力があります。', work: '改革、再設計、危機対応、新規事業など変化を扱う役割', love: '変化や本音を恐れず、関係を更新できる相手', action: '手放すものと残すものを明確にする' },
+    creativity: { title: '独自の形を生み出す力', summary: '感覚や理想を、自分らしい表現や構造へ変える力があります。', work: 'デザイン、文章、企画、ブランドなど独自性を形にする役割', love: '感性や価値観を否定せず、互いに刺激を与えられる関係', action: '完成前でも一度外へ見せて反応を得る' },
+    care: { title: '人や場を育てる力', summary: '相手が安心して力を出せる環境を作り、必要なものを整える力があります。', work: '育成、支援、接客、コミュニティ運営など人を支える役割', love: '与えるだけでなく、自分も安心して頼れる関係', action: '助ける範囲と休む時間を決める' },
+    exploration: { title: '世界を広げる探究心', summary: '未知の知識や環境に触れ、可能性を広げることで成長します。', work: '研究、海外、教育、IT、メディアなど学び続ける役割', love: '互いの成長や新しい経験を応援できる関係', action: '今月試す新しい経験を一つ選ぶ' },
+    practicality: { title: '考えを現実の形にする力', summary: '抽象的な考えを手順・数字・成果物へ落とし込むことで強みが完成します。', work: '実務設計、運営、財務、制作など成果が確認できる役割', love: '気持ちだけでなく、行動と生活設計で信頼を示す関係', action: '次の行動を期限と数値で決める' },
+  }
+  const signals = new Map<ConsensusKey, Set<string>>()
+  const addSignals = (source: string, keys: ConsensusKey[]) => keys.forEach(key => {
+    if (!signals.has(key)) signals.set(key, new Set())
+    signals.get(key)!.add(source)
+  })
+  const signSignals: Record<string, ConsensusKey[]> = {
+    牡羊座: ['initiative', 'independence'], 牡牛座: ['stability', 'practicality'], 双子座: ['communication', 'exploration'], 蟹座: ['care', 'stability'], 獅子座: ['creativity', 'initiative'], 乙女座: ['practicality', 'insight'],
+    天秤座: ['harmony', 'communication'], 蠍座: ['insight', 'transformation'], 射手座: ['exploration', 'initiative'], 山羊座: ['responsibility', 'practicality'], 水瓶座: ['independence', 'transformation'], 魚座: ['insight', 'care'],
+  }
+  const stemSignals: Record<string, ConsensusKey[]> = { 甲: ['initiative', 'exploration'], 乙: ['harmony', 'care'], 丙: ['creativity', 'initiative'], 丁: ['insight', 'creativity'], 戊: ['stability', 'responsibility'], 己: ['care', 'practicality'], 庚: ['transformation', 'initiative'], 辛: ['practicality', 'insight'], 壬: ['exploration', 'communication'], 癸: ['insight', 'care'] }
+  const sanmeiSignals: Record<string, ConsensusKey[]> = { 貫索星: ['independence', 'stability'], 石門星: ['harmony', 'communication'], 鳳閣星: ['communication', 'creativity'], 調舒星: ['insight', 'creativity'], 禄存星: ['care', 'harmony'], 司禄星: ['stability', 'practicality'], 車騎星: ['initiative', 'transformation'], 牽牛星: ['responsibility', 'practicality'], 龍高星: ['exploration', 'transformation'], 玉堂星: ['insight', 'communication'] }
+  const numberSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['exploration', 'transformation'], 6: ['care', 'responsibility'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['care', 'insight'], 11: ['insight', 'communication'], 22: ['responsibility', 'practicality'], 33: ['care', 'creativity'] }
+  addSignals('四柱推命', stemSignals[input.shichuDay[0]] ?? [])
+  addSignals('算命学', sanmeiSignals[input.sanmeiStar] ?? [])
+  addSignals('数秘術', numberSignals[input.lifePathNumber] ?? [])
+  if (westernSun) addSignals('西洋占星術', signSignals[westernSun.sign] ?? [])
+  if (westernMoon) addSignals('西洋占星術', signSignals[westernMoon.sign] ?? [])
+  if (vedic) addSignals('インド占星術', signSignals[vedic.ascendant.sign] ?? [])
+  if (vedicMoon) addSignals('インド占星術', signSignals[vedicMoon.sign] ?? [])
+  if (/五黄|八白|六白/.test(input.honmeiName)) addSignals('九星気学', ['responsibility', 'practicality'])
+  if (/一白|四緑/.test(input.honmeiName)) addSignals('九星気学', ['communication', 'harmony'])
+  if (/三碧|九紫/.test(input.honmeiName)) addSignals('九星気学', ['initiative', 'creativity'])
+  if (/二黒/.test(input.honmeiName)) addSignals('九星気学', ['care', 'stability'])
+  if (/七赤/.test(input.honmeiName)) addSignals('九星気学', ['communication', 'creativity'])
+  if (/天機|巨門|太陽|太陰/.test(soulPalaceStars)) addSignals('紫微斗数', ['communication', 'insight'])
+  if (/紫微|天府|天梁|武曲/.test(soulPalaceStars)) addSignals('紫微斗数', ['responsibility', 'stability'])
+  if (/破軍|七殺|廉貞|貪狼/.test(soulPalaceStars)) addSignals('紫微斗数', ['transformation', 'initiative'])
+  const sukuyoSignals: ConsensusKey[] = []
+  if (/洞察|本音|機微|直感|精神/.test(sukuyoDetail)) sukuyoSignals.push('insight')
+  if (/魅力|社交|人間関係|協調|縁/.test(sukuyoDetail)) sukuyoSignals.push('harmony')
+  if (/行動|挑戦|開拓|決断/.test(sukuyoDetail)) sukuyoSignals.push('initiative')
+  if (/創造|表現|美|芸術/.test(sukuyoDetail)) sukuyoSignals.push('creativity')
+  if (/安定|堅実|継続|守/.test(sukuyoDetail)) sukuyoSignals.push('stability')
+  if (/学|探究|知識|未知/.test(sukuyoDetail)) sukuyoSignals.push('exploration')
+  addSignals('宿曜', [...new Set(sukuyoSignals)])
+  const rankedConsensus = [...signals.entries()]
+    .map(([key, sources]) => ({ key, sources: [...sources], count: sources.size }))
+    .filter(item => item.count >= 3)
+    .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
+    .slice(0, 4)
+  const selectedConsensus = rankedConsensus.length >= 2
+    ? rankedConsensus
+    : [...signals.entries()].map(([key, sources]) => ({ key, sources: [...sources], count: sources.size })).sort((a, b) => b.count - a.count).slice(0, 3)
+  const strongest = selectedConsensus[0]
+  const traitBlocks = selectedConsensus.map((item, index) => {
+    const detail = consensusLabels[item.key]
+    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n一致した占術：${item.sources.join('・')}（${item.count}占術）`
+  }).join('\n\n')
+  const workBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].work}`).join('\n')
+  const loveBlocks = selectedConsensus.slice(0, 3).map(item => `・${consensusLabels[item.key].love}`).join('\n')
+  const actionBlocks = selectedConsensus.slice(0, 3).map((item, index) => `**${index + 1}. ${consensusLabels[item.key].action}**`).join('\n')
+
+  return `【全占術一致鑑定 — 結論】
+${strongest ? `複数の占術で最も強く一致したのは、**「${consensusLabels[strongest.key].title}」**です。` : '複数の占術を比較し、共通する傾向だけを抽出しました。'}
+この鑑定書は、四柱推命・算命学・紫微斗数・宿曜・九星気学・数秘術・西洋占星術・インド占星術を比較し、**3種類以上で同じ方向が出た内容だけ**を表示しています。
+
+【共通して現れた本質】
+${traitBlocks}
+
+【仕事で共通して活かせること】
+${workBlocks}
+**結論：肩書ではなく、上記の力を日常的に使える仕事内容を選ぶことが重要です。**
+
+【恋愛・結婚で共通して大切なこと】
+${loveBlocks}
+**結論：強く惹かれるかだけでなく、これらの条件を日常生活で守れる相手かを確認してください。**
+
+【今から行うこと】
+${actionBlocks}
+
+【この鑑定書に表示していないもの】
+一つの占術だけに現れた特徴、他の占術と方向が一致しない解釈、根拠が2種類以下の内容は、混乱を避けるため表示していません。時期や出来事も、複数の異なる占術で同じテーマを固定計算できる場合を除き断定しません。
+
+同じ生年月日・出生時刻・出生地・性別では、毎回同じ結果になります。占術は将来を保証するものではなく、自分の選択肢を整理するための参考情報として利用してください。`
+
+  /* 旧・占術別詳細レポート（全占術一致版への移行履歴として一時保持）
   return `【全占術統合鑑定 — 総合結論】
 四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
 これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
@@ -442,4 +533,5 @@ ${annualDetail}
 あなたの天中殺は${input.chusatsu}です。これは不幸を予告するものではなく、従来の前提を見直しやすい周期を示す分類です。時期だけで重大な決断をせず、資金、健康、契約、周囲への影響といった現実条件を確認してください。**占術は決断を代行するものではなく、見落としている観点を増やす道具**です。
 
 同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
+  */
 }
