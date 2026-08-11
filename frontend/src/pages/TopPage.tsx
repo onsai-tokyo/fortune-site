@@ -825,6 +825,7 @@ export function TopPage() {
                       { name: '四柱推命', color: '#f87171' }, { name: '算命学', color: '#60a5fa' },
                       { name: '宿曜', color: '#a78bfa' }, { name: '納音', color: '#f59e0b' },
                       { name: '数秘術', color: '#94a3b8' }, { name: '九星気学', color: '#4ade80' },
+                      { name: '西洋占星術', color: '#38bdf8' }, { name: 'インド占星術', color: '#fb923c' },
                     ].map(s => (
                       <span key={s.name} className="text-xs border rounded-full px-3 py-0.5 font-medium"
                         style={{ color: s.color, borderColor: `${s.color}40`, background: `${s.color}10` }}>

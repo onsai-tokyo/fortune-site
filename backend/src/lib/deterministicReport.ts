@@ -92,6 +92,16 @@ const ASTRO_SIGN: Record<string, string> = {
   射手座: '視野を広げ、意味や可能性を探究する力', 山羊座: '目標を現実の仕組みへ変え、責任を果たす力', 水瓶座: '既存の枠を越え、独自の仕組みを考える力', 魚座: '境界を越えて感じ取り、想像力で包み込む力',
 }
 
+const NAKSHATRA_DETAIL: Record<string, string> = {
+  アシュヴィニー: '素早く始め、停滞を動かす力', バラニー: '責任を引き受け、最後まで変化を通過する力', クリッティカー: '不要なものを切り分け、本質を磨く力', ローヒニー: '魅力や資源を育て、形ある豊かさへつなげる力',
+  ムリガシーラ: '問いを持ち続け、未知の答えを探す力', アールドラー: '混乱の中から真実を見つけ、再構築する力', プナルヴァス: '原点へ戻り、何度でも立て直す力', プシャ: '人や仕組みを養い、安定して成長させる力',
+  アーシュレーシャ: '相手や状況の奥を読み、複雑さを扱う力', マガー: '受け継いだものを尊重し、自分の責任として担う力', 'プールヴァ・パールグニー': '創造性や喜びを人と分かち合う力', 'ウッタラ・パールグニー': '関係を約束と実務によって長く支える力',
+  ハスタ: '技術と工夫を使い、考えを手で扱える形にする力', チトラー: '理想の像を描き、独自の美しさや構造を作る力', スヴァーティ: '自立性を保ちながら柔軟に世界を広げる力', ヴィシャーカー: '目標へ集中し、複数の可能性から一本を選ぶ力',
+  アヌラーダー: '信頼と協力を育て、困難の中でも関係を守る力', ジェーシュタ: '複雑な局面で責任を担い、守るべきものを守る力', ムーラ: '表面にとらわれず、物事の根本原因まで掘る力', 'プールヴァ・アーシャーダー': '信念を掲げ、自分の価値を外へ打ち出す力',
+  'ウッタラ・アーシャーダー': '長期的な原則を守り、確かな成果へ結びつける力', シュラヴァナ: 'よく聞き、知識や経験を学びとして伝える力', ダニシュター: '集団のリズムを読み、資源と行動をまとめる力', シャタビシャー: '既存の常識から距離を取り、独自に問題を解く力',
+  'プールヴァ・バードラパダー': '理想を深く追い、価値観の転換を促す力', 'ウッタラ・バードラパダー': '内面の深さを保ち、静かに全体を支える力', レーヴァティー: '人や物事を安全に次の段階へ導く力',
+}
+
 const SANMEI_DETAIL: Record<string, string> = {
   貫索星: '自分の基準を守り、ひとつの方針を継続する力です。急な変更より、自分で納得した順序で進むと安定します。',
   石門星: '人と人をつなぎ、集団の中で共通点を見つける力です。対等な関係で協力すると持ち味が出ます。',
@@ -296,6 +306,11 @@ export function buildDeterministicReport(input: ReportInput): string {
   const westernMars = westernPlanet('火星')
   const vedicSun = vedicPlanet('太陽')
   const vedicMoon = vedicPlanet('月')
+  const vedicMercury = vedicPlanet('水星')
+  const vedicVenus = vedicPlanet('金星')
+  const vedicMars = vedicPlanet('火星')
+  const vedicJupiter = vedicPlanet('木星')
+  const vedicSaturn = vedicPlanet('土星')
 
   return `【全占術統合鑑定 — 総合結論】
 四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
@@ -312,6 +327,7 @@ ${western && vedic ? `西洋占星術では太陽${westernSun?.sign}・月${west
 【全占術統合鑑定 — 才能・仕事・お金】
 四柱推命では${day.work}、算命学では東方${eastStar}の「${WORK_STYLE[eastStar] ?? SANMEI[eastStar]}」、紫微斗数では官祿宮${careerPalaceStars}・財帛宮${wealthPalaceStars}が仕事と収入の使い方を示します。九星の${input.kyuseiProfile?.yearStar ?? input.honmeiName}は、社会の中心で責任を引き受ける動き方を補足します。
 **仕事の総合結論は、${day.strength}を、${WORK_STYLE[eastStar] ?? '自分の専門性を活かす働き方'}へつなげること。** 得意な${strongestElement}を軸に、少ない${weakestElement}の「${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}」は手順・道具・協力者で補うと成果と収入が安定します。肩書より、裁量・評価基準・価値提供の方法が自分に合うかを重視してください。
+${vedic ? `インド占星術ではラグナ${vedic.ascendant.sign}の「${ASTRO_SIGN[vedic.ascendant.sign]}」、木星${vedicJupiter?.sign}の「${ASTRO_SIGN[vedicJupiter?.sign ?? ''] ?? '発展の方向'}」、土星${vedicSaturn?.sign}の「${ASTRO_SIGN[vedicSaturn?.sign ?? ''] ?? '責任の持ち方'}」を仕事の補助線にします。**短期的な適職名より、長期的に責任を持って育てられる領域を選ぶことが重要です。**` : ''}
 **向く役割：** 情報整理、企画、改善、専門分野の発信、複数の人や領域をつなぐ役割。${day.work}のように、知識を現実の判断へ変える仕事で強みが出ます。
 **向く環境：** 目的と評価基準は明確だが、進め方には裁量がある環境。短期成果だけを競うより、専門性と信頼を積み上げられる場が合います。
 **お金の扱い：** 財帛宮${wealthPalaceStars}は、発信・行動と蓄積・配慮の両方を求めます。収入源と生活防衛資金を分け、感情で使う予算をあらかじめ決めると、稼ぐ力と守る力のバランスが整います。
@@ -320,6 +336,7 @@ ${western && vedic ? `西洋占星術では太陽${westernSun?.sign}・月${west
 【全占術統合鑑定 — 恋愛・結婚・パートナーシップ】
 算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${input.sukuyo}宿は、相手の本音や場の機微を読む対人感覚を加えます。
 ${westernVenus && westernMars ? `西洋占星術では、金星${westernVenus.sign}が「好み・受け取る愛情」、火星${westernMars.sign}が「欲求・自分から動く方法」を示します。金星の${ASTRO_SIGN[westernVenus.sign]}と火星の${ASTRO_SIGN[westernMars.sign]}を両立できる関係が自然です。` : ''}
+${vedicVenus && vedicMars ? `インド占星術では金星${vedicVenus.sign}が関係に求める価値、火星${vedicMars.sign}${vedicMars.retrograde ? '逆行' : ''}が欲求と衝突時の反応を示します。**惹かれる気持ちだけでなく、安心できる生活条件と怒りや違和感を安全に話せるかを確認すること**が関係を守ります。` : ''}
 **恋愛・結婚の総合結論は、安心できる日常と互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を具体的に話すほど長続きします。婚期候補は確定日ではなく、出会い・進展・見直しが起こりやすい期間として活用してください。
 **惹かれやすい相手：** 会話が成立し、考えを更新でき、約束を行動で守る人。夫妻宮${couplePalaceStars}から、知性・企画力・言葉の相性が関係の入口になりやすい傾向です。
 **愛情表現：** 西方${westStar}の性質から、派手な演出より、連絡・生活・気遣いを継続することで愛情を示します。相手にも同じ表現を無意識に求めすぎないことが大切です。
@@ -381,7 +398,15 @@ ${planetLine(western.planets)}
 
 【鑑定根拠 — インド占星術（ラヒリ・サイデリアル）】
 ${vedic ? `ラヒリ・アヤナーンシャ${vedic.ayanamsha.toFixed(3)}°を使用。ラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**、月は**${vedicMoon?.sign}**、太陽は**${vedicSun?.sign}**です。
-月のナクシャトラは**${vedic.moonNakshatra}第${vedic.moonPada}パーダ**。心の反応、習慣、縁の感じ方を読む中心指標として扱います。
+**ラグナ（生き方の入口）：** ${ASTRO_SIGN[vedic.ascendant.sign]}。第一印象だけでなく、人生の課題へどう取り組むかを表します。
+**太陽（目的意識）：** ${vedicSun?.sign}の「${ASTRO_SIGN[vedicSun?.sign ?? ''] ?? '自分の軸を育てる力'}」。社会の中で自分らしい責任を引き受ける方向です。
+**月（心と習慣）：** ${vedicMoon?.sign}の「${ASTRO_SIGN[vedicMoon?.sign ?? ''] ?? '安心を作る力'}」。感情を落ち着かせ、日常を安定させる条件を示します。
+月のナクシャトラは**${vedic.moonNakshatra}第${vedic.moonPada}パーダ**。「${NAKSHATRA_DETAIL[vedic.moonNakshatra] ?? '心の反応を経験へ変える力'}」が心の反応、習慣、縁の感じ方に現れます。パーダは同じナクシャトラ内での表現方法をさらに四分した位置です。
+**水星（考え方・伝え方）：** ${vedicMercury?.sign}の「${ASTRO_SIGN[vedicMercury?.sign ?? ''] ?? '情報を扱う力'}」。
+**金星（愛情・価値観）：** ${vedicVenus?.sign}の「${ASTRO_SIGN[vedicVenus?.sign ?? ''] ?? '関係を育てる力'}」。
+**火星（行動・競争）：** ${vedicMars?.sign}${vedicMars?.retrograde ? '・逆行' : ''}の「${ASTRO_SIGN[vedicMars?.sign ?? ''] ?? '行動を起こす力'}」。逆行は力が弱いという意味ではなく、衝動や怒りを内側で検討してから出しやすい配置として扱います。
+**木星（発展・学び）：** ${vedicJupiter?.sign}の「${ASTRO_SIGN[vedicJupiter?.sign ?? ''] ?? '可能性を広げる力'}」。
+**土星（責任・成熟）：** ${vedicSaturn?.sign}の「${ASTRO_SIGN[vedicSaturn?.sign ?? ''] ?? '時間をかけて形にする力'}」。
 ${planetLine(vedic.planets)}
 ここではラーシ（サイン）とナクシャトラを固定計算しています。ダシャーや分割図まで断定する場合は、出生時刻の誤差と出生地点を市区町村単位で確認する必要があります。` : input.astrology?.reason ?? '出生条件から算出できません。'}
 

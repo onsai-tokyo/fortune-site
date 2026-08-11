@@ -126,6 +126,9 @@ test('詳細鑑定に恋愛・結婚・仕事と過去・未来の傾向を含�
   assert.match(report, /夫妻宮天機（化祿）・巨門/)
   assert.match(report, /西洋占星術では太陽魚座・月天秤座/)
   assert.match(report, /ナクシャトラは\*\*/)
+  assert.match(report, /\*\*ラグナ（生き方の入口）：\*\*/)
+  assert.match(report, /チトラー第3パーダ\*\*。「理想の像を描き/)
+  assert.match(report, /\*\*木星（発展・学び）：\*\*/)
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {
