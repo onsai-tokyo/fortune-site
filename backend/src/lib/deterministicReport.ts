@@ -238,6 +238,24 @@ export function buildDeterministicReport(input: ReportInput): string {
         return `**${palace.name}${palace.isBodyPalace ? '［身宮］' : ''}（${palace.heavenlyStem}${palace.earthlyBranch}）：** ${major}。主な補助星は${minor}。大限${palace.decadal.range?.join('〜') ?? '算出なし'}歳。`
       }).join('\n')
     : input.ziwei?.reason ?? '出生時刻がないため算出できません。'
+  const ziweiPalaces = input.ziwei?.available ? input.ziwei.palaces ?? [] : []
+  const palaceStars = (name: string) => {
+    const palace = ziweiPalaces.find(item => item.name === name)
+    return palace?.majorStars.length
+      ? palace.majorStars.map(star => `${star.name}${star.mutagen ? `（化${star.mutagen}）` : ''}`).join('・')
+      : '主星なし（対宮・三方四正を参照）'
+  }
+  const soulPalaceStars = palaceStars('命宮')
+  const careerPalaceStars = palaceStars('官祿')
+  const wealthPalaceStars = palaceStars('財帛')
+  const couplePalaceStars = palaceStars('夫妻')
+  const currentDecade = input.timing?.decades.find(period => currentYear >= period.startYear && currentYear <= period.endYear)
+  const currentAnnual = input.timing?.annual.find(item => item.year === currentYear)
+  const currentTimingSummary = [
+    currentDecade ? `大運${currentDecade.kanshi}・${currentDecade.tenGod}（${currentDecade.themes.join('、')}）` : '',
+    currentAnnual ? `${currentYear}年${currentAnnual.kanshi}・${currentAnnual.tenGod}（${currentAnnual.themes.join('、')}）` : '',
+    input.numerologyProfile ? `個人年${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）` : '',
+  ].filter(Boolean).join('、')
 
   return `【性格特性 — あなたの本質と気質】
 あなたの中心には、**${day.core}**という性質があります。日主${input.shichuDay[0]}は、状況に対する基本姿勢を表します。
@@ -317,6 +335,26 @@ ${annualDetail}
 【納音詳細 — 干支が示す自然界のイメージ】
 あなたの納音は**${input.nayin}**です。${nayinDetail}。
 納音は日柱の干支を二つ一組で分類する補助的な見方です。四柱推命の旺衰や通変星より優先して吉凶を決めず、**自分の資質をどのような環境で形にしやすいか**をイメージするために使います。
+
+【全占術統合鑑定 — あなたを一言で表すと】
+四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
+これらを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**とまとめられます。宿曜の「${sukuyoDetail}」という気質と、九星気学の「${honmeiDetail}」という社会的な動き方が、その軸を補強します。
+
+【全占術統合 — 才能・仕事・お金】
+四柱推命では${day.work}、算命学では東方${eastStar}の「${WORK_STYLE[eastStar] ?? SANMEI[eastStar]}」、紫微斗数では官祿宮${careerPalaceStars}・財帛宮${wealthPalaceStars}が仕事と収入の使い方を示します。
+**仕事の総合結論は、${day.strength}を、${WORK_STYLE[eastStar] ?? '自分の専門性を活かす働き方'}へつなげること。** 得意な${strongestElement}の力を中心に置き、少ない${weakestElement}は手順・道具・協力者で補うと成果が安定します。肩書よりも、実際に任される裁量と価値提供の方法が合っているかを重視してください。
+
+【全占術統合 — 恋愛・結婚・パートナーシップ】
+算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。
+**恋愛・結婚の総合結論は、安心できる日常と、互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を言葉にすると長続きします。婚期候補は出会いや関係が動きやすい時期であり、相手との現実的な合意が整ったときに活かされます。
+
+【全占術統合 — 現在の運気とこれから】
+現在は${currentTimingSummary || '人生段階と年運を重ねて確認する時期'}です。算命学では${currentPhase?.star ?? '現在の従星'}、紫微斗数では大限、四柱推命では大運・年運、数秘術では個人年がそれぞれ異なる時間幅を示します。
+**今の総合テーマは、${currentAnnual?.themes.join('、') ?? currentDecade?.themes.join('、') ?? '現在の強みを再現できる形へ整えること'}。** 一つの占術だけで時期を決めず、複数で重なるテーマを優先すると、予言ではなく行動計画として活用できます。
+
+【全占術統合 — 注意点と開運アクション】
+注意点は、${day.caution}です。命式で少ない${weakestElement}の「${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい働き'}」を意識し、天中殺や冲の時期は重大な判断を急がず確認工程を増やしてください。
+**最初に行うこと：** ${ELEMENT_DETAIL[weakestElement] ?? '不足しやすい機能'}を補う小さな習慣を一つ決める。\n**仕事では：** ${WORK_STYLE[eastStar] ?? '強みを繰り返し使える環境を選ぶ'}。\n**人間関係では：** 希望・不安・境界線を短い言葉で共有する。\n**運気の節目では：** 現実条件を確認したうえで、小さく試してから決断する。
 
 【人生の使命 — 生まれ持ったテーマ】
 数秘術の運命数${input.lifePathNumber}が示す中心テーマは、**${mission}**です。宿曜の${input.sukuyo}宿と算命学の${sanmei}を組み合わせると、培った力を周囲へ渡したときに人生の手応えが強まります。大きな目標ほど、小さく再現できる行動へ分解することが使命を現実へつなぐ方法です。
