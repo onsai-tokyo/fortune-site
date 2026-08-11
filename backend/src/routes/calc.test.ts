@@ -60,10 +60,10 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
   assert.deepEqual(expanded.fourPillars.map(pillar => pillar.stemTenGod), ['傷官', '偏官', '日主', '劫財'])
   assert.deepEqual(expanded.sanmeiChart.bodyChart, {
     north: { label: '北（頭）', star: '調舒星' },
-    east: { label: '東（左手）', star: '車騎星' },
+    west: { label: '西（右手）', star: '司禄星' },
     center: { label: '中央（胸）', star: '鳳閣星' },
-    south: { label: '南（腹）', star: '司禄星' },
-    west: { label: '西（右手）', star: '貫索星' },
+    east: { label: '東（左手）', star: '貫索星' },
+    south: { label: '南（腹）', star: '車騎星' },
   })
   assert.deepEqual(expanded.sanmeiChart.subordinateStars, {
     early: { label: '初年期', star: '天禄星', stage: '建禄' },

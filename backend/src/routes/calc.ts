@@ -152,10 +152,10 @@ export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
 
   const bodyChart = {
     north: { label: '北（頭）', star: calcPrimaryStar(dayStemIdx, shichu.year.stemIdx) },
-    east: { label: '東（左手）', star: calcPrimaryStar(dayStemIdx, shichu.month.stemIdx) },
+    west: { label: '西（右手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.day.branchIdx][0]) },
     center: { label: '中央（胸）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.month.branchIdx][0]) },
-    south: { label: '南（腹）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.day.branchIdx][0]) },
-    west: { label: '西（右手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.year.branchIdx][0]) },
+    east: { label: '東（左手）', star: calcPrimaryStar(dayStemIdx, HIDDEN_STEMS[shichu.year.branchIdx][0]) },
+    south: { label: '南（腹）', star: calcPrimaryStar(dayStemIdx, shichu.month.stemIdx) },
   }
   const subordinateStars = {
     early: { label: '初年期', ...calcSubordinateStar(dayStemIdx, shichu.year.branchIdx) },
