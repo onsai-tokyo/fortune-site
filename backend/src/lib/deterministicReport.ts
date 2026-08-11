@@ -543,10 +543,25 @@ export function buildDeterministicReport(input: ReportInput): string {
         caution: 'その場の勢いだけで決めず、現実的な条件を確認してください。',
       }
       const yearAction = consensusLabels[shared[0]]?.action ?? 'その年に優先することを一つ決める'
+      const workKeys: ConsensusKey[] = ['initiative', 'communication', 'insight', 'stability', 'independence', 'responsibility', 'transformation', 'creativity', 'exploration', 'practicality']
+      const loveKeys: ConsensusKey[] = ['harmony', 'stability', 'care', 'responsibility']
+      const relationKeys: ConsensusKey[] = ['communication', 'harmony', 'care', 'exploration']
+      const workScore = shared.filter(key => workKeys.includes(key)).length + (/偏財|正財|偏官|正官|偏印|正印/.test(item.tenGod) ? 1 : 0)
+      const loveScore = shared.filter(key => loveKeys.includes(key)).length + (item.relationshipSignals.length ? 2 : 0) + ([2, 6].includes(personalYear) ? 1 : 0)
+      const relationScore = shared.filter(key => relationKeys.includes(key)).length + (/劫財|食神|傷官|偏財/.test(item.tenGod) ? 1 : 0)
+      const strongestDomainScore = Math.max(workScore, loveScore, relationScore)
+      const showWork = workScore >= 2 || (workScore === strongestDomainScore && strongestDomainScore < 2)
+      const showLove = loveScore >= 2
+      const showRelation = relationScore >= 2 && relationScore >= Math.max(workScore, loveScore)
+      const domainLines = [
+        showWork ? `仕事の動き（${item.year}年）：${domain.work}` : '',
+        showLove ? `恋愛・結婚の動き（${item.year}年）：${domain.love}` : '',
+        showRelation ? `人間関係の動き（${item.year}年）：${domain.relation}` : '',
+      ].filter(Boolean).join('\n')
       const relationship = item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
         ? ` ${item.year}年は、交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。`
         : ''
-      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n仕事運（${item.year}年）：${domain.work}\n恋愛・結婚運（${item.year}年）：${domain.love}\n人間関係（${item.year}年）：${domain.relation}\n気をつけること（${item.year}年）：${domain.caution}\n${item.year}年に意識すること：${yearAction}。\n${evidenceMarker([
+      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${relationship}\n${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
       ])}`
