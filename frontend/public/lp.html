@@ -1805,6 +1805,25 @@
       if (!link || typeof gtag !== 'function') return;
       gtag('event', 'affiliate_click', { placement: link.dataset.affiliateName, destination: link.href });
     });
+    const API_FALLBACK_ORIGIN = 'https://fortune-site-iuzo.onrender.com';
+    const fetchFortuneApi = async (path, options) => {
+      let primaryResponse = null;
+      let primaryError = null;
+      try {
+        primaryResponse = await fetch(path, options);
+        if (primaryResponse.status < 500) return primaryResponse;
+      } catch (error) {
+        primaryError = error;
+      }
+
+      // Vite/Vercelの中継が一時的に502になっても、鑑定API自体が稼働中なら続行する。
+      try {
+        return await fetch(`${API_FALLBACK_ORIGIN}${path}`, options);
+      } catch (fallbackError) {
+        if (primaryResponse) return primaryResponse;
+        throw primaryError || fallbackError;
+      }
+    };
     formEl.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (typeof gtag === 'function') { gtag('event', 'fortune_form_submit', { form_name: 'top_fortune' }); gtag('event', 'fortune_started'); }
@@ -1839,7 +1858,7 @@
         const birthTime = hour && minute ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : '';
 
         // バックエンドから占術データを取得
-        const calcResponse = await fetch('/api/calc/divination', {
+        const calcResponse = await fetchFortuneApi('/api/calc/divination', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ birthDate, birthTime, birthplace, gender })
@@ -1950,7 +1969,7 @@
         });
 
         resultContent.innerHTML = '<div class="reading-progress"><p>統合鑑定を作成しています</p><span>計算済みの結果を、読みやすい鑑定書へまとめています。</span></div>';
-        const response = await fetch('/api/preview/generate?format=json&v=5', {
+        const response = await fetchFortuneApi('/api/preview/generate?format=json&v=5', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

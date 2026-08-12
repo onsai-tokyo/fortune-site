@@ -19,8 +19,27 @@ const PORT = process.env.PORT ?? 3001
 // Renderなどのリバースプロキシの背後で動作する場合に必要
 app.set('trust proxy', 1)
 
+const configuredFrontendOrigins = (process.env.FRONTEND_URL ?? '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean)
+const allowedFrontendOrigins = new Set([
+  ...configuredFrontendOrigins,
+  'https://fate-lab.com',
+  'https://www.fate-lab.com',
+  'https://fortune-site-theta.vercel.app',
+])
+const localPreviewOrigin = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  origin(origin, callback) {
+    // Originが無いサーバー間通信と、公開サイト・ローカル確認画面だけを許可する。
+    if (!origin || allowedFrontendOrigins.has(origin) || localPreviewOrigin.test(origin)) {
+      callback(null, true)
+      return
+    }
+    callback(new Error('CORS origin not allowed'))
+  },
   credentials: true,
 }))
 // Stripe署名検証では加工前のbodyが必要。express.jsonより先に登録する。
