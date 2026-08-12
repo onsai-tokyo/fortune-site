@@ -999,6 +999,12 @@
     .report-subsection-title { margin: 24px 0 10px; color: var(--gold-dark); font-size: 15px; letter-spacing: .05em; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
+    .affiliate-card { margin: 24px 0; padding: 18px; border: 1px solid rgba(143,106,31,.32); border-radius: 12px; background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(241,230,201,.38)); white-space: normal; }
+    .affiliate-label { display: inline-block; margin-bottom: 8px; padding: 2px 7px; border: 1px solid rgba(143,106,31,.32); border-radius: 999px; color: var(--gold-dark); font-family: 'Noto Sans JP', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+    .affiliate-card h5 { margin: 0 0 7px; color: var(--text-main); font-size: 16px; line-height: 1.55; }
+    .affiliate-card p { margin: 0 0 13px; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 12px; line-height: 1.75; }
+    .affiliate-link { display: flex; min-height: 44px; padding: 10px 15px; border-radius: 8px; align-items: center; justify-content: center; background: var(--gold-dark); color: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .affiliate-note { display: block; margin-top: 9px; color: #786f64; font-family: 'Noto Sans JP', sans-serif; font-size: 9px; line-height: 1.6; }
     .data-summary { margin: 0 0 18px; color: var(--gold-dark); font-family: serif; font-size: 17px; font-weight: 700; }
     .ziwei-late-row { display: none; }
     .ziwei-table.show-all .ziwei-late-row { display: table-row; }
@@ -1649,6 +1655,23 @@
 
   <script>
     const formEl = document.querySelector('form');
+    // A8.netで提携承認された広告URLだけを設定する。空欄の枠は画面に表示しない。
+    const affiliateOffers = {
+      summary: { url: '', title: '鑑定結果を専門家に相談したい方へ', description: '自分だけでは整理しにくい悩みを、相談できるサービスから探せます。', cta: '相談できるサービスを見る' },
+      love: { url: '', title: '恋愛や結婚について、さらに相談したい方へ', description: '相手との関係や今後について、第三者へ相談できるサービスを案内します。', cta: '恋愛相談サービスを見る' },
+      closing: { url: '', title: '次の一歩を具体的にしたい方へ', description: '鑑定書を参考に、自分に合った相談相手やサービスを探せます。', cta: 'おすすめサービスを見る' }
+    };
+    const renderAffiliate = (offer, placement) => {
+      if (!offer?.url) return '';
+      const url = String(offer.url);
+      if (!/^https:\/\//.test(url)) return '';
+      return `<aside class="affiliate-card" data-affiliate-placement="${placement}">
+        <span class="affiliate-label">PR・広告</span>
+        <h5>${offer.title}</h5><p>${offer.description}</p>
+        <a class="affiliate-link" href="${url}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-name="${placement}">${offer.cta} →</a>
+        <small class="affiliate-note">リンク先は外部サービスです。当サイトは成果報酬を受け取る場合があります。</small>
+      </aside>`;
+    };
     const fortuneTerms = {
       '傷官': '四柱推命の通変星。感性、表現、改善意識が表れやすい性質です。',
       '化忌': '紫微斗数の四化の一つ。執着や課題が集中しやすい領域を示します。',
@@ -1672,12 +1695,20 @@
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
       });
-      return withGlossary
+      let rendered = withGlossary
         .replace(/^【(.+?)】$/gm, '<h4 class="report-section-title">$1</h4>')
         .replace(/^〈(.+?)〉$/gm, '<h5 class="report-subsection-title">$1</h5>')
         .replace(/\n\n/g, '<div class="report-spacer"></div>')
         .replace(/\n/g, '<br>');
+      rendered = rendered.replace('<h4 class="report-section-title">共通して現れた本質</h4>', `${renderAffiliate(affiliateOffers.summary, 'summary')}<h4 class="report-section-title">共通して現れた本質</h4>`);
+      rendered = rendered.replace('<h4 class="report-section-title">人間関係</h4>', `${renderAffiliate(affiliateOffers.love, 'love')}<h4 class="report-section-title">人間関係</h4>`);
+      return `${rendered}${renderAffiliate(affiliateOffers.closing, 'closing')}`;
     };
+    document.addEventListener('click', event => {
+      const link = event.target.closest?.('[data-affiliate-name]');
+      if (!link || typeof gtag !== 'function') return;
+      gtag('event', 'affiliate_click', { placement: link.dataset.affiliateName, destination: link.href });
+    });
     formEl.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (typeof gtag === 'function') gtag('event', 'fortune_form_submit', { form_name: 'top_fortune' });
