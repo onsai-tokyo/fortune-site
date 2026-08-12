@@ -630,9 +630,14 @@ export function buildDeterministicReport(input: ReportInput): string {
   const westernMoonDetail = astroPhrase(westernMoon?.sign, 'moon')
   const westernVenusDetail = astroPhrase(westernVenus?.sign, 'venus')
   const westernMarsDetail = astroPhrase(westernMars?.sign, 'mars')
-  // 出生時刻がない場合も全員共通の代替文にしない。配偶者位置・日主・宿曜を使って個別化する。
-  const attractionDetail = SIGN_BEHAVIOR[westernVenus?.sign ?? '']?.venus
-    ?? `${LOVE_STYLE[westStar] ?? day.love}。特に、${SUKUYO_DETAIL[input.sukuyo] ?? '自然体で信頼を育てられること'}を感じる相手に惹かれます`
+  // 「好きになりやすい人」は配偶者位置を土台に、インド式の金星と木星を交差させる。
+  // 出生時刻がない場合も共通文にせず、配偶者位置・宿曜・日柱で個別化する。
+  const sanmeiAttraction = LOVE_STYLE[westStar] ?? day.love
+  const vedicVenusAttraction = SIGN_BEHAVIOR[vedicVenus?.sign ?? '']?.venus
+  const vedicJupiterTrust = SIGN_BEHAVIOR[vedicJupiter?.sign ?? '']?.jupiter
+  const attractionDetail = vedicVenusAttraction && vedicJupiterTrust
+    ? `${sanmeiAttraction}。第一印象では、${vedicVenusAttraction} 長く付き合う相手を選ぶときは、${vedicJupiterTrust}`
+    : `${sanmeiAttraction}。特に、${SUKUYO_DETAIL[input.sukuyo] ?? '自然体で信頼を育てられること'}を感じ、${day.love}を実現できる人に惹かれます`
   const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars
     ?? `${SANMEI_DETAIL[eastStar] ?? day.strength} 好意が生まれた後は、${day.love}かどうかを確かめながら進みます`
   const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
@@ -731,7 +736,7 @@ ${uniqueWorkPattern}
 ${combinedEvidence}
 
 【恋愛・結婚】
-惹かれやすさ：**${attractionDetail}**。外見や勢いだけでなく、その人が普段どのように約束を扱うかが決め手になります。
+惹かれやすさ：**${attractionDetail}**。第一印象だけでなく、一緒に過ごしたときにこの条件が続くかを見ると、本当に合う相手を見分けやすくなります。
 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
 関係が安定する条件：${loveBlocks}
 ${loveScene}
