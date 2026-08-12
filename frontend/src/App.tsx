@@ -1,8 +1,7 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 
-const TopPage = lazy(() => import('./pages/TopPage').then(module => ({ default: module.TopPage })))
 const ResultPage = lazy(() => import('./pages/ResultPage').then(module => ({ default: module.ResultPage })))
 const FeaturePage = lazy(() => import('./pages/FeaturePage').then(module => ({ default: module.FeaturePage })))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
@@ -21,13 +20,18 @@ function PageLoader() {
   return <div className="min-h-screen bg-[#faf7ef]" aria-label="ページを読み込んでいます" />
 }
 
+function OfficialTopRedirect() {
+  useEffect(() => { window.location.replace('/lp.html') }, [])
+  return <PageLoader />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<TopPage />} />
+            <Route path="/" element={<OfficialTopRedirect />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/result" element={<ResultPage />} />
