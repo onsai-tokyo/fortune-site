@@ -690,9 +690,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const personalizedElements = `考え方と行動のバランスを見ると、**「${strongestDetail}」**がいちばん自然に使えます。${favorableBridge} 反対に「${weakestDetail}」は不足しやすいため、習慣にする、道具を使う、得意な人に頼るなど、外から補うと全体が整います。`
   const personalizedLove = westernVenus && westernMars
     ? `親密になるほど、${westStarDetail}という関わり方が前面に出ます。
-- 惹かれ方：${SIGN_BEHAVIOR[westernVenus.sign]?.venus ?? westernVenusDetail}
-- 気持ちが動いた後：${SIGN_BEHAVIOR[westernMars.sign]?.mars ?? westernMarsDetail}
-好きになる速さと、信頼を決める速さは必ずしも同じではありません。`
+惹かれるときは、${SIGN_BEHAVIOR[westernVenus.sign]?.venus ?? westernVenusDetail}。一方、気持ちが動いた後は、${SIGN_BEHAVIOR[westernMars.sign]?.mars ?? westernMarsDetail}。そのため、好きになる速さと信頼を決める速さは必ずしも同じではありません。`
     : `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。一方、関係を進める場面では「${eastStarDetail}」が働きます。**求める安心と、実際に取る行動の違い**を自覚すると、無理のない速度で信頼を育てられます。`
   const inwardMarsPattern = westernMars?.retrograde || vedicMars?.retrograde
     ? `**好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人です。** 普段は抑えていても、限界を越えた後に強い言葉や決断として表れやすいため、小さな違和感の段階で伝える方が関係を守れます。強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません。`
@@ -833,6 +831,7 @@ ${easternDomainPattern}
 ${combinedEvidence}
 
 【仕事】
+仕事で現れやすい場面は、次の3つです。
 ${workBlocks}
 
 ${workScene}
@@ -856,6 +855,7 @@ ${uniqueLovePattern}
 ${combinedEvidence}
 
 【人間関係】
+人間関係で現れやすい傾向は、次の3つです。
 ${friendBlocks}
 
 ${relationScene}
