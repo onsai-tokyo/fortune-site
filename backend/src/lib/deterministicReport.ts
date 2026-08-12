@@ -240,6 +240,18 @@ const NAYIN_DETAIL: Record<string, string> = {
 }
 
 export function buildDeterministicReport(input: ReportInput): string {
+  const identityKey = [
+    input.shichuDay, input.nayin, input.sanmeiStar, input.sukuyo, input.lifePathNumber,
+    input.honmeiName, input.numerologyProfile?.birthDayNumber, input.numerologyProfile?.attitudeNumber,
+    input.sanmeiChart ? Object.values(input.sanmeiChart.bodyChart).map(item => item.star).join('') : '',
+  ].join('|')
+  const stableHash = (value: string) => [...value].reduce((hash, char) => ((hash * 31) + (char.codePointAt(0) ?? 0)) >>> 0, 2166136261)
+  const pick = <T>(items: readonly T[], salt: string) => items[stableHash(`${identityKey}|${salt}`) % items.length]
+  const rotate = <T>(items: T[], salt: string) => {
+    if (items.length < 2) return items
+    const offset = stableHash(`${identityKey}|${salt}`) % items.length
+    return [...items.slice(offset), ...items.slice(0, offset)]
+  }
   const day = DAY_STEM[input.shichuDay[0]] ?? DAY_STEM.甲
   const sanmei = SANMEI[input.sanmeiStar] ?? '資質を着実に活かす力'
   const mission = LIFE_PATH[input.lifePathNumber] ?? LIFE_PATH[1]
@@ -501,18 +513,30 @@ export function buildDeterministicReport(input: ReportInput): string {
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
     const expression = item.lineageCount >= 3
-      ? '普段の何気ない反応から大きな決断まで、幅広い場面に表れやすい性格です。'
+      ? pick([
+          '普段の反応だけでなく、進路や関係を決める場面にも一貫して現れます。',
+          '小さな選択と人生の節目の両方に、この傾向が通っています。',
+          '環境が変わっても残りやすく、あなたの判断を支える中心的な性質です。',
+        ], `trait-strong-${item.key}`)
       : item.count >= 4
-        ? '複数の見方が同じ方向を示しますが、環境や相手によって表れ方の強さが変わります。'
-        : '特定の場面で輪郭がはっきりする性質で、意識して使うほど長所になります。'
+        ? pick([
+            '場面によって強弱は変わりますが、複数の角度から同じ特徴が確認できます。',
+            '相手や役割に応じて見せ方を変えながら、根には同じ性質があります。',
+            'いつも同じ形では出ませんが、重要な選択ほどこの特徴が表に出ます。',
+          ], `trait-medium-${item.key}`)
+        : pick([
+            '必要な場面で輪郭が濃くなり、意識して使うほど頼れる長所になります。',
+            '常に前面へ出る性質ではなく、条件が整ったときに強く働きます。',
+            '普段は控えめでも、役割を任されたときに存在感が増す特徴です。',
+          ], `trait-focused-${item.key}`)
     return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${expression}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
   }).join('\n\n')
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const workBlocks = selectedConsensus.map(item => domainProjection[item.key].work).join(' ')
-  const loveBlocks = selectedConsensus.map(item => domainProjection[item.key].love).join(' ')
-  const friendBlocks = selectedConsensus.map(item => domainProjection[item.key].friend).join(' ')
+  const workBlocks = rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work).join(' ')
+  const loveBlocks = rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love).join(' ')
+  const friendBlocks = rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend).join(' ')
   const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
@@ -644,6 +668,21 @@ export function buildDeterministicReport(input: ReportInput): string {
   const uniqueWorkPattern = `得意領域は**${day.work}**です。共通するのは職種名ではなく、**「${day.strength}」を使えること**。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
   const uniqueLovePattern = `もともと求めるのは**${day.love}**です。親密になるほど${westStarDetail} 惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
   const uniqueRecoveryPattern = `負荷が高いときは「${day.caution}」が表れやすくなります。最も不足しやすい「${weakestDetail}」を、予定、道具、得意な人への依頼など外部の仕組みで補うと、本来の判断力へ戻りやすくなります。`
+  const workScene = pick([
+    `会議では${SANMEI[eastStar] ?? '自分の判断軸'}が先に出て、仕上げでは${monthTenGodDetail}が強く働きます。`,
+    `仕事を始める入口は${SANMEI[eastStar] ?? '自分らしい進め方'}、成果として残したいものは${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}です。`,
+    `周囲からは${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '状況を動かす人'}と見られやすく、実務では${monthTenGodDetail}を担うと評価が定着します。`,
+  ], 'work-scene')
+  const loveScene = pick([
+    `惹かれる入口は${LOVE_STYLE[westStar] ?? day.love}ですが、関係を進めるときは${SANMEI[eastStar] ?? '自分のペース'}が前に出ます。`,
+    `安心の条件は${day.love}で、好意を行動へ移す場面では${SANMEI[eastStar] ?? '率直な行動'}を選びやすい人です。`,
+    `二人きりでは${SANMEI[westStar] ?? '親密さ'}を求め、意見が割れた場面では「${day.caution}」が課題として現れます。`,
+  ], 'love-scene')
+  const relationScene = pick([
+    `初対面では${NUMEROLOGY_DETAIL[input.numerologyProfile?.attitudeNumber ?? 0] ?? '相手を観察する姿勢'}が出やすく、親しくなると${SANMEI[eastStar] ?? '本来の行動力'}が見えてきます。`,
+    `集団では${SANMEI[eastStar] ?? '場に応じた役割'}を担い、少人数では${SANMEI[westStar] ?? '身近な人への関わり方'}を大切にします。`,
+    `人との距離を決める基準は${SUKUYO_DETAIL[input.sukuyo] ?? '本音を扱えるかどうか'}で、役割を持つと${SANMEI[northStar] ?? '責任感'}が強まります。`,
+  ], 'relation-scene')
   const vedicDetailBlock = vedic
     ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
 
@@ -685,6 +724,7 @@ ${combinedEvidence}
 【仕事】
 ${workBlocks}
 
+${workScene}
 ${personalizedWork}
 ${uniqueWorkPattern}
 収入面では、**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}を成果物として見える形にすること**が鍵です。${day.caution}が出たときは、依頼の範囲・期限・対価を見直してください。
@@ -694,6 +734,7 @@ ${combinedEvidence}
 惹かれやすさ：**${attractionDetail}**。外見や勢いだけでなく、その人が普段どのように約束を扱うかが決め手になります。
 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
 関係が安定する条件：${loveBlocks}
+${loveScene}
 ${personalizedLove}
 ${uniqueLovePattern}
 すれ違いやすい場面：**${day.caution}**が恋愛にも出やすい点です。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
@@ -703,6 +744,7 @@ ${combinedEvidence}
 【人間関係】
 ${friendBlocks}
 
+${relationScene}
 ${personalizedRelations}
 人付き合いでは、**${SUKUYO_DETAIL[input.sukuyo] ?? '自分の感覚を大切にしながら信頼を築くこと'}**が表れます。疲れたときは「${day.caution}」が起きていないかを確認し、無理な役割だけを手放してください。
 ${combinedEvidence}

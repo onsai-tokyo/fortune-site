@@ -13,6 +13,7 @@ import {
   calcTenGod,
   calcShichu,
   getSukuyo,
+  KYUSEI_NAMES,
 } from './calc.js'
 import { buildDeterministicReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
@@ -137,6 +138,37 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     assert.notEqual(new Set(three.map(item => item.slice(0, 10))).size, 1, `3文連続で導入句が同じです: ${three.join(' / ')}`)
     assert.notEqual(new Set(three.map(item => item.slice(-10))).size, 1, `3文連続で文末が同じです: ${three.join(' / ')}`)
   }
+})
+
+test('異なる生年月日は固有の場面描写と順序を持ち、同じ入力ではぶれない', () => {
+  const makeReport = (year: number, month: number, day: number) => {
+    const shichu = calcShichu(year, month, day)
+    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
+    return buildDeterministicReport({
+      shichuDay: shichu.day.kanshi,
+      nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
+      sanmeiStar: sanmei.shukumeiStar,
+      chusatsu: sanmei.chusatsu,
+      sukuyo: getSukuyo(year, month, day),
+      lifePathNumber: calcLifePathNumber(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`),
+      numerologyProfile: calcNumerologyProfile(year, month, day, 2026),
+      honmeiName: KYUSEI_NAMES[calcHonmeiStar(year, month, day)],
+      kyuseiProfile: calcKyuseiProfile(year, month, day),
+      timing: calcTimingCycles(year, month, day, undefined, 0, 'female'),
+      sanmeiRelations: calcSanmeiRelations(shichu, sanmei.chusatsu),
+      ...calcExpandedDivination(shichu),
+    })
+  }
+  const report1995 = makeReport(1995, 2, 20)
+  const report1997 = makeReport(1997, 7, 30)
+  assert.equal(makeReport(1995, 2, 20), report1995, '同じ入力の文章がぶれています')
+  assert.notEqual(report1995, report1997)
+  assert.match(report1995, /大きな流れを読む戦略家/)
+  assert.match(report1997, /感受性で本質を潤す探究者/)
+  const scene1995 = report1995.match(/(?:会議では|仕事を始める入口は|周囲からは).+?。/)?.[0]
+  const scene1997 = report1997.match(/(?:会議では|仕事を始める入口は|周囲からは).+?。/)?.[0]
+  assert.ok(scene1995 && scene1997)
+  assert.notEqual(scene1995, scene1997, '異なる生年月日の仕事場面が同文です')
 })
 
 test('算命学の人体星図は節入り後の日数に応じて二十八元を切り替える', () => {
