@@ -606,8 +606,11 @@ export function buildDeterministicReport(input: ReportInput): string {
   const westernMoonDetail = astroPhrase(westernMoon?.sign, 'moon')
   const westernVenusDetail = astroPhrase(westernVenus?.sign, 'venus')
   const westernMarsDetail = astroPhrase(westernMars?.sign, 'mars')
-  const attractionDetail = SIGN_BEHAVIOR[westernVenus?.sign ?? '']?.venus ?? '言葉と行動が一致する相手を選びます'
-  const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars ?? '相手の反応を確かめながら関係を進めます'
+  // 出生時刻がない場合も全員共通の代替文にしない。配偶者位置・日主・宿曜を使って個別化する。
+  const attractionDetail = SIGN_BEHAVIOR[westernVenus?.sign ?? '']?.venus
+    ?? `${LOVE_STYLE[westStar] ?? day.love}。特に、${SUKUYO_DETAIL[input.sukuyo] ?? '自然体で信頼を育てられること'}を感じる相手に惹かれます`
+  const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars
+    ?? `${SANMEI_DETAIL[eastStar] ?? day.strength} 好意が生まれた後は、${day.love}かどうかを確かめながら進みます`
   const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
   const nakshatraDetail = NAKSHATRA_DETAIL[vedic?.moonNakshatra ?? ''] ?? '心の反応を経験へ変える力'
   const lifeNumberDetail = NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission
@@ -630,9 +633,13 @@ export function buildDeterministicReport(input: ReportInput): string {
     ? `これはもともと得意なうえ、意識して使うほど自分を支えてくれる長所です。強く出ていることと、味方になることは矛盾しません。`
     : `一方で、別の力を意識して取り入れると、得意なことへ偏りすぎずに済みます。`
   const personalizedElements = `考え方と行動のバランスを見ると、**「${strongestDetail}」**がいちばん自然に使えます。${favorableBridge} 反対に「${weakestDetail}」は不足しやすいため、習慣にする、道具を使う、得意な人に頼るなど、外から補うと全体が整います。`
-  const personalizedLove = `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。会話と行動が一致し、現実的な約束を更新できる相手かを時間をかけて見てください。`
-  const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。肩書そのものより、何をどこまで担当するか、何を完成品とするか、報酬はいくらかが明確な働き方に向いています。最初に全体像をつかみ、次に手順へ落とし、最後まで仕上げる流れを自分の型にすると成果が安定します。`
-  const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} **相手との関係によって自然に役割を切り替える人**です。これは矛盾ではなく、相手との距離を細かく読み分ける性質です。ただし全員に最適な対応をしようとせず、**自分が引き受ける範囲を先に示す**方が関係は長続きします。`
+  const personalizedLove = westernVenus && westernMars
+    ? `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。`
+    : `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。一方、関係を進める場面では「${eastStarDetail}」が働きます。**求める安心と、実際に取る行動の違い**を自覚すると、無理のない速度で信頼を育てられます。`
+  const monthTenGod = input.fourPillars?.find(pillar => pillar.label === '月柱')?.stemTenGod ?? ''
+  const monthTenGodDetail = TEN_GOD_DETAIL[monthTenGod] ?? '経験を成果へ変えること'
+  const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。${day.work}の中でも「${day.strength}」を使え、${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '自分の判断を成果へ結びつけられる'}環境を選ぶと持ち味が明確になります。`
+  const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} **「対等な場では${SANMEI[eastStar] ?? '自分らしさ'}、目上には${SANMEI[northStar] ?? '慎重さ'}、守る相手には${SANMEI[southStar] ?? '行動力'}」と役割が切り替わる**のが、あなたの対人関係の特徴です。全員へ同じ顔を見せる必要はありません。`
   const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
   const uniqueWorkPattern = `得意領域は**${day.work}**です。共通するのは職種名ではなく、**「${day.strength}」を使えること**。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
   const uniqueLovePattern = `もともと求めるのは**${day.love}**です。親密になるほど${westStarDetail} 惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
@@ -679,9 +686,8 @@ ${combinedEvidence}
 ${workBlocks}
 
 ${personalizedWork}
-向いているのは、目的・担当範囲・完了条件がはっきりした役割です。
 ${uniqueWorkPattern}
-収入面では、得意なことを無制限に引き受けず、納品物と対価を先に決めると安定します。
+収入面では、**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}を成果物として見える形にすること**が鍵です。${day.caution}が出たときは、依頼の範囲・期限・対価を見直してください。
 ${combinedEvidence}
 
 【恋愛・結婚】
@@ -690,15 +696,15 @@ ${combinedEvidence}
 関係が安定する条件：${loveBlocks}
 ${personalizedLove}
 ${uniqueLovePattern}
-すれ違いやすい場面：相手を理解しようとするほど、確認前に本音を推測したり、自分の希望を後回しにしたりしがちです。事実・気持ち・希望の順で短く伝えてください。
-長く続けるために話しておくこと：連絡頻度、金銭感覚、生活分担、仕事への理解、一人で過ごす時間を具体的に決めておくと安心です。
+すれ違いやすい場面：**${day.caution}**が恋愛にも出やすい点です。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
+長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人の時間・将来の優先順位を具体的に確認すると安心です。
 ${combinedEvidence}
 
 【人間関係】
 ${friendBlocks}
 
 ${personalizedRelations}
-集まりでは話を整理したり、まだ言葉になっていない違和感を見つけたりする役に回りやすい人です。人数の多さより、互いの違いと境界線を尊重し、言葉と行動の両方で信頼を示せる関係が合います。曖昧な依頼や相談をすべて背負わず、自分の担当を明確にしてください。
+人付き合いでは、**${SUKUYO_DETAIL[input.sukuyo] ?? '自分の感覚を大切にしながら信頼を築くこと'}**が表れます。疲れたときは「${day.caution}」が起きていないかを確認し、無理な役割だけを手放してください。
 ${combinedEvidence}
 
 【時期 — 重なりの強い年】
