@@ -1905,8 +1905,13 @@
             </section>
             <div class="divination-summary">${summaryHtml}</div>`;
         } else {
-          divinationContent.innerHTML = '<div style="color: red;">占術データの計算に失敗しました</div>';
-          throw new Error('占術データの計算に失敗しました');
+          const calcError = await calcResponse.json().catch(() => ({}));
+          const calcMessage = calcResponse.status >= 500
+            ? '鑑定サーバーへ接続できませんでした。少し待ってから再度お試しください。'
+            : (calcError.error || '入力内容を確認して、もう一度お試しください。');
+          divinationContent.textContent = calcMessage;
+          divinationContent.classList.add('report-error');
+          throw new Error(calcMessage);
         }
         divinationContent.querySelector('.ziwei-toggle')?.addEventListener('click', event => {
           const table = divinationContent.querySelector('.ziwei-table');
@@ -1941,10 +1946,10 @@
         addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: calcData, reportText: fullContent });
         if (typeof gtag === 'function') { gtag('event', 'fortune_report_view', { form_name: 'top_fortune' }); gtag('event', 'fortune_completed'); gtag('event', 'report_viewed'); }
       } catch (err) {
-        const isDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
-        resultContent.textContent = isDevelopment
-          ? `鑑定生成エラー: ${err instanceof Error ? err.message : String(err)}`
-          : '通信が混み合っています。少し時間をおいて、もう一度お試しください。';
+        const detail = err instanceof Error ? err.message : String(err);
+        resultContent.textContent = /fetch|network|HTTP 5\d\d/i.test(detail)
+          ? '鑑定サーバーへ接続できませんでした。少し待ってから、もう一度お試しください。'
+          : detail;
         console.error('Fortune generation failed:', err);
       } finally {
         submitButton.disabled = false;

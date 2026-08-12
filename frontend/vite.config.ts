@@ -17,11 +17,11 @@ export default defineConfig({
     } : {}),
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_PROXY_TARGET ?? 'https://fortune-site-iuzo.onrender.com',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_PROXY_TARGET ?? 'https://fortune-site-iuzo.onrender.com',
         changeOrigin: true,
       },
     },
