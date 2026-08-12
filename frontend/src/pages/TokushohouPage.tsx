@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export function TokushohouPage() {
   const navigate = useNavigate()
+  const [monthlyPrice, setMonthlyPrice] = useState('料金ページおよび決済画面に表示')
+  useEffect(() => { fetch('/api/stripe/plan').then(r => r.ok ? r.json() : null).then(plan => { if (plan?.unitAmount != null) setMonthlyPrice(`${Number(plan.unitAmount).toLocaleString('ja-JP')}円/月（税込）`) }).catch(() => {}) }, [])
 
   return (
     <div className="min-h-screen bg-navy">
@@ -22,7 +25,7 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">販売業者</h2>
-            <p className="text-white/70 text-sm">Fate Lab運営事務局</p>
+            <p className="text-white/70 text-sm">温齋株式会社</p>
           </section>
 
           <section>
@@ -49,21 +52,9 @@ export function TokushohouPage() {
                 <span>無料鑑定書生成</span>
                 <span className="text-accent font-semibold">無料</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（ライト）</span>
-                <span className="text-white/80 font-semibold">780円/月（税込）</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（スタンダード）</span>
-                <span className="text-white/80 font-semibold">1,980円/月（税込）</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span>ポイントサブスク（ヘビー）</span>
-                <span className="text-white/80 font-semibold">3,980円/月（税込）</span>
-              </div>
               <div className="flex justify-between py-2">
-                <span>各種分析（自己分析・相性診断など）</span>
-                <span className="text-white/80 font-semibold">2〜3ポイント/回</span>
+                <span>鑑定質問 継続利用プラン</span>
+                <span className="text-white/80 font-semibold">{monthlyPrice}</span>
               </div>
             </div>
             <p className="text-white/50 text-xs mt-3">※詳細はトップページの料金セクションをご確認ください</p>
@@ -71,7 +62,7 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">支払方法</h2>
-            <p className="text-white/70 text-sm">クレジットカード決済（PAY.JP）</p>
+            <p className="text-white/70 text-sm">クレジットカード決済（Stripe）</p>
             <p className="text-white/50 text-xs mt-1">VISA / MasterCard / JCB / American Express / Diners Club</p>
           </section>
 
@@ -87,8 +78,7 @@ export function TokushohouPage() {
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">商品・サービスの提供時期</h2>
             <div className="text-white/70 text-sm space-y-1">
               <p>無料鑑定書：生成完了後、即時提供</p>
-              <p>ポイント：決済完了後、即時付与</p>
-              <p>有料分析：ポイント消費後、即時提供</p>
+              <p>鑑定質問 継続利用プラン：決済完了後、即時提供</p>
             </div>
           </section>
 
@@ -103,9 +93,9 @@ export function TokushohouPage() {
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">サブスクリプションの解約について</h2>
             <div className="text-white/70 text-sm space-y-2">
-              <p>マイページまたはトップページの料金セクションからいつでも解約可能です。</p>
-              <p>解約後は翌月からの課金が停止され、残ったポイントはそのままご利用いただけます。</p>
-              <p className="text-white/60 text-xs">※解約手続き完了後、即時にサブスクリプションが停止されます。日割り返金は行っておりません。</p>
+              <p>契約管理画面からいつでも解約手続きができます。解約しない限り月ごとに自動更新されます。</p>
+              <p>解約後も現在の請求期間が終わるまでは利用でき、次回以降の課金は行われません。</p>
+              <p className="text-white/60 text-xs">※日割り返金は行っておりません。</p>
             </div>
           </section>
 

@@ -184,7 +184,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs mr-3 flex-shrink-0 mt-1">
-                  AI
+                  読
                 </div>
               )}
               <div

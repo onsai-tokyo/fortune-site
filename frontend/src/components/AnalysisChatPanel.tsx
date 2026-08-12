@@ -165,7 +165,7 @@ export function AnalysisChatPanel({ fortuneData, featureLabel, analysisId }: Pro
       >
         <div className="flex items-center gap-2.5">
           <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-          <span className="text-white font-semibold text-sm">この結果についてAIに相談する</span>
+          <span className="text-white font-semibold text-sm">この結果について質問する</span>
           <span className="text-white/30 text-xs">2pt / 回</span>
         </div>
         <div className="flex items-center gap-2">

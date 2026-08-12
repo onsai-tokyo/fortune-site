@@ -14,7 +14,7 @@ const FEATURE_META: Record<string, { label: string; dot: string; path: string }>
   subordinate: { label: '部下占い',       dot: 'bg-green-500',   path: '/feature/subordinate' },
   client:      { label: '取引先占い',     dot: 'bg-purple-500',  path: '/feature/client' },
   direction:   { label: '方位診断',       dot: 'bg-cyan-500',    path: '/feature/direction' },
-  chat:        { label: 'AIチャット',     dot: 'bg-accent',      path: '/chat' },
+  chat:        { label: '鑑定履歴',       dot: 'bg-accent',      path: '/reading' },
   free:        { label: '自由鑑定',       dot: 'bg-accent',      path: '/analyze' },
 }
 

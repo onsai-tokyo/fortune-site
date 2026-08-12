@@ -1003,6 +1003,13 @@
     .timing-year { font-weight:600; color:var(--ink); }
     .timing-domain { font-weight:700; color:var(--gold-dark); }
     .turning-point { font-weight:700; color:var(--ink); background:linear-gradient(transparent 68%, rgba(196,151,55,.24) 68%); }
+    .reading-cta { margin:24px 0 30px; padding:18px; border:1px solid var(--border-gold); border-radius:12px; background:#fffdf8; }
+    .reading-cta strong,.reading-cta span { display:block; }
+    .reading-cta span { margin-top:5px; color:var(--text-muted); font-size:13px; }
+    .reading-cta button { width:100%; margin-top:13px; padding:12px 16px; border:0; border-radius:7px; background:var(--gold-dark); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+    .reading-progress { display:grid; gap:10px; padding:22px; border:1px solid var(--border-gold); border-radius:12px; background:#fffdf8; }
+    .reading-progress p { margin:0; font-weight:700; }
+    .reading-progress span { color:var(--text-muted); font-size:13px; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
     .affiliate-card { margin: 24px 0; padding: 18px; border: 1px solid rgba(143,106,31,.32); border-radius: 12px; background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(241,230,201,.38)); white-space: normal; }
@@ -1625,6 +1632,17 @@
     </div>
   </section>
 
+  <section class="section" id="pricing" aria-labelledby="pricing-title">
+    <div class="section-inner">
+      <div class="section-header"><p class="section-eyebrow">CONTINUE READING</p><h2 class="section-title" id="pricing-title">鑑定結果を、さらに読み解く</h2></div>
+      <div class="reading-cta">
+        <strong>鑑定質問 継続利用プラン　<span id="subscription-price">月額料金を確認中</span></strong>
+        <span>無料鑑定後の質問は3回まで無料です。その後は月額プランで継続できます。契約は毎月自動更新され、契約管理画面からいつでも解約できます。</span>
+        <span>決済にはStripeを使用します。日割り返金はありません。詳細は特定商取引法に基づく表記をご確認ください。</span>
+      </div>
+    </div>
+  </section>
+
   <!-- 鑑定結果表示 -->
   <section id="result" class="result-overlay">
     <div class="result-dialog">
@@ -1688,6 +1706,10 @@
     };
     const topAffiliateSlot = document.getElementById('top-affiliate-slot');
     if (topAffiliateSlot) topAffiliateSlot.innerHTML = renderAffiliate(affiliateOffers.top, 'top');
+    fetch('/api/stripe/plan').then(response => response.ok ? response.json() : null).then(plan => {
+      const price = document.getElementById('subscription-price');
+      if (price && plan?.unitAmount != null) price.textContent = `月額${Number(plan.unitAmount).toLocaleString('ja-JP')}円（税込）`;
+    }).catch(() => {});
     const fortuneTerms = {
       '傷官': '四柱推命の通変星。感性、表現、改善意識が表れやすい性質です。',
       '化忌': '紫微斗数の四化の一つ。執着や課題が集中しやすい領域を示します。',
@@ -1730,6 +1752,24 @@
       rendered = rendered.replace('<h4 class="report-section-title">人間関係</h4>', `${renderAffiliate(affiliateOffers.love, 'love')}<h4 class="report-section-title">人間関係</h4>`);
       return `${rendered}${renderAffiliate(affiliateOffers.closing, 'closing')}`;
     };
+    const saveReadingContext = (context, sourceSection, suggestedQuestion) => {
+      sessionStorage.setItem('fate_reading_context', JSON.stringify({ ...context, sourceSection, suggestedQuestion }));
+      if (typeof gtag === 'function') gtag('event', 'question_cta_clicked', { source_section: sourceSection });
+      location.href = '/reading';
+    };
+    const addQuestionCtas = (container, context) => {
+      const headings = [...container.querySelectorAll('.report-section-title')];
+      headings.forEach((heading, index) => {
+        const title = heading.textContent.trim();
+        if (!['共通して現れた本質','あなた固有の組み合わせ','仕事','恋愛・結婚','人間関係','時期 — 重なりの強い年'].includes(title)) return;
+        const card = document.createElement('aside');
+        card.className = 'reading-cta';
+        card.innerHTML = `<strong>この結果について、さらに知りたいことは？</strong><span>${title}の内容を引き継いで質問できます。</span><button type="button">この結果について質問する</button>`;
+        card.querySelector('button').addEventListener('click', () => saveReadingContext(context, title, `${title}について、私の鑑定結果に沿ってもう少し詳しく教えてください。`));
+        const next = headings[index + 1];
+        if (next) container.insertBefore(card, next); else container.appendChild(card);
+      });
+    };
     document.addEventListener('click', event => {
       const link = event.target.closest?.('[data-affiliate-name]');
       if (!link || typeof gtag !== 'function') return;
@@ -1737,7 +1777,7 @@
     });
     formEl.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (typeof gtag === 'function') gtag('event', 'fortune_form_submit', { form_name: 'top_fortune' });
+      if (typeof gtag === 'function') { gtag('event', 'fortune_form_submit', { form_name: 'top_fortune' }); gtag('event', 'fortune_started'); }
 
       const year = formEl.querySelector('select').value;
       const month = formEl.querySelectorAll('select')[1].value;
@@ -1762,7 +1802,7 @@
         submitButton.disabled = true;
         submitButton.textContent = '鑑定中...';
         resultSection.style.display = 'block';
-        resultContent.textContent = '鑑定中...';
+        resultContent.innerHTML = '<div class="reading-progress"><p>あなたの命式を計算しています</p><span>四柱推命・算命学・紫微斗数・西洋占星術・九星気学・数秘術・宿曜などを確認中です。</span></div>';
         divinationContent.textContent = '命式を計算中...';
 
         const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -1778,6 +1818,7 @@
         let calcData;
         if (calcResponse.ok) {
           calcData = await calcResponse.json();
+          resultContent.innerHTML = '<div class="reading-progress"><p>9つの結果を照合しています</p><span>複数の占術で共通して現れる傾向を抽出しています。</span></div>';
           const elementScores = calcData.elementBalance?.scores || {};
           const bodyChart = calcData.sanmeiChart?.bodyChart || {};
           const subordinateStars = calcData.sanmeiChart?.subordinateStars || {};
@@ -1873,6 +1914,7 @@
           event.currentTarget.textContent = showing ? '85歳以降を閉じる' : 'すべての大限を見る';
         });
 
+        resultContent.innerHTML = '<div class="reading-progress"><p>統合鑑定を作成しています</p><span>計算済みの結果を、読みやすい鑑定書へまとめています。</span></div>';
         const response = await fetch('/api/preview/generate?format=json&v=5', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1896,7 +1938,8 @@
         const fullContent = responseData.text || '';
         if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
-        if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
+        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: calcData, reportText: fullContent });
+        if (typeof gtag === 'function') { gtag('event', 'fortune_report_view', { form_name: 'top_fortune' }); gtag('event', 'fortune_completed'); gtag('event', 'report_viewed'); }
       } catch (err) {
         const isDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
         resultContent.textContent = isDevelopment

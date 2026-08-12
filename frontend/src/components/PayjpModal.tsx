@@ -105,7 +105,7 @@ export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onTo
         <div className="glass-card p-3 space-y-1" style={{ background: 'rgba(148,163,184,0.05)' }}>
           {mode === 'points' ? (
             <>
-              <p className="text-white/40 text-xs">自己分析・相性診断・AIチャットなどで消費</p>
+              <p className="text-white/40 text-xs">自己分析・相性診断・鑑定結果への質問などで消費</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-white font-bold text-2xl">¥{amount.toLocaleString()}</span>
                 <span className="text-white/40 text-xs">→ {pts}pt 付与</span>
@@ -113,7 +113,7 @@ export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onTo
             </>
           ) : mode === 'one-time' ? (
             <>
-              <p className="text-white/40 text-xs">6占術 AI統合命式鑑定書（全30ページ）</p>
+              <p className="text-white/40 text-xs">複数占術の統合命式鑑定書</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-white font-bold text-2xl">¥{amount.toLocaleString()}</span>
                 <span className="text-white/40 text-xs">ワンタイム · PDF自動生成</span>
@@ -121,7 +121,7 @@ export function PayjpModal({ mode, title, amount, pts, isProcessing, error, onTo
             </>
           ) : (
             <>
-              <p className="text-white/40 text-xs">月額サブスク — 毎月ポイント付与・自己分析・AIチャットに使えます</p>
+              <p className="text-white/40 text-xs">月額サブスクリプション — 毎月ポイント付与・鑑定結果への質問に使えます</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-white font-bold text-2xl">¥{amount.toLocaleString()}</span>
                 <span className="text-white/40 text-xs">/月（税込）</span>

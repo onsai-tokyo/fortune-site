@@ -166,7 +166,7 @@ export function ResultPage() {
       {showSubModal && (
         <PayjpModal
           mode="subscription"
-          title="命術師AIチャット — プレミアム会員"
+          title="鑑定結果への質問 — 継続利用プラン"
           amount={1980}
           isProcessing={isProcessingSub}
           error={subError}
@@ -289,7 +289,7 @@ export function ResultPage() {
               <p className="text-white/25 text-xs mb-3 italic">他のメニューも試す — More Features</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: '相談し放題プラン', sub: '命術師AIに何でも相談', path: '/feature/chat',        dot: 'bg-accent',        border: 'border-accent/20        hover:border-accent/40',        text: 'text-accent'        },
+                  { label: '鑑定をさらに読む', sub: '鑑定結果について自由に質問', path: '/reading',        dot: 'bg-accent',        border: 'border-accent/20        hover:border-accent/40',        text: 'text-accent'        },
                   { label: '自己詳細分析',     sub: '強み・適職・転換期',  path: '/feature/self',        dot: 'bg-blue-400',      border: 'border-blue-400/20      hover:border-blue-400/40',      text: 'text-blue-300'      },
                   { label: '相性診断',         sub: '仕事・恋愛の相性',    path: '/feature/compat',      dot: 'bg-pink-400',      border: 'border-pink-400/20      hover:border-pink-400/40',      text: 'text-pink-300'      },
                   { label: '結婚相性',         sub: '生活・力関係・コツ',  path: '/feature/marriage',    dot: 'bg-rose-400',      border: 'border-rose-400/20      hover:border-rose-400/40',      text: 'text-rose-300'      },
@@ -323,7 +323,7 @@ export function ResultPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  <p className="text-white/40 text-xs">命術師AIチャット — プレミアム会員</p>
+                  <p className="text-white/40 text-xs">鑑定結果への質問 — 継続利用プラン</p>
                 </div>
                 <ChatArea fortuneData={fortuneData} initialReading={storedReading} sessionData={sessionData} />
               </div>
@@ -335,12 +335,12 @@ export function ResultPage() {
                     <span className="text-accent text-lg">✦</span>
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">命術師AIチャット</p>
-                    <p className="text-white/40 text-xs">命式を記憶したAI占術師に何でも相談できます</p>
+                    <p className="text-white font-semibold text-sm">鑑定結果について質問する</p>
+                    <p className="text-white/40 text-xs">命式と計算済みの鑑定結果を引き継いで質問できます</p>
                   </div>
                 </div>
                 <ul className="space-y-1.5">
-                  {['命式データを踏まえた深掘り相談', '仕事・恋愛・転機など何でも質問可能', '毎月の運勢レポートも自動配信'].map(item => (
+                  {['命式データを踏まえた詳しい読み解き', '仕事・恋愛・転機について質問可能', '鑑定履歴から続けて質問'].map(item => (
                     <li key={item} className="flex items-center gap-2">
                       <div className="w-1 h-1 rounded-full bg-accent/60 flex-shrink-0" />
                       <span className="text-white/50 text-xs">{item}</span>
@@ -351,7 +351,7 @@ export function ResultPage() {
                   onClick={() => setShowSubModal(true)}
                   className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all"
                 >
-                  1,980円/月でチャットを解放する
+                  鑑定を続ける
                 </button>
                 <p className="text-white/20 text-xs text-center">いつでも解約可能 · PAY.JP による安全な決済</p>
               </div>

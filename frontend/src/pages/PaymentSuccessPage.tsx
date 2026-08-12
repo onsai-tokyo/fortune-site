@@ -19,14 +19,14 @@ export default function PaymentSuccessPage() {
           <h1 className="text-white font-bold text-2xl mb-3">ご購入ありがとうございます</h1>
           <p className="text-white/50 text-sm leading-relaxed">
             プレミアム会員として登録が完了しました。<br />
-            命術師AIへの相談が今すぐご利用いただけます。
+            鑑定結果への追加質問が今すぐご利用いただけます。
           </p>
         </div>
 
         <div className="glass-card p-5 border border-accent/20 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-1 h-4 rounded-full bg-accent" />
-            <p className="text-white/70 text-sm">AIに何でも相談 — 無制限</p>
+            <p className="text-white/70 text-sm">鑑定結果について質問 — 継続利用</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-1 h-4 rounded-full bg-accent" />

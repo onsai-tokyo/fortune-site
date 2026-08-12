@@ -1061,7 +1061,7 @@ export function TopPage() {
               <span className="text-white/40 text-xs font-medium tracking-widest uppercase">Pricing</span>
             </div>
             <h2 className="text-white font-bold text-2xl sm:text-3xl mb-2">月額サブスクリプション</h2>
-            <p className="text-white/35 text-sm">毎月ポイントが付与。詳細分析・AIチャット全機能に使えます</p>
+            <p className="text-white/35 text-sm">毎月ポイントが付与。詳細分析と鑑定結果への質問に使えます</p>
             <p className="text-white/25 text-xs mt-1">登録すると 3pt 無料プレゼント · いつでも解約可能</p>
           </div>
 

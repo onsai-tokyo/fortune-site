@@ -21,13 +21,13 @@ export function UpgradeModal({ onSubscribe, onClose }: Props) {
         <div className="glass-card p-4 space-y-2 border border-accent/20" style={{ background: 'rgba(148,163,184,0.05)' }}>
           <p className="text-accent text-xs font-semibold tracking-wider">プレミアム会員 — 3,980円/月</p>
           <p className="text-white/70 text-sm leading-relaxed">
-            毎月AIが6占術を統合して今月の運勢をお届け。AIチャット相談も無制限でご利用いただけます。
+            複数占術を照らし合わせた鑑定と、鑑定結果への追加質問をご利用いただけます。
           </p>
           <ul className="space-y-1 pt-1">
             {[
               '毎月1日：統合運勢レポート配信',
               '毎月15日：詳細アドバイス配信',
-              'AIチャット相談し放題（無制限）',
+              '鑑定結果への追加質問',
             ].map(item => (
               <li key={item} className="flex items-center gap-2">
                 <div className="w-1 h-1 rounded-full bg-accent flex-shrink-0" />

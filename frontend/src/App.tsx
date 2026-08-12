@@ -15,6 +15,7 @@ const CompatReportPage = lazy(() => import('./pages/CompatReportPage'))
 const TokushohouPage = lazy(() => import('./pages/TokushohouPage').then(module => ({ default: module.TokushohouPage })))
 const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })))
+const ReadingPage = lazy(() => import('./pages/ReadingPage'))
 
 function PageLoader() {
   return <div className="min-h-screen bg-[#faf7ef]" aria-label="ページを読み込んでいます" />
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/tokushohou" element={<TokushohouPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/reading" element={<ReadingPage />} />
           </Routes>
         </Suspense>
       </AuthProvider>

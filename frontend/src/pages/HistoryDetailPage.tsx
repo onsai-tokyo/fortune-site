@@ -6,7 +6,7 @@ import { getAnalysis, type AnalysisRecord } from '../lib/history'
 const FEATURE_LABEL: Record<string, string> = {
   preview: '命式鑑定書', self: '自己分析', compat: '相性診断', marriage: '結婚相性',
   org: '組織診断', recruit: '採用分析', boss: '上司占い', subordinate: '部下占い',
-  client: '取引先占い', direction: '方位診断', chat: 'AIチャット', free: '自由鑑定',
+  client: '取引先占い', direction: '方位診断', chat: '鑑定結果への質問', free: '自由鑑定',
 }
 
 function formatDate(iso: string) {
@@ -162,7 +162,7 @@ function ChatHistory({ messages }: { messages: { role: string; content: string }
     <div className="glass-card border border-accent/15 overflow-hidden">
       <div className="px-5 py-3 border-b border-white/8 flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-        <span className="text-white/60 text-sm font-medium">AIとの会話</span>
+        <span className="text-white/60 text-sm font-medium">鑑定結果についての質問</span>
       </div>
       <div className="px-4 py-4 space-y-3 max-h-96 overflow-y-auto">
         {msgs.map((msg, i) => (

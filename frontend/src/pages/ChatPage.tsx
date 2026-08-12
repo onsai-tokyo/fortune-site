@@ -163,7 +163,7 @@ export default function ChatPage() {
     setMessages([initMsg])
 
     if (user) {
-      const title = `AIチャット — ${bd}`
+      const title = `鑑定結果への質問 — ${bd}`
       saveAnalysis(user.id, 'chat', bd, title).then(rid => {
         if (rid) {
           const newRecord: AnalysisRecord = {
@@ -275,7 +275,7 @@ export default function ChatPage() {
       <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
         <div className="glass-card max-w-sm w-full p-8 text-center space-y-5">
           <h2 className="text-white font-bold text-xl">ログインが必要です</h2>
-          <p className="text-white/50 text-sm">命術師AIチャットをご利用いただくにはログインが必要です。</p>
+          <p className="text-white/50 text-sm">鑑定結果への質問をご利用いただくにはログインが必要です。</p>
           <button onClick={() => navigate('/auth')} className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm">
             ログイン / 新規登録
           </button>
@@ -320,20 +320,20 @@ export default function ChatPage() {
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            新しいチャット
+            新しい鑑定
           </button>
         </div>
 
         {/* Session list */}
         <div className="flex-1 overflow-y-auto py-2 px-2">
           {grouped.length === 0 ? (
-            <p className="text-white/20 text-xs px-3 py-4 text-center">チャット履歴はありません</p>
+            <p className="text-white/20 text-xs px-3 py-4 text-center">鑑定履歴はありません</p>
           ) : (
             grouped.map(group => (
               <div key={group.label} className="mb-3">
                 <p className="text-white/20 text-xs px-3 py-1">{group.label}</p>
                 {group.items.map(s => {
-                  const title = (s.title ?? '').replace(/^AIチャット — \d{4}-\d{2}-\d{2}$/, s.birth_date ?? '').trim() || s.birth_date || 'チャット'
+                  const title = (s.title ?? '').replace(/^鑑定結果への質問 — \d{4}-\d{2}-\d{2}$/, s.birth_date ?? '').trim() || s.birth_date || '鑑定履歴'
                   const isActive = s.id === activeSessionId
                   return (
                     <button
@@ -397,11 +397,11 @@ export default function ChatPage() {
                     onClick={startNewChat}
                     className="text-xs bg-accent/15 text-accent border border-accent/30 rounded-lg px-3 py-1.5 hover:bg-accent/25 transition-colors"
                   >
-                    + 新しいチャット
+                    + 新しい鑑定
                   </button>
                 </div>
                 {messages.length === 0 ? (
-                  <p className="text-white/25 text-sm text-center py-20">チャット内容がありません</p>
+                  <p className="text-white/25 text-sm text-center py-20">質問履歴がありません</p>
                 ) : (
                   <div className="space-y-5">
                     {messages.map((msg, i) => (
@@ -435,8 +435,8 @@ export default function ChatPage() {
                 <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/25 flex items-center justify-center mx-auto mb-4">
                   <span className="text-accent text-2xl">✦</span>
                 </div>
-                <h1 className="text-white text-2xl font-bold mb-2">命術師AIに相談する</h1>
-                <p className="text-white/35 text-sm">生年月日を入力してチャットを始めてください</p>
+                <h1 className="text-white text-2xl font-bold mb-2">鑑定結果について質問する</h1>
+                <p className="text-white/35 text-sm">生年月日を入力して鑑定を始めてください</p>
               </div>
 
               <form onSubmit={handleStartChat} className="glass-card p-6 space-y-5">
@@ -532,7 +532,7 @@ export default function ChatPage() {
 
                 <button type="submit" disabled={!form.year || !form.month || !form.day}
                   className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-sm transition-all disabled:opacity-40 shadow-lg shadow-accent/20">
-                  ✦ チャットを始める
+                  鑑定を始める
                 </button>
               </form>
             </div>
@@ -554,7 +554,7 @@ export default function ChatPage() {
                 onClick={startNewChat}
                 className="text-white/30 hover:text-accent text-xs border border-white/10 hover:border-accent/30 rounded-lg px-3 py-1.5 transition-all flex-shrink-0"
               >
-                新しいチャット
+                新しい鑑定
               </button>
             </div>
 

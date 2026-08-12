@@ -16,6 +16,7 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const { user } = useAuth()
+  const returnTo = params.get('returnTo')?.startsWith('/') ? params.get('returnTo')! : '/'
 
   useEffect(() => {
     const detectRegistration = () => {
@@ -71,9 +72,9 @@ export default function AuthPage() {
   }, [])
 
   useEffect(() => {
-    if (user && !message.includes('認証が完了')) navigate('/', { replace: true })
+    if (user && !message.includes('認証が完了')) navigate(returnTo, { replace: true })
     else if (user && message.includes('認証が完了')) {
-      const t = setTimeout(() => navigate('/', { replace: true }), 3000)
+      const t = setTimeout(() => navigate(returnTo, { replace: true }), 3000)
       return () => clearTimeout(t)
     }
   }, [user, navigate, message])
@@ -90,7 +91,7 @@ export default function AuthPage() {
 
     try {
       if (mode === 'register') {
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth?returnTo=${encodeURIComponent(returnTo)}` } })
         if (error) throw error
         if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
           throw new Error('User already registered')
@@ -100,7 +101,7 @@ export default function AuthPage() {
       } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        navigate('/')
+        navigate(returnTo)
       } else if (mode === 'reset') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth?mode=login`,
@@ -136,8 +137,8 @@ export default function AuthPage() {
         {/* ロゴ */}
         <div className="text-center mb-8">
           <button onClick={() => navigate('/')} className="inline-block">
-            <h1 className="text-2xl font-bold text-white">宿命解析</h1>
-            <p className="text-accent text-xs mt-1">6占術 AI統合命式鑑定</p>
+            <h1 className="text-2xl font-bold text-white">Fate Lab</h1>
+            <p className="text-accent text-xs mt-1">9つの占術を照らし合わせる鑑定</p>
           </button>
         </div>
 
