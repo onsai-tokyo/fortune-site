@@ -133,6 +133,14 @@ previewRouter.post('/generate', async (req, res) => {
       ...expanded,
     })
 
+    // 固定鑑定は一括生成済み。モバイルSafariがSSE接続の終了を待ち続ける場合に備え、
+    // アイボリー版トップからは通常のJSONレスポンスを利用する。
+    if (req.query.format === 'json') {
+      res.setHeader('Cache-Control', 'private, no-store, max-age=0')
+      res.json({ text: deterministicReport })
+      return
+    }
+
     res.setHeader('Content-Type', 'text/event-stream')
     // POST本文に個人の出生情報を含むため共有キャッシュへ保存しない。
     // 同一入力の再現性は固定計算で担保し、古い鑑定文の再利用を防ぐ。

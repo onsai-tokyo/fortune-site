@@ -1816,7 +1816,7 @@
           event.currentTarget.textContent = showing ? '85歳以降を閉じる' : 'すべての大限を見る';
         });
 
-        const response = await fetch('/api/preview/generate?v=4', {
+        const response = await fetch('/api/preview/generate?format=json&v=5', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1831,19 +1831,9 @@
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        let fullContent = '';
-        const consumeSseLine = (line) => {
-          if (!line.startsWith('data: ')) return;
-          const jsonStr = line.slice(6);
-          if (!jsonStr.trim() || jsonStr === '[DONE]') return;
-          const obj = JSON.parse(jsonStr);
-          if (obj.delta && obj.delta.text) fullContent += obj.delta.text;
-        };
-
-        // 固定鑑定は小さなレスポンスなので、完了後に一括処理する。
-        // SafariでReadableStreamの終了通知が止まり「鑑定中」のままになる事象を避ける。
-        const responseText = await response.text();
-        responseText.split(/\r?\n/).forEach(consumeSseLine);
+        // 通常のJSONとして一括受信し、Safariのストリーム終了待ちを完全に避ける。
+        const responseData = await response.json();
+        const fullContent = responseData.text || '';
         if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
         if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
