@@ -354,8 +354,11 @@ export function buildDeterministicReport(input: ReportInput): string {
   ).join('／')
   const westernSun = westernPlanet('太陽')
   const westernMoon = westernPlanet('月')
+  const westernMercury = westernPlanet('水星')
   const westernVenus = westernPlanet('金星')
   const westernMars = westernPlanet('火星')
+  const westernJupiter = westernPlanet('木星')
+  const westernSaturn = westernPlanet('土星')
   const vedicSun = vedicPlanet('太陽')
   const vedicMoon = vedicPlanet('月')
   const vedicMercury = vedicPlanet('水星')
@@ -668,6 +671,30 @@ export function buildDeterministicReport(input: ReportInput): string {
   const inwardMarsPattern = westernMars?.retrograde || vedicMars?.retrograde
     ? `**好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人です。** 普段は抑えていても、限界を越えた後に強い言葉や決断として表れやすいため、小さな違和感の段階で伝える方が関係を守れます。強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません。`
     : ''
+  const aspectText = western?.aspects.join('、') ?? ''
+  const innerProcessingPatterns = [
+    westernMercury?.retrograde
+      ? '考えや言葉をすぐ確定せず、内側で何度か組み直してから伝える傾向があります。返答を急かされない環境の方が、本来の精度を出せます。'
+      : '',
+    westernJupiter?.retrograde
+      ? '成長や成功の基準を世間から借りるより、自分で意味を確かめたときに力が伸びます。'
+      : '',
+    westernSaturn?.retrograde
+      ? '責任を外から言われる以上に重く受け止めやすく、自分だけに厳しい基準を課しがちです。'
+      : '',
+  ].filter(Boolean).join(' ')
+  const deepChangePattern = /太陽と冥王星の(?:スクエア|オポジション|コンジャンクション)/.test(aspectText)
+    ? '**人生の節目では、表面的な修正ではなく「これまでの自分」を作り替えるほどの決断をしやすい人です。** 支配される感覚には強く反応するため、自分で選び直せる余地が必要です。'
+    : ''
+  const emotionalVoltagePattern = /月と(?:天王星|海王星)の(?:スクエア|オポジション)/.test(aspectText)
+    ? '周囲の空気や急な変化を敏感に受け取り、平静に見えるときも内側では感情が大きく動くことがあります。予定を詰めすぎず、一人で感覚を戻す時間を確保してください。'
+    : ''
+  const expansionBrakePattern = /木星と土星の(?:スクエア|オポジション)/.test(aspectText)
+    ? '仕事では「もっと広げたい気持ち」と「失敗しない形へ固めたい気持ち」が同時に働きます。大きく賭けるより、試す範囲を決めて段階的に広げる方法が合います。'
+    : ''
+  const wholeChartCorePattern = [innerProcessingPatterns, deepChangePattern].filter(Boolean).join(' ')
+  const wholeChartWorkPattern = expansionBrakePattern
+  const wholeChartRecoveryPattern = emotionalVoltagePattern
   const monthTenGod = input.fourPillars?.find(pillar => pillar.label === '月柱')?.stemTenGod ?? ''
   const monthTenGodDetail = TEN_GOD_DETAIL[monthTenGod] ?? '経験を成果へ変えること'
   const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。${day.work}の中でも「${day.strength}」を使え、${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '自分の判断を成果へ結びつけられる'}環境を選ぶと持ち味が明確になります。`
@@ -725,8 +752,10 @@ ${traitBlocks}
 ${primaryKey && secondaryKey ? `${consensusLabels[primaryKey].title}と${consensusLabels[secondaryKey].title}を同時に使う点が、この人らしさです。まず「${consensusLabels[primaryKey].action}」、次に「${consensusLabels[secondaryKey].action}」の順で進めると、考えを現実の選択へ移しやすくなります。` : '共通して現れた本質を、状況に応じて組み合わせて使う人です。'}
 ${personalizedCore}
 ${personalizedEmotion}
+${wholeChartCorePattern}
 ${personalizedElements}
 ${uniqueRecoveryPattern}
+${wholeChartRecoveryPattern}
 ${combinedEvidence}
 
 【仕事】
@@ -734,6 +763,7 @@ ${workBlocks}
 
 ${workScene}
 ${personalizedWork}
+${wholeChartWorkPattern}
 ${uniqueWorkPattern}
 収入面では、**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}を成果物として見える形にすること**が鍵です。${day.caution}が出たときは、依頼の範囲・期限・対価を見直してください。
 ${combinedEvidence}
