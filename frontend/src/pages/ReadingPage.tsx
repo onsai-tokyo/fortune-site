@@ -89,7 +89,7 @@ export default function ReadingPage() {
         const response = await fetch('/api/reading/conversations', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
           title: pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`, ...pending,
         }) })
-        const body = await response.json()
+        const body = await response.json().catch(() => ({ error: `鑑定結果を引き継げませんでした（HTTP ${response.status}）` }))
         if (!response.ok) { setError(body.error ?? '鑑定結果を引き継げませんでした'); return }
         setConversationId(body.id); setParams({ conversation: body.id }, { replace: true })
         setHistory(prev => [{ id: body.id, title: pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`, source_section: pending.sourceSection, source_year: pending.sourceYear, updated_at: new Date().toISOString() }, ...prev])
