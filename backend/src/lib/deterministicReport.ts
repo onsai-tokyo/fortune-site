@@ -24,8 +24,8 @@ interface ReportInput {
     direction: string
     startDate: string
     decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
-    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
-    marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; themes: string[] }>
+    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
+    marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
   }
   sanmeiRelations?: {
     relations: Array<{ pillars: string; branches: string; relation: string; meaning: string }>
@@ -51,6 +51,7 @@ interface ReportInput {
       minorStars: string[]
       decadal: { range: number[]; heavenlyStem: string; earthlyBranch: string }
     }>
+    annual?: Array<{ year: number; heavenlyStem: string; earthlyBranch: string; activePalaces: string[]; mutagenStars: string[]; signals: string[] }>
   }
   astrology?: {
     available: boolean
@@ -70,6 +71,7 @@ interface ReportInput {
       moonNakshatra: string
       moonPada: number
     }
+    annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[] }>
   }
 }
 
@@ -562,6 +564,16 @@ export function buildDeterministicReport(input: ReportInput): string {
   const friendBlocks = rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend).join(' ')
   const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
+  const kyuseiYearSignals: Record<number, ConsensusKey[]> = {
+    1: ['insight', 'care'], 2: ['stability', 'care'], 3: ['initiative', 'communication'],
+    4: ['harmony', 'communication'], 5: ['responsibility', 'transformation'], 6: ['responsibility', 'practicality'],
+    7: ['communication', 'harmony'], 8: ['stability', 'transformation'], 9: ['creativity', 'insight'],
+  }
+  const annualKyuseiNumber = (year: number) => {
+    let sum = String(year).split('').reduce((total, digit) => total + Number(digit), 0)
+    while (sum > 9) sum = String(sum).split('').reduce((total, digit) => total + Number(digit), 0)
+    return ((11 - sum - 1) % 9 + 9) % 9 + 1
+  }
   const annualSignals = (themes: string[]) => {
     const text = themes.join('、')
     const keys: ConsensusKey[] = []
@@ -588,7 +600,18 @@ export function buildDeterministicReport(input: ReportInput): string {
       const relationshipOverlap: ConsensusKey[] = item.relationshipSignals.length && [2, 6].includes(personalYear ?? 0)
         ? [hasRelationshipBreak ? 'transformation' : 'harmony']
         : []
-      const shared = [...new Set([...annualShared, ...decadeShared, ...relationshipOverlap])]
+      const ziweiYear = input.ziwei?.annual?.find(entry => entry.year === item.year)
+      const astrologyYear = input.astrology?.annual?.find(entry => entry.year === item.year)
+      const sanmeiYearSignals: ConsensusKey[] = item.sanmeiSignals?.some(signal => signal.includes('天中殺')) ? ['transformation', 'insight'] : []
+      const stemsSignals = [...new Set([...annualSignals(item.themes), ...annualSignals(decade?.themes ?? []), ...relationshipOverlap, ...sanmeiYearSignals, ...((ziweiYear?.signals ?? []) as ConsensusKey[])])]
+      const ephemerisSignals = [...new Set((astrologyYear?.signals ?? []) as ConsensusKey[])]
+      const kyuseiNumber = annualKyuseiNumber(item.year)
+      const numberSignals = [...new Set([...personalSignals, ...(kyuseiYearSignals[kyuseiNumber] ?? [])])]
+      const signalCounts = new Map<ConsensusKey, number>()
+      for (const lineageSignals of [stemsSignals, ephemerisSignals, numberSignals]) {
+        for (const signal of lineageSignals) signalCounts.set(signal, (signalCounts.get(signal) ?? 0) + 1)
+      }
+      const shared = [...signalCounts.entries()].filter(([, count]) => count >= 2).sort((a, b) => b[1] - a[1]).map(([key]) => key)
       if (!personalYear || !shared.length) return null
       const sharedLabels = shared.map(key => consensusLabels[key].title).join('・')
       const yearHeadline = item.themes.slice(0, 2).join('・') || sharedLabels
@@ -635,10 +658,20 @@ export function buildDeterministicReport(input: ReportInput): string {
         ? `[[TURNING:${item.year}年（${item.ageRange}）— 大きな転換期]]`
         : `[[YEAR:${item.year}年（${item.ageRange}）]]`
       const domainLabelLine = domainLabels.map(label => `[[DOMAIN:${label}]]`).join(' ')
-      const text = `${yearLabel}\n[[SUMMARY:${yearHeadline}]] ${domainLabelLine}\n\n${domainLines}${longTermNote}${relationship}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
+      const astrologyNote = astrologyYear && (astrologyYear.western.length || astrologyYear.vedic.length)
+        ? ` 天体の長期的な動きでも${astrologyYear.signals.includes('responsibility') ? '責任や現実化' : astrologyYear.signals.includes('harmony') ? '縁や協力' : '成長と変化'}が強まります。`
+        : ''
+      const ziweiNote = ziweiYear?.activePalaces.length
+        ? ` 長期の人生周期では${ziweiYear.activePalaces.map(name => name === '官禄' ? '仕事' : name === '夫妻' ? '結婚・パートナーシップ' : name === '財帛' ? '収入' : '自分自身').join('・')}が動きやすい位置です。`
+        : ''
+      const text = `${yearLabel}\n[[SUMMARY:${yearHeadline}]] ${domainLabelLine}\n\n${domainLines}${longTermNote}${relationship}${astrologyNote}${ziweiNote}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
+        ...(item.sanmeiSignals?.length ? [{ lineage: 'stems' as const, system: '算命学', factor: item.sanmeiSignals.join('・') }] : []),
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
+        ...(ziweiYear ? [{ lineage: 'stems' as const, system: '紫微斗数', factor: `流年 ${ziweiYear.heavenlyStem}${ziweiYear.earthlyBranch} ${ziweiYear.activePalaces.join('・')}` }] : []),
+        ...(astrologyYear ? [{ lineage: 'ephemeris' as const, system: '西洋・インド占星術', factor: [...astrologyYear.western, ...astrologyYear.vedic, `${astrologyYear.dashaLord}期`].join('・') }] : []),
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
+        { lineage: 'number', system: '九星気学', factor: `年盤 ${kyuseiYearSignals[kyuseiNumber] ? kyuseiNumber : ''}` },
       ])}`
       return { year: item.year, text }
     })

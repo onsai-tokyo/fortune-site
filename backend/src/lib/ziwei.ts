@@ -31,6 +31,18 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
     minorStars: palace.minorStars.map(star => star.name),
     decadal: palace.decadal,
   }))
+  const annual = Array.from({ length: 43 }, (_, offset) => {
+    const targetYear = year + 18 + offset
+    const horoscope = chart.horoscope(`${targetYear}-${month}-${day}`, timeIndex(hour))
+    const yearly = horoscope.yearly
+    const annualLifePalace = String(yearly.palaceNames[yearly.index] ?? yearly.name).replace('祿', '禄')
+    const activePalaces = ['官禄', '夫妻', '財帛', '命宮'].filter(name => annualLifePalace === name)
+    const signals: string[] = []
+    if (activePalaces.includes('官禄') || activePalaces.includes('財帛')) signals.push('practicality', 'responsibility')
+    if (activePalaces.includes('夫妻')) signals.push('harmony', 'stability')
+    if (activePalaces.includes('命宮')) signals.push('initiative', 'transformation')
+    return { year: targetYear, heavenlyStem: yearly.heavenlyStem, earthlyBranch: yearly.earthlyBranch, activePalaces, mutagenStars: yearly.mutagen, signals: [...new Set(signals)] }
+  })
 
   return {
     available: true as const,
@@ -45,7 +57,6 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
     body: chart.body,
     earthlyBranchOfSoulPalace: chart.earthlyBranchOfSoulPalace,
     earthlyBranchOfBodyPalace: chart.earthlyBranchOfBodyPalace,
-    palaces,
+    palaces, annual,
   }
 }
-

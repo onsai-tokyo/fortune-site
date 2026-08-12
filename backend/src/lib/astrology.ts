@@ -49,6 +49,65 @@ export interface AstrologyProfile {
   method: string
   western?: { ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; aspects: string[] }
   vedic?: { ayanamsha: number; ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; moonNakshatra: string; moonPada: number }
+  annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[] }>
+}
+
+const DASHA_LORDS = ['ケートゥ', '金星', '太陽', '月', '火星', 'ラーフ', '木星', '土星', '水星']
+const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17]
+const DASHA_SIGNALS: Record<string, string[]> = {
+  ケートゥ: ['transformation', 'insight'], 金星: ['harmony', 'care'], 太陽: ['initiative', 'responsibility'],
+  月: ['care', 'harmony'], 火星: ['initiative', 'transformation'], ラーフ: ['exploration', 'transformation'],
+  木星: ['exploration', 'practicality'], 土星: ['responsibility', 'stability'], 水星: ['communication', 'insight'],
+}
+
+function annualAstrology(natalDate: Date, planets: AstrologyProfile['western'] extends infer W ? any[] : never, siderealPlanets: any[], ayanamsha: number) {
+  const birthYear = natalDate.getUTCFullYear()
+  const natalMoonSidereal = siderealPlanets.find(planet => planet.name === '月')?.longitude ?? 0
+  const nakLength = 360 / 27
+  const nakIndex = Math.floor(natalMoonSidereal / nakLength)
+  const lordStart = nakIndex % 9
+  const elapsedFraction = (natalMoonSidereal % nakLength) / nakLength
+  const firstRemaining = DASHA_YEARS[lordStart] * (1 - elapsedFraction)
+  const relevantNatal = planets.filter(planet => ['太陽', '月', '金星', '火星'].includes(planet.name))
+  return Array.from({ length: 43 }, (_, offset) => {
+    const year = birthYear + 18 + offset
+    const date = new Date(Date.UTC(year, natalDate.getUTCMonth(), natalDate.getUTCDate(), 3, 0))
+    const transit = (body: AstronomyTypes.Body) => Astronomy.Ecliptic(Astronomy.GeoVector(body, date, true)).elon
+    const jupiter = transit(Astronomy.Body.Jupiter)
+    const saturn = transit(Astronomy.Body.Saturn)
+    const western: string[] = []
+    const signals: string[] = []
+    for (const natal of relevantNatal) {
+      const jDistance = Math.abs(signedDelta(jupiter, natal.longitude))
+      if ([0, 60, 120].some(angle => Math.abs(jDistance - angle) <= 5)) {
+        western.push(`木星が出生時の${natal.name}を後押し`)
+        signals.push(natal.name === '金星' || natal.name === '月' ? 'harmony' : 'exploration')
+      }
+      const sDistance = Math.abs(signedDelta(saturn, natal.longitude))
+      if ([0, 90, 180].some(angle => Math.abs(sDistance - angle) <= 4)) {
+        western.push(`土星が出生時の${natal.name}へ節目を形成`)
+        signals.push('responsibility', natal.name === '金星' || natal.name === '月' ? 'transformation' : 'stability')
+      }
+    }
+    const siderealJupiterSign = Math.floor(normalize(jupiter - lahiriAyanamsha(date)) / 30)
+    const siderealSaturnSign = Math.floor(normalize(saturn - lahiriAyanamsha(date)) / 30)
+    const moonSign = Math.floor(natalMoonSidereal / 30)
+    const jHouse = ((siderealJupiterSign - moonSign + 12) % 12) + 1
+    const sHouse = ((siderealSaturnSign - moonSign + 12) % 12) + 1
+    const vedic: string[] = []
+    if ([2, 5, 7, 9, 11].includes(jHouse)) { vedic.push(`木星が月から第${jHouse}室`); signals.push(jHouse === 7 ? 'harmony' : 'exploration') }
+    if ([12, 1, 2].includes(sHouse)) { vedic.push('土星が月の前後を通過'); signals.push('responsibility', 'transformation') }
+    const age = year - birthYear
+    let remaining = age - firstRemaining
+    let lordIndex = lordStart
+    if (remaining >= 0) {
+      lordIndex = (lordIndex + 1) % 9
+      while (remaining >= DASHA_YEARS[lordIndex]) { remaining -= DASHA_YEARS[lordIndex]; lordIndex = (lordIndex + 1) % 9 }
+    }
+    const dashaLord = DASHA_LORDS[lordIndex]
+    signals.push(...(DASHA_SIGNALS[dashaLord] ?? []))
+    return { year, western: [...new Set(western)], vedic, dashaLord, signals: [...new Set(signals)] }
+  })
 }
 
 export function calcAstrology(year: number, month: number, day: number, hour: number | undefined, minute: number, birthplace?: string): AstrologyProfile {
@@ -80,5 +139,6 @@ export function calcAstrology(year: number, month: number, day: number, hour: nu
     method: `出生地${birthplace || '東京都'}の都道府県庁代表座標・日本標準時（JST）`,
     western: { ascendant: zodiac(westernAsc), midheaven: zodiac(westernMc), planets, aspects: aspects.slice(0, 12) },
     vedic: { ayanamsha, ascendant: zodiac(westernAsc - ayanamsha), midheaven: zodiac(westernMc - ayanamsha), planets: siderealPlanets, moonNakshatra: NAKSHATRAS[nakshatraIndex], moonPada },
+    annual: annualAstrology(date, planets, siderealPlanets, ayanamsha),
   }
 }

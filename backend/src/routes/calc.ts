@@ -246,6 +246,7 @@ export interface AnnualTiming {
   tenGod: string
   score: number
   relationshipSignals: string[]
+  sanmeiSignals: string[]
   themes: string[]
 }
 
@@ -288,6 +289,7 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
   const dayBranch = shichu.day.branch
   const spouseGods = gender === 'male' ? ['偏財', '正財'] : ['偏官', '正官']
   const favorable = calcExpandedDivination(shichu).strength.favorableElements
+  const voidBranches = calcSanmei(dayStemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays).chusatsu.slice(0, 2).split('')
 
   const decades: TimingPeriod[] = yun.getDaYun(8).slice(1).map((period: any) => {
     const pillar = pillarFromKanshi(period.getGanZhi())
@@ -316,9 +318,13 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
       if (BRANCH_BREAK[dayBranch] === pillar.branch) { score += 1; relation = '破'; relationshipSignals.push('日支と破（隠れていたずれが表面化しやすい）') }
       if (PEACH_BLOSSOM[dayBranch] === pillar.branch) { score += 1; relationshipSignals.push('桃花（交流や注目が増えやすい）') }
       if (favorable.includes(pillar.element)) score += 1
+      const sanmeiSignals = [
+        ...(voidBranches.includes(pillar.branch) ? ['天中殺の年（拡大より整理と再確認を優先）'] : []),
+        ...(relation ? [`位相法 ${relation}`] : []),
+      ]
       return {
         year: item.getYear(), ageRange: `${item.getYear() - year - 1}〜${item.getYear() - year}歳`,
-        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, themes: timingThemes(tenGod, relation),
+        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, sanmeiSignals, themes: timingThemes(tenGod, relation),
       }
     })
 

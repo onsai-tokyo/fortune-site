@@ -256,6 +256,18 @@ test('1995-02-20 05:40 女性の紫微斗数十二宮を固定値で再現する
   assert.equal(ziwei.palaces.length, 12)
   assert.deepEqual(ziwei.palaces.find(palace => palace.name === '命宮')?.majorStars.map(star => [star.name, star.brightness, star.mutagen]), [['天梁', '陷', '權']])
   assert.deepEqual(ziwei.palaces.find(palace => palace.name === '夫妻')?.majorStars.map(star => [star.name, star.mutagen]), [['天機', '祿'], ['巨門', '']])
+  assert.equal(ziwei.annual.length, 43)
+  assert.equal(ziwei.annual[0].year, 2013)
+  assert.ok(ziwei.annual.every(item => item.activePalaces.length <= 1))
+})
+
+test('西洋・インド占星術の年運はトランジットとダシャーを同じ年へ統合する', () => {
+  const astrology = calcAstrology(1995, 2, 20, 5, 40, '愛知県')
+  assert.equal(astrology.annual?.length, 43)
+  assert.equal(astrology.annual?.[0].year, 2013)
+  assert.ok(astrology.annual?.every(item => item.dashaLord && Array.isArray(item.signals)))
+  assert.ok(astrology.annual?.some(item => item.western.length > 0))
+  assert.ok(astrology.annual?.some(item => item.vedic.length > 0))
 })
 
 test('算命学の位相法と天中殺の作用点を算出する', () => {
@@ -302,6 +314,7 @@ function makeFullReport(year: number, month: number, day: number, hour?: number,
 test('指定入力と五行0・出生時刻なしでも統合鑑定が最後まで生成される', () => {
   const target = makeFullReport(1995, 3, 16, 10, 30)
   assert.match(target, /【迷ったときの順序・注記】/)
+  assert.match(target, /天体の長期的な動き|長期の人生周期/)
   assert.ok(target.length > 3000)
   for (const [year, month, day] of [[1988, 1, 1], [1988, 1, 2], [1988, 1, 4]]) {
     const shichu = calcShichu(year, month, day, 12, 0)
