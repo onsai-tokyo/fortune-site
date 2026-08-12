@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS reading_conversations (
   report_text text NOT NULL DEFAULT '',
   source_section text,
   source_year integer,
+  idempotency_key text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -72,6 +73,9 @@ REVOKE INSERT, UPDATE, DELETE ON subscriptions FROM authenticated;
 
 CREATE INDEX IF NOT EXISTS reading_conversations_user_updated_idx
   ON reading_conversations(user_id, updated_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS reading_conversations_user_idempotency_idx
+  ON reading_conversations(user_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS reading_messages_conversation_created_idx
   ON reading_messages(conversation_id, created_at);
 

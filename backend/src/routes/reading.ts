@@ -57,15 +57,45 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     }
     const db = getSupabaseAdmin()
     const safeTitle = validateConversationTitle(title) ?? '鑑定結果について'
-    const { data, error } = await db.from('reading_conversations').insert({
+    const rawIdempotencyKey = req.header('Idempotency-Key') ?? ''
+    const idempotencyKey = /^[a-f0-9]{64}$/.test(rawIdempotencyKey) ? rawIdempotencyKey : null
+    let hasIdempotencyColumn = true
+
+    if (idempotencyKey) {
+      const { data: existing, error: lookupError } = await db.from('reading_conversations')
+        .select('id').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+      if (existing?.id) { res.status(200).json({ id: existing.id, reused: true }); return }
+      if (lookupError && ['42703', 'PGRST204'].includes(lookupError.code ?? '')) hasIdempotencyColumn = false
+      else if (lookupError) throw lookupError
+
+      // migration反映前も同一ユーザーの逐次再送を重複させない後方互換処理。
+      if (!hasIdempotencyColumn) {
+        const { data: legacyExisting, error: legacyError } = await db.from('reading_conversations')
+          .select('id').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).maybeSingle()
+        if (legacyError) throw legacyError
+        if (legacyExisting?.id) { res.status(200).json({ id: legacyExisting.id, reused: true }); return }
+      }
+    }
+
+    const storedBirthData = !hasIdempotencyColumn && idempotencyKey
+      ? { ...(birthData as Record<string, unknown>), _fateReadingKey: idempotencyKey }
+      : birthData
+    const insertPayload: Record<string, unknown> = {
       user_id: req.userId,
       title: safeTitle,
-      birth_data: birthData,
+      birth_data: storedBirthData,
       calculated_data: calculatedData,
       report_text: reportText,
       source_section: typeof sourceSection === 'string' ? sourceSection.slice(0, 80) : null,
       source_year: typeof sourceYear === 'number' ? sourceYear : null,
-    }).select('id').single()
+    }
+    if (hasIdempotencyColumn && idempotencyKey) insertPayload.idempotency_key = idempotencyKey
+    const { data, error } = await db.from('reading_conversations').insert(insertPayload).select('id').single()
+    if (error?.code === '23505' && idempotencyKey && hasIdempotencyColumn) {
+      const { data: existing } = await db.from('reading_conversations')
+        .select('id').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+      if (existing?.id) { res.status(200).json({ id: existing.id, reused: true }); return }
+    }
     if (error) throw error
     res.status(201).json({ id: data.id })
   } catch (error) {

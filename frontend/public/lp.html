@@ -1757,14 +1757,14 @@
     };
     const saveReadingContext = (context, sourceSection, suggestedQuestion) => {
       try {
-        sessionStorage.setItem('fate_reading_context', JSON.stringify({ ...context, sourceSection, suggestedQuestion }));
+        localStorage.setItem('fate_reading_context', JSON.stringify({ ...context, sourceSection, suggestedQuestion, savedAt: Date.now() }));
       } catch (error) {
         console.error('Reading context storage failed:', error);
         alert('鑑定結果を引き継げませんでした。ページを再読み込みして、もう一度お試しください。');
         return;
       }
       if (typeof gtag === 'function') gtag('event', 'question_cta_clicked', { source_section: sourceSection });
-      location.href = '/reading';
+      location.href = '/reading/new';
     };
     const addQuestionCtas = (container, context) => {
       const headings = [...container.querySelectorAll('.report-section-title')];

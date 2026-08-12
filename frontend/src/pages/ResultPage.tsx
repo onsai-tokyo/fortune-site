@@ -289,7 +289,7 @@ export function ResultPage() {
               <p className="text-white/25 text-xs mb-3 italic">他のメニューも試す — More Features</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: '鑑定をさらに読む', sub: '鑑定結果について自由に質問', path: '/reading',        dot: 'bg-accent',        border: 'border-accent/20        hover:border-accent/40',        text: 'text-accent'        },
+                  { label: '鑑定をさらに読む', sub: '鑑定結果について自由に質問', path: '/reading/history', dot: 'bg-accent',        border: 'border-accent/20        hover:border-accent/40',        text: 'text-accent'        },
                   { label: '自己詳細分析',     sub: '強み・適職・転換期',  path: '/feature/self',        dot: 'bg-blue-400',      border: 'border-blue-400/20      hover:border-blue-400/40',      text: 'text-blue-300'      },
                   { label: '相性診断',         sub: '仕事・恋愛の相性',    path: '/feature/compat',      dot: 'bg-pink-400',      border: 'border-pink-400/20      hover:border-pink-400/40',      text: 'text-pink-300'      },
                   { label: '結婚相性',         sub: '生活・力関係・コツ',  path: '/feature/marriage',    dot: 'bg-rose-400',      border: 'border-rose-400/20      hover:border-rose-400/40',      text: 'text-rose-300'      },

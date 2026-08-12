@@ -47,11 +47,14 @@ stripeRouter.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
     }
     const customer = await findOrCreateCustomer(req.userId!, req.userEmail)
-    const returnQuery = conversationId ? `&conversation=${encodeURIComponent(conversationId)}` : ''
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription', customer, line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${frontendUrl()}/reading?checkout=success${returnQuery}`,
-      cancel_url: `${frontendUrl()}/reading?checkout=cancelled${returnQuery}`,
+      success_url: conversationId
+        ? `${frontendUrl()}/reading/${conversationId}?checkout=success`
+        : `${frontendUrl()}/reading/history?checkout=success`,
+      cancel_url: conversationId
+        ? `${frontendUrl()}/reading/${conversationId}?checkout=cancelled`
+        : `${frontendUrl()}/reading/history?checkout=cancelled`,
       client_reference_id: req.userId,
       metadata: { user_id: req.userId!, conversation_id: conversationId },
       subscription_data: { metadata: { user_id: req.userId! } },

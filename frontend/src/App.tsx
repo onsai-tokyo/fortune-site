@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 
 const ResultPage = lazy(() => import('./pages/ResultPage').then(module => ({ default: module.ResultPage })))
@@ -25,6 +25,15 @@ function OfficialTopRedirect() {
   return <PageLoader />
 }
 
+function LegacyReadingRedirect() {
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const conversation = params.get('conversation')
+  const checkout = params.get('checkout')
+  if (conversation) return <Navigate to={`/reading/${conversation}${checkout ? `?checkout=${encodeURIComponent(checkout)}` : ''}`} replace />
+  return <Navigate to="/reading/new" replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -44,7 +53,10 @@ export default function App() {
             <Route path="/tokushohou" element={<TokushohouPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/reading" element={<ReadingPage />} />
+            <Route path="/reading" element={<LegacyReadingRedirect />} />
+            <Route path="/reading/new" element={<ReadingPage mode="start" />} />
+            <Route path="/reading/history" element={<ReadingPage mode="history" />} />
+            <Route path="/reading/:conversationId" element={<ReadingPage mode="chat" />} />
           </Routes>
         </Suspense>
       </AuthProvider>
