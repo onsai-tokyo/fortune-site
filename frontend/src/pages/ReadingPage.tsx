@@ -36,6 +36,7 @@ export default function ReadingPage() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [monthlyPrice, setMonthlyPrice] = useState('')
   const [activeContext, setActiveContext] = useState<{ sourceSection?: string; sourceYear?: number }>({ sourceSection: pending?.sourceSection, sourceYear: pending?.sourceYear })
+  const [dataLoading, setDataLoading] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` })
@@ -47,43 +48,58 @@ export default function ReadingPage() {
     }).catch(() => {})
   }, [])
   useEffect(() => {
-    if (!session?.access_token) return
+    if (!session?.access_token) { setDataLoading(false); return }
     void (async () => {
-      if (params.get('checkout') === 'success') { track('checkout_completed'); track('subscription_started') }
-      const statusResponse = await fetch('/api/reading/status', { headers: authHeaders() })
-      if (!statusResponse.ok) { setError('利用状況を確認できませんでした'); return }
-      let state = await statusResponse.json()
-      if (params.get('checkout') === 'success' && !state.premium) {
-        for (let attempt = 0; attempt < 5 && !state.premium; attempt++) {
-          await new Promise(resolve => setTimeout(resolve, 1200))
-          state = await fetch('/api/reading/status', { headers: authHeaders() }).then(r => r.json())
-        }
-      }
-      setStatus(state)
-      const wasPremium = localStorage.getItem('fate_was_premium') === 'true'
-      if (wasPremium && !state.premium) track('subscription_cancelled')
-      localStorage.setItem('fate_was_premium', String(Boolean(state.premium)))
-      const historyResponse = await fetch('/api/reading/conversations', { headers: authHeaders() })
-      const historyBody = await historyResponse.json()
-      if (!historyResponse.ok) { setError(historyBody.error ?? '鑑定履歴を取得できませんでした'); return }
-      setHistory(historyBody.conversations ?? [])
-      if (conversationId) {
-        const body = await fetch(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() }).then(r => r.json())
-        if (body.messages) {
+      try {
+        if (params.get('checkout') === 'success') { track('checkout_completed'); track('subscription_started') }
+        try {
+          const statusResponse = await fetch('/api/reading/status', { headers: authHeaders() })
+          if (statusResponse.ok) {
+            let state = await statusResponse.json()
+            if (params.get('checkout') === 'success' && !state.premium) {
+              for (let attempt = 0; attempt < 5 && !state.premium; attempt++) {
+                await new Promise(resolve => setTimeout(resolve, 1200))
+                const retry = await fetch('/api/reading/status', { headers: authHeaders() })
+                if (retry.ok) state = await retry.json()
+              }
+            }
+            setStatus(state)
+            const wasPremium = localStorage.getItem('fate_was_premium') === 'true'
+            if (wasPremium && !state.premium) track('subscription_cancelled')
+            localStorage.setItem('fate_was_premium', String(Boolean(state.premium)))
+          }
+        } catch { /* 履歴一覧は利用状況APIと独立して表示する */ }
+
+        let historyBody: { conversations?: HistoryItem[] } = {}
+        try {
+          const historyResponse = await fetch('/api/reading/conversations', { headers: authHeaders() })
+          if (historyResponse.ok) historyBody = await historyResponse.json()
+        } catch { /* ローカルプレビューでは空の一覧を表示する */ }
+        setHistory(historyBody.conversations ?? [])
+
+        if (conversationId) {
+          const response = await fetch(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() })
+          const body = await response.json()
+          if (!response.ok || !body.messages) { setError(body.error ?? '鑑定履歴を開けませんでした'); return }
           setMessages(body.messages)
           setActiveContext({ sourceSection: body.conversation?.source_section, sourceYear: body.conversation?.source_year })
+          return
         }
-        return
+        if (!pending) return
+        const response = await fetch('/api/reading/conversations', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+          title: pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`, ...pending,
+        }) })
+        const body = await response.json()
+        if (!response.ok) { setError(body.error ?? '鑑定結果を引き継げませんでした'); return }
+        setConversationId(body.id); setParams({ conversation: body.id }, { replace: true })
+        setHistory(prev => [{ id: body.id, title: pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`, source_section: pending.sourceSection, source_year: pending.sourceYear, updated_at: new Date().toISOString() }, ...prev])
+        setInput(pending.suggestedQuestion ?? '')
+        sessionStorage.removeItem('fate_reading_context')
+      } catch {
+        if (pending || conversationId) setError('鑑定結果を読み込めませんでした。時間をおいて再度お試しください。')
+      } finally {
+        setDataLoading(false)
       }
-      if (!pending) return
-      const response = await fetch('/api/reading/conversations', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
-        title: pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`, ...pending,
-      }) })
-      const body = await response.json()
-      if (!response.ok) { setError(body.error ?? '鑑定結果を引き継げませんでした'); return }
-      setConversationId(body.id); setParams({ conversation: body.id }, { replace: true })
-      setInput(pending.suggestedQuestion ?? '')
-      sessionStorage.removeItem('fate_reading_context')
     })()
   }, [session?.access_token])
 
@@ -165,10 +181,14 @@ export default function ReadingPage() {
   if (isLoading) return <main className="min-h-screen bg-[#faf7ef]" />
   if (!user) return <main className="min-h-screen bg-[#faf7ef] text-[#211d18] px-5 py-16 font-serif"><section className="max-w-xl mx-auto border border-[#d8c79e] bg-[#fffdf8] p-8 rounded-2xl shadow-[0_18px_50px_rgba(83,61,25,.08)]"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="text-2xl mt-4">鑑定結果について質問する</h1><p className="mt-5 leading-8 text-[#62594f]">鑑定結果と質問履歴を安全に保存するため、無料登録またはログインをお願いします。先ほどの鑑定内容はそのまま引き継がれます。</p><div className="grid gap-3 mt-7"><Link onClick={() => track('question_cta_clicked', { action: 'register' })} to="/auth?mode=register&returnTo=%2Freading" className="block bg-[#9a6d16] text-white text-center rounded-lg py-4">新規登録（無料）</Link><Link onClick={() => track('question_cta_clicked', { action: 'login' })} to="/auth?returnTo=%2Freading" className="block border border-[#bfa66e] bg-[#fffdf8] text-[#5f471c] text-center rounded-lg py-4">ログイン</Link></div></section></main>
 
+  const historyList = history.length > 0 ? <div className="grid gap-3">{history.map(item => <div key={item.id} className="border border-[#ded2bb] bg-[#fffdf8] rounded-xl p-4 flex items-start gap-3"><button onClick={() => openConversation(item.id)} className="text-left flex-1"><span className="block text-lg">{item.title}</span><small className="text-[#887b6b]">{new Date(item.updated_at).toLocaleDateString('ja-JP')}・続きを見る</small></button><button onClick={() => renameConversation(item)} className="text-xs underline text-[#70531e] py-1">名前変更</button><button onClick={() => deleteConversation(item)} className="text-xs underline text-[#8b453b] py-1">削除</button></div>)}</div> : null
+
+  if (!conversationId) return <main className="min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10 font-serif"><div className="max-w-3xl mx-auto"><Link to="/" className="text-sm text-[#796a56]">← Fate Lab</Link><header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · READING LIBRARY</p><h1 className="text-3xl mt-3">鑑定履歴</h1><p className="mt-3 text-[#6d6257] leading-7">保存した鑑定を選ぶと、その結果について個別に質問できます。</p></header><section className="py-7">{dataLoading ? <p className="text-[#827668]">鑑定履歴を確認しています…</p> : historyList ?? <div className="border border-[#ded2bb] bg-[#fffdf8] rounded-2xl p-7 text-center"><h2 className="text-xl">保存された鑑定はまだありません</h2><p className="mt-3 text-[#6d6257] leading-7">最初に無料鑑定を行うと、鑑定書がここへ保存され、結果について質問できるようになります。</p></div>}<Link to="/" className="block mt-6 bg-[#9a6d16] text-white text-center rounded-lg py-4">新しく無料鑑定する</Link></section><p className="text-xs text-[#827668] leading-6">結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。</p></div></main>
+
   return <main className="min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10 font-serif"><div className="max-w-3xl mx-auto">
     <Link to="/" className="text-sm text-[#796a56]">← Fate Lab</Link>
     <header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="text-3xl mt-3">鑑定結果について質問する</h1><p className="mt-3 text-[#6d6257] leading-7">あなたの命式と9つの占術の計算結果をもとに、気になることをさらに読み解けます。</p>{status && <p className="mt-3 text-sm text-[#8a7557]">{status.premium ? '継続利用プランをご利用中' : `無料質問 残り${status.remaining}回`}</p>}{status?.premium && <button onClick={openPortal} className="mt-3 text-sm underline text-[#70531e]">契約内容・解約を確認する</button>}</header>
-    {history.length > 0 && <details className="mt-6 border border-[#ded2bb] bg-[#fffdf8] rounded-xl p-4"><summary className="cursor-pointer font-semibold">鑑定履歴</summary><div className="grid gap-3 mt-3">{history.map(item => <div key={item.id} className="border-t border-[#eee5d3] pt-3 flex items-start gap-3"><button onClick={() => openConversation(item.id)} className="text-left flex-1"><span className="block">{item.title}</span><small className="text-[#887b6b]">{new Date(item.updated_at).toLocaleDateString('ja-JP')}</small></button><button onClick={() => renameConversation(item)} className="text-xs underline text-[#70531e] py-1">名前変更</button><button onClick={() => deleteConversation(item)} className="text-xs underline text-[#8b453b] py-1">削除</button></div>)}</div></details>}
+    <button onClick={() => { setConversationId(''); setParams({}); setMessages([]); setError('') }} className="mt-5 text-sm underline text-[#70531e]">鑑定履歴へ戻る</button>
     <section className="py-8 space-y-5">{messages.length === 0 && <div className="border-l-2 border-[#bb9345] pl-5 leading-8 text-[#5f554a]">鑑定書で気になった部分を、そのまま質問できます。未来を断定せず、計算済みの結果から読み解きます。</div>}{messages.map((message, index) => <article key={index} className={message.role === 'user' ? 'ml-auto max-w-[85%] bg-[#ede4d2] p-4 rounded-xl' : 'mr-auto max-w-[92%] border border-[#ded2bb] bg-[#fffdf8] p-5 rounded-xl whitespace-pre-wrap leading-8'}>{message.content ? (message.role === 'assistant' ? answerWithoutSuggestions(message.content) : message.content) : '読み解いています…'}</article>)}<div ref={bottomRef} /></section>
     {suggestions.length > 0 && <div className="flex flex-wrap gap-2 mb-5">{suggestions.map(item => <button key={item} onClick={() => send(item)} className="border border-[#cbb88f] rounded-full px-4 py-2 text-sm bg-[#fffdf8]">{item}</button>)}</div>}
     {status?.remaining === 0 && !status.premium ? <section className="border border-[#c8aa6d] bg-[#fffaf0] p-6 rounded-2xl"><h2 className="text-xl">もう少し、深く読み解きますか。</h2><p className="mt-3 leading-7 text-[#685e53]">無料鑑定の続きとして、気になったことを何度でも質問できます。月額料金・自動更新・解約方法は決済画面と特定商取引法の表記で確認できます。</p>{monthlyPrice && <p className="mt-3 font-semibold text-[#70531e]">{monthlyPrice}（税込・自動更新）</p>}<button onClick={checkout} className="w-full mt-5 py-4 bg-[#9a6d16] text-white rounded-lg">鑑定を続ける</button></section> : <div className="sticky bottom-3 bg-[#fffdf8] border border-[#d8c79e] shadow-xl rounded-2xl p-3 flex gap-2"><textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }} placeholder="鑑定結果について質問する…" className="flex-1 bg-transparent px-3 py-2 resize-none outline-none" rows={2} /><button onClick={() => send()} disabled={!input.trim() || sending} className="px-5 rounded-xl bg-[#9a6d16] text-white disabled:opacity-40">送信</button></div>}
