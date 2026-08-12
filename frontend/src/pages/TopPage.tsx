@@ -325,36 +325,26 @@ export function TopPage() {
         throw new Error(err.error ?? '生成に失敗しました')
       }
 
-      const reader = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let firstChunk = true
       let fullContent = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        for (const line of chunk.split('\n')) {
-          if (!line.startsWith('data: ')) continue
-          const data = line.slice(6)
-          if (data === '[DONE]') break
-          try {
-            const parsed = JSON.parse(data) as { delta?: { text?: string } }
-            if (parsed.delta?.text) {
-              const cleaned = parsed.delta.text
-                .replace(/^#{1,3}\s*/gm, '')
-                .replace(/^---+$/gm, '')
-                .replace(/^===+$/gm, '')
-              fullContent += cleaned
-              setPreviewContent(prev => prev + cleaned)
-              if (firstChunk) {
-                firstChunk = false
-                setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-              }
-            }
-          } catch { /* ignore parse errors */ }
-        }
+      // 固定鑑定は完成済みの文章を返すため、一括で受信する。
+      // iOS Safariでストリームの終了通知を待ち続け、「鑑定中」が残る問題を避ける。
+      const responseText = await res.text()
+      for (const line of responseText.split('\n')) {
+        if (!line.startsWith('data: ')) continue
+        const data = line.slice(6)
+        if (data === '[DONE]') continue
+        try {
+          const parsed = JSON.parse(data) as { delta?: { text?: string } }
+          if (parsed.delta?.text) fullContent += parsed.delta.text
+        } catch { /* 壊れた行は無視 */ }
       }
+      fullContent = fullContent
+        .replace(/^#{1,3}\s*/gm, '')
+        .replace(/^---+$/gm, '')
+        .replace(/^===+$/gm, '')
+      if (!fullContent) throw new Error('鑑定書を受信できませんでした。もう一度お試しください')
+      setPreviewContent(fullContent)
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
 
       // 生成完了 → キャッシュ保存 + 履歴保存（ログイン中のみ）
       if (fullContent) {
