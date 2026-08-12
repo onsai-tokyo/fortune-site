@@ -1779,10 +1779,10 @@
     };
     const compactReadingData = (value, depth = 0) => {
       if (value == null || typeof value === 'number' || typeof value === 'boolean') return value;
-      if (typeof value === 'string') return value.slice(0, 600);
-      if (depth >= 5) return Array.isArray(value) ? [] : {};
-      if (Array.isArray(value)) return value.slice(0, 40).map(item => compactReadingData(item, depth + 1));
-      return Object.fromEntries(Object.entries(value).slice(0, 100).map(([key, item]) => [key, compactReadingData(item, depth + 1)]));
+      if (typeof value === 'string') return value.slice(0, 300);
+      if (depth >= 4) return Array.isArray(value) ? [] : {};
+      if (Array.isArray(value)) return value.slice(0, 12).map(item => compactReadingData(item, depth + 1));
+      return Object.fromEntries(Object.entries(value).slice(0, 50).map(([key, item]) => [key, compactReadingData(item, depth + 1)]));
     };
     document.addEventListener('click', event => {
       const link = event.target.closest?.('[data-affiliate-name]');
