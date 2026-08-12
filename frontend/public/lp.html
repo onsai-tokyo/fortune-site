@@ -1786,6 +1786,20 @@
       if (Array.isArray(value)) return value.slice(0, 12).map(item => compactReadingData(item, depth + 1));
       return Object.fromEntries(Object.entries(value).slice(0, 50).map(([key, item]) => [key, compactReadingData(item, depth + 1)]));
     };
+    const buildReadingEvidence = (data) => ({
+      shichuYear: data.shichuYear, shichuMonth: data.shichuMonth, shichuDay: data.shichuDay, shichuHour: data.shichuHour,
+      nayin: data.nayin, sanmeiStar: data.sanmeiStar, chusatsu: data.chusatsu, sukuyo: data.sukuyo,
+      lifePathNumber: data.lifePathNumber, numerologyProfile: data.numerologyProfile,
+      honmeiName: data.honmeiName, kyuseiProfile: compactReadingData(data.kyuseiProfile),
+      fiveElements: compactReadingData(data.fiveElements), strength: compactReadingData(data.strength),
+      sanmei: compactReadingData(data.sanmei), sanmeiRelations: compactReadingData(data.sanmeiRelations),
+      timing: data.timing ? {
+        direction: data.timing.direction, startDate: data.timing.startDate,
+        decades: compactReadingData(data.timing.decades),
+        annual: compactReadingData(data.timing.annual),
+      } : null,
+      ziwei: compactReadingData(data.ziwei), astrology: compactReadingData(data.astrology),
+    });
     document.addEventListener('click', event => {
       const link = event.target.closest?.('[data-affiliate-name]');
       if (!link || typeof gtag !== 'function') return;
@@ -1960,7 +1974,7 @@
         if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
         // 質問APIが実際に参照する本文量に合わせ、履歴保存時のリクエストを過大にしない。
-        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: compactReadingData(calcData), reportText: fullContent.slice(0, 20000) });
+        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: buildReadingEvidence(calcData), reportText: fullContent.slice(0, 18000) });
         if (typeof gtag === 'function') { gtag('event', 'fortune_report_view', { form_name: 'top_fortune' }); gtag('event', 'fortune_completed'); gtag('event', 'report_viewed'); }
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
