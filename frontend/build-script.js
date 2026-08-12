@@ -126,9 +126,9 @@ const guides = [
     body: ''
   },
   {
-    path: 'guides/nayin', title: '納音とは？六十干支を30種類に分類する見方',
-    description: '納音が六十干支を海中金・炉中火など30種類の象意へ分類する仕組みと活用上の注意を解説します。',
-    body: `<p>納音は、六十干支を二つずつ組にして30種類の象意へ対応させる考え方です。海中金、炉中火、大林木など、自然物にたとえた名称が使われます。</p><h2>日干や五行とは別の分類</h2><p>納音の名称に含まれる木・火・土・金・水は、命式全体の五行バランスをそのまま示すものではありません。異なる分類を混同しないことが大切です。</p><h2>象意の使い方</h2><p>自然物のイメージを、性質を考える補助線として使います。一つの納音だけで職業、結婚、健康などを断定することはできません。</p><h2>統合時の位置づけ</h2><p>Fate Labでは納音を補助的な情報として扱い、独立性の高い複数占術で同様の傾向が確認できた場合に説明へ加えます。</p>`
+    path: 'guides/nayin', title: '納音とは？日柱との違い・関係と30種類の特徴一覧',
+    description: '納音と日柱の違いを例付きで解説。六十干支から納音が決まる関係と、海中金・炉中火・大林木など30種類の対応日柱、特徴、強み、注意点を一覧で確認できます。',
+    body: ''
   },
   {
     path: 'guides/setsuiri-boundary', title: '立春前後で四柱推命の結果が変わる理由｜節入りの検証',
@@ -156,6 +156,7 @@ const ENGINE_WORK_STYLE = loadEngineRecord('WORK_STYLE');
 const ENGINE_SANMEI = loadEngineRecord('SANMEI_DETAIL');
 const ENGINE_POSITION = loadEngineRecord('POSITION_MEANING');
 const ENGINE_SUBORDINATE = loadEngineRecord('SUBORDINATE_DETAIL');
+const ENGINE_NAYIN = loadEngineRecord('NAYIN_DETAIL');
 
 const ANGEL_DIGIT_MEANINGS = {
   0: ['余白と可能性', 'いったん立ち止まり、前提を空にして選び直す'],
@@ -281,6 +282,26 @@ const ANIMAL_TRAITS = {
 };
 const SEXAGENARY_ANIMALS = Array.from({ length: 60 }, (_, index) => ({ number: index + 1, pillar: `${SEXAGENARY_STEMS[index % 10]}${SEXAGENARY_BRANCHES[index % 12]}`, color: ANIMAL_COLORS[index % 10], animal: ANIMAL_SEQUENCE[index] }));
 
+const NAYIN_APPLICATION = {
+  金: ['価値を見極め、基準や品質として磨く', '完成度を求めすぎて判断が厳しくならないよう、途中段階も共有する'],
+  火: ['情熱、発信、変化を周囲へ伝える', '勢いだけで燃え尽きないよう、継続できる範囲を決める'],
+  木: ['人、技能、計画を時間をかけて育てる', '成長を急いだり広げすぎたりせず、根を張る工程を守る'],
+  土: ['生活、組織、関係の足場を整えて支える', '責任を抱え込みすぎず、守る範囲と変更条件を決める'],
+  水: ['情報、経験、人の間を柔軟につなぐ', '選択肢を増やしすぎず、期限を決めて一つの形へ着地する']
+};
+
+function nayinBody() {
+  const entries = Object.entries(ENGINE_NAYIN);
+  const summaryRows = entries.map(([name, meaning], index) => { const pillars = SEXAGENARY_ANIMALS.slice(index * 2, index * 2 + 2).map(item => item.pillar); return `<tr><th><a href="#nayin-${index + 1}">${name}</a></th><td>${pillars.join('・')}</td><td>${meaning}</td></tr>`; }).join('');
+  const details = entries.map(([name, meaning], index) => {
+    const pillars = SEXAGENARY_ANIMALS.slice(index * 2, index * 2 + 2).map(item => item.pillar);
+    const element = name.at(-1);
+    const [strength, caution] = NAYIN_APPLICATION[element] ?? ['象意を現実の行動へ置き換える', '名称だけで吉凶を決めない'];
+    return `<section id="nayin-${index + 1}" class="nayin-detail"><h3>${name}｜${pillars.join('・')}</h3><p><strong>基本の象意：</strong>${meaning}。</p><p><strong>特徴と強み：</strong>${strength}働きとして読むと、${meaning.replace(/。.*$/, '')}という自然物の比喩を日常へ置き換えられます。仕事では肩書より、どの工程でこの力を使っているかを確認します。</p><p><strong>偏りが出たとき：</strong>${caution}ことが大切です。納音だけで性格を断定せず、同じ納音を共有する二つの日柱でも、日干の陰陽や命式全体によって表れ方が違う点を確認します。</p><p><strong>自分で確かめる問い：</strong>過去一年で「${strength}」ことが成果につながった場面と、負担になった場面はそれぞれ何だったでしょうか。</p></section>`;
+  }).join('');
+  return `<p><strong>日柱と納音は別の項目です。</strong>日柱は、生まれた日の天干と地支を組み合わせた「甲子・乙丑・丙寅……癸亥」という六十干支そのものです。納音は、その六十干支を2つずつ一組にし、海中金・炉中火・大林木など30種類の自然物の象意へ分類した名前です。</p><p>関係を式にすると、<strong>生年月日から日柱を計算 → 日柱の六十干支番号を確認 → 対応する納音を決める</strong>という順番です。たとえば甲子と乙丑はどちらも海中金、丙寅と丁卯はどちらも炉中火です。一つの納音に二つの日柱が対応するため、納音が同じでも日柱まで同じとは限りません。</p><div class="example-grid"><section><h3>日柱：壬午の場合</h3><p>壬午は六十干支の19番です。19番と20番の癸未は、ともに<strong>楊柳木</strong>へ分類されます。ただし日柱は壬午のままであり、「日柱が楊柳木になる」という意味ではありません。</p></section><section><h3>日柱：甲子の場合</h3><p>甲子は六十干支の1番です。1番の甲子と2番の乙丑は、ともに<strong>海中金</strong>です。甲と乙という日干の違いは残るため、詳しい四柱推命では同じ人物像にまとめません。</p></section></div><h2>納音名の五行と命式の五行は違う</h2><p>海中金の「金」や大林木の「木」は、納音という分類名に含まれる五行です。命式に木が何個あるか、日主が強いか弱いかを示す五行バランスとは別に計算します。たとえば納音が楊柳木でも、命式全体で木が最も多いとは限りません。</p><p>また、納音は日柱だけに限って使える概念ではなく、六十干支で表される年柱・月柱・時柱にも対応づけられます。ただしFate Labでは本人の入口として日柱の納音を表示しているため、この記事も「日柱から求める納音」を中心に説明します。</p>${midArticleCta}<h2>納音30種類と対応する日柱一覧</h2><div class="table-scroll nayin-table"><table><thead><tr><th>納音</th><th>対応する日柱</th><th>基本の意味</th></tr></thead><tbody>${summaryRows}</tbody></table></div><h2>各納音の特徴・強み・注意点</h2><p>納音の自然物は、性格を一語で決めるラベルではなく、力の育ち方や使い方を考える比喩です。「金だからお金に強い」「火だから短気」のように字面だけで判断せず、対応する日柱と命式全体を合わせます。</p>${details}<h2>納音を読む順番</h2><ol><li>生年月日から日柱を正確に算出する</li><li>六十干支一覧で日柱に対応する納音を確認する</li><li>納音の自然物が示す「力の使い方」を読む</li><li>日干の五行・陰陽と、命式全体の五行バランスを別に確認する</li><li>仕事・人間関係など、実際に再現している場面だけを残す</li></ol><h2>よくある誤解</h2><h3>同じ納音なら同じ性格？</h3><p>同じではありません。同じ納音には二つの日柱が入り、年柱・月柱・時柱や生まれた季節も人によって違います。共通する象意があっても、その出方や強さは命式全体と経験によって変わります。</p><h3>納音の五行を補えば開運する？</h3><p>納音名の五行だけを見て、色、食べ物、方角などを機械的に足す根拠にはなりません。必要な五行を考える場合は、季節や日主との関係を含む命式全体を先に読みます。</p><h3>納音だけで相性を判断できる？</h3><p>二人の象意を比較する補助線にはなりますが、関係の良し悪しは決まりません。四柱同士の関係、実際の価値観、会話、生活条件を優先してください。</p><h2>Fate Labではどう扱っているか</h2><p>Fate Labは日柱を暦の計算で確定した後、その六十干支に対応する納音を一意に求めます。納音は日柱から派生するため、四柱推命と別系統の独立した一票として重複評価しません。自然物の象意を、鑑定文を理解しやすくする補助説明として使用します。</p><p>同じ生年月日と計算条件なら同じ日柱・納音を返します。一方、納音だけで職業、結婚、健康、将来を断定せず、複数の独立した占術と実際の経験に同じ傾向がある場合にだけ統合結果へ反映します。</p><style>.nayin-table table{min-width:760px}.nayin-detail{scroll-margin-top:20px;padding-bottom:8px;border-bottom:1px solid #e2d8c4}.nayin-detail:target{background:#fff8df}.nayin-detail h3{padding-top:8px}</style>`;
+}
+
 function animalCharacterBody() {
   const rows = SEXAGENARY_ANIMALS.map(item => `<tr id="animal-${item.number}"><td>${item.number}</td><th>${item.pillar}</th><td>${item.color}</td><td><strong>${item.color}の${item.animal}</strong></td><td>${ANIMAL_TRAITS[item.animal][0]}</td></tr>`).join('');
   const animalSections = Object.entries(ANIMAL_TRAITS).map(([animal, [theme, detail]]) => { const matches = SEXAGENARY_ANIMALS.filter(item => item.animal === animal); return `<section id="type-${animal}"><h3>${animal}｜${theme}</h3><p>${detail}</p><p><strong>対応する日柱：</strong>${matches.map(item => `${item.pillar}（${item.color}）`).join('、')}</p><p>同じ${animal}でも色が違えば日干が異なります。動物の共通像だけで終わらず、四柱推命では${matches.map(item => item.pillar[0]).join('・')}それぞれの五行と陰陽、さらに生まれた季節や命式全体を確認します。</p></section>`; }).join('');
@@ -337,6 +358,7 @@ function sanmeigakuStarsBody() {
 }
 
 function expandedGuide(page) {
+  if (page.path === 'guides/nayin') return { ...page, body: nayinBody() };
   if (page.path === 'guides/astrology-systems-comparison') return { ...page, body: astrologySystemsComparisonBody() };
   if (page.path === 'guides/shichu-suimei-animal-character') return { ...page, body: animalCharacterBody() };
   if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: sanmeigakuStarsBody() };
