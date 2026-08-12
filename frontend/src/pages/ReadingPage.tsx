@@ -4,25 +4,39 @@ import { useAuth } from '../contexts/AuthContext'
 
 type Message = { role: 'user' | 'assistant'; content: string; referenced_systems?: string[] }
 type PendingReading = { birthData: Record<string, unknown>; calculatedData: Record<string, unknown>; reportText: string; sourceSection?: string; sourceYear?: number; suggestedQuestion?: string }
+type HistoryItem = { id: string; title: string; source_section?: string; source_year?: number; updated_at: string }
 
 declare global { interface Window { gtag?: (...args: unknown[]) => void } }
 const track = (name: string, params: Record<string, unknown> = {}) => window.gtag?.('event', name, params)
 
+function contextualSuggestions(section?: string, year?: number) {
+  if (year) return [`${year}年に仕事で起こりやすい変化は？`, `${year}年の恋愛・結婚の流れは？`, `${year - 1}年との違いは？`]
+  if (section?.includes('恋愛') || section?.includes('結婚')) return ['惹かれやすい相手を詳しく見る', '関係が安定する条件は？', '結婚につながりやすい時期は？']
+  if (section?.includes('仕事')) return ['向いている働き方を詳しく見る', '転職や独立に向く時期は？', '仕事で注意する癖は？']
+  if (section?.includes('人間関係')) return ['長く付き合いやすい友人は？', '人間関係で疲れやすい場面は？', '距離の取り方を詳しく見る']
+  return ['仕事の流れを詳しく見る', '恋愛・結婚の流れを詳しく見る', '次の転換期を詳しく見る']
+}
+
+function answerWithoutSuggestions(content: string) {
+  return content.split('\n').filter(line => !/^次の質問：/.test(line.trim())).join('\n').trim()
+}
+
 export default function ReadingPage() {
   const { user, session, isLoading } = useAuth()
   const [params, setParams] = useSearchParams()
+  const pending = useMemo<PendingReading | null>(() => {
+    try { return JSON.parse(sessionStorage.getItem('fate_reading_context') ?? 'null') } catch { return null }
+  }, [])
   const [conversationId, setConversationId] = useState(params.get('conversation') ?? '')
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<{ premium: boolean; remaining: number | null; limit: number } | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
-  const [history, setHistory] = useState<Array<{ id: string; title: string; updated_at: string }>>([])
+  const [history, setHistory] = useState<HistoryItem[]>([])
   const [monthlyPrice, setMonthlyPrice] = useState('')
+  const [activeContext, setActiveContext] = useState<{ sourceSection?: string; sourceYear?: number }>({ sourceSection: pending?.sourceSection, sourceYear: pending?.sourceYear })
   const bottomRef = useRef<HTMLDivElement>(null)
-  const pending = useMemo<PendingReading | null>(() => {
-    try { return JSON.parse(sessionStorage.getItem('fate_reading_context') ?? 'null') } catch { return null }
-  }, [])
 
   const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` })
 
@@ -55,7 +69,10 @@ export default function ReadingPage() {
       setHistory(historyBody.conversations ?? [])
       if (conversationId) {
         const body = await fetch(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() }).then(r => r.json())
-        if (body.messages) setMessages(body.messages)
+        if (body.messages) {
+          setMessages(body.messages)
+          setActiveContext({ sourceSection: body.conversation?.source_section, sourceYear: body.conversation?.source_year })
+        }
         return
       }
       if (!pending) return
@@ -109,6 +126,24 @@ export default function ReadingPage() {
     const body = await fetch(`/api/reading/conversations/${id}`, { headers: authHeaders() }).then(r => r.json())
     if (!body.messages) { setError(body.error ?? '鑑定履歴を開けませんでした'); return }
     setConversationId(id); setParams({ conversation: id }); setMessages(body.messages)
+    setActiveContext({ sourceSection: body.conversation?.source_section, sourceYear: body.conversation?.source_year })
+  }
+
+  async function renameConversation(item: HistoryItem) {
+    const title = window.prompt('鑑定履歴の名前', item.title)?.trim()
+    if (!title || title === item.title) return
+    const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ title }) })
+    const body = await response.json()
+    if (!response.ok) { setError(body.error ?? '名前を変更できませんでした'); return }
+    setHistory(prev => prev.map(entry => entry.id === item.id ? { ...entry, title: body.conversation.title, updated_at: body.conversation.updated_at } : entry))
+  }
+
+  async function deleteConversation(item: HistoryItem) {
+    if (!window.confirm(`「${item.title}」を削除しますか？質問と回答も削除され、元に戻せません。`)) return
+    const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'DELETE', headers: authHeaders() })
+    if (!response.ok) { const body = await response.json().catch(() => ({})); setError(body.error ?? '削除できませんでした'); return }
+    setHistory(prev => prev.filter(entry => entry.id !== item.id))
+    if (conversationId === item.id) { setConversationId(''); setParams({}); setMessages([]); setActiveContext({}) }
   }
 
   async function checkout() {
@@ -125,7 +160,7 @@ export default function ReadingPage() {
   const lastMessage = messages[messages.length - 1]
   const suggestions = lastMessage?.role === 'assistant'
     ? [...lastMessage.content.matchAll(/次の質問：(.+)/g)].map(match => match[1].trim()).slice(0, 4)
-    : pending?.suggestedQuestion ? [pending.suggestedQuestion] : ['仕事の流れを詳しく見る', '恋愛・結婚の流れを詳しく見る', '次の転換期を詳しく見る']
+    : pending?.suggestedQuestion ? [pending.suggestedQuestion, ...contextualSuggestions(activeContext.sourceSection, activeContext.sourceYear)].slice(0, 4) : contextualSuggestions(activeContext.sourceSection, activeContext.sourceYear)
 
   if (isLoading) return <main className="min-h-screen bg-[#faf7ef]" />
   if (!user) return <main className="min-h-screen bg-[#faf7ef] text-[#211d18] px-5 py-16"><section className="max-w-xl mx-auto border border-[#d8c79e] bg-[#fffdf8] p-8 rounded-2xl"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="font-serif text-2xl mt-4">鑑定結果について質問する</h1><p className="mt-5 leading-8 text-[#62594f]">鑑定結果と質問履歴を安全に保存するため、ログインまたは無料会員登録をお願いします。先ほどの鑑定内容はそのまま引き継がれます。</p><Link onClick={() => track('question_cta_clicked')} to="/auth?returnTo=%2Freading" className="block mt-7 bg-[#9a6d16] text-white text-center rounded-lg py-4">ログインして続ける</Link></section></main>
@@ -133,8 +168,8 @@ export default function ReadingPage() {
   return <main className="min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10 font-serif"><div className="max-w-3xl mx-auto">
     <Link to="/" className="text-sm text-[#796a56]">← Fate Lab</Link>
     <header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="text-3xl mt-3">鑑定結果について質問する</h1><p className="mt-3 text-[#6d6257] leading-7">あなたの命式と9つの占術の計算結果をもとに、気になることをさらに読み解けます。</p>{status && <p className="mt-3 text-sm text-[#8a7557]">{status.premium ? '継続利用プランをご利用中' : `無料質問 残り${status.remaining}回`}</p>}{status?.premium && <button onClick={openPortal} className="mt-3 text-sm underline text-[#70531e]">契約内容・解約を確認する</button>}</header>
-    {history.length > 0 && <details className="mt-6 border border-[#ded2bb] bg-[#fffdf8] rounded-xl p-4"><summary className="cursor-pointer font-semibold">鑑定履歴</summary><div className="grid gap-2 mt-3">{history.map(item => <button key={item.id} onClick={() => openConversation(item.id)} className="text-left border-t border-[#eee5d3] pt-3"><span className="block">{item.title}</span><small className="text-[#887b6b]">{new Date(item.updated_at).toLocaleDateString('ja-JP')}</small></button>)}</div></details>}
-    <section className="py-8 space-y-5">{messages.length === 0 && <div className="border-l-2 border-[#bb9345] pl-5 leading-8 text-[#5f554a]">鑑定書で気になった部分を、そのまま質問できます。未来を断定せず、計算済みの結果から読み解きます。</div>}{messages.map((message, index) => <article key={index} className={message.role === 'user' ? 'ml-auto max-w-[85%] bg-[#ede4d2] p-4 rounded-xl' : 'mr-auto max-w-[92%] border border-[#ded2bb] bg-[#fffdf8] p-5 rounded-xl whitespace-pre-wrap leading-8'}>{message.content || '読み解いています…'}</article>)}<div ref={bottomRef} /></section>
+    {history.length > 0 && <details className="mt-6 border border-[#ded2bb] bg-[#fffdf8] rounded-xl p-4"><summary className="cursor-pointer font-semibold">鑑定履歴</summary><div className="grid gap-3 mt-3">{history.map(item => <div key={item.id} className="border-t border-[#eee5d3] pt-3 flex items-start gap-3"><button onClick={() => openConversation(item.id)} className="text-left flex-1"><span className="block">{item.title}</span><small className="text-[#887b6b]">{new Date(item.updated_at).toLocaleDateString('ja-JP')}</small></button><button onClick={() => renameConversation(item)} className="text-xs underline text-[#70531e] py-1">名前変更</button><button onClick={() => deleteConversation(item)} className="text-xs underline text-[#8b453b] py-1">削除</button></div>)}</div></details>}
+    <section className="py-8 space-y-5">{messages.length === 0 && <div className="border-l-2 border-[#bb9345] pl-5 leading-8 text-[#5f554a]">鑑定書で気になった部分を、そのまま質問できます。未来を断定せず、計算済みの結果から読み解きます。</div>}{messages.map((message, index) => <article key={index} className={message.role === 'user' ? 'ml-auto max-w-[85%] bg-[#ede4d2] p-4 rounded-xl' : 'mr-auto max-w-[92%] border border-[#ded2bb] bg-[#fffdf8] p-5 rounded-xl whitespace-pre-wrap leading-8'}>{message.content ? (message.role === 'assistant' ? answerWithoutSuggestions(message.content) : message.content) : '読み解いています…'}</article>)}<div ref={bottomRef} /></section>
     {suggestions.length > 0 && <div className="flex flex-wrap gap-2 mb-5">{suggestions.map(item => <button key={item} onClick={() => send(item)} className="border border-[#cbb88f] rounded-full px-4 py-2 text-sm bg-[#fffdf8]">{item}</button>)}</div>}
     {status?.remaining === 0 && !status.premium ? <section className="border border-[#c8aa6d] bg-[#fffaf0] p-6 rounded-2xl"><h2 className="text-xl">もう少し、深く読み解きますか。</h2><p className="mt-3 leading-7 text-[#685e53]">無料鑑定の続きとして、気になったことを何度でも質問できます。月額料金・自動更新・解約方法は決済画面と特定商取引法の表記で確認できます。</p>{monthlyPrice && <p className="mt-3 font-semibold text-[#70531e]">{monthlyPrice}（税込・自動更新）</p>}<button onClick={checkout} className="w-full mt-5 py-4 bg-[#9a6d16] text-white rounded-lg">鑑定を続ける</button></section> : <div className="sticky bottom-3 bg-[#fffdf8] border border-[#d8c79e] shadow-xl rounded-2xl p-3 flex gap-2"><textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }} placeholder="鑑定結果について質問する…" className="flex-1 bg-transparent px-3 py-2 resize-none outline-none" rows={2} /><button onClick={() => send()} disabled={!input.trim() || sending} className="px-5 rounded-xl bg-[#9a6d16] text-white disabled:opacity-40">送信</button></div>}
     {error && <p className="text-red-700 mt-4">{error}</p>}<p className="text-xs text-[#827668] leading-6 mt-8">結果は将来を保証するものではありません。重要な意思決定はご自身で判断し、必要に応じて適切な専門家へご相談ください。</p>

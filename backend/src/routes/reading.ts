@@ -1,10 +1,20 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import rateLimit from 'express-rate-limit'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 3))
+const questionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: Math.max(1, Number(process.env.READING_QUESTION_RATE_LIMIT ?? 6)),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: req => (req as AuthRequest).userId!,
+  message: { error: '短時間に質問が続いています。少し待ってから再度お試しください。' },
+})
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -46,9 +56,10 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
       res.status(413).json({ error: '鑑定データが大きすぎます' }); return
     }
     const db = getSupabaseAdmin()
+    const safeTitle = validateConversationTitle(title) ?? '鑑定結果について'
     const { data, error } = await db.from('reading_conversations').insert({
       user_id: req.userId,
-      title: typeof title === 'string' ? title.slice(0, 120) : '鑑定結果について',
+      title: safeTitle,
       birth_data: birthData,
       calculated_data: calculatedData,
       report_text: reportText,
@@ -82,12 +93,31 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
   res.json({ conversation, messages: messages ?? [] })
 })
 
-readingRouter.post('/conversations/:id/questions', requireAuth, async (req: AuthRequest, res) => {
+readingRouter.patch('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
+  const title = validateConversationTitle(req.body?.title)
+  if (!title) { res.status(400).json({ error: '鑑定履歴の名前を入力してください' }); return }
+  const { data, error } = await getSupabaseAdmin().from('reading_conversations').update({ title, updated_at: new Date().toISOString() })
+    .eq('id', req.params.id).eq('user_id', req.userId!).select('id,title,updated_at').maybeSingle()
+  if (error) { res.status(500).json({ error: '鑑定履歴の名前を変更できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  res.json({ conversation: data })
+})
+
+readingRouter.delete('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
+  const { data, error } = await getSupabaseAdmin().from('reading_conversations').delete()
+    .eq('id', req.params.id).eq('user_id', req.userId!).select('id').maybeSingle()
+  if (error) { res.status(500).json({ error: '鑑定履歴を削除できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  res.status(204).end()
+})
+
+readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter, async (req: AuthRequest, res) => {
   const db = getSupabaseAdmin()
   let chargedFreeQuestion = false
   try {
-    const question = typeof req.body?.question === 'string' ? req.body.question.trim().slice(0, 1200) : ''
-    if (!question) { res.status(400).json({ error: '質問を入力してください' }); return }
+    const checkedQuestion = validateReadingQuestion(req.body?.question)
+    if (!checkedQuestion.ok) { res.status(checkedQuestion.status).json({ error: checkedQuestion.error }); return }
+    const question = checkedQuestion.value
     const { data: conversation } = await db.from('reading_conversations').select('*')
       .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
     if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }

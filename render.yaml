@@ -12,6 +12,8 @@ services:
         value: https://fate-lab.com
       - key: FREE_QUESTION_LIMIT
         value: 3
+      - key: READING_QUESTION_RATE_LIMIT
+        value: 6
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SUPABASE_URL
