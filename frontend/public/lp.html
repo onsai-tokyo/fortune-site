@@ -997,6 +997,8 @@
     .report-section-title { margin: 30px 0 12px; padding: 0 0 8px 13px; border-bottom: 1px solid rgba(212,197,160,.7); border-left: 3px solid var(--gold-primary); color: var(--text-main); font-size: 17px; line-height: 1.5; }
     .report-section-title:first-child { margin-top: 0; }
     .report-subsection-title { margin: 24px 0 10px; color: var(--gold-dark); font-size: 15px; letter-spacing: .05em; }
+    .report-bullet { display: block; position: relative; margin: 7px 0; padding-left: 1.25em; }
+    .report-bullet::before { content: '•'; position: absolute; left: .15em; color: var(--gold-dark); font-weight: 700; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
     .affiliate-card { margin: 24px 0; padding: 18px; border: 1px solid rgba(143,106,31,.32); border-radius: 12px; background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(241,230,201,.38)); white-space: normal; }
@@ -1708,6 +1710,7 @@
       let rendered = withGlossary
         .replace(/^【(.+?)】$/gm, '<h4 class="report-section-title">$1</h4>')
         .replace(/^〈(.+?)〉$/gm, '<h5 class="report-subsection-title">$1</h5>')
+        .replace(/^- (.+)$/gm, '<span class="report-bullet">$1</span>')
         .replace(/\n\n/g, '<div class="report-spacer"></div>')
         .replace(/\n/g, '<br>');
       rendered = rendered.replace('<h4 class="report-section-title">共通して現れた本質</h4>', `${renderAffiliate(affiliateOffers.summary, 'summary')}<h4 class="report-section-title">共通して現れた本質</h4>`);

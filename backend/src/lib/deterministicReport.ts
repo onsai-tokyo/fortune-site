@@ -94,6 +94,12 @@ const ASTRO_SIGN: Record<string, string> = {
   射手座: '視野を広げ、意味や可能性を探究する力', 山羊座: '目標を現実の仕組みへ変え、責任を果たす力', 水瓶座: '既存の枠を越え、独自の仕組みを考える力', 魚座: '境界を越えて感じ取り、想像力で包み込む力',
 }
 const ZODIAC_SIGNS = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座']
+const PARTNER_GROWTH: Record<string, string> = {
+  牡羊座: '挑戦を恐れず、自分で道を開く人', 牡牛座: '生活と仕事を着実に育てられる人', 双子座: '好奇心があり、学びを会話で共有できる人',
+  蟹座: '身近な人を守り、安心できる居場所を作れる人', 獅子座: '自信と敬意を持ち、周囲を励ませる人', 乙女座: '技術を磨き、誠実に役立とうとする人',
+  天秤座: '対等な協力関係を築ける人', 蠍座: '一つのことを深く学び、信頼を守れる人', 射手座: '視野が広く、互いの成長を応援できる人',
+  山羊座: '経験を積み、長期的な責任を果たせる人', 水瓶座: '個性を尊重し、未来の考えを共有できる人', 魚座: '共感と想像力を持ち、弱さも受け止められる人',
+}
 
 type PlanetRole = 'lagna' | 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn'
 const PLANET_ROLE_PREFIX: Record<PlanetRole, string> = {
@@ -549,9 +555,10 @@ export function buildDeterministicReport(input: ReportInput): string {
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const workBlocks = rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work).join(' ')
-  const loveBlocks = rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love).join(' ')
-  const friendBlocks = rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend).join(' ')
+  const asBullets = (items: string[]) => items.map(item => `- ${item}`).join('\n')
+  const workBlocks = asBullets(rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work))
+  const loveBlocks = asBullets(rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love))
+  const friendBlocks = asBullets(rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend))
   const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
@@ -649,12 +656,12 @@ export function buildDeterministicReport(input: ReportInput): string {
   // 出生時刻がない場合も共通文にせず、配偶者位置・宿曜・日柱で個別化する。
   const sanmeiAttraction = LOVE_STYLE[westStar] ?? day.love
   const vedicVenusAttraction = SIGN_BEHAVIOR[vedicVenus?.sign ?? '']?.venus
-  const vedicJupiterTrust = SIGN_BEHAVIOR[vedicJupiter?.sign ?? '']?.jupiter
+  const vedicJupiterTrust = PARTNER_GROWTH[vedicJupiter?.sign ?? '']
   const attractionDetail = vedicVenusAttraction && vedicJupiterTrust
-    ? `${sanmeiAttraction}。第一印象では、${vedicVenusAttraction} 長く付き合う相手を選ぶときは、${vedicJupiterTrust}`
+    ? `${sanmeiAttraction}。第一印象では、${vedicVenusAttraction}。長く付き合う相手を選ぶときは、${vedicJupiterTrust}`
     : `${sanmeiAttraction}。特に、${SUKUYO_DETAIL[input.sukuyo] ?? '自然体で信頼を育てられること'}を感じ、${day.love}を実現できる人に惹かれます`
   const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars
-    ?? `${SANMEI_DETAIL[eastStar] ?? day.strength} 好意が生まれた後は、${day.love}かどうかを確かめながら進みます`
+    ?? `${SANMEI[eastStar] ?? day.strength}が行動の軸です。好意が生まれた後は、${day.love}かどうかを確かめながら進みます`
   const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
   const nakshatraDetail = NAKSHATRA_DETAIL[vedic?.moonNakshatra ?? ''] ?? '心の反応を経験へ変える力'
   const lifeNumberDetail = NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission
@@ -665,20 +672,27 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `あなたは**「${profileTitle}」**です。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}と持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
+  const personalizedCore = `あなたは**「${profileTitle}」**です。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}ことで持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
   const personalizedEmotion = westernMoon?.sign === vedicMoon?.sign
-    ? `心の落ち着き方を別々の方法で見ると、どちらも同じ傾向が出ています。${westernMoonDetail} 加えて、無意識には「${nakshatraDetail}」という反応もあります。疲れているときほど答えを急がず、まず気持ちを言葉にし、その後で事実を整理すると落ち着きます。`
-    : `心には、周囲との均衡を取りたい面と、自分のペースで現実を確かめたい面があります。前者は${westernMoonDetail} 後者は${vedicMoonDetail} さらに「${nakshatraDetail}」という反応も重なるため、感情・事実・希望を順番に分けると落ち着きます。`
+    ? `心の落ち着き方を別々の方法で見ても、同じ傾向が出ています。${westernMoonDetail}。加えて、無意識には「${nakshatraDetail}」という反応があります。疲れているときは答えを急がず、気持ち、事実、希望の順に整理すると落ち着きます。`
+    : `心には二つの安心条件があります。
+- 表に出やすい反応：${SIGN_BEHAVIOR[westernMoon?.sign ?? '']?.moon ?? westernMoonDetail}
+- 内側で求めるもの：${SIGN_BEHAVIOR[vedicMoon?.sign ?? '']?.moon ?? vedicMoonDetail}
+- 無意識の反応：${nakshatraDetail}
+この三つを混ぜず、気持ち、事実、希望の順に整理すると落ち着きます。`
   const strongestIsFavorable = input.strength?.favorableElements.includes(strongestElement)
   const favorableBridge = strongestIsFavorable
     ? `これはもともと得意なうえ、意識して使うほど自分を支えてくれる長所です。強く出ていることと、味方になることは矛盾しません。`
     : `一方で、別の力を意識して取り入れると、得意なことへ偏りすぎずに済みます。`
   const personalizedElements = `考え方と行動のバランスを見ると、**「${strongestDetail}」**がいちばん自然に使えます。${favorableBridge} 反対に「${weakestDetail}」は不足しやすいため、習慣にする、道具を使う、得意な人に頼るなど、外から補うと全体が整います。`
   const personalizedLove = westernVenus && westernMars
-    ? `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。`
+    ? `親密になるほど、${westStarDetail}という関わり方が前面に出ます。
+- 惹かれ方：${SIGN_BEHAVIOR[westernVenus.sign]?.venus ?? westernVenusDetail}
+- 気持ちが動いた後：${SIGN_BEHAVIOR[westernMars.sign]?.mars ?? westernMarsDetail}
+好きになる速さと、信頼を決める速さは必ずしも同じではありません。`
     : `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。一方、関係を進める場面では「${eastStarDetail}」が働きます。**求める安心と、実際に取る行動の違い**を自覚すると、無理のない速度で信頼を育てられます。`
   const inwardMarsPattern = westernMars?.retrograde || vedicMars?.retrograde
     ? `**好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人です。** 普段は抑えていても、限界を越えた後に強い言葉や決断として表れやすいため、小さな違和感の段階で伝える方が関係を守れます。強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません。`
@@ -713,7 +727,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     9: '専門学習・思想・遠方との縁', 10: '仕事・肩書・社会的達成', 11: '仲間・将来計画・社会との接点', 12: '内省・休息・見えない負担',
   }
   const identityAndDirectionPattern = western
-    ? `外からは「${astroPhrase(western.ascendant.sign, 'lagna')}」人に見られやすく、社会では「${astroPhrase(western.midheaven?.sign, 'sun')}」方向へ評価を積み上げます。${sunHouse ? `人生の目的は、特に**${houseArea[sunHouse]}**で形になりやすい配置です。` : ''}`
+    ? `第一印象では、${SIGN_BEHAVIOR[western.ascendant.sign]?.lagna ?? '周囲を見ながら入口を選びます'}。社会で評価されやすい方向は、**${ASTRO_SIGN[western.midheaven?.sign ?? ''] ?? '自分の役割を成果へ変えること'}**です。${sunHouse ? `人生の目的は、特に**${houseArea[sunHouse]}**で形になりやすい傾向です。` : ''}`
     : ''
   const emotionalAreaPattern = moonHouse
     ? `安心を取り戻す鍵は、**${houseArea[moonHouse]}**を整えることです。気持ちが乱れたときは、この領域で無理をしていないか確認してください。`
@@ -729,26 +743,38 @@ export function buildDeterministicReport(input: ReportInput): string {
     return fallback
   }
   const easternDomainPattern = input.ziwei?.available
-    ? `仕事では${palaceTheme(careerPalaceStars, '一つの専門性を磨くこと')}、お金では${palaceTheme(wealthPalaceStars, '収支と価値の基準を自分で持つこと')}が長期テーマです。親密な関係では${palaceTheme(couplePalaceStars, '対等な約束を育てること')}、友人関係では${palaceTheme(friendsPalaceStars, '助け合う範囲を明確にすること')}が表れます。`
+    ? `領域ごとの長期テーマは次のとおりです。
+- 仕事：${palaceTheme(careerPalaceStars, '一つの専門性を磨くこと')}
+- お金：${palaceTheme(wealthPalaceStars, '収支と価値の基準を自分で持つこと')}
+- 親密な関係：${palaceTheme(couplePalaceStars, '対等な約束を育てること')}
+- 友人関係：${palaceTheme(friendsPalaceStars, '助け合う範囲を明確にすること')}`
     : ''
   const relationshipChangePattern = input.sanmeiRelations?.relations.length
     ? `人や環境との結びつきには、**${input.sanmeiRelations.relations.map(item => item.meaning).join('。また、')}**という動きがあります。変化が起きたときは、元へ戻すことだけでなく新しい関係の形を作る視点が役立ちます。`
     : ''
   const lifeEnergyPattern = [earlyStar, middleStar, lateStar].every(Boolean)
-    ? `若い時期は「${SUBORDINATE_DETAIL[earlyStar!.star]}」、中年期は「${SUBORDINATE_DETAIL[middleStar!.star]}」、その後は「${SUBORDINATE_DETAIL[lateStar!.star]}」へ重心が移ります。**年代によって動き方が変わること自体が自然な設計**です。`
+    ? `年代ごとのエネルギーは、一文につなげず次のように読み分けます。
+- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star]}
+- 中年期：${SUBORDINATE_DETAIL[middleStar!.star]}
+- その後：${SUBORDINATE_DETAIL[lateStar!.star]}
+**年代によって動き方が変わること自体が自然な設計**です。`
     : ''
   const monthTenGod = input.fourPillars?.find(pillar => pillar.label === '月柱')?.stemTenGod ?? ''
   const monthTenGodDetail = TEN_GOD_DETAIL[monthTenGod] ?? '経験を成果へ変えること'
-  const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。${day.work}の中でも「${day.strength}」を使え、${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '自分の判断を成果へ結びつけられる'}環境を選ぶと持ち味が明確になります。`
-  const personalizedRelations = `対等な相手といるときは、${eastStarDetail} 目上の相手には、${northStarDetail} 後輩や守る相手には、${southStarDetail} **「対等な場では${SANMEI[eastStar] ?? '自分らしさ'}、目上には${SANMEI[northStar] ?? '慎重さ'}、守る相手には${SANMEI[southStar] ?? '行動力'}」と役割が切り替わる**のが、あなたの対人関係の特徴です。全員へ同じ顔を見せる必要はありません。`
+  const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。得意領域の中でも「${day.strength}」を使え、**${input.kyuseiProfile?.yearStar ?? input.honmeiName}らしい持ち味**を発揮できる環境を選ぶと、個性が成果として伝わります。`
+  const personalizedRelations = `相手との関係によって、自然に役割を切り替えます。
+- 対等な相手には：${SANMEI[eastStar] ?? '自分らしさ'}
+- 目上の相手には：${SANMEI[northStar] ?? '慎重さ'}
+- 後輩や守る相手には：${SANMEI[southStar] ?? '行動力'}
+全員へ同じ顔を見せる必要はありません。`
   const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
   const uniqueWorkPattern = `得意領域は**${day.work}**です。共通するのは職種名ではなく、**「${day.strength}」を使えること**。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
-  const uniqueLovePattern = `もともと求めるのは**${day.love}**です。親密になるほど${westStarDetail} 惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
+  const uniqueLovePattern = `もともと求めるのは**${day.love}**です。親密な関係では、${westStarDetail}。惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
   const uniqueRecoveryPattern = `負荷が高いときは「${day.caution}」が表れやすくなります。最も不足しやすい「${weakestDetail}」を、予定、道具、得意な人への依頼など外部の仕組みで補うと、本来の判断力へ戻りやすくなります。`
   const workScene = pick([
     `会議では${SANMEI[eastStar] ?? '自分の判断軸'}が先に出て、仕上げでは${monthTenGodDetail}が強く働きます。`,
     `仕事を始める入口は${SANMEI[eastStar] ?? '自分らしい進め方'}、成果として残したいものは${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}です。`,
-    `周囲からは${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '状況を動かす人'}と見られやすく、実務では${monthTenGodDetail}を担うと評価が定着します。`,
+    `周囲からは**${input.kyuseiProfile?.yearStar ?? input.honmeiName}らしい${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName]?.split('。')[0] ?? '存在感'}**を持つ人と見られやすく、実務では${monthTenGodDetail}を担うと評価が定着します。`,
   ], 'work-scene')
   const loveScene = pick([
     `惹かれる入口は${LOVE_STYLE[westStar] ?? day.love}ですが、関係を進めるときは${SANMEI[eastStar] ?? '自分のペース'}が前に出ます。`,
@@ -819,7 +845,8 @@ ${combinedEvidence}
 【恋愛・結婚】
 惹かれやすさ：**${attractionDetail}**。第一印象だけでなく、一緒に過ごしたときにこの条件が続くかを見ると、本当に合う相手を見分けやすくなります。
 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
-関係が安定する条件：${loveBlocks}
+関係が安定する条件：
+${loveBlocks}
 ${loveScene}
 ${personalizedLove}
 ${inwardMarsPattern}
