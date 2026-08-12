@@ -111,6 +111,11 @@ const guides = [
     body: `<p>算命学は、生年月日を干支へ置き換え、陰陽五行の関係から性質や環境との関わりを考える体系です。四柱推命と共通する素材を使いますが、解釈体系は同一ではありません。</p><h2>星は役割を整理する記号</h2><p>十大主星は行動や才能の方向、十二大従星はエネルギーの質を表す手がかりとされます。星名の印象だけで吉凶を決めず、配置と全体の関係を見ます。</p><h2>天中殺を怖がらない</h2><p>天中殺は一定の周期を示す概念であり、必ず不幸が起きる期間ではありません。大きな決断では現実の条件と専門家の助言を優先してください。</p><h2>四柱推命との統合</h2><p>同じ干支を使う結果を重複票として数えすぎないよう、Fate Labでは近い体系同士の関連性を考慮して文章化します。</p>`
   },
   {
+    path: 'guides/sanmeigaku-stars', title: '算命学の星一覧｜十大主星・十二大従星と位置別の読み方',
+    description: '算命学の十大主星と十二大従星の特徴を一覧で解説。人体星図の中心・東・西・南・北に入る位置による意味の違い、組み合わせ例、歴史的背景も確認できます。',
+    body: ''
+  },
+  {
     path: 'guides/nayin', title: '納音とは？六十干支を30種類に分類する見方',
     description: '納音が六十干支を海中金・炉中火など30種類の象意へ分類する仕組みと活用上の注意を解説します。',
     body: `<p>納音は、六十干支を二つずつ組にして30種類の象意へ対応させる考え方です。海中金、炉中火、大林木など、自然物にたとえた名称が使われます。</p><h2>日干や五行とは別の分類</h2><p>納音の名称に含まれる木・火・土・金・水は、命式全体の五行バランスをそのまま示すものではありません。異なる分類を混同しないことが大切です。</p><h2>象意の使い方</h2><p>自然物のイメージを、性質を考える補助線として使います。一つの納音だけで職業、結婚、健康などを断定することはできません。</p><h2>統合時の位置づけ</h2><p>Fate Labでは納音を補助的な情報として扱い、独立性の高い複数占術で同様の傾向が確認できた場合に説明へ加えます。</p>`
@@ -138,6 +143,9 @@ const ENGINE_DAY_STEM = loadEngineRecord('DAY_STEM');
 const ENGINE_ELEMENT = loadEngineRecord('ELEMENT_DETAIL');
 const ENGINE_TEN_GOD = loadEngineRecord('TEN_GOD_DETAIL');
 const ENGINE_WORK_STYLE = loadEngineRecord('WORK_STYLE');
+const ENGINE_SANMEI = loadEngineRecord('SANMEI_DETAIL');
+const ENGINE_POSITION = loadEngineRecord('POSITION_MEANING');
+const ENGINE_SUBORDINATE = loadEngineRecord('SUBORDINATE_DETAIL');
 
 const ANGEL_DIGIT_MEANINGS = {
   0: ['余白と可能性', 'いったん立ち止まり、前提を空にして選び直す'],
@@ -243,7 +251,38 @@ function angelNumberPractice(number) {
 
 const angelHubAppendix = `<h2>検索結果を自分の答えへ変えるワーク</h2><p>辞典に表示された意味を読んだら、当たっているかどうかをすぐ決めず、「この言葉から思い出す具体的な出来事は何か」を一つ書きます。次に、その出来事で自分が選べることと、相手や環境にしか決められないことを分けます。自分が選べる側にだけ行動を置くと、数字の解釈が不安や期待を増幅するだけで終わりません。</p><p>たとえば「変化」という結果が出た場合、退職や別れのような大きな決断へ直結させず、会議の方法を一週間変える、連絡の頻度を相談する、固定費を一つ比較するなど、元に戻せる実験から始めます。「協力」なら誰かが助けてくれるのを待つのではなく、相談したい内容と期限を明確にします。</p><h2>数字の記録で確認する4項目</h2><ol><li><strong>事実：</strong>いつ、どこで、どの数字を見たか</li><li><strong>解釈：</strong>その数字から何を連想したか</li><li><strong>行動：</strong>実際に何を試したか</li><li><strong>結果：</strong>一週間後に何が変わり、何が変わらなかったか</li></ol><p>事実と解釈を分けて記録すると、「数字を見たから起きたこと」と「もともと注意を向けていたこと」を混同しにくくなります。心配が強く、数字を確認する行為をやめられない場合は、占いの意味探しを休み、身近な人や適切な相談窓口へ話してください。</p>`;
 
+const SANMEI_POSITION_LABELS = {
+  center: ['中心', '自分の核'], east: ['東', '社会・友人'], west: ['西', '家庭・身近な人'], north: ['北', '思考・目上'], south: ['南', '未来・部下']
+};
+const SANMEI_STAR_THEMES = {
+  貫索星: ['自立と継続', '自分の基準を曲げず、時間をかけて守り抜く'], 石門星: ['協調と連帯', '対等な仲間をつなぎ、共通目的を作る'], 鳳閣星: ['自然な表現', '観察したことを穏やかに伝え、場を和らげる'], 調舒星: ['感性と独創', '繊細な違いを受け取り、独自の表現へ変える'], 禄存星: ['愛情と引力', '人を引きつけ、求められるものを惜しまず与える'], 司禄星: ['蓄積と日常', '生活、資源、信頼を小さな習慣で守る'], 車騎星: ['行動と突破', '迷いを動きへ変え、目の前の課題へ素早く挑む'], 牽牛星: ['責任と役割', '肩書や約束を大切にし、期待へきちんと応える'], 龍高星: ['冒険と体験知', '未知の環境へ入り、自分の経験から学び直す'], 玉堂星: ['学習と継承', '先人の知識を丁寧に受け取り、整理して伝える']
+};
+const positionReading = (star, position) => {
+  const action = SANMEI_STAR_THEMES[star][1];
+  const readings = {
+    center: `${action}ことが、本人の判断基準として表れます。長所を使いすぎたときの偏りも、自分の癖として確認します。`,
+    east: `${action}姿が、仕事・友人・兄弟姉妹など外の社会で見えやすくなります。初対面で受け取られる印象にも関わります。`,
+    west: `${action}傾向が、配偶者・家族・身近な仲間との距離感に表れます。公の顔より、安心した場での反応を見ます。`,
+    north: `${action}方法が、考え方、学び方、親や上司など目上との接し方に表れます。何を手本として受け取るかも読みます。`,
+    south: `${action}力が、子ども・部下・後輩への伝え方や、未来に残したいものに表れます。育成と自己表現の方向を見ます。`
+  };
+  return readings[position];
+};
+
+function sanmeigakuStarsBody() {
+  const mainStars = Object.entries(ENGINE_SANMEI).map(([star, detail]) => {
+    const [theme] = SANMEI_STAR_THEMES[star];
+    return `<section><h3>${star}｜${theme}</h3><p>${detail}</p><p><strong>活かし方：</strong>${SANMEI_STAR_THEMES[star][1]}場面を意識して作ります。星の性質が強く出すぎると、一つの方法への固執、周囲への過剰適応、急ぎすぎなど別の負担へ変わることがあります。「この力を使うか」だけでなく「いつ、誰に、どの程度使うか」を調整するのが実用的な読み方です。</p></section>`;
+  }).join('');
+  const positionRows = Object.entries(SANMEI_POSITION_LABELS).map(([key, [label, short]]) => `<tr><th>${label}</th><td>${short}</td><td>${ENGINE_POSITION[key]}</td></tr>`).join('');
+  const crossRows = Object.keys(ENGINE_SANMEI).map(star => `<tr><th>${star}</th>${['center', 'east', 'west', 'north', 'south'].map(position => `<td><strong>${SANMEI_POSITION_LABELS[position][0]}</strong>：${positionReading(star, position)}</td>`).join('')}</tr>`).join('');
+  const subordinateRows = Object.entries(ENGINE_SUBORDINATE).map(([star, detail]) => `<tr><th>${star}</th><td>${detail}。</td><td>強弱の順位ではなく、その場所・年代でどのような速度と姿勢を取りやすいかとして読みます。</td></tr>`).join('');
+  const chart = `<figure class="sanmei-chart"><figcaption>人体星図の5位置</figcaption><svg viewBox="0 0 520 390" role="img" aria-labelledby="sanmei-title sanmei-desc"><title id="sanmei-title">算命学の人体星図</title><desc id="sanmei-desc">中央に中心星、上に北、左に西、右に東、下に南を配置した図</desc><path d="M260 78V312M120 195H400"/><g><rect x="200" y="28" width="120" height="76" rx="12"/><text x="260" y="58">北</text><text x="260" y="82">思考・目上</text></g><g><rect x="200" y="157" width="120" height="76" rx="12"/><text x="260" y="187">中心</text><text x="260" y="211">本人の核</text></g><g><rect x="28" y="157" width="120" height="76" rx="12"/><text x="88" y="187">西</text><text x="88" y="211">家庭・身近</text></g><g><rect x="372" y="157" width="120" height="76" rx="12"/><text x="432" y="187">東</text><text x="432" y="211">社会・友人</text></g><g><rect x="200" y="286" width="120" height="76" rx="12"/><text x="260" y="316">南</text><text x="260" y="340">未来・部下</text></g></svg></figure>`;
+  return `<p>算命学の星は、一つを見て「性格はこれ」と決めるラベルではありません。十大主星はどのような本能や才能を使いやすいか、十二大従星はその力がどのような速度や姿勢で動くかを見る記号です。さらに、同じ星でも人体星図の中心・東・西・北・南のどこに入るかで、表れやすい相手と場面が変わります。</p><p>この記事では、Fate Labの鑑定エンジンで実際に使う星の解釈マスタを、星単独、位置、組み合わせの順で展開します。まず中心星で本人の核をつかみ、次に社会と家庭、目上と未来への表現を比較すると、星名だけを暗記するより読みやすくなります。</p><h2>人体星図の位置は何を表すか</h2>${chart}<div class="table-scroll"><table><thead><tr><th>位置</th><th>短い意味</th><th>読む領域</th></tr></thead><tbody>${positionRows}</tbody></table></div><p>「東の星は仕事だけ」「西の星は結婚だけ」と狭く固定する必要はありません。東は社会へ出るときの行動全般、西は安心できる近距離の関係全般を含みます。北と南は、上から受け取るものと下・未来へ渡すものという方向性の違いとして比較できます。</p>${midArticleCta}<h2>十大主星の意味と特徴</h2>${mainStars}<h2>星と入っている位置を組み合わせて読む</h2><p>次の表は「星の性質 × 表れる場所」を同時に確認するための一覧です。スマートフォンでは横へスクロールできます。文章をそのまま人物へ当てはめるのではなく、実際の経験が多い場所を探してください。</p><div class="table-scroll sanmei-cross"><table><thead><tr><th>主星</th><th>中心</th><th>東</th><th>西</th><th>北</th><th>南</th></tr></thead><tbody>${crossRows}</tbody></table></div><h2>配置を読む順番</h2><ol><li><strong>中心：</strong>迷ったときに戻りやすい本人の基準を確認する</li><li><strong>東と西：</strong>外の社会で見せる姿と、身近な関係で見せる姿の差を見る</li><li><strong>北と南：</strong>目上や過去から受け取る方法と、後輩や未来へ渡す方法を比べる</li><li><strong>重複：</strong>同じ星が複数位置にあれば、その性質を複数の領域で反復しやすいと考える</li><li><strong>全体：</strong>一つの星を吉凶とせず、陰陽五行や現実の経験と照合する</li></ol><h2>組み合わせの読み方：2つの例</h2><div class="example-grid"><section><h3>例1：中心が貫索星、東が車騎星、西が司禄星</h3><p>核には自分の基準を守る貫索星があり、社会では車騎星の素早い行動が前に出ます。一方、身近な関係では司禄星の蓄積と日常維持を重視します。「頑固な人」「行動的な人」の一語ではなく、内面では納得を守り、外では即応し、家庭では安定を作るという場面差として読みます。</p></section><section><h3>例2：中心が玉堂星、東が龍高星、北が牽牛星</h3><p>中心の玉堂星は知識を整理して受け継ぐことを重視します。社会では龍高星が未知の体験へ向かい、北では牽牛星が目上や既存の役割へ礼節を示します。伝統を学ぶ一方で、仕事では現場へ出て更新するという両方の動きが共存します。</p></section></div><h2>十二大従星の意味と特徴</h2><p>十二大従星は、人生を胎児から成長、成熟、老い、その後までの十二段階になぞらえたエネルギー表現です。「強い星が優秀、弱い星が不利」という順位表ではありません。静かに観察する力と、前へ出て責任を持つ力は、必要になる環境が違います。</p><div class="table-scroll"><table><thead><tr><th>従星</th><th>エンジンでの基本解釈</th><th>読むときの注意</th></tr></thead><tbody>${subordinateRows}</tbody></table></div><h2>算命学の歴史と軍略の話</h2><h3>古代中国に由来する基礎概念</h3><p>算命学が用いる陰陽五行、十干十二支、暦の考え方には古代中国で形成された思想と術数の長い背景があります。ただし、古代の個々の文献に現れる概念と、現在日本で「算命学」と呼ばれる星の体系を、変更のない一つの制度として直結させることはできません。</p><h3>中国戦国時代と軍略起源は「流派に伝わる説」</h3><p>算命学の教育機関や流派では、戦国時代の思想家・鬼谷子に連なる学問で、個人の占いではなく、国家、政治、軍略、組織の配置を考えるために用いられたという由来が語られています。軍略的に読むとは「戦いの勝敗を魔法のように予言する」ことではなく、人の役割、集団の相性、環境と時期を比較して配置や方針を考える、という説明です。</p><p>一方で、鬼谷子という人物像や文献の成立年代には研究上の議論があり、現代の十大主星・十二大従星が戦国時代に現在と同じ名称・方式で軍議に使われたことまでを、確認できる一次史料として示すのは困難です。そのためFate Labでは「戦国時代に使われた」と事実として断定せず、算命学の系譜で伝えられる起源説として紹介します。</p><h3>日本で公開・体系化された時期</h3><p>現在日本で普及している算命学については、高尾義政が昭和40年代に理論を公開し、1972年に高尾学館を設立したという沿革が同館から示されています。国立国会図書館では、高尾義政著『原典算命学大系 第1巻』（菜根出版、1980年）を確認できます。また同大系の第10巻には「算命学軍略論」が収録され、少なくとも近現代の体系内で軍略が一部門として扱われていることは書誌・刊行情報から確認できます。</p><div class="sources"><h3>歴史部分の参照資料</h3><ul><li><a href="https://www.sanmei-gaku.com/aboutus/" target="_blank" rel="noopener noreferrer">高尾学館「算命学について・沿革」</a>（流派が説明する起源と日本での公開史）</li><li><a href="https://ndlsearch.ndl.go.jp/books/R100000039-I12515164" target="_blank" rel="noopener noreferrer">国立国会図書館サーチ『原典算命学大系 1巻』</a>（著者・出版年の書誌）</li><li><a href="https://www.sanmei-gaku.com/books/" target="_blank" rel="noopener noreferrer">高尾学館「原典算命学大系」</a>（第10巻「算命学軍略論」の収録案内）</li></ul><p>流派自身による歴史説明と、公的機関の書誌情報は性質が異なります。本記事では両者を分けて扱っています。</p></div><h2>Fate Labではどう扱っているか</h2><p>算命学の星は重要な手がかりですが、Fate Labでは一つの星だけで性格や将来を断定しません。中心・東・西・北・南の配置を固定ルールで文章化したうえで、四柱推命と素材を共有する点も考慮し、西洋占星術、数秘術など別系統の占術で同じ方向が出ているかを照合します。</p><p>同じ出生条件なら同じ星と配置を返し、単独の特徴を過大に表示しないことが、鑑定結果の再現性を守る基準です。星の説明は「当たっている部分だけを集める」ためではなく、自分がどの場面でどの力を使っているかを経験から検証するために利用してください。</p><style>.sanmei-chart{max-width:620px;margin:26px auto;padding:18px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:10px}.sanmei-chart figcaption{font-weight:700}.sanmei-chart svg{width:100%;height:auto}.sanmei-chart path{stroke:#b7a278;stroke-width:2}.sanmei-chart rect{fill:#faf7ef;stroke:#a98539;stroke-width:2}.sanmei-chart text{text-anchor:middle;font-weight:700}.sanmei-chart text+text{font-size:14px;font-weight:400}.sanmei-cross table{min-width:1500px}.sanmei-cross td{min-width:250px}</style>`;
+}
+
 function expandedGuide(page) {
+  if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: sanmeigakuStarsBody() };
   if (page.path === 'guides/angel-numbers') return { ...page, body: `${angelNumberHubBody()}${angelHubAppendix}<style>${cycleFixStyle}</style>` };
   if (page.path.startsWith('guides/angel-number-')) {
     const number = Number(page.path.split('-').at(-1));
