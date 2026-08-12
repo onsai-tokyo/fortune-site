@@ -592,18 +592,9 @@ export function buildDeterministicReport(input: ReportInput): string {
   // 以下は入力ごとの実データを交差させ、テンプレートだけでは出ない個人差を文章化する層。
   const centerStarDetail = SANMEI_DETAIL[input.sanmeiStar] ?? sanmei
   const centerStarLabel = SANMEI[input.sanmeiStar] ?? input.sanmeiStar
-  // 10（生来の判断軸）× 10（内面の表現傾向）× 10（五行5種×運用2種）= 1000タイプ。
-  // 番号は入力から一意に決まり、文章のランダム化には使わない。
-  const dayStemOrder = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-  const centerStarOrder = ['貫索星', '石門星', '鳳閣星', '調舒星', '禄存星', '司禄星', '車騎星', '牽牛星', '龍高星', '玉堂星']
-  const elementOrder = ['木', '火', '土', '金', '水']
-  const dayStemIndex = Math.max(0, dayStemOrder.indexOf(input.shichuDay[0]))
-  const centerStarIndex = Math.max(0, centerStarOrder.indexOf(input.sanmeiStar))
-  const elementIndex = Math.max(0, elementOrder.indexOf(strongestElement))
+  // 10（生来の判断軸）× 10（内面の表現傾向）× 10（五行5種×運用2種）を
+  // 文章の個別化に使う。内部分類番号は利用者向け鑑定文には表示しない。
   const activeElementUse = (input.strength?.supportRatio ?? 50) >= 50
-  const elementModeIndex = elementIndex * 2 + (activeElementUse ? 0 : 1)
-  const profileNumber = dayStemIndex * 100 + centerStarIndex * 10 + elementModeIndex + 1
-  const profileCode = `FL-${String(profileNumber).padStart(4, '0')}`
   const elementModeLabel = activeElementUse
     ? `${ELEMENT_DETAIL[strongestElement] ?? '得意な力'}を積極的に使う`
     : `${ELEMENT_DETAIL[strongestElement] ?? '得意な力'}を自分の土台にする`
@@ -627,7 +618,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `あなたは**「${profileTitle}」**です（タイプ番号 ${profileCode}）。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}と持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
+  const personalizedCore = `あなたは**「${profileTitle}」**です。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}と持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
