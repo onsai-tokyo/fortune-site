@@ -160,7 +160,9 @@ export function calcExpandedDivination(shichu: ReturnType<typeof calcShichu>) {
     })
     return {
       key, label, kanshi: pillar.kanshi, stem: pillar.stem, branch: pillar.branch,
-      stemTenGod: key === 'day' ? '日主' : calcTenGod(dayStemIdx, pillar.stemIdx), hiddenStems,
+      stemTenGod: key === 'day' ? '日主' : calcTenGod(dayStemIdx, pillar.stemIdx),
+      twelveStage: calcSubordinateStar(dayStemIdx, pillar.branchIdx).stage,
+      hiddenStems,
     }
   })
   for (const element of ELEMENT_ORDER) elementScores[element] = Math.round(elementScores[element] * 10) / 10

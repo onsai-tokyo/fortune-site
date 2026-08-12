@@ -66,6 +66,7 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
   const expanded = calcExpandedDivination(calcShichu(1995, 2, 20, 5, 40))
   assert.deepEqual(expanded.fourPillars.map(pillar => pillar.kanshi), ['乙亥', '戊寅', '壬午', '癸卯'])
   assert.deepEqual(expanded.fourPillars.map(pillar => pillar.stemTenGod), ['傷官', '偏官', '日主', '劫財'])
+  assert.deepEqual(expanded.fourPillars.map(pillar => pillar.twelveStage), ['建禄', '病', '胎', '死'])
   assert.deepEqual(expanded.sanmeiChart.bodyChart, {
     north: { label: '北（頭）', star: '調舒星' },
     west: { label: '西（右手）', star: '牽牛星' },
