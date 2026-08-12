@@ -665,6 +665,9 @@ export function buildDeterministicReport(input: ReportInput): string {
   const personalizedLove = westernVenus && westernMars
     ? `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。惹かれ方は「${westernVenusDetail}」、気持ちが動いた後の行動は「${westernMarsDetail}」となるため、好きになる速さと信頼を決める速さは必ずしも同じではありません。`
     : `親密になるほど「${westStarDetail}」という関わり方が前面に出ます。一方、関係を進める場面では「${eastStarDetail}」が働きます。**求める安心と、実際に取る行動の違い**を自覚すると、無理のない速度で信頼を育てられます。`
+  const inwardMarsPattern = westernMars?.retrograde || vedicMars?.retrograde
+    ? `**好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人です。** 普段は抑えていても、限界を越えた後に強い言葉や決断として表れやすいため、小さな違和感の段階で伝える方が関係を守れます。強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません。`
+    : ''
   const monthTenGod = input.fourPillars?.find(pillar => pillar.label === '月柱')?.stemTenGod ?? ''
   const monthTenGodDetail = TEN_GOD_DETAIL[monthTenGod] ?? '経験を成果へ変えること'
   const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。${day.work}の中でも「${day.strength}」を使え、${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '自分の判断を成果へ結びつけられる'}環境を選ぶと持ち味が明確になります。`
@@ -741,6 +744,7 @@ ${combinedEvidence}
 関係が安定する条件：${loveBlocks}
 ${loveScene}
 ${personalizedLove}
+${inwardMarsPattern}
 ${uniqueLovePattern}
 すれ違いやすい場面：**${day.caution}**が恋愛にも出やすい点です。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
 長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人の時間・将来の優先順位を具体的に確認すると安心です。

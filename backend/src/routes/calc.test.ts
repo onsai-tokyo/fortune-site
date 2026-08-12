@@ -116,6 +116,8 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /惹かれやすさ：\*\*責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
   assert.match(report, /成長を応援し合える相手を選びます/)
   assert.match(report, /深い研究と継承によって伸びます/)
+  assert.match(report, /好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人/)
+  assert.match(report, /強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません/)
   assert.match(report, /年は複数の計算結果が同じ流れを示し/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
