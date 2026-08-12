@@ -15,7 +15,7 @@ import {
   getSukuyo,
   KYUSEI_NAMES,
 } from './calc.js'
-import { buildDeterministicReport } from '../lib/deterministicReport.js'
+import { buildDeterministicReport, renderReportBlocks } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 
@@ -104,25 +104,23 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     ...expanded,
   })
 
-  for (const heading of ['先に読む要約', '共通して現れた本質', 'あなた固有の組み合わせ', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年', '迷ったときの順序・注記', '命式・計算データとの境界']) {
+  for (const heading of ['先に読む要約', '共通して現れた本質', 'あなた固有の組み合わせ', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年', '迷ったときの順序・注記']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
   assert.doesNotMatch(report, /【補助傾向】/)
   assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
   assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
-  assert.match(report, /社会で繰り返し扱いやすい課題は/)
+  assert.match(report, /参照できた系統：/)
   assert.doesNotMatch(report, /タイプ番号|FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
   assert.match(report, /惹かれやすさ：責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
   assert.match(report, /成長を応援し合える相手を選びます/)
   assert.match(report, /一つのことを深く学び、信頼を守れる人/)
-  assert.match(report, /好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人/)
-  assert.match(report, /強い相手に惹かれることと、強引に押されることが苦手なのは矛盾しません/)
   assert.match(report, /これまでの自分.*作り替えるほどの決断/)
   assert.match(report, /もっと広げたい気持ち.*失敗しない形へ固めたい気持ち/)
   assert.match(report, /周囲の空気や急な変化を敏感に受け取り/)
   assert.match(report, /第一印象では.+社会で評価されやすい方向は/)
-  assert.match(report, /年代によって動き方が変わること自体が自然な設計/)
+  assert.doesNotMatch(report, /命式・計算データとの境界/)
   assert.match(report, /- 仕事：/)
   assert.match(report, /- お金：/)
   assert.match(report, /- 親密な関係：/)
@@ -131,7 +129,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /です。\s*(?:目上|後輩|前者|後者)には/)
   assert.doesNotMatch(report, /力です。\s*(?:好意|惹か|気持ち)/)
   assert.doesNotMatch(report, /しますで評価|タイプ\s+惹か|条件：-/)
-  assert.match(report, /年は複数の計算結果が同じ流れを示し/)
+  assert.doesNotMatch(report.replace(/\[\[HIGHLIGHT:\d{4}年.+?\]\]/g, ''), /\d{4}年/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
   assert.match(report, /強く出ていることと、味方になることは矛盾しません/)
@@ -143,12 +141,15 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   }
   const visibleReport = report.replace(/\[\[EVIDENCE:.+?\]\]/g, '')
   assert.ok((visibleReport.match(/\[\[HIGHLIGHT:.+?\]\]/g) ?? []).length >= 7)
-  const forbidden = /四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音|日主|通変星|鳳閣星|貫索星|牽牛星|官禄宮|財帛宮|化忌|ラグナ|ナクシャトラ|運命数|大運|°/
+  const forbidden = /四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音|日主|通変星|鳳閣星|貫索星|牽牛星|官禄宮|財帛宮|化忌|ラグナ|ナクシャトラ|運命数|大運|一白水星|二黒土星|三碧木星|四緑木星|五黄土星|六白金星|七赤金星|八白土星|九紫火星|角宿|亢宿|氐宿|房宿|心宿|尾宿|箕宿|斗宿|女宿|虚宿|危宿|室宿|壁宿|奎宿|婁宿|胃宿|昴宿|畢宿|觜宿|参宿|井宿|鬼宿|柳宿|星宿|張宿|翼宿|軫宿|°/
   assert.doesNotMatch(visibleReport, forbidden)
+  const loveSection = visibleReport.match(/【恋愛・結婚】([\s\S]*?)【人間関係】/)?.[1] ?? ''
+  assert.equal((loveSection.match(/責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/g) ?? []).length, 1)
   for (const heading of ['仕事', '恋愛・結婚', '人間関係']) {
     assert.equal((visibleReport.match(new RegExp(`【${heading}】`, 'g')) ?? []).length, 1)
   }
-  const longSentences = visibleReport.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 15 && !/^(【|根拠：|一致：)/.test(item))
+  const proseWithoutTimeline = visibleReport.split('【時期 — 重なりの強い年】')[0]
+  const longSentences = proseWithoutTimeline.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 15 && !/^(【|根拠：|一致：)/.test(item))
   const duplicateSentences = longSentences.filter((item, index) => longSentences.indexOf(item) !== index)
   assert.deepEqual(duplicateSentences, [], `15文字以上の同一文が重複しています: ${duplicateSentences.join(' / ')}`)
   const sentences = visibleReport.replaceAll('**', '').split(/[。\n]/).map(item => item.trim()).filter(item => item.length >= 12 && !item.startsWith('【'))
@@ -268,4 +269,51 @@ test('数秘術の複数指標と九星の年月日時盤を固定値で再現�
   assert.deepEqual(calcKyuseiProfile(1995, 2, 20, 5, 40), {
     yearStar: '五黄土星', monthStar: '二黒土星', dayStar: '七赤金星', timeStar: '四緑木星',
   })
+})
+
+function makeFullReport(year: number, month: number, day: number, hour?: number, minute = 0) {
+  const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const birthTime = hour === undefined ? '' : `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+  const shichu = calcShichu(year, month, day, hour, minute)
+  const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
+  return buildDeterministicReport({
+    birthDate, birthTime, birthplace: '愛知県', gender: 'female',
+    shichuDay: shichu.day.kanshi,
+    nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
+    sanmeiStar: sanmei.shukumeiStar,
+    chusatsu: sanmei.chusatsu,
+    sukuyo: getSukuyo(year, month, day),
+    lifePathNumber: calcLifePathNumber(birthDate),
+    numerologyProfile: calcNumerologyProfile(year, month, day, 2026),
+    honmeiName: KYUSEI_NAMES[calcHonmeiStar(year, month, day)],
+    kyuseiProfile: calcKyuseiProfile(year, month, day, hour, minute),
+    timing: calcTimingCycles(year, month, day, hour, minute, 'female'),
+    sanmeiRelations: calcSanmeiRelations(shichu, sanmei.chusatsu),
+    ziwei: calcZiwei(year, month, day, hour, 'female', '愛知県'),
+    astrology: calcAstrology(year, month, day, hour, minute, '愛知県'),
+    ...calcExpandedDivination(shichu),
+  })
+}
+
+test('指定入力と五行0・出生時刻なしでも統合鑑定が最後まで生成される', () => {
+  const target = makeFullReport(1995, 3, 16, 10, 30)
+  assert.match(target, /【迷ったときの順序・注記】/)
+  assert.ok(target.length > 3000)
+  for (const [year, month, day] of [[1988, 1, 1], [1988, 1, 2], [1988, 1, 4]]) {
+    const shichu = calcShichu(year, month, day, 12, 0)
+    const scores = calcExpandedDivination(shichu).elementBalance.scores
+    assert.ok(Object.values(scores).some(score => score === 0))
+    assert.match(makeFullReport(year, month, day, 12, 0), /【仕事】/)
+  }
+  assert.match(makeFullReport(1990, 6, 12), /出生時刻不明/)
+  assert.match(makeFullReport(2000, 11, 3), /出生時刻不明/)
+})
+
+test('一つの鑑定ブロックが失敗しても他ブロックを返す', () => {
+  const report = renderReportBlocks([
+    { id: 'first', render: () => '最初のブロック' },
+    { id: 'broken', render: () => { throw new Error('test failure') } },
+    { id: 'last', render: () => '最後のブロック' },
+  ], 'test')
+  assert.equal(report, '最初のブロック\n\n最後のブロック')
 })

@@ -1000,6 +1000,9 @@
     .report-list { margin: 3px 0 8px; padding: 0; list-style: none; }
     .report-list li { position: relative; margin: 0; padding: 0 0 0 1.15em; line-height: 1.5; }
     .report-list li::before { content: '•'; position: absolute; left: .1em; color: var(--gold-dark); font-weight: 700; }
+    .agreement-badge { display:inline-block; margin-left:7px; padding:2px 7px; border:1px solid var(--border-gold); border-radius:999px; color:var(--gold-dark); font-size:11px; line-height:1.4; vertical-align:middle; }
+    .timing-more { margin:10px 0 18px; }
+    .timing-more summary { cursor:pointer; color:var(--gold-dark); font-weight:600; }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
     .affiliate-card { margin: 24px 0; padding: 18px; border: 1px solid rgba(143,106,31,.32); border-radius: 12px; background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(241,230,201,.38)); white-space: normal; }
@@ -1705,7 +1708,11 @@
         return section.replace(/\[\[HIGHLIGHT:(.+?)\]\]/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
       }).join('');
       const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:.+?\]\]/g, '');
-      const withGlossary = withEvidence.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
+      const withMeta = withEvidence
+        .replace(/\[\[AGREEMENT:(.+?)\]\]/g, '<span class="agreement-badge">$1</span>')
+        .replace(/\[\[TIMING_MORE_START\]\]/g, '<details class="timing-more"><summary>すべての年を見る</summary>')
+        .replace(/\[\[TIMING_MORE_END\]\]/g, '</details>');
+      const withGlossary = withMeta.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
       });
@@ -1879,7 +1886,10 @@
           })
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}`);
+        }
 
         // 通常のJSONとして一括受信し、Safariのストリーム終了待ちを完全に避ける。
         const responseData = await response.json();
@@ -1888,7 +1898,10 @@
         resultContent.innerHTML = renderReport(fullContent);
         if (typeof gtag === 'function') gtag('event', 'fortune_report_view', { form_name: 'top_fortune' });
       } catch (err) {
-        resultContent.textContent = '通信が混み合っています。少し時間をおいて、もう一度お試しください。';
+        const isDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
+        resultContent.textContent = isDevelopment
+          ? `鑑定生成エラー: ${err instanceof Error ? err.message : String(err)}`
+          : '通信が混み合っています。少し時間をおいて、もう一度お試しください。';
         console.error('Fortune generation failed:', err);
       } finally {
         submitButton.disabled = false;

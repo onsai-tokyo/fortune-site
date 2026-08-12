@@ -116,6 +116,10 @@ previewRouter.post('/generate', async (req, res) => {
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
     const deterministicReport = buildDeterministicReport({
+      birthDate,
+      birthTime,
+      birthplace,
+      gender,
       age,
       shichuDay: shichu.day.kanshi,
       nayin,
@@ -272,9 +276,22 @@ ${ageTable}
     res.end()
     */
   } catch (err) {
-    console.error('Preview generate error:', err)
+    const requestInput = {
+      birthDate: req.body?.birthDate,
+      birthTime: req.body?.birthTime,
+      birthplace: req.body?.birthplace,
+      gender: req.body?.gender,
+    }
+    console.error('Preview generate error', {
+      input: requestInput,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    })
     if (!res.headersSent) {
-      res.status(500).json({ error: 'プレビューの生成に失敗しました' })
+      res.status(500).json({
+        error: 'プレビューの生成に失敗しました',
+        ...(process.env.NODE_ENV !== 'production' ? { detail: err instanceof Error ? err.message : String(err) } : {}),
+      })
     } else {
       res.write('data: [DONE]\n\n')
       res.end()
