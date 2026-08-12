@@ -113,7 +113,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /社会で繰り返し扱いやすい課題は/)
   assert.doesNotMatch(report, /タイプ番号|FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
-  assert.match(report, /惹かれやすさ：\*\*責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
+  assert.match(report, /惹かれやすさ：責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
   assert.match(report, /成長を応援し合える相手を選びます/)
   assert.match(report, /一つのことを深く学び、信頼を守れる人/)
   assert.match(report, /好意・怒り・違和感を、その場ですぐ外へ出すより、一度自分の内側で確かめる人/)
@@ -142,6 +142,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     assert.ok(lineages.size >= 2, `根拠が2系統未満です: ${evidence}`)
   }
   const visibleReport = report.replace(/\[\[EVIDENCE:.+?\]\]/g, '')
+  assert.ok((visibleReport.match(/\[\[HIGHLIGHT:.+?\]\]/g) ?? []).length >= 7)
   const forbidden = /四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音|日主|通変星|鳳閣星|貫索星|牽牛星|官禄宮|財帛宮|化忌|ラグナ|ナクシャトラ|運命数|大運|°/
   assert.doesNotMatch(visibleReport, forbidden)
   for (const heading of ['仕事', '恋愛・結婚', '人間関係']) {

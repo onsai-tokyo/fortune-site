@@ -1699,9 +1699,10 @@
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
-      const limitedHighlights = escaped.split(/(?=^【.+?】$)/gm).map(section => {
+      const withoutLegacyHighlights = escaped.replace(/\*\*(.+?)\*\*/g, '$1');
+      const limitedHighlights = withoutLegacyHighlights.split(/(?=^【.+?】$)/gm).map(section => {
         let highlights = 0;
-        return section.replace(/\*\*(.+?)\*\*/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
+        return section.replace(/\[\[HIGHLIGHT:(.+?)\]\]/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
       }).join('');
       const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:.+?\]\]/g, '');
       const withGlossary = withEvidence.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {

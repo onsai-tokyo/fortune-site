@@ -550,7 +550,7 @@ export function buildDeterministicReport(input: ReportInput): string {
             '常に前面へ出る性質ではなく、条件が整ったときに強く働きます。',
             '普段は控えめでも、役割を任されたときに存在感が増す特徴です。',
           ], `trait-focused-${item.key}`)
-    return `**${index + 1}. ${detail.title}**\n${detail.summary}\n${expression}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
+    return `[[HIGHLIGHT:${index + 1}. ${detail.title}]]\n${detail.summary}\n${expression}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
   }).join('\n\n')
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
@@ -621,7 +621,7 @@ export function buildDeterministicReport(input: ReportInput): string {
       const longTermNote = decadeShared.length && decade
         ? ` ${item.year}年は長期の流れでも${decade.themes.join('、')}が続いており、年単独より影響が残りやすい時期です。`
         : ''
-      const text = `**${item.year}年（${item.ageRange}）：${yearHeadline}**\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${longTermNote}${relationship}\n起こりやすいこと：${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
+      const text = `[[HIGHLIGHT:${item.year}年（${item.ageRange}）：${yearHeadline}]]\n${item.year}年は複数の計算結果が同じ流れを示し、${item.themes.join('、')}が動きやすい時期です。${longTermNote}${relationship}\n起こりやすいこと：${domainLines}\nこの時期のポイント（${item.year}年）：${domain.caution} ${item.year}年は${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
@@ -671,7 +671,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const weakestDetail = ELEMENT_DETAIL[weakestElement] ?? '意識して補いたい機能'
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
-  const personalizedCore = `あなたは**「${profileTitle}」**です。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}ことで持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
+  const personalizedCore = `あなたは[[HIGHLIGHT:「${profileTitle}」]]です。物事を決めるときは「${day.core}」らしく全体を見て、心の中では「${centerStarLabel}」を大切にします。特に、${elementModeLabel}ことで持ち味が安定します。また「${lifeNumberDetail}」も大切なテーマなので、知ったことを自分の中だけに置かず、誰かが使える形にするとあなたらしさが伝わります。`
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
@@ -765,8 +765,8 @@ export function buildDeterministicReport(input: ReportInput): string {
 - 後輩や守る相手には：${SANMEI[southStar] ?? '行動力'}
 全員へ同じ顔を見せる必要はありません。`
   const personalizedLifeStage = `今は「${currentPhaseDetail}」を経験から育てる段階です。時間の流れには「${currentTimingThemes || '役割や優先順位を見直すこと'}」が出ているため、生まれ持った性質をそのまま繰り返すのではなく、現在の役割へ翻訳することが大切です。${birthNumber ? `生得的には「${NUMEROLOGY_DETAIL[birthNumber] ?? '得意分野を自然に使うこと'}」` : ''}${attitudeNumber ? `、人から見える入口は「${NUMEROLOGY_DETAIL[attitudeNumber] ?? '状況に合わせた方法を選ぶこと'}」` : ''}です。`
-  const uniqueWorkPattern = `得意領域は**${day.work}**です。共通するのは職種名ではなく、**「${day.strength}」を使えること**。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
-  const uniqueLovePattern = `もともと求めるのは**${day.love}**です。親密な関係では、${westStarDetail}。惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
+  const uniqueWorkPattern = `得意領域は${day.work}です。共通するのは職種名ではなく、[[HIGHLIGHT:「${day.strength}」を使えること]]。反対に、${day.caution}が続く環境では消耗しやすいため、仕事を選ぶときは業界よりも意思決定の速さ、裁量、評価基準を確認してください。`
+  const uniqueLovePattern = `もともと求めるのは[[HIGHLIGHT:${day.love}]]です。親密な関係では、${westStarDetail}。惹かれる条件と衝突時の動き方には差があるため、強く惹かれた直後より、意見が違ったときに互いがどう話すかを見る方が相性を判断できます。`
   const uniqueRecoveryPattern = `負荷が高いときは「${day.caution}」が表れやすくなります。最も不足しやすい「${weakestDetail}」を、予定、道具、得意な人への依頼など外部の仕組みで補うと、本来の判断力へ戻りやすくなります。`
   const workScene = pick([
     `会議では${SANMEI[eastStar] ?? '自分の判断軸'}が先に出て、仕上げでは${monthTenGodDetail}が強く働きます。`,
@@ -805,10 +805,10 @@ export function buildDeterministicReport(input: ReportInput): string {
     : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
   return `【先に読む要約】
-${strongest ? `**結論：あなたに最も強く表れているのは「${consensusLabels[strongest.key].title}」です。**` : '**結論：いくつかの計算で共通した傾向を中心にまとめています。**'}
+${strongest ? `結論：あなたに最も強く表れているのは[[HIGHLIGHT:「${consensusLabels[strongest.key].title}」]]です。` : '結論：いくつかの計算で共通した傾向を中心にまとめています。'}
 人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
 注意点：${strongest ? shadowTendencies[strongest.key] : day.caution}。
-今日から試すこと：**${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}**。
+今日から試すこと：${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}。
 
 【共通して現れた本質】
 ${traitBlocks}
@@ -836,11 +836,11 @@ ${workScene}
 ${personalizedWork}
 ${wholeChartWorkPattern}
 ${uniqueWorkPattern}
-収入面では、**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}を成果物として見える形にすること**が鍵です。${day.caution}が出たときは、依頼の範囲・期限・対価を見直してください。
+収入面では、${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}を成果物として見える形にすることが鍵です。${day.caution}が出たときは、依頼の範囲・期限・対価を見直してください。
 ${combinedEvidence}
 
 【恋愛・結婚】
-惹かれやすさ：**${attractionDetail}**。第一印象だけでなく、一緒に過ごしたときにこの条件が続くかを見ると、本当に合う相手を見分けやすくなります。
+惹かれやすさ：${attractionDetail}。第一印象だけでなく、一緒に過ごしたときにこの条件が続くかを見ると、本当に合う相手を見分けやすくなります。
 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
 関係が安定する条件：
 ${loveBlocks}
@@ -848,7 +848,7 @@ ${loveScene}
 ${personalizedLove}
 ${inwardMarsPattern}
 ${uniqueLovePattern}
-すれ違いやすい場面：**${day.caution}**が恋愛にも出やすい点です。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
+すれ違いやすい場面：${day.caution}が恋愛にも出やすい点です。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
 長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人の時間・将来の優先順位を具体的に確認すると安心です。
 ${combinedEvidence}
 
@@ -857,7 +857,7 @@ ${friendBlocks}
 
 ${relationScene}
 ${personalizedRelations}
-人付き合いでは、**${SUKUYO_DETAIL[input.sukuyo] ?? '自分の感覚を大切にしながら信頼を築くこと'}**が表れます。疲れたときは「${day.caution}」が起きていないかを確認し、無理な役割だけを手放してください。
+人付き合いでは、[[HIGHLIGHT:${SUKUYO_DETAIL[input.sukuyo] ?? '自分の感覚を大切にしながら信頼を築くこと'}]]が表れます。疲れたときは「${day.caution}」が起きていないかを確認し、無理な役割だけを手放してください。
 ${combinedEvidence}
 
 【時期 — 重なりの強い年】
@@ -867,7 +867,7 @@ ${timingBlocks}
 ここに表示する年は、出来事が必ず起こるという意味ではありません。複数の計算で同じテーマが強く出た期間だけを載せています。
 
 【迷ったときの順序・注記】
-**自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。**
+自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。
 
 一つの見方だけに出た特徴は本文へ載せていません。同じ情報を入力すれば、毎回同じ結果になります。この鑑定は将来を決めつけるものではなく、自分の気持ちや選択肢を整理するための参考情報です。
 
