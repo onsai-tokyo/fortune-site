@@ -555,7 +555,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   }
   const traitBlocks = selectedConsensus.map((item, index) => {
     const detail = consensusLabels[item.key]
-    return `[[HIGHLIGHT:${index + 1}. ${detail.title}]]\n${detail.summary}\n${dailyTendencies[item.key]}\n落とし穴：${shadowTendencies[item.key]}。\n行動：${detail.action}。\n${evidenceFor(item)}`
+    return `[[HIGHLIGHT:${index + 1}. ${detail.title}]]\n${detail.summary}\n${dailyTendencies[item.key]}\n気をつけたいのは、${shadowTendencies[item.key]}です。\nうまく活かすには、${detail.action}。\n${evidenceFor(item)}`
   }).join('\n\n')
   const workBlocks = rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work).join(' ')
   const loveBlocks = rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love).join(' ')
@@ -609,6 +609,13 @@ export function buildDeterministicReport(input: ReportInput): string {
       const showWork = workScore >= 2 || (workScore === strongestDomainScore && strongestDomainScore < 2)
       const showLove = loveScore >= 2
       const showRelation = relationScore >= 2 && relationScore >= Math.max(workScore, loveScore)
+      const isMarriage = !hasRelationshipBreak && item.relationshipSignals.length > 0 && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+      const domainLabels = [
+        showWork ? '仕事' : '',
+        isMarriage ? '結婚' : showLove ? '恋愛' : '',
+        showRelation ? '人間関係' : '',
+        hasRelationshipBreak ? '恋愛・人間関係の見直し' : '',
+      ].filter((label, index, all) => label && all.indexOf(label) === index)
       const concrete = (text: string) => text.replace(/^.+?年は、/, '').replace(/年です。$/, '流れです。')
       const domainLines = [
         showWork ? concrete(domain.work) : '',
@@ -623,7 +630,12 @@ export function buildDeterministicReport(input: ReportInput): string {
       const longTermNote = decadeShared.length && decade
         ? ` 長期の流れでも${decade.themes.join('、')}が続き、単年より影響が残りやすい時期です。`
         : ''
-      const text = `[[HIGHLIGHT:${item.year}年（${item.ageRange}）]] [[AGREEMENT:一致 2系統]]\n${yearHeadline}\n\n${domainLines}${longTermNote}${relationship}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
+      const majorTurningPoint = hasRelationshipBreak || isMarriage || (decadeShared.length > 0 && shared.length >= 2)
+      const yearLabel = majorTurningPoint
+        ? `[[TURNING:${item.year}年（${item.ageRange}）— 大きな転換期]]`
+        : `[[YEAR:${item.year}年（${item.ageRange}）]]`
+      const domainLabelLine = domainLabels.map(label => `[[DOMAIN:${label}]]`).join('・')
+      const text = `${yearLabel}\n${domainLabelLine}\n${yearHeadline}\n\n${domainLines}${longTermNote}${relationship}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },
@@ -631,17 +643,10 @@ export function buildDeterministicReport(input: ReportInput): string {
       return { year: item.year, text }
     })
     .filter((item): item is { year: number; text: string } => Boolean(item))
-  const limitTiming = (entries: Array<{ year: number; text: string }>, visible: number) => {
-    const shown = entries.slice(-visible)
-    const hidden = entries.slice(0, -visible)
-    return [shown.map(item => item.text).join('\n\n'), hidden.length ? `[[TIMING_MORE_START]]\n${hidden.map(item => item.text).join('\n\n')}\n[[TIMING_MORE_END]]` : ''].filter(Boolean).join('\n\n')
-  }
   const pastEntries = timingEntries.filter(item => item.year < currentYear)
   const futureEntries = timingEntries.filter(item => item.year >= currentYear)
-  const pastTimingBlocks = limitTiming(pastEntries, 3)
-  const futureShown = futureEntries.slice(0, 5).map(item => item.text).join('\n\n')
-  const futureHidden = futureEntries.slice(5)
-  const futureTimingBlocks = [futureShown, futureHidden.length ? `[[TIMING_MORE_START]]\n${futureHidden.map(item => item.text).join('\n\n')}\n[[TIMING_MORE_END]]` : ''].filter(Boolean).join('\n\n')
+  const pastTimingBlocks = pastEntries.map(item => item.text).join('\n\n')
+  const futureTimingBlocks = futureEntries.map(item => item.text).join('\n\n')
   const timingBlocks = `〈過去15年の振り返り〉\n${pastTimingBlocks || '過去15年には、複数の計算で同じテーマが強く重なる年はありませんでした。'}\n\n〈これから20年の流れ〉\n${futureTimingBlocks || 'これから20年には、複数の計算で同じテーマが強く重なる年はありません。日々の状況を優先して判断してください。'}`
 
   // 「共通テーマ」は同じでも、実際の現れ方は命式・星図・天体の組み合わせで変わる。
@@ -668,8 +673,8 @@ export function buildDeterministicReport(input: ReportInput): string {
   const vedicVenusAttraction = SIGN_BEHAVIOR[vedicVenus?.sign ?? '']?.venus
   const vedicJupiterTrust = PARTNER_GROWTH[vedicJupiter?.sign ?? '']
   const attractionDetail = vedicVenusAttraction && vedicJupiterTrust
-    ? `${sanmeiAttraction}。第一印象では、${vedicVenusAttraction}。長く付き合う相手を選ぶときは、${vedicJupiterTrust}`
-    : `${sanmeiAttraction}。特に、${SUKUYO_DETAIL[input.sukuyo] ?? '自然体で信頼を育てられること'}を感じ、${day.love}を実現できる人に惹かれます`
+    ? `${sanmeiAttraction}を大切にする人です。最初は${vedicVenusAttraction}。長く付き合うなら、${vedicJupiterTrust}を選びます`
+    : `${sanmeiAttraction}を大切にする人です。自然に話せて、${day.love}を一緒につくれる相手に惹かれます`
   const pursuitDetail = SIGN_BEHAVIOR[westernMars?.sign ?? '']?.mars
     ?? `${SANMEI[eastStar] ?? day.strength}が行動の軸です。好意が生まれた後は、${day.love}かどうかを確かめながら進みます`
   const vedicMoonDetail = astroPhrase(vedicMoon?.sign, 'moon')
@@ -683,20 +688,19 @@ export function buildDeterministicReport(input: ReportInput): string {
   const primaryKey = selectedConsensus[0]?.key
   const secondaryKey = selectedConsensus[1]?.key
   const personalizedCore = pick([
-    `あなたは[[HIGHLIGHT:「${profileTitle}」]]です。「${day.core}」の視野で状況を捉えながら、内側では「${centerStarLabel}」を守ります。${elementModeLabel}と、知識を誰かが使える形へ変えることが持ち味を安定させます。`,
-    `[[HIGHLIGHT:「${profileTitle}」]]という組み合わせが、あなたの判断に表れます。全体を読む力と「${centerStarLabel}」を両立し、${elementModeLabel}ほど、自分らしい選択が明確になります。`,
-    `判断の土台は「${day.core}」、心が譲れないものは「${centerStarLabel}」です。この二つを持つあなたは[[HIGHLIGHT:「${profileTitle}」]]。${lifeNumberDetail}を現実の行動へ移すと個性が伝わります。`,
+    `あなたは[[HIGHLIGHT:「${profileTitle}」]]です。全体の状況を見ながら、自分が納得できるやり方も大切にします。${elementModeLabel}ことで、知識を人に分かりやすく伝えられます。`,
+    `[[HIGHLIGHT:「${profileTitle}」]]という特徴があります。全体を見渡すことと、自分が大切にしたいことを両立できる人です。${elementModeLabel}ほど、迷いが減ります。`,
+    `広い視野で考える一方、自分が納得できないことには簡単に流されません。この二つを持つあなたは[[HIGHLIGHT:「${profileTitle}」]]です。${lifeNumberDetail}を毎日の行動に取り入れると、良さが伝わりやすくなります。`,
   ], 'personalized-core')
   const personalizedContrast = primaryKey && secondaryKey
     ? `あなたの個性は、**${consensusLabels[primaryKey].title}**と${consensusLabels[secondaryKey].title}を同時に使う点にあります。「${consensusLabels[primaryKey].action}」の後に「${consensusLabels[secondaryKey].action}」という順番にすると、内面の迷いを行動へ変えやすくなります。`
     : ''
   const personalizedEmotion = westernMoon?.sign && vedicMoon?.sign && westernMoon.sign === vedicMoon.sign
-    ? `心の落ち着き方を別々の方法で見ても、同じ傾向が出ています。${westernMoonDetail}。加えて、無意識には「${nakshatraDetail}」という反応があります。疲れているときは答えを急がず、気持ち、事実、希望の順に整理すると落ち着きます。`
-    : westernMoon?.sign && vedicMoon?.sign ? `心には二つの安心条件があります。
-- 表に出やすい反応：${SIGN_BEHAVIOR[westernMoon?.sign ?? '']?.moon ?? westernMoonDetail}
-- 内側で求めるもの：${SIGN_BEHAVIOR[vedicMoon?.sign ?? '']?.moon ?? vedicMoonDetail}
-- 無意識の反応：${nakshatraDetail}
-この三つを混ぜず、気持ち、事実、希望の順に整理すると落ち着きます。` : ''
+    ? `気持ちを落ち着かせるには、人と話して考えを整理する時間が必要です。疲れているときはすぐに結論を出さず、「いま感じていること」「実際に起きたこと」「これからどうしたいか」の順に分けると冷静さを取り戻せます。`
+    : westernMoon?.sign && vedicMoon?.sign ? `気持ちが乱れたときは、次の三つを分けて考えると落ち着きます。
+- 人に見せやすい反応：${SIGN_BEHAVIOR[westernMoon?.sign ?? '']?.moon ?? westernMoonDetail}
+- 本当は必要としていること：${SIGN_BEHAVIOR[vedicMoon?.sign ?? '']?.moon ?? vedicMoonDetail}
+- とっさに出やすい反応：${nakshatraDetail}` : ''
   const strongestIsFavorable = input.strength?.favorableElements.includes(strongestElement)
   const favorableBridge = strongestIsFavorable
     ? `これはもともと得意なうえ、意識して使うほど自分を支えてくれる長所です。強く出ていることと、味方になることは矛盾しません。`
@@ -726,10 +730,10 @@ export function buildDeterministicReport(input: ReportInput): string {
       : '',
   ].filter(Boolean).join(' ')
   const deepChangePattern = /太陽と冥王星の(?:スクエア|オポジション|コンジャンクション)/.test(aspectText)
-    ? '**人生の節目では、表面的な修正ではなく「これまでの自分」を作り替えるほどの決断をしやすい人です。** 支配される感覚には強く反応するため、自分で選び直せる余地が必要です。'
+    ? '人生の大きな節目では、仕事や人間関係を少し直すだけでなく、環境そのものを変える決断をしやすい人です。人に決められると強いストレスを感じるため、最後は自分で選べる状態を作ってください。'
     : ''
   const emotionalVoltagePattern = /月と(?:天王星|海王星)の(?:スクエア|オポジション)/.test(aspectText)
-    ? '周囲の空気や急な変化を敏感に受け取り、平静に見えるときも内側では感情が大きく動くことがあります。予定を詰めすぎず、一人で感覚を戻す時間を確保してください。'
+    ? '周りの雰囲気や急な予定変更に疲れやすいところがあります。平気そうに見えても気持ちが大きく揺れることがあるため、予定を詰めすぎず、一人で落ち着く時間を取ってください。'
     : ''
   const expansionBrakePattern = /木星と土星の(?:スクエア|オポジション)/.test(aspectText)
     ? '仕事では「もっと広げたい気持ち」と「失敗しない形へ固めたい気持ち」が同時に働きます。大きく賭けるより、試す範囲を決めて段階的に広げる方法が合います。'
@@ -743,13 +747,13 @@ export function buildDeterministicReport(input: ReportInput): string {
     9: '専門学習・思想・遠方との縁', 10: '仕事・肩書・社会的達成', 11: '仲間・将来計画・社会との接点', 12: '内省・休息・見えない負担',
   }
   const identityAndDirectionPattern = western
-    ? `第一印象では、${SIGN_BEHAVIOR[western.ascendant.sign]?.lagna ?? '周囲を見ながら入口を選びます'}。社会で評価されやすい方向は、**${ASTRO_SIGN[western.midheaven?.sign ?? ''] ?? '自分の役割を成果へ変えること'}**です。${sunHouse ? `人生の目的は、特に**${houseArea[sunHouse]}**で形になりやすい傾向です。` : ''}`
+    ? `初対面では、${SIGN_BEHAVIOR[western.ascendant.sign]?.lagna ?? '周囲の様子を見てから動きます'}。仕事では、${ASTRO_SIGN[western.midheaven?.sign ?? ''] ?? '任された役割を成果にすること'}が評価されやすい人です。${sunHouse ? `${houseArea[sunHouse]}に関わる経験が、自信につながりやすくなります。` : ''}`
     : ''
   const emotionalAreaPattern = moonHouse
-    ? `安心を取り戻す鍵は、**${houseArea[moonHouse]}**を整えることです。気持ちが乱れたときは、この領域で無理をしていないか確認してください。`
+    ? `気持ちが不安定なときは、${houseArea[moonHouse]}で無理をしていないか確認してください。ここを整えると落ち着きやすくなります。`
     : ''
   const maturityAreaPattern = saturnHouse
-    ? `時間をかけて自信へ変わる課題は、**${houseArea[saturnHouse]}**にあります。最初から得意である必要はなく、境界線と習慣を作るほど安定します。`
+    ? `${houseArea[saturnHouse]}は、経験を重ねるほど上手になる分野です。最初から完璧を目指さず、無理をしない範囲と続けられる習慣を決めてください。`
     : ''
   const palaceTheme = (stars: string, fallback: string) => {
     if (/紫微|天府|天梁|武曲/.test(stars)) return '責任を引き受け、長期的な信用と成果を築くこと'
@@ -774,19 +778,19 @@ export function buildDeterministicReport(input: ReportInput): string {
     : ''
   const lifeEnergyPattern = [earlyStar, middleStar, lateStar].every(Boolean)
     ? pick([`年代ごとの動き方には、次の違いがあります。
-- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star]}
-- 中年期：${SUBORDINATE_DETAIL[middleStar!.star]}
-- その後：${SUBORDINATE_DETAIL[lateStar!.star]}
+- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star].replace(/エネルギー/g, '傾向')}
+- 中年期：${SUBORDINATE_DETAIL[middleStar!.star].replace(/エネルギー/g, '傾向')}
+- その後：${SUBORDINATE_DETAIL[lateStar!.star].replace(/エネルギー/g, '傾向')}
 時期に応じて力の使い方が変わる人です。`,
       `人生の前半・中盤・後半では、前面に出る力が移ります。
-- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star]}
-- 中年期：${SUBORDINATE_DETAIL[middleStar!.star]}
-- その後：${SUBORDINATE_DETAIL[lateStar!.star]}
+- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star].replace(/エネルギー/g, '傾向')}
+- 中年期：${SUBORDINATE_DETAIL[middleStar!.star].replace(/エネルギー/g, '傾向')}
+- その後：${SUBORDINATE_DETAIL[lateStar!.star].replace(/エネルギー/g, '傾向')}
 過去と今の自分が違って見えても、矛盾ではありません。`,
       `長い時間で見ると、同じ方法を使い続けるタイプではありません。
-- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star]}
-- 中年期：${SUBORDINATE_DETAIL[middleStar!.star]}
-- その後：${SUBORDINATE_DETAIL[lateStar!.star]}
+- 若い時期：${SUBORDINATE_DETAIL[earlyStar!.star].replace(/エネルギー/g, '傾向')}
+- 中年期：${SUBORDINATE_DETAIL[middleStar!.star].replace(/エネルギー/g, '傾向')}
+- その後：${SUBORDINATE_DETAIL[lateStar!.star].replace(/エネルギー/g, '傾向')}
 現在の年代に合う力を優先すると流れが整います。`,
     ], 'life-energy')
     : ''
@@ -878,10 +882,10 @@ export function buildDeterministicReport(input: ReportInput): string {
 
   const report = `【先に読む要約】
 ${coverageNote}
-${strongest ? `結論：あなたに最も強く表れているのは[[HIGHLIGHT:「${consensusLabels[strongest.key].title}」]]です。` : '結論：いくつかの計算で共通した傾向を中心にまとめています。'}
-人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
-注意点：${strongest ? shadowTendencies[strongest.key] : day.caution}。
-今日から試すこと：${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}。
+${strongest ? `結論として、あなたに最も強く表れているのは[[HIGHLIGHT:「${consensusLabels[strongest.key].title}」]]です。` : 'いくつかの計算で共通した傾向を中心にまとめています。'}
+- 人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
+- 気をつけたいこと：${strongest ? shadowTendencies[strongest.key] : day.caution}。
+- 今日から試すこと：${strongest ? consensusLabels[strongest.key].action : '判断理由を一文にする'}。
 
 【共通して現れた本質】
 ${traitBlocks}
@@ -902,11 +906,11 @@ ${uniqueWorkPattern}
 ${combinedEvidence}
 
 【恋愛・結婚】
-惹かれやすさ：${attractionDetail}。第一印象だけでなく、一緒に過ごしたときにこの条件が続くかを見ると、本当に合う相手を見分けやすくなります。
-恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が一致するかを確かめながら関係を育てます。
-関係が安定する条件：${loveBlocks}
-すれ違いやすい場面：本質で触れた落とし穴が、親密な関係でも出やすくなります。違和感が小さいうちに、相手の意図を決めつけず質問へ変えてください。
-長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人の時間・将来の優先順位を具体的に確認すると安心です。
+- 惹かれやすい人：${attractionDetail}。第一印象だけでなく、一緒に過ごしても同じ良さを感じられるかを見ると、本当に合う相手を見分けやすくなります。
+- 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が合っているかを確かめながら関係を育てます。
+- 関係が安定する条件：${loveBlocks}
+- すれ違いやすい場面：本質で触れた注意点が、親しい相手にも出やすくなります。小さな違和感のうちに、相手の気持ちを決めつけず、質問して確かめてください。
+- 長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人で過ごす時間・将来の優先順位を具体的に確認すると安心です。
 ${combinedEvidence}
 
 【人間関係】

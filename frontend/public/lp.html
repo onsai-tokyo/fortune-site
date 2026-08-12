@@ -1000,9 +1000,9 @@
     .report-list { margin: 3px 0 8px; padding: 0; list-style: none; }
     .report-list li { position: relative; margin: 0; padding: 0 0 0 1.15em; line-height: 1.5; }
     .report-list li::before { content: '•'; position: absolute; left: .1em; color: var(--gold-dark); font-weight: 700; }
-    .agreement-badge { display:inline-block; margin-left:7px; padding:2px 7px; border:1px solid var(--border-gold); border-radius:999px; color:var(--gold-dark); font-size:11px; line-height:1.4; vertical-align:middle; }
-    .timing-more { margin:10px 0 18px; }
-    .timing-more summary { cursor:pointer; color:var(--gold-dark); font-weight:600; }
+    .timing-year { font-weight:600; color:var(--ink); }
+    .timing-domain { font-weight:700; color:var(--gold-dark); }
+    .turning-point { font-weight:700; color:var(--ink); background:linear-gradient(transparent 68%, rgba(196,151,55,.24) 68%); }
     .report-spacer { height: 14px; }
     .fortune-term { padding: 0; border: 0; border-bottom: 1px dotted var(--gold-dark); background: transparent; color: inherit; font: inherit; cursor: help; }
     .affiliate-card { margin: 24px 0; padding: 18px; border: 1px solid rgba(143,106,31,.32); border-radius: 12px; background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(241,230,201,.38)); white-space: normal; }
@@ -1709,9 +1709,9 @@
       }).join('');
       const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:.+?\]\]/g, '');
       const withMeta = withEvidence
-        .replace(/\[\[AGREEMENT:(.+?)\]\]/g, '<span class="agreement-badge">$1</span>')
-        .replace(/\[\[TIMING_MORE_START\]\]/g, '<details class="timing-more"><summary>すべての年を見る</summary>')
-        .replace(/\[\[TIMING_MORE_END\]\]/g, '</details>');
+        .replace(/\[\[TURNING:(.+?)\]\]/g, '<strong class="turning-point">$1</strong>')
+        .replace(/\[\[YEAR:(.+?)\]\]/g, '<span class="timing-year">$1</span>')
+        .replace(/\[\[DOMAIN:(.+?)\]\]/g, '<strong class="timing-domain">$1</strong>');
       const withGlossary = withMeta.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
