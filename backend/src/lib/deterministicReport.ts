@@ -634,8 +634,8 @@ export function buildDeterministicReport(input: ReportInput): string {
       const yearLabel = majorTurningPoint
         ? `[[TURNING:${item.year}年（${item.ageRange}）— 大きな転換期]]`
         : `[[YEAR:${item.year}年（${item.ageRange}）]]`
-      const domainLabelLine = domainLabels.map(label => `[[DOMAIN:${label}]]`).join('・')
-      const text = `${yearLabel}\n${domainLabelLine}\n${yearHeadline}\n\n${domainLines}${longTermNote}${relationship}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
+      const domainLabelLine = domainLabels.map(label => `[[DOMAIN:${label}]]`).join(' ')
+      const text = `${yearLabel}\n[[SUMMARY:${yearHeadline}]] ${domainLabelLine}\n\n${domainLines}${longTermNote}${relationship}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
         { lineage: 'number', system: '数秘術', factor: `個人年 ${personalYear}` },

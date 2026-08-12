@@ -1001,7 +1001,8 @@
     .report-list li { position: relative; margin: 0; padding: 0 0 0 1.15em; line-height: 1.5; }
     .report-list li::before { content: '•'; position: absolute; left: .1em; color: var(--gold-dark); font-weight: 700; }
     .timing-year { font-weight:600; color:var(--ink); }
-    .timing-domain { font-weight:700; color:var(--gold-dark); }
+    .timing-summary { display:inline; color:var(--text-main); font-weight:700; }
+    .timing-domain { display:inline-block; margin:2px 3px; padding:2px 8px; border:1px solid rgba(154,109,22,.28); border-radius:999px; background:rgba(201,169,97,.12); color:var(--gold-dark); font-family:'Noto Sans JP',sans-serif; font-size:10px; font-weight:700; line-height:1.6; white-space:nowrap; }
     .turning-point { font-weight:700; color:var(--ink); background:linear-gradient(transparent 68%, rgba(196,151,55,.24) 68%); }
     .reading-cta { position:relative; overflow:hidden; margin:24px 0 30px; padding:20px; border:1px solid rgba(154,109,22,.45); border-radius:14px; box-shadow:0 10px 28px rgba(119,82,18,.12); background:linear-gradient(135deg,#fffaf0 0%,#f3e3b9 100%); }
     .reading-cta::before { content:'無料'; position:absolute; top:14px; right:14px; padding:3px 10px; border-radius:999px; background:#fffdf8; color:var(--gold-dark); font-family:'Noto Sans JP',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; }
@@ -1734,7 +1735,8 @@
       const withMeta = withEvidence
         .replace(/\[\[TURNING:(.+?)\]\]/g, '<strong class="turning-point">$1</strong>')
         .replace(/\[\[YEAR:(.+?)\]\]/g, '<span class="timing-year">$1</span>')
-        .replace(/\[\[DOMAIN:(.+?)\]\]/g, '<strong class="timing-domain">$1</strong>');
+        .replace(/\[\[SUMMARY:(.+?)\]\]/g, '<strong class="timing-summary">$1</strong>')
+        .replace(/\[\[DOMAIN:(.+?)\]\]/g, '<span class="timing-domain">#$1</span>');
       const withGlossary = withMeta.replace(/傷官|化忌|六合|ナクシャトラ|パーダ|納音|建禄/g, term => {
         const desc = fortuneTerms[term];
         return `<button type="button" class="fortune-term" title="${desc}" aria-label="${term}：${desc}">${term}</button>`;
