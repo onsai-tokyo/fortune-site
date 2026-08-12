@@ -555,10 +555,9 @@ export function buildDeterministicReport(input: ReportInput): string {
   const supportingBlocks = supportingConsensus.length
     ? supportingConsensus.map(item => `**${consensusLabels[item.key].title}** — ${consensusLabels[item.key].summary}\n根拠：${item.sources.join('・')}（${item.lineageCount}系統・${item.count}占術）`).join('\n\n')
     : '強い一致項目以外に、2占術で明確に重なる補助傾向はありません。'
-  const asBullets = (items: string[]) => items.map(item => `- ${item}`).join('\n')
-  const workBlocks = asBullets(rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work))
-  const loveBlocks = asBullets(rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love))
-  const friendBlocks = asBullets(rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend))
+  const workBlocks = rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work).join(' ')
+  const loveBlocks = rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love).join(' ')
+  const friendBlocks = rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend).join(' ')
   const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
   const annualSignals = (themes: string[]) => {
@@ -831,7 +830,6 @@ ${easternDomainPattern}
 ${combinedEvidence}
 
 【仕事】
-仕事で現れやすい場面は、次の3つです。
 ${workBlocks}
 
 ${workScene}
@@ -855,7 +853,6 @@ ${uniqueLovePattern}
 ${combinedEvidence}
 
 【人間関係】
-人間関係で現れやすい傾向は、次の3つです。
 ${friendBlocks}
 
 ${relationScene}
