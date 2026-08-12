@@ -113,7 +113,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.match(report, /社会で繰り返し扱いやすい課題は/)
   assert.doesNotMatch(report, /タイプ番号|FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
-  assert.match(report, /惹かれやすさ：\*\*誠実さと将来性を重視し、正式な関係を丁寧に築くタイプ/)
+  assert.match(report, /惹かれやすさ：\*\*責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
   assert.match(report, /成長を応援し合える相手を選びます/)
   assert.match(report, /深い研究と継承によって伸びます/)
   assert.match(report, /年は複数の計算結果が同じ流れを示し/)
