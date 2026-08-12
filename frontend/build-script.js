@@ -116,6 +116,11 @@ const guides = [
     body: ''
   },
   {
+    path: 'guides/shichu-suimei-animal-character', title: '四柱推命と動物占いの関係｜六十干支・12動物・カラー60種類一覧',
+    description: '四柱推命の日柱と動物占いの関係を解説。壬午がブルーの狼になる理由、六十干支と12動物・10カラー全60通りの対応、各動物の特徴を一覧で確認できます。',
+    body: ''
+  },
+  {
     path: 'guides/nayin', title: '納音とは？六十干支を30種類に分類する見方',
     description: '納音が六十干支を海中金・炉中火など30種類の象意へ分類する仕組みと活用上の注意を解説します。',
     body: `<p>納音は、六十干支を二つずつ組にして30種類の象意へ対応させる考え方です。海中金、炉中火、大林木など、自然物にたとえた名称が使われます。</p><h2>日干や五行とは別の分類</h2><p>納音の名称に含まれる木・火・土・金・水は、命式全体の五行バランスをそのまま示すものではありません。異なる分類を混同しないことが大切です。</p><h2>象意の使い方</h2><p>自然物のイメージを、性質を考える補助線として使います。一つの納音だけで職業、結婚、健康などを断定することはできません。</p><h2>統合時の位置づけ</h2><p>Fate Labでは納音を補助的な情報として扱い、独立性の高い複数占術で同様の傾向が確認できた場合に説明へ加えます。</p>`
@@ -251,6 +256,33 @@ function angelNumberPractice(number) {
 
 const angelHubAppendix = `<h2>検索結果を自分の答えへ変えるワーク</h2><p>辞典に表示された意味を読んだら、当たっているかどうかをすぐ決めず、「この言葉から思い出す具体的な出来事は何か」を一つ書きます。次に、その出来事で自分が選べることと、相手や環境にしか決められないことを分けます。自分が選べる側にだけ行動を置くと、数字の解釈が不安や期待を増幅するだけで終わりません。</p><p>たとえば「変化」という結果が出た場合、退職や別れのような大きな決断へ直結させず、会議の方法を一週間変える、連絡の頻度を相談する、固定費を一つ比較するなど、元に戻せる実験から始めます。「協力」なら誰かが助けてくれるのを待つのではなく、相談したい内容と期限を明確にします。</p><h2>数字の記録で確認する4項目</h2><ol><li><strong>事実：</strong>いつ、どこで、どの数字を見たか</li><li><strong>解釈：</strong>その数字から何を連想したか</li><li><strong>行動：</strong>実際に何を試したか</li><li><strong>結果：</strong>一週間後に何が変わり、何が変わらなかったか</li></ol><p>事実と解釈を分けて記録すると、「数字を見たから起きたこと」と「もともと注意を向けていたこと」を混同しにくくなります。心配が強く、数字を確認する行為をやめられない場合は、占いの意味探しを休み、身近な人や適切な相談窓口へ話してください。</p>`;
 
+const SEXAGENARY_STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const SEXAGENARY_BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const ANIMAL_COLORS = ['イエロー','グリーン','レッド','オレンジ','ブラウン','ブラック','ゴールド','シルバー','ブルー','パープル'];
+const ANIMAL_SEQUENCE = ['チータ','たぬき','猿','子守熊','黒ひょう','虎','チータ','たぬき','猿','子守熊','こじか','ゾウ','狼','ひつじ','猿','子守熊','こじか','ゾウ','狼','ひつじ','ペガサス','ペガサス','ひつじ','狼','狼','ひつじ','ペガサス','ペガサス','ひつじ','狼','ゾウ','こじか','子守熊','猿','ひつじ','狼','ゾウ','こじか','子守熊','猿','たぬき','チータ','虎','黒ひょう','子守熊','猿','たぬき','チータ','虎','黒ひょう','ライオン','ライオン','黒ひょう','虎','虎','黒ひょう','ライオン','ライオン','黒ひょう','虎'];
+const ANIMAL_TRAITS = {
+  チータ: ['速さと挑戦', '思いついたら素早く試し、短い期間で手応えを得ると力が出やすいタイプです。開始の勢いは強い一方、結果が見えない期間が長いと関心が移りやすいため、途中の小目標を置くと持続しやすくなります。'],
+  たぬき: ['経験と調整', '過去の経験や信頼関係を大切にし、場の習慣を読みながら自然に馴染むタイプです。急な変更を受け入れる前に、変更理由とこれまでの方法との接続を確認すると安心して力を使えます。'],
+  猿: ['器用さと工夫', '目の前の課題をゲームのように捉え、道具や会話を使って具体的に解くタイプです。複雑な問題も小さく分けると動きやすい一方、先を急ぐと確認を省きやすいので完了条件を明確にします。'],
+  子守熊: ['計画と楽しさ', '先の展開を想像し、無理のないペースと楽しく続けられる環境を作るタイプです。慎重に計画できる反面、準備の中で迷い続ける場合は、試す期限を決めると前へ進みやすくなります。'],
+  黒ひょう: ['感性と向上心', '新しさや美しさを敏感に捉え、自分も周囲もより良くしたい気持ちを持ちやすいタイプです。評価への感度を品質改善へ活かしつつ、他人の反応だけで自分の価値を決めないことが大切です。'],
+  虎: ['責任と公平さ', '一度引き受けた役割を粘り強く守り、周囲を公平に扱おうとするタイプです。頼られるほど頑張れますが、抱え込みやすいため、責任範囲と助けを求める基準を先に決めます。'],
+  こじか: ['慎重さと信頼', '初めての場所では相手をよく観察し、安全だと分かると素直な力を出すタイプです。信頼を時間をかけて作れる一方、不安を察してもらうだけでなく必要な支援を言葉にすると関係が安定します。'],
+  ゾウ: ['集中と継続', '決めた目標へ黙々と取り組み、見えないところでも努力を積み重ねるタイプです。限界まで我慢してから反応するのではなく、負担が小さい段階で進捗や困り事を共有すると強みが長続きします。'],
+  狼: ['独自性と自分のペース', '周囲と違っていても自分が納得できる方法を選び、専門や作品を深めるタイプです。単独で集中する時間を守りながら、目的と締切だけは周囲と共有すると独自性が成果へつながります。'],
+  ひつじ: ['協調と情報', '人の輪と全体の状況を見渡し、情報を集めて関係を整えるタイプです。相談相手を作るのが上手な一方、疎外感を避けるために無理をする場合は、一人で休む時間も予定に含めます。'],
+  ペガサス: ['直感と自由', 'その場の感覚から発想を飛躍させ、既存の枠にない方法を生み出すタイプです。気分や環境から影響を受けやすいため、発想を否定せず記録し、実行部分を仕組みや協力者で支えると形になります。'],
+  ライオン: ['誇りと統率', '理想の基準を掲げ、人前では堂々と役割を果たそうとするタイプです。弱みを見せずに頑張りやすいので、安心して試行錯誤できる場所を別に持つと、統率力が威圧ではなく信頼として伝わります。']
+};
+const SEXAGENARY_ANIMALS = Array.from({ length: 60 }, (_, index) => ({ number: index + 1, pillar: `${SEXAGENARY_STEMS[index % 10]}${SEXAGENARY_BRANCHES[index % 12]}`, color: ANIMAL_COLORS[index % 10], animal: ANIMAL_SEQUENCE[index] }));
+
+function animalCharacterBody() {
+  const rows = SEXAGENARY_ANIMALS.map(item => `<tr id="animal-${item.number}"><td>${item.number}</td><th>${item.pillar}</th><td>${item.color}</td><td><strong>${item.color}の${item.animal}</strong></td><td>${ANIMAL_TRAITS[item.animal][0]}</td></tr>`).join('');
+  const animalSections = Object.entries(ANIMAL_TRAITS).map(([animal, [theme, detail]]) => { const matches = SEXAGENARY_ANIMALS.filter(item => item.animal === animal); return `<section id="type-${animal}"><h3>${animal}｜${theme}</h3><p>${detail}</p><p><strong>対応する日柱：</strong>${matches.map(item => `${item.pillar}（${item.color}）`).join('、')}</p><p>同じ${animal}でも色が違えば日干が異なります。動物の共通像だけで終わらず、四柱推命では${matches.map(item => item.pillar[0]).join('・')}それぞれの五行と陰陽、さらに生まれた季節や命式全体を確認します。</p></section>`; }).join('');
+  const lookupScript = `<script>(()=>{const data=${JSON.stringify(SEXAGENARY_ANIMALS)};const form=document.getElementById('animal-pillar-tool'),input=document.getElementById('animal-pillar'),result=document.getElementById('animal-pillar-result');form.addEventListener('submit',e=>{e.preventDefault();const value=input.value.trim();const item=data.find(x=>x.pillar===value);result.innerHTML=item?'<strong>'+item.pillar+'は「'+item.color+'の'+item.animal+'」</strong><span>六十干支'+item.number+'番。基本テーマは「'+${JSON.stringify(Object.fromEntries(Object.entries(ANIMAL_TRAITS).map(([key,value])=>[key,value[0]])))}[item.animal]+'」です。</span><a href="#animal-'+item.number+'">60種類一覧の該当行を見る</a>':'<strong>日柱を確認してください</strong><span>甲子・壬午・癸亥のように、天干と地支の2文字で入力します。</span>';})})()</script>`;
+  return `<p>「壬午はブルーの狼」のような動物キャラ分類は、四柱推命と無関係な別の計算ではありません。生まれた日の干支である<strong>日柱</strong>を、甲子から癸亥までの六十干支番号へ対応させ、その番号を12種類の動物と10色で親しみやすく表した現代日本の分類です。壬午は甲子から数えて19番なので、19番の動物「狼」と、9で終わる番号の色「ブルー」が組み合わさります。</p><p>ただし、動物キャラだけで四柱推命全体を読んだことにはなりません。四柱推命は年柱・月柱・日柱・時柱、日干、月令、五行、通変星などを重ねます。動物キャラ分類は日柱を入口として直感的に理解する方法で、詳しい命式分析の一部分を現代的な言葉へ置き換えたものです。</p><h2>日柱から動物とカラーを検索</h2><form class="tool" id="animal-pillar-tool"><label for="animal-pillar">日柱（六十干支）</label><input id="animal-pillar" maxlength="2" placeholder="例：壬午" required><button type="submit">動物キャラを調べる</button></form><div class="tool-result" id="animal-pillar-result" role="status" aria-live="polite">甲子・壬午・癸亥など、日柱の2文字を入力してください。</div>${lookupScript}<p>日柱が分からない場合は、Fate Labの<a href="/tools/day-master">日干・日柱無料計算</a>で生年月日から確認できます。</p><h2>四柱推命と動物キャラ分類の関係</h2><div class="table-scroll"><table><thead><tr><th>比較</th><th>四柱推命</th><th>動物キャラ分類</th></tr></thead><tbody><tr><th>主な入力</th><td>生年月日、できれば出生時刻・出生地</td><td>生年月日</td></tr><tr><th>中心となる情報</th><td>四柱八字と命式全体</td><td>生まれた日の日柱・六十干支番号</td></tr><tr><th>分類</th><td>十干十二支、五行、通変星など</td><td>12動物、10カラー、60分類</td></tr><tr><th>得意な使い方</th><td>複数要素の関係や時期を詳しく読む</td><td>基本的な個性を覚えやすく理解する</td></tr></tbody></table></div><h3>なぜ60通りになるのか</h3><p>十干は甲・乙・丙・丁・戊・己・庚・辛・壬・癸の10種類、十二支は子・丑・寅・卯・辰・巳・午・未・申・酉・戌・亥の12種類です。陽の干と陽の支、陰の干と陰の支が順番に組み合わさるため、10×12の120通りではなく60通りで一周します。</p><h3>動物と干支の動物は別物</h3><p>壬午の「午」は十二支の馬ですが、動物キャラは狼です。十二支の動物をそのまま性格分類へ使っているのではありません。六十干支の番号を別の12キャラクターへ対応させているため、「午なのになぜ狼？」という見た目のずれが生じます。</p>${midArticleCta}<h2>六十干支・カラー・動物の全60通り対応表</h2><p>カラーは番号の下一桁に対応し、イエロー、グリーン、レッド、オレンジ、ブラウン、ブラック、ゴールド、シルバー、ブルー、パープルの順で10色が循環します。動物は単純な12順ではなく、決められた換算表で対応します。</p><div class="table-scroll animal-table"><table><thead><tr><th>番号</th><th>日柱</th><th>カラー</th><th>動物</th><th>基本テーマ</th></tr></thead><tbody>${rows}</tbody></table></div><h2>12種類の動物ごとの特徴</h2><p>60種類を60ページへ分割すると、説明の大半が重複し、読者も比較しにくくなります。このページでは12動物の詳しい特徴と、各動物に属する日柱を一緒に掲載します。検索需要と独自の検証内容が十分に蓄積した動物だけ、将来個別記事へ発展させる方が適切です。</p>${animalSections}<h2>壬午・ブルーの狼を四柱推命と合わせて読む例</h2><p>壬午の天干「壬」は陽の水で、大きな流れ、柔軟な移動、広い視野の象徴として説明されます。地支「午」は火の性質を持ち、水と火という異なる働きが一つの日柱に同居します。動物キャラではブルーの狼として、自分のペース、独自性、専門を深める姿にまとめられます。</p><p>ここから「必ず一匹狼になる」と断定するのではなく、変化へ適応する壬の広がりと、自分の方法を守る狼の像が、実際にはどの場面で出るかを確認します。月柱や月令、他の五行によっては、独自性が研究・制作として表れる人もいれば、移動の多い仕事や新しい仕組み作りに表れる人もいます。</p><h2>名称・歴史についての注意</h2><p>個性心理學研究所の公式説明では、四柱推命や宿曜経を基礎に社会心理学的解釈を加え、1997年に12動物・60分類として体系化したとされています。「個性心理學®」などは登録商標を含む独自のサービス名称です。本記事は公式サービスを複製・提供するものではなく、古くから使われる六十干支と、公開されている動物・カラー対応の関係を解説しています。</p><div class="sources"><h3>参照資料</h3><ul><li><a href="https://eco.mtk.nao.ac.jp/koyomi/faq/60kansi.html" target="_blank" rel="noopener noreferrer">国立天文台暦計算室「六十干支」</a>（六十干支の仕組みと一覧）</li><li><a href="https://www.doubutsu-uranai.com/" target="_blank" rel="noopener noreferrer">動物占い®Premium</a>（公式サイトが示す12動物・カラー分類）</li><li><a href="https://www.noa-group.co.jp/biz/about" target="_blank" rel="noopener noreferrer">個性心理學研究所「個性心理學®とは」</a>（体系化の経緯）</li></ul></div><h2>Fate Labではどう扱っているか</h2><p>Fate Labでは、動物の印象だけで鑑定結果を決めません。まず日柱を暦の規則で計算し、日干、五行、通変星など四柱推命の要素として読みます。そのうえで、動物キャラの言葉は結果を理解しやすくする補助的な対照表として扱います。</p><p>同じ生年月日には同じ日柱を返し、出生時刻が不明なら時柱を推測で補いません。また、動物キャラと四柱推命は同じ日柱を共有するため、二つの独立した証拠として重複加点しないことも重要です。</p><style>.animal-table table{min-width:720px}.animal-table tr:target{background:#fff1bf}.animal-table td:nth-child(1){text-align:center}.animal-table td:nth-child(3){white-space:nowrap}</style>`;
+}
+
 const SANMEI_POSITION_LABELS = {
   center: ['中心', '自分の核'], east: ['東', '社会・友人'], west: ['西', '家庭・身近な人'], north: ['北', '思考・目上'], south: ['南', '未来・部下']
 };
@@ -282,6 +314,7 @@ function sanmeigakuStarsBody() {
 }
 
 function expandedGuide(page) {
+  if (page.path === 'guides/shichu-suimei-animal-character') return { ...page, body: animalCharacterBody() };
   if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: sanmeigakuStarsBody() };
   if (page.path === 'guides/angel-numbers') return { ...page, body: `${angelNumberHubBody()}${angelHubAppendix}<style>${cycleFixStyle}</style>` };
   if (page.path.startsWith('guides/angel-number-')) {
