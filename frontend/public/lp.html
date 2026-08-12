@@ -1665,9 +1665,9 @@
     // A8.netで提携承認された広告URLだけを設定する。空欄の枠は画面に表示しない。
     const affiliateOffers = {
       top: { url: 'https://px.a8.net/svt/ejp?a8mat=4AXLW8+F1SI1M+2PEO+C3BAQ', title: '新規会員登録で3,000円分無料クーポン', description: '恋愛や仕事の悩みを今すぐ相談したい方へ。ココナラ電話占いなら、実力派の占い師へ電話で相談できます。', cta: 'ココナラ電話占いを見る' },
-      summary: { url: 'https://px.a8.net/svt/ejp?a8mat=4BA419+4QVG62+2PEO+1BO6EQ', title: '結果をもう一段深く整理したい方へ', description: '気になったテーマを自分のペースで文章にし、ココナラの専門家へ相談できます。', cta: '相談できる専門家を探す' },
-      love: { url: 'https://px.a8.net/svt/ejp?a8mat=4AXLW8+F1SI1M+2PEO+C3BAQ', title: '恋愛や結婚を、今すぐ相談したい方へ', description: '相手との関係や今後について、ココナラ電話占いで占い師へ直接相談できます。', cta: 'ココナラ電話占いを見る' },
-      closing: { url: 'https://px.a8.net/svt/ejp?a8mat=4BA419+4QVG62+2PEO+1BO6EQ', title: '次の一歩を具体的にしたい方へ', description: '鑑定書を手がかりに、悩みに合うココナラの相談相手を探せます。', cta: '相談サービスを見る' }
+      summary: { url: 'https://px.a8.net/svt/ejp?a8mat=4AXLW8+F1SI1M+2PEO+C3BAQ', title: '新規会員登録で3,000円分無料クーポン', description: '鑑定結果をさらに深く相談したい方へ。ココナラ電話占いで占い師へ直接相談できます。', cta: 'ココナラ電話占いを見る' },
+      love: { url: 'https://px.a8.net/svt/ejp?a8mat=4AXLW8+F1SI1M+2PEO+C3BAQ', title: '新規会員登録で3,000円分無料クーポン', description: '恋愛や結婚、相手との今後について、ココナラ電話占いで占い師へ直接相談できます。', cta: 'ココナラ電話占いを見る' },
+      closing: { url: 'https://px.a8.net/svt/ejp?a8mat=4AXLW8+F1SI1M+2PEO+C3BAQ', title: '新規会員登録で3,000円分無料クーポン', description: '鑑定書を手がかりに、今気になる悩みをココナラ電話占いで相談できます。', cta: 'ココナラ電話占いを見る' }
     };
     const renderAffiliate = (offer, placement) => {
       if (!offer?.url) return '';
