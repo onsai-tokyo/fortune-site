@@ -24,48 +24,22 @@ export default function AuthPage() {
       const hashParams = new URLSearchParams(hash.substring(1))
       const searchParams = new URLSearchParams(window.location.search)
 
-      console.log('[AuthPage] ====================')
-      console.log('[AuthPage] Full URL:', window.location.href)
-      console.log('[AuthPage] Hash:', hash)
-      console.log('[AuthPage] Hash params:', Object.fromEntries(hashParams.entries()))
-      console.log('[AuthPage] Search params:', Object.fromEntries(searchParams.entries()))
-
       const isSignup = hashParams.get('type') === 'signup' || searchParams.get('type') === 'signup'
       const hasAccessToken = !!hashParams.get('access_token')
 
-      console.log('[AuthPage] isSignup:', isSignup)
-      console.log('[AuthPage] hasAccessToken:', hasAccessToken)
-
       if (isSignup || hasAccessToken) {
-        console.log('[AuthPage] 🎉 REGISTRATION COMPLETE DETECTED!')
-        console.log('[AuthPage] Setting localStorage flag...')
-
-        // フラグを設定
         try {
           localStorage.setItem('show_registration_complete', 'true')
-          const verify = localStorage.getItem('show_registration_complete')
-          console.log('[AuthPage] Flag verification:', verify)
-
-          if (verify !== 'true') {
-            console.error('[AuthPage] ❌ Failed to set flag!')
-          } else {
-            console.log('[AuthPage] ✅ Flag successfully set!')
-          }
         } catch (e) {
-          console.error('[AuthPage] ❌ localStorage error:', e)
+          console.error('[AuthPage] localStorage error:', e)
         }
 
-        setMessage('🎉 登録が完了しました！ようこそ、宿命解析へ。ウェルカムボーナス3ptをプレゼントしました。')
+        setMessage('登録が完了しました。鑑定結果の続きをご覧いただけます。')
 
-        // URLをクリーンにする
         setTimeout(() => {
-          console.log('[AuthPage] Cleaning URL...')
           window.history.replaceState({}, '', window.location.pathname)
         }, 100)
-      } else {
-        console.log('[AuthPage] No registration detected')
       }
-      console.log('[AuthPage] ====================')
     }
 
     detectRegistration()
@@ -132,47 +106,46 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-navy flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        {/* ロゴ */}
+    <div className="min-h-screen bg-[#faf7ef] text-[#211d18] flex items-center justify-center p-5 font-serif">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <button onClick={() => navigate('/')} className="inline-block">
-            <h1 className="text-2xl font-bold text-white">Fate Lab</h1>
-            <p className="text-accent text-xs mt-1">9つの占術を照らし合わせる鑑定</p>
+            <h1 className="text-2xl tracking-[.12em]">Fate Lab</h1>
+            <p className="text-[#9a762b] text-xs tracking-[.12em] mt-2">9つの占術を照らし合わせる鑑定</p>
           </button>
         </div>
 
-        <div className="glass-card p-6 space-y-5">
-          <h2 className="text-white font-semibold text-lg text-center">{titles[mode]}</h2>
+        <div className="border border-[#d8c79e] bg-[#fffdf8] rounded-2xl p-7 sm:p-9 space-y-6 shadow-[0_18px_50px_rgba(83,61,25,.08)]">
+          <div className="text-center"><p className="text-[11px] tracking-[.24em] text-[#9a762b]">FATE LAB · MEMBER</p><h2 className="text-2xl mt-3">{titles[mode]}</h2></div>
 
           {message && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-              <p className="text-green-400 text-sm">{message}</p>
+            <div className="bg-[#f2eee2] border border-[#d8c79e] rounded-lg p-3">
+              <p className="text-[#526044] text-sm leading-6">{message}</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-[#fff4ef] border border-[#d9a89a] rounded-lg p-3">
+              <p className="text-[#8b3f31] text-sm">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-white/50 text-xs mb-1 block">メールアドレス</label>
+              <label className="text-[#6d6257] text-sm mb-2 block">メールアドレス</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="example@email.com"
-                className="w-full bg-navy-light border border-white/10 rounded-lg px-3 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-accent/50"
+                className="w-full bg-white border border-[#d8c79e] rounded-lg px-4 py-3.5 text-[#211d18] text-sm placeholder-[#aaa095] focus:outline-none focus:border-[#9a762b]"
               />
             </div>
 
             {mode !== 'reset' && (
               <div>
-                <label className="text-white/50 text-xs mb-1 block">パスワード</label>
+                <label className="text-[#6d6257] text-sm mb-2 block">パスワード</label>
                 <input
                   type="password"
                   value={password}
@@ -180,7 +153,7 @@ export default function AuthPage() {
                   required
                   placeholder="8文字以上"
                   minLength={8}
-                  className="w-full bg-navy-light border border-white/10 rounded-lg px-3 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-accent/50"
+                  className="w-full bg-white border border-[#d8c79e] rounded-lg px-4 py-3.5 text-[#211d18] text-sm placeholder-[#aaa095] focus:outline-none focus:border-[#9a762b]"
                 />
               </div>
             )}
@@ -188,24 +161,24 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg transition-all disabled:opacity-50 text-sm"
+              className="w-full py-4 bg-[#9a6d16] hover:bg-[#825b11] text-white rounded-lg transition-colors disabled:opacity-50"
             >
               {isLoading ? '処理中...' : titles[mode]}
             </button>
           </form>
 
-          <div className="space-y-2 pt-2 border-t border-white/10">
+          <div className="space-y-2 pt-3 border-t border-[#e8dfcb]">
             {mode === 'login' && (
               <>
                 <button
                   onClick={() => { setMode('register'); setError(''); setMessage('') }}
-                  className="w-full text-center text-white/40 hover:text-white/70 text-xs py-1 transition-colors"
+                  className="w-full text-center text-[#70531e] hover:text-[#4e3812] text-sm py-1 transition-colors"
                 >
-                  アカウントをお持ちでない方 → 新規登録
+                  新規登録（無料）
                 </button>
                 <button
                   onClick={() => { setMode('reset'); setError(''); setMessage('') }}
-                  className="w-full text-center text-white/30 hover:text-white/50 text-xs py-1 transition-colors"
+                  className="w-full text-center text-[#867a6c] hover:text-[#5d5348] text-xs py-1 transition-colors"
                 >
                   パスワードを忘れた方
                 </button>
@@ -214,7 +187,7 @@ export default function AuthPage() {
             {mode !== 'login' && (
               <button
                 onClick={() => { setMode('login'); setError(''); setMessage('') }}
-                className="w-full text-center text-white/40 hover:text-white/70 text-xs py-1 transition-colors"
+                className="w-full text-center text-[#70531e] hover:text-[#4e3812] text-sm py-1 transition-colors"
               >
                 ログインはこちら
               </button>
@@ -222,7 +195,7 @@ export default function AuthPage() {
           </div>
         </div>
 
-        <p className="text-white/20 text-xs text-center mt-4">
+        <p className="text-[#8a7e70] text-xs text-center mt-5 leading-6">
           登録することで利用規約・プライバシーポリシーに同意したものとみなします
         </p>
       </div>
