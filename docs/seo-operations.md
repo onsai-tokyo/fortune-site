@@ -49,6 +49,23 @@ URL: https://fate-lab.com/
 5. インデックス未登録、クロールエラー、Core Web Vitals不良を確認する。
 6. 実質的に更新したURLだけ再クロールを申請する。
 
+### CSVから改善候補を自動抽出する
+
+Search Consoleの「検索結果」から、検索語とページを含むCSVをエクスポートし、次を実行する。
+
+```bash
+node scripts/analyze-search-console.mjs ~/Downloads/fate-lab-search-console.csv
+```
+
+`reports/search-console-YYYY-MM-DD.md`へ、次の順で改善候補が出力される。
+
+1. 掲載順位8〜30位で表示回数が多い検索語
+2. 10位以内なのに想定よりCTRが低い検索語
+3. 4〜7位で上位3件を狙える検索語
+4. 現状を維持すべき1〜3位の検索語
+
+ページ列が入ったCSVを推奨する。Search Consoleの画面で「検索キーワード」と「ページ」を同時に出力できない場合は、優先ページを選択してから検索キーワードをエクスポートする。
+
 ## 月次コンテンツ監査
 
 - 計算例、境界条件、独自検証のいずれかが記事に含まれているか
