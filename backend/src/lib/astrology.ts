@@ -36,12 +36,19 @@ function tropicalAscendant(date: Date, latitude: number, longitude: number) {
   return normalize(Math.atan2(-Math.cos(theta), Math.sin(epsilon) * Math.tan(phi) + Math.cos(epsilon) * Math.sin(theta)) * 180 / Math.PI + 180)
 }
 
+function tropicalMidheaven(date: Date, longitude: number) {
+  const theta = normalize(Astronomy.SiderealTime(date) * 15 + longitude) * Math.PI / 180
+  const years = (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 31_556_952_000
+  const epsilon = (23.439291 - 0.00000036 * years) * Math.PI / 180
+  return normalize(Math.atan2(Math.sin(theta) / Math.cos(epsilon), Math.cos(theta)) * 180 / Math.PI)
+}
+
 export interface AstrologyProfile {
   available: boolean
   reason?: string
   method: string
-  western?: { ascendant: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; aspects: string[] }
-  vedic?: { ayanamsha: number; ascendant: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; moonNakshatra: string; moonPada: number }
+  western?: { ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; aspects: string[] }
+  vedic?: { ayanamsha: number; ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; moonNakshatra: string; moonPada: number }
 }
 
 export function calcAstrology(year: number, month: number, day: number, hour: number | undefined, minute: number, birthplace?: string): AstrologyProfile {
@@ -56,6 +63,7 @@ export function calcAstrology(year: number, month: number, day: number, hour: nu
     return { name, longitude: tropicalLongitude, ...zodiac(tropicalLongitude), retrograde: signedDelta(tropicalLongitude, previousLongitude) < 0 }
   })
   const westernAsc = tropicalAscendant(date, latitude, longitude)
+  const westernMc = tropicalMidheaven(date, longitude)
   const aspectAngles: Array<[number, string, number]> = [[0, 'コンジャンクション', 7], [60, 'セクスタイル', 5], [90, 'スクエア', 6], [120, 'トライン', 6], [180, 'オポジション', 7]]
   const aspects: string[] = []
   for (let i = 0; i < planets.length; i++) for (let j = i + 1; j < planets.length; j++) {
@@ -70,7 +78,7 @@ export function calcAstrology(year: number, month: number, day: number, hour: nu
   return {
     available: true,
     method: `出生地${birthplace || '東京都'}の都道府県庁代表座標・日本標準時（JST）`,
-    western: { ascendant: zodiac(westernAsc), planets, aspects: aspects.slice(0, 12) },
-    vedic: { ayanamsha, ascendant: zodiac(westernAsc - ayanamsha), planets: siderealPlanets, moonNakshatra: NAKSHATRAS[nakshatraIndex], moonPada },
+    western: { ascendant: zodiac(westernAsc), midheaven: zodiac(westernMc), planets, aspects: aspects.slice(0, 12) },
+    vedic: { ayanamsha, ascendant: zodiac(westernAsc - ayanamsha), midheaven: zodiac(westernMc - ayanamsha), planets: siderealPlanets, moonNakshatra: NAKSHATRAS[nakshatraIndex], moonPada },
   }
 }

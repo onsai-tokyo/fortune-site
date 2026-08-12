@@ -54,12 +54,14 @@ interface ReportInput {
     method: string
     western?: {
       ascendant: { sign: string; degree: number }
+      midheaven?: { sign: string; degree: number }
       planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
       aspects: string[]
     }
     vedic?: {
       ayanamsha: number
       ascendant: { sign: string; degree: number }
+      midheaven?: { sign: string; degree: number }
       planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
       moonNakshatra: string
       moonPada: number
@@ -91,6 +93,7 @@ const ASTRO_SIGN: Record<string, string> = {
   獅子座: '創造性と誇りを表現し、周囲を照らす力', 乙女座: '細部を整え、役に立つ形へ改善する力', 天秤座: '複数の立場を調整し、美しい均衡を作る力', 蠍座: '一つの対象を深く掘り、根本から変える力',
   射手座: '視野を広げ、意味や可能性を探究する力', 山羊座: '目標を現実の仕組みへ変え、責任を果たす力', 水瓶座: '既存の枠を越え、独自の仕組みを考える力', 魚座: '境界を越えて感じ取り、想像力で包み込む力',
 }
+const ZODIAC_SIGNS = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座']
 
 type PlanetRole = 'lagna' | 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn'
 const PLANET_ROLE_PREFIX: Record<PlanetRole, string> = {
@@ -366,6 +369,15 @@ export function buildDeterministicReport(input: ReportInput): string {
   const vedicMars = vedicPlanet('火星')
   const vedicJupiter = vedicPlanet('木星')
   const vedicSaturn = vedicPlanet('土星')
+  const wholeSignHouse = (sign: string | undefined) => {
+    if (!sign || !western?.ascendant.sign) return null
+    const ascIndex = ZODIAC_SIGNS.indexOf(western.ascendant.sign)
+    const signIndex = ZODIAC_SIGNS.indexOf(sign)
+    return ascIndex < 0 || signIndex < 0 ? null : ((signIndex - ascIndex + 12) % 12) + 1
+  }
+  const sunHouse = wholeSignHouse(westernSun?.sign)
+  const moonHouse = wholeSignHouse(westernMoon?.sign)
+  const saturnHouse = wholeSignHouse(westernSaturn?.sign)
 
   type ConsensusKey = 'initiative' | 'communication' | 'insight' | 'stability' | 'independence' | 'harmony' | 'responsibility' | 'transformation' | 'creativity' | 'care' | 'exploration' | 'practicality'
   const consensusLabels: Record<ConsensusKey, { title: string; summary: string; work: string; love: string; action: string }> = {
@@ -695,6 +707,36 @@ export function buildDeterministicReport(input: ReportInput): string {
   const wholeChartCorePattern = [innerProcessingPatterns, deepChangePattern].filter(Boolean).join(' ')
   const wholeChartWorkPattern = expansionBrakePattern
   const wholeChartRecoveryPattern = emotionalVoltagePattern
+  const houseArea: Record<number, string> = {
+    1: '自分らしさと第一印象', 2: '収入・所有・自己価値', 3: '学習・会話・身近な移動', 4: '家庭・居場所・心の土台',
+    5: '恋愛・創作・自己表現', 6: '働き方・習慣・健康管理', 7: '結婚・契約・対等な関係', 8: '深い共有・喪失と再生',
+    9: '専門学習・思想・遠方との縁', 10: '仕事・肩書・社会的達成', 11: '仲間・将来計画・社会との接点', 12: '内省・休息・見えない負担',
+  }
+  const identityAndDirectionPattern = western
+    ? `外からは「${astroPhrase(western.ascendant.sign, 'lagna')}」人に見られやすく、社会では「${astroPhrase(western.midheaven?.sign, 'sun')}」方向へ評価を積み上げます。${sunHouse ? `人生の目的は、特に**${houseArea[sunHouse]}**で形になりやすい配置です。` : ''}`
+    : ''
+  const emotionalAreaPattern = moonHouse
+    ? `安心を取り戻す鍵は、**${houseArea[moonHouse]}**を整えることです。気持ちが乱れたときは、この領域で無理をしていないか確認してください。`
+    : ''
+  const maturityAreaPattern = saturnHouse
+    ? `時間をかけて自信へ変わる課題は、**${houseArea[saturnHouse]}**にあります。最初から得意である必要はなく、境界線と習慣を作るほど安定します。`
+    : ''
+  const palaceTheme = (stars: string, fallback: string) => {
+    if (/紫微|天府|天梁|武曲/.test(stars)) return '責任を引き受け、長期的な信用と成果を築くこと'
+    if (/天機|巨門|太陽|太陰/.test(stars)) return '考えを整理し、言葉・知識・観察を役立てること'
+    if (/破軍|七殺|廉貞|貪狼/.test(stars)) return '変化を恐れず、古い仕組みを次の形へ更新すること'
+    if (/天同|天相/.test(stars)) return '人との協力や調整を通じて、安心できる流れを作ること'
+    return fallback
+  }
+  const easternDomainPattern = input.ziwei?.available
+    ? `仕事では${palaceTheme(careerPalaceStars, '一つの専門性を磨くこと')}、お金では${palaceTheme(wealthPalaceStars, '収支と価値の基準を自分で持つこと')}が長期テーマです。親密な関係では${palaceTheme(couplePalaceStars, '対等な約束を育てること')}、友人関係では${palaceTheme(friendsPalaceStars, '助け合う範囲を明確にすること')}が表れます。`
+    : ''
+  const relationshipChangePattern = input.sanmeiRelations?.relations.length
+    ? `人や環境との結びつきには、**${input.sanmeiRelations.relations.map(item => item.meaning).join('。また、')}**という動きがあります。変化が起きたときは、元へ戻すことだけでなく新しい関係の形を作る視点が役立ちます。`
+    : ''
+  const lifeEnergyPattern = [earlyStar, middleStar, lateStar].every(Boolean)
+    ? `若い時期は「${SUBORDINATE_DETAIL[earlyStar!.star]}」、中年期は「${SUBORDINATE_DETAIL[middleStar!.star]}」、その後は「${SUBORDINATE_DETAIL[lateStar!.star]}」へ重心が移ります。**年代によって動き方が変わること自体が自然な設計**です。`
+    : ''
   const monthTenGod = input.fourPillars?.find(pillar => pillar.label === '月柱')?.stemTenGod ?? ''
   const monthTenGodDetail = TEN_GOD_DETAIL[monthTenGod] ?? '経験を成果へ変えること'
   const personalizedWork = `仕事では「${eastStarDetail}」という進め方が評価につながります。社会で繰り返し扱いやすい課題は**${monthTenGodDetail}**、長期的な方向は**${NUMEROLOGY_DETAIL[input.lifePathNumber] ?? mission}**です。${day.work}の中でも「${day.strength}」を使え、${KYUSEI_DETAIL[input.kyuseiProfile?.yearStar ?? input.honmeiName] ?? '自分の判断を成果へ結びつけられる'}環境を選ぶと持ち味が明確になります。`
@@ -751,11 +793,17 @@ ${traitBlocks}
 【あなた固有の組み合わせ】
 ${primaryKey && secondaryKey ? `${consensusLabels[primaryKey].title}と${consensusLabels[secondaryKey].title}を同時に使う点が、この人らしさです。まず「${consensusLabels[primaryKey].action}」、次に「${consensusLabels[secondaryKey].action}」の順で進めると、考えを現実の選択へ移しやすくなります。` : '共通して現れた本質を、状況に応じて組み合わせて使う人です。'}
 ${personalizedCore}
+${identityAndDirectionPattern}
 ${personalizedEmotion}
+${emotionalAreaPattern}
 ${wholeChartCorePattern}
 ${personalizedElements}
 ${uniqueRecoveryPattern}
 ${wholeChartRecoveryPattern}
+${maturityAreaPattern}
+${lifeEnergyPattern}
+${relationshipChangePattern}
+${easternDomainPattern}
 ${combinedEvidence}
 
 【仕事】
