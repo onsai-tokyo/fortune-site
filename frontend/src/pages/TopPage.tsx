@@ -47,7 +47,7 @@ const FAQS = [
   { q: '同じ情報を入れると、同じ結果になりますか？', a: 'はい。初回の統合鑑定は固定ルールで組み立てるため、同じ生年月日・出生時刻・性別なら同じ結果になります。' },
   { q: '鑑定書の生成にAIを使っていますか？', a: '初回の統合鑑定書は生成AIを使わず、各占術の計算結果と固定された解釈ルールから生成します。' },
   { q: '出生時刻が分からなくても使えますか？', a: '利用できます。ただし四柱推命の時柱など、出生時刻が必要な項目は省略されます。分かる場合は入力すると、より多くの要素を計算できます。' },
-  { q: '結果は科学的に証明されていますか？', a: '占術は科学的な診断や将来の保証ではありません。自己理解や選択肢を整理するための参考情報としてご利用ください。' },
+  { q: '結果は科学的に証明されていますか？', a: '占術は科学的な診断や将来の保証ではありません。自己理解や選択肢を整理するための参考情報としてご利用ください。', href: '/guides/shichu-suimei-statistics' },
 ]
 
 const COCONALA_AFFILIATE_URL = (import.meta as ImportMeta & {
@@ -1193,10 +1193,11 @@ export function TopPage() {
           </div>
 
           <div className="space-y-3">
-            {FAQS.map(({ q, a }) => (
+            {FAQS.map(({ q, a, href }) => (
               <div key={q} className="glass-card p-4 space-y-2 border border-white/5">
                 <p className="text-white/80 text-sm font-semibold">{q}</p>
                 <p className="text-white/50 text-xs leading-relaxed">{a}</p>
+                {href && <a href={href} className="inline-block text-amber-200/70 hover:text-amber-100 text-xs underline underline-offset-4">四柱推命・統計学・科学的根拠の解説を読む</a>}
               </div>
             ))}
           </div>
