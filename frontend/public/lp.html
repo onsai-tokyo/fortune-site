@@ -1944,7 +1944,8 @@
         const fullContent = responseData.text || '';
         if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
-        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: calcData, reportText: fullContent });
+        // 質問APIが実際に参照する本文量に合わせ、履歴保存時のリクエストを過大にしない。
+        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: calcData, reportText: fullContent.slice(0, 20000) });
         if (typeof gtag === 'function') { gtag('event', 'fortune_report_view', { form_name: 'top_fortune' }); gtag('event', 'fortune_completed'); gtag('event', 'report_viewed'); }
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);

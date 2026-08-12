@@ -25,7 +25,9 @@ app.use(cors({
 }))
 // Stripe署名検証では加工前のbodyが必要。express.jsonより先に登録する。
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook)
-app.use(express.json({ limit: '128kb' }))
+// 命式・9占術の計算結果と鑑定本文を、質問履歴へ一度だけ保存する。
+// 128kbでは正常な鑑定書も413になるため、対象を検証するAPI側の上限と合わせて余裕を持たせる。
+app.use(express.json({ limit: '1mb' }))
 
 // レート制限: 全API IPごと10req/分
 const limiter = rateLimit({
