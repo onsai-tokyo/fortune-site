@@ -531,6 +531,54 @@ export function calcKyuseiProfile(year: number, month: number, day: number, hour
 }
 
 // ===== エンドポイント =====
+export function calcShichuResult(
+  year: number,
+  month: number,
+  day: number,
+  hour?: number,
+  minute = 0,
+  gender?: 'male' | 'female',
+) {
+  const shichu = calcShichu(year, month, day, hour, minute)
+  return {
+    shichuYear: shichu.year.kanshi,
+    shichuMonth: shichu.month.kanshi,
+    shichuDay: shichu.day.kanshi,
+    shichuHour: shichu.hour?.kanshi ?? null,
+    ...calcExpandedDivination(shichu),
+    timing: gender ? calcTimingCycles(year, month, day, hour, minute, gender) : null,
+  }
+}
+
+calcRouter.post('/shichu', (req, res) => {
+  try {
+    const { birthDate, birthTime, gender } = req.body as { birthDate?: string; birthTime?: string; gender?: string }
+    if (!birthDate) {
+      res.status(400).json({ error: '生年月日は必須です' })
+      return
+    }
+    if (gender && gender !== 'male' && gender !== 'female') {
+      res.status(400).json({ error: '性別の形式が正しくありません' })
+      return
+    }
+    const [year, month, day] = birthDate.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1, day))
+    if (!year || !month || !day || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+      res.status(400).json({ error: '生年月日の形式が正しくありません' })
+      return
+    }
+    const [birthHour, birthMinute] = birthTime ? birthTime.split(':').map(Number) : [undefined, 0]
+    if (birthTime && (!Number.isInteger(birthHour) || !Number.isInteger(birthMinute) || birthHour! < 0 || birthHour! > 23 || birthMinute < 0 || birthMinute > 59)) {
+      res.status(400).json({ error: '出生時刻の形式が正しくありません' })
+      return
+    }
+    res.json(calcShichuResult(year, month, day, birthHour, birthMinute, gender as 'male' | 'female' | undefined))
+  } catch (err) {
+    console.error('Shichu calc error:', err)
+    res.status(500).json({ error: '四柱推命の計算に失敗しました' })
+  }
+})
+
 calcRouter.post('/divination', (req, res) => {
   try {
     const { birthDate, birthTime, birthplace, gender } = req.body as { birthDate?: string; birthTime?: string; birthplace?: string; gender?: string }

@@ -12,6 +12,7 @@ import {
   calcKyuseiProfile,
   calcTenGod,
   calcShichu,
+  calcShichuResult,
   getSukuyo,
   KYUSEI_NAMES,
 } from './calc.js'
@@ -79,6 +80,16 @@ test('1995-02-20 05:40 の詳細命式を固定値で再現する', () => {
     middle: { label: '中年期', star: '天胡星', stage: '病' },
     late: { label: '晩年期', star: '天報星', stage: '胎' },
   })
+})
+
+test('四柱推命専用結果は性別なしで命式を返し、指定時だけ大運を返す', () => {
+  const natal = calcShichuResult(1995, 2, 20, 5, 40)
+  assert.equal(natal.shichuDay, '壬午')
+  assert.equal(natal.timing, null)
+
+  const withTiming = calcShichuResult(1995, 2, 20, 5, 40, 'female')
+  assert.ok(withTiming.timing?.decades.length)
+  assert.ok(withTiming.timing?.annual.some(item => item.year === 2026))
 })
 
 test('複数占術で一致した内容だけを鑑定書に表示する', () => {
