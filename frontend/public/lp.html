@@ -1003,10 +1003,11 @@
     .timing-year { font-weight:600; color:var(--ink); }
     .timing-domain { font-weight:700; color:var(--gold-dark); }
     .turning-point { font-weight:700; color:var(--ink); background:linear-gradient(transparent 68%, rgba(196,151,55,.24) 68%); }
-    .reading-cta { margin:24px 0 30px; padding:18px; border:1px solid var(--border-gold); border-radius:12px; background:#fffdf8; }
+    .reading-cta { position:relative; overflow:hidden; margin:24px 0 30px; padding:20px; border:1px solid rgba(154,109,22,.45); border-radius:14px; box-shadow:0 10px 28px rgba(119,82,18,.12); background:linear-gradient(135deg,#fffaf0 0%,#f3e3b9 100%); }
+    .reading-cta::before { content:'無料'; position:absolute; top:14px; right:14px; padding:3px 10px; border-radius:999px; background:#fffdf8; color:var(--gold-dark); font-family:'Noto Sans JP',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; }
     .reading-cta strong,.reading-cta span { display:block; }
     .reading-cta span { margin-top:5px; color:var(--text-muted); font-size:13px; }
-    .reading-cta button { width:100%; margin-top:13px; padding:12px 16px; border:0; border-radius:7px; background:var(--gold-dark); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+    .reading-cta button { width:100%; margin-top:15px; padding:14px 16px; border:0; border-radius:8px; box-shadow:0 6px 16px rgba(104,70,12,.2); background:linear-gradient(90deg,#9a6d16,#bd8d2d); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
     .reading-progress { display:grid; gap:10px; padding:22px; border:1px solid var(--border-gold); border-radius:12px; background:#fffdf8; }
     .reading-progress p { margin:0; font-weight:700; }
     .reading-progress span { color:var(--text-muted); font-size:13px; }
@@ -1636,8 +1637,8 @@
     <div class="section-inner">
       <div class="section-header"><p class="section-eyebrow">CONTINUE READING</p><h2 class="section-title" id="pricing-title">鑑定結果を、さらに読み解く</h2></div>
       <div class="reading-cta">
-        <strong>鑑定質問 継続利用プラン　<span id="subscription-price">月額料金を確認中</span></strong>
-        <span>無料鑑定後の質問は3回まで無料です。その後は月額プランで継続できます。契約は毎月自動更新され、契約管理画面からいつでも解約できます。</span>
+        <strong>鑑定質問 継続利用プラン　<span id="subscription-price">月額2,980円（税込）</span></strong>
+        <span>無料鑑定後の質問は2回まで無料です。その後は月額2,980円の質問し放題プランで継続できます。契約は毎月自動更新され、契約管理画面からいつでも解約できます。</span>
         <span>決済にはStripeを使用します。日割り返金はありません。詳細は特定商取引法に基づく表記をご確認ください。</span>
       </div>
     </div>
@@ -1764,7 +1765,7 @@
         if (!['共通して現れた本質','あなた固有の組み合わせ','仕事','恋愛・結婚','人間関係','時期 — 重なりの強い年'].includes(title)) return;
         const card = document.createElement('aside');
         card.className = 'reading-cta';
-        card.innerHTML = `<strong>この結果について、さらに知りたいことは？</strong><span>${title}の内容を引き継いで質問できます。</span><button type="button">この結果について質問する</button>`;
+        card.innerHTML = `<strong>この結果について、さらに知りたいことは？</strong><span>9つの占術結果と「${title}」の内容をもとに、気になる点をより詳しく読み解けます。</span><button type="button">さらに深掘り鑑定へ（無料）</button>`;
         card.querySelector('button').addEventListener('click', () => saveReadingContext(context, title, `${title}について、私の鑑定結果に沿ってもう少し詳しく教えてください。`));
         const next = headings[index + 1];
         if (next) container.insertBefore(card, next); else container.appendChild(card);

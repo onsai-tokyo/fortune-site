@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 
 export const readingRouter = Router()
-const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 3))
+const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
 const questionLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: Math.max(1, Number(process.env.READING_QUESTION_RATE_LIMIT ?? 6)),
