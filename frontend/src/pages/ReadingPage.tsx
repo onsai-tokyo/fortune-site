@@ -198,7 +198,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
     track('question_sent', { conversation_id: conversationId })
     if (messages.filter(item => item.role === 'user').length === 1) track('second_question_sent', { conversation_id: conversationId })
     try {
-      const response = await fetch(`/api/reading/conversations/${conversationId}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ question: text }) })
+      const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ question: text }) })
       if (response.status === 402) {
         setMessages(prev => prev.slice(0, -1)); setStatus(prev => prev ? { ...prev, remaining: 0 } : prev)
         track('free_limit_reached'); track('paywall_viewed'); return
@@ -218,7 +218,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
         }
       }
       if (!answer.trim()) throw new Error('回答を取得できませんでした')
-      const state = await fetch('/api/reading/status', { headers: authHeaders() }).then(r => r.json()); setStatus(state)
+      const state = await fetchReadingApi('/api/reading/status', { headers: authHeaders() }).then(r => r.json()); setStatus(state)
     } catch (e) {
       setMessages(prev => prev.slice(0, -1)); setError(e instanceof Error ? e.message : '回答を取得できませんでした')
     } finally { setSending(false) }
