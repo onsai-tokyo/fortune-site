@@ -96,6 +96,7 @@ BEGIN
 END;
 $$;
 REVOKE ALL ON FUNCTION consume_free_reading_question(uuid, integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION consume_free_reading_question(uuid, integer) TO service_role;
 
 CREATE OR REPLACE FUNCTION refund_free_reading_question(target_user_id uuid)
 RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
@@ -103,3 +104,4 @@ RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   WHERE user_id = target_user_id;
 $$;
 REVOKE ALL ON FUNCTION refund_free_reading_question(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION refund_free_reading_question(uuid) TO service_role;

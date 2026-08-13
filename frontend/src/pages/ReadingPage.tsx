@@ -171,11 +171,29 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
         setHistory(historyBody.conversations ?? [])
 
         if (mode === 'chat' && conversationId) {
-          const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() })
-          const body = await response.json()
-          if (!response.ok || !body.messages) { setError(body.error ?? '鑑定履歴を開けませんでした'); return }
-          setMessages(body.messages)
-          setActiveContext({ sourceSection: body.conversation?.source_section, sourceYear: body.conversation?.source_year })
+          let body: { conversation?: Record<string, unknown>; messages?: Message[]; error?: string } | null = null
+          try {
+            const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() })
+            if (response.ok) body = await response.json()
+          } catch { /* 本人のRLS範囲内で直接読み直す */ }
+
+          if (!body?.messages) {
+            const [{ data: conversation, error: conversationError }, { data: directMessages, error: messagesError }] = await Promise.all([
+              supabase.from('reading_conversations').select('id,source_section,source_year').eq('id', conversationId).eq('user_id', userId).maybeSingle(),
+              supabase.from('reading_messages').select('role,content,referenced_systems,created_at').eq('conversation_id', conversationId).eq('user_id', userId).order('created_at'),
+            ])
+            if (conversationError || messagesError || !conversation) {
+              setError(conversationError?.message ?? messagesError?.message ?? '鑑定履歴を開けませんでした')
+              return
+            }
+            body = { conversation, messages: (directMessages ?? []) as Message[] }
+          }
+
+          setMessages(body.messages ?? [])
+          setActiveContext({
+            sourceSection: typeof body.conversation?.source_section === 'string' ? body.conversation.source_section : undefined,
+            sourceYear: typeof body.conversation?.source_year === 'number' ? body.conversation.source_year : undefined,
+          })
           return
         }
       } catch (cause) {
