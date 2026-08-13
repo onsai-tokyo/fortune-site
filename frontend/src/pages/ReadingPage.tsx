@@ -40,7 +40,16 @@ function contextualSuggestions(section?: string, year?: number) {
 }
 
 function answerWithoutSuggestions(content: string) {
-  return content.split('\n').filter(line => !/^次の質問：/.test(line.trim())).join('\n').trim()
+  return content
+    .split('\n')
+    .filter(line => !/^次の質問：/.test(line.trim()))
+    .map(line => line
+      .replace(/\*\*/g, '')
+      .replace(/^#{1,6}\s*/, '')
+      .replace(/^---+\s*$/, ''))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 type ReadingMode = 'start' | 'history' | 'chat'
