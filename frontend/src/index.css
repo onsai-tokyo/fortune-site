@@ -82,6 +82,12 @@
 /* Ivory theme shared by every React route. The static landing page uses the same palette. */
 :root {
   color-scheme: light;
+  --font-heading: "Shippori Mincho", "Yu Mincho", serif;
+  --font-body: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  --font-data: "Yu Mincho", serif;
+  --text: #211d18;
+  --text-sub: #5c5349;
+  --text-weak: #7a7065;
 }
 
 body {
@@ -91,6 +97,83 @@ body {
     radial-gradient(ellipse 85% 55% at 50% -8%, rgba(201, 169, 97, 0.14) 0%, transparent 62%),
     linear-gradient(180deg, #fffdf8 0%, #faf7ef 48%, #f5efe3 100%) !important;
 }
+
+.reading-page {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.9;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.reading-page > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.reading-page h1,
+.reading-page h2,
+.reading-page h3,
+.reading-page h4,
+.reading-page .font-serif,
+.sidebar-heading,
+.auth-page h1,
+.auth-page h2,
+.auth-page h3,
+.auth-page h4 {
+  font-family: var(--font-heading);
+}
+
+.auth-page {
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-body);
+}
+
+.reading-page .text-white,
+.auth-page .text-white {
+  color: #fff !important;
+}
+
+.reading-page textarea,
+.reading-page button,
+.reading-page nav,
+.reading-page .sidebar-label {
+  font-family: var(--font-body);
+}
+
+.reading-page .sidebar-heading {
+  font-family: var(--font-heading);
+}
+
+.reading-page .sidebar-label {
+  margin-bottom: 12px;
+}
+
+.reading-page [class*="tracking-"] {
+  white-space: nowrap;
+}
+
+.reading-answer-paragraph + .reading-answer-paragraph,
+.reading-answer-list + .reading-answer-paragraph,
+.reading-answer-paragraph + .reading-answer-list {
+  margin-top: 1rem;
+}
+
+.reading-answer-heading {
+  margin-top: 1.4rem;
+  margin-bottom: .5rem;
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.reading-answer-heading:first-child { margin-top: 0; }
+.reading-answer-paragraph { color: var(--text-sub); line-height: 1.9; }
+.reading-answer-list { margin-top: .75rem; padding-left: 1.25rem; list-style: disc; color: var(--text-sub); }
+.reading-answer-list li + li { margin-top: .35rem; }
 
 .bg-deep-navy,
 .bg-navy {

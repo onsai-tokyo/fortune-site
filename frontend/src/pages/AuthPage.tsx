@@ -105,7 +105,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf7ef] text-[#211d18] flex items-center justify-center p-5 font-serif">
+    <div className="auth-page min-h-screen bg-[#faf7ef] text-[#211d18] flex items-center justify-center p-5">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <button onClick={() => navigate('/')} className="inline-block">
