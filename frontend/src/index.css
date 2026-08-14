@@ -148,7 +148,10 @@ body {
 }
 
 .reading-page .sidebar-label {
-  margin-bottom: 12px;
+  display: inline-block;
+  margin: -6px 0 12px;
+  padding: 0 6px;
+  background: #fffdf8;
 }
 
 .reading-page [class*="tracking-"] {

@@ -13,6 +13,8 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [registrationSent, setRegistrationSent] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const { user } = useAuth()
@@ -57,6 +59,12 @@ export default function AuthPage() {
     if (params.get('mode') === 'register') setMode('register')
   }, [params])
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = window.setInterval(() => setResendCooldown(value => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [resendCooldown])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
@@ -71,6 +79,8 @@ export default function AuthPage() {
           throw new Error('User already registered')
         }
         setMessage('確認メールを送信しました。メールのリンクをクリックして登録を完了してください。')
+        setRegistrationSent(true)
+        setResendCooldown(60)
         pixel.trackCompleteRegistration()
       } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -98,6 +108,26 @@ export default function AuthPage() {
     }
   }
 
+  async function resendConfirmation() {
+    if (!email || resendCooldown > 0 || isLoading) return
+    setIsLoading(true)
+    setError('')
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth?returnTo=${encodeURIComponent(returnTo)}` },
+      })
+      if (error) throw error
+      setResendCooldown(60)
+      setMessage('確認メールを再送しました。')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '確認メールを再送できませんでした')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const titles: Record<Mode, string> = {
     login: 'ログイン',
     register: '新規登録',
@@ -115,7 +145,7 @@ export default function AuthPage() {
         </div>
 
         <div className="border border-[#d8c79e] bg-[#fffdf8] rounded-2xl p-7 sm:p-9 space-y-6 shadow-[0_18px_50px_rgba(83,61,25,.08)]">
-          <div className="text-center"><p className="text-[11px] tracking-[.24em] text-[#9a762b]">FATE LAB · MEMBER</p><h2 className="text-2xl mt-3">{titles[mode]}</h2></div>
+          <div className="text-center"><p className="text-[11px] tracking-[.24em] text-[#9a762b]">FATE LAB · MEMBER</p><h2 className="text-2xl mt-3">{registrationSent ? '確認メールをお送りしました' : titles[mode]}</h2>{!registrationSent && mode !== 'reset' && <p className="mt-3 text-left text-sm leading-7 text-[#5c5349]">鑑定書と質問の内容を保存するため、無料登録またはログインをお願いします。<br />先ほどの鑑定内容はそのまま引き継がれます。</p>}</div>
 
           {message && (
             <div className="bg-[#f2eee2] border border-[#d8c79e] rounded-lg p-3">
@@ -129,7 +159,12 @@ export default function AuthPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {registrationSent ? <section className="text-center">
+            <p className="text-sm leading-7 text-[#5c5349]"><strong className="break-all text-[#211d18]">{email}</strong> 宛に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、鑑定書の保存と質問がご利用いただけます。</p>
+            <p className="mt-4 text-sm leading-7 text-[#5c5349]">メールが届かない場合は、迷惑メールフォルダをご確認ください。</p>
+            <button type="button" onClick={() => void resendConfirmation()} disabled={resendCooldown > 0 || isLoading} className="mt-6 w-full rounded-lg border border-[#bfa66e] bg-[#fffdf8] py-3 text-sm text-[#70531e] disabled:opacity-50">{resendCooldown > 0 ? `確認メールを再送する（${resendCooldown}秒後）` : '確認メールを再送する'}</button>
+            <button type="button" onClick={() => { setRegistrationSent(false); setMessage(''); setError(''); setEmail(''); setPassword('') }} className="mt-4 text-sm text-[#70531e] underline">別のメールアドレスで登録する</button>
+          </section> : <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-[#6d6257] text-sm mb-2 block">メールアドレス</label>
               <input
@@ -164,13 +199,13 @@ export default function AuthPage() {
             >
               {isLoading ? '処理中...' : titles[mode]}
             </button>
-          </form>
+          </form>}
 
-          <div className="space-y-2 pt-3 border-t border-[#e8dfcb]">
+          {!registrationSent && <div className="space-y-2 pt-3 border-t border-[#e8dfcb]">
             {mode === 'login' && (
               <>
                 <button
-                  onClick={() => { setMode('register'); setError(''); setMessage('') }}
+                  onClick={() => { setMode('register'); setRegistrationSent(false); setError(''); setMessage('') }}
                   className="w-full text-center text-[#70531e] hover:text-[#4e3812] text-sm py-1 transition-colors"
                 >
                   新規登録（無料）
@@ -191,7 +226,7 @@ export default function AuthPage() {
                 ログインはこちら
               </button>
             )}
-          </div>
+          </div>}
         </div>
 
         <p className="text-[#8a7e70] text-xs text-center mt-5 leading-6">
