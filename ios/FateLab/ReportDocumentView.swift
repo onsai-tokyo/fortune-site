@@ -237,18 +237,18 @@ private struct LabeledBulletView: View {
     }
 
     var body: some View {
-        if let parts {
+        if let parts, !parts.body.isEmpty {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 10) {
                     Rectangle().fill(FateTheme.gold).frame(width: 3, height: 22)
                     Text(parts.title).font(.system(size: 18, weight: .semibold, design: .serif))
                 }
-                if !parts.body.isEmpty {
-                    Text(parts.body).font(.system(size: 16)).lineSpacing(9).foregroundStyle(FateTheme.ink)
-                        .padding(.leading, 13)
-                }
+                Text(parts.body).font(.system(size: 16)).lineSpacing(9).foregroundStyle(FateTheme.ink)
+                    .padding(.leading, 13)
             }
             .padding(.top, 8)
+        } else if parts != nil {
+            EmptyView()
         } else {
             HStack(alignment: .top, spacing: 10) { Text("・"); InlineReportText(inlines: inlines) }
         }

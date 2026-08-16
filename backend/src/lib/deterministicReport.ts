@@ -637,6 +637,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   }).join('\n\n')
   const workBlocks = rotate(selectedConsensus, 'work-order').map(item => domainProjection[item.key].work).join(' ')
   const loveBlocks = rotate(selectedConsensus, 'love-order').map(item => domainProjection[item.key].love).join(' ')
+  const relationshipStability = loveBlocks || `${day.love}。気持ちを察し合うだけで済ませず、連絡の頻度や一人で過ごす時間、将来の希望を言葉で確認できると関係が安定します。`
   const friendBlocks = rotate(selectedConsensus, 'friend-order').map(item => domainProjection[item.key].friend).join(' ')
   const combinedEvidence = evidenceMarker(selectedConsensus.flatMap(item => item.sources.map(source => ({ lineage: sourceLineage[source], system: source, factor: sourceFactor(source) }))).filter((item, index, all) => all.findIndex(other => other.system === item.system && other.factor === item.factor) === index))
   const personalYearSignals: Record<number, ConsensusKey[]> = { 1: ['initiative', 'independence'], 2: ['harmony', 'care'], 3: ['creativity', 'communication'], 4: ['stability', 'practicality'], 5: ['transformation', 'exploration'], 6: ['care', 'responsibility', 'harmony'], 7: ['insight', 'independence'], 8: ['responsibility', 'practicality'], 9: ['transformation', 'care'] }
@@ -1016,7 +1017,7 @@ ${combinedEvidence}
 【恋愛・結婚】
 - 惹かれやすい人：${attractionDetail}。第一印象だけでなく、一緒に過ごしても同じ良さを感じられるかを見ると、本当に合う相手を見分けやすくなります。
 - 恋の始まり方：${pursuitDetail}。気持ちが動いた後も、自分のペースと相手の反応が合っているかを確かめながら関係を育てます。
-- 関係が安定する条件：${loveBlocks}
+- 関係が安定する条件：${relationshipStability}
 - すれ違いやすい場面：本質で触れた注意点が、親しい相手にも出やすくなります。小さな違和感のうちに、相手の気持ちを決めつけず、質問して確かめてください。
 - 長く続けるために話しておくこと：${day.love}を実現するために、連絡頻度・一人で過ごす時間・将来の優先順位を具体的に確認すると安心です。
 ${combinedEvidence}
