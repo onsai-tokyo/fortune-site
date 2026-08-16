@@ -34,16 +34,12 @@ struct ReportDocumentView: View {
             Button(isSaving ? "鑑定書を保存しています…" : questionTitle, action: askQuestion)
                 .buttonStyle(GoldButtonStyle()).disabled(isSaving)
             Divider().overlay(FateTheme.line)
-            Text("目次").font(.system(size: 24, weight: .medium, design: .serif))
-            chapterLink(number: 1, title: "命式・計算データ", detail: "9つの占術の計算結果") {
-                CalculatedDataChapterView(data: report.calculatedData, index: 1, total: readingChapters.count + 1,
-                                          questionTitle: "さらに詳しく質問する", askQuestion: askQuestion)
-            }
-            ForEach(Array(readingChapters.enumerated()), id: \.element.id) { index, chapter in
-                chapterLink(number: index + 2, title: chapter.title, detail: chapter.detail) {
-                    ReportChapterView(chapter: chapter, index: index + 2, total: readingChapters.count + 1,
+            Text("鑑定書 全文").font(.system(size: 24, weight: .medium, design: .serif))
+            CalculatedDataChapterView(data: report.calculatedData, index: 1, total: readingChapters.count + 1,
                                       questionTitle: "さらに詳しく質問する", askQuestion: askQuestion)
-                }
+            ForEach(Array(readingChapters.enumerated()), id: \.element.id) { index, chapter in
+                InlineReportChapterView(chapter: chapter, index: index + 2,
+                                        questionTitle: "さらに詳しく質問する", askQuestion: askQuestion)
             }
             Text("本文 \(document.sourceCharacterCount.formatted())文字・すべての章を省略せず掲載しています。")
                 .font(.caption).foregroundStyle(FateTheme.muted)
@@ -60,21 +56,57 @@ struct ReportDocumentView: View {
         }.font(.system(size: 14)).foregroundStyle(FateTheme.muted)
     }
 
-    @ViewBuilder private func chapterLink<Destination: View>(number: Int, title: String, detail: String?, @ViewBuilder destination: () -> Destination) -> some View {
-        NavigationLink(destination: destination()) {
-            HStack(spacing: 14) {
-                Text("第\(japaneseNumber(number))章")
-                    .font(.system(size: 13, weight: .medium, design: .serif))
-                    .foregroundStyle(FateTheme.gold)
-                    .frame(width: 52, alignment: .leading)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.system(size: 17, weight: .medium, design: .serif)).foregroundStyle(FateTheme.ink)
-                    if let detail { Text(detail).font(.caption).foregroundStyle(FateTheme.muted) }
-                }
-                Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.weak)
-            }.padding(.vertical, 14)
+}
+
+private struct InlineReportChapterView: View {
+    let chapter: ReportChapter
+    let index: Int
+    let questionTitle: String
+    let askQuestion: () -> Void
+
+    var body: some View {
+        LazyVStack(alignment: .leading, spacing: 18) {
+            VStack(spacing: 12) {
+                Text("第 \(japaneseNumber(index)) 章").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
+                Text(chapter.title).font(.system(size: 27, weight: .medium, design: .serif)).multilineTextAlignment(.center)
+                Rectangle().fill(FateTheme.gold).frame(width: 48, height: 1)
+            }.frame(maxWidth: .infinity).padding(.top, 32).padding(.bottom, 12)
+            ForEach(Array(displayNodes.enumerated()), id: \.offset) { _, node in ReportNodeView(node: node) }
+            if !chapterEvidence.groups.isEmpty {
+                EvidenceDisclosureView(evidence: chapterEvidence, title: "この章で参照した内容")
+                    .padding(.top, 16)
+            }
+            Button(questionTitle, action: askQuestion).buttonStyle(GoldButtonStyle()).padding(.top, 8)
+            Divider().overlay(FateTheme.line).padding(.top, 18)
         }
-        Divider().overlay(FateTheme.line)
+    }
+
+    private var displayNodes: [ReportNode] { chapter.nodes.compactMap(removingEvidence) }
+    private var chapterEvidence: EvidenceGroups {
+        var groups: [EvidenceGroups.Group] = []
+        for node in chapter.nodes { collectEvidence(from: node, into: &groups) }
+        return EvidenceGroups(groups: groups)
+    }
+    private func removingEvidence(from node: ReportNode) -> ReportNode? {
+        switch node {
+        case .evidence: return nil
+        case .year(var year): year.body = year.body.compactMap(removingEvidence); return .year(year)
+        default: return node
+        }
+    }
+    private func collectEvidence(from node: ReportNode, into groups: inout [EvidenceGroups.Group]) {
+        switch node {
+        case .evidence(let evidence):
+            for incoming in evidence.groups {
+                if let index = groups.firstIndex(where: { $0.id == incoming.id }) {
+                    for item in incoming.items where !groups[index].items.contains(where: { $0.system == item.system && $0.detail == item.detail }) {
+                        groups[index].items.append(item)
+                    }
+                } else { groups.append(incoming) }
+            }
+        case .year(let year): for child in year.body { collectEvidence(from: child, into: &groups) }
+        default: break
+        }
     }
 }
 
@@ -286,8 +318,7 @@ private struct CalculatedDataChapterView: View {
     var questionTitle: String? = nil
     var askQuestion: (() -> Void)? = nil
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 20) {
                 VStack(spacing: 12) {
                     Text("第 一 章").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
                     Text("命式・計算データ").font(.system(size: 27, weight: .medium, design: .serif))
@@ -314,9 +345,9 @@ private struct CalculatedDataChapterView: View {
                 if let questionTitle, let askQuestion {
                     Button(questionTitle, action: askQuestion).buttonStyle(GoldButtonStyle())
                 }
-            }.padding(20)
-        }.background(FateTheme.ivory).navigationTitle("命式・計算データ").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Text("1 / \(total)").font(.caption).foregroundStyle(FateTheme.muted) } }
+                Divider().overlay(FateTheme.line).padding(.top, 18)
+            }
+            .padding(.top, 12)
     }
     private var sections: [(key: String, value: Any)] {
         data.keys.sorted().compactMap { key in data[key].map { (key, $0) } }
