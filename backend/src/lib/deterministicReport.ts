@@ -24,7 +24,7 @@ interface ReportInput {
     direction: string
     startDate: string
     decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
-    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; themes: string[] }> }>
+    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; relationshipEvents?: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents?: string[]; themes: string[] }> }>
     marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
   }
   sanmeiRelations?: {
@@ -673,9 +673,13 @@ export function buildDeterministicReport(input: ReportInput): string {
       const personalSignals = personalYear ? personalYearSignals[personalYear] ?? [] : []
       const annualShared = annualSignals(item.themes).filter(key => personalSignals.includes(key))
       const decadeShared = annualSignals(decade?.themes ?? []).filter(key => personalSignals.includes(key))
-      const hasRelationshipBreak = item.relationshipSignals.some(signal => /破|冲/.test(signal))
+      const hasRelationshipBreak = item.relationshipSignals.some(signal => /破/.test(signal))
+      const hasRelationshipShift = item.relationshipSignals.some(signal => /冲/.test(signal))
+      const hasSpouseSignal = item.relationshipSignals.some(signal => /配偶者星/.test(signal))
+      const hasPeachSignal = item.relationshipSignals.some(signal => /桃花/.test(signal))
+      const hasCombineSignal = item.relationshipSignals.some(signal => /六合/.test(signal))
       const relationshipOverlap: ConsensusKey[] = item.relationshipSignals.length && [2, 6].includes(personalYear ?? 0)
-        ? [hasRelationshipBreak ? 'transformation' : 'harmony']
+        ? [hasRelationshipBreak || hasRelationshipShift ? 'transformation' : 'harmony']
         : []
       const ziweiYear = input.ziwei?.annual?.find(entry => entry.year === item.year)
       const astrologyYear = input.astrology?.annual?.find(entry => entry.year === item.year)
@@ -709,12 +713,12 @@ export function buildDeterministicReport(input: ReportInput): string {
       const showWork = workScore >= 2 || (workScore === strongestDomainScore && strongestDomainScore < 2)
       const showLove = loveScore >= 2
       const showRelation = relationScore >= 2 && relationScore >= Math.max(workScore, loveScore)
-      const isMarriage = !hasRelationshipBreak && item.relationshipSignals.length > 0 && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+      const isMarriage = !hasRelationshipBreak && !hasRelationshipShift && hasSpouseSignal && hasCombineSignal && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
       const activePalaces = ziweiYear?.activePalaces ?? []
-      const romanceStart = !hasRelationshipBreak && showLove && (
+      const romanceStart = showLove && (hasPeachSignal || (!hasRelationshipBreak && !hasRelationshipShift && (
         /食神|傷官|偏財/.test(item.tenGod) || [2, 3, 6].includes(personalYear) ||
         shared.some(key => ['harmony', 'care', 'exploration'].includes(key))
-      )
+      )))
       const careerChange = showWork && (
         /偏官|偏印/.test(item.tenGod) || shared.some(key => ['transformation', 'independence', 'initiative'].includes(key)) ||
         activePalaces.some(name => name === '官禄' || name === '遷移')
@@ -725,7 +729,8 @@ export function buildDeterministicReport(input: ReportInput): string {
       )
       const eventLabels = [
         romanceStart ? '交際・新しい恋' : '',
-        hasRelationshipBreak ? '別れ・関係の見直し' : '',
+        hasRelationshipBreak ? '隠れた問題・関係の見直し' : '',
+        hasRelationshipShift ? '交際・別離・復縁など関係の切り替わり' : '',
         isMarriage ? '結婚' : '',
         careerChange ? '転職・働き方の変更' : '',
         newChallenge ? '新しい挑戦' : '',
@@ -742,12 +747,15 @@ export function buildDeterministicReport(input: ReportInput): string {
       ].filter(Boolean).join(' ')
       const relationship = hasRelationshipBreak
         ? ' 関係の前提や隠れていたずれが表面化し、続け方を見直す動きも起こりやすくなります。'
+        : hasRelationshipShift && hasSpouseSignal
+          ? ' 関係の状態が動きやすく、交際開始・別離・復縁などの形で結論が表れる場合があります。'
         : item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
           ? ' 交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。'
           : ''
       const eventDetails = [
         romanceStart ? '恋愛では、新しい出会いが交際へ進んだり、友人関係から恋へ変わったりしやすい時期です。' : '',
-        hasRelationshipBreak ? '恋愛では、無理をして続けてきた関係の問題が表面化し、別れるか、付き合い方を作り直すかを決めやすい時期です。' : '',
+        hasRelationshipBreak ? '恋愛では、隠れていた事情や二人の前提のずれが見えやすく、続けるか、関係の作り方を変えるかを検討しやすい時期です。' : '',
+        hasRelationshipShift ? '恋愛では、関係を始める・離れる・やり直すなど、現状をそのままにしにくい時期です。' : '',
         isMarriage ? '結婚では、同居・婚約・入籍など、関係を正式な形へ進める話がまとまりやすい時期です。' : '',
         careerChange ? '仕事では、転職・異動・独立など、これまでの働き方を変える選択が起こりやすい時期です。' : '',
         newChallenge ? '新しい挑戦では、学び直し・副業・企画の開始など、未経験のことへ最初の一歩を踏み出しやすい時期です。' : '',
@@ -770,17 +778,22 @@ export function buildDeterministicReport(input: ReportInput): string {
           for (const signal of lineageSignals) monthCounts.set(signal, (monthCounts.get(signal) ?? 0) + 1)
         }
         const monthShared = [...monthCounts.entries()].filter(([, count]) => count >= 2).map(([key]) => key)
-        const monthBreak = monthItem.relationshipSignals.some(signal => /冲|破/.test(signal)) && (hasRelationshipBreak || monthShared.includes('transformation'))
-        const monthRomance = !monthBreak && romanceStart && monthItem.relationshipSignals.length > 0 && monthShared.some(key => ['harmony', 'care', 'exploration'].includes(key))
-        const monthMarriage = isMarriage && !monthBreak && monthItem.relationshipSignals.some(signal => /正官|正財|六合/.test(signal)) && monthShared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+        const monthBreak = monthItem.relationshipSignals.some(signal => /破/.test(signal)) && (hasRelationshipBreak || monthShared.includes('transformation'))
+        const monthShift = monthItem.relationshipSignals.some(signal => /冲/.test(signal)) && (hasRelationshipShift || monthShared.includes('transformation'))
+        const monthPeach = monthItem.relationshipSignals.some(signal => /桃花/.test(signal))
+        // 桃花 and 破 can coexist: contacts may increase while an existing
+        // relationship's hidden mismatch surfaces. Do not cancel one out.
+        const monthRomance = (monthPeach || romanceStart) && monthItem.relationshipSignals.length > 0 && (monthPeach || monthShared.some(key => ['harmony', 'care', 'exploration'].includes(key)))
+        const monthMarriage = isMarriage && !monthBreak && !monthShift && monthItem.relationshipSignals.some(signal => /正官|正財|六合/.test(signal)) && monthShared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
         const monthCareer = careerChange && (/偏官|偏印|比肩/.test(monthItem.tenGod) || monthShared.some(key => ['transformation', 'independence', 'initiative'].includes(key)))
         const monthChallenge = newChallenge && monthShared.some(key => ['initiative', 'exploration', 'creativity'].includes(key))
-        const monthRelocation = relocation && (monthBreak || monthShared.includes('transformation'))
+        const monthRelocation = relocation && (monthBreak || monthShift || monthShared.includes('transformation'))
         const labels = [
-          monthRomance ? '新しい恋・交際開始' : '', monthBreak ? '別れ・関係の見直し' : '',
+          monthRomance ? '出会い・新しい接触' : '', monthBreak ? '隠れた問題・関係の見直し' : '',
+          monthShift ? '交際・別離・復縁など関係の切り替わり' : '',
           monthMarriage ? '同居・婚約・結婚' : '', monthCareer ? '転職・異動・独立' : '',
           monthChallenge ? '新しい挑戦' : '', monthRelocation ? '引越し・住環境の変更' : '',
-        ].filter(Boolean)
+        ].filter(Boolean).slice(0, 3)
         const longTermOverlap = monthShared.filter(key => decadeShared.includes(key)).length
         const annualOverlap = monthShared.filter(key => shared.includes(key)).length
         const score = labels.length * 3 + longTermOverlap * 2 + annualOverlap + monthEphemerisSignals.length
@@ -802,7 +815,7 @@ export function buildDeterministicReport(input: ReportInput): string {
       const longTermNote = decadeShared.length && decade
         ? ` 長期の流れでも${decade.themes.join('、')}が続き、単年より影響が残りやすい時期です。`
         : ''
-      const majorTurningPoint = hasRelationshipBreak || isMarriage || careerChange || relocation || (decadeShared.length > 0 && shared.length >= 2)
+      const majorTurningPoint = hasRelationshipBreak || hasRelationshipShift || isMarriage || careerChange || relocation || (decadeShared.length > 0 && shared.length >= 2)
       const yearLabel = majorTurningPoint
         ? `[[TURNING:${item.year}年（${item.ageRange}）— 大きな転換期]]`
         : `[[YEAR:${item.year}年（${item.ageRange}）]]`

@@ -35,12 +35,17 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
     const targetYear = year + 18 + offset
     const horoscope = chart.horoscope(`${targetYear}-${month}-${day}`, timeIndex(hour))
     const yearly = horoscope.yearly
-    const annualLifePalace = String(yearly.palaceNames[yearly.index] ?? yearly.name).replace('祿', '禄')
-    const activePalaces = ['官禄', '夫妻', '財帛', '命宮'].filter(name => annualLifePalace === name)
+    // yearly.index is the position where the yearly Life Palace lands in the
+    // natal chart. yearly.palaceNames[yearly.index] is always "命宮", so using
+    // it here made every year look like a Life-Palace year.
+    const annualLifePalace = String(chart.palaces[yearly.index]?.name ?? '').replace('祿', '禄')
+    const activePalaces = annualLifePalace ? [annualLifePalace] : []
     const signals: string[] = []
     if (activePalaces.includes('官禄') || activePalaces.includes('財帛')) signals.push('practicality', 'responsibility')
     if (activePalaces.includes('夫妻')) signals.push('harmony', 'stability')
     if (activePalaces.includes('命宮')) signals.push('initiative', 'transformation')
+    if (activePalaces.includes('遷移')) signals.push('transformation', 'exploration')
+    if (activePalaces.includes('田宅')) signals.push('stability', 'transformation')
     return { year: targetYear, heavenlyStem: yearly.heavenlyStem, earthlyBranch: yearly.earthlyBranch, activePalaces, mutagenStars: yearly.mutagen, signals: [...new Set(signals)] }
   })
 

@@ -18,6 +18,9 @@ struct AuthView: View {
                     TextField("メールアドレス", text: $email).textInputAutocapitalization(.never).keyboardType(.emailAddress)
                         .textFieldStyle(.roundedBorder)
                     SecureField("パスワード（8文字以上）", text: $password).textFieldStyle(.roundedBorder)
+                    if let message = auth.noticeMessage {
+                        Text(message).foregroundStyle(FateTheme.gold).font(.footnote).lineSpacing(4)
+                    }
                     if let message = auth.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
                     Button(registering ? "登録する" : "ログイン") {
                         Task {
@@ -29,7 +32,11 @@ struct AuthView: View {
                     Divider().overlay(FateTheme.line)
                     Text(registering ? "すでに登録済みの方" : "はじめての方")
                         .font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
-                    Button(registering ? "ログイン画面へ" : "新規登録（無料）") { registering.toggle() }
+                    Button(registering ? "ログイン画面へ" : "新規登録（無料）") {
+                        registering.toggle()
+                        auth.errorMessage = nil
+                        auth.noticeMessage = nil
+                    }
                         .buttonStyle(OutlineGoldButtonStyle())
                 }.padding(28)
             }.background(FateTheme.ivory).toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる", systemImage: "xmark") { dismiss() } } }

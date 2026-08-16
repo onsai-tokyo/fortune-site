@@ -248,9 +248,26 @@ export interface AnnualTiming {
   tenGod: string
   score: number
   relationshipSignals: string[]
+  relationshipEvents: string[]
   sanmeiSignals: string[]
   themes: string[]
-  monthly: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; themes: string[] }>
+  monthly: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents: string[]; themes: string[] }>
+}
+
+function relationshipEventLabels(signals: string[]): string[] {
+  const hasSpouse = signals.some(signal => /配偶者星/.test(signal))
+  const hasCombine = signals.some(signal => /六合/.test(signal))
+  const hasClash = signals.some(signal => /冲/.test(signal))
+  const hasBreak = signals.some(signal => /破/.test(signal))
+  const hasPeach = signals.some(signal => /桃花/.test(signal))
+  return [
+    hasPeach ? '出会いや接触が増えやすい' : '',
+    hasBreak ? '隠れていたずれや前提が表面化しやすい' : '',
+    hasClash && hasSpouse ? '交際開始・別離・復縁など関係の状態が切り替わりやすい' : '',
+    hasClash && !hasSpouse ? '関係や生活環境を組み替えやすい' : '',
+    hasSpouse && hasCombine && !hasBreak ? '交際・同居・婚約・結婚、または正式な終了など関係を定めやすい' : '',
+    hasSpouse && !hasCombine && !hasClash && !hasBreak ? '関係の定義や将来を現実的に決めやすい' : '',
+  ].filter(Boolean)
 }
 
 const BRANCH_COMBINE: Record<string, string> = {
@@ -343,12 +360,13 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
           monthLabel: index === 11 ? '翌年1月ごろ' : `${calendarMonth}月ごろ`,
           kanshi: monthItem.getGanZhi(), tenGod: monthTenGod,
           relationshipSignals: monthRelationshipSignals,
+          relationshipEvents: relationshipEventLabels(monthRelationshipSignals),
           themes: timingThemes(monthTenGod, monthRelation),
         }
       })
       return {
         year: item.getYear(), ageRange: `${item.getYear() - year - 1}〜${item.getYear() - year}歳`,
-        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, sanmeiSignals, themes: timingThemes(tenGod, relation), monthly,
+        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, relationshipEvents: relationshipEventLabels(relationshipSignals), sanmeiSignals, themes: timingThemes(tenGod, relation), monthly,
       }
     })
 

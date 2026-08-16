@@ -312,6 +312,20 @@ test('1995-02-20 05:40 女性の紫微斗数十二宮を固定値で再現する
   assert.equal(ziwei.annual.length, 43)
   assert.equal(ziwei.annual[0].year, 2013)
   assert.ok(ziwei.annual.every(item => item.activePalaces.length <= 1))
+  assert.equal(ziwei.annual.find(item => item.year === 2019)?.activePalaces[0], '命宮')
+  assert.equal(ziwei.annual.find(item => item.year === 2023)?.activePalaces[0], '官禄')
+  assert.ok(new Set(ziwei.annual.flatMap(item => item.activePalaces)).size > 1)
+})
+
+test('恋愛年運は吉凶ではなく関係の出来事類型を組み合わせで判定する', () => {
+  const timing = calcTimingCycles(1995, 2, 20, 5, 40, 'female')
+  const march2018 = timing.annual.find(item => item.year === 2018)?.monthly.find(item => item.month === 3)
+  assert.ok(march2018?.relationshipEvents.some(event => event.includes('隠れていたずれ')))
+  assert.ok(march2018?.relationshipEvents.some(event => event.includes('出会いや接触')))
+  const year2020 = timing.annual.find(item => item.year === 2020)
+  assert.ok(year2020?.relationshipEvents.some(event => event.includes('関係や生活環境を組み替え')))
+  const year2023 = timing.annual.find(item => item.year === 2023)
+  assert.ok(year2023?.relationshipEvents.some(event => event.includes('隠れていたずれ')))
 })
 
 test('西洋・インド占星術の年運はトランジットとダシャーを同じ年へ統合する', () => {
