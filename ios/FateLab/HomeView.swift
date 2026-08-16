@@ -7,6 +7,8 @@ struct HomeView: View {
     @State private var isWorking = false
     @State private var progress: ReportProgress = .calculating
     @State private var timeSelected = false
+    @State private var showDatePicker = false
+    @State private var draftDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     @State private var showTimePicker = false
     @State private var draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
     @State private var errorMessage: String?
@@ -24,8 +26,22 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 18) {
                         Text("INSTANT ANALYSIS").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
                         inputSection("01", "生年月日") {
-                            DatePicker("", selection: $input.date, displayedComponents: .date).labelsHidden()
-                                .tint(FateTheme.gold)
+                            Button {
+                                draftDate = input.date
+                                showDatePicker = true
+                            } label: {
+                                HStack {
+                                    Text(input.date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits)))
+                                    Spacer()
+                                    Text("生年月日を選ぶ")
+                                    Image(systemName: "chevron.right")
+                                }
+                                .padding(12)
+                                .foregroundStyle(FateTheme.ink)
+                                .background(FateTheme.paper)
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
                         }
                         Divider().overlay(FateTheme.line.opacity(0.7))
                         inputSection("02", "出生時刻") {
@@ -94,6 +110,31 @@ struct HomeView: View {
                 // 入力と一致しない古い鑑定書を画面に残さない。
                 report = nil
                 errorMessage = nil
+            }
+            .sheet(isPresented: $showDatePicker) {
+                NavigationStack {
+                    VStack(spacing: 24) {
+                        Text("生年月日を選んでください")
+                            .font(.system(size: 20, weight: .medium, design: .serif))
+                        DatePicker(
+                            "生年月日",
+                            selection: $draftDate,
+                            in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .environment(\.locale, Locale(identifier: "ja_JP"))
+                        Button("この日付を使用する") {
+                            input.date = draftDate
+                            showDatePicker = false
+                        }.buttonStyle(GoldButtonStyle())
+                    }
+                    .padding(24)
+                    .background(FateTheme.ivory)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showDatePicker = false } } }
+                }
+                .presentationDetents([.medium])
             }
             .sheet(isPresented: $showTimePicker) {
                 NavigationStack {
