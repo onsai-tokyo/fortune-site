@@ -4,7 +4,8 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
-type Message = { role: 'user' | 'assistant'; content: string; referenced_systems?: string[] }
+type ProfileTrait = { id: string; source_message_id?: string; category: string; text: string; status: 'pending' | 'approved' | 'rejected' }
+type Message = { id?: string; role: 'user' | 'assistant'; content: string; referenced_systems?: string[]; traits?: ProfileTrait[] }
 type PendingReading = { birthData: Record<string, unknown>; calculatedData: Record<string, unknown>; reportText: string; sourceSection?: string; sourceYear?: number; suggestedQuestion?: string; savedAt?: number }
 type HistoryItem = { id: string; secret_token?: string; title: string; source_section?: string; source_year?: number; updated_at: string }
 
@@ -105,7 +106,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
   const [conversationId, setConversationId] = useState(identifier === 'id' ? routeIdentifier : '')
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [status, setStatus] = useState<{ premium: boolean; remaining: number | null; limit: number } | null>(null)
+  const [status, setStatus] = useState<{ premium: boolean; remaining: number | null; limit: number; approvedCount?: number } | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -114,6 +115,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
   const [checkoutComplete, setCheckoutComplete] = useState(params.get('checkout') === 'success')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [shareNotice, setShareNotice] = useState('')
+  const [profileNotice, setProfileNotice] = useState('')
   const [activeContext, setActiveContext] = useState<{ sourceSection?: string; sourceYear?: number }>({ sourceSection: pending?.sourceSection, sourceYear: pending?.sourceYear })
   const [dataLoading, setDataLoading] = useState(true)
   const [retryCount, setRetryCount] = useState(0)
@@ -248,7 +250,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
         setHistory(historyBody.conversations ?? [])
 
         if (mode === 'chat' && routeIdentifier) {
-          let body: { conversation?: Record<string, unknown>; messages?: Message[]; error?: string } | null = null
+          let body: { conversation?: Record<string, unknown>; messages?: Message[]; traits?: ProfileTrait[]; error?: string } | null = null
           try {
             const endpoint = identifier === 'token'
               ? `/api/reading/reports/${encodeURIComponent(routeIdentifier)}`
@@ -266,13 +268,17 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
               return
             }
             const { data: directMessages, error: directMessagesError } = await supabase.from('reading_messages')
-              .select('role,content,referenced_systems,created_at').eq('conversation_id', conversation.id).eq('user_id', userId).order('created_at')
+              .select('id,role,content,referenced_systems,created_at').eq('conversation_id', conversation.id).eq('user_id', userId).order('created_at')
             if (directMessagesError) { setError(directMessagesError.message); return }
-            body = { conversation, messages: (directMessages ?? []) as Message[] }
+            const { data: directTraits } = await supabase.from('profile_traits')
+              .select('id,source_message_id,category,text,status').eq('conversation_id', conversation.id).eq('user_id', userId).order('created_at')
+            body = { conversation, messages: (directMessages ?? []) as Message[], traits: (directTraits ?? []) as ProfileTrait[] }
           }
 
           if (typeof body.conversation?.id === 'string') setConversationId(body.conversation.id)
-          setMessages(body.messages ?? [])
+          setMessages((body.messages ?? []).map(message => ({
+            ...message, traits: (body?.traits ?? []).filter(trait => trait.source_message_id === message.id),
+          })))
           setActiveContext({
             sourceSection: typeof body.conversation?.source_section === 'string' ? body.conversation.source_section : undefined,
             sourceYear: typeof body.conversation?.source_year === 'number' ? body.conversation.source_year : undefined,
@@ -321,6 +327,9 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
           const raw = line.slice(6); if (raw === '[DONE]') continue
           const part = JSON.parse(raw)
           if (part.error) throw new Error(part.error)
+          if (Array.isArray(part.meta?.traits) && part.meta.traits.length) {
+            setMessages(prev => [...prev.slice(0, -1), { ...prev[prev.length - 1], traits: part.meta.traits }])
+          }
           if (part.delta?.text) { answer += part.delta.text; setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: answer }]) }
         }
       }
@@ -380,6 +389,22 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
     catch { setShareNotice(url) }
   }
 
+  async function answerTrait(trait: ProfileTrait, statusValue: 'approved' | 'rejected') {
+    const response = await fetchReadingApi(`/api/reading/profile/traits/${trait.id}`, {
+      method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status: statusValue }),
+    })
+    const body = await response.json().catch(() => ({}))
+    if (!response.ok) { setError(body.error ?? '回答を保存できませんでした'); return }
+    setMessages(previous => previous.map(message => ({
+      ...message, traits: message.traits?.map(item => item.id === trait.id ? { ...item, status: statusValue } : item),
+    })))
+    if (statusValue === 'approved') {
+      setStatus(previous => previous ? { ...previous, approvedCount: body.approvedCount } : previous)
+      setProfileNotice(`保存しました${body.approvedCount ? `（${body.approvedCount}件目）` : ''}`)
+    }
+    else setProfileNotice('「違う」を反映しました。似た内容は次から出しません。')
+  }
+
   const lastMessage = messages[messages.length - 1]
   const suggestions = lastMessage?.role === 'assistant'
     ? [...lastMessage.content.matchAll(/次の質問：(.+)/g)].map(match => match[1].trim()).slice(0, 4)
@@ -403,6 +428,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
       <h2 className="sidebar-heading text-lg">質問履歴{userQuestions.length ? `（${userQuestions.length}）` : ''}</h2>
       {userQuestions.length ? <ol className="mt-3 grid gap-2 text-sm text-[#5c5349]">{userQuestions.map((message, index) => <li key={index} className="line-clamp-2"><span className="mr-2 text-[#9a762b]">{kanjiNumbers[index] ?? index + 1}</span>{message.content}</li>)}</ol> : <p className="mt-2 text-sm leading-6 text-[#5c5349]">質問すると、ここに記録されます。</p>}
     </div>
+    <Link to="/me" className="mt-5 block border-t border-[#d8c79e] pt-4 text-sm text-[#70531e]">あなたについてわかってきたこと →</Link>
     <a href="/lp.html#fortune-form" className="block mt-5 border border-[#bfa66e] rounded-lg py-3 text-center text-sm text-[#70531e]">新しく鑑定する</a>
   </div>
 
@@ -418,7 +444,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
 
   if (mode === 'start' && pending && error) return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-5 py-16"><section className="max-w-xl mx-auto border border-[#d8c79e] bg-[#fffdf8] p-8 rounded-2xl shadow-[0_18px_50px_rgba(83,61,25,.08)]"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="text-2xl mt-4">鑑定結果について質問する</h1><p className="mt-5 leading-8 text-[#62594f]">先ほどの鑑定結果を質問画面へ保存できませんでした。鑑定内容はブラウザに残っているため、下のボタンから保存を再実行できます。</p><p className="mt-4 text-sm text-[#8b453b] break-words">{error}</p><button onClick={() => { creatingRef.current = false; setError(''); setDataLoading(true); setRetryCount(value => value + 1) }} className="w-full mt-7 bg-[#9a6d16] text-white text-center rounded-lg py-4">保存を再実行する</button><a href="/lp.html#form" className="block mt-4 text-center underline text-[#70531e]">鑑定書へ戻る</a></section></main>
 
-  if (mode === 'history') return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10"><div className="max-w-3xl mx-auto"><a href="/lp.html" className="text-sm text-[#5c5349]">← Fate Lab</a><header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · READING LIBRARY</p><h1 className="text-3xl mt-3">鑑定書一覧</h1><p className="mt-3 text-[#5c5349] leading-7">これまでに作成した鑑定書の一覧です。選ぶと、その鑑定書と質問を開けます。</p></header><section className="py-7">{error && <div className="mb-5 border border-[#c98775] bg-[#fff6f2] rounded-xl p-4 text-[#7f3427]">{error}<a href="/lp.html#form" className="block mt-3 underline">鑑定書へ戻ってもう一度試す</a></div>}{dataLoading ? <p className="text-[#5c5349]">鑑定書を確認しています…</p> : historyList ?? <div className="border border-[#ded2bb] bg-[#fffdf8] rounded-2xl p-7 text-center"><h2 className="text-xl">保存された鑑定書はまだありません</h2><p className="mt-3 text-[#5c5349] leading-7">最初に無料鑑定を行うと、鑑定書がここへ保存され、結果について質問できるようになります。</p></div>}<a href="/lp.html#form" className="block mt-6 bg-[#9a6d16] text-white text-center rounded-lg py-4">新しく鑑定する</a></section><p className="text-xs text-[#5c5349] leading-6">結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。</p></div></main>
+  if (mode === 'history') return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10"><div className="max-w-3xl mx-auto"><a href="/lp.html" className="text-sm text-[#5c5349]">← Fate Lab</a><header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · READING LIBRARY</p><div className="flex items-end justify-between gap-4"><h1 className="text-3xl mt-3">鑑定書一覧</h1><Link to="/me" className="text-sm text-[#70531e]">あなたについて →</Link></div><p className="mt-3 text-[#5c5349] leading-7">これまでに作成した鑑定書の一覧です。選ぶと、その鑑定書と質問を開けます。</p></header><section className="py-7">{error && <div className="mb-5 border border-[#c98775] bg-[#fff6f2] rounded-xl p-4 text-[#7f3427]">{error}<a href="/lp.html#form" className="block mt-3 underline">鑑定書へ戻ってもう一度試す</a></div>}{dataLoading ? <p className="text-[#5c5349]">鑑定書を確認しています…</p> : historyList ?? <div className="border border-[#ded2bb] bg-[#fffdf8] rounded-2xl p-7 text-center"><h2 className="text-xl">保存された鑑定書はまだありません</h2><p className="mt-3 text-[#5c5349] leading-7">最初に無料鑑定を行うと、鑑定書がここへ保存され、結果について質問できるようになります。</p></div>}<a href="/lp.html#form" className="block mt-6 bg-[#9a6d16] text-white text-center rounded-lg py-4">新しく鑑定する</a></section><p className="text-xs text-[#5c5349] leading-6">結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。</p></div></main>
 
   if (mode === 'start') return <Navigate to="/reading/history" replace />
   if (!routeIdentifier) return <Navigate to="/reading/history" replace />
@@ -426,17 +452,34 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
   return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-8"><div className="max-w-6xl mx-auto">
     <div className="flex items-center justify-between gap-4"><button onClick={backToReport} className="text-sm text-[#5c5349]">← 鑑定書に戻る</button><div className="flex gap-2"><button onClick={() => void shareSummary()} className="border border-[#bfa66e] rounded-lg px-4 py-2 text-sm text-[#70531e]">要点を共有</button><button onClick={() => setMobileNavOpen(true)} className="lg:hidden border border-[#bfa66e] rounded-lg px-4 py-2 text-sm text-[#70531e]">履歴</button></div></div>
     {shareNotice && <p className="mt-3 text-xs text-[#70531e] break-all">{shareNotice}</p>}
+    {profileNotice && <Link to="/me" className="mt-3 block rounded-lg border border-[#d8c79e] bg-[#f7f2e6] px-4 py-3 text-sm text-[#70531e]">{profileNotice}　あなたのページを見る →</Link>}
     <p className="mt-3 text-xs text-[#7a7065]">鑑定書 › {sourceLabel} › 質問</p>
     <div className="mt-6 grid gap-7 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
     <aside className="hidden lg:block lg:sticky lg:top-6 border border-[#d8c79e] bg-[#fffdf8] rounded-2xl shadow-[0_12px_35px_rgba(83,61,25,.06)]">{readingNavigation()}</aside>
     <div className="w-full min-w-0">
     {checkoutComplete && <div className="mb-6 border-l-4 border-[#9a6d16] bg-[#f3eedf] px-4 py-4"><div className="flex items-start justify-between gap-4"><p className="text-sm leading-7 text-[#211d18]">継続鑑定のお手続きが完了しました。回数の制限なくお読みいただけます。</p><button onClick={() => setCheckoutComplete(false)} aria-label="お知らせを閉じる" className="text-[#70531e]">×</button></div></div>}
     <header className="mt-7 border-b border-[#d8c79e] pb-7"><div className="flex items-center justify-between gap-4"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><button onClick={() => void signOut()} className="text-xs underline text-[#5c5349]">ログアウト</button></div><h1 className="text-3xl mt-3">鑑定結果について質問する</h1><p className="mt-3 text-[#5c5349] leading-7">あなたの命式と9つの占術の計算結果をもとに、気になることをさらに読み解けます。</p>{status && <p className="mt-3 text-sm text-[#5c5349]">{status.premium ? '継続鑑定をご利用中です。回数の制限なくお読みいただけます。' : status.remaining && status.remaining > 0 ? `無料でお読みいただける残り：${status.remaining}回` : '無料分をご利用いただきました'}</p>}{status?.premium && <button onClick={openPortal} className="mt-3 text-sm underline text-[#70531e]">契約内容・解約を確認する</button>}</header>
-    <section className="py-8 space-y-5">{messages.length === 0 && <div className="border-l-2 border-[#bb9345] pl-5 leading-8 text-[#5c5349]">鑑定書で気になった部分を、そのまま質問できます。未来を断定せず、計算済みの結果から読み解きます。</div>}{messages.map((message, index) => { const answerNumber = messages.slice(0, index + 1).filter(item => item.role === 'assistant').length; return message.role === 'user' ? <div key={index} className="ml-auto max-w-[85%]"><p className="mb-1 text-right text-[11px] text-[#887b6b]">お尋ね</p><article className="bg-[#ede4d2] p-4 rounded-xl">{message.content}</article></div> : <article key={index} className="reading-answer mr-auto max-w-[92%] overflow-hidden rounded-xl border border-[#ded2bb] bg-[#fffdf8]"><header className="border-b border-[#d8c79e] bg-[#f7f2e6] px-5 py-3"><span className="mr-3 text-[#9a762b]">{kanjiNumbers[answerNumber - 1] ?? answerNumber}</span>{sourceLabel}について</header><div className="p-5">{message.content ? formatAnswer(message.content) : '読み解いています…'}</div>{message.content && <footer className="border-t border-[#eee4d0] px-5 py-3 text-right"><button onClick={backToReport} className="text-xs text-[#70531e]">この内容の元になった箇所を読む → {sourceLabel}</button></footer>}</article>})}<div ref={bottomRef} /></section>
+    <section className="py-8 space-y-5">
+      {messages.length === 0 && <div className="border-l-2 border-[#bb9345] pl-5 leading-8 text-[#5c5349]">鑑定書で気になった部分を、そのまま質問できます。未来を断定せず、計算済みの結果から読み解きます。</div>}
+      {messages.map((message, index) => {
+        const answerNumber = messages.slice(0, index + 1).filter(item => item.role === 'assistant').length
+        if (message.role === 'user') return <div key={index} className="ml-auto max-w-[85%]"><p className="mb-1 text-right text-[11px] text-[#887b6b]">お尋ね</p><article className="bg-[#ede4d2] p-4 rounded-xl">{message.content}</article></div>
+        return <div key={index} className="mr-auto max-w-[92%]">
+          <article className="reading-answer overflow-hidden rounded-xl border border-[#ded2bb] bg-[#fffdf8]"><header className="border-b border-[#d8c79e] bg-[#f7f2e6] px-5 py-3"><span className="mr-3 text-[#9a762b]">{kanjiNumbers[answerNumber - 1] ?? answerNumber}</span>{sourceLabel}について</header><div className="p-5">{message.content ? formatAnswer(message.content) : '読み解いています…'}</div>{message.content && <footer className="border-t border-[#eee4d0] px-5 py-3 text-right"><button onClick={backToReport} className="text-xs text-[#70531e]">この内容の元になった箇所を読む → {sourceLabel}</button></footer>}</article>
+          {message.traits?.map(trait => <section key={trait.id} className="mt-5 rounded-xl border border-[#d8c79e] bg-[#fffdf8] p-5">
+            <h3 className="text-[15px] text-[#5c5349]">今回わかった あなたのこと</h3>
+            <div className="mt-3 border-t border-[#e6dcc7] pt-4 font-sans text-base leading-8 text-[#211d18]">{trait.text}</div>
+            {trait.status === 'pending' ? <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={() => void answerTrait(trait, 'approved')} className="rounded-lg border border-[#a77a22] px-3 py-3 text-sm text-[#70531e]">合っている</button><button onClick={() => void answerTrait(trait, 'rejected')} className="rounded-lg border border-[#cfc8bb] px-3 py-3 text-sm text-[#62594f]">違う</button></div> : <p className="mt-4 text-sm text-[#7a7065]">{trait.status === 'approved' ? 'あなたのページに保存しました' : 'この内容は次から出しません'}</p>}
+            <p className="mt-3 text-xs leading-6 text-[#7a7065]">「違う」を選ぶと、似た内容は次から出しません</p>
+          </section>)}
+        </div>
+      })}
+      <div ref={bottomRef} />
+    </section>
     {suggestions.length > 0 && <div className="mb-5 border-y border-[#d8c79e] py-4"><h2 className="text-base mb-2">続けて読み解く</h2><div className="grid">{suggestions.map(item => <button key={item} onClick={() => send(item)} className="text-left border-t first:border-t-0 border-[#e6dcc7] py-3 text-sm text-[#70531e]">・{item}</button>)}</div></div>}
     {status?.remaining === 1 && !status.premium && <p className="mb-3 text-sm text-[#5c5349]">残り1回です。継続プランでは回数の制限なくお読みいただけます。</p>}
     <div className="sticky bottom-3 bg-[#fffdf8] border border-[#d8c79e] shadow-xl rounded-2xl p-3 flex gap-2"><textarea value={input} onChange={e => { setInput(e.target.value); if (showPaywall) setShowPaywall(false) }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }} placeholder={`「${sourceLabel}」について質問する…`} className="flex-1 bg-transparent px-3 py-2 resize-none outline-none" rows={2} /><button onClick={() => send()} disabled={!input.trim() || sending} className="px-5 rounded-xl bg-[#9a6d16] text-white disabled:opacity-40">読み解く</button></div>
-    {showPaywall && status?.remaining === 0 && !status.premium && <section className="mt-4 border border-[#c8aa6d] bg-[#fffaf0] p-6 rounded-2xl shadow-[0_12px_30px_rgba(112,83,30,.12)]"><p className="text-sm text-[#5c5349]">お書きになった質問</p><blockquote className="mt-2 border-l-2 border-[#bfa66e] pl-4 text-[#211d18]">「{input.trim()}」</blockquote><div className="mt-5 border-t border-[#d8c79e] pt-5"><p className="text-xs tracking-[.18em] text-[#8c681e]">FATE LAB 継続鑑定</p><h2 className="text-xl mt-2">この続きは、継続鑑定でお読みいただけます。</h2><ul className="mt-4 list-disc pl-5 leading-8 text-[#5c5349]"><li>保存した鑑定書をもとに、回数の制限なく質問できます</li><li>これまでの質問と回答は、いつでも読み返せます</li></ul><p className="mt-3 font-semibold text-lg text-[#70531e]">{monthlyPrice}（税込・自動更新）</p><p className="mt-1 text-sm text-[#5c5349]">いつでも解約できます。</p><button onClick={checkout} className="w-full mt-5 py-4 bg-[#9a6d16] text-white rounded-lg">鑑定を続ける</button><p className="mt-3 text-center text-xs text-[#887b6b]">お支払いはStripeを通じて行われます。</p></div></section>}
+    {showPaywall && status?.remaining === 0 && !status.premium && <section className="mt-4 border border-[#c8aa6d] bg-[#fffaf0] p-6 rounded-2xl shadow-[0_12px_30px_rgba(112,83,30,.12)]"><p className="text-sm text-[#5c5349]">お書きになった質問</p><blockquote className="mt-2 border-l-2 border-[#bfa66e] pl-4 text-[#211d18]">「{input.trim()}」</blockquote><div className="mt-5 border-t border-[#d8c79e] pt-5"><p className="text-xs tracking-[.18em] text-[#8c681e]">FATE LAB 継続鑑定</p>{Boolean(status.approvedCount) && <p className="mt-3 text-sm text-[#70531e]">あなたについてわかってきたこと：{status.approvedCount}</p>}<h2 className="text-xl mt-2">この続きは、継続鑑定でお読みいただけます。</h2><ul className="mt-4 list-disc pl-5 leading-8 text-[#5c5349]"><li>保存した鑑定書をもとに、回数の制限なく質問できます</li><li>これまでの質問と回答は、いつでも読み返せます</li></ul><p className="mt-3 font-semibold text-lg text-[#70531e]">{monthlyPrice}（税込・自動更新）</p><p className="mt-1 text-sm text-[#5c5349]">いつでも解約できます。</p><button onClick={checkout} className="w-full mt-5 py-4 bg-[#9a6d16] text-white rounded-lg">鑑定を続ける</button><p className="mt-3 text-center text-xs text-[#887b6b]">お支払いはStripeを通じて行われます。</p></div></section>}
     {error && <p className="text-red-700 mt-4">{error}</p>}<p className="text-xs text-[#5c5349] leading-6 mt-8">結果は将来を保証するものではありません。重要な意思決定はご自身で判断し、必要に応じて適切な専門家へご相談ください。</p>
     </div></div>
     {mobileNavOpen && <div className="fixed inset-0 z-50 lg:hidden"><button aria-label="履歴を閉じる" onClick={() => setMobileNavOpen(false)} className="absolute inset-0 bg-black/30" /><aside className="absolute right-0 top-0 h-full w-[86%] max-w-[320px] overflow-y-auto bg-[#fffdf8] shadow-2xl"><div className="flex justify-end p-3"><button onClick={() => setMobileNavOpen(false)} className="px-3 py-2 text-sm text-[#5c5349]">閉じる ×</button></div>{readingNavigation(true)}</aside></div>}

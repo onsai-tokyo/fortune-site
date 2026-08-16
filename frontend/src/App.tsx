@@ -16,6 +16,7 @@ const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ defau
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })))
 const ReadingPage = lazy(() => import('./pages/ReadingPage'))
 const SharedReadingPage = lazy(() => import('./pages/SharedReadingPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 
 function PageLoader() {
   return <div className="min-h-screen bg-[#faf7ef]" aria-label="ページを読み込んでいます" />
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/reading/:conversationId" element={<ReadingPage mode="chat" identifier="id" />} />
             <Route path="/r/:secretToken" element={<ReadingPage mode="chat" identifier="token" />} />
             <Route path="/s/:shareId" element={<SharedReadingPage />} />
+            <Route path="/me" element={<ProfilePage />} />
           </Routes>
         </Suspense>
       </AuthProvider>

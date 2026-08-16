@@ -5,6 +5,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 import { buildPublicReadingShare } from '../lib/readingShare.js'
+import { filterTraitCandidates } from '../lib/profileTraits.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -32,6 +33,24 @@ async function isPremium(userId: string) {
     && (!data.current_period_end || new Date(data.current_period_end) > new Date())
 }
 
+async function extractProfileTraits(question: string, answer: string, existing: string[]) {
+  const extraction = await getClient().messages.create({
+    model: 'claude-haiku-4-5-20251001', max_tokens: 350,
+    system: `会話から、利用者自身が述べた行動傾向・条件・好みだけを確認候補として抽出してください。
+占い結果だけから人格を推測してはいけません。質問が事実確認だけ、または利用者が自分について何も述べていない場合は空配列にしてください。
+人格断定、能力否定、診断、医療・心理用語、他者への評価は禁止です。短い日常語で書いてください。
+categoryは decision / work / love / relation / value のいずれか。最大2件。JSON配列だけを返してください。`,
+    messages: [{ role: 'user', content: `質問：${question.slice(0, 1200)}\n\n回答：${answer.slice(0, 2500)}\n\n既存・除外済み：${JSON.stringify(existing.slice(0, 80))}` }],
+  })
+  const text = extraction.content.find(item => item.type === 'text')?.text ?? '[]'
+  const match = text.match(/\[[\s\S]*\]/)
+  if (!match) return []
+  try {
+    const parsed = JSON.parse(match[0])
+    return Array.isArray(parsed) ? filterTraitCandidates(parsed, existing) : []
+  } catch { return [] }
+}
+
 // 共有ページは出生情報や鑑定書本文を返さず、明示的に作成された要点だけを返す。
 readingRouter.get('/shares/:shareId', async (req, res) => {
   const { data, error } = await getSupabaseAdmin().from('reading_shares')
@@ -44,16 +63,46 @@ readingRouter.get('/shares/:shareId', async (req, res) => {
 readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   try {
     const db = getSupabaseAdmin()
-    const [{ data: usage }, premium] = await Promise.all([
+    const [{ data: usage }, premium, { count: approvedCount }] = await Promise.all([
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
       isPremium(req.userId!),
+      db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
     ])
     const used = usage?.free_questions_used ?? 0
-    res.json({ premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used) })
+    res.json({ premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0 })
   } catch (error) {
     console.error('Reading status failed:', error)
     res.status(500).json({ error: '利用状況を確認できませんでした' })
   }
+})
+
+readingRouter.get('/profile/traits', requireAuth, async (req: AuthRequest, res) => {
+  const { data, error } = await getSupabaseAdmin().from('profile_traits')
+    .select('id,reading_id,conversation_id,category,text,status,created_at,approved_at')
+    .eq('user_id', req.userId!).eq('status', 'approved').order('approved_at', { ascending: false }).limit(300)
+  if (error) { res.status(500).json({ error: 'プロフィールを取得できませんでした' }); return }
+  res.json({ traits: data ?? [] })
+})
+
+readingRouter.patch('/profile/traits/:id', requireAuth, async (req: AuthRequest, res) => {
+  const status = req.body?.status
+  if (!['approved', 'rejected'].includes(status)) { res.status(400).json({ error: '回答を選んでください' }); return }
+  const { data, error } = await getSupabaseAdmin().from('profile_traits').update({
+    status, approved_at: status === 'approved' ? new Date().toISOString() : null,
+  }).eq('id', req.params.id).eq('user_id', req.userId!).select('id,status,approved_at').maybeSingle()
+  if (error) { res.status(500).json({ error: '回答を保存できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '確認項目が見つかりません' }); return }
+  const { count } = await getSupabaseAdmin().from('profile_traits').select('id', { count: 'exact', head: true })
+    .eq('user_id', req.userId!).eq('status', 'approved')
+  res.json({ trait: data, approvedCount: count ?? 0 })
+})
+
+readingRouter.delete('/profile/traits/:id', requireAuth, async (req: AuthRequest, res) => {
+  const { data, error } = await getSupabaseAdmin().from('profile_traits').delete()
+    .eq('id', req.params.id).eq('user_id', req.userId!).eq('status', 'approved').select('id').maybeSingle()
+  if (error) { res.status(500).json({ error: '項目を削除できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '項目が見つかりません' }); return }
+  res.status(204).end()
 })
 
 readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) => {
@@ -130,7 +179,9 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
   if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
-  res.json({ conversation, messages: messages ?? [] })
+  const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
+    .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
+  res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
@@ -140,7 +191,9 @@ readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) 
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
-  res.json({ conversation, messages: messages ?? [] })
+  const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
+    .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
+  res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
 })
 
 readingRouter.post('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
@@ -252,13 +305,33 @@ Markdownの太字記号「**」、見出し記号「#」、区切り線「---」
       }
     }
     const systems = [...new Set((answer.match(/四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音/g) ?? []))]
-    const [{ error: assistantMessageError }, { error: conversationUpdateError }] = await Promise.all([
-      db.from('reading_messages').insert({ conversation_id: conversation.id, user_id: req.userId, role: 'assistant', content: answer, referenced_systems: systems }),
-      db.from('reading_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversation.id).eq('user_id', req.userId!),
-    ])
+    const { data: assistantMessage, error: assistantMessageError } = await db.from('reading_messages')
+      .insert({ conversation_id: conversation.id, user_id: req.userId, role: 'assistant', content: answer, referenced_systems: systems })
+      .select('id').single()
+    const { error: conversationUpdateError } = await db.from('reading_conversations')
+      .update({ updated_at: new Date().toISOString() }).eq('id', conversation.id).eq('user_id', req.userId!)
     if (assistantMessageError) throw assistantMessageError
     if (conversationUpdateError) throw conversationUpdateError
-    res.write(`data: ${JSON.stringify({ meta: { referencedSystems: systems } })}\n\n`)
+    let traits: Array<Record<string, unknown>> = []
+    try {
+      const { data: priorTraits } = await db.from('profile_traits').select('text,status,created_at')
+        .eq('user_id', req.userId!).order('created_at', { ascending: false }).limit(100)
+      const decided = (priorTraits ?? []).filter(item => item.status !== 'pending')
+      const consecutiveRejected = decided.slice(0, 3).filter(item => item.status === 'rejected').length
+      if (consecutiveRejected < 3 && assistantMessage?.id) {
+        const candidates = await extractProfileTraits(question, answer, (priorTraits ?? []).map(item => item.text))
+        if (candidates.length) {
+          const { data: inserted } = await db.from('profile_traits').insert(candidates.map(candidate => ({
+            user_id: req.userId, reading_id: conversation.id, conversation_id: conversation.id,
+            source_message_id: assistantMessage.id, category: candidate.category, text: candidate.text, status: 'pending',
+          }))).select('id,source_message_id,category,text,status,created_at')
+          traits = inserted ?? []
+        }
+      }
+    } catch (traitError) {
+      console.error('Profile trait extraction failed:', { userId: req.userId, conversationId: conversation.id, traitError })
+    }
+    res.write(`data: ${JSON.stringify({ meta: { referencedSystems: systems, traits } })}\n\n`)
     res.write('data: [DONE]\n\n'); res.end()
   } catch (error) {
     if (chargedFreeQuestion && req.userId) {
