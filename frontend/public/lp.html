@@ -1028,6 +1028,39 @@
     .report-content h4,.report-content h5 { font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif; }
     .fortune-table,.fortune-table .kanshi-cell,.sanmei-body-chart,.subordinate-star-table { font-family:'Yu Mincho',serif; }
     .report-content strong { color: var(--text-main); font-weight: 700; background: linear-gradient(transparent 68%, rgba(201,169,97,.22) 0); }
+    .agreement-seal { display: inline-block; flex: 0 0 auto; vertical-align: middle; }
+    .agreement-dot { opacity: 0; animation: seal-reveal .16s ease-out forwards; }
+    .agreement-note { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 16px; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; line-height: 1.7; }
+    .agreement-legend { margin: 0 0 24px; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; line-height: 1.8; }
+    @keyframes seal-reveal { from { opacity: 0; } to { opacity: 1; } }
+    .gogyo-card { grid-column: 1 / -1; }
+    .gogyo-chart { display: grid; gap: 8px; margin-top: 10px; }
+    .gogyo-row { display: grid; grid-template-columns: 28px minmax(0,1fr) 38px; align-items: center; min-height: 28px; gap: 10px; }
+    .gogyo-label { color: var(--text-main); font-family: 'Yu Mincho', serif; font-size: 15px; }
+    .gogyo-track { height: 8px; overflow: hidden; border-radius: 4px; background: #efe7d5; }
+    .gogyo-fill { width: var(--bar-width); height: 100%; min-width: 1px; border-radius: 4px; background: #9a6d16; animation: gogyo-grow .4s ease-out both; }
+    .gogyo-fill.zero { width: 1px !important; background: #c9b584; }
+    .gogyo-value { color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; text-align: right; }
+    .gogyo-fact { margin: 10px 0 0; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 12px; }
+    @keyframes gogyo-grow { from { width: 0; } to { width: var(--bar-width); } }
+    .chapter-door { padding: 64px 0; text-align: center; }
+    .chapter-number { display: block; color: var(--text-sub); font-family: 'Yu Mincho', serif; font-size: 14px; letter-spacing: .24em; }
+    .chapter-title { display: block; margin-top: 18px; color: var(--text-main); font-family: 'Yu Mincho', serif; font-size: 30px; letter-spacing: .2em; }
+    .chapter-door::after { display: block; width: 48px; height: 1px; margin: 24px auto 0; background: #d8c79e; content: ''; }
+    .chapter-folio { margin: 32px 0 40px; color: var(--text-sub); font-family: 'Yu Mincho', serif; font-size: 13px; text-align: right; }
+    .chapter-divider { width: 32px; height: 1px; margin: 40px auto; background: #d8c79e; }
+    .share-reading-card { margin-top: 24px; padding: 24px; border: 1px solid #d8c79e; border-radius: 12px; background: #fffdf8; }
+    .share-reading-card h3 { margin: 0; color: var(--text-main); font-family: 'Yu Mincho', serif; font-size: 20px; }
+    .share-reading-card p { margin: 8px 0 0; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; }
+    .share-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .share-action { padding: 11px 18px; border: 1px solid #bfa66e; border-radius: 8px; background: transparent; color: #70531e; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; text-decoration: none; cursor: pointer; }
+    .report-scroll-progress { display: none; position: fixed; top: 0; left: 0; z-index: 1100; width: 100%; height: 2px; background: #e8dec8; }
+    .report-scroll-progress span { display: block; width: 0; height: 100%; background: #9a6d16; transition: width 120ms linear; }
+    .report-ending { margin: 48px 0 8px; padding: 28px 0; border-top: 1px solid #d8c79e; border-bottom: 1px solid #d8c79e; text-align: center; }
+    .report-ending strong { display: block; color: var(--text-main); font-family: 'Yu Mincho', serif; font-size: 20px; }
+    .report-ending p { margin: 10px 0 0; color: var(--text-sub); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; line-height: 1.8; }
+    @media (max-width: 767px) { .chapter-door { padding: 48px 0; } .chapter-title { font-size: 26px; } .report-scroll-progress { display: block; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; } }
     .report-section-title { margin: 30px 0 12px; padding: 0 0 8px 13px; border-bottom: 1px solid rgba(212,197,160,.7); border-left: 3px solid var(--gold-primary); color: var(--text-main); font-size: 17px; line-height: 1.5; }
     .report-section-title:first-child { margin-top: 0; }
     .report-subsection-title { margin: 24px 0 10px; color: var(--gold-dark); font-size: 15px; letter-spacing: .05em; }
@@ -1681,6 +1714,7 @@
 
   <!-- 鑑定結果表示 -->
   <section id="result" class="result-overlay">
+    <div class="report-scroll-progress" aria-hidden="true"><span></span></div>
     <div class="result-dialog">
       <button id="close-result" class="result-close" aria-label="鑑定結果を閉じる">✕</button>
       <header class="result-heading">
@@ -1700,6 +1734,11 @@
         <h3 class="result-card-title">統合鑑定</h3>
         <div id="result-content" class="report-content"></div>
       </div>
+      <section id="share-reading" class="share-reading-card" hidden>
+        <h3>この鑑定書の要点を共有する</h3>
+        <p>生年月日は含まれません</p>
+        <div class="share-actions"><a id="save-share-image" class="share-action" download="fate-lab-reading.svg">画像を保存</a><a id="share-on-x" class="share-action" target="_blank" rel="noopener noreferrer">Xで共有</a></div>
+      </section>
     </div>
   </section>
 
@@ -1755,6 +1794,28 @@
       '納音': '干支60組を30種類の自然イメージに分類する補助的な見方です。',
       '建禄': '十二運の一つ。自立して能力を現実で使いやすい段階を示します。'
     };
+    const lineageLabels = ['干支系', '天体系', '数理系', '宿曜系'];
+    const renderAgreementSeal = (matched, lineages = [], size = 'md') => {
+      const safeMatched = Math.max(0, Math.min(4, Number(matched) || 0));
+      const tooltip = lineages.length ? `（${lineages.join('・')}）` : '';
+      const small = size === 'sm';
+      const diameter = small ? 10 : 14;
+      const gap = small ? 4 : 6;
+      const width = small ? 52 : 74;
+      const radius = diameter / 2;
+      const dots = Array.from({ length: 4 }, (_, index) => {
+        const matchedDot = index < safeMatched;
+        const cx = radius + index * (diameter + gap);
+        return `<circle class="agreement-dot" cx="${cx}" cy="${radius}" r="${radius - (matchedDot ? 0 : .5)}" fill="${matchedDot ? '#9A6D16' : 'none'}" stroke="${matchedDot ? 'none' : '#C9B584'}" stroke-width="${matchedDot ? 0 : 1}" style="animation-delay:${index * 80}ms"/>`;
+      }).join('');
+      return `<svg class="agreement-seal ${size}" width="${width}" height="${diameter}" viewBox="0 0 ${width} ${diameter}" role="img" aria-label="4系統のうち${safeMatched}系統が一致${tooltip}"><title>4系統のうち${safeMatched}系統が一致${tooltip}</title>${dots}</svg>`;
+    };
+    const sealFromEvidence = raw => {
+      const lineages = [...new Set(String(raw).split('||').map(item => item.split('｜')[0]).filter(item => lineageLabels.includes(item)))];
+      return `<span class="agreement-note">${renderAgreementSeal(lineages.length, lineages, 'sm')}<span>${lineages.length}系統が同じ方向を示しています</span></span>`;
+    };
+    const chapterNames = ['先に読む要約', '共通して現れた本質', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年'];
+    const kanjiChapterNumbers = ['一', '二', '三', '四', '五', '六'];
     const renderReport = (value) => {
       const escaped = value
         .replaceAll('&', '&amp;')
@@ -1765,7 +1826,7 @@
         let highlights = 0;
         return section.replace(/\[\[HIGHLIGHT:(.+?)\]\]/g, (_, text) => ++highlights <= 2 ? `<strong>${text}</strong>` : text);
       }).join('');
-      const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:.+?\]\]/g, '');
+      const withEvidence = limitedHighlights.replace(/\[\[EVIDENCE:(.+?)\]\]/g, (_, raw) => sealFromEvidence(raw));
       const withMeta = withEvidence
         .replace(/\[\[TURNING:(.+?)\]\]/g, '<strong class="turning-point">$1</strong>')
         .replace(/\[\[YEAR:(.+?)\]\]/g, '<span class="timing-year">$1</span>')
@@ -1785,9 +1846,63 @@
         .replace(/\n\n/g, '<div class="report-spacer"></div>')
         .replace(/\n/g, '<br>')
         .replace(/<\/ul><br>/g, '</ul>');
+      const coverageMatch = value.match(/参照できた系統：(\d)\/4/);
+      if (coverageMatch) {
+        const matched = Number(coverageMatch[1]);
+        rendered = rendered.replace(/参照できた系統：\d\/4(?:（.+?）)?/, `<span class="agreement-note">${renderAgreementSeal(matched, [], 'md')}<span>4系統のうち${matched}系統が一致しています</span></span><p class="agreement-legend">4つの円は、干支・天体・数理・宿曜という独立した4系統を表します。塗られた数だけ、異なる系統が同じ方向を示しています。</p>`);
+      }
       rendered = rendered.replace('<h4 class="report-section-title">共通して現れた本質</h4>', `${renderAffiliate(affiliateOffers.summary, 'summary')}<h4 class="report-section-title">共通して現れた本質</h4>`);
       rendered = rendered.replace('<h4 class="report-section-title">人間関係</h4>', `${renderAffiliate(affiliateOffers.love, 'love')}<h4 class="report-section-title">人間関係</h4>`);
+      chapterNames.forEach((title, index) => {
+        rendered = rendered.replace(`<h4 class="report-section-title">${title}</h4>`, `<section class="chapter-door"><span class="chapter-number">第 ${kanjiChapterNumbers[index]} 章</span><h4 class="report-section-title chapter-title">${title}</h4></section>`);
+      });
       return `${rendered}${renderAffiliate(affiliateOffers.closing, 'closing')}`;
+    };
+    const addChapterFolios = container => {
+      const doors = [...container.querySelectorAll('.chapter-door')];
+      doors.forEach((door, index) => {
+        if (index > 0) {
+          const folio = document.createElement('div');
+          folio.className = 'chapter-folio';
+          folio.textContent = `${kanjiChapterNumbers[index - 1]} / 六`;
+          door.before(folio);
+          const divider = document.createElement('div');
+          divider.className = 'chapter-divider';
+          door.before(divider);
+        }
+      });
+      if (doors.length) {
+        const folio = document.createElement('div');
+        folio.className = 'chapter-folio';
+        folio.textContent = '六 / 六';
+        container.appendChild(folio);
+      }
+    };
+    const renderGogyoChart = scores => {
+      const entries = Object.entries(scores || {}).map(([label, value]) => [label, Number(value) || 0]);
+      if (!entries.length) return '';
+      const max = Math.max(...entries.map(([, value]) => value), 0.01);
+      const strongest = entries.reduce((best, item) => item[1] > best[1] ? item : best, entries[0]);
+      const weakest = entries.reduce((best, item) => item[1] < best[1] ? item : best, entries[0]);
+      const rows = entries.map(([label, value]) => `<div class="gogyo-row"><span class="gogyo-label">${label}</span><span class="gogyo-track"><span class="gogyo-fill${value === 0 ? ' zero' : ''}" style="--bar-width:${value === 0 ? '1px' : `${(value / max) * 100}%`}"></span></span><span class="gogyo-value">${value}</span></div>`).join('');
+      const weakestText = weakest[1] === 0 ? `命式にありません：${weakest[0]}` : `最も少ない：${weakest[0]}`;
+      return `<div class="divination-summary-item gogyo-card"><strong>五行バランス</strong><div class="gogyo-chart">${rows}</div><p class="gogyo-fact">最も強い：${strongest[0]}　／　${weakestText}</p></div>`;
+    };
+    const configureShareImage = (scores, reportText) => {
+      const shareCard = document.getElementById('share-reading');
+      const saveButton = document.getElementById('save-share-image');
+      const xLink = document.getElementById('share-on-x');
+      const coverage = Number(reportText.match(/参照できた系統：(\d)\/4/)?.[1] || 0);
+      const topTheme = reportText.match(/\[\[HIGHLIGHT:(?:\d+\.\s*)?(.+?)\]\]/)?.[1] || '複数の占術で共通した本質';
+      const entries = Object.entries(scores || {}).map(([label, value]) => [label, Number(value) || 0]);
+      if (!shareCard || !saveButton || !xLink || !entries.length) return;
+      const max = Math.max(...entries.map(([, value]) => value), 0.01);
+      const circles = Array.from({ length: 4 }, (_, index) => `<circle cx="${92 + index * 34}" cy="245" r="9" fill="${index < coverage ? '#9A6D16' : 'none'}" stroke="${index < coverage ? '#9A6D16' : '#C9B584'}"/>`).join('');
+      const bars = entries.map(([label, value], index) => { const y = 310 + index * 43; const width = value === 0 ? 1 : Math.round((value / max) * 390); return `<text x="82" y="${y + 7}" font-family="serif" font-size="24" fill="#211D18">${label}</text><rect x="125" y="${y - 8}" width="390" height="12" rx="6" fill="#EFE7D5"/><rect x="125" y="${y - 8}" width="${width}" height="12" rx="6" fill="${value === 0 ? '#C9B584' : '#9A6D16'}"/><text x="535" y="${y + 6}" font-family="sans-serif" font-size="18" fill="#5F564C">${value}</text>`; }).join('');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#FAF7EF"/><text x="72" y="82" font-family="serif" font-size="30" letter-spacing="8" fill="#9A6D16">FATE LAB</text><line x1="72" y1="112" x2="1128" y2="112" stroke="#D8C79E"/><text x="72" y="190" font-family="serif" font-size="44" fill="#211D18">${topTheme.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</text>${circles}<text x="245" y="252" font-family="sans-serif" font-size="20" fill="#5F564C">${coverage}系統が一致</text>${bars}<text x="940" y="590" font-family="sans-serif" font-size="20" fill="#5F564C">fate-lab.com</text><text x="72" y="590" font-family="sans-serif" font-size="18" fill="#5F564C">生年月日は含まれません</text></svg>`;
+      saveButton.href = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      xLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${topTheme}｜${coverage}系統が一致\n生年月日は含まれません`)}&url=${encodeURIComponent('https://fate-lab.com/')}`;
+      shareCard.hidden = false;
     };
     const saveReadingContext = (context, sourceSection, suggestedQuestion) => {
       try {
@@ -1810,7 +1925,10 @@
         card.innerHTML = `<strong>この結果について、さらに知りたいことは？</strong><span>9つの占術結果と「${title}」の内容をもとに、気になる点をより詳しく読み解けます。</span><button type="button">さらに深掘り鑑定へ（無料）</button>`;
         card.querySelector('button').addEventListener('click', () => saveReadingContext(context, title, `${title}について、私の鑑定結果に沿ってもう少し詳しく教えてください。`));
         const next = headings[index + 1];
-        if (next) container.insertBefore(card, next); else container.appendChild(card);
+        const nextChapter = next?.closest('.chapter-door');
+        if (nextChapter?.parentElement === container) container.insertBefore(card, nextChapter);
+        else if (next?.parentElement === container) container.insertBefore(card, next);
+        else container.appendChild(card);
       });
     };
     const compactReadingData = (value, depth = 0) => {
@@ -1885,6 +2003,8 @@
         submitButton.disabled = true;
         submitButton.textContent = '鑑定中...';
         resultSection.style.display = 'block';
+        const shareCard = document.getElementById('share-reading');
+        if (shareCard) shareCard.hidden = true;
         resultContent.innerHTML = '<div class="reading-progress"><p>あなたの命式を計算しています</p><span>四柱推命・算命学・紫微斗数・西洋占星術・九星気学・数秘術・宿曜などを確認中です。</span></div>';
         divinationContent.textContent = '命式を計算中...';
 
@@ -1899,16 +2019,16 @@
         });
 
         let calcData;
+        let elementScores = {};
         if (calcResponse.ok) {
           calcData = await calcResponse.json();
           resultContent.innerHTML = '<div class="reading-progress"><p>9つの結果を照合しています</p><span>複数の占術で共通して現れる傾向を抽出しています。</span></div>';
-          const elementScores = calcData.elementBalance?.scores || {};
+          elementScores = calcData.elementBalance?.scores || {};
           const bodyChart = calcData.sanmeiChart?.bodyChart || {};
           const subordinateStars = calcData.sanmeiChart?.subordinateStars || {};
           const divinationData = {
             '納音': calcData.nayin,
             '算命学（宿命星）': calcData.sanmeiStar,
-            '五行バランス': Object.entries(elementScores).map(([element, score]) => `${element}${score}`).join('・'),
             '旺衰（簡易判定）': calcData.strength ? `${calcData.strength.label}（扶助${calcData.strength.supportRatio}%）` : '算出なし',
             '補う五行の目安': calcData.strength?.favorableElements?.join('・') || '算出なし',
             '宿曜': calcData.sukuyo,
@@ -1918,9 +2038,9 @@
             '九星気学（本命星）': calcData.kyuseiProfile?.yearStar || calcData.honmeiName,
             '九星気学（月命・日命）': calcData.kyuseiProfile ? `${calcData.kyuseiProfile.monthStar}・${calcData.kyuseiProfile.dayStar}` : '算出なし'
           };
-          const summaryHtml = Object.entries(divinationData).map(([key, val]) =>
+          const summaryHtml = `${renderGogyoChart(elementScores)}${Object.entries(divinationData).map(([key, val]) =>
             `<div class="divination-summary-item"><strong>${key}</strong><span>${val}</span></div>`
-          ).join('');
+          ).join('')}`;
           const pillarsHtml = (calcData.fourPillars || []).map(pillar => `
             <tr>
               <th scope="row">${pillar.label}</th>
@@ -2026,8 +2146,16 @@
         const fullContent = responseData.text || '';
         if (!fullContent.trim()) throw new Error('鑑定結果が空でした');
         resultContent.innerHTML = renderReport(fullContent);
+        addChapterFolios(resultContent);
         // 質問APIが実際に参照する本文量に合わせ、履歴保存時のリクエストを過大にしない。
-        addQuestionCtas(resultContent, { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: buildReadingEvidence(calcData), reportText: fullContent.slice(0, 18000) });
+        const readingContext = { birthData: { birthDate, birthTime, birthplace, gender }, calculatedData: buildReadingEvidence(calcData), reportText: fullContent.slice(0, 18000) };
+        addQuestionCtas(resultContent, readingContext);
+        const ending = document.createElement('section');
+        ending.className = 'report-ending';
+        ending.innerHTML = '<strong>鑑定書は以上です。</strong><p>気になった箇所について、そのまま質問できます。<br>無料でお読みいただける残り：2回</p><button type="button" class="share-action">この鑑定書について質問する</button>';
+        ending.querySelector('button').addEventListener('click', () => saveReadingContext(readingContext, '鑑定書全体', 'この鑑定書全体について、今の私に特に大切なことを詳しく教えてください。'));
+        resultContent.appendChild(ending);
+        configureShareImage(elementScores, fullContent);
         if (typeof gtag === 'function') { gtag('event', 'fortune_report_view', { form_name: 'top_fortune' }); gtag('event', 'fortune_completed'); gtag('event', 'report_viewed'); }
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
@@ -2044,9 +2172,18 @@
     // 結果モーダルを閉じるボタン
     const closeBtn = document.getElementById('close-result');
     const resultSection = document.getElementById('result');
+    const progressFill = document.querySelector('.report-scroll-progress span');
+    const updateReportProgress = () => {
+      if (!resultSection || !progressFill) return;
+      const maxScroll = Math.max(1, resultSection.scrollHeight - resultSection.clientHeight);
+      progressFill.style.width = `${Math.min(100, Math.max(0, resultSection.scrollTop / maxScroll * 100))}%`;
+    };
+    resultSection?.addEventListener('scroll', updateReportProgress, { passive: true });
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         resultSection.style.display = 'none';
+        resultSection.scrollTop = 0;
+        updateReportProgress();
       });
     }
 
