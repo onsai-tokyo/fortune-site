@@ -31,14 +31,45 @@ struct APIClient {
         return request
     }
 
-    private func data(for request: URLRequest) async throws -> Data {
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
-        guard 200..<300 ~= http.statusCode else {
-            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            throw APIError.server(object?["error"] as? String ?? "処理を完了できませんでした")
+    private func data(for request: URLRequest, retryTransient: Bool = false) async throws -> Data {
+        let maximumAttempts = retryTransient ? 3 : 1
+        var lastError: Error = APIError.invalidResponse
+
+        for attempt in 0..<maximumAttempts {
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+                if 200..<300 ~= http.statusCode { return data }
+
+                let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+                let error = APIError.server(object?["error"] as? String ?? "一時的に接続できませんでした。もう一度お試しください")
+                lastError = error
+                let transientStatusCodes = [500, 502, 503, 504]
+                if retryTransient, attempt + 1 < maximumAttempts, transientStatusCodes.contains(http.statusCode) {
+                    try await Task.sleep(for: .seconds(2 * (attempt + 1)))
+                    continue
+                }
+                throw error
+            } catch {
+                lastError = error
+                let transientCodes: Set<URLError.Code> = [
+                    .timedOut, .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed,
+                    .networkConnectionLost, .notConnectedToInternet,
+                ]
+                if retryTransient, attempt + 1 < maximumAttempts,
+                   let urlError = error as? URLError, transientCodes.contains(urlError.code) {
+                    try await Task.sleep(for: .seconds(2 * (attempt + 1)))
+                    continue
+                }
+                throw error
+            }
         }
-        return data
+        throw lastError
+    }
+
+    func warmup() async {
+        guard let call = try? request(path: "/health") else { return }
+        _ = try? await data(for: call, retryTransient: true)
     }
 
     func status(token: String) async throws -> ReadingStatus {
@@ -119,11 +150,11 @@ struct APIClient {
         let birthData: [String: Any] = ["birthDate": date, "birthTime": birthTime,
                                         "birthplace": input.birthplace, "gender": input.gender]
         progress(.calculating)
-        let calcData = try await data(for: request(path: "/api/calc/divination", method: "POST", json: birthData))
+        let calcData = try await data(for: request(path: "/api/calc/divination", method: "POST", json: birthData), retryTransient: true)
         guard let calculated = try JSONSerialization.jsonObject(with: calcData) as? [String: Any] else { throw APIError.invalidResponse }
         progress(.integrating)
         let previewBody: [String: Any] = birthData.merging(["question": "", "calculatedData": calculated]) { _, new in new }
-        let stream = try await data(for: request(path: "/api/preview/generate?v=2", method: "POST", json: previewBody))
+        let stream = try await data(for: request(path: "/api/preview/generate?v=2", method: "POST", json: previewBody), retryTransient: true)
         let text = String(decoding: stream, as: UTF8.self).split(separator: "\n").reduce(into: "") { result, line in
             guard line.hasPrefix("data: ") else { return }
             let payload = String(line.dropFirst(6))

@@ -63,6 +63,7 @@ struct HomeView: View {
                 if let report { ReportView(report: report) }
             }.padding(20)
         }.background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
+            .task { await APIClient.shared.warmup() }
             .safeAreaInset(edge: .bottom) {
                 if report == nil {
                     VStack(spacing: 6) {
