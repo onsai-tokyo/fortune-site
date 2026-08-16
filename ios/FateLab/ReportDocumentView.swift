@@ -135,12 +135,43 @@ struct ReportNodeView: View {
             HStack(spacing: 10) { Rectangle().fill(FateTheme.gold).frame(width: 4); Text(title).font(.system(size: 19, weight: .medium, design: .serif)) }
                 .padding(.top, 18).padding(.bottom, 4)
         case .paragraph(let inlines): InlineReportText(inlines: inlines)
-        case .bullet(let inlines): HStack(alignment: .top, spacing: 10) { Text("・"); InlineReportText(inlines: inlines) }
+        case .bullet(let inlines): LabeledBulletView(inlines: inlines)
         case .advice(let inlines):
             HStack(alignment: .top, spacing: 10) { Text("▸").foregroundStyle(FateTheme.gold); InlineReportText(inlines: inlines) }
                 .padding(12).background(FateTheme.gold.opacity(0.06)).clipShape(RoundedRectangle(cornerRadius: 10))
         case .evidence(let groups): EvidenceDisclosureView(evidence: groups)
         case .year(let year): YearCardView(year: year)
+        }
+    }
+}
+
+private struct LabeledBulletView: View {
+    let inlines: [ReportInline]
+
+    private var parts: (title: String, body: String)? {
+        let text = inlines.map(\.plainText).joined()
+        guard let separator = text.firstIndex(of: "：") else { return nil }
+        let title = String(text[..<separator]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty, title.count <= 28 else { return nil }
+        let bodyStart = text.index(after: separator)
+        return (title, String(text[bodyStart...]).trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    var body: some View {
+        if let parts {
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(spacing: 10) {
+                    Rectangle().fill(FateTheme.gold).frame(width: 3, height: 22)
+                    Text(parts.title).font(.system(size: 18, weight: .semibold, design: .serif))
+                }
+                if !parts.body.isEmpty {
+                    Text(parts.body).font(.system(size: 16)).lineSpacing(9).foregroundStyle(FateTheme.ink)
+                        .padding(.leading, 13)
+                }
+            }
+            .padding(.top, 8)
+        } else {
+            HStack(alignment: .top, spacing: 10) { Text("・"); InlineReportText(inlines: inlines) }
         }
     }
 }
