@@ -38,9 +38,9 @@ struct SettingsView: View {
                 else { Button("ログイン・新規登録") { AuthPresentation.shared.isPresented = true } }
             }
             Section("サービスについて") {
-                Link("利用規約", destination: AppConfig.apiBaseURL.appending(path: "/terms"))
-                Link("プライバシーポリシー", destination: AppConfig.apiBaseURL.appending(path: "/privacy"))
-                Link("特定商取引法に基づく表記", destination: AppConfig.apiBaseURL.appending(path: "/tokushohou"))
+                Link("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
+                Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
+                Link("特定商取引法に基づく表記", destination: AppConfig.websiteBaseURL.appending(path: "/tokushohou"))
             }
         }.scrollContentBackground(.hidden).background(FateTheme.ivory).fateScreenTitle("設定")
             .confirmationDialog("アカウントを削除しますか", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {

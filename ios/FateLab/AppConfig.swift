@@ -4,8 +4,10 @@ enum AppConfig {
     static let subscriptionProductID = "com.onsai.fatelab.premium.monthly"
 
     static var apiBaseURL: URL {
-        value(named: "APIBaseURL", fallback: "https://fate-lab.com")
+        value(named: "APIBaseURL", fallback: "https://fortune-site-iuzo.onrender.com")
     }
+
+    static let websiteBaseURL = URL(string: "https://fate-lab.com")!
 
     static var supabaseURL: URL {
         value(named: "SupabaseURL", fallback: "https://invalid.supabase.co")

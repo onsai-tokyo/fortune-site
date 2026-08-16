@@ -221,9 +221,9 @@ private struct PaywallSheet: View {
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     HStack {
-                        Link("利用規約", destination: AppConfig.apiBaseURL.appending(path: "/terms"))
+                        Link("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
                         Text("・")
-                        Link("プライバシーポリシー", destination: AppConfig.apiBaseURL.appending(path: "/privacy"))
+                        Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                     }.font(.caption).frame(maxWidth: .infinity)
                 }.padding(24)
             }.background(FateTheme.ivory)

@@ -6,7 +6,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: 6.0
-    CURRENT_PROJECT_VERSION: 4
+    CURRENT_PROJECT_VERSION: 5
     MARKETING_VERSION: 1.0.0
     DEVELOPMENT_TEAM: DB28SG2U7D
     CODE_SIGN_STYLE: Automatic
@@ -17,7 +17,7 @@ settings:
     INFOPLIST_KEY_UIUserInterfaceStyle: Light
     GENERATE_INFOPLIST_FILE: true
     PRODUCT_BUNDLE_IDENTIFIER: com.onsai.fatelab
-    API_BASE_URL: https://fate-lab.com
+    API_BASE_URL: https://fortune-site-iuzo.onrender.com
     # Supabase publishable settings. These values are intentionally public;
     # privileged service-role credentials must never be added to the app.
     SUPABASE_URL: https://jarerymytxcsqvzduqub.supabase.co
