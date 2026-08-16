@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS reading_shares (
 
 ALTER TABLE reading_shares ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own reading shares" ON reading_shares;
 CREATE POLICY "Users manage own reading shares" ON reading_shares
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
