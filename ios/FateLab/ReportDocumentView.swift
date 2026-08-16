@@ -322,7 +322,7 @@ private struct CalculatedDataChapterView: View {
                 VStack(spacing: 12) {
                     Text("第 一 章").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
                     Text("命式・計算データ").font(.system(size: 27, weight: .medium, design: .serif))
-                    Text("9つの占術から算出した生データを省略せず表示します。").font(.caption).foregroundStyle(FateTheme.muted)
+                    Text("9つの占術から算出した主要データを、見やすく整理しています。").font(.caption).foregroundStyle(FateTheme.muted)
                 }.frame(maxWidth: .infinity).padding(.vertical, 26)
                 LazyVStack(alignment: .leading, spacing: 14) {
                     ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
@@ -368,32 +368,47 @@ private struct CalculatedDataChapterView: View {
         } else {
             let rows = conciseRows(for: key, value: value)
             VStack(spacing: 0) {
-                tableHeader(["項目", "計算結果"], weights: [0.38, 0.62])
+                tableHeader(["項目", "計算結果"])
                 ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                    tableRow([row.label, row.value], weights: [0.38, 0.62], shaded: index.isMultiple(of: 2))
+                    tableRow([row.label, row.value], shaded: index.isMultiple(of: 2))
                 }
             }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
         }
     }
 
-    private func tableHeader(_ values: [String], weights: [CGFloat]? = nil) -> some View {
+    @ViewBuilder
+    private func tableHeader(_ values: [String]) -> some View {
         HStack(spacing: 0) {
-            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
-                Text(value).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, minHeight: 34, alignment: .center)
-                    .layoutPriority(Double((weights ?? []).indices.contains(index) ? (weights ?? [])[index] * 10 : 1))
-                    .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1) } }
+            if values.count == 2 {
+                Text(values[0]).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 112).frame(minHeight: 38).overlay(alignment: .trailing) { Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1) }
+                Text(values[1]).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 38)
+            } else {
+                ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                    Text(value).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 38, alignment: .center)
+                        .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1) } }
+                }
             }
         }.background(FateTheme.gold)
     }
 
-    private func tableRow(_ values: [String], weights: [CGFloat]? = nil, shaded: Bool) -> some View {
+    @ViewBuilder
+    private func tableRow(_ values: [String], shaded: Bool) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
-                Text(value).font(.system(size: 13)).foregroundStyle(FateTheme.ink).lineLimit(nil)
-                    .frame(maxWidth: .infinity, minHeight: 42, alignment: .topLeading).padding(8)
-                    .layoutPriority(Double((weights ?? []).indices.contains(index) ? (weights ?? [])[index] * 10 : 1))
-                    .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(FateTheme.line).frame(width: 1) } }
+            if values.count == 2 {
+                Text(values[0]).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                    .padding(.vertical, 10).padding(.horizontal, 9).frame(width: 112, alignment: .topLeading)
+                    .overlay(alignment: .trailing) { Rectangle().fill(FateTheme.line).frame(width: 1) }
+                Text(values[1]).font(.system(size: 14)).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 10).padding(.horizontal, 9).frame(maxWidth: .infinity, alignment: .topLeading)
+            } else {
+                ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                    Text(value).font(.system(size: 12)).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .topLeading).padding(.vertical, 9).padding(.horizontal, 5)
+                        .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(FateTheme.line).frame(width: 1) } }
+                }
             }
         }.background(shaded ? FateTheme.gold.opacity(0.045) : Color.clear)
             .overlay(alignment: .bottom) { Rectangle().fill(FateTheme.line).frame(height: 1) }
@@ -419,6 +434,38 @@ private struct CalculatedDataChapterView: View {
                     let star = String(describing: item["star"] ?? "—")
                     let stage = String(describing: item["stage"] ?? "")
                     rows.append((displayLabel(period), stage.isEmpty ? star : "\(star)（\(stage)）"))
+                }
+            }
+            return rows
+        }
+        if key == "sanmeiRelations", let dictionary = value as? [String: Any], let relations = dictionary["relations"] as? [[String: Any]] {
+            return relations.prefix(8).map { relation in
+                let branches = String(describing: relation["branches"] ?? "—")
+                let name = String(describing: relation["relation"] ?? "関係")
+                return ("\(branches)・\(name)", String(describing: relation["meaning"] ?? "—"))
+            }
+        }
+        if key == "ziwei", let dictionary = value as? [String: Any] {
+            var rows: [(String, String)] = []
+            for field in ["fiveElementsClass", "soul", "body", "lunarDate", "timeRange"] {
+                if let item = dictionary[field], !(item is NSNull) { rows.append((displayLabel(field), displayValue(item))) }
+            }
+            if let palaces = dictionary["palaces"] as? [[String: Any]] {
+                for palace in palaces where ["命宮", "夫妻", "官禄", "財帛"].contains(String(describing: palace["name"] ?? "")) {
+                    let stars = (palace["majorStars"] as? [[String: Any]] ?? []).map { String(describing: $0["name"] ?? "") }.filter { !$0.isEmpty }
+                    rows.append((String(describing: palace["name"] ?? "宮"), stars.isEmpty ? "主星なし" : stars.joined(separator: "・")))
+                }
+            }
+            return rows
+        }
+        if key == "astrology", let dictionary = value as? [String: Any] {
+            var rows: [(String, String)] = []
+            for system in ["western", "vedic"] {
+                guard let chart = dictionary[system] as? [String: Any] else { continue }
+                let systemName = system == "western" ? "西洋" : "インド"
+                if let asc = chart["ascendant"] as? [String: Any] { rows.append(("\(systemName) ASC", "\(asc["sign"] ?? "—") \(displayValue(asc["degree"] ?? 0))°")) }
+                for planet in (chart["planets"] as? [[String: Any]] ?? []).filter({ ["太陽", "月", "金星", "火星", "木星", "土星"].contains(String(describing: $0["name"] ?? "")) }) {
+                    rows.append(("\(systemName) \(planet["name"] ?? "天体")", "\(planet["sign"] ?? "—") \(displayValue(planet["degree"] ?? 0))°\((planet["retrograde"] as? Bool) == true ? "・逆行" : "")"))
                 }
             }
             return rows
