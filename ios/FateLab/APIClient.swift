@@ -20,7 +20,12 @@ struct APIClient {
     private init() {}
 
     private func request(path: String, method: String = "GET", token: String? = nil, json: Any? = nil) throws -> URLRequest {
-        var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: path))
+        // `appending(path:)` は `?v=2` までパスとして扱い、`%3Fv=2` に
+        // エンコードしてしまう。相対URLとして解決し、クエリを保持する。
+        guard let url = URL(string: path, relativeTo: AppConfig.apiBaseURL)?.absoluteURL else {
+            throw APIError.invalidResponse
+        }
+        var request = URLRequest(url: url)
         // Render のコールドスタート後に占術計算が60秒を少し超える場合がある。
         // URLSession の既定値（60秒）で正常な鑑定を失敗扱いにしない。
         request.timeoutInterval = 180
