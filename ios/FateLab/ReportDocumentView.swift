@@ -388,7 +388,9 @@ private struct CalculatedDataChapterView: View {
             }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
         } else if key == "elementBalance" {
             elementBalanceView(rows: conciseRows(for: key, value: value))
-        } else if key == "sanmeiChart" || key == "numerologyProfile" {
+        } else if key == "sanmeiChart" {
+            sanmeiBodyChart(value: value)
+        } else if key == "numerologyProfile" {
             compactGrid(rows: conciseRows(for: key, value: value))
         } else {
             let rows = conciseRows(for: key, value: value)
@@ -418,6 +420,56 @@ private struct CalculatedDataChapterView: View {
                 }
             }
         }
+    }
+
+    private func sanmeiBodyChart(value: Any) -> some View {
+        let dictionary = value as? [String: Any] ?? [:]
+        let chart = dictionary["bodyChart"] as? [String: Any] ?? [:]
+        let subordinate = dictionary["subordinateStars"] as? [String: Any] ?? [:]
+        func star(_ key: String, from source: [String: Any]) -> String {
+            let item = source[key] as? [String: Any] ?? [:]
+            let name = String(describing: item["star"] ?? "—")
+            let stage = String(describing: item["stage"] ?? "")
+            return stage.isEmpty ? name : "\(name)（\(stage)）"
+        }
+        let cells: [(String, String, String)] = [
+            ("人体星図", "全体", "figure.stand"),
+            ("頭", star("north", from: chart), ""),
+            ("左肩", star("early", from: subordinate), ""),
+            ("右手", star("west", from: chart), ""),
+            ("胸・中心", star("center", from: chart), ""),
+            ("左手", star("east", from: chart), ""),
+            ("右足", star("late", from: subordinate), ""),
+            ("腹", star("south", from: chart), ""),
+            ("左足", star("middle", from: subordinate), "")
+        ]
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 1), count: 3), spacing: 1) {
+            ForEach(Array(cells.enumerated()), id: \.offset) { index, cell in
+                VStack(spacing: 7) {
+                    Text(cell.0)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(FateTheme.muted)
+                    if !cell.2.isEmpty {
+                        Image(systemName: cell.2)
+                            .font(.system(size: 28, weight: .light))
+                            .foregroundStyle(FateTheme.gold)
+                    } else {
+                        Text(cell.1)
+                            .font(.system(size: 14, weight: index == 4 ? .semibold : .medium, design: .serif))
+                            .foregroundStyle(FateTheme.ink)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.78)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 88)
+                .padding(.horizontal, 5)
+                .background(index == 4 ? FateTheme.gold.opacity(0.13) : FateTheme.gold.opacity(0.045))
+            }
+        }
+        .background(FateTheme.line)
+        .clipShape(RoundedRectangle(cornerRadius: 9))
+        .overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.line))
     }
 
     private func compactGrid(rows: [(label: String, value: String)]) -> some View {
