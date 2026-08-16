@@ -335,6 +335,16 @@ private struct CalculatedDataChapterView: View {
                             }
                         }
                     }
+                    if !auxiliaryRows.isEmpty {
+                        ReportCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("東洋占術の補助データ")
+                                    .font(.system(size: 19, weight: .medium, design: .serif))
+                                Divider().overlay(FateTheme.line)
+                                compactGrid(rows: auxiliaryRows)
+                            }
+                        }
+                    }
                 }
                 if let questionTitle, let askQuestion {
                     Button(questionTitle, action: askQuestion).buttonStyle(GoldButtonStyle())
@@ -344,8 +354,19 @@ private struct CalculatedDataChapterView: View {
             .padding(.top, 12)
     }
     private var sections: [(key: String, value: Any)] {
-        let preferred = ["fourPillars", "elementBalance", "sanmeiChart", "sanmeiRelations", "ziwei", "astrology", "kyuseiProfile", "numerologyProfile", "sukuyo", "nayin", "chusatsu"]
-        return preferred.compactMap { key in data[key].map { (key, $0) } }
+        let preferred = ["fourPillars", "elementBalance", "sanmeiChart", "sanmeiRelations", "ziwei", "astrology", "kyuseiProfile", "numerologyProfile"]
+        return preferred.compactMap { key in
+            guard let value = data[key] else { return nil }
+            if key != "fourPillars" && conciseRows(for: key, value: value).isEmpty { return nil }
+            return (key, value)
+        }
+    }
+
+    private var auxiliaryRows: [(label: String, value: String)] {
+        [("宿曜", "sukuyo"), ("納音", "nayin"), ("天中殺", "chusatsu")].compactMap { label, key in
+            guard let value = data[key], let result = conciseRows(for: key, value: value).first?.value, !result.isEmpty else { return nil }
+            return (label, result)
+        }
     }
 
     @ViewBuilder
@@ -365,15 +386,80 @@ private struct CalculatedDataChapterView: View {
                     ], shaded: index.isMultiple(of: 2))
                 }
             }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
+        } else if key == "elementBalance" {
+            elementBalanceView(rows: conciseRows(for: key, value: value))
+        } else if key == "sanmeiChart" || key == "numerologyProfile" {
+            compactGrid(rows: conciseRows(for: key, value: value))
         } else {
             let rows = conciseRows(for: key, value: value)
-            VStack(spacing: 0) {
-                tableHeader(["項目", "計算結果"])
-                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                    tableRow([row.label, row.value], shaded: index.isMultiple(of: 2))
+            if rows.count == 1, let row = rows.first, row.label == "値" {
+                Text(row.value)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(FateTheme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 2)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                        HStack(alignment: .firstTextBaseline, spacing: 14) {
+                            Text(row.label)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(FateTheme.muted)
+                                .frame(width: 104, alignment: .leading)
+                            Text(row.value)
+                                .font(.system(size: 15))
+                                .foregroundStyle(FateTheme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.vertical, 10)
+                        if index < rows.count - 1 { Divider().overlay(FateTheme.line.opacity(0.65)) }
+                    }
                 }
-            }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
+            }
         }
+    }
+
+    private func compactGrid(rows: [(label: String, value: String)]) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(row.label)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(FateTheme.muted)
+                    Text(row.value)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(FateTheme.ink)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                }
+                .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 8)
+                .background(FateTheme.gold.opacity(0.055))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
+    private func elementBalanceView(rows: [(label: String, value: String)]) -> some View {
+        let maximum = max(rows.compactMap { Double($0.value) }.max() ?? 1, 1)
+        return VStack(spacing: 10) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                let score = Double(row.value) ?? 0
+                HStack(spacing: 10) {
+                    Text(row.label).font(.system(size: 14, weight: .medium)).frame(width: 20)
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(FateTheme.gold.opacity(0.10))
+                            Capsule().fill(FateTheme.gold.opacity(0.72))
+                                .frame(width: max(score > 0 ? 4 : 0, geometry.size.width * score / maximum))
+                        }
+                    }.frame(height: 8)
+                    Text(row.value).font(.system(size: 13, design: .monospaced)).foregroundStyle(FateTheme.muted).frame(width: 38, alignment: .trailing)
+                }
+            }
+        }.padding(.vertical, 2)
     }
 
     @ViewBuilder
