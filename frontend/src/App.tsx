@@ -14,6 +14,7 @@ const CompatReportPage = lazy(() => import('./pages/CompatReportPage'))
 const TokushohouPage = lazy(() => import('./pages/TokushohouPage').then(module => ({ default: module.TokushohouPage })))
 const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })))
+const SupportPage = lazy(() => import('./pages/SupportPage').then(module => ({ default: module.SupportPage })))
 const ReadingPage = lazy(() => import('./pages/ReadingPage'))
 const SharedReadingPage = lazy(() => import('./pages/SharedReadingPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/tokushohou" element={<TokushohouPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/support" element={<SupportPage />} />
             <Route path="/reading" element={<LegacyReadingRedirect />} />
             <Route path="/reading/new" element={<ReadingPage mode="start" />} />
             <Route path="/reading/history" element={<ReadingPage mode="history" />} />

@@ -62,8 +62,8 @@ export function TokushohouPage() {
 
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">支払方法</h2>
-            <p className="text-white/70 text-sm">クレジットカード決済（Stripe）</p>
-            <p className="text-white/50 text-xs mt-1">VISA / MasterCard / JCB / American Express / Diners Club</p>
+            <p className="text-white/70 text-sm">Apple App Store決済、またはウェブ版で案内する決済方法</p>
+            <p className="text-white/50 text-xs mt-1">iOSアプリではApple Accountに設定された支払方法が利用されます</p>
           </section>
 
           <section>
@@ -93,7 +93,7 @@ export function TokushohouPage() {
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">サブスクリプションの解約について</h2>
             <div className="text-white/70 text-sm space-y-2">
-              <p>契約管理画面からいつでも解約手続きができます。解約しない限り月ごとに自動更新されます。</p>
+              <p>iOSアプリの契約は、Apple Accountのサブスクリプション管理画面からいつでも解約できます。解約しない限り月ごとに自動更新されます。</p>
               <p>解約後も現在の請求期間が終わるまでは利用でき、次回以降の課金は行われません。</p>
               <p className="text-white/60 text-xs">※日割り返金は行っておりません。</p>
             </div>
