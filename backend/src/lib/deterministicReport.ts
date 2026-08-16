@@ -710,11 +710,29 @@ export function buildDeterministicReport(input: ReportInput): string {
       const showLove = loveScore >= 2
       const showRelation = relationScore >= 2 && relationScore >= Math.max(workScore, loveScore)
       const isMarriage = !hasRelationshipBreak && item.relationshipSignals.length > 0 && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+      const activePalaces = ziweiYear?.activePalaces ?? []
+      const romanceStart = !hasRelationshipBreak && showLove && (
+        /食神|傷官|偏財/.test(item.tenGod) || [2, 3, 6].includes(personalYear) ||
+        shared.some(key => ['harmony', 'care', 'exploration'].includes(key))
+      )
+      const careerChange = showWork && (
+        /偏官|偏印/.test(item.tenGod) || shared.some(key => ['transformation', 'independence', 'initiative'].includes(key)) ||
+        activePalaces.some(name => name === '官禄' || name === '遷移')
+      )
+      const newChallenge = shared.some(key => ['initiative', 'exploration', 'creativity'].includes(key)) || personalYear === 1 || personalYear === 5
+      const relocation = activePalaces.some(name => name === '田宅' || name === '遷移') || (
+        [5, 9].includes(personalYear) && shared.includes('transformation') && item.relationshipSignals.some(signal => /冲|破/.test(signal))
+      )
+      const eventLabels = [
+        romanceStart ? '交際・新しい恋' : '',
+        hasRelationshipBreak ? '別れ・関係の見直し' : '',
+        isMarriage ? '結婚' : '',
+        careerChange ? '転職・働き方の変更' : '',
+        newChallenge ? '新しい挑戦' : '',
+        relocation ? '引越し・生活環境の変更' : '',
+      ].filter((label, index, all) => label && all.indexOf(label) === index)
       const domainLabels = [
-        showWork ? '仕事' : '',
-        isMarriage ? '結婚' : showLove ? '恋愛' : '',
-        showRelation ? '人間関係' : '',
-        hasRelationshipBreak ? '恋愛・人間関係の見直し' : '',
+        showWork ? '仕事' : '', showLove ? '恋愛' : '', showRelation ? '人間関係' : '', ...eventLabels,
       ].filter((label, index, all) => label && all.indexOf(label) === index)
       const concrete = (text: string) => text.replace(/^.+?年は、/, '').replace(/年です。$/, '流れです。')
       const domainLines = [
@@ -727,21 +745,30 @@ export function buildDeterministicReport(input: ReportInput): string {
         : item.relationshipSignals.length && shared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
           ? ' 交際や結婚など、関係をはっきりさせる動きも起こりやすくなります。'
           : ''
+      const eventDetails = [
+        romanceStart ? '恋愛では、新しい出会いが交際へ進んだり、友人関係から恋へ変わったりしやすい時期です。' : '',
+        hasRelationshipBreak ? '恋愛では、無理をして続けてきた関係の問題が表面化し、別れるか、付き合い方を作り直すかを決めやすい時期です。' : '',
+        isMarriage ? '結婚では、同居・婚約・入籍など、関係を正式な形へ進める話がまとまりやすい時期です。' : '',
+        careerChange ? '仕事では、転職・異動・独立など、これまでの働き方を変える選択が起こりやすい時期です。' : '',
+        newChallenge ? '新しい挑戦では、学び直し・副業・企画の開始など、未経験のことへ最初の一歩を踏み出しやすい時期です。' : '',
+        relocation ? '生活面では、引越し・同居・住環境の見直しなど、暮らす場所を変える動きが起こりやすい時期です。' : '',
+      ].filter(Boolean).join(' ')
       const longTermNote = decadeShared.length && decade
         ? ` 長期の流れでも${decade.themes.join('、')}が続き、単年より影響が残りやすい時期です。`
         : ''
-      const majorTurningPoint = hasRelationshipBreak || isMarriage || (decadeShared.length > 0 && shared.length >= 2)
+      const majorTurningPoint = hasRelationshipBreak || isMarriage || careerChange || relocation || (decadeShared.length > 0 && shared.length >= 2)
       const yearLabel = majorTurningPoint
         ? `[[TURNING:${item.year}年（${item.ageRange}）— 大きな転換期]]`
         : `[[YEAR:${item.year}年（${item.ageRange}）]]`
       const domainLabelLine = domainLabels.map(label => `[[DOMAIN:${label}]]`).join(' ')
+      const eventHeadline = eventLabels.length ? `${eventLabels.join('・')}が動きやすい時期` : yearHeadline
       const astrologyNote = astrologyYear && (astrologyYear.western.length || astrologyYear.vedic.length)
         ? ` 天体の長期的な動きでも${astrologyYear.signals.includes('responsibility') ? '責任や現実化' : astrologyYear.signals.includes('harmony') ? '縁や協力' : '成長と変化'}が強まります。`
         : ''
       const ziweiNote = ziweiYear?.activePalaces.length
         ? ` 長期の人生周期では${ziweiYear.activePalaces.map(name => name === '官禄' ? '仕事' : name === '夫妻' ? '結婚・パートナーシップ' : name === '財帛' ? '収入' : '自分自身').join('・')}が動きやすい位置です。`
         : ''
-      const text = `${yearLabel}\n[[SUMMARY:${yearHeadline}]] ${domainLabelLine}\n\n${domainLines}${longTermNote}${relationship}${astrologyNote}${ziweiNote}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
+      const text = `${yearLabel}\n[[SUMMARY:${eventHeadline}]] ${domainLabelLine}\n\n${eventDetails}${eventDetails && domainLines ? ' ' : ''}${domainLines}${longTermNote}${relationship}${astrologyNote}${ziweiNote}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         ...(item.sanmeiSignals?.length ? [{ lineage: 'stems' as const, system: '算命学', factor: item.sanmeiSignals.join('・') }] : []),
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),
