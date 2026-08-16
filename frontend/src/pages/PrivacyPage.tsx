@@ -40,8 +40,8 @@ export function PrivacyPage() {
               <p>本サービスでは、以下の情報を収集します。</p>
               <ul className="list-disc list-inside pl-2 space-y-1 text-white/60">
                 <li>メールアドレス（アカウント登録時）</li>
-                <li>生年月日・出生時刻（鑑定に使用）</li>
-                <li>サービス利用履歴・分析結果</li>
+                <li>生年月日・出生時刻・出生地・性別（鑑定に使用）</li>
+                <li>鑑定結果への質問内容、鑑定履歴およびサービス利用状況</li>
                 <li>購入・契約情報（Apple App Storeまたは決済事業者経由。カード情報は当社では保持しません）</li>
                 <li>アクセスログ（IPアドレス、ブラウザ情報等）</li>
               </ul>
@@ -63,6 +63,14 @@ export function PrivacyPage() {
                 <li>ユーザーにご自身の登録情報の閲覧や変更、削除、ご利用状況の閲覧を行っていただくため</li>
                 <li>上記の利用目的に付随する目的</li>
               </ul>
+              <p className="pt-2">本サービスの提供に必要な範囲で、以下のサービス提供事業者に情報の取扱いを委託することがあります。</p>
+              <ul className="list-disc list-inside pl-2 space-y-1 text-white/60">
+                <li>Apple Inc.（アプリ配信、アプリ内購入および契約状態の確認）</li>
+                <li>Supabase, Inc.（アカウント認証およびデータ保管）</li>
+                <li>Anthropic PBC（計算済み鑑定データおよび質問内容の文章化）</li>
+                <li>ホスティングその他、サービス運営に必要なインフラ提供事業者</li>
+              </ul>
+              <p>これらの事業者には、各業務の遂行に必要な範囲でのみ情報を取り扱わせます。当社は、第三者広告を目的としたユーザー情報の追跡または販売を行いません。</p>
             </div>
           </section>
 
@@ -134,7 +142,7 @@ export function PrivacyPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-white/40 text-xs">最終更新日：2026年4月15日</p>
+          <p className="text-white/40 text-xs">最終更新日：2026年8月16日</p>
         </div>
 
       </div>
