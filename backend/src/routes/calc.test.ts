@@ -161,7 +161,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /【補助傾向】/)
   assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
   assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
-  assert.match(report, /参照できた系統：/)
+  assert.match(report, /参照できた系統：4\/4/)
   assert.doesNotMatch(report, /タイプ番号|FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
   assert.match(report, /惹かれやすい人：責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
