@@ -83,7 +83,7 @@ struct ProfileTrait: Codable, Identifiable {
     }
 }
 
-struct BirthInput {
+struct BirthInput: Equatable {
     var date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     var hasTime = false
     var time = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()

@@ -60,7 +60,13 @@ struct HomeView: View {
                         if isWorking { progressView }
                     }
                 }
-                if let report { ReportView(report: report) }
+                if let report {
+                    Button("別の人を鑑定する") { resetForAnotherPerson() }
+                        .buttonStyle(.bordered)
+                        .tint(FateTheme.gold)
+                        .frame(maxWidth: .infinity)
+                    ReportView(report: report)
+                }
             }.padding(20)
         }.background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
             .task { await APIClient.shared.warmup() }
@@ -84,6 +90,11 @@ struct HomeView: View {
             .onChange(of: input.hasTime) { _, enabled in
                 if enabled { timeSelected = false; showTimePicker = true }
             }
+            .onChange(of: input) { _, _ in
+                // 入力と一致しない古い鑑定書を画面に残さない。
+                report = nil
+                errorMessage = nil
+            }
             .sheet(isPresented: $showTimePicker) {
                 NavigationStack {
                     VStack(spacing: 24) {
@@ -100,10 +111,21 @@ struct HomeView: View {
     }
 
     private func generateReport() async {
+        let requestedInput = input
         isWorking = true; errorMessage = nil
-        do { report = try await APIClient.shared.generateReport(input: input) { progress = $0 } }
+        do {
+            let generated = try await APIClient.shared.generateReport(input: requestedInput) { progress = $0 }
+            if input == requestedInput { report = generated }
+        }
         catch { errorMessage = error.localizedDescription }
         isWorking = false
+    }
+
+    private func resetForAnotherPerson() {
+        input = BirthInput()
+        timeSelected = false
+        report = nil
+        errorMessage = nil
     }
 
     @ViewBuilder private func inputSection<Content: View>(_ number: String, _ title: String, @ViewBuilder content: () -> Content) -> some View {
