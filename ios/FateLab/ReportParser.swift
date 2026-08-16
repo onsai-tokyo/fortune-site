@@ -86,7 +86,10 @@ enum ReportParser {
             guard let title = currentTitle else {
                 preface.append(contentsOf: currentNodes); currentNodes.removeAll(); return
             }
-            chapters.append(ReportChapter(id: "chapter-\(chapters.count)-\(title)", title: title, nodes: currentNodes))
+            // 一致条件を満たす本文がない章は、空の画面として目次に出さない。
+            if !currentNodes.isEmpty {
+                chapters.append(ReportChapter(id: "chapter-\(chapters.count)-\(title)", title: title, nodes: currentNodes))
+            }
             currentNodes.removeAll()
         }
         func append(_ node: ReportNode) {
