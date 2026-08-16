@@ -250,6 +250,7 @@ export interface AnnualTiming {
   relationshipSignals: string[]
   sanmeiSignals: string[]
   themes: string[]
+  monthly: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; themes: string[] }>
 }
 
 const BRANCH_COMBINE: Record<string, string> = {
@@ -324,9 +325,30 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
         ...(voidBranches.includes(pillar.branch) ? ['天中殺の年（拡大より整理と再確認を優先）'] : []),
         ...(relation ? [`位相法 ${relation}`] : []),
       ]
+      const monthly = item.getLiuYue().map((monthItem: any, index: number) => {
+        const monthPillar = pillarFromKanshi(monthItem.getGanZhi())
+        const monthTenGod = calcTenGod(dayStemIdx, monthPillar.stemIdx)
+        const monthHiddenTenGod = calcTenGod(dayStemIdx, HIDDEN_STEMS[monthPillar.branchIdx][0])
+        const monthRelationshipSignals: string[] = []
+        let monthRelation: string | undefined
+        if (spouseGods.includes(monthTenGod)) monthRelationshipSignals.push(`天干に配偶者星の${monthTenGod}`)
+        if (spouseGods.includes(monthHiddenTenGod)) monthRelationshipSignals.push(`地支に配偶者星の${monthHiddenTenGod}`)
+        if (BRANCH_COMBINE[dayBranch] === monthPillar.branch) { monthRelation = '六合'; monthRelationshipSignals.push('日支と六合') }
+        if ((monthPillar.branchIdx - shichu.day.branchIdx + 12) % 12 === 6) { monthRelation = '冲'; monthRelationshipSignals.push('日支と冲') }
+        if (BRANCH_BREAK[dayBranch] === monthPillar.branch) { monthRelation = '破'; monthRelationshipSignals.push('日支と破') }
+        if (PEACH_BLOSSOM[dayBranch] === monthPillar.branch) monthRelationshipSignals.push('桃花')
+        const calendarMonth = index === 11 ? 1 : index + 2
+        return {
+          month: calendarMonth,
+          monthLabel: index === 11 ? '翌年1月ごろ' : `${calendarMonth}月ごろ`,
+          kanshi: monthItem.getGanZhi(), tenGod: monthTenGod,
+          relationshipSignals: monthRelationshipSignals,
+          themes: timingThemes(monthTenGod, monthRelation),
+        }
+      })
       return {
         year: item.getYear(), ageRange: `${item.getYear() - year - 1}〜${item.getYear() - year}歳`,
-        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, sanmeiSignals, themes: timingThemes(tenGod, relation),
+        kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, sanmeiSignals, themes: timingThemes(tenGod, relation), monthly,
       }
     })
 

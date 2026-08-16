@@ -24,7 +24,7 @@ interface ReportInput {
     direction: string
     startDate: string
     decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
-    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
+    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; themes: string[] }> }>
     marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
   }
   sanmeiRelations?: {
@@ -71,7 +71,7 @@ interface ReportInput {
       moonNakshatra: string
       moonPada: number
     }
-    annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[] }>
+    annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[]; months?: Array<{ month: number; signals: string[]; details: string[] }> }>
   }
 }
 
@@ -753,6 +753,52 @@ export function buildDeterministicReport(input: ReportInput): string {
         newChallenge ? '新しい挑戦では、学び直し・副業・企画の開始など、未経験のことへ最初の一歩を踏み出しやすい時期です。' : '',
         relocation ? '生活面では、引越し・同居・住環境の見直しなど、暮らす場所を変える動きが起こりやすい時期です。' : '',
       ].filter(Boolean).join(' ')
+      const monthlyHighlights = (item.monthly ?? []).map(monthItem => {
+        const personalMonth = ((personalYear + monthItem.month - 2) % 9) + 1
+        const monthPersonalSignals = personalYearSignals[personalMonth] ?? []
+        const monthStemSignals = [...new Set([
+          ...annualSignals(monthItem.themes),
+          ...annualSignals(decade?.themes ?? []),
+          ...(monthItem.relationshipSignals.some(signal => /冲|破/.test(signal)) ? ['transformation' as ConsensusKey] : []),
+          ...(monthItem.relationshipSignals.some(signal => /六合/.test(signal)) ? ['harmony' as ConsensusKey] : []),
+        ])]
+        const astrologyMonth = astrologyYear?.months?.find(month => month.month === monthItem.month)
+        const monthEphemerisSignals = [...new Set((astrologyMonth?.signals ?? []) as ConsensusKey[])]
+        const monthNumberSignals = [...new Set(monthPersonalSignals)]
+        const monthCounts = new Map<ConsensusKey, number>()
+        for (const lineageSignals of [monthStemSignals, monthEphemerisSignals, monthNumberSignals]) {
+          for (const signal of lineageSignals) monthCounts.set(signal, (monthCounts.get(signal) ?? 0) + 1)
+        }
+        const monthShared = [...monthCounts.entries()].filter(([, count]) => count >= 2).map(([key]) => key)
+        const monthBreak = monthItem.relationshipSignals.some(signal => /冲|破/.test(signal)) && (hasRelationshipBreak || monthShared.includes('transformation'))
+        const monthRomance = !monthBreak && romanceStart && monthItem.relationshipSignals.length > 0 && monthShared.some(key => ['harmony', 'care', 'exploration'].includes(key))
+        const monthMarriage = isMarriage && !monthBreak && monthItem.relationshipSignals.some(signal => /正官|正財|六合/.test(signal)) && monthShared.some(key => ['harmony', 'stability', 'responsibility'].includes(key))
+        const monthCareer = careerChange && (/偏官|偏印|比肩/.test(monthItem.tenGod) || monthShared.some(key => ['transformation', 'independence', 'initiative'].includes(key)))
+        const monthChallenge = newChallenge && monthShared.some(key => ['initiative', 'exploration', 'creativity'].includes(key))
+        const monthRelocation = relocation && (monthBreak || monthShared.includes('transformation'))
+        const labels = [
+          monthRomance ? '新しい恋・交際開始' : '', monthBreak ? '別れ・関係の見直し' : '',
+          monthMarriage ? '同居・婚約・結婚' : '', monthCareer ? '転職・異動・独立' : '',
+          monthChallenge ? '新しい挑戦' : '', monthRelocation ? '引越し・住環境の変更' : '',
+        ].filter(Boolean)
+        const longTermOverlap = monthShared.filter(key => decadeShared.includes(key)).length
+        const annualOverlap = monthShared.filter(key => shared.includes(key)).length
+        const score = labels.length * 3 + longTermOverlap * 2 + annualOverlap + monthEphemerisSignals.length
+        return { month: monthItem.month, label: monthItem.monthLabel, labels, score, longTermOverlap }
+      }).filter(month => month.labels.length > 0)
+        .sort((a, b) => b.score - a.score || a.month - b.month)
+        .slice(0, 3)
+        .sort((a, b) => a.month - b.month)
+      const groupedMonthlyHighlights = [...monthlyHighlights.reduce((groups, month) => {
+        const key = `${month.labels.join('・')}|${month.longTermOverlap > 0}`
+        const current = groups.get(key) ?? { labels: month.labels, longTermOverlap: month.longTermOverlap, months: [] as string[] }
+        current.months.push(month.label.replace(/ごろ$/, ''))
+        groups.set(key, current)
+        return groups
+      }, new Map<string, { labels: string[]; longTermOverlap: number; months: string[] }>()).values()]
+      const monthlyText = groupedMonthlyHighlights.length
+        ? `\n〈動きが強まりやすい月〉\n${groupedMonthlyHighlights.map(month => `- ${month.months.join('・')}ごろ：${month.labels.join('・')}${month.longTermOverlap ? '。長期運とも重なり、単月だけで終わりにくい動きです' : ''}`).join('\n')}`
+        : ''
       const longTermNote = decadeShared.length && decade
         ? ` 長期の流れでも${decade.themes.join('、')}が続き、単年より影響が残りやすい時期です。`
         : ''
@@ -768,7 +814,7 @@ export function buildDeterministicReport(input: ReportInput): string {
       const ziweiNote = ziweiYear?.activePalaces.length
         ? ` 長期の人生周期では${ziweiYear.activePalaces.map(name => name === '官禄' ? '仕事' : name === '夫妻' ? '結婚・パートナーシップ' : name === '財帛' ? '収入' : '自分自身').join('・')}が動きやすい位置です。`
         : ''
-      const text = `${yearLabel}\n[[SUMMARY:${eventHeadline}]] ${domainLabelLine}\n\n${eventDetails}${eventDetails && domainLines ? ' ' : ''}${domainLines}${longTermNote}${relationship}${astrologyNote}${ziweiNote}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
+      const text = `${yearLabel}\n[[SUMMARY:${eventHeadline}]] ${domainLabelLine}\n\n${eventDetails}${eventDetails && domainLines ? ' ' : ''}${domainLines}${longTermNote}${relationship}${astrologyNote}${ziweiNote}${monthlyText}\n▸ ${domain.caution} ${yearAction}。\n${evidenceMarker([
         { lineage: 'stems', system: '四柱推命', factor: `${item.kanshi}・${item.tenGod}` },
         ...(item.sanmeiSignals?.length ? [{ lineage: 'stems' as const, system: '算命学', factor: item.sanmeiSignals.join('・') }] : []),
         ...(decadeShared.length && decade ? [{ lineage: 'stems' as const, system: '四柱推命', factor: `10年運 ${decade.kanshi}・${decade.tenGod}` }] : []),

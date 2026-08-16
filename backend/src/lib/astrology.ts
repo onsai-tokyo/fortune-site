@@ -49,7 +49,7 @@ export interface AstrologyProfile {
   method: string
   western?: { ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; aspects: string[] }
   vedic?: { ayanamsha: number; ascendant: ReturnType<typeof zodiac>; midheaven: ReturnType<typeof zodiac>; planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>; moonNakshatra: string; moonPada: number }
-  annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[] }>
+  annual?: Array<{ year: number; western: string[]; vedic: string[]; dashaLord: string; signals: string[]; months: Array<{ month: number; signals: string[]; details: string[] }> }>
 }
 
 const DASHA_LORDS = ['ケートゥ', '金星', '太陽', '月', '火星', 'ラーフ', '木星', '土星', '水星']
@@ -106,7 +106,28 @@ function annualAstrology(natalDate: Date, planets: AstrologyProfile['western'] e
     }
     const dashaLord = DASHA_LORDS[lordIndex]
     signals.push(...(DASHA_SIGNALS[dashaLord] ?? []))
-    return { year, western: [...new Set(western)], vedic, dashaLord, signals: [...new Set(signals)] }
+    const months = Array.from({ length: 12 }, (_, monthIndex) => {
+      const monthDate = new Date(Date.UTC(year, monthIndex, 15, 3, 0))
+      const monthTransit = (body: AstronomyTypes.Body) => Astronomy.Ecliptic(Astronomy.GeoVector(body, monthDate, true)).elon
+      const monthJupiter = monthTransit(Astronomy.Body.Jupiter)
+      const monthSaturn = monthTransit(Astronomy.Body.Saturn)
+      const monthSignals: string[] = []
+      const details: string[] = []
+      for (const natal of relevantNatal) {
+        const jDistance = Math.abs(signedDelta(monthJupiter, natal.longitude))
+        if ([0, 60, 120].some(angle => Math.abs(jDistance - angle) <= 3)) {
+          monthSignals.push(natal.name === '金星' || natal.name === '月' ? 'harmony' : 'exploration')
+          details.push(`木星が出生時の${natal.name}を後押し`)
+        }
+        const sDistance = Math.abs(signedDelta(monthSaturn, natal.longitude))
+        if ([0, 90, 180].some(angle => Math.abs(sDistance - angle) <= 2.5)) {
+          monthSignals.push('responsibility', natal.name === '金星' || natal.name === '月' ? 'transformation' : 'stability')
+          details.push(`土星が出生時の${natal.name}へ節目を形成`)
+        }
+      }
+      return { month: monthIndex + 1, signals: [...new Set(monthSignals)], details: [...new Set(details)] }
+    }).filter(month => month.signals.length > 0)
+    return { year, western: [...new Set(western)], vedic, dashaLord, signals: [...new Set(signals)], months }
   })
 }
 

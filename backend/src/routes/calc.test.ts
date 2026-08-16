@@ -183,6 +183,8 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report.replace(/\[\[(?:YEAR|TURNING):\d{4}年.+?\]\]/g, ''), /\d{4}年/)
   assert.doesNotMatch(report, /一致\s*\d+系統|TIMING_MORE/)
   assert.match(report, /\[\[DOMAIN:仕事\]\]/)
+  assert.match(report, /〈動きが強まりやすい月〉/)
+  assert.match(report, /\[\[DOMAIN:(?:交際・新しい恋|別れ・関係の見直し|結婚|転職・働き方の変更|新しい挑戦|引越し・生活環境の変更)\]\]/)
   assert.match(report, /\[\[DOMAIN:(?:恋愛|結婚)\]\]/)
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)

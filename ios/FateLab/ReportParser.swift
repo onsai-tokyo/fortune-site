@@ -104,7 +104,11 @@ enum ReportParser {
                 flushChapter(); currentTitle = String(line.dropFirst().dropLast()); continue
             }
             if line.hasPrefix("〈"), line.hasSuffix("〉") {
-                flushParagraph(); flushYear(); append(.subsection(String(line.dropFirst().dropLast()))); continue
+                flushParagraph()
+                let title = String(line.dropFirst().dropLast())
+                if currentYear != nil { currentYear!.body.append(.subsection(title)) }
+                else { flushYear(); append(.subsection(title)) }
+                continue
             }
             let markers = markerValues(in: line)
             if let yearMarker = markers.first(where: { $0.name == "YEAR" || $0.name == "TURNING" }) {
