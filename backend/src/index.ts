@@ -12,6 +12,7 @@ import { previewRouter } from './routes/preview.js'
 import { calcRouter } from './routes/calc.js'
 import { readingRouter } from './routes/reading.js'
 import { stripeRouter, stripeWebhook } from './routes/stripe.js'
+import { appleRouter, appStoreNotification } from './routes/apple.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -44,6 +45,7 @@ app.use(cors({
 }))
 // Stripe署名検証では加工前のbodyが必要。express.jsonより先に登録する。
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook)
+app.post('/api/apple/notifications', express.json({ limit: '256kb' }), appStoreNotification)
 // 命式・9占術の計算結果と鑑定本文を、質問履歴へ一度だけ保存する。
 // 128kbでは正常な鑑定書も413になるため、対象を検証するAPI側の上限と合わせて余裕を持たせる。
 app.use(express.json({ limit: '5mb' }))
@@ -77,6 +79,7 @@ app.use('/api/preview', previewRouter)
 app.use('/api/calc', calcRouter)
 app.use('/api/reading', readingRouter)
 app.use('/api/stripe', stripeRouter)
+app.use('/api/apple', appleRouter)
 
 app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''

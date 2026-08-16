@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 import { buildPublicReadingShare } from '../lib/readingShare.js'
 import { filterTraitCandidates } from '../lib/profileTraits.js'
+import { hasPremiumAccess } from '../lib/premium.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -20,17 +21,6 @@ const questionLimiter = rateLimit({
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-}
-
-const activeStatuses = new Set(['active', 'trialing'])
-
-async function isPremium(userId: string) {
-  const db = getSupabaseAdmin()
-  const { data } = await db.from('stripe_subscriptions')
-    .select('subscription_status,current_period_end')
-    .eq('user_id', userId).maybeSingle()
-  return !!data && activeStatuses.has(data.subscription_status)
-    && (!data.current_period_end || new Date(data.current_period_end) > new Date())
 }
 
 async function extractProfileTraits(question: string, answer: string, existing: string[]) {
@@ -65,7 +55,7 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
     const db = getSupabaseAdmin()
     const [{ data: usage }, premium, { count: approvedCount }] = await Promise.all([
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
-      isPremium(req.userId!),
+      hasPremiumAccess(req.userId!),
       db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
     ])
     const used = usage?.free_questions_used ?? 0
@@ -82,6 +72,17 @@ readingRouter.get('/profile/traits', requireAuth, async (req: AuthRequest, res) 
     .eq('user_id', req.userId!).eq('status', 'approved').order('approved_at', { ascending: false }).limit(300)
   if (error) { res.status(500).json({ error: 'プロフィールを取得できませんでした' }); return }
   res.json({ traits: data ?? [] })
+})
+
+readingRouter.delete('/account', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(req.userId!)
+    if (error) throw error
+    res.status(204).end()
+  } catch (error) {
+    console.error('Delete account failed:', error)
+    res.status(500).json({ error: 'アカウントを削除できませんでした' })
+  }
 })
 
 readingRouter.patch('/profile/traits/:id', requireAuth, async (req: AuthRequest, res) => {
@@ -166,7 +167,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseAdmin()
   const { data, error } = await db.from('reading_conversations')
-    .select('id,secret_token,title,source_section,source_year,created_at,updated_at')
+    .select('id,secret_token,title,source_section,source_year,created_at,updated_at,reading_messages(count)')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
   if (error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
   res.json({ conversations: data })
@@ -249,7 +250,7 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
       .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
     if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
 
-    const premium = await isPremium(req.userId!)
+    const premium = await hasPremiumAccess(req.userId!)
     if (!premium) {
       const { data: used, error } = await db.rpc('consume_free_reading_question', {
         target_user_id: req.userId!, question_limit: FREE_QUESTION_LIMIT,

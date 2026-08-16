@@ -1,0 +1,120 @@
+import { Router, Request, Response } from 'express'
+import { Environment, JWSTransactionDecodedPayload, SignedDataVerifier } from '@apple/app-store-server-library'
+import { requireAuth, AuthRequest } from '../middleware/auth.js'
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+
+export const appleRouter = Router()
+
+function required(name: string) {
+  const value = process.env[name]?.trim()
+  if (!value) throw new Error(`${name} が未設定です`)
+  return value
+}
+function rootCertificates() {
+  return required('APPLE_ROOT_CA_BASE64').split(',').map(value => Buffer.from(value.trim(), 'base64'))
+}
+
+function verifier(environment: Environment) {
+  const appAppleId = environment === Environment.PRODUCTION ? Number(required('APPLE_APP_ID')) : undefined
+  return new SignedDataVerifier(rootCertificates(), true, environment, required('APPLE_BUNDLE_ID'), appAppleId)
+}
+
+async function verifyTransaction(signedTransaction: string) {
+  try { return await verifier(Environment.SANDBOX).verifyAndDecodeTransaction(signedTransaction) }
+  catch (sandboxError) {
+    try { return await verifier(Environment.PRODUCTION).verifyAndDecodeTransaction(signedTransaction) }
+    catch (productionError) {
+      console.error('App Store transaction verification failed', { sandboxError, productionError })
+      throw productionError
+    }
+  }
+}
+
+async function verifyNotification(signedPayload: string) {
+  try { return await verifier(Environment.PRODUCTION).verifyAndDecodeNotification(signedPayload) }
+  catch (productionError) {
+    try { return await verifier(Environment.SANDBOX).verifyAndDecodeNotification(signedPayload) }
+    catch (sandboxError) {
+      console.error('App Store notification verification failed', { productionError, sandboxError })
+      throw sandboxError
+    }
+  }
+}
+
+const toIso = (milliseconds?: number) => milliseconds ? new Date(milliseconds).toISOString() : null
+const normalizedUuid = (value?: string) => value?.toLowerCase() ?? ''
+const transactionStatus = (transaction: JWSTransactionDecodedPayload) => {
+  if (transaction.revocationDate) return 'revoked'
+  if (transaction.expiresDate && transaction.expiresDate <= Date.now()) return 'expired'
+  return 'active'
+}
+
+async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expectedUserId?: string) {
+  if (transaction.productId !== required('APPLE_SUBSCRIPTION_PRODUCT_ID')) throw new Error('App Store product ID が一致しません')
+  if (!transaction.originalTransactionId || !transaction.transactionId) throw new Error('App Store transaction ID が不足しています')
+  const userId = normalizedUuid(transaction.appAccountToken)
+  if (!userId) throw new Error('appAccountToken がありません')
+  if (expectedUserId && userId !== normalizedUuid(expectedUserId)) throw new Error('購入者とログインユーザーが一致しません')
+  const { error } = await getSupabaseAdmin().from('app_store_subscriptions').upsert({
+    user_id: userId,
+    original_transaction_id: transaction.originalTransactionId,
+    latest_transaction_id: transaction.transactionId,
+    product_id: transaction.productId,
+    environment: transaction.environment ?? 'Unknown',
+    subscription_status: transactionStatus(transaction),
+    expires_at: toIso(transaction.expiresDate),
+    revoked_at: toIso(transaction.revocationDate),
+    app_account_token: userId,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' })
+  if (error) throw error
+  return { status: transactionStatus(transaction), expiresAt: toIso(transaction.expiresDate) }
+}
+
+appleRouter.get('/plan', (_req, res) => {
+  const productId = process.env.APPLE_SUBSCRIPTION_PRODUCT_ID
+  if (!productId) { res.status(503).json({ error: 'App Storeプランは現在準備中です' }); return }
+  res.json({ productId })
+})
+
+appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const signedTransaction = typeof req.body?.signedTransaction === 'string' ? req.body.signedTransaction : ''
+    if (!signedTransaction || signedTransaction.length > 20000) { res.status(400).json({ error: '購入情報が不足しています' }); return }
+    const transaction = await verifyTransaction(signedTransaction)
+    res.json({ verified: true, subscription: await mirrorTransaction(transaction, req.userId) })
+  } catch (error) {
+    console.error('App Store purchase verification failed:', error)
+    res.status(400).json({ error: '購入情報を確認できませんでした' })
+  }
+})
+
+export async function appStoreNotification(req: Request, res: Response) {
+  try {
+    const signedPayload = typeof req.body?.signedPayload === 'string' ? req.body.signedPayload : ''
+    if (!signedPayload || signedPayload.length > 100000) { res.status(400).json({ error: 'signedPayload is required' }); return }
+    const notification = await verifyNotification(signedPayload)
+    if (!notification.notificationUUID || !notification.notificationType) throw new Error('通知IDまたは通知種別がありません')
+    const db = getSupabaseAdmin()
+    const { error: eventError } = await db.from('app_store_notification_events').insert({
+      notification_uuid: notification.notificationUUID,
+      notification_type: notification.notificationType,
+      subtype: notification.subtype ?? null,
+      environment: notification.data?.environment ?? null,
+    })
+    if (eventError?.code === '23505') { res.json({ received: true, duplicate: true }); return }
+    if (eventError) throw eventError
+    try {
+      if (notification.data?.signedTransactionInfo) {
+        await mirrorTransaction(await verifyTransaction(notification.data.signedTransactionInfo))
+      }
+      res.json({ received: true })
+    } catch (error) {
+      await db.from('app_store_notification_events').delete().eq('notification_uuid', notification.notificationUUID)
+      throw error
+    }
+  } catch (error) {
+    console.error('App Store notification failed:', error)
+    res.status(400).json({ error: 'Invalid App Store notification' })
+  }
+}
