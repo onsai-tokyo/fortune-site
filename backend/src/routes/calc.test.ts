@@ -328,6 +328,23 @@ test('恋愛年運は吉凶ではなく関係の出来事類型を組み合わ�
   assert.ok(year2023?.relationshipEvents.some(event => event.includes('隠れていたずれ')))
 })
 
+test('1995-06-30 女性の関係転換から結婚までの流れを出生時刻なしでも再現する', () => {
+  const timing = calcTimingCycles(1995, 6, 30, undefined, 0, 'female')
+  const decade = timing.decades.find(item => item.startYear <= 2024 && item.endYear >= 2026)
+  assert.ok(decade?.themes.includes('縁がまとまりやすい'))
+
+  const year2024 = timing.annual.find(item => item.year === 2024)
+  assert.ok(year2024?.relationshipSignals.some(signal => signal.includes('配偶者星')))
+  const april2024 = year2024?.monthly.find(item => item.month === 4)
+  assert.equal(april2024?.relationshipSignals.filter(signal => signal.includes('配偶者星')).length, 2)
+
+  const february2025 = timing.annual.find(item => item.year === 2025)?.monthly.find(item => item.month === 2)
+  assert.ok(february2025?.relationshipEvents.some(event => event.includes('関係の定義や将来')))
+  const january2026 = timing.annual.find(item => item.year === 2025)?.monthly.find(item => item.month === 1)
+  assert.equal(january2026?.monthLabel, '翌年1月ごろ')
+  assert.ok(january2026?.relationshipSignals.some(signal => signal.includes('配偶者星')))
+})
+
 test('西洋・インド占星術の年運はトランジットとダシャーを同じ年へ統合する', () => {
   const astrology = calcAstrology(1995, 2, 20, 5, 40, '愛知県')
   assert.equal(astrology.annual?.length, 43)
