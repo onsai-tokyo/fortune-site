@@ -77,6 +77,81 @@ interface ReportInput {
 
 export type ReportBlock = { id: string; render: () => string }
 
+export type ConsensusFamily = 'stems' | 'ephemeris' | 'number' | 'lunar'
+
+export type FamilyVerdict<Theme extends string = string> = {
+  family: ConsensusFamily
+  theme: Theme | null
+  strength: number
+  split: boolean
+  supporting: string[]
+  opposing: string[]
+}
+
+export type TwoStageConsensusItem<Theme extends string = string> = {
+  key: Theme
+  sources: string[]
+  count: number
+  lineages: ConsensusFamily[]
+  lineageCount: number
+  score: number
+  familyVerdicts: FamilyVerdict<Theme>[]
+}
+
+/**
+ * Each calculation family can contribute at most one vote to a theme.
+ * Nayin is intentionally absent from familySystems: it is derived from the
+ * same stem/branch data and is retained as evidence only, not as a voter.
+ */
+export function buildTwoStageConsensus<Theme extends string>(
+  signals: Map<Theme, Set<string>>,
+  sourceFamily: Record<string, ConsensusFamily>,
+  familySystems: Record<ConsensusFamily, string[]>,
+  strengths: Map<Theme, Map<string, number>> = new Map(),
+) {
+  const verdicts: FamilyVerdict<Theme>[] = []
+  const items: TwoStageConsensusItem<Theme>[] = []
+
+  for (const [theme, sourceSet] of signals.entries()) {
+    const accepted: FamilyVerdict<Theme>[] = []
+    for (const family of Object.keys(familySystems) as ConsensusFamily[]) {
+      const systems = familySystems[family]
+      const supporting = systems.filter(system => sourceSet.has(system) && sourceFamily[system] === family)
+      if (!supporting.length) continue
+      const opposing = systems.filter(system => !sourceSet.has(system))
+      const required = Math.floor(systems.length / 2) + 1
+      const passed = supporting.length >= required
+      const signalStrength = supporting.reduce((sum, system) => sum + (strengths.get(theme)?.get(system) ?? 1), 0) / supporting.length
+      const verdict: FamilyVerdict<Theme> = {
+        family,
+        theme: passed ? theme : null,
+        strength: signalStrength,
+        split: !passed,
+        supporting,
+        opposing,
+      }
+      verdicts.push(verdict)
+      if (passed) accepted.push(verdict)
+    }
+
+    if (!accepted.length) continue
+    const sources = accepted.flatMap(verdict => verdict.supporting)
+    const averageStrength = accepted.reduce((sum, verdict) => sum + verdict.strength, 0) / accepted.length
+    items.push({
+      key: theme,
+      sources,
+      count: sources.length,
+      lineages: accepted.map(verdict => verdict.family),
+      lineageCount: accepted.length,
+      score: averageStrength,
+      familyVerdicts: accepted,
+    })
+  }
+
+  items.sort((a, b) => b.lineageCount - a.lineageCount || b.score - a.score || b.count - a.count || a.key.localeCompare(b.key))
+  return { items, verdicts, splitVerdicts: verdicts.filter(verdict => verdict.split) }
+}
+
 export function renderReportBlocks(blocks: ReportBlock[], context = ''): string {
   return blocks.flatMap(block => {
     try {
@@ -504,24 +579,25 @@ export function buildDeterministicReport(input: ReportInput): string {
   if (/安定|堅実|継続|守/.test(sukuyoDetail)) sukuyoSignals.push('stability')
   if (/学|探究|知識|未知/.test(sukuyoDetail)) sukuyoSignals.push('exploration')
   addSignals('宿曜', [...new Set(sukuyoSignals)])
-  type Lineage = 'stems' | 'ephemeris' | 'number' | 'lunar'
+  type Lineage = ConsensusFamily
   const sourceLineage: Record<string, Lineage> = {
     四柱推命: 'stems', 算命学: 'stems', 紫微斗数: 'stems', 西洋占星術: 'ephemeris', インド占星術: 'ephemeris',
     数秘術: 'number', 九星気学: 'number', 宿曜: 'lunar',
   }
   const lineageName: Record<Lineage, string> = { stems: '干支系', ephemeris: '天体系', number: '数理系', lunar: '宿曜系' }
-  const consensusItems = [...signals.entries()].map(([key, sourceSet]) => {
-    const sources = [...sourceSet]
-    const lineages = [...new Set(sources.map(source => sourceLineage[source]))]
-    const score = lineages.length + (sources.length - lineages.length) * 0.3
-    return { key, sources, count: sources.length, lineages, lineageCount: lineages.length, score }
-  })
+  const familySystems: Record<Lineage, string[]> = {
+    stems: ['四柱推命', '算命学', '紫微斗数'],
+    ephemeris: ['西洋占星術', 'インド占星術'],
+    number: ['数秘術', '九星気学'],
+    lunar: ['宿曜'],
+  }
+  const { items: consensusItems, splitVerdicts } = buildTwoStageConsensus(signals, sourceLineage, familySystems)
   const rankedConsensus = consensusItems
     .filter(item => item.lineageCount >= 2)
-    .sort((a, b) => b.score - a.score || b.lineageCount - a.lineageCount || a.key.localeCompare(b.key))
+    .sort((a, b) => b.lineageCount - a.lineageCount || b.score - a.score || b.count - a.count || a.key.localeCompare(b.key))
   const supportingConsensus = consensusItems
     .filter(item => item.lineageCount < 2 || !rankedConsensus.includes(item))
-    .sort((a, b) => b.score - a.score || a.key.localeCompare(b.key))
+    .sort((a, b) => b.lineageCount - a.lineageCount || b.score - a.score || b.count - a.count || a.key.localeCompare(b.key))
     .slice(0, 5)
   // 一致条件は常に2系統以上。件数を揃えるために閾値を下げない。
   const selectedConsensus = rankedConsensus.slice(0, 3)
@@ -963,7 +1039,7 @@ ${timingBlocks}
 【迷ったときの順序・注記】
 自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。
 
-一つの見方だけに出た特徴は本文へ載せていません。同じ情報を入力すれば、毎回同じ結果になります。この鑑定は将来を決めつけるものではなく、自分の気持ちや選択肢を整理するための参考情報です。
+一つの見方だけに出た特徴は本文へ載せていません。同じ出生データなら、同じ計算結果から読み解きます。この鑑定は将来を決めつけるものではなく、自分の気持ちや選択肢を整理するための参考情報です。
 
 詳しい計算要素は、画面上部の「命式・計算データ」で確認できます。`
   const sections = report.split(/(?=^【.+?】$)/gm).filter(Boolean)
@@ -1102,6 +1178,6 @@ ${annualDetail}
 【運気を扱うときの注意】
 あなたの天中殺は${input.chusatsu}です。これは不幸を予告するものではなく、従来の前提を見直しやすい周期を示す分類です。時期だけで重大な決断をせず、資金、健康、契約、周囲への影響といった現実条件を確認してください。**占術は決断を代行するものではなく、見落としている観点を増やす道具**です。
 
-同じ入力条件では常に同じ内容になります。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
+同じ出生データなら、同じ計算結果から読み解きます。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
   */
 }

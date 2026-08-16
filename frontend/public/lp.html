@@ -69,7 +69,7 @@
         "@type": "FAQPage",
         "mainEntity": [
           { "@type": "Question", "name": "無料で利用できますか？", "acceptedAnswer": { "@type": "Answer", "text": "統合鑑定書は登録不要・無料で利用できます。鑑定結果についての追加質問は2回まで無料で、その後は月額2,980円（税込）の継続利用プランをご利用いただけます。" } },
-          { "@type": "Question", "name": "同じ情報を入れると同じ結果になりますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。固定された計算方法と解釈ルールを使うため、同じ入力条件なら同じ結果になります。" } },
+          { "@type": "Question", "name": "同じ出生データを入れると同じ結果になりますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。同じ出生データなら、同じ計算結果から読み解きます。" } },
           { "@type": "Question", "name": "出生時間がわからなくても鑑定できますか？", "acceptedAnswer": { "@type": "Answer", "text": "利用できます。ただし四柱推命の時柱など、出生時刻が必要な項目は省略されます。" } },
           { "@type": "Question", "name": "鑑定書の生成にAIを使っていますか？", "acceptedAnswer": { "@type": "Answer", "text": "初回の統合鑑定書は生成AIを使わず、各占術の計算結果と固定された解釈ルールから生成します。" } }
         ]
@@ -1158,9 +1158,9 @@
       </svg>
     </div>
     <div class="section-inner" style="text-align: center;">
-      <h1 class="hero-title"><span class="hero-title-line">9つの占術が、</span><br><span class="hero-title-line">同じことを言っている部分だけ。</span></h1>
+      <h1 class="hero-title"><span class="hero-title-line">9つの占術を、</span><br><span class="hero-title-line">4つの系統から照合。</span></h1>
       <p class="hero-desc" style="font-size: 14px; line-height: 1.9; margin-bottom: 16px;">
-        同じ生年月日でも、占いによって結果は変わります。<br class="sp-break">Fate Labは9つの占術を計算し、複数の系統で一致した本質・仕事・恋愛をお伝えします。
+        重なって現れた傾向を中心に読み解きます。<br class="sp-break">暦・天体・数・宿という、計算のもとが異なる4系統から確認します。
       </p>
       <a href="#form" class="btn-primary">
         無料で鑑定する
@@ -1564,7 +1564,7 @@
           <div class="reason-number">3</div>
           <div>
             <h3 class="reason-title">再現性のある鑑定ロジック</h3>
-            <p class="reason-text">生成AIの自由作文ではなく、計算結果と定めた解釈ルールから、同じ入力に同じ結果を返します。</p>
+            <p class="reason-text">生成AIの自由作文ではなく、同じ出生データなら、同じ計算結果から読み解きます。</p>
           </div>
         </div>
       </div>
@@ -1663,11 +1663,11 @@
 
         <div class="faq-item">
           <div class="faq-question" onclick="this.parentElement.classList.toggle('open')">
-            <span class="faq-question-text">同じ情報を入れると同じ結果になりますか？</span>
+            <span class="faq-question-text">同じ出生データを入れると同じ結果になりますか？</span>
             <span class="faq-icon"></span>
           </div>
           <div class="faq-answer">
-            <p class="faq-answer-text">はい。固定された計算方法と解釈ルールを使うため、同じ入力条件なら同じ結果になります。</p>
+            <p class="faq-answer-text">はい。同じ出生データなら、同じ計算結果から読み解きます。</p>
           </div>
         </div>
 
@@ -1849,7 +1849,7 @@
       const coverageMatch = value.match(/参照できた系統：(\d)\/4/);
       if (coverageMatch) {
         const matched = Number(coverageMatch[1]);
-        rendered = rendered.replace(/参照できた系統：\d\/4(?:（.+?）)?/, `<span class="agreement-note">${renderAgreementSeal(matched, [], 'md')}<span>4系統のうち${matched}系統が一致しています</span></span><p class="agreement-legend">4つの円は、干支・天体・数理・宿曜という独立した4系統を表します。塗られた数だけ、異なる系統が同じ方向を示しています。</p>`);
+        rendered = rendered.replace(/参照できた系統：\d\/4(?:（.+?）)?/, `<span class="agreement-note">${renderAgreementSeal(matched, [], 'md')}<span>4系統のうち${matched}系統が一致しています</span></span><p class="agreement-legend">4つの円は、暦・天体・数・宿という計算のもとが異なる4系統を表します。塗られた数だけ、別々の計算が同じ方向を示しています。</p>`);
       }
       rendered = rendered.replace('<h4 class="report-section-title">共通して現れた本質</h4>', `${renderAffiliate(affiliateOffers.summary, 'summary')}<h4 class="report-section-title">共通して現れた本質</h4>`);
       rendered = rendered.replace('<h4 class="report-section-title">人間関係</h4>', `${renderAffiliate(affiliateOffers.love, 'love')}<h4 class="report-section-title">人間関係</h4>`);

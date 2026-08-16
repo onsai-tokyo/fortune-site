@@ -16,9 +16,48 @@ import {
   getSukuyo,
   KYUSEI_NAMES,
 } from './calc.js'
-import { buildDeterministicReport, renderReportBlocks } from '../lib/deterministicReport.js'
+import { buildDeterministicReport, buildTwoStageConsensus, renderReportBlocks } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
+
+test('二段階Consensusは系統内の厳密な過半数だけを1票にまとめる', () => {
+  type Theme = 'change' | 'stay'
+  const sourceFamily = {
+    四柱推命: 'stems', 算命学: 'stems', 紫微斗数: 'stems',
+    西洋占星術: 'ephemeris', インド占星術: 'ephemeris',
+    数秘術: 'number', 九星気学: 'number', 宿曜: 'lunar',
+  } as const
+  const familySystems = {
+    stems: ['四柱推命', '算命学', '紫微斗数'],
+    ephemeris: ['西洋占星術', 'インド占星術'],
+    number: ['数秘術', '九星気学'],
+    lunar: ['宿曜'],
+  }
+  const signals = new Map<Theme, Set<string>>([
+    ['change', new Set(['四柱推命', '算命学', '西洋占星術', '宿曜'])],
+    ['stay', new Set(['紫微斗数', 'インド占星術'])],
+  ])
+  const results = Array.from({ length: 10 }, () => buildTwoStageConsensus(signals, sourceFamily, familySystems))
+  const first = results[0]
+  const change = first.items.find(item => item.key === 'change')
+
+  results.slice(1).forEach(result => {
+    assert.deepEqual(first, result, '同じSignalで順位と判定が変わっています')
+  })
+  assert.deepEqual(change?.lineages, ['stems', 'lunar'])
+  assert.equal(change?.lineageCount, 2)
+  assert.ok(first.splitVerdicts.some(verdict => verdict.family === 'ephemeris' && verdict.theme === null))
+  assert.ok(first.items.every(item => item.lineageCount >= 0 && item.lineageCount <= 4))
+})
+
+test('納音はConsensusの投票者に含めない', () => {
+  const signals = new Map([['theme', new Set(['納音'])]])
+  const result = buildTwoStageConsensus(signals, {}, {
+    stems: ['四柱推命', '算命学', '紫微斗数'], ephemeris: ['西洋占星術', 'インド占星術'], number: ['数秘術', '九星気学'], lunar: ['宿曜'],
+  })
+  assert.deepEqual(result.items, [])
+  assert.deepEqual(result.verdicts, [])
+})
 
 test('立春の直前までは前年・前月の干支を使う', () => {
   const result = calcShichu(2024, 2, 4, 17, 27)
