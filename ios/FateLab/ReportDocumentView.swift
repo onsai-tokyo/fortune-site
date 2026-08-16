@@ -331,13 +331,7 @@ private struct CalculatedDataChapterView: View {
                                 Text(displayLabel(section.key))
                                     .font(.system(size: 19, weight: .medium, design: .serif))
                                 Divider().overlay(FateTheme.line)
-                                ForEach(Array(flatten(section.value).enumerated()), id: \.offset) { _, row in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(row.label).font(.system(size: 13, design: .serif)).foregroundStyle(FateTheme.gold)
-                                        Text(row.value).font(.system(size: 15, design: .serif)).lineSpacing(5).textSelection(.enabled)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }
+                                compactTable(for: section.key, value: section.value)
                             }
                         }
                     }
@@ -350,12 +344,94 @@ private struct CalculatedDataChapterView: View {
             .padding(.top, 12)
     }
     private var sections: [(key: String, value: Any)] {
-        data.keys.sorted().compactMap { key in data[key].map { (key, $0) } }
+        let preferred = ["fourPillars", "elementBalance", "sanmeiChart", "sanmeiRelations", "ziwei", "astrology", "kyuseiProfile", "numerologyProfile", "sukuyo", "nayin", "chusatsu"]
+        return preferred.compactMap { key in data[key].map { (key, $0) } }
+    }
+
+    @ViewBuilder
+    private func compactTable(for key: String, value: Any) -> some View {
+        if key == "fourPillars", let pillars = value as? [[String: Any]] {
+            VStack(spacing: 0) {
+                tableHeader(["柱", "干支", "通変星", "蔵干"])
+                ForEach(Array(pillars.enumerated()), id: \.offset) { index, pillar in
+                    let hidden = (pillar["hiddenStems"] as? [[String: Any]] ?? []).map {
+                        "\($0["stem"] ?? "")（\($0["tenGod"] ?? "")）"
+                    }.joined(separator: "・")
+                    tableRow([
+                        String(describing: pillar["label"] ?? "—"),
+                        String(describing: pillar["kanshi"] ?? "—"),
+                        String(describing: pillar["stemTenGod"] ?? "—"),
+                        hidden.isEmpty ? "—" : hidden
+                    ], shaded: index.isMultiple(of: 2))
+                }
+            }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
+        } else {
+            let rows = conciseRows(for: key, value: value)
+            VStack(spacing: 0) {
+                tableHeader(["項目", "計算結果"], weights: [0.38, 0.62])
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                    tableRow([row.label, row.value], weights: [0.38, 0.62], shaded: index.isMultiple(of: 2))
+                }
+            }.clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
+        }
+    }
+
+    private func tableHeader(_ values: [String], weights: [CGFloat]? = nil) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                Text(value).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 34, alignment: .center)
+                    .layoutPriority(Double((weights ?? []).indices.contains(index) ? (weights ?? [])[index] * 10 : 1))
+                    .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1) } }
+            }
+        }.background(FateTheme.gold)
+    }
+
+    private func tableRow(_ values: [String], weights: [CGFloat]? = nil, shaded: Bool) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(Array(values.enumerated()), id: \.offset) { index, value in
+                Text(value).font(.system(size: 13)).foregroundStyle(FateTheme.ink).lineLimit(nil)
+                    .frame(maxWidth: .infinity, minHeight: 42, alignment: .topLeading).padding(8)
+                    .layoutPriority(Double((weights ?? []).indices.contains(index) ? (weights ?? [])[index] * 10 : 1))
+                    .overlay(alignment: .trailing) { if index < values.count - 1 { Rectangle().fill(FateTheme.line).frame(width: 1) } }
+            }
+        }.background(shaded ? FateTheme.gold.opacity(0.045) : Color.clear)
+            .overlay(alignment: .bottom) { Rectangle().fill(FateTheme.line).frame(height: 1) }
+    }
+
+    private func conciseRows(for key: String, value: Any) -> [(label: String, value: String)] {
+        if key == "elementBalance", let dictionary = value as? [String: Any], let scores = dictionary["scores"] as? [String: Any] {
+            return ["木", "火", "土", "金", "水"].compactMap { element in
+                scores[element].map { (element, displayValue($0)) }
+            }
+        }
+        if key == "sanmeiChart", let dictionary = value as? [String: Any] {
+            var rows: [(String, String)] = []
+            if let chart = dictionary["bodyChart"] as? [String: Any] {
+                for position in ["north", "west", "center", "east", "south"] {
+                    guard let item = chart[position] as? [String: Any] else { continue }
+                    rows.append((displayLabel(position), String(describing: item["star"] ?? "—")))
+                }
+            }
+            if let stars = dictionary["subordinateStars"] as? [String: Any] {
+                for period in ["early", "middle", "late"] {
+                    guard let item = stars[period] as? [String: Any] else { continue }
+                    let star = String(describing: item["star"] ?? "—")
+                    let stage = String(describing: item["stage"] ?? "")
+                    rows.append((displayLabel(period), stage.isEmpty ? star : "\(star)（\(stage)）"))
+                }
+            }
+            return rows
+        }
+        return flatten(value).filter { row in
+            !row.label.contains("年運") && !row.label.contains("長期運") && !row.label.contains("signals") &&
+            !row.label.contains("key") && !row.value.isEmpty
+        }.prefix(16).map { $0 }
     }
 
     private func flatten(_ value: Any, path: [String] = []) -> [(label: String, value: String)] {
         if let dictionary = value as? [String: Any] {
-            let hiddenKeys: Set<String> = ["key", "label", "signals", "longitude"]
+            let hiddenKeys: Set<String> = ["key", "label", "signals", "longitude", "annual", "decadal"]
             return dictionary.keys.sorted().filter { !hiddenKeys.contains($0) }.flatMap { key -> [(label: String, value: String)] in
                 guard let nestedValue = dictionary[key] else { return [] }
                 if key == "annual" || key == "decadal" {
