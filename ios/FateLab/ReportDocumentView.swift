@@ -212,14 +212,67 @@ private struct CalculatedDataChapterView: View {
                     Text("命式・計算データ").font(.system(size: 27, weight: .medium, design: .serif))
                     Text("9つの占術から算出した生データを省略せず表示します。").font(.caption).foregroundStyle(FateTheme.muted)
                 }.frame(maxWidth: .infinity).padding(.vertical, 26)
-                ReportCard { Text(prettyJSON).font(.system(size: 13, design: .monospaced)).textSelection(.enabled) }
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                        ReportCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(displayLabel(section.key))
+                                    .font(.system(size: 19, weight: .medium, design: .serif))
+                                Divider().overlay(FateTheme.line)
+                                ForEach(Array(flatten(section.value).enumerated()), id: \.offset) { _, row in
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(row.label).font(.caption).foregroundStyle(FateTheme.gold)
+                                        Text(row.value).font(.system(size: 15)).lineSpacing(5).textSelection(.enabled)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
+                }
             }.padding(20)
         }.background(FateTheme.ivory).navigationTitle("命式・計算データ").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Text("1 / \(total)").font(.caption).foregroundStyle(FateTheme.muted) } }
     }
-    private var prettyJSON: String {
-        guard JSONSerialization.isValidJSONObject(data), let raw = try? JSONSerialization.data(withJSONObject: data, options: [.prettyPrinted, .sortedKeys]) else { return "計算データを表示できませんでした。" }
-        return String(decoding: raw, as: UTF8.self)
+    private var sections: [(key: String, value: Any)] {
+        data.keys.sorted().compactMap { key in data[key].map { (key, $0) } }
+    }
+
+    private func flatten(_ value: Any, path: [String] = []) -> [(label: String, value: String)] {
+        if let dictionary = value as? [String: Any] {
+            return dictionary.keys.sorted().flatMap { key -> [(label: String, value: String)] in
+                guard let nestedValue = dictionary[key] else { return [] }
+                return flatten(nestedValue, path: path + [displayLabel(key)])
+            }
+        }
+        if let array = value as? [Any] {
+            return array.enumerated().flatMap { index, item in
+                flatten(item, path: path + ["\(index + 1)"])
+            }
+        }
+        return [(path.isEmpty ? "値" : path.joined(separator: "・"), displayValue(value))]
+    }
+
+    private func displayValue(_ value: Any) -> String {
+        if let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() { return number.boolValue ? "あり" : "なし" }
+            let decimal = number.doubleValue
+            if decimal.rounded() == decimal { return String(Int(decimal)) }
+            return String(format: "%.2f", decimal)
+        }
+        if value is NSNull { return "算出なし" }
+        return String(describing: value)
+    }
+
+    private func displayLabel(_ key: String) -> String {
+        let labels = [
+            "astrology": "西洋・インド占星術", "available": "算出状況", "method": "計算方法", "reason": "注記",
+            "birthplace": "出生地", "chusatsu": "天中殺", "elementBalance": "五行バランス", "scores": "五行スコア",
+            "fourPillars": "四柱推命", "branch": "地支", "hiddenStems": "蔵干", "element": "五行", "stem": "天干",
+            "tenGod": "通変星", "sanmei": "算命学", "ziwei": "紫微斗数", "numerology": "数秘術", "kyusei": "九星気学",
+            "sukuyo": "宿曜", "nayin": "納音", "timing": "時期運", "western": "西洋占星術", "vedic": "インド占星術"
+        ]
+        return labels[key] ?? key
     }
 }
 
