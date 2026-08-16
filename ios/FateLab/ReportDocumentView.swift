@@ -36,11 +36,13 @@ struct ReportDocumentView: View {
             Divider().overlay(FateTheme.line)
             Text("目次").font(.system(size: 24, weight: .medium, design: .serif))
             chapterLink(number: 1, title: "命式・計算データ", detail: "9つの占術の計算結果") {
-                CalculatedDataChapterView(data: report.calculatedData, index: 1, total: readingChapters.count + 1)
+                CalculatedDataChapterView(data: report.calculatedData, index: 1, total: readingChapters.count + 1,
+                                          questionTitle: "さらに詳しく質問する", askQuestion: askQuestion)
             }
             ForEach(Array(readingChapters.enumerated()), id: \.element.id) { index, chapter in
                 chapterLink(number: index + 2, title: chapter.title, detail: chapter.detail) {
-                    ReportChapterView(chapter: chapter, index: index + 2, total: readingChapters.count + 1)
+                    ReportChapterView(chapter: chapter, index: index + 2, total: readingChapters.count + 1,
+                                      questionTitle: "さらに詳しく質問する", askQuestion: askQuestion)
                 }
             }
             Text("本文 \(document.sourceCharacterCount.formatted())文字・すべての章を省略せず掲載しています。")
@@ -80,6 +82,8 @@ struct ReportChapterView: View {
     let chapter: ReportChapter
     let index: Int
     let total: Int
+    var questionTitle: String? = nil
+    var askQuestion: (() -> Void)? = nil
     @State private var restoredPosition = false
 
     private var positionKey: String { "fatelab.report.position.\(chapter.id)" }
@@ -93,13 +97,22 @@ struct ReportChapterView: View {
                         Text(chapter.title).font(.system(size: 27, weight: .medium, design: .serif)).multilineTextAlignment(.center)
                         Rectangle().fill(FateTheme.gold).frame(width: 48, height: 1)
                     }.frame(maxWidth: .infinity).padding(.vertical, 26).id(-1)
-                    ForEach(Array(chapter.nodes.enumerated()), id: \.offset) { nodeIndex, node in
+                    ForEach(Array(displayNodes.enumerated()), id: \.offset) { nodeIndex, node in
                         ReportNodeView(node: node)
                             .id(nodeIndex)
                             .onAppear {
                                 guard restoredPosition else { return }
                                 UserDefaults.standard.set(nodeIndex, forKey: positionKey)
                             }
+                    }
+                    if !chapterEvidence.groups.isEmpty {
+                        EvidenceDisclosureView(evidence: chapterEvidence, title: "この章で参照した内容")
+                            .padding(.top, 16)
+                    }
+                    if let questionTitle, let askQuestion {
+                        Button(questionTitle, action: askQuestion)
+                            .buttonStyle(GoldButtonStyle())
+                            .padding(.top, 8)
                     }
                 }
                 .padding(20)
@@ -125,6 +138,40 @@ struct ReportChapterView: View {
     // This bar represents the current chapter in the whole report. The chapter
     // counter on the right uses the same numerator and denominator.
     private var progress: CGFloat { total > 0 ? min(1, CGFloat(index) / CGFloat(total)) : 1 }
+
+    private var displayNodes: [ReportNode] { chapter.nodes.compactMap(removingEvidence) }
+
+    private var chapterEvidence: EvidenceGroups {
+        var groups: [EvidenceGroups.Group] = []
+        for node in chapter.nodes { collectEvidence(from: node, into: &groups) }
+        return EvidenceGroups(groups: groups)
+    }
+
+    private func removingEvidence(from node: ReportNode) -> ReportNode? {
+        switch node {
+        case .evidence: return nil
+        case .year(var year):
+            year.body = year.body.compactMap(removingEvidence)
+            return .year(year)
+        default: return node
+        }
+    }
+
+    private func collectEvidence(from node: ReportNode, into groups: inout [EvidenceGroups.Group]) {
+        switch node {
+        case .evidence(let evidence):
+            for incoming in evidence.groups {
+                if let index = groups.firstIndex(where: { $0.id == incoming.id }) {
+                    for item in incoming.items where !groups[index].items.contains(where: { $0.system == item.system && $0.detail == item.detail }) {
+                        groups[index].items.append(item)
+                    }
+                } else { groups.append(incoming) }
+            }
+        case .year(let year):
+            for child in year.body { collectEvidence(from: child, into: &groups) }
+        default: break
+        }
+    }
 }
 
 struct ReportNodeView: View {
@@ -210,6 +257,7 @@ private struct YearCardView: View {
 
 private struct EvidenceDisclosureView: View {
     let evidence: EvidenceGroups
+    var title = "この読み解きの根拠"
     @State private var expanded = false
     var body: some View {
         DisclosureGroup(isExpanded: $expanded) {
@@ -226,7 +274,7 @@ private struct EvidenceDisclosureView: View {
                     }
                 }
             }.padding(.top, 12)
-        } label: { Text("この読み解きの根拠").font(.system(size: 15, weight: .medium, design: .serif)) }
+        } label: { Text(title).font(.system(size: 15, weight: .medium, design: .serif)) }
             .padding(14).background(FateTheme.gold.opacity(0.045)).clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
@@ -235,6 +283,8 @@ private struct CalculatedDataChapterView: View {
     let data: [String: Any]
     let index: Int
     let total: Int
+    var questionTitle: String? = nil
+    var askQuestion: (() -> Void)? = nil
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -260,6 +310,9 @@ private struct CalculatedDataChapterView: View {
                             }
                         }
                     }
+                }
+                if let questionTitle, let askQuestion {
+                    Button(questionTitle, action: askQuestion).buttonStyle(GoldButtonStyle())
                 }
             }.padding(20)
         }.background(FateTheme.ivory).navigationTitle("命式・計算データ").navigationBarTitleDisplayMode(.inline)
