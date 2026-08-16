@@ -161,7 +161,7 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.doesNotMatch(report, /【補助傾向】/)
   assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
   assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
-  assert.match(report, /参照できた系統：4\/4/)
+  assert.doesNotMatch(report, /参照できた系統|\d\/4/)
   assert.doesNotMatch(report, /タイプ番号|FL-\d{4}/)
   assert.match(report, /関係が安定する条件：/)
   assert.match(report, /惹かれやすい人：責任感が強く、仕事や社会的役割を背負える、礼儀と誇りのある芯の強いタイプ/)
@@ -373,8 +373,8 @@ test('指定入力と五行0・出生時刻なしでも統合鑑定が最後ま�
     assert.ok(Object.values(scores).some(score => score === 0))
     assert.match(makeFullReport(year, month, day, 12, 0), /【仕事】/)
   }
-  assert.match(makeFullReport(1990, 6, 12), /出生時刻不明/)
-  assert.match(makeFullReport(2000, 11, 3), /出生時刻不明/)
+  assert.match(makeFullReport(1990, 6, 12), /出生時刻が不明/)
+  assert.match(makeFullReport(2000, 11, 3), /出生時刻が不明/)
 })
 
 test('一つの鑑定ブロックが失敗しても他ブロックを返す', () => {

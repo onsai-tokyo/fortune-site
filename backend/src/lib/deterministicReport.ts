@@ -972,16 +972,10 @@ export function buildDeterministicReport(input: ReportInput): string {
 この欄はラーシ（サイン）、ラグナ、月のナクシャトラを表示しています。ダシャーや分割図は、出生地点を市区町村単位で確認してから扱う必要があるため、現在は断定表示していません。`
     : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
-  // Coverage means that a family was calculated, not that it happened to vote
-  // for one of the three strongest consensus themes. Using selectedConsensus
-  // here incorrectly reported 3/4 when all four families had valid results.
-  const availableLineages = new Set<Lineage>(['stems', 'number'])
-  if (westernSun || westernMoon || vedic) availableLineages.add('ephemeris')
-  if (input.sukuyo || sukuyoDetail) availableLineages.add('lunar')
   const hasKnownBirthTime = Boolean(input.birthTime) || (input.birthTime === undefined && input.astrology?.available)
   const coverageNote = hasKnownBirthTime
-    ? `参照できた系統：${availableLineages.size}/4`
-    : `参照できた系統：${availableLineages.size}/4（出生時刻不明のため天体系の一部を除外）`
+    ? ''
+    : '出生時刻が不明のため、時刻が必要な一部の結果を除いて鑑定しています。'
   const uniqueParagraphs = [
     { score: selectedConsensus[0]?.score ?? 0, text: personalizedCore },
     { score: input.astrology?.available ? 2.5 : 0, text: [identityAndDirectionPattern, personalizedEmotion, emotionalAreaPattern, wholeChartCorePattern].filter(Boolean).join('\n') },
