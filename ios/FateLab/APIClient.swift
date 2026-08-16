@@ -21,6 +21,9 @@ struct APIClient {
 
     private func request(path: String, method: String = "GET", token: String? = nil, json: Any? = nil) throws -> URLRequest {
         var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: path))
+        // Render のコールドスタート後に占術計算が60秒を少し超える場合がある。
+        // URLSession の既定値（60秒）で正常な鑑定を失敗扱いにしない。
+        request.timeoutInterval = 180
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
