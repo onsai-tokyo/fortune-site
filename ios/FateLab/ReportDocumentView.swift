@@ -271,19 +271,85 @@ private struct InlineReportText: View {
 
 private struct YearCardView: View {
     let year: ReportYearCard
+    private var compactDomains: [String] {
+        var result: [String] = []
+        for value in year.domains {
+            let tag: String
+            if value.contains("別れ") || value.contains("関係の見直し") { tag = "関係の見直し" }
+            else if value.contains("転職") || value.contains("働き方") { tag = "転職" }
+            else if value.contains("挑戦") { tag = "挑戦" }
+            else if value.contains("引越") || value.contains("生活環境") { tag = "引越し" }
+            else if value.contains("結婚") { tag = "結婚" }
+            else if value.contains("恋愛") { tag = "恋愛" }
+            else if value.contains("仕事") || value.contains("収入") { tag = "仕事" }
+            else { continue }
+            if !result.contains(tag) { result.append(tag) }
+        }
+        return result
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
             if year.isTurning { Text("転換期").font(.caption2).tracking(2).foregroundStyle(FateTheme.gold) }
             Text(year.year).font(.system(size: 20, weight: .medium, design: .serif))
             if !year.summary.isEmpty { Text(year.summary).font(.system(size: 15)).foregroundStyle(FateTheme.muted) }
-            if !year.domains.isEmpty {
-                HStack { ForEach(year.domains, id: \.self) { Text($0).font(.caption2).padding(.horizontal, 10).padding(.vertical, 6).overlay(RoundedRectangle(cornerRadius: 6).stroke(FateTheme.line)) } }
+            if !compactDomains.isEmpty {
+                TagFlowLayout(spacing: 7) {
+                    ForEach(compactDomains, id: \.self) { domain in
+                        Text("#\(domain)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(FateTheme.gold)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(FateTheme.gold.opacity(0.08))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(FateTheme.gold.opacity(0.34)))
+                    }
+                }
             }
             Divider().overlay(FateTheme.line.opacity(0.7))
             ForEach(Array(year.body.enumerated()), id: \.offset) { _, node in ReportNodeView(node: node) }
         }.padding(18).background(FateTheme.paper)
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(year.isTurning ? FateTheme.gold : FateTheme.line, lineWidth: year.isTurning ? 1.5 : 1))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+private struct TagFlowLayout: Layout {
+    let spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .greatestFiniteMagnitude
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+        var lineHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if width > 0 && width + spacing + size.width > maxWidth {
+                height += lineHeight + spacing
+                width = 0
+                lineHeight = 0
+            }
+            width += (width == 0 ? 0 : spacing) + size.width
+            lineHeight = max(lineHeight, size.height)
+        }
+        return CGSize(width: maxWidth.isFinite ? maxWidth : width, height: height + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var lineHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > bounds.minX && x + size.width > bounds.maxX {
+                x = bounds.minX
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
     }
 }
 
