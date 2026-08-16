@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 
 type Message = { role: 'user' | 'assistant'; content: string; referenced_systems?: string[] }
 type PendingReading = { birthData: Record<string, unknown>; calculatedData: Record<string, unknown>; reportText: string; sourceSection?: string; sourceYear?: number; suggestedQuestion?: string; savedAt?: number }
-type HistoryItem = { id: string; title: string; source_section?: string; source_year?: number; updated_at: string }
+type HistoryItem = { id: string; secret_token?: string; title: string; source_section?: string; source_year?: number; updated_at: string }
 
 declare global { interface Window { gtag?: (...args: unknown[]) => void } }
 const track = (name: string, params: Record<string, unknown> = {}) => window.gtag?.('event', name, params)
@@ -85,10 +85,10 @@ function formatAnswer(content: string) {
 
 type ReadingMode = 'start' | 'history' | 'chat'
 
-export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) {
+export default function ReadingPage({ mode = 'start', identifier = 'token' }: { mode?: ReadingMode; identifier?: 'token' | 'id' }) {
   const { user, session, isLoading, signOut } = useAuth()
   const navigate = useNavigate()
-  const routeParams = useParams<{ conversationId: string }>()
+  const routeParams = useParams<{ secretToken?: string; conversationId?: string }>()
   const [params] = useSearchParams()
   const pending = useMemo<PendingReading | null>(() => {
     try {
@@ -101,7 +101,8 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
       return parsed
     } catch { return null }
   }, [])
-  const conversationId = mode === 'chat' ? routeParams.conversationId ?? '' : ''
+  const routeIdentifier = mode === 'chat' ? (routeParams.secretToken ?? routeParams.conversationId ?? '') : ''
+  const [conversationId, setConversationId] = useState(identifier === 'id' ? routeIdentifier : '')
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<{ premium: boolean; remaining: number | null; limit: number } | null>(null)
@@ -112,6 +113,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
   const [showPaywall, setShowPaywall] = useState(false)
   const [checkoutComplete, setCheckoutComplete] = useState(params.get('checkout') === 'success')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [shareNotice, setShareNotice] = useState('')
   const [activeContext, setActiveContext] = useState<{ sourceSection?: string; sourceYear?: number }>({ sourceSection: pending?.sourceSection, sourceYear: pending?.sourceYear })
   const [dataLoading, setDataLoading] = useState(true)
   const [retryCount, setRetryCount] = useState(0)
@@ -122,6 +124,18 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
   const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` })
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  useEffect(() => {
+    if (mode !== 'chat') return
+    const existing = document.querySelector('meta[name="robots"]')
+    const previous = existing?.getAttribute('content')
+    const meta = existing ?? document.head.appendChild(document.createElement('meta'))
+    meta.setAttribute('name', 'robots')
+    meta.setAttribute('content', 'noindex, nofollow')
+    return () => {
+      if (previous) meta.setAttribute('content', previous)
+      else if (!existing) meta.remove()
+    }
+  }, [mode])
   useEffect(() => {
     document.body.style.overflow = mobileNavOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -147,6 +161,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
           const title = pending.sourceYear ? `${pending.sourceYear}年について` : `${pending.sourceSection ?? '鑑定結果'}について`
           const key = await readingIdempotencyKey(pending)
           let savedId = ''
+          let savedToken = ''
           let apiFailure = ''
           try {
             const response = await fetchReadingApi('/api/reading/conversations', {
@@ -155,7 +170,10 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
               body: JSON.stringify({ title, ...pending }),
             })
             const body = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-            if (response.ok && typeof body.id === 'string') savedId = body.id
+            if (response.ok && typeof body.id === 'string') {
+              savedId = body.id
+              savedToken = typeof body.token === 'string' ? body.token : ''
+            }
             else apiFailure = body.error ?? `HTTP ${response.status}`
           } catch (cause) {
             apiFailure = cause instanceof Error ? cause.message : '保存APIへ接続できませんでした'
@@ -164,9 +182,9 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
           // API設定が未完了のローカル環境でも、本人のRLS範囲内で同じキーを再利用して1件だけ保存する。
           if (!savedId) {
             const { data: existing, error: lookupError } = await supabase.from('reading_conversations')
-              .select('id').contains('birth_data', { _fateReadingKey: key }).maybeSingle()
+              .select('id,secret_token').contains('birth_data', { _fateReadingKey: key }).maybeSingle()
             if (lookupError) throw new Error(`保存先の確認に失敗しました: ${lookupError.message}`)
-            if (existing?.id) savedId = existing.id
+            if (existing?.id) { savedId = existing.id; savedToken = existing.secret_token ?? '' }
             else {
               const { data, error: directError } = await supabase.from('reading_conversations').insert({
                 user_id: userId,
@@ -176,16 +194,17 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
                 report_text: pending.reportText,
                 source_section: pending.sourceSection?.slice(0, 80) ?? null,
                 source_year: pending.sourceYear ?? null,
-              }).select('id').single()
+              }).select('id,secret_token').single()
               if (directError || !data?.id) throw new Error(`保存API: ${apiFailure || '応答なし'}／保存先: ${directError?.message ?? '保存できませんでした'}`)
               savedId = data.id
+              savedToken = data.secret_token ?? ''
             }
           }
           createdRef.current = true
           // 認証状態の再描画や StrictMode の再実行が起きても鑑定内容を失わないよう、
           // 保存が完了するまでは引き継ぎデータを残しておく。
           localStorage.removeItem('fate_reading_context')
-          navigate(`/reading/${savedId}`, { replace: true })
+          navigate(savedToken ? `/r/${savedToken}` : `/reading/${savedId}`, { replace: true })
           return
         }
 
@@ -221,32 +240,38 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
             historyBody = await historyResponse.json()
           } else if (historyResponse.status >= 500) {
             const { data } = await supabase.from('reading_conversations')
-              .select('id,title,source_section,source_year,created_at,updated_at')
+              .select('id,secret_token,title,source_section,source_year,created_at,updated_at')
               .eq('user_id', userId).order('updated_at', { ascending: false }).limit(100)
             historyBody = { conversations: data ?? [] }
           }
         } catch { /* ローカルプレビューでは空の一覧を表示する */ }
         setHistory(historyBody.conversations ?? [])
 
-        if (mode === 'chat' && conversationId) {
+        if (mode === 'chat' && routeIdentifier) {
           let body: { conversation?: Record<string, unknown>; messages?: Message[]; error?: string } | null = null
           try {
-            const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}`, { headers: authHeaders() })
+            const endpoint = identifier === 'token'
+              ? `/api/reading/reports/${encodeURIComponent(routeIdentifier)}`
+              : `/api/reading/conversations/${encodeURIComponent(routeIdentifier)}`
+            const response = await fetchReadingApi(endpoint, { headers: authHeaders() })
             if (response.ok) body = await response.json()
           } catch { /* 本人のRLS範囲内で直接読み直す */ }
 
           if (!body?.messages) {
-            const [{ data: conversation, error: conversationError }, { data: directMessages, error: messagesError }] = await Promise.all([
-              supabase.from('reading_conversations').select('id,source_section,source_year').eq('id', conversationId).eq('user_id', userId).maybeSingle(),
-              supabase.from('reading_messages').select('role,content,referenced_systems,created_at').eq('conversation_id', conversationId).eq('user_id', userId).order('created_at'),
-            ])
-            if (conversationError || messagesError || !conversation) {
-              setError(conversationError?.message ?? messagesError?.message ?? '鑑定履歴を開けませんでした')
+            const conversationFilter = identifier === 'token' ? 'secret_token' : 'id'
+            const { data: conversation, error: conversationError } = await supabase.from('reading_conversations')
+              .select('id,secret_token,source_section,source_year').eq(conversationFilter, routeIdentifier).eq('user_id', userId).maybeSingle()
+            if (conversationError || !conversation) {
+              setError(conversationError?.message ?? '鑑定履歴を開けませんでした')
               return
             }
+            const { data: directMessages, error: directMessagesError } = await supabase.from('reading_messages')
+              .select('role,content,referenced_systems,created_at').eq('conversation_id', conversation.id).eq('user_id', userId).order('created_at')
+            if (directMessagesError) { setError(directMessagesError.message); return }
             body = { conversation, messages: (directMessages ?? []) as Message[] }
           }
 
+          if (typeof body.conversation?.id === 'string') setConversationId(body.conversation.id)
           setMessages(body.messages ?? [])
           setActiveContext({
             sourceSection: typeof body.conversation?.source_section === 'string' ? body.conversation.source_section : undefined,
@@ -264,7 +289,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
         setDataLoading(false)
       }
     })()
-  }, [session?.access_token, user?.id, retryCount, mode, conversationId, pending, navigate])
+  }, [session?.access_token, user?.id, retryCount, mode, routeIdentifier, identifier, pending, navigate])
 
   async function send(question = input) {
     const text = question.trim()
@@ -309,7 +334,8 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
 
   async function openConversation(id: string) {
     track('reading_history_opened', { conversation_id: id })
-    navigate(`/reading/${id}`)
+    const item = history.find(entry => entry.id === id)
+    navigate(item?.secret_token ? `/r/${item.secret_token}` : `/reading/${id}`)
   }
 
   async function renameConversation(item: HistoryItem) {
@@ -341,6 +367,19 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
     const body = await response.json(); if (body.url) location.href = body.url; else setError(body.error ?? '契約管理画面を開けませんでした')
   }
 
+  async function shareSummary() {
+    if (!session?.access_token || identifier !== 'token' || !routeIdentifier) return
+    setShareNotice('共有ページを準備しています…')
+    const response = await fetchReadingApi(`/api/reading/reports/${encodeURIComponent(routeIdentifier)}/share`, {
+      method: 'POST', headers: authHeaders(), body: '{}',
+    })
+    const body = await response.json().catch(() => ({}))
+    if (!response.ok || !body.shareId) { setShareNotice(body.error ?? '共有リンクを作成できませんでした'); return }
+    const url = `${window.location.origin}/s/${body.shareId}`
+    try { await navigator.clipboard.writeText(url); setShareNotice('共有リンクをコピーしました。生年月日・出生地は含まれません。') }
+    catch { setShareNotice(url) }
+  }
+
   const lastMessage = messages[messages.length - 1]
   const suggestions = lastMessage?.role === 'assistant'
     ? [...lastMessage.content.matchAll(/次の質問：(.+)/g)].map(match => match[1].trim()).slice(0, 4)
@@ -369,7 +408,7 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
 
   if (isLoading) return <main className="min-h-screen bg-[#faf7ef]" />
   if (!user) {
-    const returnTo = mode === 'start' ? '/reading/new' : mode === 'history' ? '/reading/history' : `/reading/${conversationId}`
+    const returnTo = mode === 'start' ? '/reading/new' : mode === 'history' ? '/reading/history' : identifier === 'token' ? `/r/${routeIdentifier}` : `/reading/${routeIdentifier}`
     return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-5 py-16"><section className="max-w-xl mx-auto border border-[#d8c79e] bg-[#fffdf8] p-8 rounded-2xl shadow-[0_18px_50px_rgba(83,61,25,.08)]"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · PERSONAL READING</p><h1 className="text-2xl mt-4">鑑定結果について質問する</h1><p className="mt-5 leading-8 text-[#62594f]">鑑定結果と質問履歴を安全に保存するため、無料登録またはログインをお願いします。先ほどの鑑定内容はそのまま引き継がれます。</p><div className="grid gap-3 mt-7"><Link onClick={() => track('question_cta_clicked', { action: 'register' })} to={`/auth?mode=register&returnTo=${encodeURIComponent(returnTo)}`} className="block bg-[#9a6d16] text-white text-center rounded-lg py-4">新規登録（無料）</Link><Link onClick={() => track('question_cta_clicked', { action: 'login' })} to={`/auth?returnTo=${encodeURIComponent(returnTo)}`} className="block border border-[#bfa66e] bg-[#fffdf8] text-[#5f471c] text-center rounded-lg py-4">ログイン</Link></div></section></main>
   }
 
@@ -382,10 +421,11 @@ export default function ReadingPage({ mode = 'start' }: { mode?: ReadingMode }) 
   if (mode === 'history') return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-10"><div className="max-w-3xl mx-auto"><a href="/lp.html" className="text-sm text-[#5c5349]">← Fate Lab</a><header className="mt-7 border-b border-[#d8c79e] pb-7"><p className="text-xs tracking-[.25em] text-[#9a762b]">FATE LAB · READING LIBRARY</p><h1 className="text-3xl mt-3">鑑定書一覧</h1><p className="mt-3 text-[#5c5349] leading-7">これまでに作成した鑑定書の一覧です。選ぶと、その鑑定書と質問を開けます。</p></header><section className="py-7">{error && <div className="mb-5 border border-[#c98775] bg-[#fff6f2] rounded-xl p-4 text-[#7f3427]">{error}<a href="/lp.html#form" className="block mt-3 underline">鑑定書へ戻ってもう一度試す</a></div>}{dataLoading ? <p className="text-[#5c5349]">鑑定書を確認しています…</p> : historyList ?? <div className="border border-[#ded2bb] bg-[#fffdf8] rounded-2xl p-7 text-center"><h2 className="text-xl">保存された鑑定書はまだありません</h2><p className="mt-3 text-[#5c5349] leading-7">最初に無料鑑定を行うと、鑑定書がここへ保存され、結果について質問できるようになります。</p></div>}<a href="/lp.html#form" className="block mt-6 bg-[#9a6d16] text-white text-center rounded-lg py-4">新しく鑑定する</a></section><p className="text-xs text-[#5c5349] leading-6">結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。</p></div></main>
 
   if (mode === 'start') return <Navigate to="/reading/history" replace />
-  if (!conversationId) return <Navigate to="/reading/history" replace />
+  if (!routeIdentifier) return <Navigate to="/reading/history" replace />
 
   return <main className="reading-page min-h-screen bg-[#faf7ef] text-[#211d18] px-4 py-8"><div className="max-w-6xl mx-auto">
-    <div className="flex items-center justify-between gap-4"><button onClick={backToReport} className="text-sm text-[#5c5349]">← 鑑定書に戻る</button><button onClick={() => setMobileNavOpen(true)} className="lg:hidden border border-[#bfa66e] rounded-lg px-4 py-2 text-sm text-[#70531e]">履歴</button></div>
+    <div className="flex items-center justify-between gap-4"><button onClick={backToReport} className="text-sm text-[#5c5349]">← 鑑定書に戻る</button><div className="flex gap-2"><button onClick={() => void shareSummary()} className="border border-[#bfa66e] rounded-lg px-4 py-2 text-sm text-[#70531e]">要点を共有</button><button onClick={() => setMobileNavOpen(true)} className="lg:hidden border border-[#bfa66e] rounded-lg px-4 py-2 text-sm text-[#70531e]">履歴</button></div></div>
+    {shareNotice && <p className="mt-3 text-xs text-[#70531e] break-all">{shareNotice}</p>}
     <p className="mt-3 text-xs text-[#7a7065]">鑑定書 › {sourceLabel} › 質問</p>
     <div className="mt-6 grid gap-7 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
     <aside className="hidden lg:block lg:sticky lg:top-6 border border-[#d8c79e] bg-[#fffdf8] rounded-2xl shadow-[0_12px_35px_rgba(83,61,25,.06)]">{readingNavigation()}</aside>

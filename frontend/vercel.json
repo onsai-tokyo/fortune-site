@@ -9,6 +9,8 @@
     { "source": "/auth", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/chat", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/reading", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/reading/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/r/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/mypage", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/history/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     { "source": "/payment/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },

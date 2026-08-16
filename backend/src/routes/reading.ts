@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
+import { buildPublicReadingShare } from '../lib/readingShare.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -30,6 +31,15 @@ async function isPremium(userId: string) {
   return !!data && activeStatuses.has(data.subscription_status)
     && (!data.current_period_end || new Date(data.current_period_end) > new Date())
 }
+
+// 共有ページは出生情報や鑑定書本文を返さず、明示的に作成された要点だけを返す。
+readingRouter.get('/shares/:shareId', async (req, res) => {
+  const { data, error } = await getSupabaseAdmin().from('reading_shares')
+    .select('share_id,summary,created_at').eq('share_id', req.params.shareId).eq('is_active', true).maybeSingle()
+  if (error) { res.status(500).json({ error: '共有ページを取得できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '共有ページが見つかりません' }); return }
+  res.json({ share: data })
+})
 
 readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   try {
@@ -63,17 +73,17 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 
     if (idempotencyKey) {
       const { data: existing, error: lookupError } = await db.from('reading_conversations')
-        .select('id').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
-      if (existing?.id) { res.status(200).json({ id: existing.id, reused: true }); return }
+        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+      if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
       if (lookupError && ['42703', 'PGRST204'].includes(lookupError.code ?? '')) hasIdempotencyColumn = false
       else if (lookupError) throw lookupError
 
       // migration反映前も同一ユーザーの逐次再送を重複させない後方互換処理。
       if (!hasIdempotencyColumn) {
         const { data: legacyExisting, error: legacyError } = await db.from('reading_conversations')
-          .select('id').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).maybeSingle()
+          .select('id,secret_token').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).maybeSingle()
         if (legacyError) throw legacyError
-        if (legacyExisting?.id) { res.status(200).json({ id: legacyExisting.id, reused: true }); return }
+        if (legacyExisting?.id) { res.status(200).json({ id: legacyExisting.id, token: legacyExisting.secret_token, reused: true }); return }
       }
     }
 
@@ -90,14 +100,14 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
       source_year: typeof sourceYear === 'number' ? sourceYear : null,
     }
     if (hasIdempotencyColumn && idempotencyKey) insertPayload.idempotency_key = idempotencyKey
-    const { data, error } = await db.from('reading_conversations').insert(insertPayload).select('id').single()
+    const { data, error } = await db.from('reading_conversations').insert(insertPayload).select('id,secret_token').single()
     if (error?.code === '23505' && idempotencyKey && hasIdempotencyColumn) {
       const { data: existing } = await db.from('reading_conversations')
-        .select('id').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
-      if (existing?.id) { res.status(200).json({ id: existing.id, reused: true }); return }
+        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+      if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
     }
     if (error) throw error
-    res.status(201).json({ id: data.id })
+    res.status(201).json({ id: data.id, token: data.secret_token })
   } catch (error) {
     console.error('Create reading conversation failed:', error)
     res.status(500).json({ error: '鑑定履歴を作成できませんでした' })
@@ -107,7 +117,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseAdmin()
   const { data, error } = await db.from('reading_conversations')
-    .select('id,title,source_section,source_year,created_at,updated_at')
+    .select('id,secret_token,title,source_section,source_year,created_at,updated_at')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
   if (error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
   res.json({ conversations: data })
@@ -121,6 +131,40 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
   res.json({ conversation, messages: messages ?? [] })
+})
+
+readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
+  const db = getSupabaseAdmin()
+  const { data: conversation } = await db.from('reading_conversations').select('*')
+    .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
+  if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
+  const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
+    .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
+  res.json({ conversation, messages: messages ?? [] })
+})
+
+readingRouter.post('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
+  const db = getSupabaseAdmin()
+  const { data: conversation } = await db.from('reading_conversations').select('*')
+    .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
+  if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
+  const summary = buildPublicReadingShare(conversation)
+  const { data, error } = await db.from('reading_shares').upsert({
+    conversation_id: conversation.id, user_id: req.userId, summary, is_active: true, updated_at: new Date().toISOString(),
+  }, { onConflict: 'conversation_id' }).select('share_id').single()
+  if (error) { res.status(500).json({ error: '共有リンクを作成できませんでした' }); return }
+  res.json({ shareId: data.share_id })
+})
+
+readingRouter.delete('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
+  const db = getSupabaseAdmin()
+  const { data: conversation } = await db.from('reading_conversations').select('id')
+    .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
+  if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
+  const { error } = await db.from('reading_shares').update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq('conversation_id', conversation.id).eq('user_id', req.userId!)
+  if (error) { res.status(500).json({ error: '共有を停止できませんでした' }); return }
+  res.status(204).end()
 })
 
 readingRouter.patch('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {

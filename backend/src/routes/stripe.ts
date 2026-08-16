@@ -41,19 +41,21 @@ stripeRouter.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     const priceId = process.env.STRIPE_PRICE_ID
     if (!priceId) { res.status(503).json({ error: '有料プランは現在準備中です' }); return }
     const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
+    let reportToken = ''
     if (conversationId) {
-      const { data } = await getSupabaseAdmin().from('reading_conversations').select('id')
+      const { data } = await getSupabaseAdmin().from('reading_conversations').select('id,secret_token')
         .eq('id', conversationId).eq('user_id', req.userId!).maybeSingle()
       if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+      reportToken = data.secret_token ?? ''
     }
     const customer = await findOrCreateCustomer(req.userId!, req.userEmail)
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription', customer, line_items: [{ price: priceId, quantity: 1 }],
-      success_url: conversationId
-        ? `${frontendUrl()}/reading/${conversationId}?checkout=success`
+      success_url: reportToken
+        ? `${frontendUrl()}/r/${reportToken}?checkout=success`
         : `${frontendUrl()}/reading/history?checkout=success`,
-      cancel_url: conversationId
-        ? `${frontendUrl()}/reading/${conversationId}?checkout=cancelled`
+      cancel_url: reportToken
+        ? `${frontendUrl()}/r/${reportToken}?checkout=cancelled`
         : `${frontendUrl()}/reading/history?checkout=cancelled`,
       client_reference_id: req.userId,
       metadata: { user_id: req.userId!, conversation_id: conversationId },

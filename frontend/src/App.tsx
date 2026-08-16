@@ -15,6 +15,7 @@ const TokushohouPage = lazy(() => import('./pages/TokushohouPage').then(module =
 const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })))
 const ReadingPage = lazy(() => import('./pages/ReadingPage'))
+const SharedReadingPage = lazy(() => import('./pages/SharedReadingPage'))
 
 function PageLoader() {
   return <div className="min-h-screen bg-[#faf7ef]" aria-label="ページを読み込んでいます" />
@@ -56,7 +57,9 @@ export default function App() {
             <Route path="/reading" element={<LegacyReadingRedirect />} />
             <Route path="/reading/new" element={<ReadingPage mode="start" />} />
             <Route path="/reading/history" element={<ReadingPage mode="history" />} />
-            <Route path="/reading/:conversationId" element={<ReadingPage mode="chat" />} />
+            <Route path="/reading/:conversationId" element={<ReadingPage mode="chat" identifier="id" />} />
+            <Route path="/r/:secretToken" element={<ReadingPage mode="chat" identifier="token" />} />
+            <Route path="/s/:shareId" element={<SharedReadingPage />} />
           </Routes>
         </Suspense>
       </AuthProvider>
