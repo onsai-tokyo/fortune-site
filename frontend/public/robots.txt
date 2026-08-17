@@ -1,19 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /auth
-Disallow: /chat
-Disallow: /history/
-Disallow: /mypage
-Disallow: /payment/
-Disallow: /result
-Disallow: /analyze
-Disallow: /compat-report
-Disallow: /debug.html
-Disallow: /auto-test.html
-Disallow: /final-check.html
-Disallow: /simple-test.html
-Disallow: /test-toast.html
 
 Sitemap: https://fate-lab.com/sitemap.xml
 Host: https://fate-lab.com

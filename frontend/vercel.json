@@ -3,7 +3,20 @@
     { "source": "/api/:path*", "destination": "https://fortune-site-iuzo.onrender.com/api/:path*" },
     { "source": "/health", "destination": "https://fortune-site-iuzo.onrender.com/health" },
     { "source": "/lp", "destination": "/lp.html" },
-    { "source": "/(.+)", "destination": "/app.html" }
+    { "source": "/auth", "destination": "/app.html" },
+    { "source": "/chat", "destination": "/app.html" },
+    { "source": "/reading", "destination": "/app.html" },
+    { "source": "/reading/:path*", "destination": "/app.html" },
+    { "source": "/r/:path*", "destination": "/app.html" },
+    { "source": "/s/:path*", "destination": "/app.html" },
+    { "source": "/mypage", "destination": "/app.html" },
+    { "source": "/me", "destination": "/app.html" },
+    { "source": "/history/:path*", "destination": "/app.html" },
+    { "source": "/payment/:path*", "destination": "/app.html" },
+    { "source": "/result", "destination": "/app.html" },
+    { "source": "/analyze", "destination": "/app.html" },
+    { "source": "/compat-report", "destination": "/app.html" },
+    { "source": "/feature/:path*", "destination": "/app.html" }
   ],
   "headers": [
     { "source": "/auth", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
