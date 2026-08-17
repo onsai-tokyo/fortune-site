@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01B53CBEFD02CF022C660DB3 /* ReadingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73347D48ADC44E658905805A /* ReadingListView.swift */; };
+		066BCC31D5E4B0BCABD376BE /* SavedReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B34350A07504940804DE477 /* SavedReadingView.swift */; };
 		1904C87890D4E6D56044CF9E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5342D58A967C8EF3F73846A /* SettingsView.swift */; };
 		1D747F7AEBCC0FDCEC6859B5 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34376F558AC94ECC52F91C17 /* APIClient.swift */; };
 		2B0E54032F6B1A39D1659636 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D31349E6A06DA0C0FFD9B29 /* Assets.xcassets */; };
@@ -41,6 +42,7 @@
 		34376F558AC94ECC52F91C17 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		35E5A4456A2D11C6D4C3797D /* FateLab.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FateLab.entitlements; sourceTree = "<group>"; };
 		3719AD9E38679916FC4B757D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		3B34350A07504940804DE477 /* SavedReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedReadingView.swift; sourceTree = "<group>"; };
 		3D04080D70BB79BC5AB54BF2 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		4074C929BE92C04BAD98AA2A /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		57C6F120A970A549A5C1422D /* FateLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FateLabApp.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 				214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */,
 				A414B67773B2C18629DFBCB7 /* ReportParser.swift */,
 				F165C70345759947694F4DD8 /* RootView.swift */,
+				3B34350A07504940804DE477 /* SavedReadingView.swift */,
 				C6E044EBDE938EC447F94016 /* ScreenshotGalleryView.swift */,
 				F5342D58A967C8EF3F73846A /* SettingsView.swift */,
 				067B14D891149931612DB9F3 /* Theme.swift */,
@@ -192,6 +195,7 @@
 				686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */,
 				8407EACECE2B9B747F15FAB6 /* ReportParser.swift in Sources */,
 				50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */,
+				066BCC31D5E4B0BCABD376BE /* SavedReadingView.swift in Sources */,
 				DEF47B746CFA130762CDB271 /* ScreenshotGalleryView.swift in Sources */,
 				1904C87890D4E6D56044CF9E /* SettingsView.swift in Sources */,
 				E8F0E89F77689CD561F075A7 /* Theme.swift in Sources */,
@@ -237,7 +241,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -307,7 +311,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 25;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

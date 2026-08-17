@@ -37,7 +37,7 @@ struct ReadingListView: View {
                                        description: Text("無料登録すると、鑑定書と質問を続きから開けます。"))
             }
         }.background(FateTheme.ivory).fateScreenTitle("鑑定書一覧")
-            .navigationDestination(for: UUID.self) { ReadingChatView(conversationID: $0) }
+            .navigationDestination(for: UUID.self) { SavedReadingView(conversationID: $0) }
             .toolbar { if auth.session == nil { Button("ログイン") { AuthPresentation.shared.isPresented = true } } }
             .alert("確認できませんでした", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) { Button("閉じる") {} } message: { Text(errorMessage ?? "") }
     }
