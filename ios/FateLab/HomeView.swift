@@ -25,14 +25,65 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("FATE LAB").font(.system(size: 17, weight: .medium, design: .serif)).tracking(4)
-                Text("9つの占術を、\n4つの系統から照合。")
-                    .font(.system(size: 34, weight: .medium, design: .serif)).lineSpacing(6)
-                Text("重なって現れた傾向を中心に、同じ入力なら変わらない鑑定書を作成します。")
-                    .foregroundStyle(FateTheme.muted).lineSpacing(6)
-                ReportCard {
+            Group {
+                if isWorking {
+                    FateLoadingView(progress: progress)
+                } else if let report {
                     VStack(alignment: .leading, spacing: 18) {
+                        ReportView(report: report)
+                        Button("別の人を鑑定する") { resetForAnotherPerson() }
+                            .buttonStyle(OutlineGoldButtonStyle())
+                    }
+                } else {
+                    inputForm
+                }
+            }
+            .padding(20)
+        }
+        .background(FateTheme.ivory)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await APIClient.shared.warmup()
+            if autoGenerate && !didAutoGenerate {
+                didAutoGenerate = true
+                await generateReport()
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if report == nil && !isWorking {
+                VStack(spacing: 6) {
+                    Button("今すぐ鑑定する") { Task { await generateReport() } }
+                        .buttonStyle(GoldButtonStyle())
+                        .disabled(input.hasTime && !timeSelected)
+                        .opacity(input.hasTime && !timeSelected ? 0.5 : 1)
+                    Text("登録不要・約1分")
+                        .font(.system(size: 13))
+                        .foregroundStyle(FateTheme.muted)
+                }
+                .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 8)
+                .background(.regularMaterial)
+            }
+        }
+        .onChange(of: input.hasTime) { _, enabled in
+            if enabled { timeSelected = false; showTimePicker = true }
+        }
+        .onChange(of: input) { _, _ in
+            report = nil
+            errorMessage = nil
+        }
+        .sheet(isPresented: $showDatePicker) { datePickerSheet }
+        .sheet(isPresented: $showTimePicker) { timePickerSheet }
+    }
+
+    private var inputForm: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("FATE LAB").font(.system(size: 17, weight: .medium, design: .serif)).tracking(4)
+            Text("9つの占術を、\n4つの系統から照合。")
+                .font(.system(size: 34, weight: .medium, design: .serif)).lineSpacing(6)
+            Text("重なって現れた傾向を中心に、同じ入力なら変わらない鑑定書を作成します。")
+                .foregroundStyle(FateTheme.muted).lineSpacing(6)
+            ReportCard {
+                VStack(alignment: .leading, spacing: 18) {
                         Text("INSTANT ANALYSIS").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
                         inputSection("01", "生年月日") {
                             Button {
@@ -82,88 +133,49 @@ struct HomeView: View {
                             }.pickerStyle(.segmented).labelsHidden()
                         }
                         if let errorMessage { Text(errorMessage).font(.footnote).foregroundStyle(.red) }
-                        if isWorking { progressView }
-                    }
-                }
-                if let report {
-                    Button("別の人を鑑定する") { resetForAnotherPerson() }
-                        .buttonStyle(.bordered)
-                        .tint(FateTheme.gold)
-                        .frame(maxWidth: .infinity)
-                    ReportView(report: report)
-                }
-            }.padding(20)
-        }.background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
-            .task {
-                await APIClient.shared.warmup()
-                if autoGenerate && !didAutoGenerate {
-                    didAutoGenerate = true
-                    await generateReport()
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if report == nil {
-                    VStack(spacing: 6) {
-                        Button(isWorking ? "鑑定中です" : "今すぐ鑑定する") {
-                            Task { await generateReport() }
-                        }
-                        .buttonStyle(GoldButtonStyle())
-                        .disabled(isWorking || (input.hasTime && !timeSelected))
-                        .opacity(input.hasTime && !timeSelected ? 0.5 : 1)
-                        Text("登録不要・約1分")
-                            .font(.system(size: 13))
-                            .foregroundStyle(FateTheme.muted)
-                    }
-                    .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 8)
-                    .background(.regularMaterial)
-                }
+        }
+    }
+
+    private var datePickerSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("生年月日を選んでください")
+                    .font(.system(size: 20, weight: .medium, design: .serif))
+                DatePicker(
+                    "生年月日",
+                    selection: $draftDate,
+                    in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .environment(\.locale, Locale(identifier: "ja_JP"))
+                Button("この日付を使用する") {
+                    input.date = draftDate
+                    showDatePicker = false
+                }.buttonStyle(GoldButtonStyle())
             }
-            .onChange(of: input.hasTime) { _, enabled in
-                if enabled { timeSelected = false; showTimePicker = true }
-            }
-            .onChange(of: input) { _, _ in
-                // 入力と一致しない古い鑑定書を画面に残さない。
-                report = nil
-                errorMessage = nil
-            }
-            .sheet(isPresented: $showDatePicker) {
-                NavigationStack {
-                    VStack(spacing: 24) {
-                        Text("生年月日を選んでください")
-                            .font(.system(size: 20, weight: .medium, design: .serif))
-                        DatePicker(
-                            "生年月日",
-                            selection: $draftDate,
-                            in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.wheel)
-                        .labelsHidden()
-                        .environment(\.locale, Locale(identifier: "ja_JP"))
-                        Button("この日付を使用する") {
-                            input.date = draftDate
-                            showDatePicker = false
-                        }.buttonStyle(GoldButtonStyle())
-                    }
-                    .padding(24)
-                    .background(FateTheme.ivory)
-                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showDatePicker = false } } }
-                }
-                .presentationDetents([.medium])
-            }
-            .sheet(isPresented: $showTimePicker) {
-                NavigationStack {
-                    VStack(spacing: 24) {
-                        Text("正確な出生時刻を選んでください").font(.system(size: 20, weight: .medium, design: .serif))
-                        DatePicker("出生時刻", selection: $draftTime, displayedComponents: .hourAndMinute)
-                            .datePickerStyle(.wheel).labelsHidden()
-                        Button("この時刻を使用する") {
-                            input.time = draftTime; timeSelected = true; showTimePicker = false
-                        }.buttonStyle(GoldButtonStyle())
-                    }.padding(24).background(FateTheme.ivory)
-                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { input.hasTime = false; showTimePicker = false } } }
-                }.presentationDetents([.medium])
-            }
+            .padding(24)
+            .background(FateTheme.ivory)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showDatePicker = false } } }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private var timePickerSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("正確な出生時刻を選んでください").font(.system(size: 20, weight: .medium, design: .serif))
+                DatePicker("出生時刻", selection: $draftTime, displayedComponents: .hourAndMinute)
+                    .datePickerStyle(.wheel).labelsHidden()
+                Button("この時刻を使用する") {
+                    input.time = draftTime; timeSelected = true; showTimePicker = false
+                }.buttonStyle(GoldButtonStyle())
+            }.padding(24).background(FateTheme.ivory)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { input.hasTime = false; showTimePicker = false } } }
+        }.presentationDetents([.medium])
     }
 
     private func generateReport() async {
@@ -194,17 +206,71 @@ struct HomeView: View {
         }
     }
 
-    private var progressView: some View {
-        HStack(spacing: 12) {
-            ProgressView().tint(FateTheme.gold)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(progress == .calculating ? "命式を計算しています" : "9つの結果を照らし合わせています")
-                    .font(.system(size: 15, weight: .semibold))
-                Text(progress == .calculating ? "入力内容から各占術の結果を算出中です。" : "共通して現れる傾向をまとめています。")
-                    .font(.caption).foregroundStyle(FateTheme.muted)
+}
+
+private struct FateLoadingView: View {
+    let progress: ReportProgress
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let seconds = timeline.date.timeIntervalSinceReferenceDate
+            let rotation = Angle.degrees(seconds.truncatingRemainder(dividingBy: 2.8) / 2.8 * 360)
+            let pulse = 0.94 + (sin(seconds * 2.2) + 1) * 0.035
+
+            VStack(spacing: 30) {
+                Spacer(minLength: 90)
+                ZStack {
+                    Circle()
+                        .stroke(FateTheme.line.opacity(0.55), lineWidth: 1)
+                        .frame(width: 124, height: 124)
+                    Circle()
+                        .trim(from: 0.08, to: 0.72)
+                        .stroke(
+                            AngularGradient(colors: [FateTheme.gold.opacity(0.2), FateTheme.gold, FateTheme.gold.opacity(0.2)], center: .center),
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                        )
+                        .frame(width: 124, height: 124)
+                        .rotationEffect(rotation)
+                    Circle()
+                        .fill(FateTheme.gold.opacity(0.12))
+                        .frame(width: 82, height: 82)
+                        .scaleEffect(pulse)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundStyle(FateTheme.gold)
+                }
+
+                VStack(spacing: 12) {
+                    Text(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
+                        .font(.system(size: 25, weight: .medium, design: .serif))
+                        .multilineTextAlignment(.center)
+                    Text(progress == .calculating
+                         ? "生年月日・出生時刻・出生地から、\nそれぞれの結果を算出しています。"
+                         : "重なって現れた傾向を読み取り、\nあなたの鑑定へ整えています。")
+                        .font(.system(size: 15))
+                        .foregroundStyle(FateTheme.muted)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(6)
+                }
+
+                HStack(spacing: 8) {
+                    ForEach(0..<3, id: \.self) { index in
+                        Circle()
+                            .fill(FateTheme.gold.opacity(dotOpacity(index: index, seconds: seconds)))
+                            .frame(width: 7, height: 7)
+                    }
+                }
+                Spacer(minLength: 120)
             }
-        }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background(FateTheme.gold.opacity(0.08)).clipShape(RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: .infinity, minHeight: 620)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
+    }
+
+    private func dotOpacity(index: Int, seconds: TimeInterval) -> Double {
+        let wave = sin(seconds * 4 - Double(index) * 0.9)
+        return 0.28 + (wave + 1) * 0.32
     }
 }
 
