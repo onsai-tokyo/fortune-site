@@ -71,11 +71,11 @@ struct InsightDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 Text(item.category.uppercased()).font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
-                Text(item.title).font(.system(size: 35, weight: .medium, design: .serif)).lineSpacing(6)
+            Text(item.displayName).font(.system(size: 35, weight: .medium, design: .serif)).lineSpacing(6)
                 FlowTags(tags: item.tags)
                 Divider().overlay(FateTheme.line)
                 Text(item.body).font(.system(size: 17)).lineSpacing(9)
-                Button("1枚ずつ集中して読む") { focusMode = true }.buttonStyle(OutlineGoldButtonStyle())
+                Button("スワイプして深く読む") { focusMode = true }.buttonStyle(OutlineGoldButtonStyle())
                 ShareLink(item: "Fate Labの鑑定「\(item.title)」\n\(item.summary)\nhttps://fate-lab.com") {
                     Label("この鑑定を共有", systemImage: "square.and.arrow.up")
                 }.buttonStyle(OutlineGoldButtonStyle())
@@ -83,32 +83,119 @@ struct InsightDetailView: View {
                 Text("共有内容に生年月日は含まれません。").font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
             }.padding(28)
         }.background(FateTheme.ivory).navigationTitle(item.category).navigationBarTitleDisplayMode(.inline)
-            .fullScreenCover(isPresented: $focusMode) { FocusReadingView(items: allItems, initialID: item.id) }
+            .fullScreenCover(isPresented: $focusMode) { FocusReadingView(item: item, onQuestion: onQuestion) }
     }
 }
 
 private struct FocusReadingView: View {
     @Environment(\.dismiss) private var dismiss
-    let items: [ReportInsight]
-    @State private var selection: String
-    init(items: [ReportInsight], initialID: String) { self.items = items; _selection = State(initialValue: initialID) }
+    let item: ReportInsight
+    let onQuestion: () -> Void
+    @State private var selection = 0
+
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             FateTheme.ivory.ignoresSafeArea()
-            TabView(selection: $selection) {
-                ForEach(items) { item in
-                    VStack(spacing: 24) {
-                        Spacer()
-                        Text(item.category.uppercased()).font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
-                        Text(item.title).font(.system(size: 30, weight: .medium, design: .serif)).multilineTextAlignment(.center)
-                        Text(item.body).font(.system(size: 18)).lineSpacing(10).frame(maxWidth: 330, alignment: .leading)
-                        Spacer()
-                        Text("左右にスワイプして読み進める").font(.caption).foregroundStyle(FateTheme.muted)
-                    }.padding(30).tag(item.id)
+
+            VStack(spacing: 0) {
+                VStack(spacing: 7) {
+                    Text(item.displayName)
+                        .font(.system(size: 20, weight: .medium, design: .serif))
+                        .multilineTextAlignment(.center)
+                    Text(item.category)
+                        .font(.caption)
+                        .tracking(1.5)
+                        .foregroundStyle(FateTheme.muted)
                 }
-            }.tabViewStyle(.page(indexDisplayMode: .always))
-            Button { dismiss() } label: { Image(systemName: "xmark").font(.title3).foregroundStyle(FateTheme.ink).padding(14).background(FateTheme.paper).clipShape(Circle()) }.padding(22)
+                .padding(.top, 18)
+
+                TabView(selection: $selection) {
+                    ForEach(Array(item.storyCards.enumerated()), id: \.offset) { index, card in
+                        VStack(spacing: 28) {
+                            Spacer(minLength: 70)
+                            Text(card.label)
+                                .font(.caption)
+                                .tracking(3)
+                                .foregroundStyle(FateTheme.muted)
+                            Text(card.text)
+                                .font(.system(size: index == item.storyCards.count - 1 ? 20 : 23, weight: .medium, design: .serif))
+                                .lineSpacing(14)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 330)
+                            if let note = card.note {
+                                Text(note)
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(FateTheme.muted)
+                                    .lineSpacing(6)
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: 310)
+                            }
+                            Spacer(minLength: 90)
+                        }
+                        .padding(.horizontal, 26)
+                        .tag(index)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(item.storyCards.count)枚中\(index + 1)枚目。\(card.label)。\(card.text)")
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+
+                HStack(spacing: 7) {
+                    ForEach(item.storyCards.indices, id: \.self) { index in
+                        Circle()
+                            .fill(index == selection ? FateTheme.ink : FateTheme.line)
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                .padding(.bottom, 28)
+
+                Text(selection == item.storyCards.count - 1 ? "ここまで読んだら、気になる点をそのまま質問できます" : "左右にスワイプして、続きを読み進める")
+                    .font(.caption)
+                    .foregroundStyle(FateTheme.muted)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 24)
+            }
+
+            VStack {
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(FateTheme.ink)
+                            .frame(width: 46, height: 46)
+                            .background(FateTheme.paper)
+                            .overlay(Rectangle().stroke(FateTheme.line, lineWidth: 0.5))
+                    }
+                    Spacer()
+                }
+                Spacer()
+                HStack {
+                    Spacer()
+                    VStack(spacing: 11) {
+                        ShareLink(item: "Fate Labの鑑定「\(item.displayName)」\n\(item.summary)\nhttps://fate-lab.com") {
+                            Image(systemName: "bookmark")
+                                .frame(width: 46, height: 46)
+                                .background(FateTheme.paper)
+                                .overlay(Rectangle().stroke(FateTheme.gold, lineWidth: 0.5))
+                        }
+                        Button {
+                            dismiss()
+                            onQuestion()
+                        } label: {
+                            Text("聞く")
+                                .font(.system(size: 12, weight: .medium, design: .serif))
+                                .frame(width: 46, height: 46)
+                                .background(FateTheme.paper)
+                                .overlay(Rectangle().stroke(FateTheme.gold, lineWidth: 0.5))
+                        }
+                    }
+                    .foregroundStyle(FateTheme.gold)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 18)
         }
+        .preferredColorScheme(.light)
     }
 }
 
@@ -131,6 +218,9 @@ struct ReportInsight: Identifiable {
     let body: String
     let tags: [String]
     let isTiming: Bool
+    let storyCards: [InsightStoryCard]
+
+    var displayName: String { TraitLanguage.name(for: title, category: category) }
 
     static func make(from source: String) -> [ReportInsight] {
         let document = ReportParser.parse(source)
@@ -140,10 +230,14 @@ struct ReportInsight: Identifiable {
             guard !texts.isEmpty else { continue }
             let timing = chapter.yearCount > 0 || chapter.title.contains("時期") || chapter.title.contains("年")
             let title = texts.first(where: { $0.count <= 46 }) ?? chapter.title
-            let body = texts.prefix(5).joined(separator: "\n\n")
+            let body = texts.joined(separator: "\n\n")
             let summary = texts.dropFirst().first ?? texts[0]
             let tags = tags(for: chapter.title + " " + body)
-            results.append(.init(id: chapter.id, category: chapter.title, title: clean(title), summary: clean(summary), body: clean(body), tags: tags, isTiming: timing))
+            let cleanedTitle = clean(title)
+            let cleanedSummary = clean(summary)
+            let cleanedBody = clean(body)
+            let cards = TraitLanguage.cards(title: cleanedTitle, summary: cleanedSummary, texts: texts.map(clean))
+            results.append(.init(id: chapter.id, category: chapter.title, title: cleanedTitle, summary: cleanedSummary, body: cleanedBody, tags: tags, isTiming: timing, storyCards: cards))
         }
         return Array(results.prefix(10))
     }
@@ -163,5 +257,99 @@ struct ReportInsight: Identifiable {
         for (needle, label) in [("仕事", "仕事"),("恋", "恋愛"),("結婚", "結婚"),("人間関係", "人間関係"),("転職", "転職"),("挑戦", "挑戦"),("引越", "引越し")] where text.contains(needle) { values.append(label) }
         if values.isEmpty { values = ["本質", "自分らしさ"] }
         return Array(values.prefix(4))
+    }
+}
+
+struct InsightStoryCard {
+    let label: String
+    let text: String
+    let note: String?
+}
+
+private enum TraitLanguage {
+    static func name(for title: String, category: String) -> String {
+        let source = title + category
+        if source.contains("言葉と情報") { return "話して確かめる人" }
+        if source.contains("責任を現実") { return "引き受けたら最後まで" }
+        if source.contains("人と人を調整") { return "間を取り持つ人" }
+        if source.contains("自分から始め") { return "まず動いてみる人" }
+        if source.contains("深く") || source.contains("探究") { return "奥まで確かめる人" }
+        if source.contains("恋愛") || source.contains("結婚") { return "近くなるほど丁寧に" }
+        if source.contains("仕事") { return "任された先で光る人" }
+        if source.contains("人間関係") { return "距離を見ながら結ぶ人" }
+        if source.contains("時期") || source.contains("年") { return "流れが動くとき" }
+        if source.contains("組み合わせ") { return "いくつもの顔を持つ人" }
+        if source.contains("要約") { return "最初に知ってほしいこと" }
+        return title.replacingOccurrences(of: "力", with: "").prefixText(12)
+    }
+
+    static func cards(title: String, summary: String, texts: [String]) -> [InsightStoryCard] {
+        let sentences = uniqueSentences(from: [summary] + texts)
+        let labels = ["はじまり", "ふだんのあなた", "人といるとき", "心の内側", "つまずくとき", "試すなら"]
+        var selected: [String] = []
+
+        let action = sentences.last { sentence in
+            ["してください", "すると", "試す", "決める", "確認する", "言葉にする", "手放す"].contains { sentence.contains($0) }
+        }
+
+        for sentence in sentences where selected.count < 6 {
+            let normalized = readable(sentence)
+            guard normalized.count >= 12,
+                  !selected.contains(normalized),
+                  normalized != title,
+                  action.map({ readable($0) != normalized }) ?? true else { continue }
+            selected.append(normalized)
+        }
+
+        if let action {
+            if selected.count == 6 { selected.removeLast() }
+            selected.append(readable(action))
+        }
+
+        if selected.isEmpty { selected = [readable(summary)] }
+        while selected.count < 4, let last = selected.last {
+            let supplements = [
+                "この特徴は、何かを決める場面でいちばん輪郭が濃くなります。",
+                "うまく使えているときは、無理に頑張らなくても自然に続けられます。",
+                "大切なのは、正しさよりも自分が納得できる順番を見つけることです。"
+            ]
+            let next = supplements.first { !selected.contains($0) } ?? last
+            selected.append(next)
+        }
+
+        return Array(selected.prefix(6)).enumerated().map { index, text in
+            let label = index == min(selected.count, 6) - 1 ? "試すなら" : labels[min(index, labels.count - 1)]
+            let note = index == 0 ? "読み進めるほど、この見立てが日常でどう表れるかが見えてきます。" : nil
+            return .init(label: label, text: text, note: note)
+        }
+    }
+
+    private static func uniqueSentences(from values: [String]) -> [String] {
+        var result: [String] = []
+        for value in values {
+            let prepared = value
+                .replacingOccurrences(of: "\n", with: "。")
+                .replacingOccurrences(of: "- ", with: "")
+            for piece in prepared.split(separator: "。") {
+                let sentence = String(piece).trimmingCharacters(in: .whitespacesAndNewlines) + "。"
+                guard sentence.count > 8, !result.contains(sentence) else { continue }
+                result.append(sentence)
+            }
+        }
+        return result
+    }
+
+    private static func readable(_ source: String) -> String {
+        let text = source
+            .replacingOccurrences(of: "[[HIGHLIGHT:", with: "")
+            .replacingOccurrences(of: "]]", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return text
+    }
+}
+
+private extension String {
+    func prefixText(_ length: Int) -> String {
+        count <= length ? self : String(prefix(length))
     }
 }
