@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var auth: AuthStore
-    @State private var input = BirthInput()
+    @State private var input: BirthInput
     @State private var report: GeneratedReport?
     @State private var isWorking = false
     @State private var progress: ReportProgress = .calculating
@@ -12,7 +12,16 @@ struct HomeView: View {
     @State private var showTimePicker = false
     @State private var draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
     @State private var errorMessage: String?
+    private let autoGenerate: Bool
+    @State private var didAutoGenerate = false
     private let prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"]
+
+    init(initialInput: BirthInput? = nil, autoGenerate: Bool = false) {
+        let value = initialInput ?? BirthInput()
+        _input = State(initialValue: value)
+        _timeSelected = State(initialValue: value.hasTime)
+        self.autoGenerate = autoGenerate
+    }
 
     var body: some View {
         ScrollView {
@@ -85,7 +94,13 @@ struct HomeView: View {
                 }
             }.padding(20)
         }.background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
-            .task { await APIClient.shared.warmup() }
+            .task {
+                await APIClient.shared.warmup()
+                if autoGenerate && !didAutoGenerate {
+                    didAutoGenerate = true
+                    await generateReport()
+                }
+            }
             .safeAreaInset(edge: .bottom) {
                 if report == nil {
                     VStack(spacing: 6) {
@@ -204,6 +219,12 @@ struct ReportView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Divider().overlay(FateTheme.line)
+            InsightHubView(report: report) {
+                if auth.session == nil {
+                    pendingAfterAuth = true
+                    AuthPresentation.shared.isPresented = true
+                } else { Task { await saveAndOpen() } }
+            }
             ReportDocumentView(report: report, questionTitle: questionButtonTitle, isSaving: isSaving) {
                 if auth.session == nil {
                     pendingAfterAuth = true

@@ -11,6 +11,7 @@
 		1904C87890D4E6D56044CF9E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5342D58A967C8EF3F73846A /* SettingsView.swift */; };
 		1D747F7AEBCC0FDCEC6859B5 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34376F558AC94ECC52F91C17 /* APIClient.swift */; };
 		2B0E54032F6B1A39D1659636 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D31349E6A06DA0C0FFD9B29 /* Assets.xcassets */; };
+		3A904DB5706AB0565F1A3023 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0809C54FA65C68BB48231A97 /* OnboardingView.swift */; };
 		50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F165C70345759947694F4DD8 /* RootView.swift */; };
 		686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */; };
 		6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3719AD9E38679916FC4B757D /* KeychainStore.swift */; };
@@ -25,12 +26,15 @@
 		E62334A3D3DBFC25A5549F2D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A6215BD9CC8E89991688F6 /* ProfileView.swift */; };
 		E788BA2BE4650ACA834E75ED /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4074C929BE92C04BAD98AA2A /* AuthView.swift */; };
 		E8F0E89F77689CD561F075A7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067B14D891149931612DB9F3 /* Theme.swift */; };
+		EF0116932650EB14E88DC8EE /* InsightHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132963A65C3787E06DD392A5 /* InsightHubView.swift */; };
 		F84DD3F1378B99349DF72F5E /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D04080D70BB79BC5AB54BF2 /* Models.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		067B14D891149931612DB9F3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		0809C54FA65C68BB48231A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		107DD9115ABC222F720551D8 /* ReadingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingChatView.swift; sourceTree = "<group>"; };
+		132963A65C3787E06DD392A5 /* InsightHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightHubView.swift; sourceTree = "<group>"; };
 		1CD011C8691551175BE93F6B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDocumentView.swift; sourceTree = "<group>"; };
 		2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
@@ -82,8 +86,10 @@
 				57C6F120A970A549A5C1422D /* FateLabApp.swift */,
 				1CD011C8691551175BE93F6B /* HomeView.swift */,
 				DC8F8B44392E671602A15C66 /* Info.plist */,
+				132963A65C3787E06DD392A5 /* InsightHubView.swift */,
 				3719AD9E38679916FC4B757D /* KeychainStore.swift */,
 				3D04080D70BB79BC5AB54BF2 /* Models.swift */,
+				0809C54FA65C68BB48231A97 /* OnboardingView.swift */,
 				96A6215BD9CC8E89991688F6 /* ProfileView.swift */,
 				2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */,
 				107DD9115ABC222F720551D8 /* ReadingChatView.swift */,
@@ -175,8 +181,10 @@
 				E788BA2BE4650ACA834E75ED /* AuthView.swift in Sources */,
 				DDB2D7B49387DFF5E346A98B /* FateLabApp.swift in Sources */,
 				BFE6F24BAB3DD56D2B551BBE /* HomeView.swift in Sources */,
+				EF0116932650EB14E88DC8EE /* InsightHubView.swift in Sources */,
 				6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */,
 				F84DD3F1378B99349DF72F5E /* Models.swift in Sources */,
+				3A904DB5706AB0565F1A3023 /* OnboardingView.swift in Sources */,
 				E62334A3D3DBFC25A5549F2D /* ProfileView.swift in Sources */,
 				9CD8CB80D084C6FABE7C4C4A /* PurchaseManager.swift in Sources */,
 				E3E37AC74D00375A8F15D4D0 /* ReadingChatView.swift in Sources */,
@@ -229,7 +237,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -299,7 +307,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
