@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { calcAstrology } from '../lib/astrology.js'
 import { Solar } from 'lunar-javascript'
 import { calcZiwei } from '../lib/ziwei.js'
+import { requireReadingAuth } from '../middleware/auth.js'
 
 export const calcRouter = Router()
 
@@ -619,7 +620,7 @@ calcRouter.post('/shichu', (req, res) => {
   }
 })
 
-calcRouter.post('/divination', (req, res) => {
+calcRouter.post('/divination', requireReadingAuth, (req, res) => {
   try {
     const { birthDate, birthTime, birthplace, gender } = req.body as { birthDate?: string; birthTime?: string; birthplace?: string; gender?: string }
 

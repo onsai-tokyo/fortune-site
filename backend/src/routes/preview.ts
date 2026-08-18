@@ -1,12 +1,30 @@
 import { Router } from 'express'
+import { createHash } from 'crypto'
+import rateLimit from 'express-rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
 import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, calcNumerologyProfile, calcKyuseiProfile, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
-import { buildDeterministicReport } from '../lib/deterministicReport.js'
+import { buildDeterministicStructuredReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
+import { requireReadingAuth } from '../middleware/auth.js'
 
 export const previewRouter = Router()
+
+const questionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: Math.max(1, Number(process.env.PREVIEW_QUESTION_RATE_LIMIT ?? 6)),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '短時間に質問が続いています。少し待ってから再度お試しください。' },
+})
+
+function requestCorrelationId(body: unknown): string {
+  const input = body && typeof body === 'object' ? body as Record<string, unknown> : {}
+  const birthDate = typeof input.birthDate === 'string' ? input.birthDate : ''
+  const birthplace = typeof input.birthplace === 'string' ? input.birthplace : ''
+  return createHash('sha256').update(`${birthDate}|${birthplace}`).digest('hex').slice(0, 8)
+}
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -61,7 +79,7 @@ interface CalculatedData {
 
 // LP用：命式鑑定書 全章ストリーミング生成
 // POST /api/preview/generate
-previewRouter.post('/generate', async (req, res) => {
+previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   try {
     const { birthDate, birthTime, birthplace, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
       birthDate?: string
@@ -74,8 +92,6 @@ previewRouter.post('/generate', async (req, res) => {
       question?: string
       calculatedData?: CalculatedData
     }
-
-    console.log('Preview generate request:', { birthDate, calculatedData })
 
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
@@ -115,7 +131,7 @@ previewRouter.post('/generate', async (req, res) => {
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
-    const deterministicReport = buildDeterministicReport({
+    const deterministicReport = buildDeterministicStructuredReport({
       birthDate,
       birthTime,
       birthplace,
@@ -137,25 +153,8 @@ previewRouter.post('/generate', async (req, res) => {
       ...expanded,
     })
 
-    // 固定鑑定は一括生成済み。モバイルSafariがSSE接続の終了を待ち続ける場合に備え、
-    // アイボリー版トップからは通常のJSONレスポンスを利用する。
-    if (req.query.format === 'json') {
-      res.setHeader('Cache-Control', 'private, no-store, max-age=0')
-      res.json({ text: deterministicReport })
-      return
-    }
-
-    res.setHeader('Content-Type', 'text/event-stream')
-    // POST本文に個人の出生情報を含むため共有キャッシュへ保存しない。
-    // 同一入力の再現性は固定計算で担保し、古い鑑定文の再利用を防ぐ。
     res.setHeader('Cache-Control', 'private, no-store, max-age=0')
-    res.setHeader('Connection', 'keep-alive')
-    res.setHeader('X-Accel-Buffering', 'no')
-    for (let offset = 0; offset < deterministicReport.length; offset += 240) {
-      res.write(`data: ${JSON.stringify({ delta: { text: deterministicReport.slice(offset, offset + 240) } })}\n\n`)
-    }
-    res.write('data: [DONE]\n\n')
-    res.end()
+    res.json(deterministicReport)
     return
 
     /* Legacy AI report generator retained temporarily for reference.
@@ -276,14 +275,8 @@ ${ageTable}
     res.end()
     */
   } catch (err) {
-    const requestInput = {
-      birthDate: req.body?.birthDate,
-      birthTime: req.body?.birthTime,
-      birthplace: req.body?.birthplace,
-      gender: req.body?.gender,
-    }
     console.error('Preview generate error', {
-      input: requestInput,
+      correlationId: requestCorrelationId(req.body),
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
     })
@@ -301,7 +294,7 @@ ${ageTable}
 
 // 質問詳細回答（¥500 決済済みトークン必須）
 // POST /api/preview/question
-previewRouter.post('/question', async (req, res) => {
+previewRouter.post('/question', questionLimiter, async (req, res) => {
   try {
     const { question, calculatedData, questionToken, birthDate, gender } = req.body as {
       question?: string

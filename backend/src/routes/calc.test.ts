@@ -19,6 +19,7 @@ import {
 import { buildDeterministicReport, buildTwoStageConsensus, renderReportBlocks } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
+import { buildStructuredReport } from '../lib/reportCards.js'
 
 test('二段階Consensusは系統内の厳密な過半数だけを1票にまとめる', () => {
   type Theme = 'change' | 'stay'
@@ -155,9 +156,11 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
     ...expanded,
   })
 
-  for (const heading of ['先に読む要約', '共通して現れた本質', 'あなた固有の組み合わせ', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年', '迷ったときの順序・注記']) {
+  for (const heading of ['先に読む要約', '共通して現れた本質', 'あなた固有の組み合わせ', '仕事', '恋愛・結婚', '人間関係', '時期 — 重なりの強い年']) {
     assert.match(report, new RegExp(`【${heading}`))
   }
+  assert.doesNotMatch(report, /【迷ったときの順序・注記】/)
+  assert.doesNotMatch(report, /出生時刻が不明のため、時刻が必要な一部の結果を除いて鑑定しています/)
   assert.doesNotMatch(report, /【補助傾向】/)
   assert.doesNotMatch(report, /【この人固有の恋愛パターン】/)
   assert.doesNotMatch(report, /【インド占星術 — 個別結果】/)
@@ -395,9 +398,15 @@ function makeFullReport(year: number, month: number, day: number, hour?: number,
   })
 }
 
+test('生年月日が異なる鑑定ではサーバー生成のカードタイトルも異なる', () => {
+  const first = buildStructuredReport(makeFullReport(1995, 2, 20, 5, 40)).cards.map(card => card.title)
+  const second = buildStructuredReport(makeFullReport(1990, 6, 12)).cards.map(card => card.title)
+  assert.notDeepEqual(first, second)
+})
+
 test('指定入力と五行0・出生時刻なしでも統合鑑定が最後まで生成される', () => {
   const target = makeFullReport(1995, 3, 16, 10, 30)
-  assert.match(target, /【迷ったときの順序・注記】/)
+  assert.doesNotMatch(target, /【迷ったときの順序・注記】/)
   assert.match(target, /天体の長期的な動き|長期の人生周期/)
   assert.ok(target.length > 3000)
   for (const [year, month, day] of [[1988, 1, 1], [1988, 1, 2], [1988, 1, 4]]) {
@@ -406,8 +415,8 @@ test('指定入力と五行0・出生時刻なしでも統合鑑定が最後ま�
     assert.ok(Object.values(scores).some(score => score === 0))
     assert.match(makeFullReport(year, month, day, 12, 0), /【仕事】/)
   }
-  assert.match(makeFullReport(1990, 6, 12), /出生時刻が不明/)
-  assert.match(makeFullReport(2000, 11, 3), /出生時刻が不明/)
+  assert.doesNotMatch(makeFullReport(1990, 6, 12), /出生時刻が不明のため、時刻が必要な一部の結果/)
+  assert.doesNotMatch(makeFullReport(2000, 11, 3), /出生時刻が不明のため、時刻が必要な一部の結果/)
 })
 
 test('一つの鑑定ブロックが失敗しても他ブロックを返す', () => {

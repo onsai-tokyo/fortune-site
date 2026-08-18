@@ -7,6 +7,7 @@ import { validateConversationTitle, validateReadingQuestion } from '../lib/readi
 import { buildPublicReadingShare } from '../lib/readingShare.js'
 import { filterTraitCandidates } from '../lib/profileTraits.js'
 import { hasPremiumAccess } from '../lib/premium.js'
+import { buildStructuredReport } from '../lib/reportCards.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -183,6 +184,14 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
   const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
   res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
+})
+
+readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
+  const { data, error } = await getSupabaseAdmin().from('reading_conversations')
+    .select('report_text').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+  if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  res.json(buildStructuredReport(data.report_text))
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {

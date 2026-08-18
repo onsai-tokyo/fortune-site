@@ -39,6 +39,12 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   next()
 }
 
+// SMTP・確認リンクの実環境検証後に有効化する。falseの間は既存ゲスト導線を維持する。
+export async function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  if (process.env.REQUIRE_READING_AUTH !== 'true') { next(); return }
+  await requireAuth(req, res, next)
+}
+
 // サブスク有効確認ミドルウェア
 export async function requireSubscription(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.userId || !req.accessToken) {

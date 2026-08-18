@@ -1,3 +1,5 @@
+import { buildStructuredReport, StructuredReport } from './reportCards.js'
+
 interface ReportInput {
   birthDate?: string
   birthTime?: string
@@ -1059,10 +1061,6 @@ export function buildDeterministicReport(input: ReportInput): string {
 この欄はラーシ（サイン）、ラグナ、月のナクシャトラを表示しています。ダシャーや分割図は、出生地点を市区町村単位で確認してから扱う必要があるため、現在は断定表示していません。`
     : input.astrology?.reason ?? '出生時刻が不明なため、ラグナを含むインド占星術の詳細は算出していません。'
 
-  const hasKnownBirthTime = Boolean(input.birthTime) || (input.birthTime === undefined && input.astrology?.available)
-  const coverageNote = hasKnownBirthTime
-    ? ''
-    : '出生時刻が不明のため、時刻が必要な一部の結果を除いて鑑定しています。'
   const uniqueParagraphs = [
     { score: selectedConsensus[0]?.score ?? 0, text: personalizedCore },
     { score: input.astrology?.available ? 2.5 : 0, text: [identityAndDirectionPattern, personalizedEmotion, emotionalAreaPattern, wholeChartCorePattern].filter(Boolean).join('\n') },
@@ -1076,7 +1074,6 @@ export function buildDeterministicReport(input: ReportInput): string {
   ], 'combination-intro') : '共通して現れた本質を、状況に応じて使う人です。'
 
   const report = `【先に読む要約】
-${coverageNote}
 ${strongest ? `結論として、あなたに最も強く表れているのは[[HIGHLIGHT:「${consensusLabels[strongest.key].title}」]]です。` : 'いくつかの計算で共通した傾向を中心にまとめています。'}
 - 人生の軸：${strongest ? destinyTendencies[strongest.key] : '自分の資質を、周囲が使える具体的な形へ変えること'}。
 - 気をつけたいこと：${strongest ? shadowTendencies[strongest.key] : day.caution}。
@@ -1121,13 +1118,7 @@ ${personalizedLifeStage}
 
 ${timingBlocks}
 ここに表示する年は、出来事が必ず起こるという意味ではありません。複数の計算で同じテーマが強く出た期間だけを載せています。
-
-【迷ったときの順序・注記】
-自分の希望を言葉にする → 現実条件を数字で確認する → 小さく試す → 続けるか決める。
-
-一つの見方だけに出た特徴は本文へ載せていません。同じ出生データなら、同じ計算結果から読み解きます。この鑑定は将来を決めつけるものではなく、自分の気持ちや選択肢を整理するための参考情報です。
-
-詳しい計算要素は、画面上部の「命式・計算データ」で確認できます。`
+`
   const sections = report.split(/(?=^【.+?】$)/gm).filter(Boolean)
   return renderReportBlocks(sections.map((section, index) => ({
     id: section.match(/^【(.+?)】/)?.[1] ?? `section-${index}`,
@@ -1266,4 +1257,9 @@ ${annualDetail}
 
 同じ出生データなら、同じ計算結果から読み解きます。出生時刻が不明な場合は時柱を含まないため、時刻を入力した結果より解釈の範囲が狭くなります。`
   */
+}
+
+// v2の主要経路。旧クライアント向け文字列も保持しつつ、表示側へは構造だけを渡す。
+export function buildDeterministicStructuredReport(input: ReportInput): StructuredReport {
+  return buildStructuredReport(buildDeterministicReport(input))
 }

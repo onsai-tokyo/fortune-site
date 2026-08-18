@@ -1,8 +1,8 @@
 import { config } from 'dotenv'
 config({ override: true })
-import express from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import cors from 'cors'
-import rateLimit from 'express-rate-limit'
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
 import { fortuneRouter } from './routes/fortune.js'
 import { chatRouter } from './routes/chat.js'
 import { paymentRouter } from './routes/payment.js'
@@ -13,6 +13,7 @@ import { calcRouter } from './routes/calc.js'
 import { readingRouter } from './routes/reading.js'
 import { stripeRouter, stripeWebhook } from './routes/stripe.js'
 import { appleRouter, appStoreNotification } from './routes/apple.js'
+import { verifiedUserIdFromAuthorization } from './lib/rateLimitIdentity.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -50,15 +51,38 @@ app.post('/api/apple/notifications', express.json({ limit: '256kb' }), appStoreN
 // 128kbでは正常な鑑定書も413になるため、対象を検証するAPI側の上限と合わせて余裕を持たせる。
 app.use(express.json({ limit: '5mb' }))
 
-// レート制限: 全API IPごと10req/分
-const limiter = rateLimit({
+interface RateLimitRequest extends Request {
+  rateLimitUserId?: string
+}
+
+function tokenUserId(req: Request): string | undefined {
+  return verifiedUserIdFromAuthorization(
+    req.headers.authorization,
+    process.env.SUPABASE_JWT_SECRET,
+    process.env.SUPABASE_URL,
+  )
+}
+
+// 通常APIは認証ユーザー単位。未認証リクエストだけIP単位で制限する。
+// JWTのsubはレート制限キーにだけ使い、認可は各ルートのrequireAuthで別途検証する。
+const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  limit: req => (req as RateLimitRequest).rateLimitUserId ? 120 : 60,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: req => {
+    const userId = (req as RateLimitRequest).rateLimitUserId
+    return userId
+      ? `user:${userId}`
+      : `ip:${ipKeyGenerator(req.ip ?? req.socket.remoteAddress ?? 'unknown', 56)}`
+  },
   message: { error: 'リクエストが多すぎます。しばらくお待ちください。' },
 })
-app.use('/api', limiter)
+app.use('/api', (req: RateLimitRequest, _res, next) => {
+  // 署名検証は1リクエストにつき一度だけ行い、limitとkeyGeneratorで結果を共有する。
+  req.rateLimitUserId = tokenUserId(req)
+  next()
+}, generalLimiter)
 
 // 鑑定エンドポイント: IPごと3req/時（コスト保護）※本番は3に戻す
 const fortuneLimiter = rateLimit({
@@ -88,6 +112,28 @@ app.get('/health', (_req, res) => {
     version: '1.1.1',
     hasApiKey: key.length > 0 && key !== 'your_api_key_here',
   })
+})
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'エンドポイントが見つかりません' })
+})
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled request error:', err instanceof Error
+    ? { name: err.name, message: err.message, stack: err.stack }
+    : { message: String(err) })
+  if (res.headersSent) { _next(err); return }
+  res.status(500).json({ error: 'サーバーで問題が発生しました' })
+})
+
+process.on('unhandledRejection', reason => {
+  console.error('Unhandled rejection:', reason instanceof Error
+    ? { name: reason.name, message: reason.message, stack: reason.stack }
+    : { message: String(reason) })
+})
+
+process.on('uncaughtException', error => {
+  console.error('Uncaught exception:', { name: error.name, message: error.message, stack: error.stack })
 })
 
 app.listen(PORT, () => {
