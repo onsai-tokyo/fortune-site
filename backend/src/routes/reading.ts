@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import rateLimit from 'express-rate-limit'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+import { getSupabaseUser } from '../lib/supabaseUser.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 import { buildPublicReadingShare } from '../lib/readingShare.js'
 import { filterTraitCandidates } from '../lib/profileTraits.js'
@@ -53,7 +54,7 @@ readingRouter.get('/shares/:shareId', async (req, res) => {
 
 readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const db = getSupabaseAdmin()
+    const db = getSupabaseUser(req.accessToken!)
     const [{ data: usage }, premium, { count: approvedCount }] = await Promise.all([
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
       hasPremiumAccess(req.userId!),
@@ -68,7 +69,7 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
 })
 
 readingRouter.get('/profile/traits', requireAuth, async (req: AuthRequest, res) => {
-  const { data, error } = await getSupabaseAdmin().from('profile_traits')
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('profile_traits')
     .select('id,reading_id,conversation_id,category,text,status,created_at,approved_at')
     .eq('user_id', req.userId!).eq('status', 'approved').order('approved_at', { ascending: false }).limit(300)
   if (error) { res.status(500).json({ error: 'プロフィールを取得できませんでした' }); return }
@@ -89,18 +90,19 @@ readingRouter.delete('/account', requireAuth, async (req: AuthRequest, res) => {
 readingRouter.patch('/profile/traits/:id', requireAuth, async (req: AuthRequest, res) => {
   const status = req.body?.status
   if (!['approved', 'rejected'].includes(status)) { res.status(400).json({ error: '回答を選んでください' }); return }
-  const { data, error } = await getSupabaseAdmin().from('profile_traits').update({
+  const db = getSupabaseUser(req.accessToken!)
+  const { data, error } = await db.from('profile_traits').update({
     status, approved_at: status === 'approved' ? new Date().toISOString() : null,
   }).eq('id', req.params.id).eq('user_id', req.userId!).select('id,status,approved_at').maybeSingle()
   if (error) { res.status(500).json({ error: '回答を保存できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '確認項目が見つかりません' }); return }
-  const { count } = await getSupabaseAdmin().from('profile_traits').select('id', { count: 'exact', head: true })
+  const { count } = await db.from('profile_traits').select('id', { count: 'exact', head: true })
     .eq('user_id', req.userId!).eq('status', 'approved')
   res.json({ trait: data, approvedCount: count ?? 0 })
 })
 
 readingRouter.delete('/profile/traits/:id', requireAuth, async (req: AuthRequest, res) => {
-  const { data, error } = await getSupabaseAdmin().from('profile_traits').delete()
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('profile_traits').delete()
     .eq('id', req.params.id).eq('user_id', req.userId!).eq('status', 'approved').select('id').maybeSingle()
   if (error) { res.status(500).json({ error: '項目を削除できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '項目が見つかりません' }); return }
@@ -116,7 +118,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     if (reportText.length > 60000) {
       res.status(413).json({ error: '鑑定データが大きすぎます' }); return
     }
-    const db = getSupabaseAdmin()
+    const db = getSupabaseUser(req.accessToken!)
     const safeTitle = validateConversationTitle(title) ?? '鑑定結果について'
     const rawIdempotencyKey = req.header('Idempotency-Key') ?? ''
     const idempotencyKey = /^[a-f0-9]{64}$/.test(rawIdempotencyKey) ? rawIdempotencyKey : null
@@ -166,7 +168,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 })
 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   const { data, error } = await db.from('reading_conversations')
     .select('id,secret_token,title,source_section,source_year,created_at,updated_at,reading_messages(count)')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
@@ -175,7 +177,7 @@ readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) =
 })
 
 readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   const { data: conversation } = await db.from('reading_conversations').select('*')
     .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
@@ -187,7 +189,7 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
 })
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
-  const { data, error } = await getSupabaseAdmin().from('reading_conversations')
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
     .select('report_text').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
@@ -195,7 +197,7 @@ readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   const { data: conversation } = await db.from('reading_conversations').select('*')
     .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
@@ -207,7 +209,7 @@ readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) 
 })
 
 readingRouter.post('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   const { data: conversation } = await db.from('reading_conversations').select('*')
     .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
@@ -220,7 +222,7 @@ readingRouter.post('/reports/:token/share', requireAuth, async (req: AuthRequest
 })
 
 readingRouter.delete('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   const { data: conversation } = await db.from('reading_conversations').select('id')
     .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
@@ -233,7 +235,7 @@ readingRouter.delete('/reports/:token/share', requireAuth, async (req: AuthReque
 readingRouter.patch('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
   const title = validateConversationTitle(req.body?.title)
   if (!title) { res.status(400).json({ error: '鑑定履歴の名前を入力してください' }); return }
-  const { data, error } = await getSupabaseAdmin().from('reading_conversations').update({ title, updated_at: new Date().toISOString() })
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations').update({ title, updated_at: new Date().toISOString() })
     .eq('id', req.params.id).eq('user_id', req.userId!).select('id,title,updated_at').maybeSingle()
   if (error) { res.status(500).json({ error: '鑑定履歴の名前を変更できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
@@ -241,7 +243,7 @@ readingRouter.patch('/conversations/:id', requireAuth, async (req: AuthRequest, 
 })
 
 readingRouter.delete('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
-  const { data, error } = await getSupabaseAdmin().from('reading_conversations').delete()
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations').delete()
     .eq('id', req.params.id).eq('user_id', req.userId!).select('id').maybeSingle()
   if (error) { res.status(500).json({ error: '鑑定履歴を削除できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
@@ -249,7 +251,7 @@ readingRouter.delete('/conversations/:id', requireAuth, async (req: AuthRequest,
 })
 
 readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter, async (req: AuthRequest, res) => {
-  const db = getSupabaseAdmin()
+  const db = getSupabaseUser(req.accessToken!)
   let chargedFreeQuestion = false
   try {
     const checkedQuestion = validateReadingQuestion(req.body?.question)

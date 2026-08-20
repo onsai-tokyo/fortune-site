@@ -44,32 +44,3 @@ export async function requireReadingAuth(req: AuthRequest, res: Response, next: 
   if (process.env.REQUIRE_READING_AUTH === 'false') { next(); return }
   await requireAuth(req, res, next)
 }
-
-// サブスク有効確認ミドルウェア
-export async function requireSubscription(req: AuthRequest, res: Response, next: NextFunction) {
-  if (!req.userId || !req.accessToken) {
-    res.status(401).json({ error: 'ログインが必要です' })
-    return
-  }
-
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${req.accessToken}` } } }
-  )
-
-  const { data } = await supabase
-    .from('subscriptions')
-    .select('expires_at')
-    .eq('user_id', req.userId)
-    .gt('expires_at', new Date().toISOString())
-    .limit(1)
-    .maybeSingle()
-
-  if (!data) {
-    res.status(403).json({ error: 'プレミアム会員のみご利用いただけます' })
-    return
-  }
-
-  next()
-}

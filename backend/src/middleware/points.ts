@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { AuthRequest } from './auth.js'
+import { hasPremiumAccess } from '../lib/premium.js'
 
 function getSupabaseWithToken(token: string) {
   return createClient(
@@ -8,18 +9,6 @@ function getSupabaseWithToken(token: string) {
     process.env.SUPABASE_ANON_KEY!,
     { global: { headers: { Authorization: `Bearer ${token}` } } }
   )
-}
-
-export async function checkPremium(userId: string, accessToken: string): Promise<boolean> {
-  const supabase = getSupabaseWithToken(accessToken)
-  const { data } = await supabase
-    .from('subscriptions')
-    .select('expires_at')
-    .eq('user_id', userId)
-    .gt('expires_at', new Date().toISOString())
-    .limit(1)
-    .maybeSingle()
-  return !!data
 }
 
 // ポイントデクリメントミドルウェア（requireAuth の後に使う）
@@ -31,7 +20,7 @@ export function requirePoints(cost: number) {
     }
 
     // プレミアム会員はポイント不要
-    const premium = await checkPremium(req.userId, req.accessToken)
+    const premium = await hasPremiumAccess(req.userId)
     if (premium) {
       req.isPremium = true
       next()
