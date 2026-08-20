@@ -156,7 +156,7 @@ private struct ReviewRow: View { let label: String; let value: String; var divid
 private struct LockScreenNotificationPreview: View {
     var body: some View {
         ZStack {
-            LinearGradient(colors: [.black.opacity(0.83), FateTheme.gold.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            Color(red: 0.11, green: 0.10, blue: 0.09)
             VStack(spacing: 8) {
                 Text("9:41").font(.system(size: 44, weight: .light)).foregroundStyle(.white)
                 Text("8月17日 月曜日").font(.caption).foregroundStyle(.white.opacity(0.82))

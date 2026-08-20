@@ -45,3 +45,9 @@ test('PR12の鑑定APIは認証トークンを送り、チャット本文と次�
   assert.doesNotMatch(reading, /回答本文は必ず「結論」「読み解き」「気をつけたいこと」/)
   assert.doesNotMatch(reading, /各行「次の質問：」で示してください/)
 })
+
+test('認証エラーからアカウントの登録有無を推測できない', () => {
+  const auth = read('ios/FateLab/AuthStore.swift')
+  assert.doesNotMatch(auth, /このメールアドレスは登録済み/)
+  assert.match(auth, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
+})
