@@ -287,12 +287,12 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
 複数の見方で一致する場合は共通点を説明し、異なる場合は無理に統合せず違いを明示してください。未来を確定事項として断言せず「傾向」「流れ」「可能性」「起こりやすい」を使ってください。
 利用者向け文章でAI、LLM、ChatGPT、Claudeなどの内部技術名を名乗らず、人間の占い師・鑑定士であるようにも振る舞わないでください。
 医療・法律・投資などの専門判断を代替しないでください。根拠のない確率を作らないでください。
-質問へ直接答える、自然な会話文にしてください。回答本文は必ず「結論」「読み解き」「気をつけたいこと」の3つの短い見出しに分けてください。
-「結論」は2〜4文で質問への答えを先に伝え、「読み解き」で計算済みデータに基づく理由や具体例を補足し、「気をつけたいこと」は必要な注意を簡潔に示してください。
-長い鑑定書をもう一度作り直さず、質問に必要な範囲だけを答えてください。短い段落と箇条書きを適度に混ぜ、箇条書きは3〜5項目程度にしてください。
-Markdownの太字記号「**」、見出し記号「#」、区切り線「---」は出力禁止です。強調したい内容は「特に大切なのは〜です」のように文章で示してください。
+見出しを付けず、話しかけるように答えてください。1文目で質問への答えを言い切り、前置きはしないでください。
+全体で3〜5文、200〜300字程度にし、理由は1つだけ挙げてください。箇条書きは複数を求める質問のときだけ使ってください。
+注意点は本当に必要なときだけ最後に1文で添え、硬い言い回しを避けて日常の言葉で書いてください。長い鑑定書を作り直さず、断定して終えてください。
+Markdownの太字記号「**」と見出し記号「#」は出力禁止です。
 専門用語を並べず、占いに詳しくない人にも分かる日常的な表現を使ってください。断定や過度な煽りを避け、読み手へ話しかける柔らかい文体にしてください。
-最後に次に聞ける質問を2〜4件、各行「次の質問：」で示してください。
+回答本文を書き終えたら、改行して ---NEXT--- と書き、そのあとに次に聞ける質問を3件、接頭辞を付けず1行ずつ書いてください。
 
 【出生情報】${birth}
 【計算済みデータ】${calculated}
@@ -308,14 +308,21 @@ Markdownの太字記号「**」、見出し記号「#」、区切り線「---」
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'private, no-store')
     res.setHeader('X-Accel-Buffering', 'no')
-    let answer = ''
+    let generated = ''
     const stream = getClient().messages.stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 1200, system, messages: history })
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        answer += event.delta.text
-        res.write(`data: ${JSON.stringify({ delta: { text: event.delta.text } })}\n\n`)
+        generated += event.delta.text
       }
     }
+    const [bodyPart, suggestionsPart = ''] = generated.split('---NEXT---', 2)
+    const answer = bodyPart
+      .replace(/^次の質問[：:].*$/gm, '')
+      .trim()
+    const suggestions = suggestionsPart.split('\n')
+      .map(line => line.replace(/^[-・*\d.\s]+/, '').replace(/^次の質問[：:]\s*/, '').trim())
+      .filter(Boolean).slice(0, 3)
+    if (answer) res.write(`data: ${JSON.stringify({ delta: { text: answer } })}\n\n`)
     const systems = [...new Set((answer.match(/四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音/g) ?? []))]
     const { data: assistantMessage, error: assistantMessageError } = await db.from('reading_messages')
       .insert({ conversation_id: conversation.id, user_id: req.userId, role: 'assistant', content: answer, referenced_systems: systems })
@@ -343,7 +350,7 @@ Markdownの太字記号「**」、見出し記号「#」、区切り線「---」
     } catch (traitError) {
       console.error('Profile trait extraction failed:', { userId: req.userId, conversationId: conversation.id, traitError })
     }
-    res.write(`data: ${JSON.stringify({ meta: { referencedSystems: systems, traits } })}\n\n`)
+    res.write(`data: ${JSON.stringify({ meta: { referencedSystems: systems, traits, suggestions } })}\n\n`)
     res.write('data: [DONE]\n\n'); res.end()
   } catch (error) {
     if (chargedFreeQuestion && req.userId) {

@@ -6,11 +6,20 @@ struct ReadingListView: View {
     @State private var readings: [ReadingSummary] = []
     @State private var errorMessage: String?
     @State private var path: [UUID] = []
+    @State private var isLoading = false
 
     var body: some View {
         Group {
-            if let session = auth.session {
+            if auth.session != nil {
                 List {
+                    if isLoading { ProgressView("読み込んでいます…").frame(maxWidth: .infinity).listRowBackground(FateTheme.background) }
+                    if let errorMessage {
+                        VStack(spacing: 12) {
+                            Text("読み込めませんでした").font(.headline)
+                            Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.secondaryText)
+                            Button("再試行") { Task { await load() } }.buttonStyle(OutlineGoldButtonStyle())
+                        }.listRowBackground(FateTheme.background)
+                    }
                     if readings.isEmpty {
                         VStack(spacing: 14) {
                             Text("まだ鑑定書がありません").font(.system(size: 21, weight: .medium, design: .serif))
@@ -31,7 +40,7 @@ struct ReadingListView: View {
                     }
                     Button("新しく鑑定する") { onNewReading() }.buttonStyle(OutlineGoldButtonStyle()).listRowBackground(FateTheme.ivory)
                 }.scrollContentBackground(.hidden)
-                    .task { do { readings = try await APIClient.shared.readings(token: session.accessToken) } catch { errorMessage = error.localizedDescription } }
+                    .task { await load() }
             } else {
                 ContentUnavailableView("鑑定履歴を保存", systemImage: "books.vertical",
                                        description: Text("無料登録すると、鑑定書と質問を続きから開けます。"))
@@ -39,7 +48,13 @@ struct ReadingListView: View {
         }.background(FateTheme.ivory).fateScreenTitle("鑑定書一覧")
             .navigationDestination(for: UUID.self) { SavedReadingView(conversationID: $0) }
             .toolbar { if auth.session == nil { Button("ログイン") { AuthPresentation.shared.isPresented = true } } }
-            .alert("確認できませんでした", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) { Button("閉じる") {} } message: { Text(errorMessage ?? "") }
+    }
+
+    private func load() async {
+        isLoading = true; errorMessage = nil
+        defer { isLoading = false }
+        do { readings = try await APIClient.shared.readings(auth: auth) }
+        catch { errorMessage = error.localizedDescription }
     }
 
     private func shortDate(_ value: String?) -> String {

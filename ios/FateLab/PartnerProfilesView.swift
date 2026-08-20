@@ -18,15 +18,13 @@ struct PartnerProfilesView: View {
                 Text("あの人とについて").font(.system(size: 30, weight: .medium, design: .serif))
                 Text("二人のプロフィールを重ねて、関係の中で表れやすい力を読みます。")
                     .foregroundStyle(FateTheme.muted)
-                ReportCard {
-                    HStack(spacing: 16) {
-                        profileTile(title: "あなた", subtitle: auth.session?.user.email ?? "登録済み", icon: "person.crop.circle")
-                        Text("&").font(.title2).foregroundStyle(FateTheme.gold)
+                HStack(spacing: 16) {
+                        profileTile(title: "あなた", subtitle: "", icon: "person")
+                        Text("&").font(.callout).foregroundStyle(FateTheme.secondaryText)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
                                         subtitle: selected.map(typeLabel) ?? "未設定", icon: "person.crop.circle.badge.plus")
                         }.buttonStyle(.plain)
-                    }
                 }
                 Picker("関係性", selection: $relationshipType) {
                     Text("恋愛").tag("romantic"); Text("友人").tag("friend")
@@ -35,7 +33,9 @@ struct PartnerProfilesView: View {
                     Text("先に相手を登録または選択してください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
                 }
-                Button(isGenerating ? "二人の関係を読み解いています…" : "相性・関係性の鑑定結果へ進む") { Task { await generateCompatibility() } }
+                Button { Task { await generateCompatibility() } } label: {
+                    HStack { if isGenerating { ProgressView().tint(FateTheme.buttonText) }; Text("相性・関係性の鑑定結果へ進む") }
+                }
                     .buttonStyle(GoldButtonStyle()).disabled(selected == nil || isGenerating).opacity(selected == nil ? 0.45 : 1)
                 if let compatibilityReport {
                     VStack(alignment: .leading, spacing: 12) {
@@ -53,7 +53,12 @@ struct PartnerProfilesView: View {
                     }
                 }
                 Text("残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
-                if let errorMessage { Text(errorMessage).foregroundStyle(.red).font(.caption) }
+                if let errorMessage {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(errorMessage).foregroundStyle(.red).font(.caption)
+                        Button("再試行") { Task { await load() } }.buttonStyle(OutlineGoldButtonStyle())
+                    }
+                }
             }.padding(20)
         }
         .background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
@@ -97,6 +102,7 @@ struct PartnerProfilesView: View {
 
     private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipType == "friend" ? "友人" : "恋愛" }
     private func load(selectNewest: Bool = false) async {
+        errorMessage = nil
         do { let response = try await APIClient.shared.partnerProfiles(auth: auth); partners = response.partners; remaining = response.remaining
             if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
         } catch { errorMessage = error.localizedDescription }
@@ -120,16 +126,19 @@ private struct PartnerRegistrationView: View {
     @State private var name = ""; @State private var date = Date(); @State private var hasTime = false; @State private var time = Date()
     @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationship = "romantic"; @State private var error: String?
     var body: some View {
-        NavigationStack { Form {
-            TextField("表示名", text: $name)
-            DatePicker("生年月日", selection: $date, displayedComponents: .date)
+        NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
+            Text("新しく相手を登録する").font(.system(size: 25, weight: .medium, design: .serif))
+            TextField("表示名", text: $name).padding(12).overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.border))
+            DateMenuPicker(date: $date)
+            Divider().overlay(FateTheme.border)
             Toggle("出生時刻を入力する", isOn: $hasTime)
             if hasTime { DatePicker("出生時刻", selection: $time, displayedComponents: .hourAndMinute) }
+            Divider().overlay(FateTheme.border)
             TextField("出生地", text: $birthplace)
             Picker("性別", selection: $gender) { Text("女性").tag("female"); Text("男性").tag("male") }
             Picker("関係性", selection: $relationship) { Text("恋愛").tag("romantic"); Text("友人").tag("friend") }
             if let error { Text(error).foregroundStyle(.red) }
-        }.navigationTitle("新しく相手を登録する").toolbar {
+        }.padding(20) }.background(FateTheme.background).toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) { Button("登録") { Task { await save() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty) }
         } }

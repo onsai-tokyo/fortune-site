@@ -56,7 +56,7 @@ struct HomeView: View {
                         .buttonStyle(GoldButtonStyle())
                         .disabled(input.hasTime && !timeSelected)
                         .opacity(input.hasTime && !timeSelected ? 0.5 : 1)
-                    Text("登録不要・約1分")
+                    Text(AppConfig.requiresAuthentication ? "約1分" : "登録すると鑑定結果を保存できます・約1分")
                         .font(.system(size: 13))
                         .foregroundStyle(FateTheme.muted)
                 }
@@ -77,31 +77,16 @@ struct HomeView: View {
 
     private var inputForm: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("FATE LAB").font(.system(size: 17, weight: .medium, design: .serif)).tracking(4)
+            Text("FATE LAB").font(.system(size: 17, weight: .medium, design: .serif)).tracking(1)
             Text("9つの占術を、\n4つの系統から照合。")
                 .font(.system(size: 34, weight: .medium, design: .serif)).lineSpacing(6)
             Text("重なって現れた傾向を中心に、同じ入力なら変わらない鑑定書を作成します。")
                 .foregroundStyle(FateTheme.muted).lineSpacing(6)
             ReportCard {
                 VStack(alignment: .leading, spacing: 18) {
-                        Text("INSTANT ANALYSIS").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
+                        Text("INSTANT ANALYSIS").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
                         inputSection("01", "生年月日") {
-                            Button {
-                                draftDate = input.date
-                                showDatePicker = true
-                            } label: {
-                                HStack {
-                                    Text(input.date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits)))
-                                    Spacer()
-                                    Text("生年月日を選ぶ")
-                                    Image(systemName: "chevron.right")
-                                }
-                                .padding(12)
-                                .foregroundStyle(FateTheme.ink)
-                                .background(FateTheme.paper)
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(FateTheme.line))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
+                            DateMenuPicker(date: $input.date)
                         }
                         Divider().overlay(FateTheme.line.opacity(0.7))
                         inputSection("02", "出生時刻") {
@@ -181,12 +166,12 @@ struct HomeView: View {
     private func generateReport() async {
         let requestedInput = input
         isWorking = true; errorMessage = nil
+        defer { isWorking = false }
         do {
-            let generated = try await APIClient.shared.generateReport(input: requestedInput) { progress = $0 }
+            let generated = try await APIClient.shared.generateReport(input: requestedInput, auth: auth) { progress = $0 }
             if input == requestedInput { report = generated }
         }
         catch { errorMessage = error.localizedDescription }
-        isWorking = false
     }
 
     private func resetForAnotherPerson() {
@@ -212,33 +197,9 @@ private struct FateLoadingView: View {
     let progress: ReportProgress
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            let seconds = timeline.date.timeIntervalSinceReferenceDate
-            let rotation = Angle.degrees(seconds.truncatingRemainder(dividingBy: 2.8) / 2.8 * 360)
-            let pulse = 0.94 + (sin(seconds * 2.2) + 1) * 0.035
-
             VStack(spacing: 30) {
                 Spacer(minLength: 90)
-                ZStack {
-                    Circle()
-                        .stroke(FateTheme.line.opacity(0.55), lineWidth: 1)
-                        .frame(width: 124, height: 124)
-                    Circle()
-                        .trim(from: 0.08, to: 0.72)
-                        .stroke(
-                            AngularGradient(colors: [FateTheme.gold.opacity(0.2), FateTheme.gold, FateTheme.gold.opacity(0.2)], center: .center),
-                            style: StrokeStyle(lineWidth: 5, lineCap: .round)
-                        )
-                        .frame(width: 124, height: 124)
-                        .rotationEffect(rotation)
-                    Circle()
-                        .fill(FateTheme.gold.opacity(0.12))
-                        .frame(width: 82, height: 82)
-                        .scaleEffect(pulse)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 28, weight: .light))
-                        .foregroundStyle(FateTheme.gold)
-                }
+                ProgressView().controlSize(.large).tint(FateTheme.primaryText)
 
                 VStack(spacing: 12) {
                     Text(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
@@ -253,71 +214,53 @@ private struct FateLoadingView: View {
                         .lineSpacing(6)
                 }
 
-                HStack(spacing: 8) {
-                    ForEach(0..<3, id: \.self) { index in
-                        Circle()
-                            .fill(FateTheme.gold.opacity(dotOpacity(index: index, seconds: seconds)))
-                            .frame(width: 7, height: 7)
-                    }
-                }
                 Spacer(minLength: 120)
             }
             .frame(maxWidth: .infinity, minHeight: 620)
-        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
     }
 
-    private func dotOpacity(index: Int, seconds: TimeInterval) -> Double {
-        let wave = sin(seconds * 4 - Double(index) * 0.9)
-        return 0.28 + (wave + 1) * 0.32
-    }
 }
 
 struct ReportView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
+    @EnvironmentObject private var tabRouter: AppTabRouter
     let report: GeneratedReport
-    @State private var conversationID: UUID?
     @State private var isSaving = false
     @State private var pendingAfterAuth = false
+    @State private var pendingContextTitle: String?
     @State private var errorMessage: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Divider().overlay(FateTheme.line)
-            InsightHubView(report: report) {
+            InsightHubView(report: report) { card in
                 if auth.session == nil {
                     pendingAfterAuth = true
+                    pendingContextTitle = card.title
                     AuthPresentation.shared.isPresented = true
-                } else { Task { await saveAndOpen() } }
-            }
-            ReportDocumentView(report: report, questionTitle: questionButtonTitle, isSaving: isSaving) {
-                if auth.session == nil {
-                    pendingAfterAuth = true
-                    AuthPresentation.shared.isPresented = true
-                } else { Task { await saveAndOpen() } }
+                } else { Task { await saveAndOpen(contextTitle: card.title) } }
             }
             if let errorMessage { Text(errorMessage).font(.footnote).foregroundStyle(.red) }
             Text("結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。")
                 .font(.caption).foregroundStyle(FateTheme.muted)
         }
-        .navigationDestination(item: $conversationID) { ReadingChatView(conversationID: $0) }
         .onChange(of: auth.session?.user.id) { _, userID in
             if userID != nil && pendingAfterAuth {
                 pendingAfterAuth = false
-                Task { await saveAndOpen() }
+                Task { await saveAndOpen(contextTitle: pendingContextTitle) }
             }
         }
     }
 
-    private var questionButtonTitle: String {
-        purchases.isPremium ? "この結果について質問する" : "この結果について質問する（無料）"
-    }
-
-    private func saveAndOpen() async {
-        guard let token = auth.session?.accessToken else { return }
+    private func saveAndOpen(contextTitle: String? = nil) async {
+        guard auth.session != nil else { return }
         isSaving = true; errorMessage = nil
-        do { conversationID = try await APIClient.shared.createConversation(report: report, token: token) }
+        do {
+            let conversationID = try await APIClient.shared.createConversation(report: report, auth: auth)
+            tabRouter.openChat(conversationID: conversationID, contextTitle: contextTitle)
+        }
         catch { errorMessage = error.localizedDescription }
         isSaving = false
     }

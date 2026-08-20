@@ -2,12 +2,13 @@ import SwiftUI
 
 struct SavedReadingView: View {
     @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
 
     @State private var detail: ConversationDetail?
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var openQuestions = false
+    @State private var cards: [ReadingCard] = []
 
     var body: some View {
         ScrollView {
@@ -26,12 +27,17 @@ struct SavedReadingView: View {
                     let report = GeneratedReport(
                         birthData: [:],
                         calculatedData: [:],
-                        text: detail.conversation.reportText
+                        text: detail.conversation.reportText,
+                        cards: cards
                     )
                     VStack(alignment: .leading, spacing: 18) {
-                        InsightHubView(report: report) { openQuestions = true }
+                        InsightHubView(report: report) { card in
+                            tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
+                        }
 
-                        Button("この鑑定書について質問する") { openQuestions = true }
+                        Button("この鑑定書について質問する") {
+                            tabRouter.openChat(conversationID: conversationID)
+                        }
                             .buttonStyle(GoldButtonStyle())
 
                         DisclosureGroup("鑑定書の全文を読む") {
@@ -45,38 +51,37 @@ struct SavedReadingView: View {
                         .padding(.vertical, 14)
                     }
                 } else {
-                    ContentUnavailableView(
-                        "鑑定書を開けませんでした",
-                        systemImage: "doc.text.magnifyingglass",
-                        description: Text(errorMessage ?? "少し待ってから、もう一度お試しください。")
-                    )
-                    .frame(minHeight: 520)
+                    VStack(spacing: 16) {
+                        ContentUnavailableView("鑑定書を開けませんでした", systemImage: "doc.text.magnifyingglass",
+                                               description: Text(errorMessage ?? "少し待ってから、もう一度お試しください。"))
+                        Button("再試行") { Task { await load() } }.buttonStyle(OutlineGoldButtonStyle())
+                    }.frame(minHeight: 520)
                 }
             }
             .padding(20)
         }
         .background(FateTheme.ivory)
         .fateScreenTitle(detail?.conversation.title ?? "あなたの鑑定")
-        .navigationDestination(isPresented: $openQuestions) {
-            ReadingChatView(conversationID: conversationID)
-        }
         .task { await load() }
         .refreshable { await load() }
     }
 
     private func load() async {
-        guard let token = auth.session?.accessToken else {
+        guard auth.session != nil else {
             isLoading = false
             errorMessage = "ログイン情報を確認できませんでした。"
             return
         }
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         do {
-            detail = try await APIClient.shared.conversation(id: conversationID, token: token)
+            async let detailRequest = APIClient.shared.conversation(id: conversationID, auth: auth)
+            async let cardsRequest = APIClient.shared.cards(id: conversationID, auth: auth)
+            detail = try await detailRequest
+            cards = try await cardsRequest.cards
         } catch {
             errorMessage = error.localizedDescription
         }
-        isLoading = false
     }
 }

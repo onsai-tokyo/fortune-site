@@ -8,10 +8,20 @@ enum ReportProgress {
 
 enum APIError: LocalizedError {
     case invalidResponse
+    case paymentRequired(String)
+    case rateLimited(String)
     case server(String)
     var errorDescription: String? {
-        switch self { case .invalidResponse: "サーバーへ接続できませんでした"; case .server(let message): message }
+        switch self {
+        case .invalidResponse: "読み込めませんでした。通信環境を確認して、もう一度お試しください"
+        case .paymentRequired(let message), .rateLimited(let message), .server(let message): message
+        }
     }
+}
+
+struct ChatAnswer {
+    let text: String
+    let suggestions: [String]
 }
 
 @MainActor
@@ -63,7 +73,12 @@ struct APIClient {
                 let serverMessage = ["error", "message", "detail"]
                     .compactMap { object?[$0] as? String }
                     .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                let error = APIError.server(serverMessage ?? "一時的に接続できませんでした。もう一度お試しください")
+                let message = serverMessage ?? "一時的に接続できませんでした。もう一度お試しください"
+                let error: APIError = switch http.statusCode {
+                case 402: .paymentRequired(message)
+                case 429: .rateLimited("アクセスが集中しています。少し待ってから、もう一度お試しください")
+                default: .server(message)
+                }
                 lastError = error
                 let transientStatusCodes = [500, 502, 503, 504]
                 if retryTransient, attempt + 1 < maximumAttempts, transientStatusCodes.contains(http.statusCode) {
@@ -191,20 +206,23 @@ struct APIClient {
         return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
     }
 
-    func ask(conversationID: UUID, question: String, auth: AuthStore) async throws -> String {
+    func ask(conversationID: UUID, question: String, auth: AuthStore) async throws -> ChatAnswer {
         let token = try await auth.validAccessToken()
         let raw = try await data(for: request(path: "/api/reading/conversations/\(conversationID.uuidString)/questions",
                                                method: "POST", token: token, json: ["question": question]), auth: auth)
+        var suggestions: [String] = []
         let text = String(decoding: raw, as: UTF8.self).split(separator: "\n").reduce(into: "") { result, line in
             guard line.hasPrefix("data: ") else { return }
             let payload = String(line.dropFirst(6))
             guard payload != "[DONE]", let chunk = payload.data(using: .utf8),
-                  let object = try? JSONSerialization.jsonObject(with: chunk) as? [String: Any],
-                  let delta = object["delta"] as? [String: Any], let part = delta["text"] as? String else { return }
-            result += part
+                  let object = try? JSONSerialization.jsonObject(with: chunk) as? [String: Any] else { return }
+            if let delta = object["delta"] as? [String: Any], let part = delta["text"] as? String { result += part }
+            if let meta = object["meta"] as? [String: Any], let values = meta["suggestions"] as? [String] { suggestions = values }
         }
-        guard !text.isEmpty else { throw APIError.server("回答を取得できませんでした") }
-        return text
+        let cleaned = text.replacingOccurrences(of: #"(?m)^次の質問[：:].*$"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { throw APIError.server("回答を取得できませんでした") }
+        return ChatAnswer(text: cleaned, suggestions: suggestions)
     }
 
     func generateReport(input: BirthInput, auth: AuthStore? = nil,

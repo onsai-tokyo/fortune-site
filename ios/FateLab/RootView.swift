@@ -33,11 +33,11 @@ struct RootView: View {
     private var mainTabs: some View {
         TabView(selection: $tabRouter.selectedTab) {
             NavigationStack { HomeView(initialInput: onboardingInput, autoGenerate: shouldAutoGenerate) }
-                .tabItem { Label("あなたについて", systemImage: "person.text.rectangle") }.tag(0)
+                .tabItem { Label("あなた", systemImage: "person") }.tag(0)
             NavigationStack { PartnerProfilesView() }
-                .tabItem { Label("あの人とについて", systemImage: "person.2") }.tag(1)
+                .tabItem { Label("ふたり", systemImage: "person.2") }.tag(1)
             NavigationStack { AIChatTabView() }
-                .tabItem { Label("AIチャット", systemImage: "bubble.left.and.bubble.right") }.tag(2)
+                .tabItem { Label("対話", systemImage: "bubble.left.and.bubble.right") }.tag(2)
             NavigationStack { SettingsView() }
                 .tabItem { Label("設定", systemImage: "gearshape") }.tag(3)
         }
@@ -77,7 +77,7 @@ private struct AIChatTabView: View {
                 }
             } else if auth.session == nil {
                 ContentUnavailableView {
-                    Label("AIチャット", systemImage: "bubble.left.and.bubble.right")
+                    Label("対話", systemImage: "bubble.left.and.bubble.right")
                 } description: {
                     Text("ログインすると、鑑定結果について質問できます。")
                 } actions: {
