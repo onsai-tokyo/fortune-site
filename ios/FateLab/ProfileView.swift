@@ -7,7 +7,7 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
+                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
                 Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium, design: .serif))
                 if auth.session != nil {
                     Text("\(traits.count)").font(.system(size: 48, weight: .medium, design: .serif)).foregroundStyle(FateTheme.gold)
@@ -38,8 +38,8 @@ struct ProfileView: View {
                 }
             }.padding(20)
         }.background(FateTheme.ivory).fateScreenTitle("あなたについて").task {
-            guard let token = auth.session?.accessToken else { return }
-            traits = (try? await APIClient.shared.traits(token: token)) ?? []
+            guard auth.session != nil else { return }
+            traits = (try? await APIClient.shared.traits(auth: auth)) ?? []
         }
     }
 
@@ -52,8 +52,8 @@ struct ProfileView: View {
     }
 
     private func delete(_ trait: ProfileTrait) async {
-        guard let token = auth.session?.accessToken else { return }
-        do { try await APIClient.shared.deleteTrait(id: trait.id, token: token); traits.removeAll { $0.id == trait.id } }
+        guard auth.session != nil else { return }
+        do { try await APIClient.shared.deleteTrait(id: trait.id, auth: auth); traits.removeAll { $0.id == trait.id } }
         catch { /* 削除に失敗した場合は表示を維持する */ }
     }
 }

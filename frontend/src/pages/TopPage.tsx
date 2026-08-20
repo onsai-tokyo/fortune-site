@@ -215,11 +215,15 @@ export function TopPage() {
     setSubmittedLabel(label)
     setSubmittedQuestion('')
     setQuestionAnswer('')
+    const readingHeaders = {
+      'Content-Type': 'application/json',
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    }
 
     // バックエンド側で計算した値を取得（フロント側の計算ライブラリのバグ回避）
     const calcRes = await fetch('/api/calc/divination', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: readingHeaders,
       body: JSON.stringify({ birthDate, birthTime, birthplace: form.birthplace, gender: form.gender }),
     })
 
@@ -290,9 +294,9 @@ export function TopPage() {
     setIsStreaming(true); setPreviewError(''); setPreviewContent('')
 
     try {
-      const res = await fetch('/api/preview/generate?v=2', {
+      const res = await fetch('/api/preview/generate?format=json', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: readingHeaders,
         body: JSON.stringify({
           birthDate, birthTime, birthplace: form.birthplace, gender: form.gender,
           partnerBirthDate, partnerBirthTime, partnerGender: form.partnerGender,
@@ -327,19 +331,8 @@ export function TopPage() {
         throw new Error(err.error ?? '生成に失敗しました')
       }
 
-      let fullContent = ''
-      // 固定鑑定は完成済みの文章を返すため、一括で受信する。
-      // iOS Safariでストリームの終了通知を待ち続け、「鑑定中」が残る問題を避ける。
-      const responseText = await res.text()
-      for (const line of responseText.split('\n')) {
-        if (!line.startsWith('data: ')) continue
-        const data = line.slice(6)
-        if (data === '[DONE]') continue
-        try {
-          const parsed = JSON.parse(data) as { delta?: { text?: string } }
-          if (parsed.delta?.text) fullContent += parsed.delta.text
-        } catch { /* 壊れた行は無視 */ }
-      }
+      const payload = await res.json() as { reportText?: string }
+      let fullContent = payload.reportText ?? ''
       fullContent = fullContent
         .replace(/^#{1,3}\s*/gm, '')
         .replace(/^---+$/gm, '')

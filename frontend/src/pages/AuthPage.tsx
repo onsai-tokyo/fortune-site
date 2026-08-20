@@ -128,6 +128,19 @@ export default function AuthPage() {
     }
   }
 
+  async function signInWithGoogle() {
+    setIsLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth?returnTo=${encodeURIComponent(returnTo)}` },
+    })
+    if (error) {
+      setError(error.message)
+      setIsLoading(false)
+    }
+  }
+
   const titles: Record<Mode, string> = {
     login: 'ログイン',
     register: '新規登録',
@@ -158,6 +171,18 @@ export default function AuthPage() {
               <p className="text-[#8b3f31] text-sm">{error}</p>
             </div>
           )}
+
+          {!registrationSent && mode !== 'reset' && <>
+            <button
+              type="button"
+              onClick={() => void signInWithGoogle()}
+              disabled={isLoading}
+              className="w-full rounded-lg border border-[#bfa66e] bg-white py-3.5 text-sm font-medium text-[#4b443b] disabled:opacity-50"
+            >
+              Googleで続ける
+            </button>
+            <div className="flex items-center gap-3 text-xs text-[#8a7e70]"><span className="h-px flex-1 bg-[#e8dfcb]" /><span>またはメールアドレス</span><span className="h-px flex-1 bg-[#e8dfcb]" /></div>
+          </>}
 
           {registrationSent ? <section className="text-center">
             <p className="text-sm leading-7 text-[#5c5349]"><strong className="break-all text-[#211d18]">{email}</strong> 宛に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、鑑定書の保存と質問がご利用いただけます。</p>

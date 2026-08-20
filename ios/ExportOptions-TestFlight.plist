@@ -11,11 +11,11 @@
     <key>signingStyle</key>
     <string>manual</string>
     <key>signingCertificate</key>
-    <string>A3563794978FCDF33C967DBBB83720C73DA39A03</string>
+    <string>10B155442F3720F5D3C98FF15D0C2EAF21D35630</string>
     <key>provisioningProfiles</key>
     <dict>
         <key>com.onsai.fatelab</key>
-        <string>Fate Lab App Store</string>
+        <string>Fate Lab App Store 27 Local</string>
     </dict>
     <key>uploadSymbols</key>
     <true/>

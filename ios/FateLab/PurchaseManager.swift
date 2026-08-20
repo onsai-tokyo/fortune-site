@@ -29,7 +29,7 @@ final class PurchaseManager: ObservableObject {
         }
     }
 
-    func purchase(userID: UUID, accessToken: String) async {
+    func purchase(userID: UUID, auth: AuthStore) async {
         guard let product else { errorMessage = "料金情報を準備中です"; return }
         isWorking = true; errorMessage = nil
         defer { isWorking = false }
@@ -38,7 +38,7 @@ final class PurchaseManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try verified(verification)
-                try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, token: accessToken)
+                try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, auth: auth)
                 await transaction.finish()
                 isPremium = true
             case .userCancelled, .pending: break
@@ -47,13 +47,13 @@ final class PurchaseManager: ObservableObject {
         } catch { errorMessage = error.localizedDescription }
     }
 
-    func restore(accessToken: String) async {
+    func restore(auth: AuthStore) async {
         isWorking = true; defer { isWorking = false }
         do {
             try await AppStore.sync()
             for await result in Transaction.currentEntitlements {
                 guard let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID else { continue }
-                try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, token: accessToken)
+                try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth)
             }
             await refreshEntitlements()
         } catch { errorMessage = "購入内容を復元できませんでした" }

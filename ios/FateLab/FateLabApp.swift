@@ -31,5 +31,6 @@ struct FateLabApp: App {
             .environment(\.locale, Locale(identifier: "ja_JP"))
             .tint(FateTheme.gold)
             .preferredColorScheme(.light)
+            .onOpenURL { url in Task { await auth.handleAuthCallback(url) } }
     }
 }

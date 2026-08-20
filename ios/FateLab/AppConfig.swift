@@ -17,6 +17,10 @@ enum AppConfig {
         Bundle.main.object(forInfoDictionaryKey: "SupabaseAnonKey") as? String ?? ""
     }
 
+    static var requiresAuthentication: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "RequireAuthentication") as? Bool ?? false
+    }
+
     private static func value(named name: String, fallback: String) -> URL {
         let raw = Bundle.main.object(forInfoDictionaryKey: name) as? String ?? fallback
         return URL(string: raw) ?? URL(string: fallback)!

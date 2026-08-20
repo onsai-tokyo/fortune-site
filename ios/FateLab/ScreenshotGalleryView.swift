@@ -244,20 +244,15 @@ private struct LiveReportScreenshotView: View {
     }
 
     @ViewBuilder private func rendered(_ report: GeneratedReport) -> some View {
-        let document = ReportParser.parse(report.text)
         switch position {
         case .top:
             ScrollView { ReportDocumentView(report: report, questionTitle: "この結果について質問する（無料）", isSaving: false) {}.padding(20) }
         case .middle:
-            if let chapter = document.chapters.first(where: { $0.title == "仕事" }) ?? document.chapters.dropFirst().first {
-                ReportChapterView(chapter: chapter, index: 3, total: document.chapters.count + 1)
-            }
+            if let card = report.cards.first(where: { !$0.isTiming }) { InsightDetailView(item: card) {} }
         case .timing:
-            if let chapter = document.chapters.first(where: { $0.title.contains("時期") || $0.nodes.contains(where: \.isYear) }) {
-                ReportChapterView(chapter: chapter, index: 7, total: document.chapters.count + 1)
-            }
+            if let card = report.cards.first(where: \.isTiming) { InsightDetailView(item: card) {} }
         case .end:
-            if let chapter = document.chapters.last { ReportChapterView(chapter: chapter, index: document.chapters.count + 1, total: document.chapters.count + 1) }
+            if let card = report.cards.last { InsightDetailView(item: card) {} }
         }
     }
 
@@ -266,12 +261,6 @@ private struct LiveReportScreenshotView: View {
         let importedURL = URL.documentsDirectory.appending(path: "screenshot-report.txt")
         if let imported = try? String(contentsOf: importedURL, encoding: .utf8), !imported.isEmpty {
             UserDefaults.standard.set(imported, forKey: cacheKey)
-        }
-        if let cached = UserDefaults.standard.string(forKey: cacheKey), !cached.isEmpty {
-            let value = GeneratedReport(birthData: [:], calculatedData: [:], text: cached)
-            report = value
-            assert(!ReportParser.plainText(from: value.text).contains("[["))
-            return
         }
         var input = BirthInput()
         input.date = Calendar(identifier: .gregorian).date(from: DateComponents(year: 1995, month: 2, day: 20)) ?? input.date
@@ -283,7 +272,6 @@ private struct LiveReportScreenshotView: View {
             let value = try await APIClient.shared.generateReport(input: input)
             report = value
             UserDefaults.standard.set(value.text, forKey: cacheKey)
-            assert(!ReportParser.plainText(from: value.text).contains("[["))
         } catch { errorMessage = error.localizedDescription }
     }
 }

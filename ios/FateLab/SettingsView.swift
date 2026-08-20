@@ -9,6 +9,10 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            Section("鑑定データ") {
+                NavigationLink("鑑定履歴") { ReadingListView() }
+                NavigationLink("会話からわかったこと") { ProfileView() }
+            }
             Section("継続鑑定") {
                 if purchases.isPremium || serverPremium {
                     Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.gold)
@@ -19,15 +23,15 @@ struct SettingsView: View {
                 } else if let session = auth.session {
                     Text("保存した鑑定書をもとに、回数の制限なく質問できます。")
                     Button(purchases.product.map { "\($0.displayPrice)／月で始める" } ?? "料金を確認しています") {
-                        Task { await purchases.purchase(userID: session.user.id, accessToken: session.accessToken) }
+                        Task { await purchases.purchase(userID: session.user.id, auth: auth) }
                     }.disabled(purchases.product == nil || purchases.isWorking)
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }
                 }
                 if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
             }
-            if let session = auth.session {
-                Section("購入") { Button("購入を復元") { Task { await purchases.restore(accessToken: session.accessToken) } } }
+            if auth.session != nil {
+                Section("購入") { Button("購入を復元") { Task { await purchases.restore(auth: auth) } } }
             }
             Section("アカウント") {
                 if let email = auth.session?.user.email { Text(email) }
@@ -50,8 +54,8 @@ struct SettingsView: View {
                 Text("保存した鑑定書と質問の履歴がすべて削除されます。この操作は取り消せません。継続鑑定をご利用中の場合は、App Storeの設定から別途解約してください。")
             }
             .task {
-                guard let token = auth.session?.accessToken else { return }
-                serverPremium = (try? await APIClient.shared.status(token: token).premium) ?? false
+                guard auth.session != nil else { return }
+                serverPremium = (try? await APIClient.shared.status(auth: auth).premium) ?? false
             }
     }
 }
