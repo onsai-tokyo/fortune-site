@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 }
 
 // JWT検証ミドルウェア（必須）
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'ログインが必要です' })
@@ -18,7 +18,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   const token = authHeader.slice(7)
-  const payload = verifySupabaseAccessToken(token, process.env.SUPABASE_JWT_SECRET, process.env.SUPABASE_URL)
+  const payload = await verifySupabaseAccessToken(token, process.env.SUPABASE_JWT_SECRET, process.env.SUPABASE_URL)
   if (!payload || typeof payload.sub !== 'string' || payload.sub.length > 128) {
     res.status(401).json({ error: 'セッションが無効です。再度ログインしてください。' })
     return
@@ -31,7 +31,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 // 鑑定APIは登録必須。ローカルでゲスト導線を明示的に確認するときだけ false にする。
-export function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
+export async function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
   if (process.env.REQUIRE_READING_AUTH === 'false') { next(); return }
-  requireAuth(req, res, next)
+  await requireAuth(req, res, next)
 }

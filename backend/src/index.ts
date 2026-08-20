@@ -56,7 +56,7 @@ interface RateLimitRequest extends Request {
   rateLimitUserId?: string
 }
 
-function tokenUserId(req: Request): string | undefined {
+async function tokenUserId(req: Request): Promise<string | undefined> {
   return verifiedUserIdFromAuthorization(
     req.headers.authorization,
     process.env.SUPABASE_JWT_SECRET,
@@ -79,9 +79,9 @@ const generalLimiter = rateLimit({
   },
   message: { error: 'リクエストが多すぎます。しばらくお待ちください。' },
 })
-app.use('/api', (req: RateLimitRequest, _res, next) => {
+app.use('/api', async (req: RateLimitRequest, _res, next) => {
   // 署名検証は1リクエストにつき一度だけ行い、limitとkeyGeneratorで結果を共有する。
-  req.rateLimitUserId = tokenUserId(req)
+  req.rateLimitUserId = await tokenUserId(req)
   next()
 }, generalLimiter)
 

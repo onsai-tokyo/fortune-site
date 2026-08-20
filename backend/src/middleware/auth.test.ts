@@ -49,7 +49,7 @@ test('explicit local opt-out keeps the guest route available', async () => {
   }
 })
 
-test('requireAuth verifies a Supabase HS256 token locally', () => {
+test('requireAuth verifies a Supabase HS256 token locally', async () => {
   const originalSecret = process.env.SUPABASE_JWT_SECRET
   const originalUrl = process.env.SUPABASE_URL
   process.env.SUPABASE_JWT_SECRET = 'test-secret'
@@ -63,7 +63,7 @@ test('requireAuth verifies a Supabase HS256 token locally', () => {
     const request = { headers: { authorization: `Bearer ${token}` } } as AuthRequest
     const { response } = responseRecorder()
     let nextCalled = false
-    requireAuth(request, response, (() => { nextCalled = true }) as NextFunction)
+    await requireAuth(request, response, (() => { nextCalled = true }) as NextFunction)
     assert.equal(nextCalled, true)
     assert.equal(request.userId, 'user-123')
     assert.equal(request.userEmail, 'test@example.com')
@@ -76,7 +76,7 @@ test('requireAuth verifies a Supabase HS256 token locally', () => {
   }
 })
 
-test('requireAuth rejects an invalid signature without a Supabase request', () => {
+test('requireAuth rejects an invalid signature without a Supabase request', async () => {
   const originalSecret = process.env.SUPABASE_JWT_SECRET
   const originalUrl = process.env.SUPABASE_URL
   process.env.SUPABASE_JWT_SECRET = 'correct-secret'
@@ -89,7 +89,7 @@ test('requireAuth rejects an invalid signature without a Supabase request', () =
     )
     const { response, result } = responseRecorder()
     let nextCalled = false
-    requireAuth({ headers: { authorization: `Bearer ${token}` } } as AuthRequest, response, (() => { nextCalled = true }) as NextFunction)
+    await requireAuth({ headers: { authorization: `Bearer ${token}` } } as AuthRequest, response, (() => { nextCalled = true }) as NextFunction)
     assert.equal(nextCalled, false)
     assert.deepEqual(result(), { statusCode: 401, body: { error: 'セッションが無効です。再度ログインしてください。' } })
   } finally {
