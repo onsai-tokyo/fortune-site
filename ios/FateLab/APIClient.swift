@@ -60,7 +60,10 @@ struct APIClient {
                 }
 
                 let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-                let error = APIError.server(object?["error"] as? String ?? "一時的に接続できませんでした。もう一度お試しください")
+                let serverMessage = ["error", "message", "detail"]
+                    .compactMap { object?[$0] as? String }
+                    .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                let error = APIError.server(serverMessage ?? "一時的に接続できませんでした。もう一度お試しください")
                 lastError = error
                 let transientStatusCodes = [500, 502, 503, 504]
                 if retryTransient, attempt + 1 < maximumAttempts, transientStatusCodes.contains(http.statusCode) {

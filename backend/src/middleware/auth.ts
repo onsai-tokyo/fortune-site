@@ -1,12 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { createClient } from '@supabase/supabase-js'
-
-function getSupabase() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!
-  )
-}
+import { verifySupabaseAccessToken } from '../lib/rateLimitIdentity.js'
 
 export interface AuthRequest extends Request {
   userId?: string
@@ -17,7 +10,7 @@ export interface AuthRequest extends Request {
 }
 
 // JWT検証ミドルウェア（必須）
-export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'ログインが必要です' })
@@ -25,22 +18,20 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   }
 
   const token = authHeader.slice(7)
-  const supabase = getSupabase()
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-
-  if (error || !user) {
+  const payload = verifySupabaseAccessToken(token, process.env.SUPABASE_JWT_SECRET, process.env.SUPABASE_URL)
+  if (!payload || typeof payload.sub !== 'string' || payload.sub.length > 128) {
     res.status(401).json({ error: 'セッションが無効です。再度ログインしてください。' })
     return
   }
 
-  req.userId = user.id
-  req.userEmail = user.email
+  req.userId = payload.sub
+  req.userEmail = typeof payload.email === 'string' ? payload.email : undefined
   req.accessToken = token
   next()
 }
 
 // 鑑定APIは登録必須。ローカルでゲスト導線を明示的に確認するときだけ false にする。
-export async function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
   if (process.env.REQUIRE_READING_AUTH === 'false') { next(); return }
-  await requireAuth(req, res, next)
+  requireAuth(req, res, next)
 }

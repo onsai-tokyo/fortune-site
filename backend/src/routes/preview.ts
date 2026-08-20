@@ -84,16 +84,11 @@ interface CalculatedData {
 // POST /api/preview/generate
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   try {
-    const { birthDate, birthTime, birthplace, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData, nickname, currentRole, currentConcern } = req.body as {
+    const { birthDate, birthTime, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
       birthDate?: string
       birthTime?: string
       birthplace?: string
       gender?: string
-      partnerBirthDate?: string
-      partnerBirthTime?: string
-      partnerGender?: string
-      question?: string
-      calculatedData?: CalculatedData
       nickname?: string
       currentRole?: CurrentRole
       currentConcern?: CurrentConcern
@@ -112,10 +107,6 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const age = calcAge(birthDate)
     const genderLabel = gender === 'male' ? '男性' : '女性'
     const [year, month, day] = birthDate.split('-').map(Number)
-    const timeLine = birthTime ? `　生誕時刻：${birthTime}` : ''
-
-    const hasPartner = !!partnerBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(partnerBirthDate)
-
     // サーバー側で正確に計算（フロント側の計算ライブラリのバグ回避）
     const [birthHour, birthMinute] = birthTime
       ? birthTime.split(':').map(Number)
@@ -173,124 +164,6 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     res.setHeader('Cache-Control', 'private, no-store, max-age=0')
     res.json(response)
     return
-
-    /* Legacy AI report generator retained temporarily for reference.
-    const dataSection = `
-【占術データ（サーバー側で正確に計算）】
-四柱推命 — 年柱:${shichu.year.kanshi} 月柱:${shichu.month.kanshi} 日柱:${shichu.day.kanshi}
-納音：${nayin}
-算命学 — 宿命星:${sanmei.shukumeiStar}　天中殺:${sanmei.chusatsu}
-宿曜：${sukuyo}宿
-数秘術（運命数）：${lifePathNumber}
-九星気学（本命星）：${KYUSEI_NAMES[honmei]}`
-
-    const partnerLine = hasPartner
-      ? `\n\n【相手の情報】\n生年月日：${partnerBirthDate}${partnerBirthTime ? `　生誕時刻：${partnerBirthTime}` : ''}　性別：${partnerGender === 'male' ? '男性' : '女性'}`
-      : ''
-
-    // 質問は別エンドポイント（/api/preview/question）で処理するため本文生成には含めない
-
-    const partnerChapter = hasPartner
-      ? '\n【相性診断 — 二人の命式が示す関係性と未来】'
-      : ''
-    // 質問は別エンドポイント（有料）で処理するため初回生成には含めない
-
-    const currentYear = new Date().getFullYear()
-    const pastStart = currentYear - 20
-    const futureEnd = currentYear + 9
-
-    // 年齢対照表を事前計算（AIに計算させるとずれるため）
-    const ageTable = Array.from({ length: futureEnd - pastStart + 1 }, (_, i) => {
-      const y = pastStart + i
-      // その年の誕生日を迎えた後の年齢
-      const ageAfterBirthday = y - year
-      // その年の誕生日前の年齢
-      const ageBeforeBirthday = ageAfterBirthday - 1
-      return `${y}年：誕生日(${month}/${day})前は${ageBeforeBirthday}歳、以降は${ageAfterBirthday}歳`
-    }).join('\n')
-
-    const prompt = `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した最高峰の命理アナリストです。
-四柱推命の日柱（命主）を分析の中心に置き、他の占術はそれを補強する形で使ってください。
-【重要】必ず日本語のみで記述すること。韓国語・中国語・英語など他の言語は一切使わないこと。
-【重要】現在年は${currentYear}年である。「今年」と書く場合は必ず${currentYear}年を指すこと。${currentYear - 1}年以前を「今年」と表現しないこと。
-【重要】この鑑定は命式データのみに基づいて行うこと。対象者の具体的な生活状況・趣味・職業・人間関係など、命式以外の情報は一切参照しないこと。
-
-【対象者プロフィール】
-生年月日：${year}年${month}月${day}日${timeLine}
-性別：${genderLabel}　年齢：${age}歳${dataSection}${partnerLine}
-
-以下の章立てで命式分析書を執筆してください。
-各章は必ず「【章タイトル】」という形式の見出しから始め、600〜1000文字程度の詳細な内容で記述してください。
-
-【性格特性 — あなたの本質と気質】
-日柱を中心に、この人物の根本的な気質と思考パターンを読み解く。専門用語は使わず、誰でもわかる言葉で具体的に描写する。
-
-【周りから見たあなた — 外面と内面のギャップ】
-他者から見た印象と、内側の本音・欲求のギャップを分析する。日常の人間関係でどんな摩擦が起きやすいか、どんな強みに変えられるかを示す。
-
-【仕事・適職 — 才能が開花する環境と職種】
-命式から読み取れる職業適性・得意な働き方・活かせる才能を具体的な職種名を挙げながら示す。
-
-【恋愛特徴 — 愛し方・愛され方のパターン】
-どんな人に惹かれるか、関係が深まるとき・壊れるときのメカニズムを命式から読み解く。
-
-【結婚相手の特徴 — 命式が示す理想の伴侶像】
-相性の良い相手の特徴・気質・生まれた月や年の傾向を具体的に示す。
-
-【子供との縁と特徴 — 子育てに宿る宿命】
-子供との縁の深さ・子育てのスタイル・子供との関係性パターンを読む。
-
-【親・兄弟との縁 — 家族が結んだ宿縁】
-親との関係性・受けた影響・兄弟との縁の特徴を命式から読み解く。
-
-【人生の使命 — この世に担って生まれた役割】
-数秘術の運命数・九星気学の本命星・宿曜の宿を統合し、この魂が持って生まれた使命・人生テーマ・社会的役割を読み解く。なぜこの生年月日に生まれたのか、どのような貢献や体験をするために生まれてきたのかを断言する。他者への影響・社会での立ち位置・魂が目指す方向性を具体的に示す。
-
-【人生の転換期 — 過去から未来の大きな変化（${pastStart}〜${futureEnd}年）】
-四柱推命の大運・流年を主軸に据えて分析する。現在の大運干支と今年の流年干支が日柱・月柱・年柱とどう作用するかを読み解き、宿曜・算命学の天中殺で補強する。
-${pastStart}年から${futureEnd}年の中で、転機・試練・飛躍・出会い・縁など特筆すべき動きがある年のみを抽出して記述する。
-平穏・安定の年は一切書かない。各年は必ず「○○年（X歳）：内容」の形式で記述する。最低8年・最大15年を目安に抽出すること。
-
-【年齢対照表 — 必ずこの表を参照して年齢を記述すること。自分で計算しないこと】
-${ageTable}
-
-【あなたらしく生きるためのアドバイス】
-命式と現在の運気を踏まえ、今この人物が取るべき具体的な行動と心がけを示す。${partnerChapter}
-
-【絶対ルール】
-・専門用語（干支の読み・五行・天干地支など）は一切使わない。使う場合は必ず平易な言葉で言い換える
-・箇条書き・記号（*、#、━、【】以外の記号）は一切使わない
-・「##」「###」「---」「===」などのMarkdown記法は絶対に使わない
-・「〜でしょう」「〜かもしれません」は禁止。断言調で書く
-・改行で区切った流れる文章で記述
-・四柱推命の日柱を主軸として、他の占術で補強する構成にすること
-・各章の最重要な結論・キーワード・判断（例：最も向いている職種、婚期のタイミング、試練の年など）は **テキスト** の形式で太字にすること。ただし使いすぎず、各章につき2〜4箇所程度
-・【仕事・適職】の章は「特に確認したいこと」の質問内容に一切引っ張られないこと。命式データのみから純粋に職業適性を判断すること
-・【人生の転換期】の年齢は必ず上記の年齢対照表から引用すること。自分で計算しないこと
-・ユーザーが明示していない具体的な行動・職業・ツール名・人間関係・固有名詞は絶対に断言しない。命式から読み取れる「傾向・性質・テーマ」は断言してよいが、ユーザーの言葉にない具体的事実を創作しないこと`
-
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache')
-    res.setHeader('Connection', 'keep-alive')
-    res.setHeader('X-Accel-Buffering', 'no')
-
-    const stream = getClient().messages.stream({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 16000,
-      temperature: 0,  // 同じ生年月日には常に同じ結果を返す
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        const cleanedText = removeEmoji(event.delta.text)
-        res.write(`data: ${JSON.stringify({ delta: { text: cleanedText } })}\n\n`)
-      }
-    }
-
-    res.write('data: [DONE]\n\n')
-    res.end()
-    */
   } catch (err) {
     console.error('Preview generate error', {
       correlationId: requestCorrelationId(req.body),
