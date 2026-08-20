@@ -14,6 +14,7 @@ import { readingRouter } from './routes/reading.js'
 import { stripeRouter, stripeWebhook } from './routes/stripe.js'
 import { appleRouter, appStoreNotification } from './routes/apple.js'
 import { verifiedUserIdFromAuthorization } from './lib/rateLimitIdentity.js'
+import { partnersRouter } from './routes/partners.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -104,6 +105,7 @@ app.use('/api/calc', calcRouter)
 app.use('/api/reading', readingRouter)
 app.use('/api/stripe', stripeRouter)
 app.use('/api/apple', appleRouter)
+app.use('/api/partners', partnersRouter)
 
 app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''
