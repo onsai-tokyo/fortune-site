@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { FortuneData, RecruitAnalysis } from '../../lib/types'
-import { apiFetch } from '../../lib/api'
-import { calcShichu } from '../../lib/shichu'
-import { calcNayin } from '../../lib/nayin'
-import { calcSanmei } from '../../lib/sanmei'
-import { getSukuyo } from '../../lib/sukuyo'
+import { apiFetch, calculatePerson } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
@@ -39,11 +35,8 @@ export function RecruitTab({ fortuneData, onSaved }: Props) {
     setIsPointInsufficient(false)
     try {
       const y = Number(year), m = Number(month), d = Number(day)
-      const shichu = calcShichu(y, m, d, undefined)
-      const nayin  = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-      const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-      const sukuyo = getSukuyo(y, m, d)
       const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+      const candidate = await calculatePerson(birthDate, gender)
 
       console.log('[RecruitTab] Starting analysis for candidate:', birthDate)
       const { input, shichu: sShichu, nayin: sNayin, sanmei: sSanmei, sukuyo: sSukuyo } = fortuneData
@@ -51,7 +44,7 @@ export function RecruitTab({ fortuneData, onSaved }: Props) {
         method: 'POST',
         body: JSON.stringify({
           selfData:      { shichu: sShichu, nayin: sNayin, sanmei: sSanmei, sukuyo: sSukuyo, birthDate: input.birthDate, gender: input.gender },
-          candidateData: { shichu, nayin, sanmei, sukuyo, birthDate, gender },
+          candidateData: { ...candidate, birthDate, gender },
         }),
       })
       console.log('[RecruitTab] Response status:', res.status)

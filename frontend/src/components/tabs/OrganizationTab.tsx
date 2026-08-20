@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import type { FortuneData, OrgMember, OrganizationAnalysis } from '../../lib/types'
-import { apiFetch } from '../../lib/api'
-import { calcShichu } from '../../lib/shichu'
-import { calcNayin } from '../../lib/nayin'
-import { calcSanmei } from '../../lib/sanmei'
-import { getSukuyo } from '../../lib/sukuyo'
+import { apiFetch, calculatePerson } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
@@ -21,13 +17,8 @@ function dynamicColor(dynamic: string) {
   return 'text-white/40 border-white/10 bg-white/5'
 }
 
-function calcMemberData(m: OrgMember) {
-  const [y, mo, d] = m.birthDate.split('-').map(Number)
-  const shichu = calcShichu(y, mo, d, undefined)
-  const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-  const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-  const sukuyo = getSukuyo(y, mo, d)
-  return { ...m, shichu, nayin, sanmei, sukuyo }
+async function calcMemberData(m: OrgMember) {
+  return { ...m, ...await calculatePerson(m.birthDate, m.gender) }
 }
 
 export function OrganizationTab({ fortuneData, onSaved }: Props) {
@@ -61,7 +52,7 @@ export function OrganizationTab({ fortuneData, onSaved }: Props) {
         ...fortuneData,
         input: { ...fortuneData.input, selfName },
       }
-      const computedMembers = members.map(calcMemberData)
+      const computedMembers = await Promise.all(members.map(calcMemberData))
 
       const res = await apiFetch('/api/analyze/organization', {
         method: 'POST',

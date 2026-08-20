@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { FortuneData, MarriageAnalysis, PartnerData } from '../../lib/types'
-import { apiFetch } from '../../lib/api'
-import { calcShichu } from '../../lib/shichu'
-import { calcNayin } from '../../lib/nayin'
-import { calcSanmei } from '../../lib/sanmei'
-import { getSukuyo } from '../../lib/sukuyo'
+import { apiFetch, calculatePerson } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
@@ -42,16 +38,12 @@ function PartnerForm({ onSubmit }: { onSubmit: (p: PartnerData & { birthDate: st
   const [day,    setDay]    = useState('')
   const [gender, setGender] = useState<'male' | 'female'>('male')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!year || !month || !day) return
     const y = Number(year), m = Number(month), d = Number(day)
-    const shichu = calcShichu(y, m, d, undefined)
-    const nayin  = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-    const sukuyo = getSukuyo(y, m, d)
     const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-    onSubmit({ shichu, nayin, sanmei, sukuyo, birthDate, gender })
+    onSubmit({ ...await calculatePerson(birthDate, gender), birthDate, gender })
   }
 
   return (

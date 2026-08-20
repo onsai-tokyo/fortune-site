@@ -2,13 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { saveAnalysis, saveChatMessages, getAnalyses, type AnalysisRecord } from '../lib/history'
-import { calcShichu } from '../lib/shichu'
-import { calcNayin } from '../lib/nayin'
-import { calcSanmei } from '../lib/sanmei'
-import { getSukuyo } from '../lib/sukuyo'
-import { calcLifePathNumber } from '../lib/numerology'
-import { calcHonmeiStar, KYUSEI_NAMES } from '../lib/kyusei'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
+import { calculateFortuneData } from '../lib/api'
 
 interface CalcData {
   shichuYear: string; shichuMonth: string; shichuDay: string; shichuHour: string | null
@@ -122,7 +117,7 @@ export default function ChatPage() {
     setSidebarOpen(false)
   }
 
-  function handleStartChat(e: React.FormEvent) {
+  async function handleStartChat(e: React.FormEvent) {
     e.preventDefault()
     if (!form.year || !form.month || !form.day) { setFormError('生年月日を入力してください'); return }
     setFormError('')
@@ -133,22 +128,24 @@ export default function ChatPage() {
     const pbd = form.showPartner && form.partnerYear && form.partnerMonth && form.partnerDay
       ? `${form.partnerYear}-${String(form.partnerMonth).padStart(2, '0')}-${String(form.partnerDay).padStart(2, '0')}` : ''
 
-    const [y, m, d] = [Number(form.year), Number(form.month), Number(form.day)]
-    const hourNum = form.hour !== '' ? Number(form.hour) : undefined
-    const shichu = calcShichu(y, m, d, hourNum)
-    const nayin  = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-    const sukuyo = getSukuyo(y, m, d)
-    const honmei = calcHonmeiStar(y, m, d)
-
+    let fortune
+    try {
+      fortune = await calculateFortuneData({
+        birthDate: bd, birthTime: bt, gender: form.gender, mbti: '', question: '',
+        partnerBirthDate: pbd, partnerBirthTime: '', partnerGender: form.partnerGender, partnerMbti: '',
+      })
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : '命式を計算できませんでした')
+      return
+    }
     const calc: CalcData = {
-      shichuYear: shichu.year.kanshi, shichuMonth: shichu.month.kanshi,
-      shichuDay: shichu.day.kanshi, shichuHour: shichu.hour?.kanshi ?? null,
-      nayin, sanmeiStar: sanmei.shukumeiStar, chusatsu: sanmei.chusatsu, sukuyo,
-      lifePathNumber: calcLifePathNumber(bd),
-      honmeiName: KYUSEI_NAMES[honmei],
-      archetype: getArchetype(shichu.day.kanshi),
-      sukuyoDetail: getSukuyoDetail(sukuyo),
+      shichuYear: fortune.shichu.year.kanshi, shichuMonth: fortune.shichu.month.kanshi,
+      shichuDay: fortune.shichu.day.kanshi, shichuHour: fortune.shichu.hour?.kanshi ?? null,
+      nayin: fortune.nayin, sanmeiStar: fortune.sanmei.shukumeiStar,
+      chusatsu: fortune.sanmei.chusatsu, sukuyo: fortune.sukuyo,
+      lifePathNumber: fortune.lifePathNumber!, honmeiName: fortune.honmeiName!,
+      archetype: getArchetype(fortune.shichu.day.kanshi),
+      sukuyoDetail: getSukuyoDetail(fortune.sukuyo),
     }
     setCalcData(calc)
     setBirthDate(bd)

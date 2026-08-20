@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { FortuneData, CompatibilityAnalysis, PartnerData } from '../../lib/types'
-import { apiFetch } from '../../lib/api'
-import { calcShichu } from '../../lib/shichu'
-import { calcNayin } from '../../lib/nayin'
-import { calcSanmei } from '../../lib/sanmei'
-import { getSukuyo } from '../../lib/sukuyo'
+import { apiFetch, calculatePerson } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { saveAnalysis } from '../../lib/history'
 import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
@@ -109,16 +105,11 @@ function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDa
   const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
   const DAYS = Array.from({ length: 31 }, (_, i) => i + 1)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!year || !month || !day) return
     const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    const [y, m, d] = [Number(year), Number(month), Number(day)]
-    const shichu = calcShichu(y, m, d, undefined)
-    const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-    const sukuyo = getSukuyo(y, m, d)
-    onSubmit({ shichu, nayin, sanmei, sukuyo, birthDate, gender })
+    onSubmit({ ...await calculatePerson(birthDate, gender), birthDate, gender })
   }
 
   return (
@@ -204,10 +195,8 @@ export function CompatibilityTab({ fortuneData, onSaved }: Props) {
     // partnerの日柱を取得
     if (fortuneData.partner) {
       reportData.partner.shichuDay = fortuneData.partner.shichu.day.kanshi
-    } else if (pBirthDate) {
-      const [y, m, d] = pBirthDate.split('-').map(Number)
-      const shichu = calcShichu(y, m, d, undefined)
-      reportData.partner.shichuDay = shichu.day.kanshi
+    } else if (submittedPartnerBlock) {
+      reportData.partner.shichuDay = submittedPartnerBlock.shichu.day.kanshi
     }
     localStorage.setItem('compat_report_data', JSON.stringify(reportData))
     navigate('/compat-report')

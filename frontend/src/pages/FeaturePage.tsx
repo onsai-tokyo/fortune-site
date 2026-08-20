@@ -13,13 +13,7 @@ import { DirectionTab } from '../components/tabs/DirectionTab'
 import { PayjpModal } from '../components/PayjpModal'
 import { AnalysisChatPanel } from '../components/AnalysisChatPanel'
 import type { FortuneData } from '../lib/types'
-import { calcShichu, calcDaiyun, calcRyunen } from '../lib/shichu'
-import { calcNayin } from '../lib/nayin'
-import { calcSanmei } from '../lib/sanmei'
-import { getSukuyo } from '../lib/sukuyo'
-import { calcLifePathNumber } from '../lib/numerology'
-import { calcHonmeiStar, KYUSEI_NAMES } from '../lib/kyusei'
-import { getArchetype, getSukuyoDetail, getAnimalFortune } from '../lib/archetype'
+import { calculateFortuneData } from '../lib/api'
 import { Seo } from '../components/Seo'
 
 type FeatureId = 'self' | 'compat' | 'marriage' | 'org' | 'recruit' | 'boss' | 'subordinate' | 'client' | 'direction'
@@ -115,7 +109,7 @@ function BirthForm({
   const [gender,      setGender]      = useState<'male' | 'female'>('female')
   const days = Array.from({ length: daysInMonth(Number(year), Number(month)) }, (_, i) => i + 1)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!year || !month || !day) {
       alert('生年月日を入力してください')
@@ -127,35 +121,18 @@ function BirthForm({
       return
     }
     const y = Number(year), m = Number(month), d = Number(day)
-    const h = (!timeUnknown && hour !== '') ? Number(hour) : undefined
-    const shichu = calcShichu(y, m, d, h)
-    const nayin  = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
-    const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx)
-    const sukuyo = getSukuyo(y, m, d)
     const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
     const birthTime = (!timeUnknown && hour !== '' && minute !== '')
       ? `${String(Number(hour)).padStart(2,'0')}:${String(Number(minute)).padStart(2,'0')}` : ''
 
-    // 拡張占術データ（プレビューと同レベルの精度）
-    const lifePathNumber = calcLifePathNumber(birthDate)
-    const honmeiStar = calcHonmeiStar(y, m, d)
-    const honmeiName = KYUSEI_NAMES[honmeiStar]
-    const archetype = getArchetype(shichu.day.kanshi)
-    const animalFortune = getAnimalFortune(shichu.day.kanshi)
-    const sukuyoDetail = getSukuyoDetail(sukuyo)
-    const currentYear = new Date().getFullYear()
-    const age = currentYear - y
-    const daiyunList = calcDaiyun(y, m, d, gender)
-    const currentDaiyun = daiyunList.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? daiyunList[0]
-    const daiyun = currentDaiyun.kanshi
-    const daiyunAge = `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`
-    const ryunen = calcRyunen(currentYear)
-
-    onSubmit({
-      input: { birthDate, birthTime, gender, mbti: '', question: '', partnerBirthDate: '', partnerBirthTime: '', partnerGender: 'female', partnerMbti: '' },
-      shichu, nayin, sanmei, sukuyo,
-      lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen,
-    })
+    try {
+      onSubmit(await calculateFortuneData({
+        birthDate, birthTime, gender, mbti: '', question: '',
+        partnerBirthDate: '', partnerBirthTime: '', partnerGender: 'female', partnerMbti: '',
+      }))
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '命式を計算できませんでした')
+    }
   }
 
   return (

@@ -7,8 +7,7 @@ import { SelfAnalysisTab } from '../components/tabs/SelfAnalysisTab'
 import { CompatibilityTab } from '../components/tabs/CompatibilityTab'
 import { NumerologyTab } from '../components/tabs/NumerologyTab'
 import { KyuseiTab } from '../components/tabs/KyuseiTab'
-import { calcLifePathNumber, calcBirthdayNumber, LIFE_PATH_MEANINGS } from '../lib/numerology'
-import { calcHonmeiStar, calcTsukimeiStar, KYUSEI_NAMES, KYUSEI_ELEMENTS, KYUSEI_MEANINGS } from '../lib/kyusei'
+import { LIFE_PATH_MEANINGS, KYUSEI_NAMES, KYUSEI_ELEMENTS, KYUSEI_MEANINGS } from '../lib/interpretationLabels'
 import type { FortuneData, NumerologyResult, KyuseiResult } from '../lib/types'
 
 interface LocationState { fortuneData: FortuneData }
@@ -26,23 +25,18 @@ const TABS: { id: Tab; label: string; sub: string }[] = [
   { id: 'ziwei',     label: '紫微斗数',   sub: 'Coming Soon'    },
 ]
 
-function calcNumerology(birthDate: string): NumerologyResult {
-  const day = parseInt(birthDate.split('-')[2])
-  const lifePathNumber = calcLifePathNumber(birthDate)
+function buildNumerology(data: FortuneData): NumerologyResult {
+  const lifePathNumber = data.lifePathNumber ?? 1
   return {
     lifePathNumber,
-    birthdayNumber: calcBirthdayNumber(day),
+    birthdayNumber: data.numerologyProfile?.birthDayNumber ?? 1,
     meaning: LIFE_PATH_MEANINGS[lifePathNumber] ?? LIFE_PATH_MEANINGS[1],
   }
 }
 
-function calcKyusei(birthDate: string): KyuseiResult {
-  const [yearStr, monthStr, dayStr] = birthDate.split('-')
-  const birthYear = parseInt(yearStr)
-  const birthMonth = parseInt(monthStr)
-  const birthDay = parseInt(dayStr)
-  const honmeiStar = calcHonmeiStar(birthYear, birthMonth, birthDay)
-  const tsukimeiStar = calcTsukimeiStar(honmeiStar, birthMonth)
+function buildKyusei(data: FortuneData): KyuseiResult {
+  const honmeiStar = Math.max(1, KYUSEI_NAMES.indexOf(data.honmeiName ?? ''))
+  const tsukimeiStar = Math.max(1, KYUSEI_NAMES.indexOf(data.kyuseiProfile?.monthStar ?? ''))
   const meanings = KYUSEI_MEANINGS[honmeiStar]
   return {
     honmeiStar,
@@ -88,8 +82,8 @@ export function ResultPage() {
 
   const abortRef = useRef<AbortController | null>(null)
 
-  const numerologyResult = fortuneData ? calcNumerology(fortuneData.input.birthDate) : null
-  const kyuseiResult     = fortuneData ? calcKyusei(fortuneData.input.birthDate) : null
+  const numerologyResult = fortuneData ? buildNumerology(fortuneData) : null
+  const kyuseiResult     = fortuneData ? buildKyusei(fortuneData) : null
 
   useEffect(() => {
     if (!fortuneData) { navigate('/'); return }

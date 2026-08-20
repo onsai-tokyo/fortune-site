@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PayjpModal } from '../components/PayjpModal'
 import { Toast } from '../components/Toast'
 import { useAuth } from '../contexts/AuthContext'
-import { calcDaiyun, calcRyunen } from '../lib/shichu'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
 import { saveAnalysis } from '../lib/history'
 
@@ -241,15 +240,18 @@ export function TopPage() {
       sukuyo: string
       lifePathNumber: number
       honmeiName: string
+      timing: {
+        decades: Array<{ kanshi: string; startAge: number; endAge: number }>
+        annual: Array<{ year: number; kanshi: string }>
+      }
     }
 
     // バックエンド側の値を優先使用
-    const [y, m, d] = [Number(form.year), Number(form.month), Number(form.day)]
+    const y = Number(form.year)
     const currentYear = new Date().getFullYear()
-    const daiyunList = calcDaiyun(y, m, d, form.gender)
     const age = currentYear - y
-    const currentDaiyun = daiyunList.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? daiyunList[0]
-    const ryunen = calcRyunen(currentYear)
+    const currentDaiyun = backendCalcData.timing.decades.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? backendCalcData.timing.decades[0]
+    const ryunen = backendCalcData.timing.annual.find(item => item.year === currentYear)?.kanshi ?? ''
     const archetype = getArchetype(backendCalcData.shichuDay)
     const sukuyoDetail = getSukuyoDetail(backendCalcData.sukuyo)
 

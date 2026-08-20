@@ -649,16 +649,19 @@ calcRouter.post('/divination', requireReadingAuth, (req, res) => {
 
     const honmei = calcHonmeiStar(year, month, day)
     const kyuseiProfile = calcKyuseiProfile(year, month, day, birthHour, birthMinute)
+    const timing = calcTimingCycles(year, month, day, birthHour, birthMinute, gender === 'male' ? 'male' : 'female')
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
 
     res.json({
+      shichu,
       shichuYear: shichu.year.kanshi,
       shichuMonth: shichu.month.kanshi,
       shichuDay: shichu.day.kanshi,
       shichuHour: shichu.hour?.kanshi ?? null,
       nayin,
+      sanmei,
       sanmeiStar: sanmei.shukumeiStar,
       chusatsu: sanmei.chusatsu,
       sukuyo,
@@ -666,6 +669,7 @@ calcRouter.post('/divination', requireReadingAuth, (req, res) => {
       numerologyProfile,
       honmeiName: KYUSEI_NAMES[honmei],
       kyuseiProfile,
+      timing,
       birthplace: birthplace || null,
       sanmeiRelations,
       ziwei,

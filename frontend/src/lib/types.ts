@@ -1,5 +1,17 @@
-import type { Pillar } from './shichu'
-import type { SanmeiResult } from './sanmei'
+export interface Pillar {
+  stemIdx: number
+  branchIdx: number
+  stem: string
+  branch: string
+  element: string
+  yinYang: string
+  kanshi: string
+}
+
+export interface SanmeiResult {
+  shukumeiStar: string
+  chusatsu: string
+}
 
 export interface FortuneInput {
   birthDate: string      // YYYY-MM-DD
@@ -40,6 +52,8 @@ export interface FortuneData {
   // 拡張占術データ（プレビューと同レベルの精度を実現）
   lifePathNumber?: number
   honmeiName?: string
+  numerologyProfile?: { birthDayNumber: number; attitudeNumber: number; personalYearNumber: number; personalYear: number }
+  kyuseiProfile?: { yearStar: string; monthStar: string; dayStar: string; timeStar: string | null }
   archetype?: string
   animalFortune?: string
   sukuyoDetail?: string
