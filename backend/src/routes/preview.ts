@@ -8,6 +8,7 @@ import { buildDeterministicStructuredReport } from '../lib/deterministicReport.j
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
+import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 
 export const previewRouter = Router()
 
@@ -81,7 +82,7 @@ interface CalculatedData {
 // POST /api/preview/generate
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   try {
-    const { birthDate, birthTime, birthplace, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData } = req.body as {
+    const { birthDate, birthTime, birthplace, gender, partnerBirthDate, partnerBirthTime, partnerGender, question, calculatedData, nickname, currentRole, currentConcern } = req.body as {
       birthDate?: string
       birthTime?: string
       birthplace?: string
@@ -91,6 +92,9 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       partnerGender?: string
       question?: string
       calculatedData?: CalculatedData
+      nickname?: string
+      currentRole?: CurrentRole
+      currentConcern?: CurrentConcern
     }
 
     if (!birthDate || !gender) {
@@ -131,7 +135,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
-    const deterministicReport = buildDeterministicStructuredReport({
+    const reportInput = {
       birthDate,
       birthTime,
       birthplace,
@@ -151,10 +155,17 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       ziwei,
       astrology,
       ...expanded,
-    })
+    }
+    const deterministicReport = buildDeterministicStructuredReport(reportInput)
+    const orderedReport = currentConcern
+      ? { ...deterministicReport, cards: prioritizeCardsForConcern(deterministicReport.cards, currentConcern) }
+      : deterministicReport
+    const response = req.query.debug === '1'
+      ? { ...orderedReport, metadata: extractReportMetadata(reportInput, { nickname, currentRole, currentConcern }) }
+      : orderedReport
 
     res.setHeader('Cache-Control', 'private, no-store, max-age=0')
-    res.json(deterministicReport)
+    res.json(response)
     return
 
     /* Legacy AI report generator retained temporarily for reference.

@@ -1,6 +1,6 @@
 import { buildStructuredReport, StructuredReport } from './reportCards.js'
 
-interface ReportInput {
+export interface ReportInput {
   birthDate?: string
   birthTime?: string
   birthplace?: string
