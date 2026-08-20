@@ -83,6 +83,30 @@ struct ProfileTrait: Codable, Identifiable {
     }
 }
 
+struct PartnerProfile: Codable, Identifiable, Equatable {
+    let id: UUID
+    let displayName: String
+    let birthDate: String
+    let birthTime: String?
+    let birthplace: String
+    let gender: String
+    let relationshipType: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, birthplace, gender
+        case displayName = "display_name"
+        case birthDate = "birth_date"
+        case birthTime = "birth_time"
+        case relationshipType = "relationship_type"
+    }
+}
+
+struct PartnerProfilesResponse: Codable {
+    let partners: [PartnerProfile]
+    let limit: Int
+    let remaining: Int
+}
+
 struct BirthInput: Equatable {
     var date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     var hasTime = false
@@ -95,6 +119,49 @@ struct GeneratedReport {
     let birthData: [String: Any]
     let calculatedData: [String: Any]
     let text: String
+    let cards: [ReadingCard]
+
+    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = []) {
+        self.birthData = birthData
+        self.calculatedData = calculatedData
+        self.text = text
+        self.cards = cards
+    }
+}
+
+struct StructuredReportResponse: Codable {
+    let version: Int
+    let reportText: String
+    let cards: [ReadingCard]
+}
+
+struct ReadingCard: Codable, Identifiable {
+    let id: String
+    let kind: String
+    let title: String
+    let summary: String
+    let tags: [String]
+    let period: ReadingCardPeriod?
+    let pages: [ReadingCardPage]
+    let evidence: [ReadingCardEvidence]
+
+    var isTiming: Bool { kind == "timing" }
+    var body: String { pages.map(\.text).joined(separator: "\n\n") }
+}
+
+struct ReadingCardPeriod: Codable { let label: String }
+
+struct ReadingCardPage: Codable {
+    let role: String
+    let label: String
+    let text: String
+    let note: String?
+}
+
+struct ReadingCardEvidence: Codable {
+    let family: String
+    let system: String
+    let detail: String
 }
 
 struct ReadingMessage: Codable, Identifiable {

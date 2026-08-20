@@ -13,13 +13,14 @@
 		1D747F7AEBCC0FDCEC6859B5 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34376F558AC94ECC52F91C17 /* APIClient.swift */; };
 		2B0E54032F6B1A39D1659636 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D31349E6A06DA0C0FFD9B29 /* Assets.xcassets */; };
 		3A904DB5706AB0565F1A3023 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0809C54FA65C68BB48231A97 /* OnboardingView.swift */; };
+		3B314EE2FBCF8155EC08F905 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D475125D304F3A7D2BBCD9F4 /* Supabase */; };
 		50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F165C70345759947694F4DD8 /* RootView.swift */; };
 		686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */; };
 		6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3719AD9E38679916FC4B757D /* KeychainStore.swift */; };
 		6B9E1FEFE63A9E6EFE2216AD /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4638D90D2B3A7DFC56C6D7F /* AuthStore.swift */; };
-		8407EACECE2B9B747F15FAB6 /* ReportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A414B67773B2C18629DFBCB7 /* ReportParser.swift */; };
 		9CD8CB80D084C6FABE7C4C4A /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */; };
 		BFE6F24BAB3DD56D2B551BBE /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD011C8691551175BE93F6B /* HomeView.swift */; };
+		C16DA413E4EC602441255930 /* PartnerProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */; };
 		CB425DF427A92494AA4877FB /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9957667F377DC5836B675311 /* AppConfig.swift */; };
 		DDB2D7B49387DFF5E346A98B /* FateLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C6F120A970A549A5C1422D /* FateLabApp.swift */; };
 		DEF47B746CFA130762CDB271 /* ScreenshotGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E044EBDE938EC447F94016 /* ScreenshotGalleryView.swift */; };
@@ -34,6 +35,7 @@
 /* Begin PBXFileReference section */
 		067B14D891149931612DB9F3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		0809C54FA65C68BB48231A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerProfilesView.swift; sourceTree = "<group>"; };
 		107DD9115ABC222F720551D8 /* ReadingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingChatView.swift; sourceTree = "<group>"; };
 		132963A65C3787E06DD392A5 /* InsightHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightHubView.swift; sourceTree = "<group>"; };
 		1CD011C8691551175BE93F6B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -50,7 +52,6 @@
 		7D31349E6A06DA0C0FFD9B29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		96A6215BD9CC8E89991688F6 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9957667F377DC5836B675311 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
-		A414B67773B2C18629DFBCB7 /* ReportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportParser.swift; sourceTree = "<group>"; };
 		C4638D90D2B3A7DFC56C6D7F /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		C6E044EBDE938EC447F94016 /* ScreenshotGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotGalleryView.swift; sourceTree = "<group>"; };
 		DC8F8B44392E671602A15C66 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -58,6 +59,17 @@
 		F165C70345759947694F4DD8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F5342D58A967C8EF3F73846A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		63A84FE9C21E31E96D7E1CD2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3B314EE2FBCF8155EC08F905 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2910F98EA7E39A40EFF2C166 = {
@@ -92,12 +104,12 @@
 				3719AD9E38679916FC4B757D /* KeychainStore.swift */,
 				3D04080D70BB79BC5AB54BF2 /* Models.swift */,
 				0809C54FA65C68BB48231A97 /* OnboardingView.swift */,
+				0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */,
 				96A6215BD9CC8E89991688F6 /* ProfileView.swift */,
 				2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */,
 				107DD9115ABC222F720551D8 /* ReadingChatView.swift */,
 				73347D48ADC44E658905805A /* ReadingListView.swift */,
 				214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */,
-				A414B67773B2C18629DFBCB7 /* ReportParser.swift */,
 				F165C70345759947694F4DD8 /* RootView.swift */,
 				3B34350A07504940804DE477 /* SavedReadingView.swift */,
 				C6E044EBDE938EC447F94016 /* ScreenshotGalleryView.swift */,
@@ -116,6 +128,7 @@
 			buildPhases = (
 				75ED54208D81E7616836094F /* Sources */,
 				6106B1B1935DFA4FEB113661 /* Resources */,
+				63A84FE9C21E31E96D7E1CD2 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -123,6 +136,7 @@
 			);
 			name = FateLab;
 			packageProductDependencies = (
+				D475125D304F3A7D2BBCD9F4 /* Supabase */,
 			);
 			productName = FateLab;
 			productReference = DE717662F562AEED25CF558C /* FateLab.app */;
@@ -139,7 +153,6 @@
 				TargetAttributes = {
 					2BB68F02A4E75E5CEB311E54 = {
 						DevelopmentTeam = DB28SG2U7D;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -152,6 +165,9 @@
 			);
 			mainGroup = 2910F98EA7E39A40EFF2C166;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				451D9A3D40AEA12149E694E2 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3E529238587A3D0923C04F81 /* Products */;
 			projectDirPath = "";
@@ -188,12 +204,12 @@
 				6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */,
 				F84DD3F1378B99349DF72F5E /* Models.swift in Sources */,
 				3A904DB5706AB0565F1A3023 /* OnboardingView.swift in Sources */,
+				C16DA413E4EC602441255930 /* PartnerProfilesView.swift in Sources */,
 				E62334A3D3DBFC25A5549F2D /* ProfileView.swift in Sources */,
 				9CD8CB80D084C6FABE7C4C4A /* PurchaseManager.swift in Sources */,
 				E3E37AC74D00375A8F15D4D0 /* ReadingChatView.swift in Sources */,
 				01B53CBEFD02CF022C660DB3 /* ReadingListView.swift in Sources */,
 				686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */,
-				8407EACECE2B9B747F15FAB6 /* ReportParser.swift in Sources */,
 				50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */,
 				066BCC31D5E4B0BCABD376BE /* SavedReadingView.swift in Sources */,
 				DEF47B746CFA130762CDB271 /* ScreenshotGalleryView.swift in Sources */,
@@ -241,7 +257,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -311,7 +327,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -357,13 +373,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FateLab/FateLab.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
 				INFOPLIST_FILE = FateLab/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_NAME = FateLab;
+				PROVISIONING_PROFILE_SPECIFIER = "Fate Lab App Store 27 Local";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -408,6 +426,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		451D9A3D40AEA12149E694E2 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.54.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D475125D304F3A7D2BBCD9F4 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 451D9A3D40AEA12149E694E2 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 891D8794FD892D32F5F56792 /* Project object */;
 }

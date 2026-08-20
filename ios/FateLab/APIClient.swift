@@ -36,15 +36,28 @@ struct APIClient {
         return request
     }
 
-    private func data(for request: URLRequest, retryTransient: Bool = false) async throws -> Data {
-        let maximumAttempts = retryTransient ? 3 : 1
+    private func data(for request: URLRequest, retryTransient: Bool = false, auth: AuthStore? = nil) async throws -> Data {
+        let maximumAttempts = (retryTransient ? 3 : 1) + (auth == nil ? 0 : 1)
         var lastError: Error = APIError.invalidResponse
+        var currentRequest = request
+        var retriedAfterRefresh = false
 
         for attempt in 0..<maximumAttempts {
             do {
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await URLSession.shared.data(for: currentRequest)
                 guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
                 if 200..<300 ~= http.statusCode { return data }
+
+                if http.statusCode == 401, let auth, !retriedAfterRefresh {
+                    let token = try await auth.validAccessToken(forceRefresh: true)
+                    currentRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    retriedAfterRefresh = true
+                    continue
+                }
+                if http.statusCode == 401, let auth {
+                    auth.signOut()
+                    AuthPresentation.shared.isPresented = true
+                }
 
                 let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
                 let error = APIError.server(object?["error"] as? String ?? "一時的に接続できませんでした。もう一度お試しください")
@@ -77,39 +90,69 @@ struct APIClient {
         _ = try? await data(for: call, retryTransient: true)
     }
 
-    func status(token: String) async throws -> ReadingStatus {
-        let raw = try await data(for: request(path: "/api/reading/status", token: token))
+    func status(auth: AuthStore) async throws -> ReadingStatus {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/status", token: token), auth: auth)
         return try JSONDecoder().decode(ReadingStatus.self, from: raw)
     }
 
-    func readings(token: String) async throws -> [ReadingSummary] {
-        let raw = try await data(for: request(path: "/api/reading/conversations", token: token))
+    func readings(auth: AuthStore) async throws -> [ReadingSummary] {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/conversations", token: token), auth: auth)
         let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
         let list = try JSONSerialization.data(withJSONObject: object?["conversations"] ?? [])
         return try JSONDecoder().decode([ReadingSummary].self, from: list)
     }
 
-    func traits(token: String) async throws -> [ProfileTrait] {
-        let raw = try await data(for: request(path: "/api/reading/profile/traits", token: token))
+    func traits(auth: AuthStore) async throws -> [ProfileTrait] {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/profile/traits", token: token), auth: auth)
         let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
         let list = try JSONSerialization.data(withJSONObject: object?["traits"] ?? [])
         return try JSONDecoder().decode([ProfileTrait].self, from: list)
     }
 
-    func deleteTrait(id: UUID, token: String) async throws {
-        _ = try await data(for: request(path: "/api/reading/profile/traits/\(id.uuidString)", method: "DELETE", token: token))
+    func deleteTrait(id: UUID, auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
+        _ = try await data(for: request(path: "/api/reading/profile/traits/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
     }
 
-    func verifyApplePurchase(signedTransaction: String, token: String) async throws {
+    func partnerProfiles(auth: AuthStore) async throws -> PartnerProfilesResponse {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/partners", token: token), auth: auth)
+        return try JSONDecoder().decode(PartnerProfilesResponse.self, from: raw)
+    }
+
+    func createPartner(displayName: String, birthDate: String, birthTime: String?, birthplace: String,
+                       gender: String, relationshipType: String, auth: AuthStore) async throws -> PartnerProfile {
+        let token = try await auth.validAccessToken()
+        var body: [String: Any] = ["displayName": displayName, "birthDate": birthDate, "birthplace": birthplace,
+                                   "gender": gender, "relationshipType": relationshipType]
+        if let birthTime { body["birthTime"] = birthTime }
+        let raw = try await data(for: request(path: "/api/partners", method: "POST", token: token, json: body), auth: auth)
+        let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
+        let value = try JSONSerialization.data(withJSONObject: object?["partner"] ?? [:])
+        return try JSONDecoder().decode(PartnerProfile.self, from: value)
+    }
+
+    func deletePartner(id: UUID, auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
+        _ = try await data(for: request(path: "/api/partners/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
+    }
+
+    func verifyApplePurchase(signedTransaction: String, auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
         _ = try await data(for: request(path: "/api/apple/transactions/verify", method: "POST", token: token,
-                                        json: ["signedTransaction": signedTransaction]))
+                                        json: ["signedTransaction": signedTransaction]), auth: auth)
     }
 
-    func deleteAccount(token: String) async throws {
-        _ = try await data(for: request(path: "/api/reading/account", method: "DELETE", token: token))
+    func deleteAccount(auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
+        _ = try await data(for: request(path: "/api/reading/account", method: "DELETE", token: token), auth: auth)
     }
 
-    func createConversation(report: GeneratedReport, token: String) async throws -> UUID {
+    func createConversation(report: GeneratedReport, auth: AuthStore) async throws -> UUID {
+        let token = try await auth.validAccessToken()
         let source = String(describing: report.birthData) + report.text
         let key = SHA256.hash(data: Data(source.utf8)).map { String(format: "%02x", $0) }.joined()
         var call = try request(path: "/api/reading/conversations", method: "POST", token: token, json: [
@@ -120,20 +163,28 @@ struct APIClient {
             "sourceSection": "鑑定全体"
         ])
         call.setValue(key, forHTTPHeaderField: "Idempotency-Key")
-        let raw = try await data(for: call)
+        let raw = try await data(for: call, auth: auth)
         guard let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any],
               let id = object["id"] as? String, let uuid = UUID(uuidString: id) else { throw APIError.invalidResponse }
         return uuid
     }
 
-    func conversation(id: UUID, token: String) async throws -> ConversationDetail {
-        let raw = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)", token: token))
+    func conversation(id: UUID, auth: AuthStore) async throws -> ConversationDetail {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)", token: token), auth: auth)
         return try JSONDecoder().decode(ConversationDetail.self, from: raw)
     }
 
-    func ask(conversationID: UUID, question: String, token: String) async throws -> String {
+    func cards(id: UUID, auth: AuthStore) async throws -> StructuredReportResponse {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/\(id.uuidString)/cards", token: token), auth: auth)
+        return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+    }
+
+    func ask(conversationID: UUID, question: String, auth: AuthStore) async throws -> String {
+        let token = try await auth.validAccessToken()
         let raw = try await data(for: request(path: "/api/reading/conversations/\(conversationID.uuidString)/questions",
-                                               method: "POST", token: token, json: ["question": question]))
+                                               method: "POST", token: token, json: ["question": question]), auth: auth)
         let text = String(decoding: raw, as: UTF8.self).split(separator: "\n").reduce(into: "") { result, line in
             guard line.hasPrefix("data: ") else { return }
             let payload = String(line.dropFirst(6))
@@ -146,7 +197,8 @@ struct APIClient {
         return text
     }
 
-    func generateReport(input: BirthInput, progress: @MainActor (ReportProgress) -> Void = { _ in }) async throws -> GeneratedReport {
+    func generateReport(input: BirthInput, auth: AuthStore? = nil,
+                        progress: @MainActor (ReportProgress) -> Void = { _ in }) async throws -> GeneratedReport {
         let calendar = Calendar(identifier: .gregorian)
         let parts = calendar.dateComponents([.year, .month, .day], from: input.date)
         let time = calendar.dateComponents([.hour, .minute], from: input.time)
@@ -154,21 +206,15 @@ struct APIClient {
         let birthTime = input.hasTime ? String(format: "%02d:%02d", time.hour!, time.minute!) : ""
         let birthData: [String: Any] = ["birthDate": date, "birthTime": birthTime,
                                         "birthplace": input.birthplace, "gender": input.gender]
+        let token: String? = if let auth, auth.session != nil { try await auth.validAccessToken() } else { nil }
         progress(.calculating)
-        let calcData = try await data(for: request(path: "/api/calc/divination", method: "POST", json: birthData), retryTransient: true)
+        let calcData = try await data(for: request(path: "/api/calc/divination", method: "POST", token: token, json: birthData), retryTransient: true, auth: auth)
         guard let calculated = try JSONSerialization.jsonObject(with: calcData) as? [String: Any] else { throw APIError.invalidResponse }
         progress(.integrating)
         let previewBody: [String: Any] = birthData.merging(["question": "", "calculatedData": calculated]) { _, new in new }
-        let stream = try await data(for: request(path: "/api/preview/generate?v=2", method: "POST", json: previewBody), retryTransient: true)
-        let text = String(decoding: stream, as: UTF8.self).split(separator: "\n").reduce(into: "") { result, line in
-            guard line.hasPrefix("data: ") else { return }
-            let payload = String(line.dropFirst(6))
-            guard payload != "[DONE]", let data = payload.data(using: .utf8),
-                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let delta = object["delta"] as? [String: Any], let part = delta["text"] as? String else { return }
-            result += part
-        }
-        guard !text.isEmpty else { throw APIError.server("鑑定書を生成できませんでした") }
-        return GeneratedReport(birthData: birthData, calculatedData: calculated, text: text)
+        let raw = try await data(for: request(path: "/api/preview/generate?format=json", method: "POST", token: token, json: previewBody), retryTransient: true, auth: auth)
+        let structured = try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+        guard !structured.reportText.isEmpty, !structured.cards.isEmpty else { throw APIError.server("鑑定書を生成できませんでした") }
+        return GeneratedReport(birthData: birthData, calculatedData: calculated, text: structured.reportText, cards: structured.cards)
     }
 }
