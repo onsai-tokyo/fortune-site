@@ -8,6 +8,9 @@ struct PartnerProfilesView: View {
     @State private var showPicker = false
     @State private var showRegistration = false
     @State private var errorMessage: String?
+    @State private var relationshipType = "romantic"
+    @State private var compatibilityReport: StructuredReportResponse?
+    @State private var isGenerating = false
 
     var body: some View {
         ScrollView {
@@ -25,15 +28,30 @@ struct PartnerProfilesView: View {
                         }.buttonStyle(.plain)
                     }
                 }
-                Picker("関係性", selection: Binding(get: { selected?.relationshipType ?? "romantic" }, set: { _ in })) {
+                Picker("関係性", selection: $relationshipType) {
                     Text("恋愛").tag("romantic"); Text("友人").tag("friend")
                 }.pickerStyle(.segmented).disabled(selected == nil)
                 if selected == nil {
                     Text("先に相手を登録または選択してください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
                 }
-                Button("相性・関係性の鑑定結果へ進む") { }
-                    .buttonStyle(GoldButtonStyle()).disabled(selected == nil).opacity(selected == nil ? 0.45 : 1)
+                Button(isGenerating ? "二人の関係を読み解いています…" : "相性・関係性の鑑定結果へ進む") { Task { await generateCompatibility() } }
+                    .buttonStyle(GoldButtonStyle()).disabled(selected == nil || isGenerating).opacity(selected == nil ? 0.45 : 1)
+                if let compatibilityReport {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("二人の関係性").font(.system(size: 24, weight: .medium, design: .serif))
+                        ForEach(compatibilityReport.cards) { card in
+                            NavigationLink { InsightDetailView(item: card) {} } label: {
+                                VStack(alignment: .leading, spacing: 7) {
+                                    Text(card.title).font(.headline).foregroundStyle(FateTheme.ink)
+                                    Text(card.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineLimit(3)
+                                }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(FateTheme.paper).clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
+                            }
+                        }
+                    }
+                }
                 Text("残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage { Text(errorMessage).foregroundStyle(.red).font(.caption) }
             }.padding(20)
@@ -64,7 +82,7 @@ struct PartnerProfilesView: View {
                 } footer: { Text(remaining == 0 ? "上限に達しています。行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
                 Section("登録済みの相手") {
                     ForEach(partners) { partner in
-                        Button { selected = partner; showPicker = false } label: {
+                        Button { selected = partner; relationshipType = partner.relationshipType; compatibilityReport = nil; showPicker = false } label: {
                             HStack {
                                 Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.gold)
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
@@ -85,6 +103,12 @@ struct PartnerProfilesView: View {
     }
     private func delete(_ partner: PartnerProfile) async {
         do { try await APIClient.shared.deletePartner(id: partner.id, auth: auth); if selected?.id == partner.id { selected = nil }; await load() }
+        catch { errorMessage = error.localizedDescription }
+    }
+    private func generateCompatibility() async {
+        guard let selected else { return }
+        isGenerating = true; errorMessage = nil; defer { isGenerating = false }
+        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, relationshipType: relationshipType, auth: auth) }
         catch { errorMessage = error.localizedDescription }
     }
 }

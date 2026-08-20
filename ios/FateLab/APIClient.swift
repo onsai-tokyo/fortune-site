@@ -140,6 +140,13 @@ struct APIClient {
         _ = try await data(for: request(path: "/api/partners/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
     }
 
+    func compatibility(partnerID: UUID, relationshipType: String, auth: AuthStore) async throws -> StructuredReportResponse {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/partners/\(partnerID.uuidString)/compatibility", method: "POST",
+                                               token: token, json: ["relationshipType": relationshipType]), retryTransient: true, auth: auth)
+        return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+    }
+
     func verifyApplePurchase(signedTransaction: String, auth: AuthStore) async throws {
         let token = try await auth.validAccessToken()
         _ = try await data(for: request(path: "/api/apple/transactions/verify", method: "POST", token: token,
