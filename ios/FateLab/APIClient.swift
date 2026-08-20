@@ -24,6 +24,11 @@ struct ChatAnswer {
     let suggestions: [String]
 }
 
+private struct HTTPResult: @unchecked Sendable {
+    let data: Data
+    let response: URLResponse
+}
+
 @MainActor
 struct APIClient {
     static let shared = APIClient()
@@ -54,7 +59,22 @@ struct APIClient {
 
         for attempt in 0..<maximumAttempts {
             do {
-                let (data, response) = try await URLSession.shared.data(for: currentRequest)
+                let requestForAttempt = currentRequest
+                let result = try await withThrowingTaskGroup(of: HTTPResult.self) { group in
+                    group.addTask { [requestForAttempt] in
+                        let (data, response) = try await URLSession.shared.data(for: requestForAttempt)
+                        return HTTPResult(data: data, response: response)
+                    }
+                    group.addTask {
+                        try await Task.sleep(for: .seconds(30))
+                        throw URLError(.timedOut)
+                    }
+                    guard let first = try await group.next() else { throw APIError.invalidResponse }
+                    group.cancelAll()
+                    return first
+                }
+                let data = result.data
+                let response = result.response
                 guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
                 if 200..<300 ~= http.statusCode { return data }
 

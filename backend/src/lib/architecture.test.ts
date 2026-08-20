@@ -39,6 +39,7 @@ test('PR12の鑑定APIは認証トークンを送り、チャット本文と次�
   const reading = read('backend/src/routes/reading.ts')
   assert.match(api, /calc\/divination[^\n]+token: token/)
   assert.match(api, /preview\/generate\?format=json[^\n]+token: token/)
+  assert.match(api, /Task\.sleep\(for: \.seconds\(30\)\)/)
   assert.match(reading, /---NEXT---/)
   assert.match(reading, /suggestions/)
   assert.doesNotMatch(reading, /回答本文は必ず「結論」「読み解き」「気をつけたいこと」/)

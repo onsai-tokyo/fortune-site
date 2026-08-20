@@ -161,7 +161,9 @@ struct ReadingChatView: View {
             followUpSuggestions = answer.suggestions
             await loadStatus()
         } catch {
-            messages.removeLast(); input = question; errorMessage = error.localizedDescription; await loadStatus()
+            messages.removeLast(); input = question; errorMessage = error.localizedDescription
+            if case APIError.paymentRequired = error { showPaywall = true }
+            await loadStatus()
         }
         isWorking = false
     }
