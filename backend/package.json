@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/routes/calc.test.ts src/lib/readingValidation.test.ts src/lib/readingShare.test.ts src/lib/profileTraits.test.ts src/lib/rateLimitIdentity.test.ts src/lib/reportCards.test.ts",
+    "test": "tsx --test src/routes/calc.test.ts src/lib/readingValidation.test.ts src/lib/readingShare.test.ts src/lib/profileTraits.test.ts src/lib/rateLimitIdentity.test.ts src/lib/reportCards.test.ts src/middleware/auth.test.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },

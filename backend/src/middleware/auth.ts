@@ -39,9 +39,9 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   next()
 }
 
-// SMTP・確認リンクの実環境検証後に有効化する。falseの間は既存ゲスト導線を維持する。
+// 鑑定APIは登録必須。ローカルでゲスト導線を明示的に確認するときだけ false にする。
 export async function requireReadingAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  if (process.env.REQUIRE_READING_AUTH !== 'true') { next(); return }
+  if (process.env.REQUIRE_READING_AUTH === 'false') { next(); return }
   await requireAuth(req, res, next)
 }
 
