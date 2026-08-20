@@ -10,6 +10,7 @@ import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { writeReportWithAi } from '../lib/report/aiWriter.js'
+import { replaceTimingCards } from '../lib/report/timingCards.js'
 
 export const previewRouter = Router()
 
@@ -157,7 +158,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       astrology,
       ...expanded,
     }
-    const deterministicReport = buildDeterministicStructuredReport(reportInput)
+    const deterministicReport = replaceTimingCards(buildDeterministicStructuredReport(reportInput), reportInput)
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
       ? deterministicReport
