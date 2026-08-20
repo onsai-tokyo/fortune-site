@@ -9,6 +9,7 @@ import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
+import { writeReportWithAi } from '../lib/report/aiWriter.js'
 
 export const previewRouter = Router()
 
@@ -157,11 +158,15 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       ...expanded,
     }
     const deterministicReport = buildDeterministicStructuredReport(reportInput)
+    const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
+    const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
+      ? deterministicReport
+      : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata)
     const orderedReport = currentConcern
-      ? { ...deterministicReport, cards: prioritizeCardsForConcern(deterministicReport.cards, currentConcern) }
-      : deterministicReport
+      ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }
+      : writtenReport
     const response = req.query.debug === '1'
-      ? { ...orderedReport, metadata: extractReportMetadata(reportInput, { nickname, currentRole, currentConcern }) }
+      ? { ...orderedReport, metadata }
       : orderedReport
 
     res.setHeader('Cache-Control', 'private, no-store, max-age=0')

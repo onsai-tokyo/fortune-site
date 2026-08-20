@@ -1,5 +1,5 @@
 export type ReportCardKind = 'essence' | 'timing' | 'chart'
-export type ReportPageRole = 'opening' | 'core' | 'scene' | 'shadow' | 'exception' | 'action'
+export type ReportPageRole = 'opening' | 'core' | 'scene' | 'shadow' | 'exception' | 'question' | 'action' | 'closing'
 
 export interface ReportCardPage {
   role: ReportPageRole
@@ -23,6 +23,7 @@ export interface ReportCard {
   period: { label: string } | null
   pages: ReportCardPage[]
   evidence: ReportCardEvidence[]
+  metadataRefs?: string[]
 }
 
 export interface StructuredReport {
