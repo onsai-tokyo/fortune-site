@@ -5,8 +5,9 @@ import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } fro
 import type { ReportMetadata } from './metadata.js'
 
 const GENERATOR_VERSION = 'ai-cards-v5-longform'
-const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 25_000))
-const AI_TOTAL_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TOTAL_TIMEOUT_MS ?? 28_000))
+const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
+const AI_TOTAL_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TOTAL_TIMEOUT_MS ?? 100_000))
+const AI_MAX_CONCURRENCY = Math.max(1, Number(process.env.AI_REPORT_MAX_CONCURRENCY ?? 4))
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
 
@@ -23,12 +24,20 @@ function logGeneration(event: 'cache_hit' | 'generated' | 'fallback' | 'timeout'
 export interface AiWriterDependencies {
   readCache(key: string): Promise<StructuredReport | null>
   writeCache(key: string, report: StructuredReport): Promise<void>
+  readCardCache?(key: string): Promise<ReportCard | null>
+  writeCardCache?(key: string, card: ReportCard): Promise<void>
   generate(prompt: string): Promise<string>
   overallTimeoutMs?: number
+  cardTimeoutMs?: number
+  maxConcurrency?: number
 }
 
 function cacheKey(seed: string, metadata: ReportMetadata) {
   return createHash('sha256').update(`${GENERATOR_VERSION}|${seed}|${metadata.combinationSignature}`).digest('hex')
+}
+
+function cardCacheKey(seed: string, metadata: ReportMetadata, cardId: string) {
+  return createHash('sha256').update(`${GENERATOR_VERSION}|card|${seed}|${metadata.combinationSignature}|${cardId}`).digest('hex')
 }
 
 function cleanJson(raw: string) {
@@ -99,7 +108,7 @@ openingは短く、sceneは60〜120字にする。各textは120字以内で1ペ�
 
 async function generateCard(card: ReportCard, prompt: string, dependencies: AiWriterDependencies): Promise<ReportCard> {
   const startedAt = Date.now()
-  const timeoutMs = Math.min(AI_REWRITE_TIMEOUT_MS, dependencies.overallTimeoutMs ?? AI_REWRITE_TIMEOUT_MS)
+  const timeoutMs = Math.min(dependencies.cardTimeoutMs ?? AI_REWRITE_TIMEOUT_MS, dependencies.overallTimeoutMs ?? Number.POSITIVE_INFINITY)
   let timeout: ReturnType<typeof setTimeout> | undefined
   try {
     const raw = await Promise.race([
@@ -131,44 +140,71 @@ export async function writeReportWithAi(
       logGeneration('cache_hit', startedAt)
       return { ...cached, generator: 'ai' }
     }
-    const generateAllCards = async () => {
-      let failedCards = 0
-      const generatedCards = await Promise.all(fallback.cards.map(async (card, index) => {
-        try { return await generateCard(card, promptForCard(card, metadata, index, fallback.cards.length), dependencies) }
-        catch { failedCards += 1; return card }
-      }))
-      const cards: ReportCard[] = []
-      for (const [index, generated] of generatedCards.entries()) {
-        const duplicate = cards.find(card => titlesAreSimilar(card.title, generated.title))
-        if (!duplicate) { cards.push(generated); continue }
-        try {
-          const retry = await generateCard(fallback.cards[index], `${promptForCard(fallback.cards[index], metadata, index, fallback.cards.length)}\n既出タイトル「${cards.map(card => card.title).join('」「')}」と異なる焦点・語彙のタイトルにしてください。`, dependencies)
-          if (cards.some(card => titlesAreSimilar(card.title, retry.title))) throw new Error('AI title remained too similar after retry')
-          cards.push(retry)
-        } catch { failedCards += 1; cards.push(fallback.cards[index]) }
-      }
-      const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
-      const report: StructuredReport = { version: 3, reportText, cards, generator: failedCards === 0 ? 'ai' : 'deterministic' }
-      if (failedCards === 0) {
-        await dependencies.writeCache(key, report)
-        logGeneration('generated', startedAt)
-      } else {
-        logGeneration('fallback', startedAt, `${failedCards}/${cards.length} cards used deterministic fallback`)
-      }
-      return report
-    }
     const overallTimeoutMs = dependencies.overallTimeoutMs ?? AI_TOTAL_TIMEOUT_MS
-    let overallTimer: ReturnType<typeof setTimeout> | undefined
-    try {
-      return await Promise.race([
-        generateAllCards(),
-        new Promise<never>((_, reject) => {
-          overallTimer = setTimeout(() => reject(new Error('AI report total rewrite timed out')), overallTimeoutMs)
-        }),
-      ])
-    } finally {
-      if (overallTimer) clearTimeout(overallTimer)
+    const deadlineAt = Date.now() + overallTimeoutMs
+    const generatedCards = [...fallback.cards]
+    const completedByAi = new Set<number>()
+    let nextIndex = 0
+    const worker = async () => {
+      while (true) {
+        const index = nextIndex++
+        if (index >= fallback.cards.length) return
+        const card = fallback.cards[index]
+        const cardKey = cardCacheKey(seed, metadata, card.id)
+        try {
+          const cardCached = await dependencies.readCardCache?.(cardKey)
+          if (cardCached) {
+            generatedCards[index] = cardCached
+            completedByAi.add(index)
+            logGeneration('cache_hit', startedAt, undefined, card.id)
+            continue
+          }
+          const generated = await generateCard(card, promptForCard(card, metadata, index, fallback.cards.length), dependencies)
+          generatedCards[index] = generated
+          completedByAi.add(index)
+          try { await dependencies.writeCardCache?.(cardKey, generated) }
+          catch (error) { console.warn('AI card cache write failed', { cardId: card.id, reason: error instanceof Error ? error.message : String(error) }) }
+        } catch { /* この章だけ決定論版を残す */ }
+      }
     }
+    const concurrency = Math.min(fallback.cards.length, dependencies.maxConcurrency ?? AI_MAX_CONCURRENCY)
+    const workers = Array.from({ length: concurrency }, () => worker())
+    let overallTimer: ReturnType<typeof setTimeout> | undefined
+    const completedWithinDeadline = await Promise.race([
+      Promise.all(workers).then(() => true),
+      new Promise<boolean>(resolve => { overallTimer = setTimeout(() => resolve(false), overallTimeoutMs) }),
+    ])
+    if (overallTimer) clearTimeout(overallTimer)
+
+    const cards: ReportCard[] = []
+    for (const [index, generated] of generatedCards.entries()) {
+      if (!completedByAi.has(index) || !cards.some(card => titlesAreSimilar(card.title, generated.title))) {
+        cards.push(generated); continue
+      }
+      try {
+        const remainingMs = deadlineAt - Date.now()
+        if (remainingMs <= 0) throw new Error('No time remained for duplicate title retry')
+        const retry = await generateCard(fallback.cards[index], `${promptForCard(fallback.cards[index], metadata, index, fallback.cards.length)}\n既出タイトル「${cards.map(card => card.title).join('」「')}」と異なる焦点・語彙のタイトルにしてください。`, {
+          ...dependencies, cardTimeoutMs: Math.min(dependencies.cardTimeoutMs ?? AI_REWRITE_TIMEOUT_MS, remainingMs),
+        })
+        if (cards.some(card => titlesAreSimilar(card.title, retry.title))) throw new Error('AI title remained too similar after retry')
+        try { await dependencies.writeCardCache?.(cardCacheKey(seed, metadata, fallback.cards[index].id), retry) }
+        catch (error) { console.warn('AI card cache write failed', { cardId: fallback.cards[index].id, reason: error instanceof Error ? error.message : String(error) }) }
+        cards.push(retry)
+      } catch { completedByAi.delete(index); cards.push(fallback.cards[index]) }
+    }
+    const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
+    const aiCardCount = completedByAi.size
+    const report: StructuredReport = { version: 3, reportText, cards, generator: aiCardCount > 0 ? 'ai' : 'deterministic' }
+    if (aiCardCount === cards.length) {
+      try { await dependencies.writeCache(key, report) }
+      catch (error) { console.warn('AI report cache write failed', { reason: error instanceof Error ? error.message : String(error) }) }
+      logGeneration('generated', startedAt)
+    } else {
+      const reason = `${cards.length - aiCardCount}/${cards.length} cards used deterministic fallback${completedWithinDeadline ? '' : ' after overall timeout'}`
+      logGeneration('fallback', startedAt, reason)
+    }
+    return report
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     console.error('AI report generation rejected; deterministic fallback used', reason)
@@ -187,6 +223,15 @@ function productionDependencies(): AiWriterDependencies {
     async writeCache(key, report) {
       const { error } = await getSupabaseAdmin().from('ai_report_cache').upsert({ cache_key: key, generator_version: GENERATOR_VERSION, payload: report })
       if (error) throw new Error(`AI report cache write failed: ${error.message}`)
+    },
+    async readCardCache(key) {
+      const { data, error } = await getSupabaseAdmin().from('ai_report_cache').select('payload').eq('cache_key', key).maybeSingle()
+      if (error) { console.error('AI card cache read failed', error.message); return null }
+      return data?.payload as ReportCard | null
+    },
+    async writeCardCache(key, card) {
+      const { error } = await getSupabaseAdmin().from('ai_report_cache').upsert({ cache_key: key, generator_version: GENERATOR_VERSION, payload: card })
+      if (error) throw new Error(`AI card cache write failed: ${error.message}`)
     },
     async generate(prompt) {
       const startedAt = Date.now()

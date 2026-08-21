@@ -348,7 +348,8 @@ struct APIClient {
         guard let calculated = try JSONSerialization.jsonObject(with: calcData) as? [String: Any] else { throw APIError.invalidResponse }
         progress(.init(percent: 18, title: "命式を計算しています", detail: "生まれた瞬間の基本データを整えています"))
         let previewBody: [String: Any] = birthData.merging(["question": "", "calculatedData": calculated]) { _, new in new }
-        let call = try request(path: "/api/preview/generate?format=sse", method: "POST", token: token, json: previewBody)
+        var call = try request(path: "/api/preview/generate?format=sse", method: "POST", token: token, json: previewBody)
+        call.timeoutInterval = 120
         let (bytes, response) = try await URLSession.shared.bytes(for: call)
         guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else { throw APIError.invalidResponse }
         var structured: StructuredReportResponse?

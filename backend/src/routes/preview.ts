@@ -88,6 +88,7 @@ interface CalculatedData {
 // POST /api/preview/generate
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   const useSse = req.query.format === 'sse'
+  let keepAlive: ReturnType<typeof setInterval> | undefined
   const progress = (percent: number, title: string, detail: string) => {
     if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
   }
@@ -113,6 +114,8 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     }
     if (useSse) {
       res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders()
+      keepAlive = setInterval(() => res.write(': keep-alive\n\n'), 10_000)
+      res.once('close', () => { if (keepAlive) clearInterval(keepAlive) })
     }
     progress(5, '入力内容を確認しています', '生年月日と出生地を確認しています')
 
@@ -189,10 +192,11 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
     if (useSse) {
       res.write(`data: ${JSON.stringify({ type: 'complete', report: response })}\n\n`)
-      progress(100, '鑑定書ができました', 'あなたのパターンを読み始められます'); res.write('data: [DONE]\n\n'); res.end()
+      progress(100, '鑑定書ができました', 'あなたのパターンを読み始められます'); res.write('data: [DONE]\n\n'); if (keepAlive) clearInterval(keepAlive); res.end()
     } else { res.setHeader('Cache-Control', 'private, no-store, max-age=0'); res.json(response) }
     return
   } catch (err) {
+    if (keepAlive) clearInterval(keepAlive)
     const requestId = correlationId(req)
     console.error('Preview generate error', {
       correlationId: requestId,

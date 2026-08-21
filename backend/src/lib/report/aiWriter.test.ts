@@ -59,7 +59,7 @@ test('一章の形式不正は他章のAI生成結果を失わせない', async 
     async readCache() { return null }, async writeCache() { throw new Error('partial result must not be cached') },
     async generate() { calls += 1; return calls === 1 ? raw : '{"card":{"title":"仕事"}}' },
   })
-  assert.equal(result.generator, 'deterministic')
+  assert.equal(result.generator, 'ai')
   assert.equal(result.cards[0].title, '勢いより準備から始める人です')
   assert.equal(result.cards[1].title, '元の仕事')
 })
@@ -90,4 +90,48 @@ test('AI整文が全体期限を超えたら決定論版をすぐ返す', async 
   assert.equal(result.generator, 'deterministic')
   assert.deepEqual(result.cards, fallback.cards)
   assert.ok(Date.now() - startedAt < 500)
+})
+
+test('AI生成の並列度を4以下に抑え、章ごとに異なるキーでキャッシュする', async () => {
+  const source = { ...fallback, cards: Array.from({ length: 7 }, (_, index) => ({ ...fallback.cards[0], id: `card-${index}`, title: `元の題${index}` })) }
+  let active = 0; let maximumActive = 0
+  const cardKeys: string[] = []
+  const result = await writeReportWithAi('bounded', source, metadata, {
+    async readCache() { return null }, async writeCache() {}, async readCardCache() { return null },
+    async writeCardCache(key) { cardKeys.push(key) }, maxConcurrency: 4,
+    async generate(prompt) {
+      const id = prompt.match(/"id":"(card-\d+)"/)?.[1] ?? 'unknown'
+      active += 1; maximumActive = Math.max(maximumActive, active)
+      await new Promise(resolve => setTimeout(resolve, 10)); active -= 1
+      return JSON.stringify({ card: { title: `${id}を生かす結論です`, summary: `${id}についての要約です。`, metadataRefs: ['missingElements:火'], pages } })
+    },
+  })
+  assert.equal(result.generator, 'ai')
+  assert.equal(maximumActive, 4)
+  assert.equal(cardKeys.length, 7)
+  assert.equal(new Set(cardKeys).size, 7)
+})
+
+test('全体期限時も完成済みの章を採用し、次回は失敗章だけを生成する', async () => {
+  const source = { ...fallback, cards: [fallback.cards[0], { ...fallback.cards[0], id: 'slow', title: '遅い章' }] }
+  const cardCache = new Map<string, typeof fallback.cards[number]>()
+  let calls = 0
+  const dependencies = {
+    async readCache() { return null }, async writeCache() {},
+    async readCardCache(key: string) { return cardCache.get(key) ?? null },
+    async writeCardCache(key: string, card: typeof fallback.cards[number]) { cardCache.set(key, card) },
+    overallTimeoutMs: 25, cardTimeoutMs: 100, maxConcurrency: 2,
+    async generate(prompt: string) {
+      calls += 1
+      if (prompt.includes('"id":"slow"')) return await new Promise<string>(() => {})
+      return raw
+    },
+  }
+  const first = await writeReportWithAi('partial-timeout', source, metadata, dependencies)
+  assert.equal(first.generator, 'ai')
+  assert.equal(first.cards[0].title, '勢いより準備から始める人です')
+  assert.equal(first.cards[1].title, '遅い章')
+  assert.equal(cardCache.size, 1)
+  await writeReportWithAi('partial-timeout', source, metadata, dependencies)
+  assert.equal(calls, 3)
 })
