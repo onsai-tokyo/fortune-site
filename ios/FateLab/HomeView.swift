@@ -91,14 +91,7 @@ struct HomeView: View {
             Text("生まれたときの情報から、最初の鑑定を作ります。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 18)
             VStack(alignment: .leading, spacing: 16) {
                 Text("生年月日").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
-                DatePicker(
-                    "生年月日",
-                    selection: $input.date,
-                    in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.compact)
-                .environment(\.locale, Locale(identifier: "ja_JP"))
+                DateMenuPicker(date: $input.date)
                 FLDivider()
                 Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
                 if input.birthTime == nil {
@@ -120,6 +113,12 @@ struct HomeView: View {
                     }.frame(minHeight: 44)
                 }
                 Text("分からない場合は空欄のまま鑑定できます").font(.footnote).foregroundStyle(FateTheme.muted)
+                FLDivider()
+                Text("出生地").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                selectionRow(value: input.birthplace) { showBirthplacePicker = true }
+                FLDivider()
+                Text("性別").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                selectionRow(value: input.gender == "male" ? "男性" : "女性") { showGenderPicker = true }
             }
             .padding(.top, 32)
             if let errorMessage {
@@ -130,7 +129,6 @@ struct HomeView: View {
                 .padding(16).frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.danger.opacity(0.45)))
             }
-            VStack(spacing: 0) { FLInsightRow(title: "本質", subtitle: "考え方と選び方の傾向"); FLInsightRow(title: "仕事", subtitle: "力を発揮しやすい環境"); FLInsightRow(title: "関係", subtitle: "人との距離の取り方") }.padding(.top, 40)
             Color.clear.frame(height: 104)
         }
     }

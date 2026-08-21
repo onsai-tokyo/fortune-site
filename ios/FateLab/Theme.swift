@@ -46,4 +46,29 @@ struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var 
 func userFacingErrorMessage(_ error: Error) -> String? { if error is CancellationError { return nil }; if let urlError = error as? URLError, urlError.code == .cancelled { return nil }; return error.localizedDescription }
 extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
 
-struct DateMenuPicker: View { @Binding var date: Date; var body: some View { DatePicker("生年月日", selection: $date, in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(), displayedComponents: .date).labelsHidden().environment(\.locale, Locale(identifier: "ja_JP")) } }
+struct DateMenuPicker: View {
+    @Binding var date: Date
+    private let calendar = Calendar(identifier: .gregorian)
+    private var components: DateComponents { calendar.dateComponents([.year, .month, .day], from: date) }
+    private var year: Binding<Int> { componentBinding(.year, fallback: 1990) }
+    private var month: Binding<Int> { componentBinding(.month, fallback: 1) }
+    private var day: Binding<Int> { componentBinding(.day, fallback: 1) }
+    private var daysInMonth: Int { let first = calendar.date(from: DateComponents(year: year.wrappedValue, month: month.wrappedValue, day: 1)) ?? date; return calendar.range(of: .day, in: .month, for: first)?.count ?? 31 }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Picker("年", selection: year) { ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text("\($0)年").tag($0) } }
+            Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text("\($0)月").tag($0) } }
+            Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text("\($0)日").tag($0) } }
+        }.pickerStyle(.menu).tint(FateTheme.ink)
+    }
+
+    private func componentBinding(_ component: Calendar.Component, fallback: Int) -> Binding<Int> {
+        Binding(get: { components.value(for: component) ?? fallback }, set: { value in
+            var updated = components; updated.setValue(value, for: component)
+            let first = calendar.date(from: DateComponents(year: updated.year, month: updated.month, day: 1)) ?? date
+            updated.day = min(updated.day ?? 1, calendar.range(of: .day, in: .month, for: first)?.count ?? 31)
+            if let next = calendar.date(from: updated), next <= Date() { date = next }
+        })
+    }
+}
