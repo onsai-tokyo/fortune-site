@@ -27,10 +27,23 @@ export interface ReportCard {
   metadataRefs?: string[]
 }
 
+export interface ChartSection {
+  id: string
+  system: string
+  title: string
+  layout: 'table' | 'bars' | 'grid' | 'list'
+  table?: { headers: string[]; rows: string[][] }
+  bars?: Array<{ label: string; value: number; max: number; isZero: boolean }>
+  grid?: Array<{ position: string; value: string }>
+  list?: Array<{ label: string; value: string; note?: string }>
+  note?: string
+}
+
 export interface StructuredReport {
   version: 2 | 3
   reportText: string
   cards: ReportCard[]
+  chartSections?: ChartSection[]
   generator?: 'ai' | 'deterministic'
 }
 
@@ -121,5 +134,5 @@ export function buildStructuredReport(reportText: string): StructuredReport {
       evidence: evidenceFrom(section),
     }]
   })
-  return { version: 2, reportText, cards }
+  return { version: 2, reportText, cards, chartSections: [] }
 }

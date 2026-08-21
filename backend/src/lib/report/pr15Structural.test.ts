@@ -5,6 +5,7 @@ import type { ReportInput } from '../deterministicReport.js'
 import { calcZiwei } from '../ziwei.js'
 import { calcExpandedDivination, calcHonmeiStar, calcKyuseiProfile, calcLifePathNumber, calcNayin, calcNumerologyProfile, calcSanmei, calcSanmeiRelations, calcShichu, calcTimingCycles, getSukuyo, KYUSEI_NAMES } from '../../routes/calc.js'
 import { assertCardContract } from './contract.js'
+import { buildChartSections } from './chartSections.js'
 import { extractReportMetadata } from './metadata.js'
 import { buildReportFacts } from './facts.js'
 import { buildReportFindings } from './findings.js'
@@ -12,7 +13,7 @@ import { buildEditorialStructuredReport } from './editorial.js'
 import { calculatedDataWithReport, storedReportFromCalculatedData } from './storedReport.js'
 import { replaceTimingCards } from './timingCards.js'
 
-function editorialFor(input: ReportInput) { const metadata = extractReportMetadata(input); const facts = buildReportFacts(input, metadata); return replaceTimingCards(buildEditorialStructuredReport(facts, buildReportFindings(facts)), input) }
+function editorialFor(input: ReportInput) { const metadata = extractReportMetadata(input); const facts = buildReportFacts(input, metadata); return { ...replaceTimingCards(buildEditorialStructuredReport(facts, buildReportFindings(facts)), input), chartSections: buildChartSections(input) } }
 
 type Sample = readonly [number, number, number, number, number]
 const samples: readonly Sample[] = [

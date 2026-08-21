@@ -14,7 +14,7 @@ import { buildReportFacts } from '../lib/report/facts.js'
 import { buildReportFindings } from '../lib/report/findings.js'
 import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
 import { replaceTimingCards } from '../lib/report/timingCards.js'
-import { buildChartCards } from '../lib/report/chartCards.js'
+import { buildChartSections } from '../lib/report/chartSections.js'
 
 export const previewRouter = Router()
 
@@ -183,7 +183,8 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       : writtenReport
     const reportWithChart = {
       ...orderedReport,
-      cards: [...orderedReport.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'), ...buildChartCards(reportInput)],
+      cards: orderedReport.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'),
+      chartSections: buildChartSections(reportInput),
     }
     const response = req.query.debug === '1'
       ? { ...reportWithChart, metadata }

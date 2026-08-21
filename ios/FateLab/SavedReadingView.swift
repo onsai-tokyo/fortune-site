@@ -9,6 +9,7 @@ struct SavedReadingView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var cards: [ReadingCard] = []
+    @State private var chartSections: [ChartSection] = []
 
     var body: some View {
         ScrollView {
@@ -28,7 +29,8 @@ struct SavedReadingView: View {
                         birthData: [:],
                         calculatedData: [:],
                         text: detail.conversation.reportText,
-                        cards: cards
+                        cards: cards,
+                        chartSections: chartSections
                     )
                     VStack(alignment: .leading, spacing: 18) {
                         InsightHubView(report: report, onQuestion: { card in
@@ -68,7 +70,9 @@ struct SavedReadingView: View {
             async let detailRequest = APIClient.shared.conversation(id: conversationID, auth: auth)
             async let cardsRequest = APIClient.shared.cards(id: conversationID, auth: auth)
             detail = try await detailRequest
-            cards = try await cardsRequest.cards
+            let report = try await cardsRequest
+            cards = report.cards
+            chartSections = report.chartSections ?? []
         } catch {
             errorMessage = userFacingMessage(error)
         }

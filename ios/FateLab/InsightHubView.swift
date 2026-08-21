@@ -58,40 +58,107 @@ private struct ChartDetailsView: View {
                 if let place = report.birthData["birthplace"] as? String { Text(place) }
                 if let gender = report.birthData["gender"] as? String { Text(gender == "female" ? "女性" : "男性") }
             }.font(.footnote).foregroundStyle(FateTheme.muted)
-            if chartCards.isEmpty {
+            if report.chartSections.isEmpty {
                 if let onReload {
                     FLErrorState(title: "命式データを読み込めませんでした", message: "通信状態を確認して、もう一度読み込んでください。", retry: onReload)
                 } else {
                     FLEmptyState(title: "命式データがありません", message: "この鑑定では命式の詳細を表示できません。")
                 }
             } else {
-                ForEach(chartCards) { item in
-                    NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { ChartCard(item: item) }
-                        .buttonStyle(.plain)
+                ForEach(report.chartSections) { section in
+                    ChartSectionView(section: section)
                 }
             }
         }
         .padding(FateSpacing.cardPadding).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }
-
-    private var chartCards: [ReadingCard] { report.cards.filter { $0.resolvedTab == "chart" } }
 }
 
-private struct ChartCard: View {
-    let item: ReadingCard
+private struct ChartSectionView: View {
+    let section: ChartSection
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                Text(item.title).font(.system(size: 18, weight: .semibold)).foregroundStyle(FateTheme.ink)
-                Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted)
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(section.system).font(.caption).tracking(2).foregroundStyle(FateTheme.muted)
+                Text(section.title).font(.system(size: 20, weight: .semibold)).foregroundStyle(FateTheme.ink)
             }
-            Text(item.summary).font(.system(size: 14)).foregroundStyle(FateTheme.body).lineSpacing(5)
-            FlowTags(tags: item.tags)
+            if let table = section.table { ChartTableView(table: table) }
+            if let bars = section.bars { ChartBarsView(bars: bars) }
+            if let grid = section.grid { ChartGridView(items: grid) }
+            if let list = section.list { ChartListView(items: list) }
+            if let note = section.note { Text(note).font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4) }
         }
         .padding(18).background(FateTheme.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
+    }
+}
+
+private struct ChartTableView: View {
+    let table: ChartTable
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
+                GridRow { ForEach(Array(table.headers.enumerated()), id: \.offset) { _, value in Text(value).font(.caption).foregroundStyle(FateTheme.muted) } }
+                Divider().gridCellUnsizedAxes(.horizontal)
+                ForEach(Array(table.rows.enumerated()), id: \.offset) { _, row in
+                    GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, value in Text(value).font(.system(size: 14)).fixedSize() } }
+                }
+            }
+        }
+    }
+}
+
+private struct ChartBarsView: View {
+    let bars: [ChartBar]
+    var body: some View {
+        VStack(spacing: 11) {
+            ForEach(bars) { bar in
+                HStack(spacing: 10) {
+                    Text(bar.label).font(.system(size: 14, weight: .medium)).frame(width: 22)
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(FateTheme.line)
+                            Capsule().fill(bar.isZero ? FateTheme.muted : FateTheme.ink).frame(width: bar.isZero ? 3 : geometry.size.width * CGFloat(bar.value / max(1, bar.max)))
+                        }
+                    }.frame(height: 7)
+                    Text(bar.isZero ? "0  要補完" : String(format: "%.1f", bar.value)).font(.caption).foregroundStyle(bar.isZero ? FateTheme.danger : FateTheme.body).frame(width: 58, alignment: .trailing)
+                }
+            }
+        }
+    }
+}
+
+private struct ChartGridView: View {
+    let items: [ChartGridItem]
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            ForEach(items) { item in
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(item.position).font(.caption).foregroundStyle(FateTheme.muted)
+                    Text(item.value).font(.system(size: 15, weight: .medium)).lineLimit(2)
+                }.frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading).padding(12)
+                    .background(FateTheme.canvas).overlay(RoundedRectangle(cornerRadius: 10).stroke(FateTheme.line))
+            }
+        }
+    }
+}
+
+private struct ChartListView: View {
+    let items: [ChartListItem]
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(items) { item in
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(item.label).font(.caption).foregroundStyle(FateTheme.muted)
+                        if let note = item.note { Text(note).font(.caption2).foregroundStyle(FateTheme.muted) }
+                    }
+                    Spacer(); Text(item.value).font(.system(size: 15, weight: .medium)).multilineTextAlignment(.trailing)
+                }.padding(.vertical, 10).overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .bottom)
+            }
+        }
     }
 }
 

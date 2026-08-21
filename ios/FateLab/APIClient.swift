@@ -222,12 +222,14 @@ struct APIClient {
         let key = SHA256.hash(data: canonicalBirthData).map { String(format: "%02x", $0) }.joined()
         let encodedCards = try JSONEncoder().encode(report.cards)
         let cardObjects = try JSONSerialization.jsonObject(with: encodedCards)
+        let encodedSections = try JSONEncoder().encode(report.chartSections)
+        let sectionObjects = try JSONSerialization.jsonObject(with: encodedSections)
         var call = try request(path: "/api/reading/conversations", method: "POST", token: token, json: [
             "title": readingTitle(report),
             "birthData": report.birthData,
             "calculatedData": report.calculatedData,
             "reportText": report.text,
-            "structuredReport": ["version": 3, "reportText": report.text, "cards": cardObjects],
+            "structuredReport": ["version": 3, "reportText": report.text, "cards": cardObjects, "chartSections": sectionObjects],
             "sourceSection": "鑑定全体"
         ])
         call.setValue(key, forHTTPHeaderField: "Idempotency-Key")
@@ -362,6 +364,6 @@ struct APIClient {
         }
         guard let structured else { throw APIError.invalidResponse }
         guard !structured.reportText.isEmpty, !structured.cards.isEmpty else { throw APIError.server("鑑定書を生成できませんでした") }
-        return GeneratedReport(birthData: birthData, calculatedData: calculated, text: structured.reportText, cards: structured.cards)
+        return GeneratedReport(birthData: birthData, calculatedData: calculated, text: structured.reportText, cards: structured.cards, chartSections: structured.chartSections ?? [])
     }
 }

@@ -127,13 +127,15 @@ struct GeneratedReport {
     let calculatedData: [String: Any]
     let text: String
     let cards: [ReadingCard]
+    let chartSections: [ChartSection]
     var conversationID: UUID?
 
-    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = [], conversationID: UUID? = nil) {
+    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = [], chartSections: [ChartSection] = [], conversationID: UUID? = nil) {
         self.birthData = birthData
         self.calculatedData = calculatedData
         self.text = text
         self.cards = cards
+        self.chartSections = chartSections
         self.conversationID = conversationID
     }
 }
@@ -142,7 +144,25 @@ struct StructuredReportResponse: Codable {
     let version: Int
     let reportText: String
     let cards: [ReadingCard]
+    let chartSections: [ChartSection]?
 }
+
+struct ChartSection: Codable, Identifiable {
+    let id: String
+    let system: String
+    let title: String
+    let layout: String
+    let table: ChartTable?
+    let bars: [ChartBar]?
+    let grid: [ChartGridItem]?
+    let list: [ChartListItem]?
+    let note: String?
+}
+
+struct ChartTable: Codable { let headers: [String]; let rows: [[String]] }
+struct ChartBar: Codable, Identifiable { let label: String; let value: Double; let max: Double; let isZero: Bool; var id: String { label } }
+struct ChartGridItem: Codable, Identifiable { let position: String; let value: String; var id: String { position } }
+struct ChartListItem: Codable, Identifiable { let label: String; let value: String; let note: String?; var id: String { label } }
 
 struct ReadingCard: Codable, Identifiable {
     let id: String

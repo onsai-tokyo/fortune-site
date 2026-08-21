@@ -26,5 +26,6 @@ export function cardContractViolations(cards: ContractCard[]): string[] {
 
 export function assertCardContract(report: StructuredReport): void {
   const violations = cardContractViolations(report.cards)
+  if ((report.chartSections?.length ?? 0) < 5) violations.push('chart sections must contain at least 5 systems')
   if (violations.length > 0) throw new Error(`Report card contract violated:\n${violations.join('\n')}`)
 }
