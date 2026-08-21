@@ -65,11 +65,21 @@ export type CompatibilityCardCache = {
   write: (spec: CompatibilityCardSpec, card: ReportCard) => Promise<void>
 }
 
-const compatibilityCardSpecs: CompatibilityCardSpec[] = [
-  { id: 'compat-attraction', purpose: '引き合う力', titleDirection: '二人が自然に惹かれ合う理由を表す断定文' },
-  { id: 'compat-friction', purpose: '衝突するとき', titleDirection: 'すれ違いが生まれる条件を表す断定文' },
-  { id: 'compat-growth', purpose: '関係を育てる方法', titleDirection: '二人の関係を育てる具体的な鍵を表す断定文' },
+const compatibilityBaseSpecs: CompatibilityCardSpec[] = [
+  { id: 'compat-overview', purpose: '二人はどのような関係になりやすいか', titleDirection: '二人の関係の全体像を表す断定文' },
+  { id: 'compat-beginning', purpose: '関係が始まりやすい瞬間', titleDirection: '出会いから関係が始まる場面を表す断定文' },
+  { id: 'compat-attraction', purpose: '惹かれ合う理由', titleDirection: '相手に感じやすい魅力を表す断定文' },
+  { id: 'compat-caution', purpose: '関係の中で気をつけたいこと', titleDirection: '関係を守るための注意点を表す断定文' },
+  { id: 'compat-friction', purpose: 'すれ違いが起きやすい場面', titleDirection: 'すれ違いが生まれる具体的な場面を表す断定文' },
+  { id: 'compat-repair', purpose: '拗れたときに二人がすると良いこと', titleDirection: '関係を立て直す具体的な行動を表す断定文' },
+  { id: 'compat-growth', purpose: '長く続けるために大切なこと', titleDirection: '二人の関係を長く育てる鍵を表す断定文' },
 ]
+const compatibilityMarriageSpec: CompatibilityCardSpec = { id: 'compat-marriage', purpose: '結婚したらどんな夫婦になりやすいか', titleDirection: '結婚後の二人の暮らし方を表す断定文' }
+const compatibilityForbiddenTerms = /天中殺|日柱|日主|干支|五行|通変星|宿曜|納音|命宮|夫妻宮|壬水|乙亥|巨門|調舒星/
+
+function compatibilityCardSpecs(relationshipType: 'romantic' | 'friend') {
+  return relationshipType === 'romantic' ? [...compatibilityBaseSpecs, compatibilityMarriageSpec] : compatibilityBaseSpecs
+}
 
 function extractJsonObject(raw: string): Record<string, unknown> {
   const unfenced = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
@@ -86,6 +96,9 @@ export function parseCompatibilityCard(raw: string, minimumPages = 8): ReportCar
     throw new Error('相性カード形式が不正です')
   }
   if (card.pages.some(page => !page.text || [...page.text].length > 120)) throw new Error('相性カード本文が不正です')
+  const readerFacingText = [card.title, card.summary, ...card.pages.flatMap(page => [page.label, page.text])].join('\n')
+  if (compatibilityForbiddenTerms.test(readerFacingText)) throw new Error('相性カード本文に占術用語が含まれています')
+  if (!Array.isArray(card.evidence) || card.evidence.length === 0) throw new Error('相性カードの根拠が不足しています')
   return card
 }
 
@@ -119,9 +132,11 @@ export async function generateCompatibilityCards(
   generate: (prompt: string, spec: CompatibilityCardSpec, attempt: number) => Promise<CompatibilityGeneration>,
   onCardComplete?: (completed: number, total: number) => void,
   cache?: CompatibilityCardCache,
+  relationshipType: 'romantic' | 'friend' = 'romantic',
 ): Promise<StructuredReport> {
+  const specs = compatibilityCardSpecs(relationshipType)
   let completed = 0
-  const results = await Promise.all(compatibilityCardSpecs.map(async spec => {
+  const results = await Promise.all(specs.map(async spec => {
     if (cache) {
       try {
         const cached = validateCompatibilityCard(await cache.read(spec), spec)
@@ -130,7 +145,7 @@ export async function generateCompatibilityCards(
         console.warn('Compatibility card cache read failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
       }
     }
-    const prompt = `${basePrompt}\n今回生成するカード: ${spec.purpose}\nID: ${spec.id}\nタイトル方針: ${spec.titleDirection}\n形式は {"card":{...}}。カードは1枚だけ、ページは8〜12枚。JSON以外を返さないでください。`
+    const prompt = `${basePrompt}\n今回生成する章: ${spec.purpose}\nID: ${spec.id}\nタイトル方針: ${spec.titleDirection}\n形式は {"card":{...}}。章は1枚だけ、ページは8〜12枚。JSON以外を返さないでください。本文・タイトル・要約・ページラベルに占術の専門語を書かず、起きることの言葉へ翻訳してください。主語は「二人」または「あなた／あの人」にし、占いの解説ではなく二人の物語として書いてください。根拠となる占術データは本文に出さず evidence にだけ残してください。`
     let first: CompatibilityGeneration
     try {
       first = await generate(prompt, spec, 1)
@@ -159,11 +174,11 @@ export async function generateCompatibilityCards(
   }).map(async promise => {
     const card = await promise
     completed += 1
-    onCardComplete?.(completed, compatibilityCardSpecs.length)
+    onCardComplete?.(completed, specs.length)
     return card
   }))
   const cards = results.filter((card): card is ReportCard => card !== null)
-  if (cards.length < 2) throw new Error('表示できる相性カードが不足しています')
+  if (cards.length < specs.length - 1) throw new Error('表示できる相性カードが不足しています')
   return assembleCompatibilityReport(cards)
 }
 
@@ -214,8 +229,9 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
 本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
 相手: ${JSON.stringify(partnerFacts)}
-カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"干支系","system":"四柱推命","detail":"二人の日柱"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"二人の核","text":"120字以内"}]}}
-opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。`
+カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"内部の占術系統","system":"内部の占術名","detail":"判断に使った計算上の根拠"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"物語上の短い見出し","text":"120字以内"}]}}
+opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。
+本文に天中殺、日柱、日主、干支、五行、通変星、宿曜、納音、命宮、夫妻宮、星名、干支名などの占術用語を一切書かない。根拠は evidence にのみ保存し、本文では二人に起きる場面や行動へ翻訳する。`
     progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const compatibilityStartedAt = Date.now()
@@ -239,7 +255,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         totalDurationMs: Date.now() - compatibilityStartedAt,
       })
       return { text: block.text, stopReason: message.stop_reason }
-    }, completed => progress(66 + completed * 8, '二人の関係を書いています', `${completed}/3の関係性カードを整えました`), {
+    }, (completed, total) => progress(66 + Math.floor(completed / total * 24), '二人の関係を書いています', `${completed}/${total}の関係性カードを整えました`), {
       read: async spec => {
         const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
         const { data, error } = await db.from('ai_report_cache').select('payload').eq('cache_key', cardCacheKey).maybeSingle()
@@ -251,7 +267,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v3-card', payload: card })
         if (error) throw error
       },
-    })
+    }, relationshipType)
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     complete(report)
