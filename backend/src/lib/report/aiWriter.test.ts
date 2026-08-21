@@ -78,3 +78,16 @@ test('似た章タイトルを検出し、一度だけ異なる題へ書き直�
   assert.equal(calls, 3)
   assert.equal(result.cards[1].title, '静かな準備が仕事を前へ進めます')
 })
+
+test('AI整文が全体期限を超えたら決定論版をすぐ返す', async () => {
+  const startedAt = Date.now()
+  const result = await writeReportWithAi('overall-timeout', fallback, metadata, {
+    async readCache() { return null },
+    async writeCache() {},
+    async generate() { return await new Promise<string>(() => {}) },
+    overallTimeoutMs: 20,
+  })
+  assert.equal(result.generator, 'deterministic')
+  assert.deepEqual(result.cards, fallback.cards)
+  assert.ok(Date.now() - startedAt < 500)
+})
