@@ -264,8 +264,7 @@ private struct LiveReportScreenshotView: View {
         }
         var input = BirthInput()
         input.date = Calendar(identifier: .gregorian).date(from: DateComponents(year: 1995, month: 2, day: 20)) ?? input.date
-        input.hasTime = true
-        input.time = Calendar(identifier: .gregorian).date(from: DateComponents(hour: 5, minute: 40)) ?? input.time
+        input.birthTime = Calendar(identifier: .gregorian).date(from: DateComponents(hour: 5, minute: 40))
         input.birthplace = "愛知県"
         input.gender = "female"
         do {

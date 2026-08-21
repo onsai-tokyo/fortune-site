@@ -26,9 +26,9 @@ struct OnboardingView: View {
             HStack {
                 Button { if step > 1 { step -= 1 } } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
                     .foregroundStyle(FateTheme.ink).opacity(step == 1 ? 0 : 1).disabled(step == 1).accessibilityLabel("前へ戻る")
-                Spacer(); Text("\(step) / 6").font(.system(size: 11, weight: .medium)).foregroundStyle(FateTheme.muted)
+                Spacer(); Text("\(step) / 5").font(.system(size: 11, weight: .medium)).foregroundStyle(FateTheme.muted)
             }
-            FLProgressIndicator(current: step, total: 6)
+            FLProgressIndicator(current: step, total: 5)
         }.padding(.top, 8)
     }
 
@@ -42,17 +42,20 @@ struct OnboardingView: View {
         case 2:
             question("生まれた日を教えてください。", detail: "あなたのパターンを読むために使います。") {
                 DatePicker("生年月日", selection: $input.date, in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(), displayedComponents: .date).datePickerStyle(.wheel).labelsHidden().environment(\.locale, Locale(identifier: "ja_JP"))
+                Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                if input.birthTime == nil {
+                    Button("時刻を入力する") { input.birthTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) }.buttonStyle(FLSecondaryButtonStyle())
+                } else {
+                    DatePicker("出生時刻", selection: birthTimeBinding, displayedComponents: .hourAndMinute).datePickerStyle(.wheel).labelsHidden()
+                    FLTextLink(title: "出生時刻をクリア") { input.birthTime = nil }
+                }
+                Text("分からない場合は空欄のまま進めます").font(.footnote).foregroundStyle(FateTheme.muted)
             }
         case 3:
-            question("生まれた時間はわかりますか？", detail: "わからなくても、鑑定はできます。") {
-                HStack { FLChip(title: "わかる", selected: input.hasTime) { input.hasTime = true }; FLChip(title: "わからない", selected: !input.hasTime) { input.hasTime = false } }
-                if input.hasTime { DatePicker("出生時刻", selection: $input.time, displayedComponents: .hourAndMinute).datePickerStyle(.wheel).labelsHidden() }
-            }
-        case 4:
             question("生まれた場所を教えてください。", detail: "都道府県を選んでください。") {
                 Picker("出生地", selection: $input.birthplace) { ForEach(Self.prefectures, id: \.self) { Text($0) } }.pickerStyle(.wheel)
             }
-        case 5:
+        case 4:
             question("鑑定に必要な情報を教えてください。", detail: "計算に使用し、設定からあとで変更できます。") {
                 Picker("性別", selection: $input.gender) { Text("女性").tag("female"); Text("男性").tag("male") }.pickerStyle(.segmented)
             }
@@ -61,7 +64,7 @@ struct OnboardingView: View {
                 VStack(spacing: 0) {
                     ReviewRow(label: "呼び名", value: input.nickname.isEmpty ? "未設定" : input.nickname)
                     ReviewRow(label: "生年月日", value: input.date.formatted(.dateTime.year().month().day()))
-                    ReviewRow(label: "出生時刻", value: input.hasTime ? input.time.formatted(date: .omitted, time: .shortened) : "不明")
+                    ReviewRow(label: "出生時刻", value: input.birthTime?.formatted(date: .omitted, time: .shortened) ?? "空欄")
                     ReviewRow(label: "出生地", value: input.birthplace)
                     ReviewRow(label: "性別", value: input.gender == "female" ? "女性" : "男性", divider: false)
                 }.overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
@@ -75,13 +78,14 @@ struct OnboardingView: View {
     }
 
     private var footer: some View {
-        Button(step == 6 ? "あなたを読む" : "次へ") {
-            if step < 6 { step += 1 } else { storedStep = 1; storedDraft = ""; onComplete(input) }
-        }.buttonStyle(FLPrimaryButtonStyle()).disabled(step == 6 && !acceptedTerms).opacity(step == 6 && !acceptedTerms ? 0.4 : 1).padding(.vertical, 12).background(FateTheme.canvas)
+        Button(step == 5 ? "あなたを読む" : "次へ") {
+            if step < 5 { step += 1 } else { storedStep = 1; storedDraft = ""; onComplete(input) }
+        }.buttonStyle(FLPrimaryButtonStyle()).disabled(step == 5 && !acceptedTerms).opacity(step == 5 && !acceptedTerms ? 0.4 : 1).padding(.vertical, 12).background(FateTheme.canvas)
     }
 
     private func saveDraft() { if let data = try? JSONEncoder().encode(input) { storedDraft = data.base64EncodedString() } }
-    private func restoreDraft() { step = min(max(storedStep, 1), 6); if let data = Data(base64Encoded: storedDraft), let value = try? JSONDecoder().decode(BirthInput.self, from: data) { input = value } }
+    private func restoreDraft() { step = min(max(storedStep, 1), 5); if let data = Data(base64Encoded: storedDraft), let value = try? JSONDecoder().decode(BirthInput.self, from: data) { input = value } }
+    private var birthTimeBinding: Binding<Date> { Binding(get: { input.birthTime ?? Date() }, set: { input.birthTime = $0 }) }
     static let prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"]
 }
 

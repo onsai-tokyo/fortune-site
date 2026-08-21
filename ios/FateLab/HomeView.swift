@@ -5,12 +5,10 @@ struct HomeView: View {
     @State private var input: BirthInput
     @State private var report: GeneratedReport?
     @State private var isWorking = false
-    @State private var progress: ReportProgress = .calculating
-    @State private var timeSelected = false
+    @State private var progress = GenerationProgress(percent: 5, title: "入力内容を確認しています", detail: "生年月日と出生地を確認しています")
     @State private var showDatePicker = false
     @State private var draftDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     @State private var showTimePicker = false
-    @State private var showTimeKnowledge = false
     @State private var showBirthplacePicker = false
     @State private var showGenderPicker = false
     @State private var draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
@@ -23,7 +21,6 @@ struct HomeView: View {
     init(initialInput: BirthInput? = nil, autoGenerate: Bool = false) {
         let value = initialInput ?? BirthInput()
         _input = State(initialValue: value)
-        _timeSelected = State(initialValue: value.hasTime)
         self.autoGenerate = autoGenerate
     }
 
@@ -31,7 +28,7 @@ struct HomeView: View {
         ScrollView {
             Group {
                 if isWorking {
-                    FateLoadingView(progress: progress)
+                    ReadingGenerationProgressView(kind: .selfReading, progress: progress)
                 } else if let report {
                     VStack(alignment: .leading, spacing: 18) {
                         ReportView(report: report)
@@ -65,8 +62,6 @@ struct HomeView: View {
                 VStack(spacing: 6) {
                     Button("あなたを読む") { Task { await generateReport() } }
                         .buttonStyle(FLPrimaryButtonStyle())
-                        .disabled(input.hasTime && !timeSelected)
-                        .opacity(input.hasTime && !timeSelected ? 0.5 : 1)
                     Text(AppConfig.requiresAuthentication ? "入力は約1分です" : "登録すると鑑定結果を保存できます・入力は約1分です")
                         .font(.system(size: 13))
                         .foregroundStyle(FateTheme.muted)
@@ -81,7 +76,6 @@ struct HomeView: View {
             errorMessage = nil
         }
         .sheet(isPresented: $showDatePicker) { datePickerSheet }
-        .sheet(isPresented: $showTimeKnowledge) { timeKnowledgeSheet }
         .sheet(isPresented: $showTimePicker) { timePickerSheet }
         .sheet(isPresented: $showBirthplacePicker) { birthplacePickerSheet }
         .sheet(isPresented: $showGenderPicker) { genderPickerSheet }
@@ -115,17 +109,6 @@ struct HomeView: View {
             HStack { Text(value).foregroundStyle(FateTheme.ink); Spacer(); Image(systemName: "chevron.right").foregroundStyle(FateTheme.muted) }
                 .contentShape(Rectangle()).padding(.vertical, 6)
         }.buttonStyle(.plain)
-    }
-
-    private var timeKnowledgeSheet: some View {
-        NavigationStack {
-            VStack(spacing: 12) {
-                Button("出生時刻がわかる") { showTimeKnowledge = false; input.hasTime = true; showTimePicker = true }
-                    .buttonStyle(FLSecondaryButtonStyle())
-                Button("出生時刻はわからない") { input.hasTime = false; timeSelected = false; showTimeKnowledge = false }
-                    .buttonStyle(FLSecondaryButtonStyle())
-            }.padding(24).background(FateTheme.canvas).fateScreenTitle("出生時刻")
-        }.presentationDetents([.medium])
     }
 
     private var birthplacePickerSheet: some View {
@@ -180,10 +163,10 @@ struct HomeView: View {
                 DatePicker("出生時刻", selection: $draftTime, displayedComponents: .hourAndMinute)
                     .datePickerStyle(.wheel).labelsHidden()
                 Button("この時刻を使用する") {
-                    input.time = draftTime; timeSelected = true; showTimePicker = false
+                    input.birthTime = draftTime; showTimePicker = false
                 }.buttonStyle(FLPrimaryButtonStyle())
             }.padding(24).background(FateTheme.canvas)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { input.hasTime = false; showTimePicker = false } } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showTimePicker = false } } }
         }.presentationDetents([.medium])
     }
 
@@ -220,7 +203,6 @@ struct HomeView: View {
 
     private func resetForAnotherPerson() {
         input = BirthInput()
-        timeSelected = false
         report = nil
         errorMessage = nil
         saveErrorMessage = nil
@@ -239,20 +221,21 @@ struct HomeView: View {
 }
 
 private struct FateLoadingView: View {
-    let progress: ReportProgress
+    let progress: GenerationProgress
 
     var body: some View {
             VStack(spacing: 30) {
                 Spacer()
-                LoadingArc()
+                FateMark(size: 72)
+                Text("あなたのパターンを読んでいます").font(.system(size: 20, weight: .semibold))
+                Text("\(progress.percent)%").font(.system(size: 42, weight: .bold))
+                ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink)
 
                 VStack(spacing: 12) {
-                    Text(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
+                    Text(progress.title)
                         .font(.system(size: 26, weight: .medium))
                         .multilineTextAlignment(.center)
-                    Text(progress == .calculating
-                         ? "生年月日・出生時刻・出生地から、\nそれぞれの結果を算出しています。"
-                         : "重なって現れた傾向を読み取り、\nあなたの鑑定へ整えています。")
+                    Text(progress.detail)
                         .font(.system(size: 15))
                         .foregroundStyle(FateTheme.muted)
                         .multilineTextAlignment(.center)
@@ -263,7 +246,7 @@ private struct FateLoadingView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(progress == .calculating ? "あなたの命式を計算しています" : "鑑定書をまとめています")
+        .accessibilityLabel("\(progress.percent)パーセント。\(progress.title)。\(progress.detail)")
     }
 
 }

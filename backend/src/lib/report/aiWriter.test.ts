@@ -4,11 +4,11 @@ import type { StructuredReport } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
 import { writeReportWithAi } from './aiWriter.js'
 
-const fallback: StructuredReport = { version: 2, reportText: 'fallback', cards: [{
+const fallback: StructuredReport = { version: 3, reportText: 'fallback', cards: [{
   id: 'core', kind: 'essence', title: '元の題', summary: '元の要約', tags: ['本質'], period: null, evidence: [], pages: [],
 }] }
 const metadata = { combinationSignature: 'abc', missingElements: [{ element: '火', score: 0, severity: 'missing' }], dominantElements: [], contradictions: [], relationshipDistortions: [], domainHighlights: [], turningPoints: { decades: [], annual: [] }, age: 30, lifeStage: '30s', profile: {} } as ReportMetadata
-const pages = Array.from({ length: 18 }, (_, index) => ({ role: index === 0 ? 'opening' : index === 17 ? 'closing' : 'core', label: `頁${index}`, text: `火が欠ける命式を具体的に読む場面${index}。` }))
+const pages = Array.from({ length: 5 }, (_, index) => ({ role: index === 0 ? 'opening' : index === 4 ? 'closing' : 'core', label: `頁${index}`, text: `火が欠ける命式を具体的に読む場面${index}。` }))
 const raw = JSON.stringify({ cards: [{ title: '勢いより準備から始める人です', summary: '熱を外から補うと動きが明確になります。', metadataRefs: ['missingElements:火'], pages }] })
 
 test('同じ入力の2回目はキャッシュを返しAIを再実行しない', async () => {

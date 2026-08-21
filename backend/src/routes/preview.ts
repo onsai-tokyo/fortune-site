@@ -10,8 +10,8 @@ import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { writeReportWithAi } from '../lib/report/aiWriter.js'
-import { replaceTimingCards } from '../lib/report/timingCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
+import { buildNarrativeStructuredReport } from '../lib/reportCards.js'
 
 export const previewRouter = Router()
 
@@ -84,6 +84,10 @@ interface CalculatedData {
 // LP用：命式鑑定書 全章ストリーミング生成
 // POST /api/preview/generate
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
+  const useSse = req.query.format === 'sse'
+  const progress = (percent: number, title: string, detail: string) => {
+    if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
+  }
   try {
     const { birthDate, birthTime, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
       birthDate?: string
@@ -104,6 +108,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       res.status(400).json({ error: '生年月日の形式が正しくありません' })
       return
     }
+    if (useSse) {
+      res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders()
+    }
+    progress(5, '入力内容を確認しています', '生年月日と出生地を確認しています')
 
     const age = calcAge(birthDate)
     const genderLabel = gender === 'male' ? '男性' : '女性'
@@ -112,6 +120,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const [birthHour, birthMinute] = birthTime
       ? birthTime.split(':').map(Number)
       : [undefined, 0]
+    progress(18, '命式を計算しています', '生まれた瞬間の基本データを整えています')
     const shichu = calcShichu(year, month, day, birthHour, birthMinute)
     const nayin = calcNayin(shichu.day.stemIdx, shichu.day.branchIdx)
     const sanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
@@ -129,6 +138,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
+    progress(38, '複数の見方を重ねています', '共通する特徴を探しています')
     const reportInput = {
       birthDate,
       birthTime,
@@ -150,8 +160,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       astrology,
       ...expanded,
     }
-    const deterministicReport = replaceTimingCards(buildDeterministicStructuredReport(reportInput), reportInput)
+    progress(58, 'あなたらしさを整理しています', '重複しない8つの視点を選んでいます')
+    const deterministicReport = buildNarrativeStructuredReport(buildDeterministicStructuredReport(reportInput))
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
+    progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
       ? deterministicReport
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata)
@@ -162,8 +174,11 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       ? { ...orderedReport, metadata }
       : orderedReport
 
-    res.setHeader('Cache-Control', 'private, no-store, max-age=0')
-    res.json(response)
+    progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
+    if (useSse) {
+      res.write(`data: ${JSON.stringify({ type: 'complete', report: response })}\n\n`)
+      progress(100, '鑑定書ができました', 'あなたのパターンを読み始められます'); res.write('data: [DONE]\n\n'); res.end()
+    } else { res.setHeader('Cache-Control', 'private, no-store, max-age=0'); res.json(response) }
     return
   } catch (err) {
     const requestId = correlationId(req)
@@ -176,7 +191,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     if (!res.headersSent) {
       sendApiError(res, 500, 'GENERATION_FAILED', '鑑定書を生成できませんでした。もう一度お試しください。', true, requestId)
     } else {
-      res.write('data: [DONE]\n\n')
+      res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '鑑定書を生成できませんでした。もう一度お試しください。', retryable: true })}\n\n`); res.write('data: [DONE]\n\n')
       res.end()
     }
   }

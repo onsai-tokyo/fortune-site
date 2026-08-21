@@ -27,9 +27,34 @@ export interface ReportCard {
 }
 
 export interface StructuredReport {
-  version: 2
+  version: 2 | 3
   reportText: string
   cards: ReportCard[]
+}
+
+const narrativeIds = ['life-mission','core-mind-1','core-mind-2','core-mind-3','love-beginning','love-pattern','work-mode','work-fit'] as const
+
+function sentences(text: string) {
+  return text.split(/(?<=[。！？])/u).map(value => value.trim()).filter(Boolean)
+}
+function pageText(text: string) { if ([...text].length <= 110) return text; const head = [...text].slice(0, 108).join(''); const boundary = Math.max(head.lastIndexOf('、'), head.lastIndexOf('，')); return `${boundary > 35 ? head.slice(0, boundary) : head}。` }
+
+export function buildNarrativeStructuredReport(source: StructuredReport): StructuredReport {
+  const essence = source.cards.filter(card => card.kind !== 'timing')
+  const pool = essence.flatMap(card => card.pages.map(page => page.text)).flatMap(sentences)
+  const cards = narrativeIds.map((id, index): ReportCard => {
+    const origin = essence[index % Math.max(1, essence.length)]
+    const selected = [...new Set([...(origin?.pages.flatMap(page => sentences(page.text)) ?? []), ...pool])]
+      .slice(index, index + 5)
+    while (selected.length < 5) selected.push('自分の感覚を言葉にできる場所で、あなたらしい力が自然に戻ります。')
+    const titleSource = (origin?.title || selected[0]).replace(/^[^：:]{1,18}[：:]/, '').replace(/[：:]/g, '、')
+    const title = /[。！？]$/.test(titleSource) ? titleSource : `${titleSource}人です`
+    const roles: ReportPageRole[] = ['opening', 'core', 'scene', 'shadow', 'closing']
+    return { id, kind: 'essence', title, summary: selected.slice(0, 2).join('').slice(0, 100), tags: [], period: null,
+      pages: selected.map((text, pageIndex) => ({ role: roles[pageIndex], label: `${String(pageIndex + 1).padStart(2, '0')} / 05`, text: pageText(text) })),
+      evidence: origin?.evidence ?? [] }
+  })
+  return { version: 3, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'), cards }
 }
 
 const markerPattern = /\[\[([A-Z]+):([\s\S]*?)\]\]/g

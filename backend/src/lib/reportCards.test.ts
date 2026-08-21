@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildStructuredReport } from './reportCards.js'
+import { buildNarrativeStructuredReport, buildStructuredReport } from './reportCards.js'
 
 const source = `【先に読む要約】
 [[HIGHLIGHT:責任の範囲を決めてから動く人です]]
@@ -43,4 +43,13 @@ test('カード数とページ数を6枚・10枚の固定上限で切らない',
   const result = buildStructuredReport(manySections)
   assert.equal(result.cards.length, 12)
   assert.equal(result.cards[0].pages.length, 8)
+})
+
+test('初回の取扱説明書は固定8ID・各5ページで時期カードを含まない', () => {
+  const report = buildNarrativeStructuredReport(buildStructuredReport(source))
+  assert.equal(report.version, 3)
+  assert.deepEqual(report.cards.map(card => card.id), ['life-mission','core-mind-1','core-mind-2','core-mind-3','love-beginning','love-pattern','work-mode','work-fit'])
+  assert.ok(report.cards.every(card => card.kind === 'essence' && card.pages.length === 5))
+  assert.ok(report.cards.every(card => card.pages.every(page => [...page.text].length <= 110 && /[。！？]$/.test(page.text))))
+  assert.ok(report.cards.every(card => !/[：:]/.test(card.title)))
 })

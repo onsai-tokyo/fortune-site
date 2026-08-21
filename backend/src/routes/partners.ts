@@ -53,6 +53,9 @@ function parseCompatibility(raw: string): StructuredReport {
 }
 
 partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
+  const useSse = req.query.format === 'sse'
+  const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
+  const complete = (report: StructuredReport) => { if (useSse) { res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
   try {
     const db = getSupabaseAdmin()
     const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
@@ -67,9 +70,12 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     if (!self?.birth_data || !self?.calculated_data) {
       sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
     }
+    if (useSse) { res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders() }
+    progress(5, '二人の情報を確認しています', '鑑定に使うプロフィールを準備しています')
     const relationshipType = req.body?.relationshipType === 'friend' ? 'friend' : 'romantic'
     const [year, month, day] = String(partner.birth_date).split('-').map(Number)
     const [hour, minute] = partner.birth_time ? String(partner.birth_time).split(':').map(Number) : [undefined, 0]
+    progress(22, '相手のデータを読み解いています', '二人の命式を重ねる準備をしています')
     const shichu = calcShichu(year, month, day, hour, minute)
     const partnerFacts = {
       name: partner.display_name, birthDate: partner.birth_date, gender: partner.gender,
@@ -80,21 +86,25 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
     const cacheKey = createHash('sha256').update(`compat-v2|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     const { data: cached } = await db.from('ai_report_cache').select('payload').eq('cache_key', cacheKey).maybeSingle()
-    if (cached?.payload) { res.json(cached.payload); return }
+    progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
+    if (cached?.payload) { complete(cached.payload as StructuredReport); return }
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードをJSONだけで返してください。
 本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
 相手: ${JSON.stringify(partnerFacts)}
 形式: {"cards":[{"id":"compat-core","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"干支系","system":"四柱推命","detail":"二人の日柱"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"二人の核","text":"120字以内"}]}]}
 カードは「引き合う力」「衝突するとき」「関係を育てる方法」の最低3枚。各8〜12ページ。opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。`
-    const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({ model: 'claude-sonnet-4-6', max_tokens: 7000, temperature: 0, messages: [{ role: 'user', content: prompt }] })
+    progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
+    const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({ model: 'claude-sonnet-4-6', max_tokens: 4200, temperature: 0, messages: [{ role: 'user', content: prompt }] })
     const block = message.content.find(item => item.type === 'text')
     if (!block || block.type !== 'text') throw new Error('AI応答がありません')
     const report = parseCompatibility(block.text)
     const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v2', payload: report })
     if (cacheError) throw cacheError
-    res.json(report)
+    progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
+    complete(report)
   } catch (error) {
     console.error('Partner compatibility failed', error)
-    res.status(500).json({ error: '相性鑑定を作成できませんでした' })
+    if (res.headersSent) { res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '相性鑑定を作成できませんでした', retryable: true })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }
+    else sendApiError(res, 500, 'GENERATION_FAILED', '相性鑑定を作成できませんでした', true, correlationId(req))
   }
 })

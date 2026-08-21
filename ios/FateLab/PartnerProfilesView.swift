@@ -12,10 +12,11 @@ struct PartnerProfilesView: View {
     @State private var relationshipType = "romantic"
     @State private var compatibilityReport: StructuredReportResponse?
     @State private var isGenerating = false
+    @State private var generationProgress = GenerationProgress(percent: 5, title: "二人の情報を確認しています", detail: "鑑定に使うプロフィールを準備しています")
     @State private var selfReading: ReadingSummary?
 
     var body: some View {
-        ScrollView {
+        ZStack { ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("ふたりのパターン").font(.system(size: 30, weight: .bold))
                     .padding(.bottom, 24)
@@ -57,10 +58,7 @@ struct PartnerProfilesView: View {
                         Text("二人の関係性").font(.system(size: 24, weight: .medium))
                         ForEach(compatibilityReport.cards) { card in
                             NavigationLink { InsightDetailView(item: card) {} } label: {
-                                VStack(alignment: .leading, spacing: 7) {
-                                    Text(card.title).font(.headline).foregroundStyle(FateTheme.ink)
-                                    Text(card.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineLimit(3)
-                                }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                                HStack { Text(card.title).font(.headline).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
                                     .background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 14))
                                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
                             }
@@ -75,8 +73,9 @@ struct PartnerProfilesView: View {
                     }
                 }
             }.padding(20)
-        }
+        }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
+        .toolbar(isGenerating ? .hidden : .visible, for: .tabBar)
         .task { await load() }
         .sheet(isPresented: $showPicker) { pickerSheet }
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
@@ -137,7 +136,7 @@ struct PartnerProfilesView: View {
     private func generateCompatibility() async {
         guard let selected, let selfReading else { return }
         isGenerating = true; errorMessage = nil; defer { isGenerating = false }
-        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) }
+        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 } }
         catch { errorMessage = userFacingMessage(error) }
     }
 }
@@ -146,7 +145,7 @@ private struct PartnerRegistrationView: View {
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
     let onSaved: () async -> Void
-    @State private var name = ""; @State private var date = Date(); @State private var hasTime = false; @State private var time = Date()
+    @State private var name = ""; @State private var date = Date(); @State private var birthTime: Date?
     @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationship = "romantic"; @State private var error: String?
     var body: some View {
         NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
@@ -154,8 +153,8 @@ private struct PartnerRegistrationView: View {
             TextField("表示名", text: $name).padding(12).overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.line))
             DateMenuPicker(date: $date)
             Divider().overlay(FateTheme.line)
-            Toggle("出生時刻を入力する", isOn: $hasTime)
-            if hasTime { DatePicker("出生時刻", selection: $time, displayedComponents: .hourAndMinute) }
+            if birthTime == nil { Button("出生時刻を入力する（任意）") { birthTime = Date() } }
+            else { DatePicker("出生時刻（任意）", selection: Binding(get: { birthTime ?? Date() }, set: { birthTime = $0 }), displayedComponents: .hourAndMinute); Button("出生時刻をクリア") { birthTime = nil } }
             Divider().overlay(FateTheme.line)
             TextField("出生地", text: $birthplace)
             Picker("性別", selection: $gender) { Text("女性").tag("female"); Text("男性").tag("male") }
@@ -168,7 +167,7 @@ private struct PartnerRegistrationView: View {
     }
     private func save() async {
         let dateText = date.formatted(.iso8601.year().month().day())
-        let timeText = hasTime ? time.formatted(.iso8601.time(includingFractionalSeconds: false)) : nil
+        let timeText = birthTime?.formatted(.iso8601.time(includingFractionalSeconds: false))
         do { _ = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationship, auth: auth); await onSaved(); dismiss() }
         catch { self.error = userFacingMessage(error) }
     }

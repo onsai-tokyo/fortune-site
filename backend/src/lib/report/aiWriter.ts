@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '../supabaseAdmin.js'
 import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
 
-const GENERATOR_VERSION = 'ai-cards-v2-timing'
+const GENERATOR_VERSION = 'ai-cards-v3-narrative'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 8_000))
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
@@ -42,14 +42,14 @@ export function parseAndValidateAiReport(raw: string, fallback: StructuredReport
     const pages = Array.isArray(card.pages) ? card.pages : []
     const metadataRefs = Array.isArray(card.metadataRefs) ? card.metadataRefs.filter((item): item is string => typeof item === 'string' && item.length > 0) : []
     if (!title || nakedTitles.has(title) || !summary || [...summary].length > 120) throw new Error('Invalid AI title or summary')
-    const minimumPages = fallback.cards[index].kind === 'timing' ? 8 : 16
-    const maximumPages = fallback.cards[index].kind === 'timing' ? 12 : 24
+    const minimumPages = 4
+    const maximumPages = 5
     if (pages.length < minimumPages || pages.length > maximumPages || !pages.every(validatePage)) throw new Error('Invalid AI pages')
     if (metadataRefs.length === 0) throw new Error('AI card did not reference metadata')
     return { ...fallback.cards[index], title, summary, pages, metadataRefs }
   })
   const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
-  return { version: 2, reportText, cards }
+  return { version: 3, reportText, cards }
 }
 
 function promptFor(fallback: StructuredReport, metadata: ReportMetadata) {
@@ -59,7 +59,7 @@ function promptFor(fallback: StructuredReport, metadata: ReportMetadata) {
 元カード: ${JSON.stringify(source)}
 
 出力は {"cards":[{"title":"...","summary":"...","metadataRefs":["missingElements:火"],"pages":[{"role":"opening","label":"はじまり","text":"..."}]}]}。
-元カードと同じ順・同じ枚数にする。kindがtimingのカードは8〜12ページ、それ以外は16〜24ページ。opening、core、scene、shadow、exception、question、action、closingを含める。
+元カードと同じ順・同じ8枚にする。各カードは4〜5ページ。opening、core、scene、shadowまたはexception、closingを含める。
 各textは120字以内、一文60字以内、1ページ1主張。具体的な場面を先に書く。二面性と都合の悪い面を含める。断定調にする。
 「かもしれません」「傾向がある人もいます」「大切です」「意識しましょう」を使わない。裸のカテゴリ名をtitleにしない。
 各カードは入力メタデータの具体値を最低1つ本文に反映し、そのパスをmetadataRefsへ入れる。内部仕様やmetadataという語は本文に書かない。`

@@ -3,37 +3,19 @@ import SwiftUI
 struct InsightHubView: View {
     let report: GeneratedReport
     let onQuestion: (ReadingCard) -> Void
-    @State private var selectedKind = 0
-
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("FATE LAB · PERSONAL READING").font(.caption).tracking(2.2).foregroundStyle(FateTheme.ink)
-                Text("あなたの鑑定").font(.system(size: 30, weight: .medium))
-                Text("気になるカードから読み進められます。")
+                Text("あなたの取扱説明書").font(.system(size: 30, weight: .bold))
+                Text("8つのページから、自分を読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
             }
-            Picker("表示", selection: $selectedKind) {
-                Text("あなたの本質").tag(0)
-                Text("時期の流れ").tag(1)
-                Text("命式詳細").tag(2)
-            }.pickerStyle(.segmented)
-            if selectedKind == 2 {
-                ChartDetailsView(report: report)
-            } else {
-                ForEach(filteredItems) { item in
+                ForEach(report.cards.prefix(8)) { item in
                     NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
                         .buttonStyle(.plain)
                 }
-            }
         }
-        .padding(20).background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(FateTheme.line))
-    }
-
-    private var filteredItems: [ReadingCard] {
-        let matching = report.cards.filter { selectedKind == 0 ? !$0.isTiming : $0.isTiming }
-        return matching.isEmpty ? report.cards : matching
+        .padding(.vertical, 20).background(FateTheme.canvas)
     }
 }
 
@@ -65,16 +47,8 @@ private struct ChartDetailsView: View {
 private struct InsightCard: View {
     let item: ReadingCard
     var body: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            HStack { Spacer(); Image(systemName: "arrow.up.right").foregroundStyle(FateTheme.ink) }
-            Text(item.title).font(.system(size: 23, weight: .semibold)).foregroundStyle(FateTheme.ink)
-            if let period = item.period { Text(period.label).font(.caption).foregroundStyle(FateTheme.muted) }
-            Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineLimit(3).lineSpacing(4)
-            FlowTags(tags: item.tags)
-        }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
-        .clipShape(RoundedRectangle(cornerRadius: 15))
-        .overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line.opacity(0.75)))
+        HStack(spacing: 14) { Text(item.title).font(.system(size: 17, weight: .semibold)).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
+            .padding(.vertical, 18).overlay(FLDivider(), alignment: .bottom)
     }
 }
 
@@ -84,26 +58,14 @@ struct InsightDetailView: View {
     @State private var focusMode = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                Text(item.title).font(.system(size: 35, weight: .medium)).lineSpacing(6)
-                Text(item.summary).font(.system(size: 18)).foregroundStyle(FateTheme.muted).lineSpacing(8)
-                FlowTags(tags: item.tags)
-                Divider().overlay(FateTheme.line)
-                ForEach(Array(item.pages.enumerated()), id: \.offset) { _, page in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
-                        Text(page.text).font(.system(size: 17)).lineSpacing(9)
-                    }
-                }
-                Button("スワイプして深く読む") { focusMode = true }.buttonStyle(FLSecondaryButtonStyle())
-                ShareLink(item: "Fate Labの鑑定「\(item.title)」\n\(item.summary)\nhttps://fate-lab.com") {
-                    Label("この鑑定を共有", systemImage: "square.and.arrow.up")
-                }.buttonStyle(FLSecondaryButtonStyle())
-                Button("さらに詳しく質問する", action: onQuestion).buttonStyle(FLPrimaryButtonStyle())
-                Text("共有内容に生年月日は含まれません。").font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
-            }.padding(28)
-        }.background(FateTheme.canvas).navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
+        VStack(alignment: .leading, spacing: 28) {
+            Spacer()
+            Text(item.title).font(.system(size: 32, weight: .bold)).lineSpacing(6)
+            Text(item.summary).font(.system(size: 18)).foregroundStyle(FateTheme.body).lineSpacing(8)
+            Spacer()
+            Button("このページを読む →") { focusMode = true }.buttonStyle(FLPrimaryButtonStyle())
+            DisclosureGroup("この読みの手がかり") { ForEach(item.evidence, id: \.detail) { Text($0.detail).font(.footnote).foregroundStyle(FateTheme.muted) } }.tint(FateTheme.ink)
+        }.padding(28).background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
             .fullScreenCover(isPresented: $focusMode) { FocusReadingView(item: item, onQuestion: onQuestion) }
     }
 }
@@ -142,7 +104,7 @@ private struct FocusReadingView: View {
                         Capsule().fill(FateTheme.ink).frame(width: geometry.size.width * progress)
                     }
                 }.frame(height: 4).padding(.horizontal, 70).padding(.bottom, 28)
-                Text(selection == item.pages.count - 1 ? "ここまで読んだら、気になる点をそのまま質問できます" : "左右にスワイプして、続きを読み進める")
+                Text("\(selection + 1) / \(item.pages.count)")
                     .font(.caption).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center).padding(.bottom, 24)
             }
             VStack {
@@ -155,13 +117,7 @@ private struct FocusReadingView: View {
                     Spacer()
                 }
                 Spacer()
-                HStack {
-                    Spacer()
-                    Button { dismiss(); onQuestion() } label: {
-                        Text("聞く").font(.system(size: 12, weight: .medium)).frame(width: 46, height: 46)
-                            .background(FateTheme.surface).overlay(Rectangle().stroke(FateTheme.ink, lineWidth: 0.5))
-                    }.foregroundStyle(FateTheme.ink)
-                }
+                if selection == item.pages.count - 1 { Button("このことを聞いてみる") { dismiss(); onQuestion() }.buttonStyle(FLPrimaryButtonStyle()) }
             }.padding(18)
         }.preferredColorScheme(.light)
     }

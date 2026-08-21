@@ -1,10 +1,8 @@
 import Foundation
 import CryptoKit
 
-enum ReportProgress {
-    case calculating
-    case integrating
-}
+struct GenerationProgress: Equatable { let percent: Int; let title: String; let detail: String }
+enum GenerationKind { case selfReading, compatibility }
 
 enum APIError: LocalizedError {
     case invalidResponse
@@ -198,11 +196,15 @@ struct APIClient {
         _ = try await data(for: request(path: "/api/partners/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
     }
 
-    func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, auth: AuthStore) async throws -> StructuredReportResponse {
+    func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, auth: AuthStore, progress: @MainActor (GenerationProgress) -> Void = { _ in }) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/partners/\(partnerID.uuidString)/compatibility", method: "POST",
-                                               token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString]), retryTransient: true, auth: auth)
-        return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+        var call = try request(path: "/api/partners/\(partnerID.uuidString)/compatibility?format=sse", method: "POST", token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString]); call.timeoutInterval = 120
+        let (bytes, response) = try await URLSession.shared.bytes(for: call)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        guard 200..<300 ~= http.statusCode else { var body = ""; for try await line in bytes.lines { body += line }; let object = body.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }; let message = object?["error"] as? String ?? "相性鑑定を作成できませんでした"; if http.statusCode == 409 { throw APIError.selfReadingRequired(message) }; throw APIError.http(status: http.statusCode, message: message) }
+        var result: StructuredReportResponse?
+        for try await line in bytes.lines { guard line.hasPrefix("data: ") else { continue }; let payload = String(line.dropFirst(6)); if payload == "[DONE]" { break }; guard let data = payload.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }; if object["type"] as? String == "progress", let percent = object["percent"] as? Int { progress(.init(percent: percent, title: object["title"] as? String ?? "関係を読んでいます", detail: object["detail"] as? String ?? "")) }; if object["type"] as? String == "complete", let report = object["report"], let reportData = try? JSONSerialization.data(withJSONObject: report) { result = try JSONDecoder().decode(StructuredReportResponse.self, from: reportData) }; if object["type"] as? String == "error" { throw APIError.server(object["error"] as? String ?? "相性鑑定を作成できませんでした") } }
+        guard let result else { throw APIError.invalidResponse }; return result
     }
 
     func verifyApplePurchase(signedTransaction: String, auth: AuthStore) async throws {
@@ -323,22 +325,32 @@ struct APIClient {
     }
 
     func generateReport(input: BirthInput, auth: AuthStore? = nil,
-                        progress: @MainActor (ReportProgress) -> Void = { _ in }) async throws -> GeneratedReport {
+                        progress: @MainActor (GenerationProgress) -> Void = { _ in }) async throws -> GeneratedReport {
         let calendar = Calendar(identifier: .gregorian)
         let parts = calendar.dateComponents([.year, .month, .day], from: input.date)
-        let time = calendar.dateComponents([.hour, .minute], from: input.time)
+        let time = input.birthTime.map { calendar.dateComponents([.hour, .minute], from: $0) }
         let date = String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
-        let birthTime = input.hasTime ? String(format: "%02d:%02d", time.hour!, time.minute!) : ""
+        let birthTime = time.map { String(format: "%02d:%02d", $0.hour!, $0.minute!) } ?? ""
         let birthData: [String: Any] = ["birthDate": date, "birthTime": birthTime, "nickname": input.nickname,
                                         "birthplace": input.birthplace, "gender": input.gender]
         let token: String? = if let auth, auth.session != nil { try await auth.validAccessToken() } else { nil }
-        progress(.calculating)
+        progress(.init(percent: 5, title: "入力内容を確認しています", detail: "生年月日と出生地を確認しています"))
         let calcData = try await data(for: request(path: "/api/calc/divination", method: "POST", token: token, json: birthData), retryTransient: true, auth: auth)
         guard let calculated = try JSONSerialization.jsonObject(with: calcData) as? [String: Any] else { throw APIError.invalidResponse }
-        progress(.integrating)
+        progress(.init(percent: 18, title: "命式を計算しています", detail: "生まれた瞬間の基本データを整えています"))
         let previewBody: [String: Any] = birthData.merging(["question": "", "calculatedData": calculated]) { _, new in new }
-        let raw = try await data(for: request(path: "/api/preview/generate?format=json", method: "POST", token: token, json: previewBody), retryTransient: true, auth: auth)
-        let structured = try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+        var call = try request(path: "/api/preview/generate?format=sse", method: "POST", token: token, json: previewBody); call.timeoutInterval = 120
+        let (bytes, response) = try await URLSession.shared.bytes(for: call)
+        guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else { throw APIError.invalidResponse }
+        var structured: StructuredReportResponse?
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }; let payload = String(line.dropFirst(6)); if payload == "[DONE]" { break }
+            guard let data = payload.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+            if object["type"] as? String == "progress", let percent = object["percent"] as? Int { progress(.init(percent: percent, title: object["title"] as? String ?? "鑑定書を作っています", detail: object["detail"] as? String ?? "")) }
+            if object["type"] as? String == "complete", let report = object["report"], let reportData = try? JSONSerialization.data(withJSONObject: report) { structured = try JSONDecoder().decode(StructuredReportResponse.self, from: reportData) }
+            if object["type"] as? String == "error" { throw APIError.server(object["error"] as? String ?? "鑑定書を生成できませんでした") }
+        }
+        guard let structured else { throw APIError.invalidResponse }
         guard !structured.reportText.isEmpty, !structured.cards.isEmpty else { throw APIError.server("鑑定書を生成できませんでした") }
         return GeneratedReport(birthData: birthData, calculatedData: calculated, text: structured.reportText, cards: structured.cards)
     }

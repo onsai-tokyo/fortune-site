@@ -110,8 +110,7 @@ struct PartnerProfilesResponse: Codable {
 struct BirthInput: Equatable, Codable {
     var nickname = ""
     var date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
-    var hasTime = false
-    var time = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
+    var birthTime: Date?
     var birthplace = "東京都"
     var gender = "female"
 }
