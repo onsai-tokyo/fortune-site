@@ -17,17 +17,6 @@ struct ReportDocumentView: View {
             ForEach(report.cards) { card in
                 StructuredReportCardView(card: card)
             }
-            if !report.calculatedData.isEmpty {
-                DisclosureGroup("命式・計算データ") {
-                    Text(formattedCalculatedData)
-                        .font(.system(size: 14, design: .monospaced))
-                        .lineSpacing(6).textSelection(.enabled).padding(.top, 12)
-                }
-                .font(.system(size: 18, weight: .medium))
-                .padding(18).background(FateTheme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
-            }
             Button(isSaving ? "鑑定書を保存しています…" : questionTitle, action: askQuestion)
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(isSaving)
         }
@@ -43,12 +32,6 @@ struct ReportDocumentView: View {
         }.font(.system(size: 14)).foregroundStyle(FateTheme.muted)
     }
 
-    private var formattedCalculatedData: String {
-        guard JSONSerialization.isValidJSONObject(report.calculatedData),
-              let data = try? JSONSerialization.data(withJSONObject: report.calculatedData, options: [.prettyPrinted, .sortedKeys]),
-              let value = String(data: data, encoding: .utf8) else { return "計算データを表示できません" }
-        return value
-    }
 }
 
 private struct StructuredReportCardView: View {

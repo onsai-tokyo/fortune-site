@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/routes/calc.test.ts src/routes/partnersCompatibility.test.ts src/lib/architecture.test.ts src/lib/readingValidation.test.ts src/lib/readingShare.test.ts src/lib/profileTraits.test.ts src/lib/rateLimitIdentity.test.ts src/lib/freeQuestionUsage.test.ts src/lib/reportCards.test.ts src/lib/report/metadata.test.ts src/lib/report/aiWriter.test.ts src/lib/report/editorial.test.ts src/lib/report/findings.test.ts src/lib/report/timingCards.test.ts src/lib/partnerProfiles.test.ts src/lib/sseAnswerParser.test.ts src/middleware/auth.test.ts",
+    "test": "tsx --test src/routes/calc.test.ts src/routes/partnersCompatibility.test.ts src/lib/architecture.test.ts src/lib/readingValidation.test.ts src/lib/readingShare.test.ts src/lib/profileTraits.test.ts src/lib/rateLimitIdentity.test.ts src/lib/freeQuestionUsage.test.ts src/lib/reportCards.test.ts src/lib/report/metadata.test.ts src/lib/report/aiWriter.test.ts src/lib/report/editorial.test.ts src/lib/report/findings.test.ts src/lib/report/timingCards.test.ts src/lib/report/chartCards.test.ts src/lib/partnerProfiles.test.ts src/lib/sseAnswerParser.test.ts src/middleware/auth.test.ts",
     "test:pr15": "tsx --test src/lib/report/pr15Structural.test.ts",
     "test:pr15:e2e": "tsx --test src/lib/report/pr15E2E.test.ts",
     "build": "tsc",

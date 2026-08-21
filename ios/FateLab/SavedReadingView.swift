@@ -31,24 +31,15 @@ struct SavedReadingView: View {
                         cards: cards
                     )
                     VStack(alignment: .leading, spacing: 18) {
-                        InsightHubView(report: report) { card in
+                        InsightHubView(report: report, onQuestion: { card in
                             tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
-                        }
+                        }, onReload: { Task { await load() } })
 
                         Button("この鑑定書について質問する") {
                             tabRouter.openChat(conversationID: conversationID)
                         }
                             .buttonStyle(FLPrimaryButtonStyle())
 
-                        DisclosureGroup("鑑定書の全文を読む") {
-                            Text(detail.conversation.reportText)
-                                .font(.system(size: 15))
-                                .lineSpacing(8)
-                                .padding(.top, 14)
-                        }
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(FateTheme.ink)
-                        .padding(.vertical, 14)
                     }
                 } else {
                     VStack(spacing: 16) {

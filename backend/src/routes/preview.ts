@@ -14,6 +14,7 @@ import { buildReportFacts } from '../lib/report/facts.js'
 import { buildReportFindings } from '../lib/report/findings.js'
 import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
 import { replaceTimingCards } from '../lib/report/timingCards.js'
+import { buildChartCards } from '../lib/report/chartCards.js'
 
 export const previewRouter = Router()
 
@@ -147,7 +148,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       birthplace,
       gender,
       age,
+      shichuYear: shichu.year.kanshi,
+      shichuMonth: shichu.month.kanshi,
       shichuDay: shichu.day.kanshi,
+      shichuHour: shichu.hour?.kanshi ?? null,
       nayin,
       sanmeiStar: sanmei.shukumeiStar,
       chusatsu: sanmei.chusatsu,
@@ -174,9 +178,13 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const orderedReport = currentConcern
       ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }
       : writtenReport
+    const reportWithChart = {
+      ...orderedReport,
+      cards: [...orderedReport.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'), ...buildChartCards(reportInput)],
+    }
     const response = req.query.debug === '1'
-      ? { ...orderedReport, metadata }
-      : orderedReport
+      ? { ...reportWithChart, metadata }
+      : reportWithChart
 
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
     if (useSse) {

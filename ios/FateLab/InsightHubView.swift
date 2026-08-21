@@ -3,6 +3,7 @@ import SwiftUI
 struct InsightHubView: View {
     let report: GeneratedReport
     let onQuestion: (ReadingCard) -> Void
+    var onReload: (() -> Void)? = nil
     @State private var selectedTab = "essence"
 
     var body: some View {
@@ -21,7 +22,7 @@ struct InsightHubView: View {
             .pickerStyle(.segmented)
 
             if selectedTab == "chart" {
-                ChartDetailsView(report: report)
+                ChartDetailsView(report: report, onQuestion: onQuestion, onReload: onReload)
             } else {
                 ForEach(report.cards.filter { $0.resolvedTab == selectedTab }) { item in
                     NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
@@ -35,29 +36,55 @@ struct InsightHubView: View {
 
 private struct ChartDetailsView: View {
     let report: GeneratedReport
+    let onQuestion: (ReadingCard) -> Void
+    let onReload: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("命式・計算データ").font(.system(size: 24, weight: .medium))
+            Text("命式の詳細").font(.system(size: 24, weight: .medium))
             VStack(alignment: .leading, spacing: 5) {
                 if let date = report.birthData["birthDate"] as? String { Text(date.replacingOccurrences(of: "-", with: "/") + " 生") }
                 if let place = report.birthData["birthplace"] as? String { Text(place) }
                 if let gender = report.birthData["gender"] as? String { Text(gender == "female" ? "女性" : "男性") }
             }.font(.footnote).foregroundStyle(FateTheme.muted)
-            Text(formattedData).font(.system(size: 13, design: .monospaced)).lineSpacing(6).textSelection(.enabled)
-            DisclosureGroup("鑑定書全文") {
-                Text(report.text).font(.system(size: 15)).lineSpacing(8).textSelection(.enabled).padding(.top, 10)
+            if chartCards.isEmpty {
+                VStack(spacing: 14) {
+                    Image(systemName: "arrow.clockwise.circle").font(.system(size: 30)).foregroundStyle(FateTheme.muted)
+                    Text("命式データを読み込めませんでした")
+                        .font(.system(size: 17, weight: .medium))
+                    Text("通信状態を確認して、もう一度読み込んでください。")
+                        .font(.footnote).foregroundStyle(FateTheme.muted)
+                    if let onReload { Button("再読み込み", action: onReload).buttonStyle(FLSecondaryButtonStyle()) }
+                }
+                .frame(maxWidth: .infinity).padding(.vertical, 34)
+            } else {
+                ForEach(chartCards) { item in
+                    NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { ChartCard(item: item) }
+                        .buttonStyle(.plain)
+                }
             }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }
 
-    private var formattedData: String {
-        guard JSONSerialization.isValidJSONObject(report.calculatedData),
-              let data = try? JSONSerialization.data(withJSONObject: report.calculatedData, options: [.prettyPrinted, .sortedKeys]),
-              let value = String(data: data, encoding: .utf8) else { return "計算データを表示できません" }
-        return value
+    private var chartCards: [ReadingCard] { report.cards.filter { $0.resolvedTab == "chart" } }
+}
+
+private struct ChartCard: View {
+    let item: ReadingCard
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                Text(item.title).font(.system(size: 18, weight: .semibold)).foregroundStyle(FateTheme.ink)
+                Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted)
+            }
+            Text(item.summary).font(.system(size: 14)).foregroundStyle(FateTheme.body).lineSpacing(5)
+            FlowTags(tags: item.tags)
+        }
+        .padding(18).background(FateTheme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
     }
 }
 

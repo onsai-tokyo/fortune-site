@@ -13,6 +13,7 @@ import { StreamingAnswerParser } from '../lib/sseAnswerParser.js'
 import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsage.js'
 import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
+import { buildChartCards } from '../lib/report/chartCards.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -200,7 +201,9 @@ readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
     .select('report_text,calculated_data').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
-  res.json(storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text))
+  const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
+  const cards = [...report.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'), ...buildChartCards(data.calculated_data)]
+  res.json({ ...report, cards })
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
