@@ -42,14 +42,12 @@ struct SavedReadingView: View {
 
                     }
                 } else {
-                    VStack(spacing: 16) {
-                        ContentUnavailableView("鑑定書を開けませんでした", systemImage: "doc.text.magnifyingglass",
-                                               description: Text(errorMessage ?? "少し待ってから、もう一度お試しください。"))
-                        Button("再試行") { Task { await load() } }.buttonStyle(FLSecondaryButtonStyle())
+                    FLErrorState(title: "鑑定書を開けませんでした", message: errorMessage ?? "少し待ってから、もう一度お試しください。") {
+                        Task { await load() }
                     }.frame(minHeight: 520)
                 }
             }
-            .padding(20)
+            .padding(FateSpacing.screenH)
         }
         .background(FateTheme.canvas)
         .fateScreenTitle(detail?.conversation.title ?? "あなたの鑑定")

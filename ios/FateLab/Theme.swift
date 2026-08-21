@@ -10,6 +10,24 @@ enum FateTheme {
     static let danger = Color(red: 0.706, green: 0.137, blue: 0.094)
 }
 
+enum FateType {
+    static let screenTitle = Font.system(size: 30, weight: .bold)
+    static let sectionTitle = Font.system(size: 22, weight: .medium)
+    static let cardTitle = Font.system(size: 17, weight: .semibold)
+    static let body = Font.system(size: 15)
+    static let caption = Font.system(size: 13)
+    static let label = Font.system(size: 12, weight: .medium)
+}
+
+enum FateSpacing {
+    static let screenH: CGFloat = 20
+    static let sectionV: CGFloat = 28
+    static let cardPadding: CGFloat = 18
+    static let rowV: CGFloat = 16
+    static let compact: CGFloat = 8
+    static let regular: CGFloat = 12
+}
+
 enum FLSpacing { static let xs: CGFloat = 8; static let sm: CGFloat = 12; static let md: CGFloat = 16; static let lg: CGFloat = 24; static let xl: CGFloat = 32; static let section: CGFloat = 40 }
 enum FLRadius { static let card: CGFloat = 16; static let button: CGFloat = 16; static let chip: CGFloat = 18 }
 
@@ -33,14 +51,77 @@ struct FLTextLink: View { let title: String; let action: () -> Void; var body: s
 struct FLDivider: View { var body: some View { Rectangle().fill(FateTheme.line).frame(height: 1) } }
 struct FLProgressIndicator: View { let current: Int; let total: Int; var body: some View { HStack(spacing: 5) { ForEach(1...total, id: \.self) { step in Capsule().fill(step <= current ? FateTheme.ink : FateTheme.line).frame(height: 3) } } } }
 struct FLChip: View { let title: String; var selected = false; let action: () -> Void; var body: some View { Button(title, action: action).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.ink).padding(.horizontal, 14).frame(height: 36).background(selected ? FateTheme.surface : FateTheme.canvas).overlay(Capsule().stroke(FateTheme.line)).clipShape(Capsule()) } }
-struct FLInsightRow: View { let title: String; let subtitle: String; var body: some View { VStack(spacing: 0) { HStack(spacing: 16) { Text(title).font(.system(size: 16, weight: .semibold)).frame(width: 52, alignment: .leading); Text(subtitle).font(.system(size: 14)).foregroundStyle(FateTheme.muted).lineLimit(1); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }.frame(minHeight: 64); FLDivider() } } }
+struct FLCard<Content: View>: View {
+    @ViewBuilder let content: Content
+    var body: some View {
+        content.padding(FateSpacing.cardPadding).frame(maxWidth: .infinity, alignment: .leading)
+            .background(FateTheme.canvas)
+            .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line))
+    }
+}
+
+struct FLListRow: View {
+    let title: String
+    var subtitle: String? = nil
+    var body: some View {
+        HStack(spacing: FateSpacing.regular) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title).font(FateType.cardTitle).foregroundStyle(FateTheme.ink)
+                if let subtitle { Text(subtitle).font(FateType.caption).foregroundStyle(FateTheme.muted).lineLimit(2) }
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted)
+        }
+        .padding(.vertical, FateSpacing.rowV)
+        .overlay(FLDivider(), alignment: .bottom)
+    }
+}
+
+struct FLSectionHeader: View {
+    let title: String
+    var subtitle: String? = nil
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(title).font(FateType.sectionTitle).foregroundStyle(FateTheme.ink)
+            if let subtitle { Text(subtitle).font(FateType.caption).foregroundStyle(FateTheme.muted).lineSpacing(4) }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct FLEmptyState: View {
+    let title: String
+    let message: String
+    var body: some View {
+        VStack(spacing: FateSpacing.regular) {
+            Text(title).font(FateType.sectionTitle)
+            Text(message).font(FateType.caption).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center).lineSpacing(4)
+        }.frame(maxWidth: .infinity).padding(.vertical, FateSpacing.sectionV)
+    }
+}
+
+struct FLErrorState: View {
+    let title: String
+    let message: String
+    let retry: () -> Void
+    var body: some View {
+        FLCard {
+            VStack(alignment: .leading, spacing: FateSpacing.regular) {
+                Text(title).font(FateType.cardTitle)
+                Text(message).font(FateType.caption).foregroundStyle(FateTheme.muted).lineSpacing(4)
+                Button("もう一度試す", action: retry).buttonStyle(FLSecondaryButtonStyle())
+            }
+        }
+    }
+}
+
+struct FLInsightRow: View { let title: String; let subtitle: String; var body: some View { FLListRow(title: title, subtitle: subtitle) } }
 
 struct ReadingGenerationProgressView: View {
     let kind: GenerationKind; let progress: GenerationProgress
     var body: some View { VStack(spacing: 28) { Spacer(); FateMark(size: 76); Text(kind == .selfReading ? "あなたのパターンを読んでいます" : "ふたりのパターンを読んでいます").font(.system(size: 21, weight: .semibold)); Text("\(progress.percent)%").font(.system(size: 44, weight: .bold)); ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink); VStack(spacing: 10) { Text(progress.title).font(.system(size: 20, weight: .semibold)); Text(progress.detail).font(.system(size: 15)).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center) }; Spacer() }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas.ignoresSafeArea()).accessibilityLabel("\(progress.percent)パーセント。\(progress.title)") }
 }
 
-struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { content.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line)) } }
+struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { FLCard { content } } }
 func userFacingErrorMessage(_ error: Error) -> String? { if error is CancellationError { return nil }; if let urlError = error as? URLError, urlError.code == .cancelled { return nil }; return error.localizedDescription }
 extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
 

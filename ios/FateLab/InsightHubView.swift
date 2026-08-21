@@ -9,7 +9,7 @@ struct InsightHubView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("あなたの取扱説明書").font(.system(size: 30, weight: .bold))
+                Text("あなたの取扱説明書").font(FateType.screenTitle)
                 Text("本質、時期、命式を行き来しながら読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
             }
@@ -37,7 +37,7 @@ struct InsightHubView: View {
                 }
             }
         }
-        .padding(.vertical, 20).background(FateTheme.canvas)
+        .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)
     }
 
     private var essenceColumns: [GridItem] {
@@ -52,22 +52,18 @@ private struct ChartDetailsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("命式の詳細").font(.system(size: 24, weight: .medium))
+            FLSectionHeader(title: "命式の詳細")
             VStack(alignment: .leading, spacing: 5) {
                 if let date = report.birthData["birthDate"] as? String { Text(date.replacingOccurrences(of: "-", with: "/") + " 生") }
                 if let place = report.birthData["birthplace"] as? String { Text(place) }
                 if let gender = report.birthData["gender"] as? String { Text(gender == "female" ? "女性" : "男性") }
             }.font(.footnote).foregroundStyle(FateTheme.muted)
             if chartCards.isEmpty {
-                VStack(spacing: 14) {
-                    Image(systemName: "arrow.clockwise.circle").font(.system(size: 30)).foregroundStyle(FateTheme.muted)
-                    Text("命式データを読み込めませんでした")
-                        .font(.system(size: 17, weight: .medium))
-                    Text("通信状態を確認して、もう一度読み込んでください。")
-                        .font(.footnote).foregroundStyle(FateTheme.muted)
-                    if let onReload { Button("再読み込み", action: onReload).buttonStyle(FLSecondaryButtonStyle()) }
+                if let onReload {
+                    FLErrorState(title: "命式データを読み込めませんでした", message: "通信状態を確認して、もう一度読み込んでください。", retry: onReload)
+                } else {
+                    FLEmptyState(title: "命式データがありません", message: "この鑑定では命式の詳細を表示できません。")
                 }
-                .frame(maxWidth: .infinity).padding(.vertical, 34)
             } else {
                 ForEach(chartCards) { item in
                     NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { ChartCard(item: item) }
@@ -75,7 +71,7 @@ private struct ChartDetailsView: View {
                 }
             }
         }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
+        .padding(FateSpacing.cardPadding).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }
 
@@ -102,8 +98,7 @@ private struct ChartCard: View {
 private struct InsightCard: View {
     let item: ReadingCard
     var body: some View {
-        HStack(spacing: 14) { Text(item.title).font(.system(size: 17, weight: .semibold)).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
-            .padding(.vertical, 18).overlay(FLDivider(), alignment: .bottom)
+        FLListRow(title: item.title, subtitle: item.summary)
     }
 }
 

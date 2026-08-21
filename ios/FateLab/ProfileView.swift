@@ -8,7 +8,7 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
-                Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium))
+                Text("あなたについて\nわかってきたこと").font(FateType.screenTitle)
                 if auth.session != nil {
                     Text(verbatim: "\(traits.count)").font(.system(size: 48, weight: .medium)).foregroundStyle(FateTheme.ink)
                 }
@@ -21,7 +21,7 @@ struct ProfileView: View {
                 } else {
                     ForEach(groupedTraits, id: \.category) { group in
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(categoryLabel(group.category)).font(.system(size: 18, weight: .medium))
+                            FLSectionHeader(title: categoryLabel(group.category))
                             ForEach(group.values) { trait in
                                 ReportCard {
                                     HStack(alignment: .top) {
@@ -36,7 +36,7 @@ struct ProfileView: View {
                         }
                     }
                 }
-            }.padding(20)
+            }.padding(FateSpacing.screenH)
         }.background(FateTheme.canvas).fateScreenTitle("あなたについて").task {
             guard auth.session != nil else { return }
             traits = (try? await APIClient.shared.traits(auth: auth)) ?? []

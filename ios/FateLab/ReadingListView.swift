@@ -14,28 +14,18 @@ struct ReadingListView: View {
                 List {
                     if isLoading { ProgressView("読み込んでいます…").frame(maxWidth: .infinity).listRowBackground(FateTheme.canvas) }
                     if let errorMessage {
-                        VStack(spacing: 12) {
-                            Text("読み込めませんでした").font(.headline)
-                            Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.muted)
-                            Button("再試行") { Task { await load() } }.buttonStyle(FLSecondaryButtonStyle())
-                        }.listRowBackground(FateTheme.canvas)
+                        FLErrorState(title: "読み込めませんでした", message: errorMessage) { Task { await load() } }
+                            .listRowBackground(FateTheme.canvas)
                     }
                     if readings.isEmpty {
-                        VStack(spacing: 14) {
-                            Text("まだ鑑定書がありません").font(.system(size: 21, weight: .medium))
-                            Text("生年月日から鑑定書を作成すると、ここに保存されます。")
-                                .font(.footnote).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center)
-                        }.frame(maxWidth: .infinity).padding(.vertical, 40).listRowBackground(FateTheme.surface)
+                        FLEmptyState(title: "まだ鑑定書がありません", message: "生年月日から鑑定書を作成すると、ここに保存されます。")
+                            .listRowBackground(FateTheme.canvas)
                     }
                     Section("\(readings.count)件") {
                     ForEach(readings) { reading in
                     NavigationLink(value: reading.id) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(reading.title).font(.system(size: 18, weight: .medium))
-                            Text(verbatim: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))")
-                                .font(.caption).foregroundStyle(FateTheme.muted)
-                        }.padding(.vertical, 8)
-                    }.listRowBackground(FateTheme.surface)
+                        FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))")
+                    }.listRowBackground(FateTheme.canvas)
                     }
                     }
                     Button("新しく鑑定する") { onNewReading() }.buttonStyle(FLSecondaryButtonStyle()).listRowBackground(FateTheme.canvas)

@@ -19,7 +19,7 @@ struct PartnerProfilesView: View {
     var body: some View {
         ZStack { ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("ふたりのパターン").font(.system(size: 30, weight: .bold))
+                Text("ふたりのパターン").font(FateType.screenTitle)
                     .padding(.bottom, 24)
                 Text("二人の関係に、いま何が起きているか。")
                     .foregroundStyle(FateTheme.muted).padding(.bottom, 32)
@@ -56,12 +56,10 @@ struct PartnerProfilesView: View {
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 if let compatibilityReport {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("二人の関係性").font(.system(size: 24, weight: .medium))
+                        FLSectionHeader(title: "二人の関係性")
                         ForEach(compatibilityReport.cards) { card in
                             NavigationLink { InsightDetailView(item: card) {} } label: {
-                                HStack { Text(card.title).font(.headline).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 14))
-                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
+                                FLListRow(title: card.title, subtitle: card.summary)
                             }
                         }
                     }
@@ -73,7 +71,7 @@ struct PartnerProfilesView: View {
                         Button("もう一度試す") { Task { if compatibilityFailed { await generateCompatibility() } else { await load() } } }.buttonStyle(FLSecondaryButtonStyle())
                     }
                 }
-            }.padding(20)
+            }.padding(FateSpacing.screenH)
         }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
         .toolbar(isGenerating ? .hidden : .visible, for: .tabBar)

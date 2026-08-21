@@ -12,7 +12,7 @@ struct ReportDocumentView: View {
             if showsCompletionMessage {
                 Text("鑑定が完了しました").font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
             }
-            Text("命式鑑定書").font(.system(size: 32, weight: .medium))
+            Text("命式鑑定書").font(FateType.screenTitle)
             birthSummary
             ForEach(report.cards) { card in
                 StructuredReportCardView(card: card)
@@ -38,13 +38,13 @@ private struct StructuredReportCardView: View {
     let card: ReadingCard
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(card.title).font(.system(size: 24, weight: .medium)).lineSpacing(6)
-            Text(card.summary).font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(7)
+        VStack(alignment: .leading, spacing: FateSpacing.cardPadding) {
+            Text(card.title).font(FateType.sectionTitle).lineSpacing(6)
+            Text(card.summary).font(FateType.body).foregroundStyle(FateTheme.muted).lineSpacing(7)
             ForEach(Array(card.pages.enumerated()), id: \.offset) { _, page in
                 VStack(alignment: .leading, spacing: 7) {
                     Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
-                    Text(page.text).font(.system(size: 16)).lineSpacing(8)
+                    Text(page.text).font(FateType.body).lineSpacing(8)
                 }
             }
             if !card.evidence.isEmpty {
@@ -57,7 +57,7 @@ private struct StructuredReportCardView: View {
                 }.font(.footnote)
             }
         }
-        .padding(20).background(FateTheme.canvas)
+        .padding(FateSpacing.cardPadding).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }

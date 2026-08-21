@@ -49,7 +49,13 @@ struct SettingsView: View {
                 Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                 Link("特定商取引法に基づく表記", destination: AppConfig.websiteBaseURL.appending(path: "/tokushohou"))
             }
-        }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("設定")
+        }
+        .font(FateType.body)
+        .tint(FateTheme.ink)
+        .scrollContentBackground(.hidden)
+        .background(FateTheme.canvas)
+        .environment(\.defaultMinListRowHeight, 54)
+        .fateScreenTitle("設定")
             .confirmationDialog("アカウントを削除しますか", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
                 Button("削除する", role: .destructive) { Task { _ = await auth.deleteAccount() } }
                 Button("キャンセル", role: .cancel) {}
