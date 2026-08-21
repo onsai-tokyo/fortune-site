@@ -89,6 +89,39 @@ struct HomeView: View {
             Text("今日のあなた。").font(.system(size: 30, weight: .bold)).padding(.top, 2)
             Text("あなたのパターンを、\nまだ読んでいません。").font(.system(size: 34, weight: .bold)).lineSpacing(5).padding(.top, 44)
             Text("生まれたときの情報から、最初の鑑定を作ります。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 18)
+            VStack(alignment: .leading, spacing: 16) {
+                Text("生年月日").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                DatePicker(
+                    "生年月日",
+                    selection: $input.date,
+                    in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.compact)
+                .environment(\.locale, Locale(identifier: "ja_JP"))
+                FLDivider()
+                Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+                if input.birthTime == nil {
+                    Button("時刻を入力する") {
+                        draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
+                        showTimePicker = true
+                    }
+                    .buttonStyle(FLSecondaryButtonStyle())
+                } else {
+                    HStack {
+                        Button(input.birthTime?.formatted(date: .omitted, time: .shortened) ?? "") {
+                            draftTime = input.birthTime ?? Date()
+                            showTimePicker = true
+                        }
+                        .foregroundStyle(FateTheme.ink)
+                        Spacer()
+                        Button("クリア") { input.birthTime = nil }
+                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(FateTheme.muted)
+                    }.frame(minHeight: 44)
+                }
+                Text("分からない場合は空欄のまま鑑定できます").font(.footnote).foregroundStyle(FateTheme.muted)
+            }
+            .padding(.top, 32)
             if let errorMessage {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.danger)
