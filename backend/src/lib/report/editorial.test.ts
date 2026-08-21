@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assignFindingsToChapters, buildEditorialStructuredReport } from './editorial.js'
+import { titlesAreSimilar } from './aiWriter.js'
 import type { ReportFact } from './facts.js'
 import type { ReportFinding } from './findings.js'
 
@@ -31,4 +32,45 @@ test('人物像の各章は役割の異なる15〜20ページの読み物にな�
     assert.equal(new Set(card.pages.map(page => page.text)).size, card.pages.length)
     assert.ok(card.pages.every(page => [...page.text].length <= 120))
   }
+})
+
+test('表示タイトルはFindingの結論になり、要約はあなたを主語にした重複のない2文になる', () => {
+  const report = buildEditorialStructuredReport(facts, findings)
+  const internalLabels = ['何度でも戻ってくる人生の軸', '人とのあいだに置く距離', '自分を見失いやすい瞬間']
+  assert.ok(report.cards.every(card => !internalLabels.includes(card.title)))
+  assert.ok(report.cards.every(card => card.summary.startsWith('あなたは、')))
+  assert.ok(report.cards.every(card => card.summary.split('。').filter(Boolean).length === 2))
+  assert.equal(new Set(report.cards.map(card => card.summary)).size, report.cards.length)
+  assert.ok(report.cards.every(card => !['仕事', '恋愛', '結婚', '本質', '性格'].includes(card.title)))
+})
+
+test('五行不足と領域固有のFindingは具体値を捨てずにタイトルへ反映する', () => {
+  const specialFacts: ReportFact[] = [
+    { id: 'metal', system: '四柱推命', lineage: 'stems', factor: 'missingElement:金:0', axis: 'deficit', signal: 'missing-金', polarity: -1, strength: 1, requiresBirthTime: false, signature: true },
+    { id: 'love', system: '紫微斗数', lineage: 'stems', factor: 'mutagen:0:夫妻宮:天相:化忌', axis: 'domain-love', signal: 'mutagen-化忌', polarity: -1, strength: 1, requiresBirthTime: true, signature: true },
+  ]
+  const specialFindings: ReportFinding[] = specialFacts.map((fact, index) => ({ id: `special-${index}`, key: fact.signal, kind: 'signature', axis: fact.axis, confidence: 1, lineages: [fact.lineage], primaryFacts: [fact.id], supportingFacts: [] }))
+  const report = buildEditorialStructuredReport(specialFacts, specialFindings)
+  assert.ok(report.cards.some(card => card.title.includes('決め切る力')))
+  assert.ok(report.cards.some(card => card.title.includes('近い相手との関係だけ')))
+})
+
+test('異なるFindingでは全ページが別の文章になり、似たタイトルは差し替える', () => {
+  const make = (signal: string): { fact: ReportFact; finding: ReportFinding } => {
+    const fact: ReportFact = { id: signal, system: 'test', lineage: 'stems', factor: signal, axis: 'drive', signal, polarity: 1, strength: 1, requiresBirthTime: false, signature: true }
+    return { fact, finding: { id: `finding-${signal}`, key: signal, kind: 'signature', axis: 'drive', confidence: 1, lineages: ['stems'], primaryFacts: [signal], supportingFacts: [] } }
+  }
+  const first = make('initiative'); const second = make('independence')
+  const firstCard = buildEditorialStructuredReport([first.fact], [first.finding]).cards[0]
+  const secondCard = buildEditorialStructuredReport([second.fact], [second.finding]).cards[0]
+  assert.ok(firstCard.pages.every((page, index) => page.text !== secondCard.pages[index].text))
+
+  const collisionFacts: ReportFact[] = [
+    { ...first.fact, id: 'drive', axis: 'drive' },
+    { ...first.fact, id: 'work', axis: 'domain-work' },
+  ]
+  const collisionFindings: ReportFinding[] = collisionFacts.map(fact => ({ id: `finding-${fact.id}`, key: 'initiative', kind: 'signature', axis: fact.axis, confidence: 1, lineages: ['stems'], primaryFacts: [fact.id], supportingFacts: [] }))
+  const collisionReport = buildEditorialStructuredReport(collisionFacts, collisionFindings)
+  assert.equal(collisionReport.cards.length, 2)
+  assert.equal(titlesAreSimilar(collisionReport.cards[0].title, collisionReport.cards[1].title), false)
 })
