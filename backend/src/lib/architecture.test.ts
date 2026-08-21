@@ -135,6 +135,17 @@ test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を
   assert.match(api, /http\.statusCode == 402.*APIError\.paymentRequired/)
 })
 
+test('相性結果は選択画面と分離し本人鑑定と同じカード導線を使う', () => {
+  const partners = read('ios/FateLab/PartnerProfilesView.swift')
+  const insightHub = read('ios/FateLab/InsightHubView.swift')
+  assert.match(partners, /navigationDestination\(isPresented: \$showCompatibilityResult\)/)
+  assert.match(partners, /CompatibilityResultView/)
+  assert.match(partners, /ReadingCardList\(cards: report\.cards\)/)
+  assert.doesNotMatch(partners, /if let compatibilityReport \{[\s\S]{0,300}ForEach/)
+  assert.match(insightHub, /struct ReadingCardList/)
+  assert.match(insightHub, /InsightDetailView\(item: item\)/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')

@@ -11,6 +11,8 @@ struct PartnerProfilesView: View {
     @State private var errorMessage: String?
     @State private var relationshipType = "romantic"
     @State private var compatibilityReport: StructuredReportResponse?
+    @State private var compatibilityKey: String?
+    @State private var showCompatibilityResult = false
     @State private var isGenerating = false
     @State private var generationProgress = GenerationProgress(percent: 5, title: "二人の情報を確認しています", detail: "鑑定に使うプロフィールを準備しています")
     @State private var selfReading: ReadingSummary?
@@ -49,26 +51,16 @@ struct PartnerProfilesView: View {
                     Text("使用する自己鑑定：\(selfReading.title)").font(.caption).foregroundStyle(FateTheme.muted)
                         .padding(.bottom, 12)
                 }
-                Button { Task { await generateCompatibility() } } label: {
+                Button { Task { await openCompatibility() } } label: {
                     Text("相性・関係性の鑑定結果へ進む")
                 }
                     .buttonStyle(FLPrimaryButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
-                if let compatibilityReport {
-                    VStack(alignment: .leading, spacing: 12) {
-                        FLSectionHeader(title: "二人の関係性")
-                        ForEach(compatibilityReport.cards) { card in
-                            NavigationLink { InsightDetailView(item: card) {} } label: {
-                                FLListRow(title: card.title, subtitle: card.summary)
-                            }
-                        }
-                    }
-                }
                 Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(errorMessage).foregroundStyle(.red).font(.caption)
-                        Button("もう一度試す") { Task { if compatibilityFailed { await generateCompatibility() } else { await load() } } }.buttonStyle(FLSecondaryButtonStyle())
+                        Button("もう一度試す") { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }.buttonStyle(FLSecondaryButtonStyle())
                     }
                 }
             }.padding(FateSpacing.screenH)
@@ -78,6 +70,11 @@ struct PartnerProfilesView: View {
         .task { await load() }
         .sheet(isPresented: $showPicker) { pickerSheet }
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
+        .navigationDestination(isPresented: $showCompatibilityResult) {
+            if let compatibilityReport, let selected {
+                CompatibilityResultView(report: compatibilityReport, partnerName: selected.displayName, relationshipType: relationshipType)
+            }
+        }
     }
 
     private func profileTile(title: String, subtitle: String, icon: String, isEmpty: Bool) -> some View {
@@ -104,7 +101,7 @@ struct PartnerProfilesView: View {
                 } footer: { Text(remaining == 0 ? "上限に達しています。行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
                 Section("登録済みの相手") {
                     ForEach(partners) { partner in
-                        Button { selected = partner; relationshipType = partner.relationshipType; compatibilityReport = nil; showPicker = false } label: {
+                        Button { selected = partner; relationshipType = partner.relationshipType; compatibilityReport = nil; compatibilityKey = nil; showPicker = false } label: {
                             HStack {
                                 Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.ink)
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
@@ -132,11 +129,41 @@ struct PartnerProfilesView: View {
         do { try await APIClient.shared.deletePartner(id: partner.id, auth: auth); if selected?.id == partner.id { selected = nil }; await load() }
         catch { errorMessage = userFacingMessage(error) }
     }
-    private func generateCompatibility() async {
+    private func openCompatibility(force: Bool = false) async {
         guard let selected, let selfReading else { return }
+        let key = "\(selected.id.uuidString)|\(selfReading.id.uuidString)|\(relationshipType)"
+        if !force, compatibilityKey == key, compatibilityReport != nil {
+            showCompatibilityResult = true
+            return
+        }
         isGenerating = true; errorMessage = nil; compatibilityFailed = false; defer { isGenerating = false }
-        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 } }
+        do {
+            compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 }
+            compatibilityKey = key
+            showCompatibilityResult = true
+        }
         catch { compatibilityFailed = true; errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。" }
+    }
+}
+
+private struct CompatibilityResultView: View {
+    let report: StructuredReportResponse
+    let partnerName: String
+    let relationshipType: String
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("二人の関係性").font(FateType.screenTitle)
+                Text("あなたと\(partnerName)さんの、\(relationshipType == "friend" ? "友情" : "恋愛")の物語を読み進める")
+                    .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
+                ReadingCardList(cards: report.cards) { _ in }
+            }
+            .padding(FateSpacing.screenH)
+        }
+        .background(FateTheme.canvas)
+        .navigationTitle("相性鑑定")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

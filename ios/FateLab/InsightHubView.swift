@@ -31,10 +31,7 @@ struct InsightHubView: View {
                     }
                 }
             } else {
-                ForEach(report.cards.filter { $0.resolvedTab == selectedTab }) { item in
-                    NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
-                        .buttonStyle(.plain)
-                }
+                ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
             }
         }
         .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)
@@ -162,7 +159,19 @@ private struct ChartListView: View {
     }
 }
 
-private struct InsightCard: View {
+struct ReadingCardList: View {
+    let cards: [ReadingCard]
+    let onQuestion: (ReadingCard) -> Void
+
+    var body: some View {
+        ForEach(cards) { item in
+            NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
+                .buttonStyle(.plain)
+        }
+    }
+}
+
+struct InsightCard: View {
     let item: ReadingCard
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
