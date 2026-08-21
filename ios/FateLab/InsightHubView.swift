@@ -23,6 +23,13 @@ struct InsightHubView: View {
 
             if selectedTab == "chart" {
                 ChartDetailsView(report: report, onQuestion: onQuestion, onReload: onReload)
+            } else if selectedTab == "essence" {
+                LazyVGrid(columns: essenceColumns, alignment: .leading, spacing: 12) {
+                    ForEach(report.cards.filter { $0.resolvedTab == "essence" }) { item in
+                        NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { EssenceCard(item: item) }
+                            .buttonStyle(.plain)
+                    }
+                }
             } else {
                 ForEach(report.cards.filter { $0.resolvedTab == selectedTab }) { item in
                     NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
@@ -31,6 +38,10 @@ struct InsightHubView: View {
             }
         }
         .padding(.vertical, 20).background(FateTheme.canvas)
+    }
+
+    private var essenceColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
     }
 }
 
@@ -93,6 +104,53 @@ private struct InsightCard: View {
     var body: some View {
         HStack(spacing: 14) { Text(item.title).font(.system(size: 17, weight: .semibold)).foregroundStyle(FateTheme.ink).fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
             .padding(.vertical, 18).overlay(FLDivider(), alignment: .bottom)
+    }
+}
+
+private struct EssenceCard: View {
+    let item: ReadingCard
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 8) {
+                Text(item.title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(FateTheme.ink)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(FateTheme.muted)
+            }
+            Text(item.summary)
+                .font(.system(size: 13))
+                .foregroundStyle(FateTheme.body)
+                .lineSpacing(4)
+                .lineLimit(3)
+            Spacer(minLength: 0)
+            EssenceTags(tags: item.tags)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 210, alignment: .topLeading)
+        .background(FateTheme.canvas)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+private struct EssenceTags: View {
+    let tags: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            ForEach(tags.prefix(2), id: \.self) { tag in
+                Text("#\(tag)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(FateTheme.muted)
+                    .lineLimit(1)
+            }
+        }
     }
 }
 
