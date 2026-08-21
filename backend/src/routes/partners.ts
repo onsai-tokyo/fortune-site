@@ -60,6 +60,10 @@ export function parseCompatibility(raw: string): StructuredReport {
 
 type CompatibilityGeneration = { text: string; stopReason?: string | null }
 type CompatibilityCardSpec = { id: string; purpose: string; titleDirection: string }
+export type CompatibilityCardCache = {
+  read: (spec: CompatibilityCardSpec) => Promise<ReportCard | null>
+  write: (spec: CompatibilityCardSpec, card: ReportCard) => Promise<void>
+}
 
 const compatibilityCardSpecs: CompatibilityCardSpec[] = [
   { id: 'compat-attraction', purpose: '引き合う力', titleDirection: '二人が自然に惹かれ合う理由を表す断定文' },
@@ -85,6 +89,22 @@ export function parseCompatibilityCard(raw: string, minimumPages = 8): ReportCar
   return card
 }
 
+function validateCompatibilityCard(card: ReportCard | null, spec: CompatibilityCardSpec): ReportCard | null {
+  if (!card || card.id !== spec.id) return null
+  try {
+    return { ...parseCompatibilityCard(JSON.stringify({ card }), 6), id: spec.id }
+  } catch {
+    return null
+  }
+}
+
+function compatibilityFailureKind(error: unknown, stopReason?: string | null) {
+  if (stopReason === 'max_tokens') return 'truncated'
+  const message = error instanceof Error ? error.message : String(error)
+  if (error instanceof SyntaxError || /JSON|見つかりません/.test(message)) return 'syntax'
+  return 'validation'
+}
+
 function assembleCompatibilityReport(cards: ReportCard[]): StructuredReport {
   return {
     version: 2,
@@ -98,26 +118,42 @@ export async function generateCompatibilityCards(
   basePrompt: string,
   generate: (prompt: string, spec: CompatibilityCardSpec, attempt: number) => Promise<CompatibilityGeneration>,
   onCardComplete?: (completed: number, total: number) => void,
+  cache?: CompatibilityCardCache,
 ): Promise<StructuredReport> {
   let completed = 0
   const results = await Promise.all(compatibilityCardSpecs.map(async spec => {
+    if (cache) {
+      try {
+        const cached = validateCompatibilityCard(await cache.read(spec), spec)
+        if (cached) return cached
+      } catch (error) {
+        console.warn('Compatibility card cache read failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
+      }
+    }
     const prompt = `${basePrompt}\n今回生成するカード: ${spec.purpose}\nID: ${spec.id}\nタイトル方針: ${spec.titleDirection}\n形式は {"card":{...}}。カードは1枚だけ、ページは8〜12枚。JSON以外を返さないでください。`
     let first: CompatibilityGeneration
     try {
       first = await generate(prompt, spec, 1)
-      if (first.stopReason !== 'max_tokens') return { ...parseCompatibilityCard(first.text, 8), id: spec.id }
+      if (first.stopReason !== 'max_tokens') {
+        const card = { ...parseCompatibilityCard(first.text, 8), id: spec.id }
+        if (cache) await cache.write(spec, card).catch(error => console.warn('Compatibility card cache write failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) }))
+        return card
+      }
+      console.warn('Compatibility card initial generation failed', { cardId: spec.id, kind: 'truncated', reason: 'max_tokens' })
     } catch (error) {
       first = { text: '', stopReason: null }
-      console.warn('Compatibility card initial generation failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
+      console.warn('Compatibility card initial generation failed', { cardId: spec.id, kind: compatibilityFailureKind(error), reason: error instanceof Error ? error.message : String(error) })
     }
 
     const retryPrompt = `${prompt}\n前回の出力は${first.stopReason === 'max_tokens' ? '長すぎて途中で切れました' : '形式検証に失敗しました'}。説明を簡潔にし、必ず完結したJSONにしてください。ページは8枚を目標とし、最低6枚を含めてください。前回の壊れたJSONの修復ではなく、このカードを最初から生成し直してください。`
     try {
       const retry = await generate(retryPrompt, spec, 2)
       if (retry.stopReason === 'max_tokens') throw new Error('再生成も最大トークン数に到達しました')
-      return { ...parseCompatibilityCard(retry.text, 6), id: spec.id }
+      const card = { ...parseCompatibilityCard(retry.text, 6), id: spec.id }
+      if (cache) await cache.write(spec, card).catch(error => console.warn('Compatibility card cache write failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) }))
+      return card
     } catch (error) {
-      console.error('Compatibility card regeneration failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
+      console.error('Compatibility card regeneration failed', { cardId: spec.id, kind: compatibilityFailureKind(error, error instanceof Error && /最大トークン/.test(error.message) ? 'max_tokens' : null), reason: error instanceof Error ? error.message : String(error) })
       return null
     }
   }).map(async promise => {
@@ -173,10 +209,8 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
       sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)),
     }
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
-    const cacheKey = createHash('sha256').update(`compat-v2|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
-    const { data: cached } = await db.from('ai_report_cache').select('payload').eq('cache_key', cacheKey).maybeSingle()
+    const compatibilityIdentity = createHash('sha256').update(`compat-v3|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
-    if (cached?.payload) { complete(cached.payload as StructuredReport); return }
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
 本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
 相手: ${JSON.stringify(partnerFacts)}
@@ -190,7 +224,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const report = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
       const attemptStartedAt = Date.now()
-      const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 3200, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
+      const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 8000, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
       const block = message.content.find(item => item.type === 'text')
       if (!block || block.type !== 'text') throw new Error('AI応答がありません')
       console.info('Compatibility generation metric', {
@@ -205,10 +239,20 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         totalDurationMs: Date.now() - compatibilityStartedAt,
       })
       return { text: block.text, stopReason: message.stop_reason }
-    }, completed => progress(66 + completed * 8, '二人の関係を書いています', `${completed}/3の関係性カードを整えました`))
+    }, completed => progress(66 + completed * 8, '二人の関係を書いています', `${completed}/3の関係性カードを整えました`), {
+      read: async spec => {
+        const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
+        const { data, error } = await db.from('ai_report_cache').select('payload').eq('cache_key', cardCacheKey).maybeSingle()
+        if (error) throw error
+        return (data?.payload as ReportCard | undefined) ?? null
+      },
+      write: async (spec, card) => {
+        const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
+        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v3-card', payload: card })
+        if (error) throw error
+      },
+    })
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
-    const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v2', payload: report })
-    if (cacheError) throw cacheError
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     complete(report)
   } catch (error) {
