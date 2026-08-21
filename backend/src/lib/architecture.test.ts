@@ -96,7 +96,7 @@ test('UI刷新は白黒テーマ・段階式オンボーディング・認証ゲ
   assert.match(onboarding, /birthTime == nil/)
   assert.doesNotMatch(onboarding, /わかる.*わからない/)
   assert.match(onboarding, /fatelab\.onboarding\.draft/)
-  assert.match(authView, /Googleで続ける/)
+  assert.match(authView, /Googleでログイン/)
   assert.doesNotMatch(swiftUI, /design: \.serif|FateTheme\.(gold|ivory|paper)/)
 })
 
@@ -131,4 +131,16 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(root, /SavedReadingView\(conversationID: initialConversationID\)/)
   assert.match(reading, /latestConversationId/)
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
+})
+
+test('認証画面はログインを主役にし新規登録を別の方法選択画面へ分ける', () => {
+  const authView = read('ios/FateLab/AuthView.swift')
+  assert.match(authView, /Googleでログイン/)
+  assert.match(authView, /メールアドレスでログイン/)
+  assert.match(authView, /新規登録はこちら/)
+  assert.match(authView, /registrationMethods/)
+  assert.match(authView, /Googleで登録/)
+  assert.match(authView, /メールアドレスで登録/)
+  assert.match(authView, /SignInWithAppleButton\(\.signIn\)/)
+  assert.match(authView, /SignInWithAppleButton\(\.signUp\)/)
 })
