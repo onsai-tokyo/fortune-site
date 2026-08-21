@@ -1,5 +1,6 @@
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
+import { titlesAreSimilar } from './aiWriter.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
@@ -18,6 +19,13 @@ function eventFlags(values: string[]) {
   }
 }
 
+function stableIndex(values: string[], year: number, length: number) {
+  const source = `${year}:${values.join('|')}`
+  let hash = 0
+  for (const character of source) hash = (hash * 31 + character.charCodeAt(0)) >>> 0
+  return hash % length
+}
+
 function titleFor(values: string[], year: number) {
   const flags = eventFlags(values)
   if (flags.move && flags.work) return '住む場所と働き方を同時に変える年'
@@ -31,7 +39,7 @@ function titleFor(values: string[], year: number) {
   if (flags.money) return '使うお金と残すお金の基準を決める年'
   if (flags.reset) return '続けないものを決め、生活の余白を戻す年'
   const alternatives = ['選ぶ順番を変え、動き方を組み直す年', '守る条件を定め、次の役割へ移る年', '慣れた方法を離れ、新しい基準を試す年']
-  return alternatives[Math.abs(year) % alternatives.length]
+  return alternatives[stableIndex(values, year, alternatives.length)]
 }
 
 function personalLens(day: string) {
@@ -40,19 +48,21 @@ function personalLens(day: string) {
   return `${stem[day[0]] ?? '自分で選ぶ力'}と${branch[day[1]] ?? '自分の基準'}`
 }
 
-function personalizedTitle(base: string, input: ReportInput, item: Annual) {
-  const focus = personalLens(input.shichuDay)
-  const action: Record<string, string> = { 甲: '新しく始める', 乙: '時間をかけて育てる', 丙: '外へ広げる', 丁: '一つずつ磨く', 戊: '形にして支える', 己: '順序を整える', 庚: '不要なものを切り替える', 辛: '基準を絞り込む', 壬: '人や情報をつなぐ', 癸: '小さな変化を読み取る' }
-  return `${base.replace(/年$/, '')}。${focus}を使い、${action[item.kanshi[0]] ?? '選び方を更新する'}年`
-}
-
-function collisionTitle(title: string, item: Annual) {
+function collisionTitle(item: Annual, values: string[]) {
+  const flags = eventFlags(values)
   const branchAction: Record<string, string> = {
     子: '新しい流れを始める', 丑: '足元を固める', 寅: '先に動いて道を作る', 卯: '関係を育てる',
     辰: '条件を組み替える', 巳: '機会を見極める', 午: '意思をはっきり示す', 未: '周囲との形を整える',
     申: '方法を更新する', 酉: '残す結果を選ぶ', 戌: '引き受ける責任を定める', 亥: '次の可能性を探る',
   }
-  return `${title.replace(/年$/, '')}、${item.tenGod}を通じて${branchAction[item.kanshi[1]] ?? '選び方を変える'}年`
+  const action = branchAction[item.kanshi[1]] ?? '選び方を変える'
+  if (flags.marriage) return `${action}ことで、二人の暮らしを具体的にする年`
+  if (flags.meeting) return `${action}ことで、これから続く縁を選ぶ年`
+  if (flags.separation) return `${action}ことで、残す関係を見極める年`
+  if (flags.work) return `${action}ことで、引き受ける役割を決める年`
+  if (flags.move) return `${action}ことで、新しい日常の土台を作る年`
+  if (flags.study) return `${action}ことで、学びを次の役割へ変える年`
+  return `${action}ことで、これから守る基準を決める年`
 }
 
 function tagsFor(values: string[]) {
@@ -61,7 +71,15 @@ function tagsFor(values: string[]) {
     flags.work ? '仕事' : '', flags.move ? '引越し・環境変化' : '', flags.study ? '学び' : '', flags.money ? 'お金' : '', flags.reset ? '整理' : '', ...values.slice(0, 2)])
 }
 
-function pagesFor(item: Annual, decade?: Decade): ReportCardPage[] {
+function summaryFor(item: Annual) {
+  const themes = unique(item.themes)
+  const relationships = unique([...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+  const event = relationships[0] ?? themes[0] ?? '優先順位の切り替え'
+  const second = relationships[1] ?? themes.find(theme => theme !== event) ?? '日常の選択'
+  return `${event}と${second}が重なり、${item.kanshi}・${item.tenGod}の動きが具体的な選択として現れる年です。`
+}
+
+function pagesFor(input: ReportInput, item: Annual, decade?: Decade): ReportCardPage[] {
   const themes = unique(item.themes)
   const relationships = unique([...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
   const core = themes.join('・') || '優先順位の切り替え'
@@ -71,9 +89,10 @@ function pagesFor(item: Annual, decade?: Decade): ReportCardPage[] {
   const scene = flags.work ? '依頼、担当範囲、働く場所を決める場面' : flags.meeting || flags.marriage ? '出会い方、約束、暮らし方を話す場面' : flags.move ? '住む場所や日々の時間配分を変える場面' : '今まで通り続けるか、方法を変えるか選ぶ場面'
   const caution = flags.marriage ? '気持ちだけで決めず、住居・お金・仕事の条件を分けて確認すること' : flags.work ? '期待に全部応えず、引き受ける範囲と期限を先に決めること' : flags.separation ? '一度の感情で結論を急がず、続ける条件と離れる条件を言葉にすること' : '変える項目を一度に増やさず、生活を守る条件から決めること'
   const action = flags.move ? '候補地、費用、移動時間を並べ、日常が続く案を一つ選ぶ' : flags.meeting || flags.marriage || flags.separation ? '相手に求める約束と、自分が守れる約束を三つずつ書く' : flags.work ? '引き受ける仕事、断る仕事、学ぶ仕事を一つずつ決める' : '続けること、やめること、試すことを一つずつ決める'
+  const lens = personalLens(input.shichuDay)
   return [
-    { role: 'opening', label: 'この年の焦点', text: `${core}が重なり、選択が目に見える形になる年です。` },
-    { role: 'core', label: '起こりやすいこと', text: `${events}という動きが、日常の決断に表れます。` },
+    { role: 'opening', label: 'この年の焦点', text: summaryFor(item) },
+    { role: 'core', label: '起こりやすいこと', text: `${events}という動きが日常の決断に表れ、${lens}が選び方の支えになります。` },
     { role: 'scene', label: '現れやすい場面', text: `${scene}で、何を優先するかがはっきりします。` },
     { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、今年の${core}が具体的な出来事になります。` },
     { role: 'shadow', label: '急がないこと', text: caution },
@@ -83,12 +102,12 @@ function pagesFor(item: Annual, decade?: Decade): ReportCardPage[] {
   ]
 }
 
-function card(item: Annual, decade?: Decade): ReportCard {
+function card(input: ReportInput, item: Annual, decade?: Decade): ReportCard {
   const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
-  const pages = pagesFor(item, decade)
+  const pages = pagesFor(input, item, decade)
   const details = unique([item.kanshi, item.tenGod, ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
   return {
-    id: `turning-year-${item.year}`, kind: 'timing', tab: 'timing', title: titleFor(values, item.year), summary: pages[0].text,
+    id: `turning-year-${item.year}`, kind: 'timing', tab: 'timing', title: titleFor(values, item.year), summary: summaryFor(item),
     tags: tagsFor(values), period: { label: `${item.year}年（${item.ageRange}）` }, pages,
     evidence: [{ family: '干支系', system: '四柱推命', detail: details.join('・').slice(0, 120) }], metadataRefs: ['turningPoints'],
   }
@@ -110,14 +129,15 @@ export function buildTurningPointCards(input: ReportInput, nowYear = new Date().
     return relationshipEvent || item.score >= 8 || (changedTheme && item.score >= 6)
   })
   const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
-  const seen = new Set<string>()
-  return selected.map(item => {
-    const result = card(item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
-    let title = personalizedTitle(result.title, input, item)
-    if (seen.has(title)) title = collisionTitle(title, item)
-    seen.add(title)
-    return { ...result, title }
-  })
+  const results: ReportCard[] = []
+  for (const item of selected) {
+    const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+    const result = card(input, item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
+    const previous = results.at(-1)
+    const title = previous && titlesAreSimilar(previous.title, result.title) ? collisionTitle(item, values) : result.title
+    results.push({ ...result, title })
+  }
+  return results
 }
 
 export function replaceTimingCards(report: StructuredReport, input: ReportInput): StructuredReport {

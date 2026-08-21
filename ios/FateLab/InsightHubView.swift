@@ -98,7 +98,22 @@ private struct ChartCard: View {
 private struct InsightCard: View {
     let item: ReadingCard
     var body: some View {
-        FLListRow(title: item.title, subtitle: item.summary)
+        VStack(alignment: .leading, spacing: 7) {
+            if let period = item.period?.label {
+                Text(period).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            }
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(item.title).font(.system(size: 18, weight: .semibold)).foregroundStyle(FateTheme.ink).lineSpacing(4)
+                    Text(item.summary).font(.system(size: 14)).foregroundStyle(FateTheme.body).lineSpacing(5).lineLimit(3)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted).padding(.top, 4)
+            }
+        }
+        .padding(.vertical, 16)
+        .overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .bottom)
+        .contentShape(Rectangle())
     }
 }
 

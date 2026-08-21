@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ReportInput } from '../deterministicReport.js'
+import { titlesAreSimilar } from './aiWriter.js'
 import { buildTurningPointCards } from './timingCards.js'
 
 const input: ReportInput = {
@@ -29,6 +30,8 @@ test('時期カードのタイトルを年だけにしない', () => {
   assert.ok(cards.every(card => !/^\d{4}(?:年)?$/.test(card.title)))
   assert.ok(cards.some(card => card.title.includes('出会い')))
   assert.ok(cards.every(card => !card.title.includes(card.period?.label ?? '___')))
+  assert.ok(cards.every(card => !/\d{4}年/.test(card.title)))
+  assert.ok(cards.every(card => /^\d{4}年（.+）$/.test(card.period?.label ?? '')))
 })
 
 test('本文とタグに年ごとの出来事・命式根拠を反映する', () => {
@@ -47,4 +50,8 @@ test('同じ事象が複数年に続いてもタイトルを重複させない',
   ] } }
   const cards = buildTurningPointCards(repeated, 2026)
   assert.equal(new Set(cards.map(card => card.title)).size, cards.length)
+  assert.ok(cards.slice(1).every((card, index) => !titlesAreSimilar(cards[index].title, card.title)))
+  assert.equal(new Set(cards.map(card => card.summary)).size, cards.length)
+  assert.ok(cards.every(card => /[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/.test(card.summary)))
+  assert.ok(cards.every(card => card.summary.includes(card.evidence[0].detail.split('・')[1])))
 })
