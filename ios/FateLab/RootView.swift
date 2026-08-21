@@ -33,14 +33,15 @@ struct RootView: View {
     private var mainTabs: some View {
         TabView(selection: $tabRouter.selectedTab) {
             NavigationStack { HomeView(initialInput: onboardingInput, autoGenerate: shouldAutoGenerate) }
-                .tabItem { Label("あなた", systemImage: "person") }.tag(0)
+                .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(0)
             NavigationStack { PartnerProfilesView() }
-                .tabItem { Label("ふたり", systemImage: "person.2") }.tag(1)
+                .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(1)
             NavigationStack { AIChatTabView() }
-                .tabItem { Label("対話", systemImage: "bubble.left.and.bubble.right") }.tag(2)
+                .tabItem { Label { Text("対話") } icon: { Image(systemName: "bubble.left.and.bubble.right").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(2)
             NavigationStack { SettingsView() }
-                .tabItem { Label("設定", systemImage: "gearshape") }.tag(3)
+                .tabItem { Label { Text("設定") } icon: { Image(systemName: "gearshape").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(3)
         }
+        .tint(FateTheme.primaryText)
         .background(FateTheme.ivory)
     }
 }
@@ -68,12 +69,14 @@ private struct AIChatTabView: View {
         Group {
             if let conversationID = tabRouter.chatConversationID {
                 VStack(spacing: 0) {
-                    if let title = tabRouter.chatContextTitle {
-                        Text("「\(title)」について質問できます")
-                            .font(.caption).foregroundStyle(FateTheme.gold).padding(.horizontal, 14).padding(.vertical, 8)
-                            .frame(maxWidth: .infinity).background(FateTheme.paper)
-                    }
+                    Text(tabRouter.chatContextTitle.map { "「\($0)」について質問できます" } ?? "")
+                        .font(.caption).foregroundStyle(FateTheme.secondaryText)
+                        .padding(.horizontal, 14).padding(.vertical, tabRouter.chatContextTitle == nil ? 0 : 8)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: tabRouter.chatContextTitle == nil ? 0 : nil)
+                        .opacity(tabRouter.chatContextTitle == nil ? 0 : 1)
                     ReadingChatView(conversationID: conversationID)
+                        .id(conversationID)
                 }
             } else if auth.session == nil {
                 ContentUnavailableView {
@@ -99,7 +102,7 @@ private struct AIChatTabView: View {
         isLoading = true; defer { isLoading = false }
         do {
             tabRouter.chatConversationID = try await APIClient.shared.readings(auth: auth).first?.id
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingMessage(error) }
     }
 }
 

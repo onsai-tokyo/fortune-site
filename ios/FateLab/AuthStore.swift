@@ -47,7 +47,7 @@ final class AuthStore: ObservableObject {
                 noticeMessage = "確認メールを送信しました。メール内のリンクを開いてください。迷惑メールフォルダもご確認ください。"
             }
         } catch {
-            errorMessage = localizedAuthError(error.localizedDescription, isRegistration: true)
+            errorMessage = userFacingErrorMessage(error).map { localizedAuthError($0, isRegistration: true) }
         }
     }
 
@@ -63,7 +63,7 @@ final class AuthStore: ObservableObject {
             noticeMessage = "Googleでログインしました。"
         } catch {
             if (error as NSError).code != 1 {
-                errorMessage = localizedAuthError(error.localizedDescription, isRegistration: false)
+                errorMessage = userFacingErrorMessage(error).map { localizedAuthError($0, isRegistration: false) }
             }
         }
     }
@@ -102,7 +102,7 @@ final class AuthStore: ObservableObject {
             noticeMessage = "Appleでログインしました。"
         } catch {
             if (error as NSError).code != ASAuthorizationError.canceled.rawValue {
-                errorMessage = localizedAuthError(error.localizedDescription, isRegistration: false)
+                errorMessage = userFacingErrorMessage(error).map { localizedAuthError($0, isRegistration: false) }
             }
         }
     }
@@ -150,7 +150,7 @@ final class AuthStore: ObservableObject {
             noticeMessage = "ログインしました。"
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = userFacingErrorMessage(error)
         }
     }
 
@@ -171,7 +171,7 @@ final class AuthStore: ObservableObject {
                 throw authError(localizedAuthError(payload?["message"] as? String, isRegistration: true))
             }
             noticeMessage = "確認メールを再送しました。迷惑メールフォルダもご確認ください。"
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingErrorMessage(error) }
     }
 
     private func authenticate(path: String, body: [String: String], isRegistration: Bool) async {
@@ -201,7 +201,7 @@ final class AuthStore: ObservableObject {
             throw NSError(domain: "FateLabAuth", code: http.statusCode,
                           userInfo: [NSLocalizedDescriptionKey: localizedAuthError(rawMessage, isRegistration: isRegistration)])
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = userFacingErrorMessage(error)
         }
     }
 
@@ -230,7 +230,7 @@ final class AuthStore: ObservableObject {
             signOut()
             return true
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = userFacingErrorMessage(error)
             return false
         }
     }

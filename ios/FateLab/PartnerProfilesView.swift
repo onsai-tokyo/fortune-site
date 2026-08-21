@@ -14,21 +14,22 @@ struct PartnerProfilesView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("あの人とについて").font(.system(size: 30, weight: .medium, design: .serif))
+                    .padding(.bottom, 24)
                 Text("二人のプロフィールを重ねて、関係の中で表れやすい力を読みます。")
-                    .foregroundStyle(FateTheme.muted)
+                    .foregroundStyle(FateTheme.muted).padding(.bottom, 32)
                 HStack(spacing: 16) {
-                        profileTile(title: "あなた", subtitle: "", icon: "person")
+                        profileTile(title: "あなた", subtitle: "", icon: "person", isEmpty: false)
                         Text("&").font(.callout).foregroundStyle(FateTheme.secondaryText)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
-                                        subtitle: selected.map(typeLabel) ?? "未設定", icon: "person.crop.circle.badge.plus")
+                                        subtitle: selected.map(typeLabel) ?? "未設定", icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
                         }.buttonStyle(.plain)
-                }
+                }.padding(.bottom, 28)
                 Picker("関係性", selection: $relationshipType) {
                     Text("恋愛").tag("romantic"); Text("友人").tag("friend")
-                }.pickerStyle(.segmented).disabled(selected == nil)
+                }.pickerStyle(.segmented).disabled(selected == nil).padding(.bottom, 24)
                 if selected == nil {
                     Text("先に相手を登録または選択してください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
@@ -37,6 +38,7 @@ struct PartnerProfilesView: View {
                     HStack { if isGenerating { ProgressView().tint(FateTheme.buttonText) }; Text("相性・関係性の鑑定結果へ進む") }
                 }
                     .buttonStyle(GoldButtonStyle()).disabled(selected == nil || isGenerating).opacity(selected == nil ? 0.45 : 1)
+                    .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 if let compatibilityReport {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("二人の関係性").font(.system(size: 24, weight: .medium, design: .serif))
@@ -52,7 +54,7 @@ struct PartnerProfilesView: View {
                         }
                     }
                 }
-                Text("残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
+                Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(errorMessage).foregroundStyle(.red).font(.caption)
@@ -67,13 +69,17 @@ struct PartnerProfilesView: View {
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
     }
 
-    private func profileTile(title: String, subtitle: String, icon: String) -> some View {
+    private func profileTile(title: String, subtitle: String, icon: String, isEmpty: Bool) -> some View {
         VStack(spacing: 8) {
-            Image(systemName: icon).font(.system(size: 34)).foregroundStyle(FateTheme.gold)
-            Text(title).font(.headline).foregroundStyle(FateTheme.ink)
-            Text(subtitle).font(.caption).foregroundStyle(FateTheme.muted).lineLimit(1)
-            Image(systemName: "chevron.down").font(.caption).foregroundStyle(FateTheme.gold)
-        }.frame(maxWidth: .infinity).padding(.vertical, 12)
+            ZStack {
+                Circle().fill(Color(red: 0.937, green: 0.914, blue: 0.867))
+                Circle().stroke(isEmpty ? FateTheme.accent : FateTheme.border, lineWidth: 0.5)
+                Image(systemName: icon).font(.system(size: 26, weight: .light))
+                    .foregroundStyle(isEmpty ? FateTheme.accent : FateTheme.secondaryText)
+            }.frame(width: 68, height: 68)
+            Text(title).font(.system(size: 15, weight: .medium)).foregroundStyle(FateTheme.ink)
+            Text(subtitle).font(.system(size: 13)).foregroundStyle(FateTheme.muted).lineLimit(1)
+        }.frame(maxWidth: .infinity)
     }
 
     private var pickerSheet: some View {
@@ -105,17 +111,17 @@ struct PartnerProfilesView: View {
         errorMessage = nil
         do { let response = try await APIClient.shared.partnerProfiles(auth: auth); partners = response.partners; remaining = response.remaining
             if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingMessage(error) }
     }
     private func delete(_ partner: PartnerProfile) async {
         do { try await APIClient.shared.deletePartner(id: partner.id, auth: auth); if selected?.id == partner.id { selected = nil }; await load() }
-        catch { errorMessage = error.localizedDescription }
+        catch { errorMessage = userFacingMessage(error) }
     }
     private func generateCompatibility() async {
         guard let selected else { return }
         isGenerating = true; errorMessage = nil; defer { isGenerating = false }
         do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, relationshipType: relationshipType, auth: auth) }
-        catch { errorMessage = error.localizedDescription }
+        catch { errorMessage = userFacingMessage(error) }
     }
 }
 
@@ -147,6 +153,6 @@ private struct PartnerRegistrationView: View {
         let dateText = date.formatted(.iso8601.year().month().day())
         let timeText = hasTime ? time.formatted(.iso8601.time(includingFractionalSeconds: false)) : nil
         do { _ = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationship, auth: auth); await onSaved(); dismiss() }
-        catch { self.error = error.localizedDescription }
+        catch { self.error = userFacingMessage(error) }
     }
 }

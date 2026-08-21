@@ -33,11 +33,21 @@ struct ReportCard<Content: View>: View {
     }
 }
 
+/// SwiftUIの画面遷移に伴うキャンセルはユーザー向けエラーとして表示しない。
+func userFacingErrorMessage(_ error: Error) -> String? {
+    if error is CancellationError { return nil }
+    if let urlError = error as? URLError, urlError.code == .cancelled { return nil }
+    return error.localizedDescription
+}
+
 extension View {
+    func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }
+
     func fateScreenTitle(_ title: String) -> some View {
         toolbar {
             ToolbarItem(placement: .principal) {
-                Text(title).font(.system(size: 22, weight: .semibold, design: .serif))
+                Text(title).font(.system(size: 17, weight: .semibold))
+                    .lineLimit(1).truncationMode(.tail)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -88,10 +98,10 @@ struct DateMenuPicker: View {
     var body: some View {
         HStack(spacing: 10) {
             Picker("年", selection: year) {
-                ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text("\($0)年").tag($0) }
+                ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text(verbatim: "\($0)年").tag($0) }
             }
-            Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text("\($0)月").tag($0) } }
-            Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text("\($0)日").tag($0) } }
+            Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text(verbatim: "\($0)月").tag($0) } }
+            Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text(verbatim: "\($0)日").tag($0) } }
         }
         .pickerStyle(.menu)
         .tint(FateTheme.primaryText)

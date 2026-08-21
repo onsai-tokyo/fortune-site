@@ -11,8 +11,9 @@ struct ReadingChatView: View {
     @State private var isWorking = false
     @State private var errorMessage: String?
     @State private var showPaywall = false
+    @State private var showSourceReport = false
     @State private var followUpSuggestions: [String] = []
-    @State private var didInitialScroll = false
+    @State private var didLoad = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,20 +23,10 @@ struct ReadingChatView: View {
                         if let status, !status.premium {
                             freeUsageStatus(status)
                         }
-                        if let report = detail?.conversation.reportText {
-                            DisclosureGroup {
-                                Text(report).font(.system(size: 15)).lineSpacing(7).padding(.top, 12)
-                            } label: {
-                                HStack { Text("もとの鑑定書を確認"); Spacer(); Image(systemName: "chevron.right").font(.caption) }
-                            }
-                            .font(.system(size: 17, weight: .medium, design: .serif))
-                            .padding().background(FateTheme.paper)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                        }
                         if messages.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("どこから読み解きますか？")
-                                    .font(.system(size: 22, weight: .medium, design: .serif))
+                                    .font(.system(size: 22, weight: .medium))
                                 Text("鑑定書で気になった部分を、そのまま質問できます。")
                                     .foregroundStyle(FateTheme.muted).lineSpacing(6)
                                 ForEach(suggestions, id: \.self) { suggestion in
@@ -48,26 +39,19 @@ struct ReadingChatView: View {
                             messageBubble(message)
                         }
                         if messages.last?.role == "assistant" && !isBlocked && !followUpSuggestions.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("続けて読み解く").font(.system(size: 16, weight: .medium, design: .serif)).padding(.bottom, 6)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("続けて読み解く").font(.system(size: 16, weight: .medium)).padding(.bottom, 2)
                                 ForEach(followUpSuggestions, id: \.self) { suggestion in
-                                    Button {
-                                        input = suggestion
-                                    } label: {
-                                        Text(suggestion).multilineTextAlignment(.leading)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .foregroundStyle(FateTheme.ink).padding(.vertical, 14)
-                                    }
-                                    Divider().overlay(FateTheme.line)
+                                    Button(suggestion) { input = suggestion }
+                                        .buttonStyle(SuggestionButtonStyle())
                                 }
                             }.padding(.top, 4)
                         }
-                        if isWorking { ProgressView("鑑定結果を読み解いています…").tint(FateTheme.gold) }
-                        Color.clear.frame(height: 1).id("bottom")
+                        if isWorking { Text("鑑定結果を読み解いています…").font(.system(size: 14)).foregroundStyle(FateTheme.secondaryText) }
+                        Color.clear.frame(height: 72).id("bottom")
                     }.padding(18)
                 }
-                .opacity(didInitialScroll ? 1 : 0)
-                .onAppear { proxy.scrollTo("bottom", anchor: .bottom); didInitialScroll = true }
+                .defaultScrollAnchor(.bottom)
                 .onChange(of: messages.count) { _, _ in withAnimation { proxy.scrollTo("bottom") } }
             }
 
@@ -81,16 +65,41 @@ struct ReadingChatView: View {
                         .lineLimit(1...5).padding(12).background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     Button("送信") {
+                        let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !question.isEmpty else { return }
                         if isBlocked { showPaywall = true } else { Task { await send() } }
                     }.font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(FateTheme.buttonText).padding(.horizontal, 15).frame(height: 38)
-                        .background(FateTheme.buttonBackground).clipShape(RoundedRectangle(cornerRadius: 10))
-                        .disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isWorking)
-                        .opacity(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
+                        .background(FateTheme.buttonBackground).clipShape(RoundedRectangle(cornerRadius: 12))
+                        .disabled(isWorking)
+                        .opacity(isWorking ? 0.4 : 1)
                 }
             }.padding(14).background(FateTheme.ivory)
         }
-        .background(FateTheme.ivory).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問").task { await load() }
+        .background(FateTheme.ivory).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")
+        .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
+            Task { await load() }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showSourceReport = true } label: { Image(systemName: "doc.text") }
+                    .disabled(detail?.conversation.reportText == nil)
+                    .accessibilityLabel("もとの鑑定書を確認")
+            }
+        }
+        .sheet(isPresented: $showSourceReport) {
+            NavigationStack {
+                ScrollView {
+                    Text(detail?.conversation.reportText ?? "")
+                        .font(.system(size: 16, design: .serif)).lineSpacing(8)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(20)
+                }
+                .background(FateTheme.ivory).fateScreenTitle("もとの鑑定書")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { showSourceReport = false } } }
+            }
+        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(draftQuestion: input) {
                 Task { await loadStatus(); if status?.premium == true { showPaywall = false } }
@@ -116,12 +125,12 @@ struct ReadingChatView: View {
 
     private func messageBubble(_ message: ReadingMessage) -> some View {
         HStack {
-            if message.role == "user" { Spacer(minLength: 42) }
+            if message.role == "user" { Spacer(minLength: 24) }
             Text(message.content).font(.system(size: 16)).lineSpacing(7)
                 .padding(message.role == "user" ? 14 : 0)
                 .background(message.role == "user" ? Color(red: 0.937, green: 0.914, blue: 0.867) : .clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            if message.role != "user" { Spacer(minLength: 22) }
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            if message.role != "user" { Spacer(minLength: 24) }
         }
     }
 
@@ -129,7 +138,7 @@ struct ReadingChatView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
             Text("もう少し、深く読み解きますか。")
-                .font(.system(size: 20, weight: .medium, design: .serif))
+                .font(.system(size: 20, weight: .medium))
             Button("継続鑑定について詳しく見る") { showPaywall = true }.buttonStyle(OutlineGoldButtonStyle())
         }.padding(16).background(FateTheme.paper)
             .overlay(Rectangle().frame(height: 1).foregroundStyle(FateTheme.line), alignment: .top)
@@ -141,7 +150,7 @@ struct ReadingChatView: View {
             let value = try await APIClient.shared.conversation(id: conversationID, auth: auth)
             detail = value; messages = value.messages
             await loadStatus()
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingMessage(error) }
     }
 
     private func loadStatus() async {
@@ -161,7 +170,7 @@ struct ReadingChatView: View {
             followUpSuggestions = answer.suggestions
             await loadStatus()
         } catch {
-            messages.removeLast(); input = question; errorMessage = error.localizedDescription
+            messages.removeLast(); input = question; errorMessage = userFacingMessage(error)
             if case APIError.paymentRequired = error { showPaywall = true }
             await loadStatus()
         }
@@ -184,7 +193,7 @@ private struct PaywallSheet: View {
                     if !draft.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("お書きになった質問").font(.caption).foregroundStyle(FateTheme.muted)
-                            Text("「\(draft)」").lineLimit(3).font(.system(size: 15, design: .serif))
+                            Text("「\(draft)」").lineLimit(3).font(.system(size: 15))
                         }
                         Divider().overlay(FateTheme.line)
                     }

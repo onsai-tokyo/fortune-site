@@ -32,7 +32,7 @@ struct ReadingListView: View {
                     NavigationLink(value: reading.id) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(reading.title).font(.system(size: 18, weight: .medium, design: .serif))
-                            Text("質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))")
+                            Text(verbatim: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))")
                                 .font(.caption).foregroundStyle(FateTheme.muted)
                         }.padding(.vertical, 8)
                     }.listRowBackground(FateTheme.paper)
@@ -54,7 +54,7 @@ struct ReadingListView: View {
         isLoading = true; errorMessage = nil
         defer { isLoading = false }
         do { readings = try await APIClient.shared.readings(auth: auth) }
-        catch { errorMessage = error.localizedDescription }
+        catch { errorMessage = userFacingMessage(error) }
     }
 
     private func shortDate(_ value: String?) -> String {

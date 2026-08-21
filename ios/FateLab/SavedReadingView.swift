@@ -81,7 +81,7 @@ struct SavedReadingView: View {
             detail = try await detailRequest
             cards = try await cardsRequest.cards
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = userFacingMessage(error)
         }
     }
 }

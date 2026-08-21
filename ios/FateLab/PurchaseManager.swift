@@ -25,7 +25,7 @@ final class PurchaseManager: ObservableObject {
             await refreshEntitlements()
         } catch {
             product = nil
-            errorMessage = "商品情報を取得できませんでした"
+            if userFacingErrorMessage(error) != nil { errorMessage = "商品情報を取得できませんでした" }
         }
     }
 
@@ -44,7 +44,7 @@ final class PurchaseManager: ObservableObject {
             case .userCancelled, .pending: break
             @unknown default: break
             }
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingErrorMessage(error) }
     }
 
     func restore(auth: AuthStore) async {
@@ -56,7 +56,9 @@ final class PurchaseManager: ObservableObject {
                 try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth)
             }
             await refreshEntitlements()
-        } catch { errorMessage = "購入内容を復元できませんでした" }
+        } catch {
+            if userFacingErrorMessage(error) != nil { errorMessage = "購入内容を復元できませんでした" }
+        }
     }
 
     private func listenForTransactions() async {

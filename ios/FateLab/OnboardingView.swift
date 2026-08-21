@@ -142,7 +142,7 @@ struct OnboardingView: View {
 
 private struct OnboardingScaffold<Content: View>: View {
     let page: Int; let onBack: () -> Void; @ViewBuilder let content: Content
-    var body: some View { VStack(alignment: .leading, spacing: 22) { HStack { Button(action: onBack) { Image(systemName: "chevron.left").font(.title3).foregroundStyle(FateTheme.ink) }; Spacer(); FateMark(size: 34); Spacer(); Text("\(page) / 5").font(.caption).foregroundStyle(FateTheme.muted) }; content }.padding(.horizontal, 28).padding(.vertical, 22) }
+    var body: some View { VStack(alignment: .leading, spacing: 22) { HStack { Button(action: onBack) { Image(systemName: "chevron.left").font(.title3).foregroundStyle(FateTheme.ink) }; Spacer(); FateMark(size: 34); Spacer(); Text(verbatim: "\(page) / 5").font(.caption).foregroundStyle(FateTheme.muted) }; content }.padding(.horizontal, 28).padding(.vertical, 22) }
 }
 
 private struct FateMark: View {

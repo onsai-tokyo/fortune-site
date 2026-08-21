@@ -272,7 +272,7 @@ private struct LiveReportScreenshotView: View {
             let value = try await APIClient.shared.generateReport(input: input)
             report = value
             UserDefaults.standard.set(value.text, forKey: cacheKey)
-        } catch { errorMessage = error.localizedDescription }
+        } catch { errorMessage = userFacingMessage(error) }
     }
 }
 #endif

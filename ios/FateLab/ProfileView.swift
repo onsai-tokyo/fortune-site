@@ -10,7 +10,7 @@ struct ProfileView: View {
                 Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
                 Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium, design: .serif))
                 if auth.session != nil {
-                    Text("\(traits.count)").font(.system(size: 48, weight: .medium, design: .serif)).foregroundStyle(FateTheme.gold)
+                    Text(verbatim: "\(traits.count)").font(.system(size: 48, weight: .medium, design: .serif)).foregroundStyle(FateTheme.gold)
                 }
                 Text("質問を重ねながら『合っている』と選んだ内容だけを保存します。")
                     .foregroundStyle(FateTheme.muted).lineSpacing(6)

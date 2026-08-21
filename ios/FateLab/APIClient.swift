@@ -8,13 +8,19 @@ enum ReportProgress {
 
 enum APIError: LocalizedError {
     case invalidResponse
+    case timeout
+    case http(status: Int, message: String)
     case paymentRequired(String)
     case rateLimited(String)
     case server(String)
     var errorDescription: String? {
         switch self {
         case .invalidResponse: "読み込めませんでした。通信環境を確認して、もう一度お試しください"
-        case .paymentRequired(let message), .rateLimited(let message), .server(let message): message
+        case .timeout: "45秒以内に応答がありませんでした。時間を置いて再試行してください（タイムアウト）"
+        case .http(let status, let message): "\(message)（HTTP \(status)）"
+        case .paymentRequired(let message): "\(message)（HTTP 402）"
+        case .rateLimited(let message): "\(message)（HTTP 429）"
+        case .server(let message): message
         }
     }
 }
@@ -22,11 +28,6 @@ enum APIError: LocalizedError {
 struct ChatAnswer {
     let text: String
     let suggestions: [String]
-}
-
-private struct HTTPResult: @unchecked Sendable {
-    let data: Data
-    let response: URLResponse
 }
 
 @MainActor
@@ -43,7 +44,7 @@ struct APIClient {
         var request = URLRequest(url: url)
         // Render のコールドスタート後に占術計算が60秒を少し超える場合がある。
         // URLSession の既定値（60秒）で正常な鑑定を失敗扱いにしない。
-        request.timeoutInterval = 180
+        request.timeoutInterval = 40
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
@@ -56,25 +57,15 @@ struct APIClient {
         var lastError: Error = APIError.invalidResponse
         var currentRequest = request
         var retriedAfterRefresh = false
+        let deadline = ContinuousClock.now.advanced(by: .seconds(45))
 
         for attempt in 0..<maximumAttempts {
             do {
-                let requestForAttempt = currentRequest
-                let result = try await withThrowingTaskGroup(of: HTTPResult.self) { group in
-                    group.addTask { [requestForAttempt] in
-                        let (data, response) = try await URLSession.shared.data(for: requestForAttempt)
-                        return HTTPResult(data: data, response: response)
-                    }
-                    group.addTask {
-                        try await Task.sleep(for: .seconds(30))
-                        throw URLError(.timedOut)
-                    }
-                    guard let first = try await group.next() else { throw APIError.invalidResponse }
-                    group.cancelAll()
-                    return first
-                }
-                let data = result.data
-                let response = result.response
+                guard ContinuousClock.now < deadline else { throw APIError.timeout }
+                let remaining = ContinuousClock.now.duration(to: deadline).components
+                let remainingSeconds = Double(remaining.seconds) + Double(remaining.attoseconds) / 1_000_000_000_000_000_000
+                currentRequest.timeoutInterval = min(40, max(0.1, remainingSeconds))
+                let (data, response) = try await URLSession.shared.data(for: currentRequest)
                 guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
                 if 200..<300 ~= http.statusCode { return data }
 
@@ -97,27 +88,37 @@ struct APIClient {
                 let error: APIError = switch http.statusCode {
                 case 402: .paymentRequired(message)
                 case 429: .rateLimited("アクセスが集中しています。少し待ってから、もう一度お試しください")
-                default: .server(message)
+                default: .http(status: http.statusCode, message: message)
                 }
                 lastError = error
                 let transientStatusCodes = [500, 502, 503, 504]
                 if retryTransient, attempt + 1 < maximumAttempts, transientStatusCodes.contains(http.statusCode) {
-                    try await Task.sleep(for: .seconds(2 * (attempt + 1)))
+                    let delay = 2 * (attempt + 1)
+                    guard ContinuousClock.now.advanced(by: .seconds(delay)) < deadline else { throw APIError.timeout }
+                    try await Task.sleep(for: .seconds(delay))
                     continue
                 }
                 throw error
             } catch {
-                lastError = error
+                let normalizedError: Error
+                if let urlError = error as? URLError, urlError.code == .timedOut {
+                    normalizedError = APIError.timeout
+                } else {
+                    normalizedError = error
+                }
+                lastError = normalizedError
                 let transientCodes: Set<URLError.Code> = [
-                    .timedOut, .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed,
+                    .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed,
                     .networkConnectionLost, .notConnectedToInternet,
                 ]
                 if retryTransient, attempt + 1 < maximumAttempts,
                    let urlError = error as? URLError, transientCodes.contains(urlError.code) {
-                    try await Task.sleep(for: .seconds(2 * (attempt + 1)))
+                    let delay = 2 * (attempt + 1)
+                    guard ContinuousClock.now.advanced(by: .seconds(delay)) < deadline else { throw APIError.timeout }
+                    try await Task.sleep(for: .seconds(delay))
                     continue
                 }
-                throw error
+                throw normalizedError
             }
         }
         throw lastError
