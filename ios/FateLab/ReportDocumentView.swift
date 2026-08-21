@@ -10,9 +10,9 @@ struct ReportDocumentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             if showsCompletionMessage {
-                Text("鑑定が完了しました").font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
+                Text("鑑定が完了しました").font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
             }
-            Text("命式鑑定書").font(.system(size: 32, weight: .medium, design: .serif))
+            Text("命式鑑定書").font(.system(size: 32, weight: .medium))
             birthSummary
             ForEach(report.cards) { card in
                 StructuredReportCardView(card: card)
@@ -23,13 +23,13 @@ struct ReportDocumentView: View {
                         .font(.system(size: 14, design: .monospaced))
                         .lineSpacing(6).textSelection(.enabled).padding(.top, 12)
                 }
-                .font(.system(size: 18, weight: .medium, design: .serif))
-                .padding(18).background(FateTheme.paper)
+                .font(.system(size: 18, weight: .medium))
+                .padding(18).background(FateTheme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
             }
             Button(isSaving ? "鑑定書を保存しています…" : questionTitle, action: askQuestion)
-                .buttonStyle(GoldButtonStyle()).disabled(isSaving)
+                .buttonStyle(FLPrimaryButtonStyle()).disabled(isSaving)
         }
     }
 
@@ -56,11 +56,11 @@ private struct StructuredReportCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(card.title).font(.system(size: 24, weight: .medium, design: .serif)).lineSpacing(6)
+            Text(card.title).font(.system(size: 24, weight: .medium)).lineSpacing(6)
             Text(card.summary).font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(7)
             ForEach(Array(card.pages.enumerated()), id: \.offset) { _, page in
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
+                    Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
                     Text(page.text).font(.system(size: 16)).lineSpacing(8)
                 }
             }
@@ -74,7 +74,7 @@ private struct StructuredReportCardView: View {
                 }.font(.footnote)
             }
         }
-        .padding(20).background(FateTheme.ivory)
+        .padding(20).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }

@@ -17,13 +17,13 @@ struct PartnerProfilesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("あの人とについて").font(.system(size: 30, weight: .medium, design: .serif))
+                Text("ふたりのパターン").font(.system(size: 30, weight: .bold))
                     .padding(.bottom, 24)
-                Text("二人のプロフィールを重ねて、関係の中で表れやすい力を読みます。")
+                Text("二人の関係に、いま何が起きているか。")
                     .foregroundStyle(FateTheme.muted).padding(.bottom, 32)
                 HStack(spacing: 16) {
                         profileTile(title: "あなた", subtitle: "", icon: "person", isEmpty: false)
-                        Text("&").font(.callout).foregroundStyle(FateTheme.secondaryText)
+                        Text("&").font(.callout).foregroundStyle(FateTheme.muted)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
                                         subtitle: selected.map(typeLabel) ?? "未設定", icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
@@ -39,29 +39,29 @@ struct PartnerProfilesView: View {
                 if selfReading == nil {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("まず「あなたについて」の鑑定を作成してください。")
-                            .font(.callout).foregroundStyle(FateTheme.secondaryText)
+                            .font(.callout).foregroundStyle(FateTheme.muted)
                         Button("あなたの鑑定を作成する") { tabRouter.selectedTab = 0 }
-                            .buttonStyle(OutlineGoldButtonStyle())
+                            .buttonStyle(FLSecondaryButtonStyle())
                     }.padding(.bottom, 12)
                 } else if let selfReading {
-                    Text("使用する自己鑑定：\(selfReading.title)").font(.caption).foregroundStyle(FateTheme.secondaryText)
+                    Text("使用する自己鑑定：\(selfReading.title)").font(.caption).foregroundStyle(FateTheme.muted)
                         .padding(.bottom, 12)
                 }
                 Button { Task { await generateCompatibility() } } label: {
-                    HStack { if isGenerating { ProgressView().tint(FateTheme.buttonText) }; Text("相性・関係性の鑑定結果へ進む") }
+                    HStack { if isGenerating { ProgressView().tint(FateTheme.canvas) }; Text("相性・関係性の鑑定結果へ進む") }
                 }
-                    .buttonStyle(GoldButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
+                    .buttonStyle(FLPrimaryButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 if let compatibilityReport {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("二人の関係性").font(.system(size: 24, weight: .medium, design: .serif))
+                        Text("二人の関係性").font(.system(size: 24, weight: .medium))
                         ForEach(compatibilityReport.cards) { card in
                             NavigationLink { InsightDetailView(item: card) {} } label: {
                                 VStack(alignment: .leading, spacing: 7) {
                                     Text(card.title).font(.headline).foregroundStyle(FateTheme.ink)
                                     Text(card.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineLimit(3)
                                 }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(FateTheme.paper).clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 14))
                                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
                             }
                         }
@@ -71,12 +71,12 @@ struct PartnerProfilesView: View {
                 if let errorMessage {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(errorMessage).foregroundStyle(.red).font(.caption)
-                        Button("再試行") { Task { await load() } }.buttonStyle(OutlineGoldButtonStyle())
+                        Button("再試行") { Task { await load() } }.buttonStyle(FLSecondaryButtonStyle())
                     }
                 }
             }.padding(20)
         }
-        .background(FateTheme.ivory).navigationBarTitleDisplayMode(.inline)
+        .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $showPicker) { pickerSheet }
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
@@ -86,9 +86,9 @@ struct PartnerProfilesView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle().fill(Color(red: 0.937, green: 0.914, blue: 0.867))
-                Circle().stroke(isEmpty ? FateTheme.accent : FateTheme.border, lineWidth: 0.5)
+                Circle().stroke(isEmpty ? FateTheme.ink : FateTheme.line, lineWidth: 0.5)
                 Image(systemName: icon).font(.system(size: 26, weight: .light))
-                    .foregroundStyle(isEmpty ? FateTheme.accent : FateTheme.secondaryText)
+                    .foregroundStyle(isEmpty ? FateTheme.ink : FateTheme.muted)
             }.frame(width: 68, height: 68)
             Text(title).font(.system(size: 15, weight: .medium)).foregroundStyle(FateTheme.ink)
             Text(subtitle).font(.system(size: 13)).foregroundStyle(FateTheme.muted).lineLimit(1)
@@ -108,9 +108,9 @@ struct PartnerProfilesView: View {
                     ForEach(partners) { partner in
                         Button { selected = partner; relationshipType = partner.relationshipType; compatibilityReport = nil; showPicker = false } label: {
                             HStack {
-                                Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.gold)
+                                Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.ink)
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
-                                Spacer(); if selected?.id == partner.id { Image(systemName: "checkmark").foregroundStyle(FateTheme.gold) }
+                                Spacer(); if selected?.id == partner.id { Image(systemName: "checkmark").foregroundStyle(FateTheme.ink) }
                             }
                         }.swipeActions { Button("削除", role: .destructive) { Task { await delete(partner) } } }
                     }
@@ -150,18 +150,18 @@ private struct PartnerRegistrationView: View {
     @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationship = "romantic"; @State private var error: String?
     var body: some View {
         NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
-            Text("新しく相手を登録する").font(.system(size: 25, weight: .medium, design: .serif))
-            TextField("表示名", text: $name).padding(12).overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.border))
+            Text("新しく相手を登録する").font(.system(size: 25, weight: .medium))
+            TextField("表示名", text: $name).padding(12).overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.line))
             DateMenuPicker(date: $date)
-            Divider().overlay(FateTheme.border)
+            Divider().overlay(FateTheme.line)
             Toggle("出生時刻を入力する", isOn: $hasTime)
             if hasTime { DatePicker("出生時刻", selection: $time, displayedComponents: .hourAndMinute) }
-            Divider().overlay(FateTheme.border)
+            Divider().overlay(FateTheme.line)
             TextField("出生地", text: $birthplace)
             Picker("性別", selection: $gender) { Text("女性").tag("female"); Text("男性").tag("male") }
             Picker("関係性", selection: $relationship) { Text("恋愛").tag("romantic"); Text("友人").tag("friend") }
             if let error { Text(error).foregroundStyle(.red) }
-        }.padding(20) }.background(FateTheme.background).toolbar {
+        }.padding(20) }.background(FateTheme.canvas).toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) { Button("登録") { Task { await save() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty) }
         } }

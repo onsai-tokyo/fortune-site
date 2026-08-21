@@ -5,88 +5,64 @@ struct AuthView: View {
     var allowsDismissal = true
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
+    @State private var route: Route = .landing
     @State private var email = ""
     @State private var password = ""
-    @State private var registering = false
-    @State private var resendCooldown = 0
+    @State private var cooldown = 0
+    private enum Route { case landing, register, login, pending }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    Text("FATE LAB · MEMBER").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
-                    Text(registering ? "新規登録（無料）" : "ログイン").font(.system(size: 31, weight: .medium, design: .serif))
-                    Text("鑑定書と質問の内容を安全に保存します。先ほどの鑑定内容もそのまま引き継げます。")
-                        .foregroundStyle(FateTheme.muted).lineSpacing(6)
-                    SignInWithAppleButton(.continue) { request in
-                        auth.prepareAppleSignIn(request)
-                    } onCompletion: { result in
-                        Task {
-                            await auth.completeAppleSignIn(result)
-                            if auth.session != nil { dismiss() }
-                        }
-                    }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .disabled(auth.isWorking)
-                    Button {
-                        Task {
-                            await auth.signInWithGoogle()
-                            if auth.session != nil { dismiss() }
-                        }
-                    } label: {
-                        Label("Googleで続ける", systemImage: "globe")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .disabled(auth.isWorking)
-                    .buttonStyle(OutlineGoldButtonStyle())
-                    Divider().overlay(FateTheme.line)
-                    Text("またはメールアドレスで続ける")
-                        .font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
-                    TextField("メールアドレス", text: $email).textInputAutocapitalization(.never).keyboardType(.emailAddress)
-                        .textFieldStyle(.roundedBorder)
-                    SecureField("パスワード（8文字以上）", text: $password).textFieldStyle(.roundedBorder)
-                    if let message = auth.noticeMessage {
-                        Text(message).foregroundStyle(FateTheme.gold).font(.footnote).lineSpacing(4)
-                    }
-                    if let message = auth.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
-                    if registering {
-                        Button(resendCooldown > 0 ? "再送まで \(resendCooldown)秒" : "確認メールを再送する") {
-                            Task {
-                                await auth.resendConfirmation(email: email)
-                                if auth.errorMessage == nil { resendCooldown = 60 }
-                            }
-                        }
-                        .disabled(auth.isWorking || email.isEmpty || resendCooldown > 0)
-                        .task(id: resendCooldown) {
-                            guard resendCooldown > 0 else { return }
-                            try? await Task.sleep(for: .seconds(1))
-                            resendCooldown -= 1
-                        }
-                    }
-                    Button(registering ? "登録する" : "ログイン") {
-                        Task {
-                            if registering { await auth.signUp(email: email, password: password) }
-                            else { await auth.signIn(email: email, password: password) }
-                            if auth.session != nil { dismiss() }
-                        }
-                    }.buttonStyle(GoldButtonStyle()).disabled(auth.isWorking || email.isEmpty || password.count < 8)
-                    Divider().overlay(FateTheme.line)
-                    Text(registering ? "すでに登録済みの方" : "はじめての方")
-                        .font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
-                    Button(registering ? "ログイン画面へ" : "新規登録（無料）") {
-                        registering.toggle()
-                        auth.errorMessage = nil
-                        auth.noticeMessage = nil
-                    }
-                        .buttonStyle(OutlineGoldButtonStyle())
-                }.padding(28)
-            }.background(FateTheme.ivory).toolbar {
-                if allowsDismissal {
-                    ToolbarItem(placement: .cancellationAction) { Button("閉じる", systemImage: "xmark") { dismiss() } }
-                }
-            }
+            Group { switch route { case .landing: landing; case .register: emailForm(registering: true); case .login: emailForm(registering: false); case .pending: verificationPending } }
+                .padding(.horizontal, 24).padding(.bottom, 24).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
+                .toolbar { if allowsDismissal { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } } }
         }
     }
+
+    private var landing: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(); FateMark(size: 84).frame(maxWidth: .infinity); Text("FATE LAB").font(.system(size: 13, weight: .medium)).tracking(4).frame(maxWidth: .infinity).padding(.top, 20)
+            Spacer().frame(height: 48)
+            Text("あなたの鑑定を、\n保存できるように。").font(.system(size: 30, weight: .bold)).lineSpacing(5)
+            Text("ログインすると、鑑定結果と対話をいつでも引き継げます。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 16)
+            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger).padding(.top, 12) }
+            Spacer()
+            Button("Googleで続ける") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }.buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
+            Button("メールアドレスで続ける") { route = .register }.buttonStyle(FLSecondaryButtonStyle()).padding(.top, 12)
+            HStack(spacing: 4) { Text("すでにアカウントをお持ちですか？").foregroundStyle(FateTheme.muted); Button("ログイン") { route = .login }.fontWeight(.semibold).foregroundStyle(FateTheme.ink) }.font(.system(size: 14)).frame(maxWidth: .infinity).padding(.top, 22)
+            SignInWithAppleButton(.continue) { auth.prepareAppleSignIn($0) } onCompletion: { result in Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() } }.signInWithAppleButtonStyle(.whiteOutline).frame(height: 44).padding(.top, 16)
+        }
+    }
+
+    private func emailForm(registering: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack { Button { route = .landing; auth.errorMessage = nil } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }.accessibilityLabel("前へ戻る"); Spacer() }
+            Spacer().frame(height: 24)
+            Text(registering ? "メールで続ける" : "ログイン").font(.system(size: 30, weight: .bold))
+            Text(registering ? "確認メールを受け取れるアドレスを入力してください。" : "登録したメールアドレスとパスワードを入力してください。").foregroundStyle(FateTheme.muted)
+            VStack(spacing: 12) {
+                TextField("メールアドレス", text: $email).textInputAutocapitalization(.never).keyboardType(.emailAddress).padding(16).overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.line))
+                SecureField("パスワード（8文字以上）", text: $password).padding(16).overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.line))
+            }
+            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
+            if let message = auth.noticeMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.muted) }
+            Spacer()
+            Button(registering ? "登録する" : "ログイン") { Task { if registering { await auth.signUp(email: email, password: password); if auth.errorMessage == nil { route = .pending } } else { await auth.signIn(email: email, password: password); closeIfAuthenticated() } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking || email.isEmpty || password.count < 8)
+            FLTextLink(title: registering ? "ログインへ" : "新規登録へ") { route = registering ? .login : .register; auth.errorMessage = nil }.frame(maxWidth: .infinity)
+        }
+    }
+
+    private var verificationPending: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Spacer(); FateMark(size: 64)
+            Text("確認メールを送りました。").font(.system(size: 30, weight: .bold))
+            Text("メール内のリンクを開いて登録を完了してください。届かない場合は迷惑メールフォルダも確認してください。").foregroundStyle(FateTheme.muted).lineSpacing(5)
+            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
+            Spacer()
+            Button(cooldown > 0 ? "再送まで \(cooldown)秒" : "確認メールを再送する") { Task { await auth.resendConfirmation(email: email); if auth.errorMessage == nil { cooldown = 60 } } }.buttonStyle(FLSecondaryButtonStyle()).disabled(cooldown > 0 || auth.isWorking)
+            FLTextLink(title: "ログインへ戻る") { route = .login }.frame(maxWidth: .infinity)
+        }.task(id: cooldown) { guard cooldown > 0 else { return }; try? await Task.sleep(for: .seconds(1)); cooldown -= 1 }
+    }
+
+    private func closeIfAuthenticated() { if auth.session != nil { dismiss() } }
 }

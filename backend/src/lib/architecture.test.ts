@@ -60,7 +60,8 @@ test('PR14でキャンセル表示・チャット再生成・旧入力UIを戻�
   assert.match(root, /\.id\(conversationID\)/)
   assert.match(chat, /\.defaultScrollAnchor\(\.bottom\)/)
   assert.doesNotMatch(chat, /didInitialScroll|\.disabled\(input\.trimmingCharacters/)
-  assert.match(home, /無料鑑定をはじめる/)
+  assert.match(home, /あなたを読む/)
+  assert.match(home, /あなたのパターンを/)
   assert.doesNotMatch(home, /INSTANT ANALYSIS|\.background\(\.regularMaterial\)/)
 })
 
@@ -68,6 +69,20 @@ test('認証エラーからアカウントの登録有無を推測できない',
   const auth = read('ios/FateLab/AuthStore.swift')
   assert.doesNotMatch(auth, /このメールアドレスは登録済み/)
   assert.match(auth, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
+})
+
+test('UI刷新は白黒テーマ・段階式オンボーディング・認証ゲートを維持する', () => {
+  const theme = read('ios/FateLab/Theme.swift')
+  const onboarding = read('ios/FateLab/OnboardingView.swift')
+  const authView = read('ios/FateLab/AuthView.swift')
+  const swiftUI = ['HomeView.swift', 'PartnerProfilesView.swift', 'ReadingChatView.swift', 'SettingsView.swift']
+    .map(file => read(`ios/FateLab/${file}`)).join('\n')
+  assert.match(theme, /static let canvas/)
+  assert.match(theme, /struct FLPrimaryButtonStyle/)
+  assert.match(onboarding, /FLProgressIndicator\(current: step, total: 6\)/)
+  assert.match(onboarding, /fatelab\.onboarding\.draft/)
+  assert.match(authView, /Googleで続ける/)
+  assert.doesNotMatch(swiftUI, /design: \.serif|FateTheme\.(gold|ivory|paper)/)
 })
 
 test('相性鑑定は明示された自己鑑定IDを検証し、チャットは逐次SSEを返す', () => {

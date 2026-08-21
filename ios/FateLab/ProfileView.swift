@@ -7,21 +7,21 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
-                Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium, design: .serif))
+                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
+                Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium))
                 if auth.session != nil {
-                    Text(verbatim: "\(traits.count)").font(.system(size: 48, weight: .medium, design: .serif)).foregroundStyle(FateTheme.gold)
+                    Text(verbatim: "\(traits.count)").font(.system(size: 48, weight: .medium)).foregroundStyle(FateTheme.ink)
                 }
                 Text("質問を重ねながら『合っている』と選んだ内容だけを保存します。")
                     .foregroundStyle(FateTheme.muted).lineSpacing(6)
                 if auth.session == nil {
-                    Button("ログインして確認する") { AuthPresentation.shared.isPresented = true }.buttonStyle(GoldButtonStyle())
+                    Button("ログインして確認する") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 } else if traits.isEmpty {
                     ReportCard { Text("まだ何も保存されていません。\n鑑定書について質問すると、会話からわかったことがここに加わります。").lineSpacing(7) }
                 } else {
                     ForEach(groupedTraits, id: \.category) { group in
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(categoryLabel(group.category)).font(.system(size: 18, weight: .medium, design: .serif))
+                            Text(categoryLabel(group.category)).font(.system(size: 18, weight: .medium))
                             ForEach(group.values) { trait in
                                 ReportCard {
                                     HStack(alignment: .top) {
@@ -37,7 +37,7 @@ struct ProfileView: View {
                     }
                 }
             }.padding(20)
-        }.background(FateTheme.ivory).fateScreenTitle("あなたについて").task {
+        }.background(FateTheme.canvas).fateScreenTitle("あなたについて").task {
             guard auth.session != nil else { return }
             traits = (try? await APIClient.shared.traits(auth: auth)) ?? []
         }

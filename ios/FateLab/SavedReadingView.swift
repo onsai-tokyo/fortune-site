@@ -15,9 +15,9 @@ struct SavedReadingView: View {
             Group {
                 if isLoading {
                     VStack(spacing: 16) {
-                        ProgressView().tint(FateTheme.gold)
+                        ProgressView().tint(FateTheme.ink)
                         Text("鑑定書を開いています")
-                            .font(.system(size: 18, weight: .medium, design: .serif))
+                            .font(.system(size: 18, weight: .medium))
                         Text("保存した内容を読み込んでいます。")
                             .font(.caption)
                             .foregroundStyle(FateTheme.muted)
@@ -38,7 +38,7 @@ struct SavedReadingView: View {
                         Button("この鑑定書について質問する") {
                             tabRouter.openChat(conversationID: conversationID)
                         }
-                            .buttonStyle(GoldButtonStyle())
+                            .buttonStyle(FLPrimaryButtonStyle())
 
                         DisclosureGroup("鑑定書の全文を読む") {
                             Text(detail.conversation.reportText)
@@ -46,7 +46,7 @@ struct SavedReadingView: View {
                                 .lineSpacing(8)
                                 .padding(.top, 14)
                         }
-                        .font(.system(size: 16, weight: .medium, design: .serif))
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(FateTheme.ink)
                         .padding(.vertical, 14)
                     }
@@ -54,13 +54,13 @@ struct SavedReadingView: View {
                     VStack(spacing: 16) {
                         ContentUnavailableView("鑑定書を開けませんでした", systemImage: "doc.text.magnifyingglass",
                                                description: Text(errorMessage ?? "少し待ってから、もう一度お試しください。"))
-                        Button("再試行") { Task { await load() } }.buttonStyle(OutlineGoldButtonStyle())
+                        Button("再試行") { Task { await load() } }.buttonStyle(FLSecondaryButtonStyle())
                     }.frame(minHeight: 520)
                 }
             }
             .padding(20)
         }
-        .background(FateTheme.ivory)
+        .background(FateTheme.canvas)
         .fateScreenTitle(detail?.conversation.title ?? "あなたの鑑定")
         .task { await load() }
         .refreshable { await load() }

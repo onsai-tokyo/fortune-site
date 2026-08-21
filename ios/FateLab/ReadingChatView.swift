@@ -52,7 +52,7 @@ struct ReadingChatView: View {
                                 }
                             }.padding(.top, 4)
                         }
-                        if isWorking { Text("鑑定結果を読み解いています…").font(.system(size: 14)).foregroundStyle(FateTheme.secondaryText) }
+                        if isWorking { Text("鑑定結果を読み解いています…").font(.system(size: 14)).foregroundStyle(FateTheme.muted) }
                         Color.clear.frame(height: 72).id("bottom")
                     }.padding(18)
                 }
@@ -76,21 +76,20 @@ struct ReadingChatView: View {
             VStack(spacing: 8) {
                 if let errorMessage { Text(errorMessage).font(.caption).foregroundStyle(.red) }
                 HStack(alignment: .bottom, spacing: 10) {
-                    TextField("鑑定結果について質問する…", text: $input, axis: .vertical)
+                    TextField("鑑定について聞く…", text: $input, axis: .vertical)
                         .lineLimit(1...5).padding(12).background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
-                    Button(isWorking ? "停止" : "送信") {
+                    Button {
                         if isWorking { streamTask?.cancel(); return }
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !question.isEmpty else { return }
                         if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
-                    }.font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(FateTheme.buttonText).padding(.horizontal, 15).frame(height: 38)
-                        .background(FateTheme.buttonBackground).clipShape(RoundedRectangle(cornerRadius: 12))
+                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).background(FateTheme.ink).clipShape(Circle()) }
+                    .accessibilityLabel(isWorking ? "回答を停止" : "送信")
                 }
-            }.padding(14).background(FateTheme.ivory)
+            }.padding(14).background(FateTheme.canvas)
         }
-        .background(FateTheme.ivory).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")
+        .background(FateTheme.canvas).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
@@ -107,10 +106,10 @@ struct ReadingChatView: View {
             NavigationStack {
                 ScrollView {
                     Text(detail?.conversation.reportText ?? "")
-                        .font(.system(size: 16, design: .serif)).lineSpacing(8)
+                        .font(.system(size: 16)).lineSpacing(8)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(20)
                 }
-                .background(FateTheme.ivory).fateScreenTitle("もとの鑑定書")
+                .background(FateTheme.canvas).fateScreenTitle("もとの鑑定書")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { showSourceReport = false } } }
             }
         }
@@ -132,7 +131,7 @@ struct ReadingChatView: View {
                 .font(.system(size: 14)).foregroundStyle(FateTheme.muted)
             if remaining == 1 {
                 Button("継続鑑定では、回数の制限なくお読みいただけます") { showPaywall = true }
-                    .font(.system(size: 13)).foregroundStyle(FateTheme.gold)
+                    .font(.system(size: 13)).foregroundStyle(FateTheme.ink)
             }
         }
     }
@@ -140,23 +139,32 @@ struct ReadingChatView: View {
     private func messageBubble(_ message: ReadingMessage) -> some View {
         HStack {
             if message.role == "user" { Spacer(minLength: 24) }
-            Text(message.role == "assistant" && message.content.isEmpty && isWorking ? "読み解いています…" : message.content)
-                .font(.system(size: 16)).lineSpacing(7)
-                .foregroundStyle(message.content.isEmpty ? FateTheme.secondaryText : FateTheme.primaryText)
-                .padding(message.role == "user" ? 14 : 0)
-                .background(message.role == "user" ? Color(red: 0.937, green: 0.914, blue: 0.867) : .clear)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            if message.role == "assistant" {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) { FateMark(size: 18); Text("FATE LAB").font(.system(size: 11, weight: .medium)).tracking(2) }
+                    if message.content.isEmpty && isWorking { Text("•••").foregroundStyle(FateTheme.muted) }
+                    else { Text(styledAnswer(message.content)).font(.system(size: 16)).lineSpacing(7).foregroundStyle(FateTheme.body) }
+                }
+            } else {
+                Text(message.content).font(.system(size: 15)).foregroundStyle(FateTheme.canvas).padding(.horizontal, 14).padding(.vertical, 11).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 16))
+            }
             if message.role != "user" { Spacer(minLength: 24) }
         }
     }
 
+    private func styledAnswer(_ content: String) -> AttributedString {
+        var result = AttributedString(content)
+        if let end = result.characters.firstIndex(where: { "。！？".contains($0) }) { result[result.startIndex...end].font = .system(size: 16, weight: .bold) }
+        return result
+    }
+
     private var inlinePaywall: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
+            Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
             Text("もう少し、深く読み解きますか。")
                 .font(.system(size: 20, weight: .medium))
-            Button("継続鑑定について詳しく見る") { showPaywall = true }.buttonStyle(OutlineGoldButtonStyle())
-        }.padding(16).background(FateTheme.paper)
+            Button("継続鑑定について詳しく見る") { showPaywall = true }.buttonStyle(FLSecondaryButtonStyle())
+        }.padding(16).background(FateTheme.surface)
             .overlay(Rectangle().frame(height: 1).foregroundStyle(FateTheme.line), alignment: .top)
     }
 
@@ -230,9 +238,9 @@ private struct PaywallSheet: View {
                     }
                     Text("無料でお読みいただける2回分を、ご利用いただきました。")
                         .font(.system(size: 15)).foregroundStyle(FateTheme.muted)
-                    Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.gold)
+                    Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
                     Text("この鑑定書を、\nいつでも開けるように。")
-                        .font(.system(size: 30, weight: .medium, design: .serif)).lineSpacing(5)
+                        .font(.system(size: 30, weight: .medium)).lineSpacing(5)
                     VStack(alignment: .leading, spacing: 12) {
                         Label("鑑定結果について、回数の制限なく質問できます", systemImage: "checkmark")
                         Label("これまでの質問と回答は、いつでも読み返せます", systemImage: "checkmark")
@@ -241,10 +249,10 @@ private struct PaywallSheet: View {
                     VStack(alignment: .leading, spacing: 5) {
                         if let product = purchases.product {
                             Text("月額 \(product.displayPrice)")
-                                .font(.system(size: 24, weight: .semibold, design: .serif))
+                                .font(.system(size: 24, weight: .semibold))
                             Text("1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
                         } else if purchases.errorMessage == nil {
-                            ProgressView("商品情報を読み込んでいます…").tint(FateTheme.gold)
+                            ProgressView("商品情報を読み込んでいます…").tint(FateTheme.ink)
                         }
                     }
                     if let session = auth.session {
@@ -252,17 +260,17 @@ private struct PaywallSheet: View {
                             ReportCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("商品情報を取得できませんでした。通信環境をご確認のうえ、もう一度お試しください。")
-                                    Button("再読み込み") { Task { await purchases.load() } }.buttonStyle(OutlineGoldButtonStyle())
+                                    Button("再読み込み") { Task { await purchases.load() } }.buttonStyle(FLSecondaryButtonStyle())
                                 }
                             }
                         } else {
                             Button("継続鑑定を始める") {
                                 Task { await purchases.purchase(userID: session.user.id, auth: auth); onRefresh() }
-                            }.buttonStyle(GoldButtonStyle()).disabled(purchases.product == nil || purchases.isWorking)
+                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(purchases.product == nil || purchases.isWorking)
                         }
                         Button("購入を復元") {
                             Task { await purchases.restore(auth: auth); onRefresh() }
-                        }.frame(maxWidth: .infinity).foregroundStyle(FateTheme.gold)
+                        }.frame(maxWidth: .infinity).foregroundStyle(FateTheme.ink)
                     }
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
@@ -272,7 +280,7 @@ private struct PaywallSheet: View {
                         Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                     }.font(.caption).frame(maxWidth: .infinity)
                 }.padding(24)
-            }.background(FateTheme.ivory)
+            }.background(FateTheme.canvas)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { dismiss() } label: { Image(systemName: "xmark") }
@@ -290,7 +298,7 @@ private struct SuggestionButtonStyle: ButtonStyle {
             .foregroundStyle(FateTheme.ink)
             .padding(.horizontal, 14).padding(.vertical, 11)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(FateTheme.paper)
+            .background(FateTheme.surface)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.line))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .opacity(configuration.isPressed ? 0.7 : 1)

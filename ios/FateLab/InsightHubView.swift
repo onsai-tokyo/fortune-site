@@ -8,8 +8,8 @@ struct InsightHubView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("FATE LAB · PERSONAL READING").font(.caption).tracking(2.2).foregroundStyle(FateTheme.gold)
-                Text("あなたの鑑定").font(.system(size: 30, weight: .medium, design: .serif))
+                Text("FATE LAB · PERSONAL READING").font(.caption).tracking(2.2).foregroundStyle(FateTheme.ink)
+                Text("あなたの鑑定").font(.system(size: 30, weight: .medium))
                 Text("気になるカードから読み進められます。")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
             }
@@ -27,7 +27,7 @@ struct InsightHubView: View {
                 }
             }
         }
-        .padding(20).background(FateTheme.paper).clipShape(RoundedRectangle(cornerRadius: 18))
+        .padding(20).background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(FateTheme.line))
     }
 
@@ -42,7 +42,7 @@ private struct ChartDetailsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("命式・計算データ").font(.system(size: 24, weight: .medium, design: .serif))
+            Text("命式・計算データ").font(.system(size: 24, weight: .medium))
             VStack(alignment: .leading, spacing: 5) {
                 if let date = report.birthData["birthDate"] as? String { Text(date.replacingOccurrences(of: "-", with: "/") + " 生") }
                 if let place = report.birthData["birthplace"] as? String { Text(place) }
@@ -50,7 +50,7 @@ private struct ChartDetailsView: View {
             }.font(.footnote).foregroundStyle(FateTheme.muted)
             Text(formattedData).font(.system(size: 13, design: .monospaced)).lineSpacing(6).textSelection(.enabled)
         }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.ivory)
+        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
     }
 
@@ -66,13 +66,13 @@ private struct InsightCard: View {
     let item: ReadingCard
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
-            HStack { Spacer(); Image(systemName: "arrow.up.right").foregroundStyle(FateTheme.gold) }
-            Text(item.title).font(.system(size: 23, weight: .semibold, design: .serif)).foregroundStyle(FateTheme.ink)
+            HStack { Spacer(); Image(systemName: "arrow.up.right").foregroundStyle(FateTheme.ink) }
+            Text(item.title).font(.system(size: 23, weight: .semibold)).foregroundStyle(FateTheme.ink)
             if let period = item.period { Text(period.label).font(.caption).foregroundStyle(FateTheme.muted) }
             Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineLimit(3).lineSpacing(4)
             FlowTags(tags: item.tags)
         }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.ivory)
+        .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line.opacity(0.75)))
     }
@@ -86,24 +86,24 @@ struct InsightDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                Text(item.title).font(.system(size: 35, weight: .medium, design: .serif)).lineSpacing(6)
-                Text(item.summary).font(.system(size: 18, design: .serif)).foregroundStyle(FateTheme.muted).lineSpacing(8)
+                Text(item.title).font(.system(size: 35, weight: .medium)).lineSpacing(6)
+                Text(item.summary).font(.system(size: 18)).foregroundStyle(FateTheme.muted).lineSpacing(8)
                 FlowTags(tags: item.tags)
                 Divider().overlay(FateTheme.line)
                 ForEach(Array(item.pages.enumerated()), id: \.offset) { _, page in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
+                        Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
                         Text(page.text).font(.system(size: 17)).lineSpacing(9)
                     }
                 }
-                Button("スワイプして深く読む") { focusMode = true }.buttonStyle(OutlineGoldButtonStyle())
+                Button("スワイプして深く読む") { focusMode = true }.buttonStyle(FLSecondaryButtonStyle())
                 ShareLink(item: "Fate Labの鑑定「\(item.title)」\n\(item.summary)\nhttps://fate-lab.com") {
                     Label("この鑑定を共有", systemImage: "square.and.arrow.up")
-                }.buttonStyle(OutlineGoldButtonStyle())
-                Button("さらに詳しく質問する", action: onQuestion).buttonStyle(GoldButtonStyle())
+                }.buttonStyle(FLSecondaryButtonStyle())
+                Button("さらに詳しく質問する", action: onQuestion).buttonStyle(FLPrimaryButtonStyle())
                 Text("共有内容に生年月日は含まれません。").font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
             }.padding(28)
-        }.background(FateTheme.ivory).navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
+        }.background(FateTheme.canvas).navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
             .fullScreenCover(isPresented: $focusMode) { FocusReadingView(item: item, onQuestion: onQuestion) }
     }
 }
@@ -116,16 +116,16 @@ private struct FocusReadingView: View {
 
     var body: some View {
         ZStack {
-            FateTheme.ivory.ignoresSafeArea()
+            FateTheme.canvas.ignoresSafeArea()
             VStack(spacing: 0) {
-                Text(item.title).font(.system(size: 20, weight: .medium, design: .serif))
+                Text(item.title).font(.system(size: 20, weight: .medium))
                     .multilineTextAlignment(.center).padding(.top, 18).padding(.horizontal, 60)
                 TabView(selection: $selection) {
                     ForEach(Array(item.pages.enumerated()), id: \.offset) { index, page in
                         VStack(spacing: 28) {
                             Spacer(minLength: 70)
                             Text(page.label).font(.caption).tracking(3).foregroundStyle(FateTheme.muted)
-                            Text(page.text).font(.system(size: 23, weight: .medium, design: .serif)).lineSpacing(14)
+                            Text(page.text).font(.system(size: 23, weight: .medium)).lineSpacing(14)
                                 .multilineTextAlignment(.center).frame(maxWidth: 330)
                             if let note = page.note {
                                 Text(note).font(.system(size: 14)).foregroundStyle(FateTheme.muted).lineSpacing(6)
@@ -149,7 +149,7 @@ private struct FocusReadingView: View {
                 HStack {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark").font(.system(size: 15, weight: .medium)).foregroundStyle(FateTheme.ink)
-                            .frame(width: 46, height: 46).background(FateTheme.paper)
+                            .frame(width: 46, height: 46).background(FateTheme.surface)
                             .overlay(Rectangle().stroke(FateTheme.line, lineWidth: 0.5))
                     }
                     Spacer()
@@ -158,9 +158,9 @@ private struct FocusReadingView: View {
                 HStack {
                     Spacer()
                     Button { dismiss(); onQuestion() } label: {
-                        Text("聞く").font(.system(size: 12, weight: .medium, design: .serif)).frame(width: 46, height: 46)
-                            .background(FateTheme.paper).overlay(Rectangle().stroke(FateTheme.gold, lineWidth: 0.5))
-                    }.foregroundStyle(FateTheme.gold)
+                        Text("聞く").font(.system(size: 12, weight: .medium)).frame(width: 46, height: 46)
+                            .background(FateTheme.surface).overlay(Rectangle().stroke(FateTheme.ink, lineWidth: 0.5))
+                    }.foregroundStyle(FateTheme.ink)
                 }
             }.padding(18)
         }.preferredColorScheme(.light)
@@ -177,8 +177,8 @@ struct FlowTags: View {
     var body: some View {
         HStack(spacing: 7) {
             ForEach(tags.prefix(4), id: \.self) { tag in
-                Text("#\(tag)").font(.caption).foregroundStyle(FateTheme.gold).padding(.horizontal, 10).padding(.vertical, 6)
-                    .background(FateTheme.gold.opacity(0.08)).clipShape(Capsule()).overlay(Capsule().stroke(FateTheme.line))
+                Text("#\(tag)").font(.caption).foregroundStyle(FateTheme.ink).padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(FateTheme.ink.opacity(0.08)).clipShape(Capsule()).overlay(Capsule().stroke(FateTheme.line))
             }
         }
     }

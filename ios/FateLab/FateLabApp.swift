@@ -14,7 +14,7 @@ struct FateLabApp: App {
         if let screen = ScreenshotMode.current {
             ScreenshotGalleryView(screen: screen)
                 .environment(\.locale, Locale(identifier: "ja_JP"))
-                .tint(FateTheme.gold)
+                .tint(FateTheme.ink)
                 .preferredColorScheme(.light)
         } else {
             mainApp
@@ -29,7 +29,7 @@ struct FateLabApp: App {
             .environmentObject(auth)
             .environmentObject(purchases)
             .environment(\.locale, Locale(identifier: "ja_JP"))
-            .tint(FateTheme.gold)
+            .tint(FateTheme.ink)
             .preferredColorScheme(.light)
             .onOpenURL { url in Task { await auth.handleAuthCallback(url) } }
     }

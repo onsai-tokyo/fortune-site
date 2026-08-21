@@ -329,7 +329,7 @@ struct APIClient {
         let time = calendar.dateComponents([.hour, .minute], from: input.time)
         let date = String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
         let birthTime = input.hasTime ? String(format: "%02d:%02d", time.hour!, time.minute!) : ""
-        let birthData: [String: Any] = ["birthDate": date, "birthTime": birthTime,
+        let birthData: [String: Any] = ["birthDate": date, "birthTime": birthTime, "nickname": input.nickname,
                                         "birthplace": input.birthplace, "gender": input.gender]
         let token: String? = if let auth, auth.session != nil { try await auth.validAccessToken() } else { nil }
         progress(.calculating)

@@ -9,13 +9,17 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            Section("鑑定データ") {
+            Section("あなたのデータ") {
+                NavigationLink("プロフィール") { ProfileView() }
+                Text("出生情報").foregroundStyle(FateTheme.ink)
+            }
+            Section("鑑定と対話") {
                 NavigationLink("鑑定履歴") { ReadingListView() }
                 NavigationLink("会話からわかったこと") { ProfileView() }
             }
-            Section("継続鑑定") {
+            Section("メンバーシップ") {
                 if purchases.isPremium || serverPremium {
-                    Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.gold)
+                    Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.ink)
                     Button("サブスクリプションを管理") {
                         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
                         Task { try? await AppStore.showManageSubscriptions(in: scene) }
@@ -37,7 +41,7 @@ struct SettingsView: View {
                 if let email = auth.session?.user.email { Text(email) }
                 if auth.session != nil {
                     Button("ログアウト") { auth.signOut() }.foregroundStyle(FateTheme.ink)
-                    Button("アカウントを削除") { showDeleteConfirmation = true }.foregroundStyle(FateTheme.destructive)
+                    Button("アカウントを削除") { showDeleteConfirmation = true }.foregroundStyle(FateTheme.danger)
                 }
                 else { Button("ログイン・新規登録") { AuthPresentation.shared.isPresented = true } }
             }
@@ -46,7 +50,7 @@ struct SettingsView: View {
                 Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                 Link("特定商取引法に基づく表記", destination: AppConfig.websiteBaseURL.appending(path: "/tokushohou"))
             }
-        }.scrollContentBackground(.hidden).background(FateTheme.ivory).fateScreenTitle("設定")
+        }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("設定")
             .confirmationDialog("アカウントを削除しますか", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
                 Button("削除する", role: .destructive) { Task { _ = await auth.deleteAccount() } }
                 Button("キャンセル", role: .cancel) {}

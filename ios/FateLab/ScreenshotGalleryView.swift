@@ -30,23 +30,23 @@ struct ScreenshotGalleryView: View {
                 case .profile: profile
                 }
             }
-            .background(FateTheme.ivory)
+            .background(FateTheme.canvas)
         }
     }
 
     private var auth: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text("FATE LAB · MEMBER").font(.caption).tracking(4).foregroundStyle(FateTheme.gold)
-                Text("ログイン").font(.system(size: 31, weight: .medium, design: .serif))
+                Text("FATE LAB · MEMBER").font(.caption).tracking(4).foregroundStyle(FateTheme.ink)
+                Text("ログイン").font(.system(size: 31, weight: .medium))
                 Text("鑑定書と質問の内容を安全に保存します。先ほどの鑑定内容もそのまま引き継げます。")
                     .foregroundStyle(FateTheme.muted).lineSpacing(6)
                 TextField("メールアドレス", text: .constant("")).textFieldStyle(.roundedBorder)
                 SecureField("パスワード（8文字以上）", text: .constant("")).textFieldStyle(.roundedBorder)
-                Button("ログイン") {}.buttonStyle(GoldButtonStyle())
+                Button("ログイン") {}.buttonStyle(FLPrimaryButtonStyle())
                 Divider().overlay(FateTheme.line)
                 Text("はじめての方").font(.caption).foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
-                Button("新規登録（無料）") {}.buttonStyle(OutlineGoldButtonStyle())
+                Button("新規登録（無料）") {}.buttonStyle(FLSecondaryButtonStyle())
             }.padding(28)
         }.fateScreenTitle("FATE LAB")
             .toolbar {
@@ -60,26 +60,26 @@ struct ScreenshotGalleryView: View {
     private var report: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("鑑定が完了しました").font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
-                Text("命式鑑定書").font(.system(size: 32, weight: .medium, design: .serif))
+                Text("鑑定が完了しました").font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
+                Text("命式鑑定書").font(.system(size: 32, weight: .medium))
                 ReportCard {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("先に読む要約").font(.system(size: 21, weight: .medium, design: .serif))
+                        Text("先に読む要約").font(.system(size: 21, weight: .medium))
                         Text("周囲をよく見ながら、自分で決めたことは最後まで形にする人です。人との関係では、曖昧なまま進めるより、言葉で確かめ合えると安心できます。")
                             .lineSpacing(7)
                     }
                 }
-                Text("命式・計算データ").font(.system(size: 23, weight: .medium, design: .serif))
+                Text("命式・計算データ").font(.system(size: 23, weight: .medium))
                 ReportCard { Text("四柱推命　日柱：壬午\n算命学　中心星：鳳閣星\n西洋占星術　太陽：魚座").lineSpacing(8) }
-                Text("共通して現れた本質").font(.system(size: 23, weight: .medium, design: .serif))
+                Text("共通して現れた本質").font(.system(size: 23, weight: .medium))
                 Text("考えを整理し、相手に伝わる形へ整えることが得意です。責任を引き受ける場面では、途中で投げずに完成まで進めます。")
                     .lineSpacing(8)
                 ReportCard {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("さらに深掘り鑑定へ").font(.system(size: 21, weight: .medium, design: .serif))
+                        Text("さらに深掘り鑑定へ").font(.system(size: 21, weight: .medium))
                         Text("9つの占術結果をもとに、恋愛・仕事・時期などを詳しく質問できます。")
                             .font(.footnote).foregroundStyle(FateTheme.muted)
-                        Button("この結果について質問する（無料）") {}.buttonStyle(GoldButtonStyle())
+                        Button("この結果について質問する（無料）") {}.buttonStyle(FLPrimaryButtonStyle())
                     }
                 }
             }.padding(20)
@@ -93,19 +93,19 @@ struct ScreenshotGalleryView: View {
                 historyRow("1997年7月30日の命式鑑定書", "仕事の転機について", "質問 2件 ・ 8/15")
                 historyRow("1995年3月16日の命式鑑定書", "今後3年の流れについて", "質問 1件 ・ 8/14")
             } header: { Text("3件") }
-            Section { Button("新しく鑑定する") {}.buttonStyle(OutlineGoldButtonStyle()).listRowBackground(FateTheme.ivory) }
+            Section { Button("新しく鑑定する") {}.buttonStyle(FLSecondaryButtonStyle()).listRowBackground(FateTheme.canvas) }
         }.scrollContentBackground(.hidden).fateScreenTitle("鑑定書一覧")
     }
 
     private func historyRow(_ title: String, _ subtitle: String, _ meta: String) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 7) {
-                Text(title).font(.system(size: 18, weight: .medium, design: .serif))
+                Text(title).font(.system(size: 18, weight: .medium))
                 Text(subtitle).font(.caption).foregroundStyle(FateTheme.muted)
-                Text(meta).font(.caption2).foregroundStyle(FateTheme.weak)
+                Text(meta).font(.caption2).foregroundStyle(FateTheme.muted)
             }
-            Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.weak)
-        }.padding(.vertical, 10).listRowBackground(FateTheme.paper)
+            Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted)
+        }.padding(.vertical, 10).listRowBackground(FateTheme.surface)
     }
 
     private func chat(paywall: Bool) -> some View {
@@ -115,13 +115,13 @@ struct ScreenshotGalleryView: View {
                     Text("無料でお読みいただける残り：1回")
                         .font(.system(size: 14)).foregroundStyle(FateTheme.muted)
                     Text("継続鑑定では、回数の制限なくお読みいただけます")
-                        .font(.system(size: 13)).foregroundStyle(FateTheme.gold)
-                    ReportCard { HStack { Text("もとの鑑定書を確認").font(.system(size: 17, weight: .medium, design: .serif)); Spacer(); Image(systemName: "chevron.right") } }
+                        .font(.system(size: 13)).foregroundStyle(FateTheme.ink)
+                    ReportCard { HStack { Text("もとの鑑定書を確認").font(.system(size: 17, weight: .medium)); Spacer(); Image(systemName: "chevron.right") } }
                     bubble("2027年の恋愛と結婚の流れを詳しく知りたいです。", user: true)
                     bubble("2027年は、関係を曖昧なままにせず、今後について具体的に話しやすい時期です。\n\n・交際を正式な形にする\n・同居や結婚後の生活を話し合う\n・仕事との両立条件を決める\n\nこうした現実的な話が進みやすくなります。", user: false)
                     if !paywall {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("続けて読み解く").font(.system(size: 16, weight: .medium, design: .serif)).padding(.bottom, 6)
+                            Text("続けて読み解く").font(.system(size: 16, weight: .medium)).padding(.bottom, 6)
                             ForEach(["この流れに向けて準備しておくことは？", "仕事と恋愛が重なる時期の考え方は？", "次の大きな転換期はいつごろ？"], id: \.self) { item in
                                 Text(item).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 14)
                                 Divider().overlay(FateTheme.line)
@@ -131,16 +131,16 @@ struct ScreenshotGalleryView: View {
                         Divider().overlay(FateTheme.line)
                         ReportCard {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("FATE LAB 継続鑑定").font(.caption).tracking(2).foregroundStyle(FateTheme.gold)
-                                Text("もう少し、深く読み解きますか。").font(.system(size: 22, weight: .medium, design: .serif))
+                                Text("FATE LAB 継続鑑定").font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
+                                Text("もう少し、深く読み解きますか。").font(.system(size: 22, weight: .medium))
                                 Text("保存した鑑定書をもとに、気になったことを回数制限なく質問できます。")
                                     .font(.footnote).foregroundStyle(FateTheme.muted)
                                 Text("月額 2,980円\n1ヶ月ごとの自動更新").font(.system(size: 17, weight: .semibold))
-                                Button("継続鑑定を始める") {}.buttonStyle(GoldButtonStyle())
-                                Button("購入内容を復元") {}.frame(maxWidth: .infinity).foregroundStyle(FateTheme.gold)
+                                Button("継続鑑定を始める") {}.buttonStyle(FLPrimaryButtonStyle())
+                                Button("購入内容を復元") {}.frame(maxWidth: .infinity).foregroundStyle(FateTheme.ink)
                                 Text("期間終了の24時間前までに解約されない場合は更新されます。解約はApp Storeの設定からいつでも行えます。")
                                     .font(.caption2).foregroundStyle(FateTheme.muted)
-                                Text("利用規約 ・ プライバシーポリシー").font(.caption).foregroundStyle(FateTheme.gold).frame(maxWidth: .infinity)
+                                Text("利用規約 ・ プライバシーポリシー").font(.caption).foregroundStyle(FateTheme.ink).frame(maxWidth: .infinity)
                             }
                         }
                     }
@@ -149,9 +149,9 @@ struct ScreenshotGalleryView: View {
             HStack(alignment: .bottom, spacing: 10) {
                 TextField("鑑定結果について質問する…", text: .constant(""), axis: .vertical)
                     .padding(12).background(.white).clipShape(RoundedRectangle(cornerRadius: 14))
-                Text("読み解く").font(.system(size: 14, weight: .semibold, design: .serif)).foregroundStyle(.white)
-                    .padding(.horizontal, 15).frame(height: 38).background(FateTheme.gold).clipShape(RoundedRectangle(cornerRadius: 8))
-            }.padding(14).background(FateTheme.ivory)
+                Text("読み解く").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                    .padding(.horizontal, 15).frame(height: 38).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 8))
+            }.padding(14).background(FateTheme.canvas)
         }.fateScreenTitle("鑑定結果への質問")
     }
 
@@ -160,23 +160,23 @@ struct ScreenshotGalleryView: View {
             VStack(alignment: .leading, spacing: 22) {
                 Text("無料でお読みいただける2回分を、ご利用いただきました。")
                     .font(.system(size: 15)).foregroundStyle(FateTheme.muted)
-                Text("FATE LAB 継続鑑定").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
+                Text("FATE LAB 継続鑑定").font(.caption).tracking(3).foregroundStyle(FateTheme.ink)
                 Text("この鑑定書を、\nいつでも開けるように。")
-                    .font(.system(size: 30, weight: .medium, design: .serif)).lineSpacing(5)
+                    .font(.system(size: 30, weight: .medium)).lineSpacing(5)
                 VStack(alignment: .leading, spacing: 14) {
                     Label("鑑定結果について、回数の制限なく質問できます", systemImage: "checkmark")
                     Label("これまでの質問と回答は、いつでも読み返せます", systemImage: "checkmark")
                 }.lineSpacing(5)
                 Divider().overlay(FateTheme.line)
-                Text("月額 2,980円").font(.system(size: 24, weight: .semibold, design: .serif))
+                Text("月額 2,980円").font(.system(size: 24, weight: .semibold))
                 Text("1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
-                Button("継続鑑定を始める") {}.buttonStyle(GoldButtonStyle())
-                Button("購入を復元") {}.frame(maxWidth: .infinity).foregroundStyle(FateTheme.gold)
+                Button("継続鑑定を始める") {}.buttonStyle(FLPrimaryButtonStyle())
+                Button("購入を復元") {}.frame(maxWidth: .infinity).foregroundStyle(FateTheme.ink)
                 Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                     .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
-                Text("利用規約 ・ プライバシーポリシー").font(.caption).foregroundStyle(FateTheme.gold).frame(maxWidth: .infinity)
+                Text("利用規約 ・ プライバシーポリシー").font(.caption).foregroundStyle(FateTheme.ink).frame(maxWidth: .infinity)
             }.padding(24)
-        }.background(FateTheme.ivory).fateScreenTitle("継続鑑定")
+        }.background(FateTheme.canvas).fateScreenTitle("継続鑑定")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {} label: { Image(systemName: "xmark") }
@@ -189,7 +189,7 @@ struct ScreenshotGalleryView: View {
         HStack {
             if user { Spacer(minLength: 48) }
             Text(text).lineSpacing(7).padding(16)
-                .background(user ? FateTheme.gold.opacity(0.14) : FateTheme.paper)
+                .background(user ? FateTheme.ink.opacity(0.14) : FateTheme.surface)
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             if !user { Spacer(minLength: 24) }
@@ -199,12 +199,12 @@ struct ScreenshotGalleryView: View {
     private var premium: some View {
         List {
             Section("継続鑑定") {
-                Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.gold)
+                Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.ink)
                 Text("鑑定結果について、回数制限なく質問できます。")
                 Button("サブスクリプションを管理") {}
                 Button("購入を復元") {}
             }
-            Section("アカウント") { Text("sample@fate-lab.com"); Button("ログアウト") {}.foregroundStyle(FateTheme.ink); Button("アカウントを削除") {}.foregroundStyle(FateTheme.destructive) }
+            Section("アカウント") { Text("sample@fate-lab.com"); Button("ログアウト") {}.foregroundStyle(FateTheme.ink); Button("アカウントを削除") {}.foregroundStyle(FateTheme.danger) }
             Section("サービスについて") { Text("利用規約"); Text("プライバシーポリシー"); Text("特定商取引法に基づく表記") }
         }.scrollContentBackground(.hidden).fateScreenTitle("設定")
     }
@@ -212,8 +212,8 @@ struct ScreenshotGalleryView: View {
     private var profile: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(3).foregroundStyle(FateTheme.gold)
-                Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium, design: .serif))
+                Text("FATE LAB · YOUR PROFILE").font(.caption).tracking(3).foregroundStyle(FateTheme.ink)
+                Text("あなたについて\nわかってきたこと").font(.system(size: 31, weight: .medium))
                 Text("質問を重ねながら『合っている』と選んだ内容だけを保存します。")
                     .foregroundStyle(FateTheme.muted).lineSpacing(6)
                 ReportCard { Text("責任の範囲と期限が明確なとき、安心して力を発揮できます。").lineSpacing(6) }
@@ -238,7 +238,7 @@ private struct LiveReportScreenshotView: View {
             } else if let errorMessage {
                 ReportCard { Text(errorMessage).foregroundStyle(.red) }.padding(20)
             } else {
-                ProgressView("実際の無料鑑定書を生成しています…").tint(FateTheme.gold)
+                ProgressView("実際の無料鑑定書を生成しています…").tint(FateTheme.ink)
             }
         }.task { await load() }.fateScreenTitle("命式鑑定書")
     }
