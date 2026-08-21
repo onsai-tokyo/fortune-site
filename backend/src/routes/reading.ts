@@ -60,13 +60,16 @@ readingRouter.get('/shares/:shareId', async (req, res) => {
 readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   try {
     const db = getSupabaseUser(req.accessToken!)
-    const [{ data: usage }, premium, { count: approvedCount }] = await Promise.all([
+    const [{ data: usage }, premium, { count: approvedCount }, { data: latestConversations, error: latestError }] = await Promise.all([
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
       hasPremiumAccess(req.userId!),
       db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
+      db.from('reading_conversations').select('id').eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(1),
     ])
+    if (latestError) throw latestError
     const used = usage?.free_questions_used ?? 0
-    res.json({ premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0 })
+    const latestConversationId = latestConversations?.[0]?.id ?? null
+    res.json({ premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0, hasReading: Boolean(latestConversationId), latestConversationId })
   } catch (error) {
     console.error('Reading status failed:', error)
     res.status(500).json({ error: '利用状況を確認できませんでした' })

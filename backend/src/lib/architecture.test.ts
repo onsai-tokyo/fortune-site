@@ -121,3 +121,14 @@ test('相性生成は個人情報を含めず停止理由と出力量を計測�
   assert.match(partners, /attemptDurationMs/)
   assert.doesNotMatch(partners, /Compatibility generation metric[\s\S]{0,500}(birth_data|calculated_data|display_name)/)
 })
+
+test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
+  const root = read('ios/FateLab/RootView.swift')
+  const reading = read('backend/src/routes/reading.ts')
+  assert.doesNotMatch(root, /fatelab\.onboarding\.completed/)
+  assert.match(root, /APIClient\.shared\.status\(auth: auth\)/)
+  assert.match(root, /status\.latestConversationID/)
+  assert.match(root, /SavedReadingView\(conversationID: initialConversationID\)/)
+  assert.match(reading, /latestConversationId/)
+  assert.match(reading, /reading_conversations.*order\('updated_at'/s)
+})

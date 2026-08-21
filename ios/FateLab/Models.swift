@@ -69,6 +69,13 @@ struct ReadingStatus: Codable {
     let limit: Int
     let remaining: Int?
     let approvedCount: Int?
+    let hasReading: Bool?
+    let latestConversationID: UUID?
+
+    enum CodingKeys: String, CodingKey {
+        case premium, used, limit, remaining, approvedCount, hasReading
+        case latestConversationID = "latestConversationId"
+    }
 }
 
 struct ProfileTrait: Codable, Identifiable {

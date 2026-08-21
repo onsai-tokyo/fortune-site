@@ -4,11 +4,8 @@ struct RootView: View {
     @EnvironmentObject private var auth: AuthStore
     @StateObject private var authPresentation = AuthPresentation.shared
     @StateObject private var tabRouter = AppTabRouter()
-    @AppStorage("fatelab.onboarding.completed") private var onboardingCompleted = false
-    @AppStorage("fatelab.profile.birthInput") private var storedBirthInput = ""
-    @State private var onboardingInput: BirthInput?
-    @State private var shouldAutoGenerate = false
     @State private var showingSplash = true
+    @State private var landingState: LandingState = .loading
 
     var body: some View {
         Group {
@@ -16,15 +13,20 @@ struct RootView: View {
                 SplashView()
             } else if AppConfig.requiresAuthentication && auth.session == nil {
                 AuthView(allowsDismissal: false)
-            } else if onboardingCompleted {
-                mainTabs
             } else {
-                OnboardingView { input in
-                    onboardingInput = input
-                    if let data = try? JSONEncoder().encode(input) { storedBirthInput = data.base64EncodedString() }
-                    shouldAutoGenerate = true
-                    onboardingCompleted = true
-                    tabRouter.selectedTab = 0
+                switch landingState {
+                case .loading:
+                    ProgressView("鑑定書を確認しています…").tint(FateTheme.ink)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
+                case .newUser:
+                    mainTabs(latestConversationID: nil)
+                case .returning(let conversationID):
+                    mainTabs(latestConversationID: conversationID)
+                case .failed(let message):
+                    VStack(spacing: 16) {
+                        ContentUnavailableView("鑑定書を確認できませんでした", systemImage: "wifi.exclamationmark", description: Text(message))
+                        Button("再試行") { Task { await loadLandingState() } }.buttonStyle(FLSecondaryButtonStyle())
+                    }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
                 }
             }
         }
@@ -34,11 +36,12 @@ struct RootView: View {
         }
         .environmentObject(tabRouter)
         .task { try? await Task.sleep(for: .seconds(1)); withAnimation(.easeOut(duration: 0.22)) { showingSplash = false } }
+        .task(id: auth.session?.user.id) { await loadLandingState() }
     }
 
-    private var mainTabs: some View {
+    private func mainTabs(latestConversationID: UUID?) -> some View {
         TabView(selection: $tabRouter.selectedTab) {
-            NavigationStack { YourReadingRootView(initialInput: onboardingInput ?? savedBirthInput, autoGenerate: shouldAutoGenerate) }
+            NavigationStack { YourReadingRootView(initialConversationID: latestConversationID) }
                 .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(0)
             NavigationStack { PartnerProfilesView() }
                 .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(1)
@@ -51,26 +54,51 @@ struct RootView: View {
         .background(FateTheme.canvas)
     }
 
-    private var savedBirthInput: BirthInput? { guard let data = Data(base64Encoded: storedBirthInput) else { return nil }; return try? JSONDecoder().decode(BirthInput.self, from: data) }
+    private func loadLandingState() async {
+        guard auth.session != nil else { landingState = .loading; return }
+        landingState = .loading
+        do {
+            let status = try await APIClient.shared.status(auth: auth)
+            if let conversationID = status.latestConversationID { landingState = .returning(conversationID) }
+            else { landingState = .newUser }
+        } catch { landingState = .failed(userFacingMessage(error) ?? "通信状態を確認して、もう一度お試しください。") }
+    }
+
+    private enum LandingState {
+        case loading
+        case newUser
+        case returning(UUID)
+        case failed(String)
+    }
 }
 
 private struct YourReadingRootView: View {
-    @EnvironmentObject private var auth: AuthStore
-    let initialInput: BirthInput?
-    let autoGenerate: Bool
+    let initialConversationID: UUID?
     @State private var showsInput: Bool
+    @State private var showsList = false
 
-    init(initialInput: BirthInput?, autoGenerate: Bool) {
-        self.initialInput = initialInput
-        self.autoGenerate = autoGenerate
-        _showsInput = State(initialValue: autoGenerate)
+    init(initialConversationID: UUID?) {
+        self.initialConversationID = initialConversationID
+        _showsInput = State(initialValue: initialConversationID == nil)
     }
 
     var body: some View {
-        if auth.session != nil && !showsInput {
-            ReadingListView { showsInput = true }
-        } else {
-            HomeView(initialInput: initialInput, autoGenerate: autoGenerate)
+        Group {
+            if showsInput {
+                HomeView()
+            } else if showsList {
+                ReadingListView { showsInput = true; showsList = false }
+            } else if let initialConversationID {
+                SavedReadingView(conversationID: initialConversationID)
+            } else {
+                HomeView()
+            }
+        }
+        .toolbar {
+            if !showsInput, !showsList, initialConversationID != nil {
+                ToolbarItem(placement: .topBarLeading) { Button("鑑定一覧") { showsList = true } }
+                ToolbarItem(placement: .topBarTrailing) { Button("新しく鑑定") { showsInput = true } }
+            }
         }
     }
 }
