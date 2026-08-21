@@ -120,12 +120,14 @@ struct GeneratedReport {
     let calculatedData: [String: Any]
     let text: String
     let cards: [ReadingCard]
+    var conversationID: UUID?
 
-    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = []) {
+    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = [], conversationID: UUID? = nil) {
         self.birthData = birthData
         self.calculatedData = calculatedData
         self.text = text
         self.cards = cards
+        self.conversationID = conversationID
     }
 }
 
@@ -167,7 +169,7 @@ struct ReadingCardEvidence: Codable {
 struct ReadingMessage: Codable, Identifiable {
     let id: UUID?
     let role: String
-    let content: String
+    var content: String
     let createdAt: String?
 
     enum CodingKeys: String, CodingKey {

@@ -11,6 +11,7 @@ import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { writeReportWithAi } from '../lib/report/aiWriter.js'
 import { replaceTimingCards } from '../lib/report/timingCards.js'
+import { correlationId, sendApiError } from '../lib/apiError.js'
 
 export const previewRouter = Router()
 
@@ -165,16 +166,15 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     res.json(response)
     return
   } catch (err) {
+    const requestId = correlationId(req)
     console.error('Preview generate error', {
-      correlationId: requestCorrelationId(req.body),
+      correlationId: requestId,
+      inputHash: requestCorrelationId(req.body),
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
     })
     if (!res.headersSent) {
-      res.status(500).json({
-        error: 'プレビューの生成に失敗しました',
-        ...(process.env.NODE_ENV !== 'production' ? { detail: err instanceof Error ? err.message : String(err) } : {}),
-      })
+      sendApiError(res, 500, 'GENERATION_FAILED', '鑑定書を生成できませんでした。もう一度お試しください。', true, requestId)
     } else {
       res.write('data: [DONE]\n\n')
       res.end()

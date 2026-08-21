@@ -6,6 +6,7 @@ import { createHash } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
+import { correlationId, sendApiError } from '../lib/apiError.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -54,12 +55,18 @@ function parseCompatibility(raw: string): StructuredReport {
 partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
   try {
     const db = getSupabaseAdmin()
+    const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+      sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
+    }
     const [{ data: partner }, { data: self }] = await Promise.all([
       db.from('partner_profiles').select('*').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle(),
-      db.from('reading_conversations').select('birth_data,calculated_data').eq('user_id', req.userId!).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      db.from('reading_conversations').select('id,birth_data,calculated_data').eq('id', conversationId).eq('user_id', req.userId!).maybeSingle(),
     ])
     if (!partner) { res.status(404).json({ error: '相手が見つかりません' }); return }
-    if (!self?.birth_data || !self?.calculated_data) { res.status(409).json({ error: '先に「あなたについて」で鑑定を作成してください' }); return }
+    if (!self?.birth_data || !self?.calculated_data) {
+      sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
+    }
     const relationshipType = req.body?.relationshipType === 'friend' ? 'friend' : 'romantic'
     const [year, month, day] = String(partner.birth_date).split('-').map(Number)
     const [hour, minute] = partner.birth_time ? String(partner.birth_time).split(':').map(Number) : [undefined, 0]
@@ -70,7 +77,8 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
       sanmei: calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays),
       sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)),
     }
-    const cacheKey = createHash('sha256').update(`compat-v1|${req.userId}|${partner.id}|${relationshipType}|${JSON.stringify(self.birth_data)}`).digest('hex')
+    const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
+    const cacheKey = createHash('sha256').update(`compat-v2|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     const { data: cached } = await db.from('ai_report_cache').select('payload').eq('cache_key', cacheKey).maybeSingle()
     if (cached?.payload) { res.json(cached.payload); return }
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードをJSONだけで返してください。
@@ -82,7 +90,7 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     const block = message.content.find(item => item.type === 'text')
     if (!block || block.type !== 'text') throw new Error('AI応答がありません')
     const report = parseCompatibility(block.text)
-    const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v1', payload: report })
+    const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v2', payload: report })
     if (cacheError) throw cacheError
     res.json(report)
   } catch (error) {

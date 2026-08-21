@@ -14,6 +14,11 @@ struct ReadingChatView: View {
     @State private var showSourceReport = false
     @State private var followUpSuggestions: [String] = []
     @State private var didLoad = false
+    @State private var shouldFollowLatest = true
+    @State private var streamRevision = 0
+    @State private var forceScrollRevision = 0
+    @State private var lastStreamScroll = Date.distantPast
+    @State private var streamTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -52,10 +57,20 @@ struct ReadingChatView: View {
                     }.padding(18)
                 }
                 .defaultScrollAnchor(.bottom)
-                .onChange(of: messages.count) { _, _ in withAnimation { proxy.scrollTo("bottom") } }
+                .simultaneousGesture(DragGesture().onChanged { _ in shouldFollowLatest = false })
+                .onChange(of: forceScrollRevision) { _, _ in withAnimation { proxy.scrollTo("bottom") } }
+                .onChange(of: streamRevision) { _, _ in
+                    guard shouldFollowLatest, Date().timeIntervalSince(lastStreamScroll) >= 0.15 else { return }
+                    lastStreamScroll = Date()
+                    withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("bottom") }
+                }
             }
 
             if isBlocked { inlinePaywall }
+            if !shouldFollowLatest {
+                Button("最新へ戻る") { shouldFollowLatest = true; forceScrollRevision += 1 }
+                    .font(.caption).padding(.vertical, 8)
+            }
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -64,15 +79,14 @@ struct ReadingChatView: View {
                     TextField("鑑定結果について質問する…", text: $input, axis: .vertical)
                         .lineLimit(1...5).padding(12).background(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
-                    Button("送信") {
+                    Button(isWorking ? "停止" : "送信") {
+                        if isWorking { streamTask?.cancel(); return }
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !question.isEmpty else { return }
-                        if isBlocked { showPaywall = true } else { Task { await send() } }
+                        if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
                     }.font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(FateTheme.buttonText).padding(.horizontal, 15).frame(height: 38)
                         .background(FateTheme.buttonBackground).clipShape(RoundedRectangle(cornerRadius: 12))
-                        .disabled(isWorking)
-                        .opacity(isWorking ? 0.4 : 1)
                 }
             }.padding(14).background(FateTheme.ivory)
         }
@@ -126,7 +140,9 @@ struct ReadingChatView: View {
     private func messageBubble(_ message: ReadingMessage) -> some View {
         HStack {
             if message.role == "user" { Spacer(minLength: 24) }
-            Text(message.content).font(.system(size: 16)).lineSpacing(7)
+            Text(message.role == "assistant" && message.content.isEmpty && isWorking ? "読み解いています…" : message.content)
+                .font(.system(size: 16)).lineSpacing(7)
+                .foregroundStyle(message.content.isEmpty ? FateTheme.secondaryText : FateTheme.primaryText)
                 .padding(message.role == "user" ? 14 : 0)
                 .background(message.role == "user" ? Color(red: 0.937, green: 0.914, blue: 0.867) : .clear)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -163,18 +179,33 @@ struct ReadingChatView: View {
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty else { return }
         input = ""; errorMessage = nil; isWorking = true
+        shouldFollowLatest = true
         messages.append(ReadingMessage(id: nil, role: "user", content: question, createdAt: nil))
+        let firstNewIndex = messages.count - 1
+        messages.append(ReadingMessage(id: nil, role: "assistant", content: "", createdAt: nil))
+        let assistantIndex = messages.count - 1
+        forceScrollRevision += 1
         do {
-            let answer = try await APIClient.shared.ask(conversationID: conversationID, question: question, auth: auth)
-            messages.append(ReadingMessage(id: nil, role: "assistant", content: answer.text, createdAt: nil))
-            followUpSuggestions = answer.suggestions
+            var didFinish = false
+            for try await event in APIClient.shared.askStream(conversationID: conversationID, question: question, auth: auth) {
+                switch event {
+                case .delta(let text):
+                    messages[assistantIndex].content += text
+                    streamRevision += 1
+                case .meta(let suggestions): followUpSuggestions = suggestions
+                case .done: didFinish = true
+                }
+            }
+            if !didFinish { throw CancellationError() }
             await loadStatus()
         } catch {
-            messages.removeLast(); input = question; errorMessage = userFacingMessage(error)
+            messages.removeSubrange(firstNewIndex..<messages.count)
+            input = question; errorMessage = userFacingMessage(error)
             if case APIError.paymentRequired = error { showPaywall = true }
             await loadStatus()
         }
         isWorking = false
+        streamTask = nil
     }
 }
 

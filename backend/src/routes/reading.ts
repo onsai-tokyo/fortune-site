@@ -9,6 +9,8 @@ import { buildPublicReadingShare } from '../lib/readingShare.js'
 import { filterTraitCandidates } from '../lib/profileTraits.js'
 import { hasPremiumAccess } from '../lib/premium.js'
 import { buildStructuredReport } from '../lib/reportCards.js'
+import { StreamingAnswerParser } from '../lib/sseAnswerParser.js'
+import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -253,6 +255,7 @@ readingRouter.delete('/conversations/:id', requireAuth, async (req: AuthRequest,
 readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
   let chargedFreeQuestion = false
+  let userMessageId: string | undefined
   try {
     const checkedQuestion = validateReadingQuestion(req.body?.question)
     if (!checkedQuestion.ok) { res.status(checkedQuestion.status).json({ error: checkedQuestion.error }); return }
@@ -276,8 +279,10 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
     const { data: prior, error: priorError } = await db.from('reading_messages').select('role,content,created_at')
       .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at', { ascending: false }).limit(20)
     if (priorError) throw priorError
-    const { error: userMessageError } = await db.from('reading_messages').insert({ conversation_id: conversation.id, user_id: req.userId, role: 'user', content: question })
+    const { data: userMessage, error: userMessageError } = await db.from('reading_messages')
+      .insert({ conversation_id: conversation.id, user_id: req.userId, role: 'user', content: question }).select('id').single()
     if (userMessageError) throw userMessageError
+    userMessageId = userMessage?.id
 
     const reportExcerpt = String(conversation.report_text).slice(0, 16000)
     const calculated = JSON.stringify(conversation.calculated_data).slice(0, 18000)
@@ -287,11 +292,8 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
 複数の見方で一致する場合は共通点を説明し、異なる場合は無理に統合せず違いを明示してください。未来を確定事項として断言せず「傾向」「流れ」「可能性」「起こりやすい」を使ってください。
 利用者向け文章でAI、LLM、ChatGPT、Claudeなどの内部技術名を名乗らず、人間の占い師・鑑定士であるようにも振る舞わないでください。
 医療・法律・投資などの専門判断を代替しないでください。根拠のない確率を作らないでください。
-見出しを付けず、話しかけるように答えてください。1文目で質問への答えを言い切り、前置きはしないでください。
-全体で3〜5文、200〜300字程度にし、理由は1つだけ挙げてください。箇条書きは複数を求める質問のときだけ使ってください。
-注意点は本当に必要なときだけ最後に1文で添え、硬い言い回しを避けて日常の言葉で書いてください。長い鑑定書を作り直さず、断定して終えてください。
-Markdownの太字記号「**」と見出し記号「#」は出力禁止です。
-専門用語を並べず、占いに詳しくない人にも分かる日常的な表現を使ってください。断定や過度な煽りを避け、読み手へ話しかける柔らかい文体にしてください。
+${conciseConversationInstruction}
+注意点は本当に必要なときだけ最後に1文で添え、硬い言い回しを避けてください。
 回答本文を書き終えたら、改行して ---NEXT--- と書き、そのあとに次に聞ける質問を3件、接頭辞を付けず1行ずつ書いてください。
 
 【出生情報】${birth}
@@ -308,21 +310,22 @@ Markdownの太字記号「**」と見出し記号「#」は出力禁止です。
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'private, no-store')
     res.setHeader('X-Accel-Buffering', 'no')
-    let generated = ''
-    const stream = getClient().messages.stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 1200, system, messages: history })
+    res.flushHeaders()
+    const parser = new StreamingAnswerParser()
+    let disconnected = false
+    const stream = getClient().messages.stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, system, messages: history })
+    res.once('close', () => {
+      if (!res.writableEnded) { disconnected = true; stream.abort() }
+    })
     for await (const event of stream) {
+      if (disconnected) throw new Error('Client disconnected')
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        generated += event.delta.text
+        const safeText = parser.push(event.delta.text)
+        if (safeText) res.write(`data: ${JSON.stringify({ delta: { text: safeText } })}\n\n`)
       }
     }
-    const [bodyPart, suggestionsPart = ''] = generated.split('---NEXT---', 2)
-    const answer = bodyPart
-      .replace(/^次の質問[：:].*$/gm, '')
-      .trim()
-    const suggestions = suggestionsPart.split('\n')
-      .map(line => line.replace(/^[-・*\d.\s]+/, '').replace(/^次の質問[：:]\s*/, '').trim())
-      .filter(Boolean).slice(0, 3)
-    if (answer) res.write(`data: ${JSON.stringify({ delta: { text: answer } })}\n\n`)
+    const { answer, suggestions, finalDelta } = parser.finish()
+    if (finalDelta) res.write(`data: ${JSON.stringify({ delta: { text: finalDelta } })}\n\n`)
     const systems = [...new Set((answer.match(/四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音/g) ?? []))]
     const { data: assistantMessage, error: assistantMessageError } = await db.from('reading_messages')
       .insert({ conversation_id: conversation.id, user_id: req.userId, role: 'assistant', content: answer, referenced_systems: systems })
@@ -353,10 +356,14 @@ Markdownの太字記号「**」と見出し記号「#」は出力禁止です。
     res.write(`data: ${JSON.stringify({ meta: { referencedSystems: systems, traits, suggestions } })}\n\n`)
     res.write('data: [DONE]\n\n'); res.end()
   } catch (error) {
+    if (userMessageId) {
+      try { await db.from('reading_messages').delete().eq('id', userMessageId).eq('user_id', req.userId!) } catch { /* keep original error */ }
+    }
     if (chargedFreeQuestion && req.userId) {
       try { await db.rpc('refund_free_reading_question', { target_user_id: req.userId }) } catch { /* keep original error */ }
     }
     console.error('Reading question failed:', { userId: req.userId, conversationId: req.params.id, chargedFreeQuestion, error })
+    if (res.destroyed || res.writableEnded) return
     if (!res.headersSent) res.status(500).json({ error: '読み解きを続けられませんでした。時間をおいて再度お試しください。' })
     else { res.write(`data: ${JSON.stringify({ error: '読み解きを続けられませんでした' })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }
   }

@@ -10,6 +10,10 @@ enum APIError: LocalizedError {
     case invalidResponse
     case timeout
     case http(status: Int, message: String)
+    case authSessionInvalid(String)
+    case selfReadingRequired(String)
+    case dependencyNotReady(String)
+    case generationTimeout(String)
     case paymentRequired(String)
     case rateLimited(String)
     case server(String)
@@ -18,6 +22,8 @@ enum APIError: LocalizedError {
         case .invalidResponse: "読み込めませんでした。通信環境を確認して、もう一度お試しください"
         case .timeout: "45秒以内に応答がありませんでした。時間を置いて再試行してください（タイムアウト）"
         case .http(let status, let message): "\(message)（HTTP \(status)）"
+        case .authSessionInvalid(let message), .selfReadingRequired(let message),
+             .dependencyNotReady(let message), .generationTimeout(let message): message
         case .paymentRequired(let message): "\(message)（HTTP 402）"
         case .rateLimited(let message): "\(message)（HTTP 429）"
         case .server(let message): message
@@ -28,6 +34,12 @@ enum APIError: LocalizedError {
 struct ChatAnswer {
     let text: String
     let suggestions: [String]
+}
+
+enum ChatEvent: Sendable {
+    case delta(String)
+    case meta([String])
+    case done
 }
 
 @MainActor
@@ -85,10 +97,17 @@ struct APIClient {
                     .compactMap { object?[$0] as? String }
                     .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                 let message = serverMessage ?? "一時的に接続できませんでした。もう一度お試しください"
-                let error: APIError = switch http.statusCode {
+                let apiCode = object?["code"] as? String
+                let error: APIError = switch apiCode {
+                case "AUTH_SESSION_INVALID": .authSessionInvalid(message)
+                case "SELF_READING_REQUIRED": .selfReadingRequired(message)
+                case "DEPENDENCY_NOT_READY": .dependencyNotReady(message)
+                case "GENERATION_TIMEOUT": .generationTimeout(message)
+                default: switch http.statusCode {
                 case 402: .paymentRequired(message)
                 case 429: .rateLimited("アクセスが集中しています。少し待ってから、もう一度お試しください")
                 default: .http(status: http.statusCode, message: message)
+                }
                 }
                 lastError = error
                 let transientStatusCodes = [500, 502, 503, 504]
@@ -179,10 +198,10 @@ struct APIClient {
         _ = try await data(for: request(path: "/api/partners/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
     }
 
-    func compatibility(partnerID: UUID, relationshipType: String, auth: AuthStore) async throws -> StructuredReportResponse {
+    func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, auth: AuthStore) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
         let raw = try await data(for: request(path: "/api/partners/\(partnerID.uuidString)/compatibility", method: "POST",
-                                               token: token, json: ["relationshipType": relationshipType]), retryTransient: true, auth: auth)
+                                               token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString]), retryTransient: true, auth: auth)
         return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
     }
 
@@ -244,6 +263,63 @@ struct APIClient {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { throw APIError.server("回答を取得できませんでした") }
         return ChatAnswer(text: cleaned, suggestions: suggestions)
+    }
+
+    func askStream(conversationID: UUID, question: String, auth: AuthStore) -> AsyncThrowingStream<ChatEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task { @MainActor in
+                do {
+                    var token = try await auth.validAccessToken()
+                    var call = try request(path: "/api/reading/conversations/\(conversationID.uuidString)/questions",
+                                           method: "POST", token: token, json: ["question": question])
+                    var refreshed = false
+                    while true {
+                        let (bytes, response) = try await URLSession.shared.bytes(for: call)
+                        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+                        if http.statusCode == 401, !refreshed {
+                            token = try await auth.validAccessToken(forceRefresh: true)
+                            call.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                            refreshed = true
+                            continue
+                        }
+                        guard 200..<300 ~= http.statusCode else {
+                            var body = ""
+                            for try await line in bytes.lines { body += line }
+                            let object = body.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+                            let message = object?["error"] as? String ?? "読み解きを続けられませんでした"
+                            let code = object?["code"] as? String
+                            if code == "AUTH_SESSION_INVALID" {
+                                auth.signOut(); AuthPresentation.shared.isPresented = true
+                                throw APIError.authSessionInvalid(message)
+                            }
+                            if code == "SELF_READING_REQUIRED" { throw APIError.selfReadingRequired(message) }
+                            if code == "DEPENDENCY_NOT_READY" { throw APIError.dependencyNotReady(message) }
+                            if code == "GENERATION_TIMEOUT" { throw APIError.generationTimeout(message) }
+                            if http.statusCode == 402 { throw APIError.paymentRequired(message) }
+                            if http.statusCode == 429 { throw APIError.rateLimited(message) }
+                            throw APIError.http(status: http.statusCode, message: message)
+                        }
+                        for try await line in bytes.lines {
+                            try Task.checkCancellation()
+                            guard line.hasPrefix("data: ") else { continue }
+                            let payload = String(line.dropFirst(6))
+                            if payload == "[DONE]" { continuation.yield(.done); continuation.finish(); return }
+                            guard let data = payload.data(using: .utf8),
+                                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+                            if let error = object["error"] as? String { throw APIError.server(error) }
+                            if let delta = object["delta"] as? [String: Any], let text = delta["text"] as? String { continuation.yield(.delta(text)) }
+                            if let meta = object["meta"] as? [String: Any], let suggestions = meta["suggestions"] as? [String] { continuation.yield(.meta(suggestions)) }
+                        }
+                        continuation.yield(.done); continuation.finish(); return
+                    }
+                } catch is CancellationError {
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
     }
 
     func generateReport(input: BirthInput, auth: AuthStore? = nil,

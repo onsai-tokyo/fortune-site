@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showGenderPicker = false
     @State private var draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
     @State private var errorMessage: String?
+    @State private var saveErrorMessage: String?
     private let autoGenerate: Bool
     @State private var didAutoGenerate = false
     private let prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"]
@@ -34,6 +35,12 @@ struct HomeView: View {
                 } else if let report {
                     VStack(alignment: .leading, spacing: 18) {
                         ReportView(report: report)
+                        if let saveErrorMessage {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(saveErrorMessage).font(.footnote).foregroundStyle(FateTheme.destructive)
+                                Button("保存を再試行") { Task { await saveGeneratedReport() } }.buttonStyle(OutlineGoldButtonStyle())
+                            }
+                        }
                         Button("別の人を鑑定する") { resetForAnotherPerson() }
                             .buttonStyle(OutlineGoldButtonStyle())
                     }
@@ -199,10 +206,30 @@ struct HomeView: View {
         isWorking = true; errorMessage = nil
         defer { isWorking = false }
         do {
-            let generated = try await APIClient.shared.generateReport(input: requestedInput, auth: auth) { progress = $0 }
-            if input == requestedInput { report = generated }
+            var generated = try await APIClient.shared.generateReport(input: requestedInput, auth: auth) { progress = $0 }
+            if input == requestedInput {
+                report = generated
+                if auth.session != nil {
+                    do {
+                        generated.conversationID = try await APIClient.shared.createConversation(report: generated, auth: auth)
+                        report = generated
+                        saveErrorMessage = nil
+                    } catch {
+                        saveErrorMessage = userFacingMessage(error) ?? ""
+                    }
+                }
+            }
         }
         catch { report = nil; errorMessage = userFacingMessage(error) }
+    }
+
+    private func saveGeneratedReport() async {
+        guard var current = report, current.conversationID == nil, auth.session != nil else { return }
+        do {
+            current.conversationID = try await APIClient.shared.createConversation(report: current, auth: auth)
+            report = current
+            saveErrorMessage = nil
+        } catch { saveErrorMessage = userFacingMessage(error) }
     }
 
     private func resetForAnotherPerson() {
@@ -210,6 +237,7 @@ struct HomeView: View {
         timeSelected = false
         report = nil
         errorMessage = nil
+        saveErrorMessage = nil
     }
 
     @ViewBuilder private func inputSection<Content: View>(_ number: String, _ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -300,7 +328,7 @@ struct ReportView: View {
         guard auth.session != nil else { return }
         isSaving = true; errorMessage = nil
         do {
-            let conversationID = try await APIClient.shared.createConversation(report: report, auth: auth)
+            let conversationID = if let existing = report.conversationID { existing } else { try await APIClient.shared.createConversation(report: report, auth: auth) }
             tabRouter.openChat(conversationID: conversationID, contextTitle: contextTitle)
         }
         catch { errorMessage = userFacingMessage(error) }

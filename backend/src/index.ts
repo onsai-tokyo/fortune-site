@@ -16,6 +16,21 @@ import { appleRouter, appStoreNotification } from './routes/apple.js'
 import { verifiedUserIdFromAuthorization } from './lib/rateLimitIdentity.js'
 import { partnersRouter } from './routes/partners.js'
 
+const dependencyStatus = {
+  supabaseUrl: Boolean(process.env.SUPABASE_URL),
+  supabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+  supabaseServiceKey: Boolean(process.env.SUPABASE_SERVICE_KEY),
+  anthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
+  jwtVerification: process.env.SUPABASE_JWT_SECRET ? 'HS256+ES256' : 'ES256_JWKS',
+}
+console.info('Dependency readiness configuration', dependencyStatus)
+if (process.env.SUPABASE_URL && !process.env.SUPABASE_JWT_SECRET) {
+  const jwksUrl = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/.well-known/jwks.json`
+  void fetch(jwksUrl, { signal: AbortSignal.timeout(5_000) })
+    .then(response => console.info('Supabase JWKS readiness', { reachable: response.ok, status: response.status }))
+    .catch(() => console.error('Supabase JWKS readiness', { reachable: false }))
+}
+
 const app = express()
 const PORT = process.env.PORT ?? 3001
 

@@ -5,6 +5,7 @@ import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } fro
 import type { ReportMetadata } from './metadata.js'
 
 const GENERATOR_VERSION = 'ai-cards-v2-timing'
+const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 8_000))
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
 
@@ -71,16 +72,22 @@ export async function writeReportWithAi(
   dependencies: AiWriterDependencies = productionDependencies(),
 ): Promise<StructuredReport> {
   const key = cacheKey(seed, metadata)
-  const cached = await dependencies.readCache(key)
-  if (cached) return cached
+  let timeout: ReturnType<typeof setTimeout> | undefined
   try {
-    const raw = await dependencies.generate(promptFor(fallback, metadata))
+    const cached = await dependencies.readCache(key)
+    if (cached) return cached
+    const raw = await Promise.race([
+      dependencies.generate(promptFor(fallback, metadata)),
+      new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error('AI report rewrite timed out')), AI_REWRITE_TIMEOUT_MS) }),
+    ])
     const report = parseAndValidateAiReport(raw, fallback)
     await dependencies.writeCache(key, report)
     return report
   } catch (error) {
     console.error('AI report generation rejected; deterministic fallback used', error instanceof Error ? error.message : String(error))
     return fallback
+  } finally {
+    if (timeout) clearTimeout(timeout)
   }
 }
 
@@ -97,7 +104,7 @@ function productionDependencies(): AiWriterDependencies {
     },
     async generate(prompt) {
       const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 16000, temperature: 0,
+        model: 'claude-sonnet-4-6', max_tokens: 6000, temperature: 0,
         messages: [{ role: 'user', content: prompt }],
       })
       const block = message.content.find(item => item.type === 'text')

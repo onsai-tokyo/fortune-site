@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { requirePoints } from '../middleware/points.js'
+import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 
 export const chatRouter = Router()
 
@@ -103,14 +104,12 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
 九星気学（本命星）：${calculatedData.honmeiName}${calculatedData.archetype ? `\n${calculatedData.archetype}` : ''}${calculatedData.sukuyoDetail ? `\n${calculatedData.sukuyoDetail}` : ''}${partnerBirthDate ? `\n\n【相手の情報】生年月日：${partnerBirthDate}　性別：${partnerGender === 'male' ? '男性' : '女性'}` : ''}`
     }
 
-    const systemPrompt = `あなたは四柱推命・算命学・宿曜・納音・数秘術・九星気学を30年以上研究してきた命術師です。
-相談者の命式データをもとに、温かみと確信をもって鑑定を行います。
-データに基づいた洞察を提供し、相談者が前に進むための具体的な指針を示します。
+    const systemPrompt = `提供された命式データだけを根拠に、安全な日本語で回答してください。
+${conciseConversationInstruction}
 
 【最重要】本日は${todayString}です。時期を言及する際は、必ず本日の日付を基準にしてください。過去の年月を未来として扱わないこと。
 
-【重要】必ず日本語のみで記述。「〜でしょう」「〜かもしれません」は禁止。断言調で答える。
-回答は300〜500字。箇条書き禁止。流れる文章で記述。最重要キーワードは **テキスト** で太字にする。${meishikiContext}`
+${meishikiContext}`
 
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
@@ -119,7 +118,7 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
 
     const stream = getClient().messages.stream({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      max_tokens: 400,
       system: systemPrompt,
       messages: history,
     })

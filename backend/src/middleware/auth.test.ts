@@ -28,7 +28,11 @@ test('reading authentication is required by default', async () => {
     let nextCalled = false
     await requireReadingAuth({ headers: {} } as AuthRequest, response, (() => { nextCalled = true }) as NextFunction)
     assert.equal(nextCalled, false)
-    assert.deepEqual(result(), { statusCode: 401, body: { error: 'ログインが必要です' } })
+    const failure = result() as { statusCode: number; body: Record<string, unknown> }
+    assert.equal(failure.statusCode, 401)
+    assert.equal(failure.body.code, 'AUTH_SESSION_INVALID')
+    assert.equal(failure.body.retryable, false)
+    assert.match(String(failure.body.correlationId), /^[0-9a-f-]{36}$/)
   } finally {
     if (original === undefined) delete process.env.REQUIRE_READING_AUTH
     else process.env.REQUIRE_READING_AUTH = original
@@ -91,7 +95,10 @@ test('requireAuth rejects an invalid signature without a Supabase request', asyn
     let nextCalled = false
     await requireAuth({ headers: { authorization: `Bearer ${token}` } } as AuthRequest, response, (() => { nextCalled = true }) as NextFunction)
     assert.equal(nextCalled, false)
-    assert.deepEqual(result(), { statusCode: 401, body: { error: 'セッションが無効です。再度ログインしてください。' } })
+    const failure = result() as { statusCode: number; body: Record<string, unknown> }
+    assert.equal(failure.statusCode, 401)
+    assert.equal(failure.body.code, 'AUTH_SESSION_INVALID')
+    assert.equal(failure.body.retryable, false)
   } finally {
     if (originalSecret === undefined) delete process.env.SUPABASE_JWT_SECRET
     else process.env.SUPABASE_JWT_SECRET = originalSecret

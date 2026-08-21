@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PartnerProfilesView: View {
     @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var tabRouter: AppTabRouter
     @State private var partners: [PartnerProfile] = []
     @State private var selected: PartnerProfile?
     @State private var remaining = 2
@@ -11,6 +12,7 @@ struct PartnerProfilesView: View {
     @State private var relationshipType = "romantic"
     @State private var compatibilityReport: StructuredReportResponse?
     @State private var isGenerating = false
+    @State private var selfReading: ReadingSummary?
 
     var body: some View {
         ScrollView {
@@ -34,10 +36,21 @@ struct PartnerProfilesView: View {
                     Text("先に相手を登録または選択してください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
                 }
+                if selfReading == nil {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("まず「あなたについて」の鑑定を作成してください。")
+                            .font(.callout).foregroundStyle(FateTheme.secondaryText)
+                        Button("あなたの鑑定を作成する") { tabRouter.selectedTab = 0 }
+                            .buttonStyle(OutlineGoldButtonStyle())
+                    }.padding(.bottom, 12)
+                } else if let selfReading {
+                    Text("使用する自己鑑定：\(selfReading.title)").font(.caption).foregroundStyle(FateTheme.secondaryText)
+                        .padding(.bottom, 12)
+                }
                 Button { Task { await generateCompatibility() } } label: {
                     HStack { if isGenerating { ProgressView().tint(FateTheme.buttonText) }; Text("相性・関係性の鑑定結果へ進む") }
                 }
-                    .buttonStyle(GoldButtonStyle()).disabled(selected == nil || isGenerating).opacity(selected == nil ? 0.45 : 1)
+                    .buttonStyle(GoldButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 if let compatibilityReport {
                     VStack(alignment: .leading, spacing: 12) {
@@ -109,7 +122,11 @@ struct PartnerProfilesView: View {
     private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipType == "friend" ? "友人" : "恋愛" }
     private func load(selectNewest: Bool = false) async {
         errorMessage = nil
-        do { let response = try await APIClient.shared.partnerProfiles(auth: auth); partners = response.partners; remaining = response.remaining
+        do {
+            async let profiles = APIClient.shared.partnerProfiles(auth: auth)
+            async let readings = APIClient.shared.readings(auth: auth)
+            let (response, availableReadings) = try await (profiles, readings)
+            partners = response.partners; remaining = response.remaining; selfReading = availableReadings.first
             if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
         } catch { errorMessage = userFacingMessage(error) }
     }
@@ -118,9 +135,9 @@ struct PartnerProfilesView: View {
         catch { errorMessage = userFacingMessage(error) }
     }
     private func generateCompatibility() async {
-        guard let selected else { return }
+        guard let selected, let selfReading else { return }
         isGenerating = true; errorMessage = nil; defer { isGenerating = false }
-        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, relationshipType: relationshipType, auth: auth) }
+        do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) }
         catch { errorMessage = userFacingMessage(error) }
     }
 }

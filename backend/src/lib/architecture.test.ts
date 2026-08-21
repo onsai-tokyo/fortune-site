@@ -69,3 +69,16 @@ test('認証エラーからアカウントの登録有無を推測できない',
   assert.doesNotMatch(auth, /このメールアドレスは登録済み/)
   assert.match(auth, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
 })
+
+test('相性鑑定は明示された自己鑑定IDを検証し、チャットは逐次SSEを返す', () => {
+  const partners = read('backend/src/routes/partners.ts')
+  const reading = read('backend/src/routes/reading.ts')
+  const api = read('ios/FateLab/APIClient.swift')
+  assert.match(partners, /conversationId/)
+  assert.doesNotMatch(partners, /order\('created_at'.*limit\(1\)/)
+  assert.match(partners, /SELF_READING_REQUIRED/)
+  assert.match(reading, /parser\.push\(event\.delta\.text\)/)
+  assert.match(reading, /res\.write\(`data:.*safeText/)
+  assert.match(api, /URLSession\.shared\.bytes\(for: call\)/)
+  assert.match(api, /AsyncThrowingStream<ChatEvent, Error>/)
+})
