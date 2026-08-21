@@ -122,6 +122,19 @@ test('相性生成は個人情報を含めず停止理由と出力量を計測�
   assert.doesNotMatch(partners, /Compatibility generation metric[\s\S]{0,500}(birth_data|calculated_data|display_name)/)
 })
 
+test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を通る', () => {
+  const partners = read('backend/src/routes/partners.ts')
+  const analyze = read('backend/src/routes/analyze.ts')
+  const api = read('ios/FateLab/APIClient.swift')
+  const legacyStart = analyze.indexOf("analyzeRouter.post('/compatibility'")
+  const legacyEnd = analyze.indexOf("analyzeRouter.post('/organization'", legacyStart)
+  const legacyCompatibility = analyze.slice(legacyStart, legacyEnd)
+  assert.match(partners, /post\('\/:id\/compatibility', loadCompatibilityContext, requirePoints\(3\)/)
+  assert.match(analyze, /COMPATIBILITY_ENDPOINT_MOVED/)
+  assert.doesNotMatch(legacyCompatibility, /getAnthropicClient|cacheKey|requirePoints/)
+  assert.match(api, /http\.statusCode == 402.*APIError\.paymentRequired/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')

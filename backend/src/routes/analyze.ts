@@ -159,68 +159,13 @@ analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthReque
   }
 })
 
-// ─── 相性診断（3pt）─────────────────────────────────────────────────────────
-analyzeRouter.post('/compatibility', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
-  try {
-    const { fortuneData, partnerBlock } = req.body
-    const { input, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen } = fortuneData
-    const selfCtx = buildPersonCtx({ shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, animalFortune, sukuyoDetail, daiyun, daiyunAge, ryunen }, input, 'あなた')
-
-    let partnerCtx = ''
-    let partnerBirthDate = ''
-    let partnerGender = ''
-    if (fortuneData.partner) {
-      partnerBirthDate = input.partnerBirthDate
-      partnerGender = input.partnerGender
-      partnerCtx = buildPersonCtx(fortuneData.partner, {
-        birthDate: partnerBirthDate,
-        gender: partnerGender,
-      }, 'お相手')
-    } else if (partnerBlock) {
-      partnerBirthDate = partnerBlock.birthDate
-      partnerGender = partnerBlock.gender || 'unknown'
-      partnerCtx = buildPersonCtx(partnerBlock, {
-        birthDate: partnerBirthDate,
-        gender: partnerGender,
-      }, 'お相手')
-    }
-
-    if (!partnerCtx) {
-      res.status(400).json({ error: '相手の情報が必要です' })
-      return
-    }
-
-    const cacheKey = `compat_${input.birthDate}_${input.gender}_${partnerBirthDate}_${partnerGender}`
-    const cached = cacheGet(cacheKey)
-    if (cached) { res.json(cached); return }
-
-    const message = await getAnthropicClient().messages.create({
-      model: getModel(req),
-      max_tokens: 2000,
-      system: `四柱推命・算命学・宿曜・納音・数秘術・九星気学を統合した相性分析AIです。
-二人の命式から本質的な相性スコアと深い分析をJSONのみで返します。
-マークダウン・余分なテキスト禁止。「〜でしょう」「〜かもしれません」禁止、断言調で書くこと。
-日柱の干支の相性（三合・六合・冲・刑など）を中心に、宿曜の相性・天中殺の関係も必ず考慮すること。
-
-【必須：分析の手順】
-① それぞれの人物について、複数の占術が共通して示すコア特性を先に特定する
-② 二人のコア特性を照合し、引き合う点・衝突する点を命式の根拠で示す
-③ 表面的な相性ではなく、コア特性同士の本質的な関係性を断言する`,
-      messages: [{
-        role: 'user',
-        content: `${selfCtx}\n${partnerCtx}\n\n以下のJSON形式のみで出力:\n{"overall":78,"work":{"score":85,"summary":"仕事上の相性を命式に基づき一文60文字以内","strengths":["命式から見た強み1","強み2"],"challenges":["課題1"],"advice":"仕事での付き合い方を具体的に60文字以内"},"romantic":{"score":72,"summary":"恋愛・プライベートの相性を命式に基づき一文60文字以内","strengths":["強み1","強み2"],"challenges":["課題1"],"advice":"関係を深めるアドバイス60文字以内"},"dynamic":"二人の本質的な関係性を断言で一文（日柱の相性を根拠に）"}`,
-      }],
-    })
-
-    const content = message.content[0]
-    if (content.type !== 'text') throw new Error('Invalid response type')
-    const result = parseJSON(content.text)
-    cacheSet(cacheKey, result)
-    res.json(result)
-  } catch (err) {
-    console.error('Compatibility error:', err)
-    res.status(500).json({ error: '相性診断の生成に失敗しました' })
-  }
+// 相性鑑定は、保存済み自己鑑定と相手プロフィールを検証する
+// /api/partners/:id/compatibility に一本化した。旧形式では生成しない。
+analyzeRouter.post('/compatibility', requireAuth, (_req, res) => {
+  res.status(410).json({
+    code: 'COMPATIBILITY_ENDPOINT_MOVED',
+    error: '相性鑑定は「ふたり」画面から作成してください。',
+  })
 })
 
 // ─── 組織診断（3pt）─────────────────────────────────────────────────────────

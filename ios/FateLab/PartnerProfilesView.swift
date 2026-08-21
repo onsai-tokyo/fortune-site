@@ -136,7 +136,7 @@ struct PartnerProfilesView: View {
         guard let selected, let selfReading else { return }
         isGenerating = true; errorMessage = nil; compatibilityFailed = false; defer { isGenerating = false }
         do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 } }
-        catch { compatibilityFailed = true; errorMessage = "相性鑑定をうまく作れませんでした。もう一度お試しください。" }
+        catch { compatibilityFailed = true; errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。" }
     }
 }
 

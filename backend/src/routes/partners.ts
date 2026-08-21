@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, type NextFunction, type Response } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { assertPartnerCapacity, MAX_PARTNER_PROFILES, validatePartnerProfile } from '../lib/partnerProfiles.js'
@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
+import { requirePoints } from '../middleware/points.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -130,16 +131,13 @@ export async function generateCompatibilityCards(
   return assembleCompatibilityReport(cards)
 }
 
-partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
-  const useSse = req.query.format === 'sse'
-  const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
-  const complete = (report: StructuredReport) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
+async function loadCompatibilityContext(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const db = getSupabaseAdmin()
     const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
       sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
     }
+    const db = getSupabaseAdmin()
     const [{ data: partner }, { data: self }] = await Promise.all([
       db.from('partner_profiles').select('*').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle(),
       db.from('reading_conversations').select('id,birth_data,calculated_data').eq('id', conversationId).eq('user_id', req.userId!).maybeSingle(),
@@ -148,6 +146,19 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     if (!self?.birth_data || !self?.calculated_data) {
       sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
     }
+    res.locals.compatibility = { db, partner, self }
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoints(3), async (req: AuthRequest, res) => {
+  const useSse = req.query.format === 'sse'
+  const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
+  const complete = (report: StructuredReport) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
+  try {
+    const { db, partner, self } = res.locals.compatibility
     if (useSse) { res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders() }
     progress(5, '二人の情報を確認しています', '鑑定に使うプロフィールを準備しています')
     const relationshipType = req.body?.relationshipType === 'friend' ? 'friend' : 'romantic'
