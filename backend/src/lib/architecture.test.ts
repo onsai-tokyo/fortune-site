@@ -96,7 +96,7 @@ test('UI刷新は白黒テーマ・段階式オンボーディング・認証ゲ
   assert.match(onboarding, /birthTime == nil/)
   assert.doesNotMatch(onboarding, /わかる.*わからない/)
   assert.match(onboarding, /fatelab\.onboarding\.draft/)
-  assert.match(authView, /Googleでログイン/)
+  assert.match(authView, /signInWithGoogle/)
   assert.doesNotMatch(swiftUI, /design: \.serif|FateTheme\.(gold|ivory|paper)/)
 })
 
@@ -157,14 +157,16 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
 })
 
-test('認証画面はログインを主役にし新規登録を別の方法選択画面へ分ける', () => {
+test('認証画面はメールを主役にしGoogleとAppleを同格で残す', () => {
   const authView = read('ios/FateLab/AuthView.swift')
-  assert.match(authView, /Googleでログイン/)
   assert.match(authView, /メールアドレスでログイン/)
   assert.match(authView, /新規登録はこちら/)
   assert.match(authView, /registrationMethods/)
-  assert.match(authView, /Googleで登録/)
   assert.match(authView, /メールアドレスで登録/)
+  assert.match(authView, /HStack\(spacing: 12\) \{[\s\S]{0,300}Button\("Google"\)[\s\S]{0,500}SignInWithAppleButton\(\.signIn\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signIn\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signUp\)/)
+  assert.match(authView, /signInWithAppleButtonStyle\(\.whiteOutline\).*frame\(height: 56\)/)
+  assert.match(authView, /auth\.errorMessage = nil; route = \.pending/)
+  assert.match(authView, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
 })

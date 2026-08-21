@@ -47,7 +47,9 @@ final class AuthStore: ObservableObject {
                 noticeMessage = "確認メールを送信しました。メール内のリンクを開いてください。迷惑メールフォルダもご確認ください。"
             }
         } catch {
-            errorMessage = userFacingErrorMessage(error).map { localizedAuthError($0, isRegistration: true) }
+            // 登録済みかどうかを応答差から推測させない。
+            errorMessage = nil
+            noticeMessage = "登録可能な場合は確認メールが届きます。メールをご確認ください。"
         }
     }
 
@@ -207,8 +209,10 @@ final class AuthStore: ObservableObject {
 
     private func localizedAuthError(_ message: String?, isRegistration: Bool) -> String {
         let raw = message?.lowercased() ?? ""
-        if raw.contains("invalid login credentials") { return "メールアドレスまたはパスワードが正しくありません。" }
-        if raw.contains("email not confirmed") { return "メールアドレスの確認が完了していません。届いた確認メールのリンクを開いてください。" }
+        if !isRegistration {
+            if raw.contains("rate limit") { return "試行回数が多くなっています。少し時間を置いてからお試しください。" }
+            return "メールアドレスまたはパスワードが正しくありません。"
+        }
         if raw.contains("already registered") || raw.contains("user already") { return "パスワード未設定の場合はGoogleまたはAppleでログインしてください。" }
         if raw.contains("password") { return "パスワードは8文字以上で入力してください。" }
         if raw.contains("rate limit") { return "試行回数が多くなっています。少し時間を置いてからお試しください。" }

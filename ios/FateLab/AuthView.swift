@@ -35,14 +35,18 @@ struct AuthView: View {
             Text("ログインすると、鑑定結果と対話をいつでも引き継げます。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 16)
             if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger).padding(.top, 12) }
             Spacer()
-            Button("Googleでログイン") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
-                .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
-            SignInWithAppleButton(.signIn) { auth.prepareAppleSignIn($0) } onCompletion: { result in
-                Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
-            }
-            .signInWithAppleButtonStyle(.black).frame(height: 50).clipShape(RoundedRectangle(cornerRadius: 12)).padding(.top, 12)
             Button("メールアドレスでログイン") { move(to: .loginEmail) }
-                .buttonStyle(FLSecondaryButtonStyle()).padding(.top, 12)
+                .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
+            socialDivider
+            HStack(spacing: 12) {
+                Button("Google") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+                    .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
+                SignInWithAppleButton(.signIn) { auth.prepareAppleSignIn($0) } onCompletion: { result in
+                    Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
+                }
+                .signInWithAppleButtonStyle(.whiteOutline).frame(maxWidth: .infinity).frame(height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
             HStack(spacing: 4) {
                 Text("アカウントをお持ちでない方").foregroundStyle(FateTheme.muted)
                 Button("新規登録はこちら") { move(to: .registrationMethods) }.fontWeight(.semibold).foregroundStyle(FateTheme.ink)
@@ -59,13 +63,18 @@ struct AuthView: View {
             Text("登録方法を選択してください。").foregroundStyle(FateTheme.muted)
             if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
             Spacer()
-            Button("Googleで登録") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+            Button("メールアドレスで登録") { move(to: .registerEmail) }
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
-            SignInWithAppleButton(.signUp) { auth.prepareAppleSignIn($0) } onCompletion: { result in
-                Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
+            socialDivider
+            HStack(spacing: 12) {
+                Button("Google") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+                    .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
+                SignInWithAppleButton(.signUp) { auth.prepareAppleSignIn($0) } onCompletion: { result in
+                    Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
+                }
+                .signInWithAppleButtonStyle(.whiteOutline).frame(maxWidth: .infinity).frame(height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-            .signInWithAppleButtonStyle(.black).frame(height: 50).clipShape(RoundedRectangle(cornerRadius: 12))
-            Button("メールアドレスで登録") { move(to: .registerEmail) }.buttonStyle(FLSecondaryButtonStyle())
             FLTextLink(title: "ログインへ戻る") { move(to: .landing) }.frame(maxWidth: .infinity)
         }
     }
@@ -82,8 +91,12 @@ struct AuthView: View {
             }
             if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
             if let message = auth.noticeMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.muted) }
+            if !registering {
+                Text("パスワード未設定の場合はGoogleまたはAppleでログインしてください。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4)
+            }
             Spacer()
-            Button(registering ? "登録する" : "ログイン") { Task { if registering { await auth.signUp(email: email, password: password); if auth.errorMessage == nil { route = .pending } } else { await auth.signIn(email: email, password: password); closeIfAuthenticated() } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking || email.isEmpty || password.count < 8)
+            Button(registering ? "登録する" : "ログイン") { Task { if registering { await auth.signUp(email: email, password: password); if auth.session != nil { closeIfAuthenticated() } else { auth.errorMessage = nil; route = .pending } } else { await auth.signIn(email: email, password: password); closeIfAuthenticated() } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking || email.isEmpty || password.count < 8)
             FLTextLink(title: registering ? "ログインへ" : "新規登録へ") { move(to: registering ? .landing : .registrationMethods) }.frame(maxWidth: .infinity)
         }
     }
@@ -91,8 +104,8 @@ struct AuthView: View {
     private var verificationPending: some View {
         VStack(alignment: .leading, spacing: 20) {
             Spacer(); FateMark(size: 64)
-            Text("確認メールを送りました。").font(.system(size: 30, weight: .bold))
-            Text("メール内のリンクを開いて登録を完了してください。届かない場合は迷惑メールフォルダも確認してください。").foregroundStyle(FateTheme.muted).lineSpacing(5)
+            Text("メールをご確認ください。").font(.system(size: 30, weight: .bold))
+            Text("登録可能な場合は確認メールが届きます。メール内のリンクを開いて登録を完了してください。届かない場合は迷惑メールフォルダも確認してください。").foregroundStyle(FateTheme.muted).lineSpacing(5)
             if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
             Spacer()
             Button(cooldown > 0 ? "再送まで \(cooldown)秒" : "確認メールを再送する") { Task { await auth.resendConfirmation(email: email); if auth.errorMessage == nil { cooldown = 60 } } }.buttonStyle(FLSecondaryButtonStyle()).disabled(cooldown > 0 || auth.isWorking)
@@ -106,6 +119,14 @@ struct AuthView: View {
                 .accessibilityLabel("前へ戻る")
             Spacer()
         }
+    }
+
+    private var socialDivider: some View {
+        HStack(spacing: 12) {
+            Rectangle().fill(FateTheme.line).frame(height: 0.5)
+            Text("または").font(.caption).foregroundStyle(FateTheme.muted)
+            Rectangle().fill(FateTheme.line).frame(height: 0.5)
+        }.padding(.vertical, 14)
     }
 
     private func move(to destination: Route) {
