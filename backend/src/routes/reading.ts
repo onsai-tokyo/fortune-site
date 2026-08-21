@@ -11,6 +11,8 @@ import { hasPremiumAccess } from '../lib/premium.js'
 import { buildStructuredReport } from '../lib/reportCards.js'
 import { StreamingAnswerParser } from '../lib/sseAnswerParser.js'
 import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
+import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsage.js'
+import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -113,7 +115,7 @@ readingRouter.delete('/profile/traits/:id', requireAuth, async (req: AuthRequest
 
 readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { title, birthData, calculatedData, reportText, sourceSection, sourceYear } = req.body as Record<string, unknown>
+    const { title, birthData, calculatedData, reportText, structuredReport, sourceSection, sourceYear } = req.body as Record<string, unknown>
     if (!birthData || typeof birthData !== 'object' || !calculatedData || typeof calculatedData !== 'object' || typeof reportText !== 'string') {
       res.status(400).json({ error: '鑑定データが不足しています' }); return
     }
@@ -128,7 +130,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 
     if (idempotencyKey) {
       const { data: existing, error: lookupError } = await db.from('reading_conversations')
-        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).limit(1).maybeSingle()
       if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
       if (lookupError && ['42703', 'PGRST204'].includes(lookupError.code ?? '')) hasIdempotencyColumn = false
       else if (lookupError) throw lookupError
@@ -136,7 +138,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
       // migration反映前も同一ユーザーの逐次再送を重複させない後方互換処理。
       if (!hasIdempotencyColumn) {
         const { data: legacyExisting, error: legacyError } = await db.from('reading_conversations')
-          .select('id,secret_token').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).maybeSingle()
+          .select('id,secret_token').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).limit(1).maybeSingle()
         if (legacyError) throw legacyError
         if (legacyExisting?.id) { res.status(200).json({ id: legacyExisting.id, token: legacyExisting.secret_token, reused: true }); return }
       }
@@ -145,11 +147,14 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     const storedBirthData = !hasIdempotencyColumn && idempotencyKey
       ? { ...(birthData as Record<string, unknown>), _fateReadingKey: idempotencyKey }
       : birthData
+    const storedCalculatedData = isStructuredReport(structuredReport)
+      ? calculatedDataWithReport(calculatedData as Record<string, unknown>, structuredReport)
+      : calculatedData
     const insertPayload: Record<string, unknown> = {
       user_id: req.userId,
       title: safeTitle,
       birth_data: storedBirthData,
-      calculated_data: calculatedData,
+      calculated_data: storedCalculatedData,
       report_text: reportText,
       source_section: typeof sourceSection === 'string' ? sourceSection.slice(0, 80) : null,
       source_year: typeof sourceYear === 'number' ? sourceYear : null,
@@ -158,7 +163,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     const { data, error } = await db.from('reading_conversations').insert(insertPayload).select('id,secret_token').single()
     if (error?.code === '23505' && idempotencyKey && hasIdempotencyColumn) {
       const { data: existing } = await db.from('reading_conversations')
-        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).maybeSingle()
+        .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).limit(1).maybeSingle()
       if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
     }
     if (error) throw error
@@ -192,10 +197,10 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('report_text').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    .select('report_text,calculated_data').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
-  res.json(buildStructuredReport(data.report_text))
+  res.json(storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text))
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
@@ -266,10 +271,7 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
 
     const premium = await hasPremiumAccess(req.userId!)
     if (!premium) {
-      const { data: used, error } = await db.rpc('consume_free_reading_question', {
-        target_user_id: req.userId!, question_limit: FREE_QUESTION_LIMIT,
-      })
-      if (error) throw error
+      const used = await consumeFreeQuestion(req.userId!, FREE_QUESTION_LIMIT)
       if (used === -1) {
         res.status(402).json({ code: 'FREE_LIMIT_REACHED', error: '無料質問枠を利用済みです' }); return
       }
@@ -360,7 +362,7 @@ ${conciseConversationInstruction}
       try { await db.from('reading_messages').delete().eq('id', userMessageId).eq('user_id', req.userId!) } catch { /* keep original error */ }
     }
     if (chargedFreeQuestion && req.userId) {
-      try { await db.rpc('refund_free_reading_question', { target_user_id: req.userId }) } catch { /* keep original error */ }
+      try { await refundFreeQuestion(req.userId) } catch { /* keep original error */ }
     }
     console.error('Reading question failed:', { userId: req.userId, conversationId: req.params.id, chargedFreeQuestion, error })
     if (res.destroyed || res.writableEnded) return

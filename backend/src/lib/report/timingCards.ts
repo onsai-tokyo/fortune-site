@@ -30,7 +30,7 @@ function pagesFor(period: string, themes: string[], details: string[]): ReportCa
 function card(id: string, title: string, period: string, themes: string[], details: string[]): ReportCard {
   const pages = pagesFor(period, themes, details)
   return {
-    id, kind: 'timing', title, summary: pages[0].text, tags: ['時期', ...themes.slice(0, 2)],
+    id, kind: 'timing', tab: 'timing', title: `${period}、${title}`, summary: pages[0].text, tags: ['時期', ...themes.slice(0, 2)],
     period: { label: period }, pages,
     evidence: [{ family: '干支系', system: '四柱推命', detail: details[0] || themes.join('・') }],
     metadataRefs: ['turningPoints'],

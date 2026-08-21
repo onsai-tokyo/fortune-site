@@ -3,17 +3,31 @@ import SwiftUI
 struct InsightHubView: View {
     let report: GeneratedReport
     let onQuestion: (ReadingCard) -> Void
+    @State private var selectedTab = "essence"
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
                 Text("あなたの取扱説明書").font(.system(size: 30, weight: .bold))
-                Text("8つのページから、自分を読み進める")
+                Text("本質、時期、命式を行き来しながら読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
             }
-                ForEach(report.cards.prefix(8)) { item in
+
+            Picker("鑑定書の表示", selection: $selectedTab) {
+                Text("あなたの本質").tag("essence")
+                Text("時期の流れ").tag("timing")
+                Text("命式詳細").tag("chart")
+            }
+            .pickerStyle(.segmented)
+
+            if selectedTab == "chart" {
+                ChartDetailsView(report: report)
+            } else {
+                ForEach(report.cards.filter { $0.resolvedTab == selectedTab }) { item in
                     NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
                         .buttonStyle(.plain)
                 }
+            }
         }
         .padding(.vertical, 20).background(FateTheme.canvas)
     }
@@ -31,6 +45,9 @@ private struct ChartDetailsView: View {
                 if let gender = report.birthData["gender"] as? String { Text(gender == "female" ? "女性" : "男性") }
             }.font(.footnote).foregroundStyle(FateTheme.muted)
             Text(formattedData).font(.system(size: 13, design: .monospaced)).lineSpacing(6).textSelection(.enabled)
+            DisclosureGroup("鑑定書全文") {
+                Text(report.text).font(.system(size: 15)).lineSpacing(8).textSelection(.enabled).padding(.top, 10)
+            }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))

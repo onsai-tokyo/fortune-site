@@ -4,14 +4,16 @@ import rateLimit from 'express-rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
 import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, calcNumerologyProfile, calcKyuseiProfile, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
-import { buildDeterministicStructuredReport } from '../lib/deterministicReport.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { writeReportWithAi } from '../lib/report/aiWriter.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
-import { buildNarrativeStructuredReport } from '../lib/reportCards.js'
+import { buildReportFacts } from '../lib/report/facts.js'
+import { buildReportFindings } from '../lib/report/findings.js'
+import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
+import { replaceTimingCards } from '../lib/report/timingCards.js'
 
 export const previewRouter = Router()
 
@@ -161,11 +163,13 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       ...expanded,
     }
     progress(58, 'あなたらしさを整理しています', '重複しない8つの視点を選んでいます')
-    const deterministicReport = buildNarrativeStructuredReport(buildDeterministicStructuredReport(reportInput))
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
+    const facts = buildReportFacts(reportInput, metadata)
+    const findings = buildReportFindings(facts)
+    const deterministicReport = replaceTimingCards(buildEditorialStructuredReport(facts, findings), reportInput)
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
-      ? deterministicReport
+      ? { ...deterministicReport, generator: 'deterministic' as const }
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata)
     const orderedReport = currentConcern
       ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }

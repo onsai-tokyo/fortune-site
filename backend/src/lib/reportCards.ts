@@ -17,6 +17,7 @@ export interface ReportCardEvidence {
 export interface ReportCard {
   id: string
   kind: ReportCardKind
+  tab?: 'essence' | 'timing' | 'chart'
   title: string
   summary: string
   tags: string[]
@@ -30,31 +31,7 @@ export interface StructuredReport {
   version: 2 | 3
   reportText: string
   cards: ReportCard[]
-}
-
-const narrativeIds = ['life-mission','core-mind-1','core-mind-2','core-mind-3','love-beginning','love-pattern','work-mode','work-fit'] as const
-
-function sentences(text: string) {
-  return text.split(/(?<=[。！？])/u).map(value => value.trim()).filter(Boolean)
-}
-function pageText(text: string) { if ([...text].length <= 110) return text; const head = [...text].slice(0, 108).join(''); const boundary = Math.max(head.lastIndexOf('、'), head.lastIndexOf('，')); return `${boundary > 35 ? head.slice(0, boundary) : head}。` }
-
-export function buildNarrativeStructuredReport(source: StructuredReport): StructuredReport {
-  const essence = source.cards.filter(card => card.kind !== 'timing')
-  const pool = essence.flatMap(card => card.pages.map(page => page.text)).flatMap(sentences)
-  const cards = narrativeIds.map((id, index): ReportCard => {
-    const origin = essence[index % Math.max(1, essence.length)]
-    const selected = [...new Set([...(origin?.pages.flatMap(page => sentences(page.text)) ?? []), ...pool])]
-      .slice(index, index + 5)
-    while (selected.length < 5) selected.push('自分の感覚を言葉にできる場所で、あなたらしい力が自然に戻ります。')
-    const titleSource = (origin?.title || selected[0]).replace(/^[^：:]{1,18}[：:]/, '').replace(/[：:]/g, '、')
-    const title = /[。！？]$/.test(titleSource) ? titleSource : `${titleSource}人です`
-    const roles: ReportPageRole[] = ['opening', 'core', 'scene', 'shadow', 'closing']
-    return { id, kind: 'essence', title, summary: selected.slice(0, 2).join('').slice(0, 100), tags: [], period: null,
-      pages: selected.map((text, pageIndex) => ({ role: roles[pageIndex], label: `${String(pageIndex + 1).padStart(2, '0')} / 05`, text: pageText(text) })),
-      evidence: origin?.evidence ?? [] }
-  })
-  return { version: 3, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'), cards }
+  generator?: 'ai' | 'deterministic'
 }
 
 const markerPattern = /\[\[([A-Z]+):([\s\S]*?)\]\]/g
@@ -108,13 +85,12 @@ function evidenceFrom(section: string): ReportCardEvidence[] {
   return result
 }
 
-function tagsFor(title: string, text: string) {
-  const source = `${title} ${text}`
-  const tags = [
-    ['仕事', '仕事'], ['恋愛', '恋愛'], ['結婚', '結婚'], ['人間関係', '人間関係'],
-    ['時期', '時期'], ['転換', '転換期'], ['本質', '本質'], ['組み合わせ', '自分らしさ'],
-  ].filter(([needle]) => source.includes(needle)).map(([, label]) => label)
-  return [...new Set(tags.length ? tags : ['本質', '自分らしさ'])].slice(0, 4)
+function tagsForLegacyCategory(category: string) {
+  if (/仕事/.test(category)) return ['仕事']
+  if (/恋愛|結婚/.test(category)) return ['恋愛', '結婚']
+  if (/人間関係/.test(category)) return ['人間関係']
+  if (/時期|年/.test(category)) return ['時期']
+  return ['本質']
 }
 
 export function buildStructuredReport(reportText: string): StructuredReport {
@@ -141,7 +117,7 @@ export function buildStructuredReport(reportText: string): StructuredReport {
     const kind: ReportCardKind = /時期|年/.test(category) ? 'timing' : 'essence'
     return [{
       id: slug(category, index), kind, title, summary,
-      tags: tagsFor(category, section), period: null, pages,
+      tags: tagsForLegacyCategory(category), period: null, pages,
       evidence: evidenceFrom(section),
     }]
   })

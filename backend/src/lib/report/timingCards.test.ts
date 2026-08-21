@@ -18,7 +18,7 @@ const input: ReportInput = {
 test('大運と年運を節目ごとのカードへ分割する', () => {
   const cards = buildTurningPointCards(input, 2026)
   assert.equal(cards.length, 3)
-  assert.ok(cards.every(card => card.kind === 'timing' && card.period?.label))
+  assert.ok(cards.every(card => card.kind === 'timing' && card.tab === 'timing' && card.period?.label))
   assert.ok(cards.every(card => card.pages.length >= 8 && card.pages.length <= 12))
 })
 

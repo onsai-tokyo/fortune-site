@@ -29,8 +29,6 @@ struct FLPrimaryButtonStyle: ButtonStyle {
 struct FLSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View { configuration.label.font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity).frame(height: 56).foregroundStyle(FateTheme.ink).background(FateTheme.canvas).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line)).clipShape(RoundedRectangle(cornerRadius: 16)).opacity(configuration.isPressed ? 0.65 : 1) }
 }
-typealias PrimaryButtonStyle = FLPrimaryButtonStyle
-
 struct FLTextLink: View { let title: String; let action: () -> Void; var body: some View { Button(title, action: action).font(.system(size: 16, weight: .semibold)).foregroundStyle(FateTheme.ink).frame(minHeight: 44) } }
 struct FLDivider: View { var body: some View { Rectangle().fill(FateTheme.line).frame(height: 1) } }
 struct FLProgressIndicator: View { let current: Int; let total: Int; var body: some View { HStack(spacing: 5) { ForEach(1...total, id: \.self) { step in Capsule().fill(step <= current ? FateTheme.ink : FateTheme.line).frame(height: 3) } } } }
@@ -57,9 +55,9 @@ struct DateMenuPicker: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Picker("年", selection: year) { ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text("\($0)年").tag($0) } }
-            Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text("\($0)月").tag($0) } }
-            Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text("\($0)日").tag($0) } }
+            Picker("年", selection: year) { ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text(verbatim: "\($0)年").tag($0) } }
+            Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text(verbatim: "\($0)月").tag($0) } }
+            Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text(verbatim: "\($0)日").tag($0) } }
         }.pickerStyle(.menu).tint(FateTheme.ink)
     }
 
@@ -70,5 +68,30 @@ struct DateMenuPicker: View {
             updated.day = min(updated.day ?? 1, calendar.range(of: .day, in: .month, for: first)?.count ?? 31)
             if let next = calendar.date(from: updated), next <= Date() { date = next }
         })
+    }
+}
+
+struct TimeMenuPicker: View {
+    @Binding var time: Date?
+    private var hour: Binding<Int?> { Binding(get: { time.map { Calendar.current.component(.hour, from: $0) } }, set: { value in
+        guard let value else { time = nil; return }
+        update(hour: value, minute: minuteValue)
+    }) }
+    private var minuteValue: Int { time.map { Calendar.current.component(.minute, from: $0) } ?? 0 }
+    private var minute: Binding<Int> { Binding(get: { minuteValue }, set: { update(hour: hour.wrappedValue ?? 12, minute: $0) }) }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Picker("時", selection: hour) {
+                Text("未入力").tag(Int?.none)
+                ForEach(0..<24, id: \.self) { Text(verbatim: "\($0)時").tag(Int?.some($0)) }
+            }
+            Picker("分", selection: minute) { ForEach(0..<60, id: \.self) { Text(verbatim: "\($0)分").tag($0) } }.disabled(time == nil)
+            Spacer()
+        }.pickerStyle(.menu).tint(FateTheme.ink)
+    }
+
+    private func update(hour: Int, minute: Int) {
+        time = Calendar.current.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))
     }
 }

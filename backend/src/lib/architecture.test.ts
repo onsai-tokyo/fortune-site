@@ -62,8 +62,20 @@ test('PR14でキャンセル表示・チャット再生成・旧入力UIを戻�
   assert.match(chat, /\.defaultScrollAnchor\(\.bottom\)/)
   assert.doesNotMatch(chat, /didInitialScroll|\.disabled\(input\.trimmingCharacters/)
   assert.match(home, /あなたを読む/)
-  assert.match(home, /あなたのパターンを/)
+  assert.match(home, /ReadingGenerationProgressView/)
+  assert.doesNotMatch(home, /あなたのパターンを、\\nまだ読んでいません/)
   assert.doesNotMatch(home, /INSTANT ANALYSIS|\.background\(\.regularMaterial\)/)
+})
+
+test('鑑定書保存は出生情報の正規化キーで冪等になり内容由来のタイトルを持つ', () => {
+  const api = read('ios/FateLab/APIClient.swift')
+  const reading = read('backend/src/routes/reading.ts')
+  assert.match(api, /options: \[\.sortedKeys\]/)
+  assert.doesNotMatch(api, /String\(describing: report\.birthData\)/)
+  assert.match(api, /readingTitle\(report\)/)
+  assert.doesNotMatch(api, /"title": "命式鑑定書"/)
+  assert.match(reading, /idempotency_key/)
+  assert.match(reading, /\.limit\(1\)\.maybeSingle\(\)/)
 })
 
 test('認証エラーからアカウントの登録有無を推測できない', () => {

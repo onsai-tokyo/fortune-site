@@ -6,12 +6,8 @@ struct HomeView: View {
     @State private var report: GeneratedReport?
     @State private var isWorking = false
     @State private var progress = GenerationProgress(percent: 5, title: "入力内容を確認しています", detail: "生年月日と出生地を確認しています")
-    @State private var showDatePicker = false
-    @State private var draftDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
-    @State private var showTimePicker = false
     @State private var showBirthplacePicker = false
     @State private var showGenderPicker = false
-    @State private var draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
     @State private var errorMessage: String?
     @State private var saveErrorMessage: String?
     private let autoGenerate: Bool
@@ -75,43 +71,23 @@ struct HomeView: View {
             report = nil
             errorMessage = nil
         }
-        .sheet(isPresented: $showDatePicker) { datePickerSheet }
-        .sheet(isPresented: $showTimePicker) { timePickerSheet }
         .sheet(isPresented: $showBirthplacePicker) { birthplacePickerSheet }
         .sheet(isPresented: $showGenderPicker) { genderPickerSheet }
     }
 
     private var inputForm: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .center, spacing: 0) {
             HStack { FateMark(size: 24); Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(3); Spacer(); Image(systemName: "person.crop.circle").font(.title2).accessibilityLabel("プロフィール") }
             .padding(.bottom, 48)
             Text(input.nickname.isEmpty ? "あなた、" : "\(input.nickname)、").font(.system(size: 30, weight: .bold))
             Text("今日のあなた。").font(.system(size: 30, weight: .bold)).padding(.top, 2)
-            Text("あなたのパターンを、\nまだ読んでいません。").font(.system(size: 34, weight: .bold)).lineSpacing(5).padding(.top, 44)
             Text("生まれたときの情報から、最初の鑑定を作ります。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 18)
             VStack(alignment: .leading, spacing: 16) {
                 Text("生年月日").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
                 DateMenuPicker(date: $input.date)
                 FLDivider()
                 Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
-                if input.birthTime == nil {
-                    Button("時刻を入力する") {
-                        draftTime = Calendar.current.date(from: DateComponents(hour: 12, minute: 0)) ?? Date()
-                        showTimePicker = true
-                    }
-                    .buttonStyle(FLSecondaryButtonStyle())
-                } else {
-                    HStack {
-                        Button(input.birthTime?.formatted(date: .omitted, time: .shortened) ?? "") {
-                            draftTime = input.birthTime ?? Date()
-                            showTimePicker = true
-                        }
-                        .foregroundStyle(FateTheme.ink)
-                        Spacer()
-                        Button("クリア") { input.birthTime = nil }
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(FateTheme.muted)
-                    }.frame(minHeight: 44)
-                }
+                TimeMenuPicker(time: $input.birthTime)
                 Text("分からない場合は空欄のまま鑑定できます").font(.footnote).foregroundStyle(FateTheme.muted)
                 FLDivider()
                 Text("出生地").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
@@ -120,7 +96,7 @@ struct HomeView: View {
                 Text("性別").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
                 selectionRow(value: input.gender == "male" ? "男性" : "女性") { showGenderPicker = true }
             }
-            .padding(.top, 32)
+            .padding(.top, 32).frame(maxWidth: 520)
             if let errorMessage {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.danger)
@@ -132,8 +108,6 @@ struct HomeView: View {
             Color.clear.frame(height: 104)
         }
     }
-
-    private var formRule: some View { Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line) }
 
     private func selectionRow(value: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -158,46 +132,6 @@ struct HomeView: View {
                 Button("女性") { input.gender = "female"; showGenderPicker = false }
                 Button("男性") { input.gender = "male"; showGenderPicker = false }
             }.foregroundStyle(FateTheme.ink).scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("性別")
-        }.presentationDetents([.medium])
-    }
-
-    private var datePickerSheet: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Text("生年月日を選んでください")
-                    .font(.system(size: 20, weight: .medium))
-                DatePicker(
-                    "生年月日",
-                    selection: $draftDate,
-                    in: Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!...Date(),
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .environment(\.locale, Locale(identifier: "ja_JP"))
-                Button("この日付を使用する") {
-                    input.date = draftDate
-                    showDatePicker = false
-                }.buttonStyle(FLPrimaryButtonStyle())
-            }
-            .padding(24)
-            .background(FateTheme.canvas)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showDatePicker = false } } }
-        }
-        .presentationDetents([.medium])
-    }
-
-    private var timePickerSheet: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Text("正確な出生時刻を選んでください").font(.system(size: 20, weight: .medium))
-                DatePicker("出生時刻", selection: $draftTime, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel).labelsHidden()
-                Button("この時刻を使用する") {
-                    input.birthTime = draftTime; showTimePicker = false
-                }.buttonStyle(FLPrimaryButtonStyle())
-            }.padding(24).background(FateTheme.canvas)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { showTimePicker = false } } }
         }.presentationDetents([.medium])
     }
 
@@ -239,58 +173,6 @@ struct HomeView: View {
         saveErrorMessage = nil
     }
 
-    @ViewBuilder private func inputSection<Content: View>(_ number: String, _ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Text(number).font(.caption2).foregroundStyle(FateTheme.ink)
-                Text(title).font(.system(size: 16, weight: .semibold))
-            }
-            content()
-        }
-    }
-
-}
-
-private struct FateLoadingView: View {
-    let progress: GenerationProgress
-
-    var body: some View {
-            VStack(spacing: 30) {
-                Spacer()
-                FateMark(size: 72)
-                Text("あなたのパターンを読んでいます").font(.system(size: 20, weight: .semibold))
-                Text("\(progress.percent)%").font(.system(size: 42, weight: .bold))
-                ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink)
-
-                VStack(spacing: 12) {
-                    Text(progress.title)
-                        .font(.system(size: 26, weight: .medium))
-                        .multilineTextAlignment(.center)
-                    Text(progress.detail)
-                        .font(.system(size: 15))
-                        .foregroundStyle(FateTheme.muted)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(6)
-                }
-
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(progress.percent)パーセント。\(progress.title)。\(progress.detail)")
-    }
-
-}
-
-private struct LoadingArc: View {
-    @State private var rotating = false
-    var body: some View {
-        Circle().trim(from: 0.08, to: 0.72)
-            .stroke(FateTheme.ink, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-            .frame(width: 32, height: 32).rotationEffect(.degrees(rotating ? 360 : 0))
-            .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: rotating)
-            .onAppear { rotating = true }
-    }
 }
 
 struct ReportView: View {

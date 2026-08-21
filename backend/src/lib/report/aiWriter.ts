@@ -4,10 +4,20 @@ import { getSupabaseAdmin } from '../supabaseAdmin.js'
 import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
 
-const GENERATOR_VERSION = 'ai-cards-v3-narrative'
-const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 8_000))
+const GENERATOR_VERSION = 'ai-cards-v5-longform'
+const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
+
+function logGeneration(event: 'cache_hit' | 'generated' | 'fallback' | 'timeout' | 'validation_failure', startedAt: number, reason?: string, cardId?: string) {
+  console.info('AI report generation metric', {
+    event,
+    generator: ['fallback', 'timeout', 'validation_failure'].includes(event) ? 'deterministic' : 'ai',
+    durationMs: Date.now() - startedAt,
+    ...(reason ? { reason } : {}),
+    ...(cardId ? { cardId } : {}),
+  })
+}
 
 export interface AiWriterDependencies {
   readCache(key: string): Promise<StructuredReport | null>
@@ -23,6 +33,19 @@ function cleanJson(raw: string) {
   return raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
 }
 
+function titleBigrams(value: string): Set<string> {
+  const normalized = value.normalize('NFKC').toLowerCase().replace(/[\s「」『』。、！？・]/g, '')
+  if (normalized.length < 2) return new Set([normalized])
+  return new Set(Array.from({ length: normalized.length - 1 }, (_, index) => normalized.slice(index, index + 2)))
+}
+
+export function titlesAreSimilar(left: string, right: string): boolean {
+  const a = titleBigrams(left); const b = titleBigrams(right)
+  if (a.size === 0 || b.size === 0) return false
+  const intersection = [...a].filter(value => b.has(value)).length
+  return intersection / Math.min(a.size, b.size) >= 0.72
+}
+
 function validatePage(value: unknown): value is ReportCardPage {
   if (!value || typeof value !== 'object') return false
   const page = value as Record<string, unknown>
@@ -31,38 +54,64 @@ function validatePage(value: unknown): value is ReportCardPage {
     && page.text.trim().length > 0 && [...page.text.trim()].length <= 120
 }
 
+function parseAndValidateAiCard(raw: string, fallback: ReportCard): ReportCard {
+  const parsed = JSON.parse(cleanJson(raw)) as Record<string, unknown>
+  const value = parsed.card ?? (Array.isArray(parsed.cards) ? parsed.cards[0] : parsed)
+  if (!value || typeof value !== 'object') throw new Error('Invalid AI card')
+  const card = value as Record<string, unknown>
+  const title = typeof card.title === 'string' ? card.title.trim() : ''
+  const summary = typeof card.summary === 'string' ? card.summary.trim() : ''
+  const pages = Array.isArray(card.pages) ? card.pages : []
+  const metadataRefs = Array.isArray(card.metadataRefs) ? card.metadataRefs.filter((item): item is string => typeof item === 'string' && item.length > 0) : []
+  if (!title || nakedTitles.has(title) || !summary || [...summary].length > 120) throw new Error('Invalid AI title or summary')
+  const minimumPages = fallback.kind === 'timing' ? 8 : 15
+  const maximumPages = fallback.kind === 'timing' ? 12 : 20
+  if (pages.length < minimumPages || pages.length > maximumPages || !pages.every(validatePage)) throw new Error('Invalid AI pages')
+  if (metadataRefs.length === 0) throw new Error('AI card did not reference metadata')
+  return { ...fallback, title, summary, pages, metadataRefs }
+}
+
 export function parseAndValidateAiReport(raw: string, fallback: StructuredReport): StructuredReport {
   const parsed = JSON.parse(cleanJson(raw)) as { cards?: unknown[] }
   if (!Array.isArray(parsed.cards) || parsed.cards.length !== fallback.cards.length) throw new Error('AI cards count mismatch')
-  const cards = parsed.cards.map((value, index): ReportCard => {
-    if (!value || typeof value !== 'object') throw new Error('Invalid AI card')
-    const card = value as Record<string, unknown>
-    const title = typeof card.title === 'string' ? card.title.trim() : ''
-    const summary = typeof card.summary === 'string' ? card.summary.trim() : ''
-    const pages = Array.isArray(card.pages) ? card.pages : []
-    const metadataRefs = Array.isArray(card.metadataRefs) ? card.metadataRefs.filter((item): item is string => typeof item === 'string' && item.length > 0) : []
-    if (!title || nakedTitles.has(title) || !summary || [...summary].length > 120) throw new Error('Invalid AI title or summary')
-    const minimumPages = 4
-    const maximumPages = 5
-    if (pages.length < minimumPages || pages.length > maximumPages || !pages.every(validatePage)) throw new Error('Invalid AI pages')
-    if (metadataRefs.length === 0) throw new Error('AI card did not reference metadata')
-    return { ...fallback.cards[index], title, summary, pages, metadataRefs }
-  })
+  const cards = parsed.cards.map((value, index) => parseAndValidateAiCard(JSON.stringify(value), fallback.cards[index]))
   const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
-  return { version: 3, reportText, cards }
+  return { version: 3, reportText, cards, generator: 'ai' }
 }
 
-function promptFor(fallback: StructuredReport, metadata: ReportMetadata) {
-  const source = fallback.cards.map(card => ({ id: card.id, kind: card.kind, title: card.title, summary: card.summary, evidence: card.evidence }))
-  return `次の鑑定事実を、読み手本人について断定するカードJSONへ書き換えてください。JSON以外は返さないでください。
+function promptForCard(card: ReportCard, metadata: ReportMetadata, index: number, total: number) {
+  const source = { id: card.id, kind: card.kind, title: card.title, summary: card.summary, pages: card.pages, evidence: card.evidence }
+  const pageContract = card.kind === 'timing'
+    ? 'この時期章だけを8〜12ページで書く。'
+    : 'この人物像の章だけを15〜20ページで書く。導入、核、表の顔、内側の感情、強み、苦手、人との距離、恋愛、仕事、過去からの変化、今後の使い方、余韻を別々のページにする。'
+  return `全${total}章のうち第${index + 1}章だけを書きます。次の鑑定事実を、読み手本人について断定するカードJSONへ書き換えてください。JSON以外は返さないでください。
 入力メタデータ: ${JSON.stringify(metadata)}
-元カード: ${JSON.stringify(source)}
+この章の元データ: ${JSON.stringify(source)}
 
-出力は {"cards":[{"title":"...","summary":"...","metadataRefs":["missingElements:火"],"pages":[{"role":"opening","label":"はじまり","text":"..."}]}]}。
-元カードと同じ順・同じ8枚にする。各カードは4〜5ページ。opening、core、scene、shadowまたはexception、closingを含める。
-各textは120字以内、一文60字以内、1ページ1主張。具体的な場面を先に書く。二面性と都合の悪い面を含める。断定調にする。
+出力は {"card":{"title":"...","summary":"...","metadataRefs":["missingElements:火"],"pages":[{"role":"opening","label":"はじまり","text":"..."}]}}。
+${pageContract}
+openingは短く、sceneは60〜120字にする。各textは120字以内で1ページ1主張。具体的な場面を先に書き、感情、葛藤、余韻まで描く。同じ内容を語尾だけ変えて繰り返さない。二面性と都合の悪い面を含める。断定調にする。
 「かもしれません」「傾向がある人もいます」「大切です」「意識しましょう」を使わない。裸のカテゴリ名をtitleにしない。
-各カードは入力メタデータの具体値を最低1つ本文に反映し、そのパスをmetadataRefsへ入れる。内部仕様やmetadataという語は本文に書かない。`
+元ページの情報を捨てず、根拠と入力メタデータの具体値を最低1つ本文に反映し、そのパスをmetadataRefsへ入れる。内部仕様やmetadataという語は本文に書かない。`
+}
+
+async function generateCard(card: ReportCard, prompt: string, dependencies: AiWriterDependencies): Promise<ReportCard> {
+  const startedAt = Date.now()
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    const raw = await Promise.race([
+      dependencies.generate(prompt),
+      new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error('AI report rewrite timed out')), AI_REWRITE_TIMEOUT_MS) }),
+    ])
+    return parseAndValidateAiCard(raw, card)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    const event = /timed out/i.test(reason) ? 'timeout' : 'validation_failure'
+    logGeneration(event, startedAt, reason, card.id)
+    throw error
+  } finally {
+    if (timeout) clearTimeout(timeout)
+  }
 }
 
 export async function writeReportWithAi(
@@ -71,23 +120,43 @@ export async function writeReportWithAi(
   metadata: ReportMetadata,
   dependencies: AiWriterDependencies = productionDependencies(),
 ): Promise<StructuredReport> {
+  const startedAt = Date.now()
   const key = cacheKey(seed, metadata)
-  let timeout: ReturnType<typeof setTimeout> | undefined
   try {
     const cached = await dependencies.readCache(key)
-    if (cached) return cached
-    const raw = await Promise.race([
-      dependencies.generate(promptFor(fallback, metadata)),
-      new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error('AI report rewrite timed out')), AI_REWRITE_TIMEOUT_MS) }),
-    ])
-    const report = parseAndValidateAiReport(raw, fallback)
-    await dependencies.writeCache(key, report)
+    if (cached) {
+      logGeneration('cache_hit', startedAt)
+      return { ...cached, generator: 'ai' }
+    }
+    let failedCards = 0
+    const generatedCards = await Promise.all(fallback.cards.map(async (card, index) => {
+      try { return await generateCard(card, promptForCard(card, metadata, index, fallback.cards.length), dependencies) }
+      catch { failedCards += 1; return card }
+    }))
+    const cards: ReportCard[] = []
+    for (const [index, generated] of generatedCards.entries()) {
+      const duplicate = cards.find(card => titlesAreSimilar(card.title, generated.title))
+      if (!duplicate) { cards.push(generated); continue }
+      try {
+        const retry = await generateCard(fallback.cards[index], `${promptForCard(fallback.cards[index], metadata, index, fallback.cards.length)}\n既出タイトル「${cards.map(card => card.title).join('」「')}」と異なる焦点・語彙のタイトルにしてください。`, dependencies)
+        if (cards.some(card => titlesAreSimilar(card.title, retry.title))) throw new Error('AI title remained too similar after retry')
+        cards.push(retry)
+      } catch { failedCards += 1; cards.push(fallback.cards[index]) }
+    }
+    const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
+    const report: StructuredReport = { version: 3, reportText, cards, generator: failedCards === 0 ? 'ai' : 'deterministic' }
+    if (failedCards === 0) {
+      await dependencies.writeCache(key, report)
+      logGeneration('generated', startedAt)
+    } else {
+      logGeneration('fallback', startedAt, `${failedCards}/${cards.length} cards used deterministic fallback`)
+    }
     return report
   } catch (error) {
-    console.error('AI report generation rejected; deterministic fallback used', error instanceof Error ? error.message : String(error))
-    return fallback
-  } finally {
-    if (timeout) clearTimeout(timeout)
+    const reason = error instanceof Error ? error.message : String(error)
+    console.error('AI report generation rejected; deterministic fallback used', reason)
+    logGeneration('fallback', startedAt, reason)
+    return { ...fallback, generator: 'deterministic' }
   }
 }
 
@@ -104,7 +173,7 @@ function productionDependencies(): AiWriterDependencies {
     },
     async generate(prompt) {
       const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 6000, temperature: 0,
+        model: 'claude-sonnet-4-6', max_tokens: 4000, temperature: 0,
         messages: [{ role: 'user', content: prompt }],
       })
       const block = message.content.find(item => item.type === 'text')

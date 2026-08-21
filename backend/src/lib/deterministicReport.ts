@@ -1,4 +1,5 @@
 import { buildStructuredReport, StructuredReport } from './reportCards.js'
+import { recordConsensusMetric } from './report/metrics.js'
 
 export interface ReportInput {
   birthDate?: string
@@ -603,6 +604,8 @@ export function buildDeterministicReport(input: ReportInput): string {
     .slice(0, 5)
   // 一致条件は常に2系統以上。件数を揃えるために閾値を下げない。
   const selectedConsensus = rankedConsensus.slice(0, 3)
+  recordConsensusMetric({ total: consensusItems.length, ranked: rankedConsensus.length,
+    selected: selectedConsensus.length, keys: rankedConsensus.map(item => `${item.key}:${item.lineageCount}`) })
   const strongest = selectedConsensus[0]
   const sourceFactor = (source: string) => {
     if (source === '四柱推命') return `日柱 ${input.shichuDay}`
@@ -1119,7 +1122,11 @@ ${personalizedLifeStage}
 ${timingBlocks}
 ここに表示する年は、出来事が必ず起こるという意味ではありません。複数の計算で同じテーマが強く出た期間だけを載せています。
 `
-  const sections = report.split(/(?=^【.+?】$)/gm).filter(Boolean)
+  const publicReport = report
+    .replace(/\[\[HIGHLIGHT:([\s\S]*?)\]\]/g, '$1')
+    .replace(/^\[\[YEAR:[\s\S]*?\]\]\s*$/gm, '')
+    .replace(/\[\[EVIDENCE:[\s\S]*?\]\]/g, '')
+  const sections = publicReport.split(/(?=^【.+?】$)/gm).filter(Boolean)
   return renderReportBlocks(sections.map((section, index) => ({
     id: section.match(/^【(.+?)】/)?.[1] ?? `section-${index}`,
     render: () => section,

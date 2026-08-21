@@ -11,7 +11,6 @@ struct SettingsView: View {
         List {
             Section("あなたのデータ") {
                 NavigationLink("プロフィール") { ProfileView() }
-                Text("出生情報").foregroundStyle(FateTheme.ink)
             }
             Section("鑑定と対話") {
                 NavigationLink("鑑定履歴") { ReadingListView() }

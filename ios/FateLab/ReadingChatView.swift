@@ -74,19 +74,27 @@ struct ReadingChatView: View {
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
-                if let errorMessage { Text(errorMessage).font(.caption).foregroundStyle(.red) }
-                HStack(alignment: .bottom, spacing: 10) {
+                if let errorMessage {
+                    HStack(spacing: 10) {
+                        Text(errorMessage).font(.caption).foregroundStyle(.red)
+                        Spacer()
+                        if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Button("もう一度送る") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
+                        }
+                    }
+                }
+                HStack(alignment: .bottom, spacing: 6) {
                     TextField("鑑定について聞く…", text: $input, axis: .vertical)
-                        .lineLimit(1...5).padding(12).background(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .lineLimit(1...5).padding(.leading, 12).padding(.vertical, 12)
                     Button {
                         if isWorking { streamTask?.cancel(); return }
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !question.isEmpty else { return }
                         if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
-                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).background(FateTheme.ink).clipShape(Circle()) }
+                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(.white).frame(width: 38, height: 38).background(FateTheme.ink).clipShape(Circle()) }
                     .accessibilityLabel(isWorking ? "回答を停止" : "送信")
-                }
+                    .padding(.trailing, 5).padding(.vertical, 5)
+                }.background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
             }.padding(14).background(FateTheme.canvas)
         }
         .background(FateTheme.canvas).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")

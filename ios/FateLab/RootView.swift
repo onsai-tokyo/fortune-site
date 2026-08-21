@@ -38,7 +38,7 @@ struct RootView: View {
 
     private var mainTabs: some View {
         TabView(selection: $tabRouter.selectedTab) {
-            NavigationStack { HomeView(initialInput: onboardingInput ?? savedBirthInput, autoGenerate: shouldAutoGenerate) }
+            NavigationStack { YourReadingRootView(initialInput: onboardingInput ?? savedBirthInput, autoGenerate: shouldAutoGenerate) }
                 .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(0)
             NavigationStack { PartnerProfilesView() }
                 .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(1)
@@ -52,6 +52,27 @@ struct RootView: View {
     }
 
     private var savedBirthInput: BirthInput? { guard let data = Data(base64Encoded: storedBirthInput) else { return nil }; return try? JSONDecoder().decode(BirthInput.self, from: data) }
+}
+
+private struct YourReadingRootView: View {
+    @EnvironmentObject private var auth: AuthStore
+    let initialInput: BirthInput?
+    let autoGenerate: Bool
+    @State private var showsInput: Bool
+
+    init(initialInput: BirthInput?, autoGenerate: Bool) {
+        self.initialInput = initialInput
+        self.autoGenerate = autoGenerate
+        _showsInput = State(initialValue: autoGenerate)
+    }
+
+    var body: some View {
+        if auth.session != nil && !showsInput {
+            ReadingListView { showsInput = true }
+        } else {
+            HomeView(initialInput: initialInput, autoGenerate: autoGenerate)
+        }
+    }
 }
 
 private struct SplashView: View {

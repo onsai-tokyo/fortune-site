@@ -14,6 +14,7 @@ struct PartnerProfilesView: View {
     @State private var isGenerating = false
     @State private var generationProgress = GenerationProgress(percent: 5, title: "二人の情報を確認しています", detail: "鑑定に使うプロフィールを準備しています")
     @State private var selfReading: ReadingSummary?
+    @State private var compatibilityFailed = false
 
     var body: some View {
         ZStack { ScrollView {
@@ -49,7 +50,7 @@ struct PartnerProfilesView: View {
                         .padding(.bottom, 12)
                 }
                 Button { Task { await generateCompatibility() } } label: {
-                    HStack { if isGenerating { ProgressView().tint(FateTheme.canvas) }; Text("相性・関係性の鑑定結果へ進む") }
+                    Text("相性・関係性の鑑定結果へ進む")
                 }
                     .buttonStyle(FLPrimaryButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
@@ -69,7 +70,7 @@ struct PartnerProfilesView: View {
                 if let errorMessage {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(errorMessage).foregroundStyle(.red).font(.caption)
-                        Button("再試行") { Task { await load() } }.buttonStyle(FLSecondaryButtonStyle())
+                        Button("もう一度試す") { Task { if compatibilityFailed { await generateCompatibility() } else { await load() } } }.buttonStyle(FLSecondaryButtonStyle())
                     }
                 }
             }.padding(20)
@@ -135,9 +136,9 @@ struct PartnerProfilesView: View {
     }
     private func generateCompatibility() async {
         guard let selected, let selfReading else { return }
-        isGenerating = true; errorMessage = nil; defer { isGenerating = false }
+        isGenerating = true; errorMessage = nil; compatibilityFailed = false; defer { isGenerating = false }
         do { compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 } }
-        catch { errorMessage = userFacingMessage(error) }
+        catch { compatibilityFailed = true; errorMessage = "相性鑑定をうまく作れませんでした。もう一度お試しください。" }
     }
 }
 

@@ -18,12 +18,11 @@ enum APIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse: "読み込めませんでした。通信環境を確認して、もう一度お試しください"
-        case .timeout: "45秒以内に応答がありませんでした。時間を置いて再試行してください（タイムアウト）"
-        case .http(let status, let message): "\(message)（HTTP \(status)）"
+        case .timeout: "応答に時間がかかっています。もう一度お試しください"
+        case .http(_, let message): message
         case .authSessionInvalid(let message), .selfReadingRequired(let message),
              .dependencyNotReady(let message), .generationTimeout(let message): message
-        case .paymentRequired(let message): "\(message)（HTTP 402）"
-        case .rateLimited(let message): "\(message)（HTTP 429）"
+        case .paymentRequired(let message), .rateLimited(let message): message
         case .server(let message): message
         }
     }
@@ -52,8 +51,6 @@ struct APIClient {
             throw APIError.invalidResponse
         }
         var request = URLRequest(url: url)
-        // Render のコールドスタート後に占術計算が60秒を少し超える場合がある。
-        // URLSession の既定値（60秒）で正常な鑑定を失敗扱いにしない。
         request.timeoutInterval = 40
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -198,7 +195,7 @@ struct APIClient {
 
     func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, auth: AuthStore, progress: @MainActor (GenerationProgress) -> Void = { _ in }) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
-        var call = try request(path: "/api/partners/\(partnerID.uuidString)/compatibility?format=sse", method: "POST", token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString]); call.timeoutInterval = 120
+        let call = try request(path: "/api/partners/\(partnerID.uuidString)/compatibility?format=sse", method: "POST", token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString])
         let (bytes, response) = try await URLSession.shared.bytes(for: call)
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard 200..<300 ~= http.statusCode else { var body = ""; for try await line in bytes.lines { body += line }; let object = body.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }; let message = object?["error"] as? String ?? "相性鑑定を作成できませんでした"; if http.statusCode == 409 { throw APIError.selfReadingRequired(message) }; throw APIError.http(status: http.statusCode, message: message) }
@@ -220,13 +217,17 @@ struct APIClient {
 
     func createConversation(report: GeneratedReport, auth: AuthStore) async throws -> UUID {
         let token = try await auth.validAccessToken()
-        let source = String(describing: report.birthData) + report.text
-        let key = SHA256.hash(data: Data(source.utf8)).map { String(format: "%02x", $0) }.joined()
+        guard JSONSerialization.isValidJSONObject(report.birthData) else { throw APIError.invalidResponse }
+        let canonicalBirthData = try JSONSerialization.data(withJSONObject: report.birthData, options: [.sortedKeys])
+        let key = SHA256.hash(data: canonicalBirthData).map { String(format: "%02x", $0) }.joined()
+        let encodedCards = try JSONEncoder().encode(report.cards)
+        let cardObjects = try JSONSerialization.jsonObject(with: encodedCards)
         var call = try request(path: "/api/reading/conversations", method: "POST", token: token, json: [
-            "title": "命式鑑定書",
+            "title": readingTitle(report),
             "birthData": report.birthData,
             "calculatedData": report.calculatedData,
             "reportText": report.text,
+            "structuredReport": ["version": 3, "reportText": report.text, "cards": cardObjects],
             "sourceSection": "鑑定全体"
         ])
         call.setValue(key, forHTTPHeaderField: "Idempotency-Key")
@@ -234,6 +235,14 @@ struct APIClient {
         guard let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any],
               let id = object["id"] as? String, let uuid = UUID(uuidString: id) else { throw APIError.invalidResponse }
         return uuid
+    }
+
+    private func readingTitle(_ report: GeneratedReport) -> String {
+        let rawDate = report.birthData["birthDate"] as? String ?? ""
+        let parts = rawDate.split(separator: "-")
+        let date = parts.count == 3 ? "\(parts[0])年\(Int(parts[1]) ?? 0)月\(Int(parts[2]) ?? 0)日" : "あなた"
+        let chapter = report.cards.first { $0.resolvedTab == "essence" }?.title ?? "取扱説明書"
+        return String("\(date)｜\(chapter)".prefix(80))
     }
 
     func conversation(id: UUID, auth: AuthStore) async throws -> ConversationDetail {
@@ -339,7 +348,7 @@ struct APIClient {
         guard let calculated = try JSONSerialization.jsonObject(with: calcData) as? [String: Any] else { throw APIError.invalidResponse }
         progress(.init(percent: 18, title: "命式を計算しています", detail: "生まれた瞬間の基本データを整えています"))
         let previewBody: [String: Any] = birthData.merging(["question": "", "calculatedData": calculated]) { _, new in new }
-        var call = try request(path: "/api/preview/generate?format=sse", method: "POST", token: token, json: previewBody); call.timeoutInterval = 120
+        let call = try request(path: "/api/preview/generate?format=sse", method: "POST", token: token, json: previewBody)
         let (bytes, response) = try await URLSession.shared.bytes(for: call)
         guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else { throw APIError.invalidResponse }
         var structured: StructuredReportResponse?

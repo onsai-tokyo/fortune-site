@@ -140,6 +140,7 @@ struct StructuredReportResponse: Codable {
 struct ReadingCard: Codable, Identifiable {
     let id: String
     let kind: String
+    let tab: String?
     let title: String
     let summary: String
     let tags: [String]
@@ -148,6 +149,7 @@ struct ReadingCard: Codable, Identifiable {
     let evidence: [ReadingCardEvidence]
 
     var isTiming: Bool { kind == "timing" }
+    var resolvedTab: String { tab ?? (kind == "timing" ? "timing" : kind == "chart" ? "chart" : "essence") }
     var body: String { pages.map(\.text).joined(separator: "\n\n") }
 }
 

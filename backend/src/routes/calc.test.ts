@@ -192,14 +192,8 @@ test('複数占術で一致した内容だけを鑑定書に表示する', () =>
   assert.ok((report.match(/言葉と情報をつなぐ力/g) ?? []).length <= 3)
   assert.ok((report.match(/人と人を調整する力/g) ?? []).length <= 3)
   assert.match(report, /強く出ていることと、味方になることは矛盾しません/)
-  const evidenceMarkers = [...report.matchAll(/\[\[EVIDENCE:(.+?)\]\]/g)].map(match => match[1])
-  assert.ok(evidenceMarkers.length >= 7)
-  for (const evidence of evidenceMarkers) {
-    const lineages = new Set(evidence.split('||').map(item => item.split('｜')[0]))
-    assert.ok(lineages.size >= 2, `根拠が2系統未満です: ${evidence}`)
-  }
-  const visibleReport = report.replace(/\[\[EVIDENCE:.+?\]\]/g, '')
-  assert.ok((visibleReport.match(/\[\[HIGHLIGHT:.+?\]\]/g) ?? []).length >= 3)
+  assert.doesNotMatch(report, /\[\[(?:EVIDENCE|HIGHLIGHT|YEAR):/)
+  const visibleReport = report
   assert.match(visibleReport, /\[\[TURNING:.+?大きな転換期\]\]/)
   const forbidden = /四柱推命|算命学|紫微斗数|西洋占星術|インド占星術|宿曜|九星気学|数秘術|納音|日主|通変星|鳳閣星|貫索星|牽牛星|官禄宮|財帛宮|化忌|ラグナ|ナクシャトラ|運命数|大運|一白水星|二黒土星|三碧木星|四緑木星|五黄土星|六白金星|七赤金星|八白土星|九紫火星|角宿|亢宿|氐宿|房宿|心宿|尾宿|箕宿|斗宿|女宿|虚宿|危宿|室宿|壁宿|奎宿|婁宿|胃宿|昴宿|畢宿|觜宿|参宿|井宿|鬼宿|柳宿|星宿|張宿|翼宿|軫宿|°/
   assert.doesNotMatch(visibleReport, forbidden)

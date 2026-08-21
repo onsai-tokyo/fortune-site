@@ -42,20 +42,35 @@ partnersRouter.delete('/:id', async (req: AuthRequest, res) => {
   res.status(204).end()
 })
 
-function parseCompatibility(raw: string): StructuredReport {
-  const value = JSON.parse(raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')) as { cards?: ReportCard[] }
+export function parseCompatibility(raw: string): StructuredReport {
+  const unfenced = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
+  const start = unfenced.indexOf('{')
+  const end = unfenced.lastIndexOf('}')
+  if (start < 0 || end < start) throw new Error('相性カードJSONが見つかりません')
+  const cleaned = unfenced.slice(start, end + 1).replace(/,\s*([}\]])/g, '$1')
+  const value = JSON.parse(cleaned) as { cards?: ReportCard[] }
   if (!Array.isArray(value.cards) || value.cards.length < 3) throw new Error('相性カードが不足しています')
   for (const card of value.cards) {
     if (!card.title || /^恋愛|友人|相性$/.test(card.title) || !Array.isArray(card.pages) || card.pages.length < 8 || card.pages.length > 12) throw new Error('相性カード形式が不正です')
     if (card.pages.some(page => !page.text || [...page.text].length > 120)) throw new Error('相性カード本文が不正です')
   }
-  return { version: 2, cards: value.cards, reportText: value.cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }
+  return { version: 2, cards: value.cards, reportText: value.cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'), generator: 'ai' }
+}
+
+export async function generateCompatibilityReport(prompt: string, generate: (prompt: string) => Promise<string>): Promise<StructuredReport> {
+  const raw = await generate(prompt)
+  try { return parseCompatibility(raw) }
+  catch (firstError) {
+    console.warn('Compatibility JSON validation failed; requesting one repair', firstError instanceof Error ? firstError.message : String(firstError))
+    const repairPrompt = `次のJSONは相性鑑定の出力ですが構文または形式が壊れています。内容を増減せず、有効なJSONだけに修正してください。コードフェンスや説明は不要です。\n${raw.slice(0, 24000)}`
+    return parseCompatibility(await generate(repairPrompt))
+  }
 }
 
 partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
   const useSse = req.query.format === 'sse'
   const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
-  const complete = (report: StructuredReport) => { if (useSse) { res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
+  const complete = (report: StructuredReport) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
   try {
     const db = getSupabaseAdmin()
     const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
@@ -94,10 +109,13 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
 形式: {"cards":[{"id":"compat-core","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"干支系","system":"四柱推命","detail":"二人の日柱"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"二人の核","text":"120字以内"}]}]}
 カードは「引き合う力」「衝突するとき」「関係を育てる方法」の最低3枚。各8〜12ページ。opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。`
     progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
-    const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({ model: 'claude-sonnet-4-6', max_tokens: 4200, temperature: 0, messages: [{ role: 'user', content: prompt }] })
-    const block = message.content.find(item => item.type === 'text')
-    if (!block || block.type !== 'text') throw new Error('AI応答がありません')
-    const report = parseCompatibility(block.text)
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const report = await generateCompatibilityReport(prompt, async generationPrompt => {
+      const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 4200, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
+      const block = message.content.find(item => item.type === 'text')
+      if (!block || block.type !== 'text') throw new Error('AI応答がありません')
+      return block.text
+    })
     const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v2', payload: report })
     if (cacheError) throw cacheError
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
