@@ -159,15 +159,6 @@ analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthReque
   }
 })
 
-// 相性鑑定は、保存済み自己鑑定と相手プロフィールを検証する
-// /api/partners/:id/compatibility に一本化した。旧形式では生成しない。
-analyzeRouter.post('/compatibility', requireAuth, (_req, res) => {
-  res.status(410).json({
-    code: 'COMPATIBILITY_ENDPOINT_MOVED',
-    error: '相性鑑定は「ふたり」画面から作成してください。',
-  })
-})
-
 // ─── 組織診断（3pt）─────────────────────────────────────────────────────────
 analyzeRouter.post('/organization', requireAuth, requirePoints(3), async (req: AuthRequest, res) => {
   try {
