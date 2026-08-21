@@ -170,3 +170,17 @@ test('認証画面はメールを主役にしGoogleとAppleを同格で残す', 
   assert.match(authView, /auth\.errorMessage = nil; route = \.pending/)
   assert.match(authView, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
 })
+
+test('本質カードは1列で相手と本人の出生情報入力を共通化する', () => {
+  const hub = read('ios/FateLab/InsightHubView.swift')
+  const home = read('ios/FateLab/HomeView.swift')
+  const partners = read('ios/FateLab/PartnerProfilesView.swift')
+  const theme = read('ios/FateLab/Theme.swift')
+  assert.doesNotMatch(hub, /essenceColumns|LazyVGrid\(columns: essence/)
+  assert.match(hub, /VStack\(spacing: 12\)[\s\S]{0,300}resolvedTab == "essence"/)
+  assert.match(theme, /struct BirthProfileFields/)
+  assert.match(home, /BirthProfileFields\(date: \$input\.date/)
+  assert.match(partners, /BirthProfileFields\(date: \$date/)
+  assert.match(partners, /DateComponents\(year: 1990, month: 1, day: 1\)/)
+  assert.doesNotMatch(partners, /@State private var name = ""; @State private var date = Date\(\)/)
+})

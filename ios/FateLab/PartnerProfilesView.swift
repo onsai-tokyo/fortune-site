@@ -171,20 +171,17 @@ private struct PartnerRegistrationView: View {
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
     let onSaved: () async -> Void
-    @State private var name = ""; @State private var date = Date(); @State private var birthTime: Date?
+    @State private var name = ""; @State private var date = Calendar.current.date(from: DateComponents(year: 1990, month: 1, day: 1))!; @State private var birthTime: Date?
     @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationship = "romantic"; @State private var error: String?
     var body: some View {
         NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
             Text("新しく相手を登録する").font(.system(size: 25, weight: .medium))
-            TextField("表示名", text: $name).padding(12).overlay(RoundedRectangle(cornerRadius: 9).stroke(FateTheme.line))
-            DateMenuPicker(date: $date)
-            Divider().overlay(FateTheme.line)
-            if birthTime == nil { Button("出生時刻を入力する（任意）") { birthTime = Date() } }
-            else { DatePicker("出生時刻（任意）", selection: Binding(get: { birthTime ?? Date() }, set: { birthTime = $0 }), displayedComponents: .hourAndMinute); Button("出生時刻をクリア") { birthTime = nil } }
-            Divider().overlay(FateTheme.line)
-            TextField("出生地", text: $birthplace)
-            Picker("性別", selection: $gender) { Text("女性").tag("female"); Text("男性").tag("male") }
-            Picker("関係性", selection: $relationship) { Text("恋愛").tag("romantic"); Text("友人").tag("friend") }
+            Text("表示名").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            TextField("呼び名", text: $name).padding(.vertical, 12); FLDivider()
+            BirthProfileFields(date: $date, birthTime: $birthTime, birthplace: $birthplace, gender: $gender)
+            FLDivider()
+            Text("関係").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Picker("関係", selection: $relationship) { Text("恋愛").tag("romantic"); Text("友人").tag("friend") }.pickerStyle(.segmented)
             if let error { Text(error).foregroundStyle(.red) }
         }.padding(20) }.background(FateTheme.canvas).toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }

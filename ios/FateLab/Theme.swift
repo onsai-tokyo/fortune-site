@@ -176,3 +176,57 @@ struct TimeMenuPicker: View {
         time = Calendar.current.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))
     }
 }
+
+struct BirthProfileFields: View {
+    @Binding var date: Date
+    @Binding var birthTime: Date?
+    @Binding var birthplace: String
+    @Binding var gender: String
+    @State private var showBirthplacePicker = false
+    @State private var showGenderPicker = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("生年月日").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            DateMenuPicker(date: $date)
+            FLDivider()
+            Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            TimeMenuPicker(time: $birthTime)
+            Text("分からない場合は空欄のまま進めます").font(.footnote).foregroundStyle(FateTheme.muted)
+            FLDivider()
+            Text("出生地").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            selectionRow(value: birthplace) { showBirthplacePicker = true }
+            FLDivider()
+            Text("性別").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            selectionRow(value: gender == "male" ? "男性" : "女性") { showGenderPicker = true }
+        }
+        .sheet(isPresented: $showBirthplacePicker) { birthplacePickerSheet }
+        .sheet(isPresented: $showGenderPicker) { genderPickerSheet }
+    }
+
+    private func selectionRow(value: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack { Text(value).foregroundStyle(FateTheme.ink); Spacer(); Image(systemName: "chevron.right").foregroundStyle(FateTheme.muted) }
+                .contentShape(Rectangle()).padding(.vertical, 6)
+        }.buttonStyle(.plain)
+    }
+
+    private var birthplacePickerSheet: some View {
+        NavigationStack {
+            List(OnboardingView.prefectures, id: \.self) { place in
+                Button { birthplace = place; showBirthplacePicker = false } label: {
+                    HStack { Text(place); Spacer(); if birthplace == place { Image(systemName: "checkmark") } }
+                }.foregroundStyle(FateTheme.ink)
+            }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("出生地")
+        }.presentationDetents([.large])
+    }
+
+    private var genderPickerSheet: some View {
+        NavigationStack {
+            List {
+                Button("女性") { gender = "female"; showGenderPicker = false }
+                Button("男性") { gender = "male"; showGenderPicker = false }
+            }.foregroundStyle(FateTheme.ink).scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("性別")
+        }.presentationDetents([.medium])
+    }
+}

@@ -24,7 +24,7 @@ struct InsightHubView: View {
             if selectedTab == "chart" {
                 ChartDetailsView(report: report, onQuestion: onQuestion, onReload: onReload)
             } else if selectedTab == "essence" {
-                LazyVGrid(columns: essenceColumns, alignment: .leading, spacing: 12) {
+                VStack(spacing: 12) {
                     ForEach(report.cards.filter { $0.resolvedTab == "essence" }) { item in
                         NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { EssenceCard(item: item) }
                             .buttonStyle(.plain)
@@ -37,9 +37,6 @@ struct InsightHubView: View {
         .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)
     }
 
-    private var essenceColumns: [GridItem] {
-        [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
-    }
 }
 
 private struct ChartDetailsView: View {
@@ -218,7 +215,7 @@ private struct EssenceCard: View {
             EssenceTags(tags: item.tags)
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 210, alignment: .topLeading)
+        .frame(maxWidth: .infinity).frame(height: 210, alignment: .topLeading)
         .background(FateTheme.canvas)
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
         .contentShape(RoundedRectangle(cornerRadius: 16))
