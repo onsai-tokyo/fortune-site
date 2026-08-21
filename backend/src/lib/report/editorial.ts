@@ -45,6 +45,12 @@ export function assignFindingsToChapters(findings: ReportFinding[]): ChapterAssi
     if (!finding) continue
     result.push({ spec, finding }); usedFindings.add(finding.id); finding.primaryFacts.forEach(fact => usedFacts.add(fact))
   }
+  console.info('Editorial chapter assignment metric', {
+    totalChapters: chapters.length,
+    assignedChapters: result.length,
+    skippedChapters: chapters.length - result.length,
+    findingsCount: findings.length,
+  })
   return result
 }
 

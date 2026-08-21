@@ -189,13 +189,31 @@ function productionDependencies(): AiWriterDependencies {
       if (error) throw new Error(`AI report cache write failed: ${error.message}`)
     },
     async generate(prompt) {
-      const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 4000, temperature: 0,
-        messages: [{ role: 'user', content: prompt }],
-      })
-      const block = message.content.find(item => item.type === 'text')
-      if (!block || block.type !== 'text') throw new Error('AI returned no text')
-      return block.text
+      const startedAt = Date.now()
+      try {
+        const message = await new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }).messages.create({
+          model: 'claude-sonnet-4-6', max_tokens: 4000, temperature: 0,
+          messages: [{ role: 'user', content: prompt }],
+        })
+        const block = message.content.find(item => item.type === 'text')
+        console.info('Anthropic AI report response metric', {
+          durationMs: Date.now() - startedAt,
+          stopReason: message.stop_reason,
+          outputTokens: message.usage.output_tokens,
+          outputChars: block?.type === 'text' ? block.text.length : 0,
+        })
+        if (!block || block.type !== 'text') throw new Error('AI returned no text')
+        return block.text
+      } catch (error) {
+        const status = typeof error === 'object' && error && 'status' in error ? Number(error.status) : undefined
+        console.warn('Anthropic AI report request metric', {
+          durationMs: Date.now() - startedAt,
+          status: status ?? null,
+          rateLimited: status === 429,
+          errorType: error instanceof Error ? error.name : 'unknown',
+        })
+        throw error
+      }
     },
   }
 }
