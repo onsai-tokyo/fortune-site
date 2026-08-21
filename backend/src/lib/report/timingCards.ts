@@ -1,67 +1,123 @@
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 
-function meaningfulTitle(themes: string[], fallback: string) {
-  const text = themes.join('・')
-  if (/仕事|責任|役割|成果|肩書/.test(text)) return '仕事で担う役割が広がる節目です'
-  if (/恋愛|結婚|縁|関係|出会/.test(text)) return '人との関わり方が大きく変わる節目です'
-  if (/変化|転換|刷新|移動|挑戦/.test(text)) return '環境を変える決断が増える時期です'
-  if (/学|探究|資格|知識/.test(text)) return '学び直したことが次の軸になる時期です'
-  if (/収入|財|お金|現実/.test(text)) return '現実的な成果を積み上げる節目です'
-  if (/休|整理|内省|見直/.test(text)) return '立ち止まって前提を組み替える時期です'
-  return fallback
+type Annual = NonNullable<ReportInput['timing']>['annual'][number]
+type Decade = NonNullable<ReportInput['timing']>['decades'][number]
+
+function unique(values: string[]) {
+  return [...new Set(values.map(value => value.trim()).filter(Boolean))]
 }
 
-function pagesFor(period: string, themes: string[], details: string[]): ReportCardPage[] {
-  const theme = themes.join('・') || '役割と環境の切り替え'
-  const detail = details.filter(Boolean).join('・') || '複数の計算で変化が重なる'
+function eventFlags(values: string[]) {
+  const joined = values.join('・')
+  return {
+    meeting: /出会|縁が始|交際開始|恋愛開始/.test(joined), marriage: /結婚|婚約|入籍|同居/.test(joined),
+    separation: /別れ|離別|失恋|関係.*見直|距離/.test(joined), work: /仕事|転職|昇進|責任|役割|成果|独立|肩書/.test(joined),
+    move: /引越|転居|移動|環境.*変|住む場所/.test(joined), study: /学|資格|探究|知識|訓練/.test(joined),
+    money: /収入|財|お金|資産|現実/.test(joined), reset: /休|整理|内省|見直|手放|刷新/.test(joined),
+  }
+}
+
+function titleFor(values: string[], year: number) {
+  const flags = eventFlags(values)
+  if (flags.move && flags.work) return '住む場所と働き方を同時に変える年'
+  if (flags.marriage) return flags.work ? '関係を形にし、仕事との配分を決める年' : '関係を形にし、暮らしの前提を決める年'
+  if (flags.meeting && flags.separation) return '新しい縁が入り、続ける関係を選び直す年'
+  if (flags.meeting) return flags.work ? '仕事の広がりから、新しい縁が入る年' : '出会いが増え、関係の前提を決める年'
+  if (flags.separation) return '曖昧な関係に区切りをつけ、距離を選ぶ年'
+  if (flags.work) return flags.money ? '任される範囲と収入の基準が変わる年' : '任される範囲が広がり、断る基準が要る年'
+  if (flags.move) return '居場所を動かし、日常の優先順位を変える年'
+  if (flags.study) return flags.reset ? '学び直しながら、古い前提を手放す年' : '学び直したことを次の役割へつなぐ年'
+  if (flags.money) return '使うお金と残すお金の基準を決める年'
+  if (flags.reset) return '続けないものを決め、生活の余白を戻す年'
+  const alternatives = ['選ぶ順番を変え、動き方を組み直す年', '守る条件を定め、次の役割へ移る年', '慣れた方法を離れ、新しい基準を試す年']
+  return alternatives[Math.abs(year) % alternatives.length]
+}
+
+function personalLens(day: string) {
+  const stem: Record<string, string> = { 甲: '始める力', 乙: '育てる力', 丙: '広げる力', 丁: '磨く力', 戊: '支える力', 己: '整える力', 庚: '決める力', 辛: '選び抜く力', 壬: 'つなぐ力', 癸: '読み取る力' }
+  const branch: Record<string, string> = { 子: '流れを変える感覚', 丑: '土台を固める感覚', 寅: '先に動く感覚', 卯: '関係を育てる感覚', 辰: '条件を組み替える感覚', 巳: '機会を見極める感覚', 午: '意思を表す感覚', 未: '周囲と整える感覚', 申: '方法を更新する感覚', 酉: '結果を選ぶ感覚', 戌: '責任を守る感覚', 亥: '可能性を探る感覚' }
+  return `${stem[day[0]] ?? '自分で選ぶ力'}と${branch[day[1]] ?? '自分の基準'}`
+}
+
+function personalizedTitle(base: string, input: ReportInput, item: Annual) {
+  const focus = personalLens(input.shichuDay)
+  const action: Record<string, string> = { 甲: '新しく始める', 乙: '時間をかけて育てる', 丙: '外へ広げる', 丁: '一つずつ磨く', 戊: '形にして支える', 己: '順序を整える', 庚: '不要なものを切り替える', 辛: '基準を絞り込む', 壬: '人や情報をつなぐ', 癸: '小さな変化を読み取る' }
+  return `${base.replace(/年$/, '')}。${focus}を使い、${action[item.kanshi[0]] ?? '選び方を更新する'}年`
+}
+
+function collisionTitle(title: string, item: Annual) {
+  const branchAction: Record<string, string> = {
+    子: '新しい流れを始める', 丑: '足元を固める', 寅: '先に動いて道を作る', 卯: '関係を育てる',
+    辰: '条件を組み替える', 巳: '機会を見極める', 午: '意思をはっきり示す', 未: '周囲との形を整える',
+    申: '方法を更新する', 酉: '残す結果を選ぶ', 戌: '引き受ける責任を定める', 亥: '次の可能性を探る',
+  }
+  return `${title.replace(/年$/, '')}、${item.tenGod}を通じて${branchAction[item.kanshi[1]] ?? '選び方を変える'}年`
+}
+
+function tagsFor(values: string[]) {
+  const flags = eventFlags(values)
+  return unique(['時期', flags.meeting ? '出会い' : '', flags.marriage ? '結婚' : '', flags.separation ? '関係の見直し' : '',
+    flags.work ? '仕事' : '', flags.move ? '引越し・環境変化' : '', flags.study ? '学び' : '', flags.money ? 'お金' : '', flags.reset ? '整理' : '', ...values.slice(0, 2)])
+}
+
+function pagesFor(item: Annual, decade?: Decade): ReportCardPage[] {
+  const themes = unique(item.themes)
+  const relationships = unique([...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+  const core = themes.join('・') || '優先順位の切り替え'
+  const events = relationships.join('・') || `${item.tenGod}の働きが強まり、${core}に選択が生まれる`
+  const longTerm = decade ? `${decade.startYear}〜${decade.endYear}年の${decade.themes.join('・') || '長期テーマ'}` : '前後の年から続く流れ'
+  const flags = eventFlags([...themes, ...relationships])
+  const scene = flags.work ? '依頼、担当範囲、働く場所を決める場面' : flags.meeting || flags.marriage ? '出会い方、約束、暮らし方を話す場面' : flags.move ? '住む場所や日々の時間配分を変える場面' : '今まで通り続けるか、方法を変えるか選ぶ場面'
+  const caution = flags.marriage ? '気持ちだけで決めず、住居・お金・仕事の条件を分けて確認すること' : flags.work ? '期待に全部応えず、引き受ける範囲と期限を先に決めること' : flags.separation ? '一度の感情で結論を急がず、続ける条件と離れる条件を言葉にすること' : '変える項目を一度に増やさず、生活を守る条件から決めること'
+  const action = flags.move ? '候補地、費用、移動時間を並べ、日常が続く案を一つ選ぶ' : flags.meeting || flags.marriage || flags.separation ? '相手に求める約束と、自分が守れる約束を三つずつ書く' : flags.work ? '引き受ける仕事、断る仕事、学ぶ仕事を一つずつ決める' : '続けること、やめること、試すことを一つずつ決める'
   return [
-    { role: 'opening', label: 'この節目', text: `${period}は、${theme}が前面に出る節目です。` },
-    { role: 'core', label: '流れの中心', text: `この期間の中心は、${theme}を現実の選択へ移すことです。` },
-    { role: 'scene', label: '起こりやすい場面', text: `役割や人間関係を選び直す場面で、判断の差が表れます。` },
-    { role: 'scene', label: '変化の手がかり', text: `${detail}ことが、切り替わりの手がかりになります。` },
-    { role: 'shadow', label: '急がないこと', text: `変化を一度に確定すると、生活条件の確認が後回しになります。` },
-    { role: 'exception', label: '意外な動き', text: `前へ進むだけでなく、続けないものを決めるほど流れが整います。` },
-    { role: 'action', label: '確かめること', text: `続ける役割、手放す役割、守る条件を一つずつ書き出してください。` },
-    { role: 'closing', label: '詳しく読む', text: `この時期の選択は、AIチャットで状況を重ねて確認できます。` },
+    { role: 'opening', label: 'この年の焦点', text: `${core}が重なり、選択が目に見える形になる年です。` },
+    { role: 'core', label: '起こりやすいこと', text: `${events}という動きが、日常の決断に表れます。` },
+    { role: 'scene', label: '現れやすい場面', text: `${scene}で、何を優先するかがはっきりします。` },
+    { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、今年の${core}が具体的な出来事になります。` },
+    { role: 'shadow', label: '急がないこと', text: caution },
+    { role: 'exception', label: '命式の手がかり', text: `${item.kanshi}と${item.tenGod}が重なるため、同じ出来事でも引き受け方が結果を分けます。` },
+    { role: 'action', label: 'この年に決めること', text: `${action}ことから始めてください。` },
+    { role: 'closing', label: '次の年へ残すもの', text: `${core}で得た基準を一つ言葉にすると、翌年の判断がぶれにくくなります。` },
   ]
 }
 
-function card(id: string, title: string, period: string, themes: string[], details: string[]): ReportCard {
-  const pages = pagesFor(period, themes, details)
+function card(item: Annual, decade?: Decade): ReportCard {
+  const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+  const pages = pagesFor(item, decade)
+  const details = unique([item.kanshi, item.tenGod, ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
   return {
-    id, kind: 'timing', tab: 'timing', title: `${period}、${title}`, summary: pages[0].text, tags: ['時期', ...themes.slice(0, 2)],
-    period: { label: period }, pages,
-    evidence: [{ family: '干支系', system: '四柱推命', detail: details[0] || themes.join('・') }],
-    metadataRefs: ['turningPoints'],
+    id: `turning-year-${item.year}`, kind: 'timing', tab: 'timing', title: titleFor(values, item.year), summary: pages[0].text,
+    tags: tagsFor(values), period: { label: `${item.year}年（${item.ageRange}）` }, pages,
+    evidence: [{ family: '干支系', system: '四柱推命', detail: details.join('・').slice(0, 120) }], metadataRefs: ['turningPoints'],
   }
+}
+
+function signature(item: Annual) {
+  return unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]).sort().join('|')
 }
 
 export function buildTurningPointCards(input: ReportInput, nowYear = new Date().getFullYear()): ReportCard[] {
   const start = nowYear - 15
   const end = nowYear + 20
-  const decades = (input.timing?.decades ?? [])
-    .filter(item => item.endYear >= start && item.startYear <= end)
-    .map(item => card(
-      `turning-decade-${item.startYear}`,
-      meaningfulTitle(item.themes, '長く続ける役割を選び直す時期です'),
-      `${item.startYear} - ${item.endYear}`,
-      item.themes,
-      [`${item.kanshi}・${item.tenGod}`],
-    ))
-  const annual = [...(input.timing?.annual ?? [])]
-    .filter(item => item.year >= start && item.year <= end)
-    .sort((a, b) => b.score - a.score || a.year - b.year)
-    .slice(0, 6)
-    .sort((a, b) => a.year - b.year)
-    .map(item => card(
-      `turning-year-${item.year}`,
-      meaningfulTitle([...item.themes, ...item.relationshipSignals], '選択の優先順位が入れ替わる節目です'),
-      `${item.year}年（${item.ageRange}）`,
-      item.themes,
-      [item.kanshi, item.tenGod, ...item.relationshipSignals, ...(item.relationshipEvents ?? [])],
-    ))
-  return [...decades, ...annual].sort((a, b) => (a.period?.label ?? '').localeCompare(b.period?.label ?? ''))
+  const allAnnual = [...(input.timing?.annual ?? [])].sort((a, b) => a.year - b.year)
+  const inRange = allAnnual.filter(item => item.year >= start && item.year <= end)
+  const turningPoints = inRange.filter(item => {
+    const previous = allAnnual.find(value => value.year === item.year - 1)
+    const relationshipEvent = (item.relationshipSignals?.length ?? 0) > 0 || (item.relationshipEvents?.length ?? 0) > 0
+    const changedTheme = previous ? signature(previous) !== signature(item) : false
+    return relationshipEvent || item.score >= 8 || (changedTheme && item.score >= 6)
+  })
+  const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
+  const seen = new Set<string>()
+  return selected.map(item => {
+    const result = card(item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
+    let title = personalizedTitle(result.title, input, item)
+    if (seen.has(title)) title = collisionTitle(title, item)
+    seen.add(title)
+    return { ...result, title }
+  })
 }
 
 export function replaceTimingCards(report: StructuredReport, input: ReportInput): StructuredReport {
