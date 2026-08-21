@@ -112,3 +112,12 @@ test('相性鑑定は明示された自己鑑定IDを検証し、チャットは
   assert.match(api, /URLSession\.shared\.bytes\(for: call\)/)
   assert.match(api, /AsyncThrowingStream<ChatEvent, Error>/)
 })
+
+test('相性生成は個人情報を含めず停止理由と出力量を計測する', () => {
+  const partners = readFileSync(new URL('../routes/partners.ts', import.meta.url), 'utf8')
+  assert.match(partners, /Compatibility generation metric/)
+  assert.match(partners, /stopReason: message\.stop_reason/)
+  assert.match(partners, /outputTokens: message\.usage\.output_tokens/)
+  assert.match(partners, /attemptDurationMs/)
+  assert.doesNotMatch(partners, /Compatibility generation metric[\s\S]{0,500}(birth_data|calculated_data|display_name)/)
+})

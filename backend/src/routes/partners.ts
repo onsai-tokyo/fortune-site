@@ -110,10 +110,23 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
 カードは「引き合う力」「衝突するとき」「関係を育てる方法」の最低3枚。各8〜12ページ。opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。`
     progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const compatibilityStartedAt = Date.now()
+    let generationAttempt = 0
     const report = await generateCompatibilityReport(prompt, async generationPrompt => {
+      generationAttempt += 1
+      const attemptStartedAt = Date.now()
       const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 4200, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
       const block = message.content.find(item => item.type === 'text')
       if (!block || block.type !== 'text') throw new Error('AI応答がありません')
+      console.info('Compatibility generation metric', {
+        attempt: generationAttempt,
+        phase: generationAttempt === 1 ? 'initial' : 'repair',
+        stopReason: message.stop_reason,
+        outputTokens: message.usage.output_tokens,
+        outputChars: block.text.length,
+        attemptDurationMs: Date.now() - attemptStartedAt,
+        totalDurationMs: Date.now() - compatibilityStartedAt,
+      })
       return block.text
     })
     const { error: cacheError } = await db.from('ai_report_cache').upsert({ cache_key: cacheKey, generator_version: 'compat-v2', payload: report })
