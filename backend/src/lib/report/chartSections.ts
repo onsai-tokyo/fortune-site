@@ -82,3 +82,10 @@ export function buildChartSections(calculatedData: unknown): ChartSection[] {
     ] },
   ]
 }
+
+export function buildCoupleChartSections(selfData: unknown, partnerData: unknown): ChartSection[] {
+  return [
+    ...buildChartSections(selfData).map(section => ({ ...section, id: `self-${section.id}`, owner: 'self' as const })),
+    ...buildChartSections(partnerData).map(section => ({ ...section, id: `partner-${section.id}`, owner: 'partner' as const })),
+  ]
+}

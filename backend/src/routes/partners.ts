@@ -4,12 +4,15 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { assertPartnerCapacity, MAX_PARTNER_PROFILES, validatePartnerProfile } from '../lib/partnerProfiles.js'
 import { createHash } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
-import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
 import { requirePoints } from '../middleware/points.js'
 import { calculatedDataWithReport } from '../lib/report/storedReport.js'
 import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoints } from '../lib/report/coupleTimingCards.js'
+import { buildCoupleChartSections } from '../lib/report/chartSections.js'
+import { calcZiwei } from '../lib/ziwei.js'
+import { calcAstrology } from '../lib/astrology.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -220,14 +223,39 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     progress(22, '相手のデータを読み解いています', '二人の命式を重ねる準備をしています')
     const shichu = calcShichu(year, month, day, hour, minute)
     const partnerTiming = calcTimingCycles(year, month, day, hour, minute, partner.gender === 'male' ? 'male' : 'female')
+    const partnerSanmei = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
+    const partnerExpanded = calcExpandedDivination(shichu)
+    const partnerCalculated = {
+      birthDate: partner.birth_date,
+      birthTime: partner.birth_time ?? '',
+      birthplace: partner.birthplace,
+      gender: partner.gender,
+      shichuYear: shichu.year.kanshi,
+      shichuMonth: shichu.month.kanshi,
+      shichuDay: shichu.day.kanshi,
+      shichuHour: shichu.hour?.kanshi ?? null,
+      nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
+      sanmeiStar: partnerSanmei.shukumeiStar,
+      chusatsu: partnerSanmei.chusatsu,
+      sukuyo: getSukuyo(year, month, day),
+      lifePathNumber: calcLifePathNumber(String(partner.birth_date)),
+      numerologyProfile: calcNumerologyProfile(year, month, day),
+      honmeiName: KYUSEI_NAMES[calcHonmeiStar(year, month, day)],
+      kyuseiProfile: calcKyuseiProfile(year, month, day, hour, minute),
+      timing: partnerTiming,
+      sanmeiRelations: calcSanmeiRelations(shichu, partnerSanmei.chusatsu),
+      ziwei: calcZiwei(year, month, day, hour, partner.gender === 'male' ? 'male' : 'female', partner.birthplace),
+      astrology: calcAstrology(year, month, day, hour, minute, partner.birthplace),
+      ...partnerExpanded,
+    }
     const partnerFacts = {
       name: partner.display_name, birthDate: partner.birth_date, gender: partner.gender,
       day: shichu.day.kanshi, nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
-      sanmei: calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays),
+      sanmei: partnerSanmei,
       sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)), timing: partnerTiming,
     }
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
-    const compatibilityIdentity = createHash('sha256').update(`compat-v4|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
+    const compatibilityIdentity = createHash('sha256').update(`compat-v5|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
 本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
@@ -267,7 +295,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       },
       write: async (spec, card) => {
         const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
-        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v4-card', payload: card })
+        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v5-card', payload: card })
         if (error) throw error
       },
     }, relationshipType)
@@ -277,7 +305,11 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const selfBirthYear = Number(selfBirthDate.slice(0, 4))
     const selfTiming = (self.calculated_data as { timing?: { annual?: Array<{ year: number; score: number; themes: string[] }> } }).timing?.annual ?? []
     const turningPoints = findCoupleTurningPoints(selfTiming, partnerTiming.annual, selfBirthYear, year)
-    const report = appendCoupleTimingCards(relationshipReport, buildCoupleTimingCards(turningPoints))
+    const timingReport = appendCoupleTimingCards(relationshipReport, buildCoupleTimingCards(turningPoints))
+    const report: StructuredReport = {
+      ...timingReport,
+      chartSections: buildCoupleChartSections(self.calculated_data, partnerCalculated),
+    }
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     const { data: existingConversation, error: conversationLookupError } = await db.from('reading_conversations')
       .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
@@ -298,7 +330,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         partner_profile_id: partner.id,
         idempotency_key: compatibilityIdentity,
         birth_data: { self: self.birth_data, partner: partnerBirth, relationshipType },
-        calculated_data: calculatedDataWithReport({ self: self.calculated_data, partner: partnerFacts, relationshipType }, report),
+        calculated_data: calculatedDataWithReport({ self: self.calculated_data, partner: partnerCalculated, relationshipType }, report),
         report_text: report.reportText,
         source_section: '二人の関係',
       }

@@ -163,6 +163,7 @@ private struct CompatibilityResultView: View {
     private var availableTabs: [(id: String, title: String)] {
         var tabs = [("essence", "二人の関係")]
         if report.cards.contains(where: { $0.resolvedTab == "timing" }) { tabs.append(("timing", "二人の節目")) }
+        if !(report.chartSections ?? []).isEmpty { tabs.append(("chart", "二人の命式")) }
         return tabs
     }
 
@@ -176,13 +177,76 @@ private struct CompatibilityResultView: View {
                     ForEach(availableTabs, id: \.id) { tab in Text(tab.title).tag(tab.id) }
                 }
                 .pickerStyle(.segmented)
-                ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
+                if selectedTab == "chart" {
+                    CoupleChartDetailsView(sections: report.chartSections ?? [], partnerName: partnerName)
+                } else {
+                    ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
+                }
             }
             .padding(FateSpacing.screenH)
         }
         .background(FateTheme.canvas)
         .navigationTitle("相性鑑定")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct CoupleChartPair: Identifiable {
+    let id: String
+    let title: String
+    let selfSection: ChartSection?
+    let partnerSection: ChartSection?
+}
+
+private struct CoupleChartDetailsView: View {
+    let sections: [ChartSection]
+    let partnerName: String
+
+    private var pairs: [CoupleChartPair] {
+        let orderedKeys = sections.reduce(into: [String]()) { keys, section in
+            let key = "\(section.system)|\(section.title)"
+            if !keys.contains(key) { keys.append(key) }
+        }
+        return orderedKeys.map { key in
+            let matching = sections.filter { "\($0.system)|\($0.title)" == key }
+            return CoupleChartPair(
+                id: key,
+                title: matching.first?.title ?? "命式",
+                selfSection: matching.first(where: { $0.owner == "self" }),
+                partnerSection: matching.first(where: { $0.owner == "partner" })
+            )
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("同じ計算結果を並べて、二人の違いと重なりを確かめる")
+                .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
+            ForEach(pairs) { pair in
+                VStack(alignment: .leading, spacing: 12) {
+                    FLSectionHeader(title: pair.title)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ownerColumn(name: "あなた", section: pair.selfSection)
+                            ownerColumn(name: partnerName, section: pair.partnerSection)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func ownerColumn(name: String, section: ChartSection?) -> some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(name).font(.system(size: 14, weight: .semibold)).foregroundStyle(FateTheme.ink)
+            if let section {
+                ChartSectionView(section: section)
+            } else {
+                FLEmptyState(title: "データがありません", message: "このプロフィールでは表示できません。")
+            }
+        }
+        .frame(width: 280, alignment: .topLeading)
     }
 }
 

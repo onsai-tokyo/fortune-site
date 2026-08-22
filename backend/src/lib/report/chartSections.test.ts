@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildChartSections, normalizePalaceName } from './chartSections.js'
+import { buildChartSections, buildCoupleChartSections, normalizePalaceName } from './chartSections.js'
 import { calcZiwei } from '../ziwei.js'
 
 const calculated = {
@@ -83,4 +83,18 @@ test('1995-02-20 03:02 女性の実際の宮名で6宮すべてを表示する',
   const ziwei = sections.find(section => section.id === 'chart-ziwei')!
   assert.equal(ziwei.grid?.length, 6)
   assert.ok(ziwei.grid?.every(item => item.value !== '—' && !item.value.includes('出生時刻が必要')))
+})
+
+test('二人の命式は同じ7種をowner付きで並べ、IDを衝突させない', () => {
+  const sections = buildCoupleChartSections(calculated, { ...calculated, shichuDay: '乙亥', lifePathNumber: 7 })
+  assert.equal(sections.length, 14)
+  assert.equal(sections.filter(section => section.owner === 'self').length, 7)
+  assert.equal(sections.filter(section => section.owner === 'partner').length, 7)
+  assert.equal(new Set(sections.map(section => section.id)).size, 14)
+  assert.ok(sections.filter(section => section.owner === 'self').every(section => section.id.startsWith('self-')))
+  assert.ok(sections.filter(section => section.owner === 'partner').every(section => section.id.startsWith('partner-')))
+  assert.deepEqual(
+    sections.filter(section => section.owner === 'self').map(section => section.title),
+    sections.filter(section => section.owner === 'partner').map(section => section.title),
+  )
 })

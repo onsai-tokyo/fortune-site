@@ -155,6 +155,7 @@ struct StructuredReportResponse: Codable {
 
 struct ChartSection: Codable, Identifiable {
     let id: String
+    let owner: String?
     let system: String
     let title: String
     let layout: String

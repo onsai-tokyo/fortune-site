@@ -29,6 +29,7 @@ export interface ReportCard {
 
 export interface ChartSection {
   id: string
+  owner?: 'self' | 'partner'
   system: string
   title: string
   layout: 'table' | 'bars' | 'grid' | 'list'

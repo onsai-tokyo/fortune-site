@@ -69,7 +69,7 @@ private struct ChartDetailsView: View {
     }
 }
 
-private struct ChartSectionView: View {
+struct ChartSectionView: View {
     let section: ChartSection
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

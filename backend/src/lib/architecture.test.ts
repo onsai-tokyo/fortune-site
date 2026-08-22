@@ -166,6 +166,8 @@ test('相性結果は選択画面と分離し本人鑑定と同じカード導�
   assert.match(partners, /navigationDestination\(isPresented: \$showCompatibilityResult\)/)
   assert.match(partners, /CompatibilityResultView/)
   assert.match(partners, /tabs\.append\(\("timing", "二人の節目"\)\)/)
+  assert.match(partners, /tabs\.append\(\("chart", "二人の命式"\)\)/)
+  assert.match(partners, /CoupleChartDetailsView/)
   assert.match(partners, /ReadingCardList\(cards: report\.cards\.filter \{ \$0\.resolvedTab == selectedTab \}, onQuestion: onQuestion\)/)
   assert.match(partners, /tabRouter\.openChat\(conversationID: conversationID, contextTitle: card\.title\)/)
   assert.doesNotMatch(partners, /ReadingCardList\(cards: report\.cards\) \{ _ in \}/)
