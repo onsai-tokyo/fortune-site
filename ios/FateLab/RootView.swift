@@ -41,7 +41,10 @@ struct RootView: View {
     }
 
     private func mainTabs(latestConversationID: UUID?) -> some View {
-        TabView(selection: $tabRouter.selectedTab) {
+        TabView(selection: Binding(
+            get: { tabRouter.selectedTab },
+            set: { tabRouter.selectTab($0) }
+        )) {
             NavigationStack { YourReadingRootView(initialConversationID: latestConversationID) }
                 .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(0)
             NavigationStack { PartnerProfilesView() }
@@ -75,6 +78,7 @@ struct RootView: View {
 }
 
 private struct YourReadingRootView: View {
+    @EnvironmentObject private var tabRouter: AppTabRouter
     let initialConversationID: UUID?
     @State private var showsInput: Bool
     @State private var showsList = false
@@ -102,6 +106,10 @@ private struct YourReadingRootView: View {
                 ToolbarItem(placement: .topBarTrailing) { Button("新しく鑑定") { showsInput = true } }
             }
         }
+        .onChange(of: tabRouter.yourRootResetToken) { _, _ in
+            showsList = false
+            showsInput = initialConversationID == nil
+        }
     }
 }
 
@@ -112,8 +120,14 @@ private struct SplashView: View {
 @MainActor
 final class AppTabRouter: ObservableObject {
     @Published var selectedTab = 0
+    @Published private(set) var yourRootResetToken = 0
     @Published var chatConversationID: UUID?
     @Published var chatContextTitle: String?
+
+    func selectTab(_ tab: Int) {
+        if tab == 0 { yourRootResetToken += 1 }
+        selectedTab = tab
+    }
 
     func openChat(conversationID: UUID, contextTitle: String? = nil) {
         chatConversationID = conversationID
