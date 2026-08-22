@@ -17,9 +17,12 @@ import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculate
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { correlationId } from '../lib/apiError.js'
 import { chatReadingTitle, compatibilityReadingTitle, personalReadingTitle } from '../lib/conversationTitle.js'
+import { refundAiChatQuestion, reserveAiChatQuestion } from '../lib/aiChatUsage.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
+const PREMIUM_MONTHLY_QUESTION_LIMIT = Math.max(0, Number(process.env.PREMIUM_MONTHLY_QUESTION_LIMIT ?? 100))
+const AI_CHAT_MONTHLY_GLOBAL_LIMIT = Math.max(0, Number(process.env.AI_CHAT_MONTHLY_GLOBAL_LIMIT ?? 5000))
 const questionLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: Math.max(1, Number(process.env.READING_QUESTION_RATE_LIMIT ?? 6)),
@@ -338,6 +341,7 @@ readingRouter.delete('/conversations/:id', requireAuth, async (req: AuthRequest,
 readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
   let chargedFreeQuestion = false
+  let reservedAiQuestion = false
   let userMessageId: string | undefined
   try {
     const checkedQuestion = validateReadingQuestion(req.body?.question)
@@ -362,6 +366,23 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
       }
       chargedFreeQuestion = true
     }
+
+    const reservation = await reserveAiChatQuestion(
+      req.userId!,
+      premium ? PREMIUM_MONTHLY_QUESTION_LIMIT : FREE_QUESTION_LIMIT,
+      AI_CHAT_MONTHLY_GLOBAL_LIMIT,
+    )
+    if (reservation === 'user_limit') {
+      if (chargedFreeQuestion) await refundFreeQuestion(req.userId!)
+      chargedFreeQuestion = false
+      res.status(402).json({ code: 'MONTHLY_QUESTION_LIMIT_REACHED', error: '今月の質問上限に達しました。翌月にもう一度お試しください。' }); return
+    }
+    if (reservation === 'global_limit') {
+      if (chargedFreeQuestion) await refundFreeQuestion(req.userId!)
+      chargedFreeQuestion = false
+      res.status(503).json({ code: 'AI_MONTHLY_BUDGET_REACHED', error: '今月の質問受付上限に達しました。翌月にもう一度お試しください。' }); return
+    }
+    reservedAiQuestion = true
 
     const { data: prior, error: priorError } = await db.from('reading_messages').select('role,content,created_at')
       .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at', { ascending: false }).limit(20)
@@ -459,6 +480,9 @@ ${conciseConversationInstruction}
     }
     if (chargedFreeQuestion && req.userId) {
       try { await refundFreeQuestion(req.userId) } catch { /* keep original error */ }
+    }
+    if (reservedAiQuestion && req.userId) {
+      try { await refundAiChatQuestion(req.userId) } catch { /* keep original error */ }
     }
     console.error('Reading question failed:', { userId: req.userId, conversationId: req.params.id, chargedFreeQuestion, error })
     if (res.destroyed || res.writableEnded) return
