@@ -232,10 +232,13 @@ struct APIClient {
         guard let result else { throw APIError.invalidResponse }; return result
     }
 
-    func verifyApplePurchase(signedTransaction: String, auth: AuthStore) async throws {
+    func verifyApplePurchase(signedTransaction: String, auth: AuthStore) async throws -> Bool {
         let token = try await auth.validAccessToken()
-        _ = try await data(for: request(path: "/api/apple/transactions/verify", method: "POST", token: token,
-                                        json: ["signedTransaction": signedTransaction]), auth: auth)
+        let payload = try await data(for: request(path: "/api/apple/transactions/verify", method: "POST", token: token,
+                                         json: ["signedTransaction": signedTransaction]), auth: auth)
+        let decoded = try? JSONSerialization.jsonObject(with: payload)
+        let object = decoded as? [String: Any]
+        return (object?["skipped"] as? Bool) != true
     }
 
     func deleteAccount(auth: AuthStore) async throws {

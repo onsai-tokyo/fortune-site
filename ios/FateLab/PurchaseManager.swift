@@ -45,7 +45,7 @@ final class PurchaseManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try verified(verification)
-                try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, auth: auth)
+                _ = try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, auth: auth)
                 await transaction.finish()
                 await sync(auth: auth)
             case .userCancelled, .pending: break
@@ -59,13 +59,21 @@ final class PurchaseManager: ObservableObject {
         isWorking = true; errorMessage = nil; defer { isWorking = false }
         do {
             try await AppStore.sync()
+            var restored = 0
             for await result in Transaction.currentEntitlements {
                 guard let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID else { continue }
-                try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth)
+                if try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth) {
+                    restored += 1
+                }
             }
             await sync(auth: auth)
+            if restored == 0 {
+                errorMessage = "このApple Accountに有効な継続鑑定が見つかりませんでした。購入時と同じApple Accountをご確認ください。"
+            } else if accessState != .premium {
+                errorMessage = "購入情報は見つかりましたが、反映を完了できませんでした。もう一度お試しください。"
+            }
         } catch {
-            if userFacingErrorMessage(error) != nil { errorMessage = "購入内容を復元できませんでした" }
+            errorMessage = "購入内容を復元できませんでした。Apple Accountと通信環境をご確認ください。"
         }
     }
 
@@ -73,7 +81,7 @@ final class PurchaseManager: ObservableObject {
         for await result in Transaction.updates {
             guard let transaction = try? verified(result) else { continue }
             if transaction.productID == AppConfig.subscriptionProductID, let authStore {
-                try? await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: authStore)
+                _ = try? await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: authStore)
             }
             await transaction.finish()
             await refreshLocalEntitlements()
@@ -91,13 +99,13 @@ final class PurchaseManager: ObservableObject {
             var status = try await APIClient.shared.status(auth: auth)
             if !status.isPremium && !hasStoreKitEntitlement && !attemptedStoreSyncThisSession {
                 attemptedStoreSyncThisSession = true
-                try? await AppStore.sync()
+                try await AppStore.sync()
                 await refreshLocalEntitlements()
             }
             if hasStoreKitEntitlement && !status.isPremium {
                 for await result in Transaction.currentEntitlements {
                     guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }
-                    try await APIClient.shared.verifyApplePurchase(
+                    _ = try await APIClient.shared.verifyApplePurchase(
                         signedTransaction: result.jwsRepresentation,
                         auth: auth
                     )

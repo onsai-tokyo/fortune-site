@@ -57,19 +57,32 @@ async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expe
   if (!transaction.originalTransactionId || !transaction.transactionId) throw new Error('App Store transaction ID が不足しています')
   const tokenUserId = normalizedUuid(transaction.appAccountToken)
   const requestUserId = normalizedUuid(expectedUserId)
-  if (requestUserId && tokenUserId && tokenUserId !== requestUserId) return { skipped: true }
-  const userId = tokenUserId || requestUserId
+  const isSandbox = transaction.environment === 'Sandbox'
+  // TestFlight purchases can outlive an app login and retain the appAccountToken
+  // of an older test user. Possession of the current StoreKit entitlement is the
+  // recovery proof in Sandbox; production purchases remain fail-closed.
+  if (requestUserId && tokenUserId && tokenUserId !== requestUserId && !isSandbox) return { skipped: true }
+  const userId = requestUserId || tokenUserId
   if (!userId) throw new Error('appAccountToken がありません')
   const db = getSupabaseAdmin()
-  if (!tokenUserId) {
-    const { data: existing, error: lookupError } = await db.from('app_store_subscriptions')
-      .select('user_id')
-      .eq('original_transaction_id', transaction.originalTransactionId)
-      .maybeSingle()
-    if (lookupError) throw lookupError
-    if (existing?.user_id && normalizedUuid(existing.user_id) !== userId) {
+  const { data: existing, error: lookupError } = await db.from('app_store_subscriptions')
+    .select('user_id')
+    .eq('original_transaction_id', transaction.originalTransactionId)
+    .maybeSingle()
+  if (lookupError) throw lookupError
+  if (existing?.user_id && normalizedUuid(existing.user_id) !== userId) {
+    if (!isSandbox) {
       throw new Error('この購入は別のアカウントに登録済みです')
     }
+    // One sandbox entitlement must have exactly one current app owner. Remove a
+    // stale mirror for the target test user, then transfer the original row.
+    const { error: staleError } = await db.from('app_store_subscriptions')
+      .delete().eq('user_id', userId).neq('original_transaction_id', transaction.originalTransactionId)
+    if (staleError) throw staleError
+    const { error: transferError } = await db.from('app_store_subscriptions')
+      .update({ user_id: userId, app_account_token: userId, updated_at: new Date().toISOString() })
+      .eq('original_transaction_id', transaction.originalTransactionId)
+    if (transferError) throw transferError
   }
   const { error } = await db.from('app_store_subscriptions').upsert({
     user_id: userId,
