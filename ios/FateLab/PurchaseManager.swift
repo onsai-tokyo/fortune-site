@@ -10,6 +10,7 @@ final class PurchaseManager: ObservableObject {
     @Published var isWorking = false
     @Published var errorMessage: String?
     private var hasStoreKitEntitlement = false
+    private var consecutiveSyncFailures = 0
     private var updates: Task<Void, Never>?
     var isPremium: Bool { accessState == .premium }
 
@@ -51,7 +52,7 @@ final class PurchaseManager: ObservableObject {
     }
 
     func restore(auth: AuthStore) async {
-        isWorking = true; defer { isWorking = false }
+        isWorking = true; errorMessage = nil; defer { isWorking = false }
         do {
             try await AppStore.sync()
             for await result in Transaction.currentEntitlements {
@@ -91,9 +92,12 @@ final class PurchaseManager: ObservableObject {
                 status = try await APIClient.shared.status(auth: auth)
             }
             accessState = status.isPremium ? .premium : .standard
+            consecutiveSyncFailures = 0
+            errorMessage = nil
         } catch {
             accessState = .unknown
-            if userFacingErrorMessage(error) != nil {
+            consecutiveSyncFailures += 1
+            if consecutiveSyncFailures >= 3, userFacingErrorMessage(error) != nil {
                 errorMessage = "購入内容を確認できませんでした。購入を復元してください。"
             }
         }

@@ -50,13 +50,28 @@ const transactionStatus = (transaction: JWSTransactionDecodedPayload) => {
   return 'active'
 }
 
-async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expectedUserId?: string) {
+type MirroredSubscription = { status: string; expiresAt: string | null; skipped?: false } | { skipped: true }
+
+async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expectedUserId?: string): Promise<MirroredSubscription> {
   if (transaction.productId !== required('APPLE_SUBSCRIPTION_PRODUCT_ID')) throw new Error('App Store product ID が一致しません')
   if (!transaction.originalTransactionId || !transaction.transactionId) throw new Error('App Store transaction ID が不足しています')
-  const userId = normalizedUuid(transaction.appAccountToken)
+  const tokenUserId = normalizedUuid(transaction.appAccountToken)
+  const requestUserId = normalizedUuid(expectedUserId)
+  if (requestUserId && tokenUserId && tokenUserId !== requestUserId) return { skipped: true }
+  const userId = tokenUserId || requestUserId
   if (!userId) throw new Error('appAccountToken がありません')
-  if (expectedUserId && userId !== normalizedUuid(expectedUserId)) throw new Error('購入者とログインユーザーが一致しません')
-  const { error } = await getSupabaseAdmin().from('app_store_subscriptions').upsert({
+  const db = getSupabaseAdmin()
+  if (!tokenUserId) {
+    const { data: existing, error: lookupError } = await db.from('app_store_subscriptions')
+      .select('user_id')
+      .eq('original_transaction_id', transaction.originalTransactionId)
+      .maybeSingle()
+    if (lookupError) throw lookupError
+    if (existing?.user_id && normalizedUuid(existing.user_id) !== userId) {
+      throw new Error('この購入は別のアカウントに登録済みです')
+    }
+  }
+  const { error } = await db.from('app_store_subscriptions').upsert({
     user_id: userId,
     original_transaction_id: transaction.originalTransactionId,
     latest_transaction_id: transaction.transactionId,
@@ -69,7 +84,7 @@ async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expe
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
   if (error) throw error
-  return { status: transactionStatus(transaction), expiresAt: toIso(transaction.expiresDate) }
+  return { status: transactionStatus(transaction), expiresAt: toIso(transaction.expiresDate), skipped: false }
 }
 
 appleRouter.get('/plan', (_req, res) => {
@@ -85,6 +100,11 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     if (!signedTransaction || signedTransaction.length > 20000) { res.status(400).json({ error: '購入情報が不足しています' }); return }
     const transaction = await verifyTransaction(signedTransaction)
     const subscription = await mirrorTransaction(transaction, req.userId)
+    if (subscription.skipped) {
+      console.info('App Store transaction belongs to another account', { correlationId: requestId })
+      res.json({ verified: true, skipped: true, correlationId: requestId })
+      return
+    }
     console.info('App Store purchase synchronized', {
       correlationId: requestId,
       environment: transaction.environment ?? 'Unknown',

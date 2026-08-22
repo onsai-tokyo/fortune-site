@@ -63,9 +63,13 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(size: 19, weight: .semibold))
                 if auth.session != nil && purchases.accessState == .unknown {
-                    HStack(spacing: 10) {
-                        ProgressView().tint(FateTheme.ink)
-                        Text("購入状況を確認しています").foregroundStyle(FateTheme.muted)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            ProgressView().tint(FateTheme.ink)
+                            Text("購入状況を確認しています").foregroundStyle(FateTheme.muted)
+                        }
+                        Button("もう一度確認する") { Task { await purchases.sync(auth: auth) } }
+                            .frame(minHeight: 44)
                     }.frame(minHeight: 56)
                 } else if purchases.accessState == .premium {
                     Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.ink)

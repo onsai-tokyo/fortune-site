@@ -369,3 +369,17 @@ test('共通エラー画面は種別・再試行・戻るを持ちGETを自動�
   assert.match(root, /FLErrorState\(kind: kind\)/)
   assert.doesNotMatch(root, /wifi\.exclamationmark/)
 })
+
+test('App Store同期は別アカウントを安全に除外し旧購入を重複付与しない', () => {
+  const apple = read('backend/src/routes/apple.ts')
+  const purchases = read('ios/FateLab/PurchaseManager.swift')
+  const settings = read('ios/FateLab/SettingsView.swift')
+  assert.match(apple, /tokenUserId && tokenUserId !== requestUserId\) return \{ skipped: true \}/)
+  assert.match(apple, /\.eq\('original_transaction_id', transaction\.originalTransactionId\)/)
+  assert.match(apple, /この購入は別のアカウントに登録済みです/)
+  assert.match(apple, /res\.json\(\{ verified: true, skipped: true/)
+  assert.match(purchases, /consecutiveSyncFailures >= 3/)
+  assert.match(purchases, /consecutiveSyncFailures = 0\s+errorMessage = nil/)
+  assert.match(settings, /Button\("もう一度確認する"\)/)
+  assert.match(settings, /Button\("購入を復元"\)/)
+})
