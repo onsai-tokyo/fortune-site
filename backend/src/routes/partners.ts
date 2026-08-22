@@ -8,6 +8,7 @@ import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber } from
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
 import { requirePoints } from '../middleware/points.js'
+import { calculatedDataWithReport } from '../lib/report/storedReport.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -207,7 +208,7 @@ async function loadCompatibilityContext(req: AuthRequest, res: Response, next: N
 partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoints(3), async (req: AuthRequest, res) => {
   const useSse = req.query.format === 'sse'
   const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
-  const complete = (report: StructuredReport) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json(report) }
+  const complete = (report: StructuredReport, conversationId: string) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
   try {
     const { db, partner, self } = res.locals.compatibility
     if (useSse) { res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders() }
@@ -270,11 +271,46 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     }, relationshipType)
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
+    const { data: existingConversation, error: conversationLookupError } = await db.from('reading_conversations')
+      .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
+    if (conversationLookupError) throw conversationLookupError
+    let compatibilityConversationId = existingConversation?.id as string | undefined
+    if (!compatibilityConversationId) {
+      const partnerBirth = {
+        birthDate: partner.birth_date,
+        birthTime: partner.birth_time ?? '',
+        birthplace: partner.birthplace,
+        gender: partner.gender,
+        displayName: partner.display_name,
+      }
+      const insertPayload = {
+        user_id: req.userId,
+        title: `あなたと${String(partner.display_name).slice(0, 40)}さんの相性鑑定`,
+        kind: 'compatibility',
+        partner_profile_id: partner.id,
+        idempotency_key: compatibilityIdentity,
+        birth_data: { self: self.birth_data, partner: partnerBirth, relationshipType },
+        calculated_data: calculatedDataWithReport({ self: self.calculated_data, partner: partnerFacts, relationshipType }, report),
+        report_text: report.reportText,
+        source_section: '二人の関係',
+      }
+      const { data: createdConversation, error: conversationCreateError } = await db.from('reading_conversations')
+        .insert(insertPayload).select('id').single()
+      if (conversationCreateError?.code === '23505') {
+        const { data: racedConversation, error: racedLookupError } = await db.from('reading_conversations')
+          .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
+        if (racedLookupError) throw racedLookupError
+        compatibilityConversationId = racedConversation?.id
+      } else if (conversationCreateError) throw conversationCreateError
+      else compatibilityConversationId = createdConversation?.id
+    }
+    if (!compatibilityConversationId) throw new Error('相性鑑定の会話を保存できませんでした')
     console.info('Compatibility conversation persistence metric', {
-      conversationPersisted: false,
+      conversationPersisted: true,
+      conversationReused: Boolean(existingConversation?.id),
       sourceConversationPresent: true,
     })
-    complete(report)
+    complete(report, compatibilityConversationId)
   } catch (error) {
     console.error('Partner compatibility failed', error)
     if (res.headersSent) { res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '相性鑑定を作成できませんでした', retryable: true })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }

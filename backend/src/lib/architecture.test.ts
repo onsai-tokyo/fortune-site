@@ -132,7 +132,19 @@ test('出生時刻と相性会話の根本原因を判別できる計測を残�
   assert.match(reading, /Reading conversation lookup miss/)
   assert.match(reading, /conversationId: req\.params\.id/)
   assert.match(partners, /Compatibility conversation persistence metric/)
-  assert.match(partners, /conversationPersisted: false/)
+  assert.match(partners, /conversationPersisted: true/)
+})
+
+test('相性鑑定は凪等な会話を1件保存し完了イベントでIDを返す', () => {
+  const partners = read('backend/src/routes/partners.ts')
+  const migration = read('supabase-reading-compatibility.sql')
+  assert.match(migration, /kind text NOT NULL DEFAULT 'self'/)
+  assert.match(migration, /partner_profile_id uuid REFERENCES partner_profiles/)
+  assert.match(partners, /eq\('idempotency_key', compatibilityIdentity\)/)
+  assert.match(partners, /kind: 'compatibility'/)
+  assert.match(partners, /partner_profile_id: partner\.id/)
+  assert.match(partners, /calculatedDataWithReport/)
+  assert.match(partners, /type: 'complete', report, conversationId/)
 })
 
 test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を通る', () => {

@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS reading_conversations (
   report_text text NOT NULL DEFAULT '',
   source_section text,
   source_year integer,
+  kind text NOT NULL DEFAULT 'self' CHECK (kind IN ('self', 'compatibility')),
+  partner_profile_id uuid,
   idempotency_key text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
