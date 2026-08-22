@@ -266,7 +266,7 @@ private struct FocusReadingView: View {
             FateTheme.canvas.ignoresSafeArea()
             VStack(spacing: 0) {
                 Text(item.title).font(.system(size: 20, weight: .medium))
-                    .multilineTextAlignment(.center).padding(.top, 18).padding(.horizontal, 60)
+                    .multilineTextAlignment(.center).padding(.top, 22).padding(.horizontal, 72)
                 TabView(selection: $selection) {
                     ForEach(Array(item.pages.enumerated()), id: \.offset) { index, page in
                         VStack(spacing: 28) {
@@ -295,10 +295,14 @@ private struct FocusReadingView: View {
             VStack {
                 HStack {
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark").font(.system(size: 15, weight: .medium)).foregroundStyle(FateTheme.ink)
-                            .frame(width: 46, height: 46).background(FateTheme.surface)
-                            .overlay(Rectangle().stroke(FateTheme.line, lineWidth: 0.5))
+                        ZStack {
+                            Circle().fill(FateTheme.canvas)
+                            Circle().stroke(FateTheme.line, lineWidth: 0.5)
+                            Image(systemName: "xmark").font(.system(size: 14, weight: .medium)).foregroundStyle(FateTheme.ink)
+                        }.frame(width: 36, height: 36)
                     }
+                    .frame(width: 44, height: 44)
+                    .accessibilityLabel("閉じる")
                     Spacer()
                 }
                 Spacer()

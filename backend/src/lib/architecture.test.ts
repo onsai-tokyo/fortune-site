@@ -198,6 +198,19 @@ test('設定は4グループに整理し購入復元とログアウトを各カ�
   assert.match(settings, /padding\(\.bottom, 48\)/)
 })
 
+test('読書画面と入力・生成UIは小画面でも簡潔な表示を保つ', () => {
+  const theme = read('ios/FateLab/Theme.swift')
+  const hub = read('ios/FateLab/InsightHubView.swift')
+  assert.match(theme, /Text\(""\)\.tag\(Int\?\.none\)/)
+  assert.doesNotMatch(theme, /Text\("未入力"\)\.tag\(Int\?\.none\)/)
+  assert.match(theme, /\.lineLimit\(1\)\.minimumScaleFactor\(0\.85\)/)
+  assert.match(theme, /padding\(\.horizontal, 24\)/)
+  assert.match(hub, /Circle\(\)\.fill\(FateTheme\.canvas\)/)
+  assert.match(hub, /frame\(width: 36, height: 36\)/)
+  assert.match(hub, /frame\(width: 44, height: 44\)/)
+  assert.doesNotMatch(hub, /overlay\(Rectangle\(\)\.stroke\(FateTheme\.line/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')

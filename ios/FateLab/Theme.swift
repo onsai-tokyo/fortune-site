@@ -118,7 +118,7 @@ struct FLInsightRow: View { let title: String; let subtitle: String; var body: s
 
 struct ReadingGenerationProgressView: View {
     let kind: GenerationKind; let progress: GenerationProgress
-    var body: some View { VStack(spacing: 28) { Spacer(); FateMark(size: 76); Text(kind == .selfReading ? "あなたのパターンを読んでいます" : "ふたりのパターンを読んでいます").font(.system(size: 21, weight: .semibold)); Text("\(progress.percent)%").font(.system(size: 44, weight: .bold)); ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink); VStack(spacing: 10) { Text(progress.title).font(.system(size: 20, weight: .semibold)); Text(progress.detail).font(.system(size: 15)).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center) }; Spacer() }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas.ignoresSafeArea()).accessibilityLabel("\(progress.percent)パーセント。\(progress.title)") }
+    var body: some View { VStack(spacing: 28) { Spacer(); FateMark(size: 76); Text(kind == .selfReading ? "あなたのパターンを読んでいます" : "ふたりのパターンを読んでいます").font(.system(size: 21, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.85); Text("\(progress.percent)%").font(.system(size: 44, weight: .bold)); ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink); VStack(spacing: 10) { Text(progress.title).font(.system(size: 20, weight: .semibold)); Text(progress.detail).font(.system(size: 15)).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center) }; Spacer() }.padding(.horizontal, 24).padding(.vertical, 28).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas.ignoresSafeArea()).accessibilityLabel("\(progress.percent)パーセント。\(progress.title)") }
 }
 
 struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { FLCard { content } } }
@@ -156,20 +156,30 @@ struct TimeMenuPicker: View {
     @Binding var time: Date?
     private var hour: Binding<Int?> { Binding(get: { time.map { Calendar.current.component(.hour, from: $0) } }, set: { value in
         guard let value else { time = nil; return }
-        update(hour: value, minute: minuteValue)
+        update(hour: value, minute: minute.wrappedValue ?? 0)
     }) }
-    private var minuteValue: Int { time.map { Calendar.current.component(.minute, from: $0) } ?? 0 }
-    private var minute: Binding<Int> { Binding(get: { minuteValue }, set: { update(hour: hour.wrappedValue ?? 12, minute: $0) }) }
+    private var minute: Binding<Int?> { Binding(get: {
+        time.map { Calendar.current.component(.minute, from: $0) }
+    }, set: { value in
+        guard let value else { time = nil; return }
+        update(hour: hour.wrappedValue ?? 12, minute: value)
+    }) }
 
     var body: some View {
         HStack(spacing: 8) {
             Picker("時", selection: hour) {
-                Text("未入力").tag(Int?.none)
+                Text("").tag(Int?.none)
                 ForEach(0..<24, id: \.self) { Text(verbatim: "\($0)時").tag(Int?.some($0)) }
             }
-            Picker("分", selection: minute) { ForEach(0..<60, id: \.self) { Text(verbatim: "\($0)分").tag($0) } }.disabled(time == nil)
+            Picker("分", selection: minute) {
+                Text("").tag(Int?.none)
+                ForEach(0..<60, id: \.self) { Text(verbatim: "\($0)分").tag(Int?.some($0)) }
+            }.disabled(time == nil)
             Spacer()
-        }.pickerStyle(.menu).tint(FateTheme.ink)
+        }
+        .pickerStyle(.menu).tint(FateTheme.ink)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(time == nil ? "出生時刻は空欄" : "出生時刻")
     }
 
     private func update(hour: Int, minute: Int) {
