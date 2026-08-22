@@ -39,13 +39,14 @@ struct AuthView: View {
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
             socialDivider
             VStack(spacing: 12) {
-                Button("Googleでログイン") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+                Button { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } } label: {
+                    googleButtonLabel("Googleでログイン")
+                }
                     .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
                 SignInWithAppleButton(.signIn) { auth.prepareAppleSignIn($0) } onCompletion: { result in
                     Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
                 }
                 .signInWithAppleButtonStyle(.whiteOutline).frame(maxWidth: .infinity).frame(height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             HStack(spacing: 4) {
                 Text("アカウントをお持ちでない方").foregroundStyle(FateTheme.muted)
@@ -66,13 +67,14 @@ struct AuthView: View {
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
             socialDivider
             VStack(spacing: 12) {
-                Button("Googleで登録") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+                Button { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } } label: {
+                    googleButtonLabel("Googleで登録")
+                }
                     .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
                 SignInWithAppleButton(.signUp) { auth.prepareAppleSignIn($0) } onCompletion: { result in
                     Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
                 }
                 .signInWithAppleButtonStyle(.whiteOutline).frame(maxWidth: .infinity).frame(height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             FLTextLink(title: "ログインへ戻る") { move(to: .landing) }.frame(maxWidth: .infinity)
         }
@@ -127,6 +129,14 @@ struct AuthView: View {
             Text("または").font(.caption).foregroundStyle(FateTheme.muted)
             Rectangle().fill(FateTheme.line).frame(height: 0.5)
         }.padding(.vertical, 14)
+    }
+
+    private func googleButtonLabel(_ title: String) -> some View {
+        HStack(spacing: 12) {
+            Image("GoogleLogo").resizable().aspectRatio(contentMode: .fit).frame(width: 18, height: 18)
+            Text(title)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func move(to destination: Route) {

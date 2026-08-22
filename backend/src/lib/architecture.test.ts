@@ -272,6 +272,8 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(root, /SavedReadingView\(conversationID: initialConversationID\)/)
   assert.match(reading, /latestConversationId/)
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
+  assert.match(reading, /\.or\('kind\.is\.null,kind\.eq\.personal'\)/)
+  assert.match(root, /latest\.isCompatibility \? "二人の関係性" : "あなたの取扱説明書"/)
 })
 
 test('鑑定の保存は会話を複製せずブックマーク状態を更新する', () => {
@@ -293,11 +295,14 @@ test('認証画面はメール・Google・Appleを同幅の縦一列で残す', 
   assert.match(authView, /新規登録はこちら/)
   assert.match(authView, /registrationMethods/)
   assert.match(authView, /メールアドレスで登録/)
-  assert.match(authView, /VStack\(spacing: 12\) \{[\s\S]{0,300}Button\("Googleでログイン"\)[\s\S]{0,500}SignInWithAppleButton\(\.signIn\)/)
-  assert.match(authView, /Button\("Googleで登録"\)/)
+  assert.match(authView, /googleButtonLabel\("Googleでログイン"\)/)
+  assert.match(authView, /googleButtonLabel\("Googleで登録"\)/)
+  assert.match(authView, /Image\("GoogleLogo"\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signIn\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signUp\)/)
   assert.match(authView, /signInWithAppleButtonStyle\(\.whiteOutline\).*frame\(height: 56\)/)
+  assert.doesNotMatch(authView, /SignInWithAppleButton[\s\S]{0,400}clipShape/)
+  assert.doesNotMatch(authView, /SignInWithAppleButton[\s\S]{0,400}cornerRadius/)
   assert.match(authView, /VStack\(alignment: \.center, spacing: 0\)/)
   assert.match(authView, /VStack\(alignment: \.center, spacing: 20\)/)
   assert.match(authView, /overlay\(alignment: \.topLeading\)/)
@@ -322,6 +327,22 @@ test('本質カードは1列で相手と本人の出生情報入力を共通化�
   assert.match(partners, /BirthProfileFields\(date: \$date/)
   assert.match(partners, /DateComponents\(year: 1990, month: 1, day: 1\)/)
   assert.doesNotMatch(partners, /@State private var name = ""; @State private var date = Date\(\)/)
+})
+
+test('本人と二人の鑑定カードはscopeを必須条件として画面を分離する', () => {
+  const hub = read('ios/FateLab/InsightHubView.swift')
+  const reading = read('backend/src/routes/reading.ts')
+  const editorial = read('backend/src/lib/report/editorial.ts')
+  const timing = read('backend/src/lib/report/timingCards.ts')
+  const coupleTiming = read('backend/src/lib/report/coupleTimingCards.ts')
+  const partners = read('backend/src/routes/partners.ts')
+  assert.doesNotMatch(hub, /\$0\.scope == nil/)
+  assert.match(hub, /\$0\.scope == \(scope == \.couple \? "couple" : "self"\)/)
+  assert.match(reading, /scope: card\.scope \?\? expectedScope/)
+  assert.match(editorial, /scope: 'self'/)
+  assert.match(timing, /scope: 'self'/)
+  assert.match(coupleTiming, /scope: 'couple'/)
+  assert.match(partners, /scope: 'couple'/)
 })
 
 test('あなたタブは再選択で取扱説明書へ戻り本質も共通リストを使う', () => {

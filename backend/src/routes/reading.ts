@@ -67,7 +67,9 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
       hasPremiumAccess(req.userId!),
       db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
-      db.from('reading_conversations').select('id').eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(1),
+      db.from('reading_conversations').select('id').eq('user_id', req.userId!)
+        .or('kind.is.null,kind.eq.personal')
+        .order('updated_at', { ascending: false }).limit(1),
     ])
     if (latestError) throw latestError
     const used = usage?.free_questions_used ?? 0

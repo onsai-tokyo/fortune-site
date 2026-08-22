@@ -5,7 +5,7 @@ import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } fro
 import type { ReportMetadata } from './metadata.js'
 import { japanDateContext, japanDateParts } from '../japanDate.js'
 
-const GENERATOR_VERSION = 'ai-cards-v5-longform'
+const GENERATOR_VERSION = 'ai-cards-v6-domain-contract'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
 const AI_TOTAL_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TOTAL_TIMEOUT_MS ?? 100_000))
 const AI_MAX_CONCURRENCY = Math.max(1, Number(process.env.AI_REPORT_MAX_CONCURRENCY ?? 4))
@@ -66,6 +66,16 @@ function validatePage(value: unknown): value is ReportCardPage {
     && page.text.trim().length > 0 && [...page.text.trim()].length <= 120
 }
 
+const loveForbidden = /仕事|職場|キャリア|上司/u
+const workForbidden = /恋愛|恋人|結婚|パートナー/u
+
+function containsForbiddenDomain(cardId: string, pages: ReportCardPage[]) {
+  const content = pages.map(page => `${page.label}\n${page.text}`).join('\n')
+  if (cardId.startsWith('love-')) return loveForbidden.test(content)
+  if (cardId.startsWith('work-')) return workForbidden.test(content)
+  return false
+}
+
 function parseAndValidateAiCard(raw: string, fallback: ReportCard): ReportCard {
   const parsed = JSON.parse(cleanJson(raw)) as Record<string, unknown>
   const value = parsed.card ?? (Array.isArray(parsed.cards) ? parsed.cards[0] : parsed)
@@ -79,6 +89,7 @@ function parseAndValidateAiCard(raw: string, fallback: ReportCard): ReportCard {
   const minimumPages = fallback.kind === 'timing' ? 8 : 15
   const maximumPages = fallback.kind === 'timing' ? 12 : 20
   if (pages.length < minimumPages || pages.length > maximumPages || !pages.every(validatePage)) throw new Error('Invalid AI pages')
+  if (containsForbiddenDomain(fallback.id, pages as ReportCardPage[])) throw new Error('AI card mixed an unrelated domain')
   if (metadataRefs.length === 0) throw new Error('AI card did not reference metadata')
   return { ...fallback, title, summary, pages, metadataRefs }
 }
@@ -91,11 +102,24 @@ export function parseAndValidateAiReport(raw: string, fallback: StructuredReport
   return { version: 3, reportText, cards, generator: 'ai' }
 }
 
+function pageContractFor(card: ReportCard): string {
+  if (card.id.startsWith('love-')) return `この章は恋愛だけを扱う。15〜20ページで書く。
+惹かれ方、距離の取り方、関係の始まり、安心できる条件、すれ違いが起きる場面、続くとき／終わるとき、相手に見せる顔と見せない顔、余韻を別々のページにする。
+仕事・キャリア・職場・上司の話は一切書かない。`
+  if (card.id.startsWith('work-')) return `この章は仕事だけを扱う。15〜20ページで書く。
+進め方、任され方、力が出る環境、消耗する環境、評価のされ方、判断の癖、役割が変わるとき、余韻を別々のページにする。
+恋愛・恋人・結婚・パートナーの話は一切書かない。`
+  const theme = card.tags[0] ?? card.title
+  return `この章は「${theme}」だけを扱う。15〜20ページで書く。
+導入、核、表の顔、内側の感情、強み、苦手、人との距離、過去からの変化、今後の使い方、余韻を別々のページにする。
+恋愛と仕事は、それぞれ最大1ページまでにする。`
+}
+
 function promptForCard(card: ReportCard, metadata: ReportMetadata, index: number, total: number) {
   const source = { id: card.id, kind: card.kind, title: card.title, summary: card.summary, pages: card.pages, evidence: card.evidence }
   const pageContract = card.kind === 'timing'
     ? 'この時期章だけを8〜12ページで書く。'
-    : 'この人物像の章だけを15〜20ページで書く。導入、核、表の顔、内側の感情、強み、苦手、人との距離、恋愛、仕事、過去からの変化、今後の使い方、余韻を別々のページにする。'
+    : pageContractFor(card)
   return `現在日は${japanDateContext()}です。過去の年を未来として、未来の年を過去として書かないでください。
 全${total}章のうち第${index + 1}章だけを書きます。次の鑑定事実を、読み手本人について断定するカードJSONへ書き換えてください。JSON以外は返さないでください。
 入力メタデータ: ${JSON.stringify(metadata)}

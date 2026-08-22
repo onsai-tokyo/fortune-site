@@ -35,6 +35,28 @@ test('120字超過やメタデータ未参照のAI出力は決定論版へ戻す
   assert.deepEqual(result.cards, fallback.cards)
 })
 
+test('恋愛と仕事の章はプロンプトと検証の両方で他領域の混入を拒否する', async () => {
+  const love = { ...fallback.cards[0], id: 'love-pattern', title: '恋愛章', tags: ['恋愛'] }
+  const work = { ...fallback.cards[0], id: 'work-mode', title: '仕事章', tags: ['仕事'] }
+  const source = { ...fallback, cards: [love, work] }
+  const prompts: string[] = []
+  let calls = 0
+  const result = await writeReportWithAi('domain-mixing', source, metadata, {
+    async readCache() { return null }, async writeCache() {},
+    async generate(prompt) {
+      prompts.push(prompt); calls += 1
+      const contaminated = pages.map(page => ({ ...page,
+        label: calls === 1 ? `${page.label}と仕事` : `${page.label}と恋愛`,
+      }))
+      return JSON.stringify({ card: { title: calls === 1 ? '恋の距離を読む章です' : '任され方を読む章です', summary: '章の要約です。', metadataRefs: ['missingElements:火'], pages: contaminated } })
+    },
+  })
+  assert.equal(result.generator, 'deterministic')
+  assert.deepEqual(result.cards, source.cards)
+  assert.ok(prompts.some(prompt => prompt.includes('仕事・キャリア・職場・上司の話は一切書かない')))
+  assert.ok(prompts.some(prompt => prompt.includes('恋愛・恋人・結婚・パートナーの話は一切書かない')))
+})
+
 test('章ごとに並列生成し、元ページと根拠を各プロンプトへ渡す', async () => {
   const secondCard = { ...fallback.cards[0], id: 'work', title: '元の仕事', pages: [{ role: 'core' as const, label: '元頁', text: '元ページの具体文。' }], evidence: [{ family: '干支系', system: '四柱推命', detail: '日柱' }] }
   const source = { ...fallback, cards: [fallback.cards[0], secondCard] }

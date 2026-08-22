@@ -31,7 +31,7 @@ struct InsightHubView: View {
                 }
             } else {
                 ReadingCardList(cards: report.cards.filter {
-                    $0.resolvedTab == selectedTab && ($0.scope == nil || $0.scope == (scope == .couple ? "couple" : "self"))
+                    $0.resolvedTab == selectedTab && $0.scope == (scope == .couple ? "couple" : "self")
                 }, onQuestion: onQuestion)
             }
         }

@@ -189,7 +189,10 @@ private struct AIChatTabView: View {
         guard auth.session != nil, tabRouter.chatConversationID == nil else { return }
         isLoading = true; defer { isLoading = false }
         do {
-            tabRouter.chatConversationID = try await APIClient.shared.readings(auth: auth).first?.id
+            if let latest = try await APIClient.shared.readings(auth: auth).first {
+                tabRouter.chatConversationID = latest.id
+                tabRouter.chatContextTitle = latest.isCompatibility ? "二人の関係性" : "あなたの取扱説明書"
+            }
         } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
 }
