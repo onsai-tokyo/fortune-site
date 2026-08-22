@@ -93,14 +93,14 @@ function pagesFor(input: ReportInput, item: Annual, decade?: Decade): ReportCard
   const action = flags.move ? '候補地、費用、移動時間を並べ、日常が続く案を一つ選ぶ' : flags.meeting || flags.marriage || flags.separation ? '相手に求める約束と、自分が守れる約束を三つずつ書く' : flags.work ? '引き受ける仕事、断る仕事、学ぶ仕事を一つずつ決める' : '続けること、やめること、試すことを一つずつ決める'
   const lens = personalLens(input.shichuDay)
   return [
-    { role: 'opening', label: 'この年の焦点', text: summaryFor(item) },
-    { role: 'core', label: '起こりやすいこと', text: `${events}という動きが日常の決断に表れ、${lens}が選び方の支えになります。` },
-    { role: 'scene', label: '現れやすい場面', text: `${scene}で、何を優先するかがはっきりします。` },
-    { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、今年の${core}が具体的な出来事になります。` },
-    { role: 'shadow', label: '急がないこと', text: caution },
-    { role: 'exception', label: '命式の手がかり', text: `${item.kanshi}と${item.tenGod}が重なるため、同じ出来事でも引き受け方が結果を分けます。` },
-    { role: 'action', label: 'この年に決めること', text: `${action}ことから始めてください。` },
-    { role: 'closing', label: '次の年へ残すもの', text: `${core}で得た基準を一つ言葉にすると、翌年の判断がぶれにくくなります。` },
+    { role: 'opening', label: 'この年の焦点', text: `${item.year}年は、${summaryFor(item)}` },
+    { role: 'core', label: '起こりやすいこと', text: `${item.year}年は${events}という動きが日常の決断に表れ、${lens}が選び方の支えになります。` },
+    { role: 'scene', label: '現れやすい場面', text: `${item.year}年は${scene}で、${core}のうち何を優先するかがはっきりします。` },
+    { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、${item.year}年の${core}が具体的な出来事になります。` },
+    { role: 'shadow', label: '急がないこと', text: `${item.year}年の${core}では、${caution}` },
+    { role: 'exception', label: '命式の手がかり', text: `${item.year}年は${item.kanshi}と${item.tenGod}が重なるため、${core}という同じ出来事でも引き受け方が結果を分けます。` },
+    { role: 'action', label: 'この年に決めること', text: `${item.year}年は、${action}ことから始めてください。` },
+    { role: 'closing', label: '次の年へ残すもの', text: `${item.year}年の${core}で得た基準を一つ言葉にすると、翌年の判断がぶれにくくなります。` },
   ]
 }
 

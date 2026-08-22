@@ -44,6 +44,9 @@ test('節目カードは決定論的な8ページで二人の節目タブに入�
   assert.ok(first.every(card => card.period?.label.includes('あなた') && card.period.label.includes('相手')))
   assert.equal(new Set(first.map(card => card.title)).size, first.length)
   assert.ok(first.every(card => card.pages.every(page => [...page.text].length <= 120)))
+  const pageTexts = first.flatMap(card => card.pages.map(page => page.text))
+  assert.equal(new Set(pageTexts).size, pageTexts.length)
+  assert.ok(first.every(card => card.pages.every(page => page.text.includes(card.period!.label.match(/\d{4}年/)![0]))))
 })
 
 test('異なる二人の年運は異なる節目を返し、既存の関係カードを保持する', () => {

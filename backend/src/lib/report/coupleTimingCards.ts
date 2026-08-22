@@ -18,6 +18,10 @@ export interface CoupleTurningPoint {
   score: number
 }
 
+function yearLead(year: number) {
+  return `${year}年は`
+}
+
 const kindCopy = {
   aligned: {
     titles: ['同じ方向へ動くほど、二人の歩幅がそろう年', '重なる願いを、二人の選択へ変える年', '一緒に決めることが、次の景色を開く年'],
@@ -111,14 +115,14 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear
     const selfTheme = themeText(point.selfThemes)
     const partnerTheme = themeText(point.partnerThemes)
     const pages: ReportCard['pages'] = [
-      { role: 'opening', label: 'この年の二人', text: copy.summary },
-      { role: 'core', label: 'あなたに起きること', text: `あなたは「${selfTheme}」へ意識が向きます。変えたいことを小さく共有すると、相手も置いていかれません。` },
-      { role: 'core', label: '相手に起きること', text: `相手は「${partnerTheme}」を大切にします。結論を急がず、何を守りたいかを聞く時間が二人を整えます。` },
-      { role: 'scene', label: '関係が動く場面', text: point.kind === 'aligned' ? '同じ話題に自然と目が向きます。暮らしや将来の選択を一緒に決めるほど、信頼が形になります。' : '予定や優先順位の違いが表に出ます。違いを拒絶と受け取らず、別々の時間も約束に含めてください。' },
-      { role: 'shadow', label: 'すれ違いやすいとき', text: point.kind === 'self-heavy' ? 'あなたの決断が先に進み、説明が後になると相手は不安になります。途中の迷いも伝えることが必要です。' : point.kind === 'partner-heavy' ? '相手の変化を待つ間、あなたが我慢だけを重ねると距離が広がります。できることと難しいことを分けてください。' : '分かっているはずという期待が、短い返事や沈黙を誤解へ変えます。大切なことほど言葉を省かないでください。' },
-      { role: 'exception', label: '見落としたくないこと', text: '同じ速さで進むことだけが親密さではありません。互いの変化を知り、戻れる場所を保つことも二人の強さです。' },
-      { role: 'question', label: '二人で確かめること', text: `この年に守りたいものと、変えてもよいものを一つずつ話してください。答えの違いが、次の約束を具体的にします。` },
-      { role: 'closing', label: 'この年の鍵', text: point.kind === 'aligned' ? '一緒に選ぶ回数を増やすこと。二人の意思が同じ場所に積み重なり、次の節目を支えます。' : '違いをなくすのではなく、扱い方を決めること。その約束が二人らしい距離をつくります。' },
+      { role: 'opening', label: 'この年の二人', text: `${yearLead(point.year)}${copy.summary}` },
+      { role: 'core', label: 'あなたに起きること', text: `${point.year}年のあなたは「${selfTheme}」へ意識が向きます。変えたいことを小さく共有すると、相手も置いていかれません。` },
+      { role: 'core', label: '相手に起きること', text: `${point.year}年の相手は「${partnerTheme}」を大切にします。結論を急がず、何を守りたいかを聞く時間が二人を整えます。` },
+      { role: 'scene', label: '関係が動く場面', text: point.kind === 'aligned' ? `${selfTheme}と${partnerTheme}が重なる場面で、二人は同じ話題へ自然と目を向けます。一緒に決めるほど、${point.year}年の信頼が形になります。` : `${selfTheme}と${partnerTheme}の優先順位が違う場面で、二人の歩幅が表に出ます。${point.year}年は別々の時間も約束に含めてください。` },
+      { role: 'shadow', label: 'すれ違いやすいとき', text: point.kind === 'self-heavy' ? `${selfTheme}を急ぐあなたの説明が後になると、${partnerTheme}を守りたい相手は不安になります。${point.year}年は途中の迷いも伝えてください。` : point.kind === 'partner-heavy' ? `${partnerTheme}へ向かう相手を待つ間、${selfTheme}を後回しにすると距離が広がります。${point.year}年はできることと難しいことを分けてください。` : `${selfTheme}と${partnerTheme}を分かっているはずという期待が、短い返事や沈黙を誤解へ変えます。${point.year}年は大切なことほど言葉を省かないでください。` },
+      { role: 'exception', label: '見落としたくないこと', text: `${point.year}年は、${selfTheme}と${partnerTheme}が同じ速さで進まなくても構いません。互いの変化を知り、戻れる場所を保つことも二人の強さです。` },
+      { role: 'question', label: '二人で確かめること', text: `${point.year}年に向けて、${selfTheme}と${partnerTheme}のうち守りたいもの、変えてよいものを一つずつ話してください。違いが次の約束を具体的にします。` },
+      { role: 'closing', label: 'この年の鍵', text: point.kind === 'aligned' ? `${point.year}年は、${selfTheme}と${partnerTheme}を一緒に選ぶ回数を増やすこと。二人の意思が次の節目を支えます。` : `${point.year}年は、${selfTheme}と${partnerTheme}の違いをなくさず、扱い方を決めること。その約束が二人らしい距離をつくります。` },
     ]
     return withCardProvenance({
       id: `couple-timing-${point.year}`,

@@ -41,6 +41,9 @@ test('本文とタグに年ごとの出来事・命式根拠を反映する', ()
   assert.ok(relationship.tags.includes('出会い'))
   assert.match(relationship.pages.map(page => page.text).join('\n'), /出会い|丙午|正財/)
   assert.ok(relationship.pages.every(page => [...page.text].length <= 120))
+  assert.ok(cards.every(card => card.pages.every(page => page.text.includes(card.period!.label.match(/\d{4}年/)![0]))))
+  const pageTexts = cards.flatMap(card => card.pages.map(page => page.text))
+  assert.equal(new Set(pageTexts).size, pageTexts.length)
 })
 
 test('同じ事象が複数年に続いてもタイトルを重複させない', () => {
