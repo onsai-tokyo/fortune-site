@@ -218,11 +218,12 @@ test('存在しない鑑定のチャットは404を再送せず一覧へ戻せ�
   assert.match(chat, /else if !input\.trimmingCharacters/)
 })
 
-test('設定は4グループに整理し購入復元とログアウトを各カード内に保つ', () => {
+test('設定から鑑定履歴を外し購入復元とログアウトを各カード内に保つ', () => {
   const settings = read('ios/FateLab/SettingsView.swift')
-  for (const title of ['あなたのデータ', '鑑定と対話', 'メンバーシップ', 'アカウント']) {
+  for (const title of ['あなたのデータ', 'メンバーシップ', 'アカウント']) {
     assert.match(settings, new RegExp(title))
   }
+  assert.doesNotMatch(settings, /鑑定履歴/)
   assert.match(settings, /private var membershipCard/)
   assert.match(settings, /RoundedRectangle\(cornerRadius: 12\)/)
   assert.match(settings, /SettingsDivider\(edgeInset: 0\)/)
@@ -345,10 +346,14 @@ test('本人と二人の鑑定カードはscopeを必須条件として画面を
   assert.match(partners, /scope: 'couple'/)
 })
 
-test('あなたタブは再選択で取扱説明書へ戻り本質も共通リストを使う', () => {
+test('5タブをenumで管理し再選択で各タブのrootへ戻る', () => {
   const root = read('ios/FateLab/RootView.swift')
   const hub = read('ios/FateLab/InsightHubView.swift')
-  assert.match(root, /func selectTab\(_ tab: Int\)/)
+  assert.match(root, /enum AppTab: Int, Hashable \{ case you, couple, readings, chat, settings \}/)
+  assert.match(root, /func selectTab\(_ tab: AppTab\)/)
+  assert.match(root, /Text\("鑑定書"\)/)
+  assert.match(root, /Image\(systemName: "books\.vertical"\)/)
+  assert.match(root, /resetTokens\[tab, default: 0\] \+= 1/)
   assert.match(root, /yourRootResetToken \+= 1/)
   assert.match(root, /onChange\(of: tabRouter\.yourRootResetToken\)/)
   assert.match(root, /showsList = false/)

@@ -13,10 +13,6 @@ struct SettingsView: View {
                     NavigationLink { ProfileView() } label: { SettingsNavigationRow(title: "プロフィール") }
                 }
 
-                SettingsGroup(title: "鑑定と対話") {
-                    NavigationLink { ReadingListView() } label: { SettingsNavigationRow(title: "鑑定履歴") }
-                }
-
                 membershipCard
 
                 SettingsGroup(title: "アカウント") {

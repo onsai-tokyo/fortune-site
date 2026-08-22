@@ -18,7 +18,10 @@ struct ReadingListView: View {
                             .listRowBackground(FateTheme.canvas)
                     }
                     if readings.isEmpty {
-                        FLEmptyState(title: "まだ鑑定書がありません", message: "生年月日から鑑定書を作成すると、ここに保存されます。")
+                        VStack(spacing: 16) {
+                            FLEmptyState(title: "まだ鑑定がありません", message: "生まれたときの情報から、最初の鑑定を作れます。")
+                            Button("新しく鑑定する") { onNewReading() }.buttonStyle(FLPrimaryButtonStyle())
+                        }
                             .listRowBackground(FateTheme.canvas)
                     }
                     Section("\(readings.count)件") {
@@ -30,7 +33,9 @@ struct ReadingListView: View {
                     }.listRowBackground(FateTheme.canvas)
                     }
                     }
-                    Button("新しく鑑定する") { onNewReading() }.buttonStyle(FLSecondaryButtonStyle()).listRowBackground(FateTheme.canvas)
+                    if !readings.isEmpty {
+                        Button("新しく鑑定する") { onNewReading() }.buttonStyle(FLSecondaryButtonStyle()).listRowBackground(FateTheme.canvas)
+                    }
                 }.scrollContentBackground(.hidden)
                     .task { await load() }
             } else {

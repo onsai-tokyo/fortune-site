@@ -10,6 +10,8 @@ final class PurchaseManager: ObservableObject {
     @Published var isWorking = false
     @Published var errorMessage: String?
     private var hasStoreKitEntitlement = false
+    private var attemptedStoreSyncThisSession = false
+    private weak var authStore: AuthStore?
     private var consecutiveSyncFailures = 0
     private var updates: Task<Void, Never>?
     var isPremium: Bool { accessState == .premium }
@@ -34,6 +36,7 @@ final class PurchaseManager: ObservableObject {
     }
 
     func purchase(userID: UUID, auth: AuthStore) async {
+        authStore = auth
         guard let product else { errorMessage = "料金情報を準備中です"; return }
         isWorking = true; errorMessage = nil
         defer { isWorking = false }
@@ -52,6 +55,7 @@ final class PurchaseManager: ObservableObject {
     }
 
     func restore(auth: AuthStore) async {
+        authStore = auth
         isWorking = true; errorMessage = nil; defer { isWorking = false }
         do {
             try await AppStore.sync()
@@ -68,6 +72,9 @@ final class PurchaseManager: ObservableObject {
     private func listenForTransactions() async {
         for await result in Transaction.updates {
             guard let transaction = try? verified(result) else { continue }
+            if transaction.productID == AppConfig.subscriptionProductID, let authStore {
+                try? await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: authStore)
+            }
             await transaction.finish()
             await refreshLocalEntitlements()
         }
@@ -76,11 +83,17 @@ final class PurchaseManager: ObservableObject {
     /// StoreKit is only a signal that the server mirror may need updating.
     /// The server status remains the single source of truth used by the UI.
     func sync(auth: AuthStore) async {
+        authStore = auth
         errorMessage = nil
         accessState = .unknown
         await refreshLocalEntitlements()
         do {
             var status = try await APIClient.shared.status(auth: auth)
+            if !status.isPremium && !hasStoreKitEntitlement && !attemptedStoreSyncThisSession {
+                attemptedStoreSyncThisSession = true
+                try? await AppStore.sync()
+                await refreshLocalEntitlements()
+            }
             if hasStoreKitEntitlement && !status.isPremium {
                 for await result in Transaction.currentEntitlements {
                     guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }

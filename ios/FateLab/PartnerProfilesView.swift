@@ -13,6 +13,7 @@ private func relationshipGroup(_ label: String) -> String {
 
 struct PartnerProfilesView: View {
     @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var purchases: PurchaseManager
     @EnvironmentObject private var tabRouter: AppTabRouter
     @State private var partners: [PartnerProfile] = []
     @State private var selected: PartnerProfile?
@@ -30,6 +31,8 @@ struct PartnerProfilesView: View {
     @State private var generationProgress = GenerationProgress(percent: 5, title: "二人の情報を確認しています", detail: "鑑定に使うプロフィールを準備しています")
     @State private var selfReading: ReadingSummary?
     @State private var compatibilityFailed = false
+    @State private var needsPurchaseRecovery = false
+    @State private var showPaywall = false
 
     var body: some View {
         ZStack { ScrollView {
@@ -63,7 +66,7 @@ struct PartnerProfilesView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("まず「あなたについて」の鑑定を作成してください。")
                             .font(.callout).foregroundStyle(FateTheme.muted)
-                        Button("あなたの鑑定を作成する") { tabRouter.selectedTab = 0 }
+                        Button("あなたの鑑定を作成する") { tabRouter.selectedTab = .you }
                             .buttonStyle(FLSecondaryButtonStyle())
                     }.padding(.bottom, 12)
                 } else if let selfReading {
@@ -77,10 +80,21 @@ struct PartnerProfilesView: View {
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
-                    FLErrorState(
-                        title: errorKind == .network ? "通信エラーが発生しました" : "相性鑑定を完了できませんでした",
-                        message: errorMessage
-                    ) { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }
+                    if needsPurchaseRecovery {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("購入状況を確認してください").font(.headline)
+                            Text(errorMessage).font(.callout).foregroundStyle(FateTheme.muted)
+                            Button("購入を復元") {
+                                Task { await purchases.restore(auth: auth); await openCompatibility(force: true) }
+                            }.buttonStyle(FLPrimaryButtonStyle())
+                            Button("継続鑑定を始める") { showPaywall = true }.buttonStyle(FLSecondaryButtonStyle())
+                        }.padding(18).background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 14))
+                    } else {
+                        FLErrorState(
+                            title: errorKind == .network ? "通信エラーが発生しました" : "相性鑑定を完了できませんでした",
+                            message: errorMessage
+                        ) { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }
+                    }
                 }
             }.padding(FateSpacing.screenH)
         }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }
@@ -89,6 +103,11 @@ struct PartnerProfilesView: View {
         .task { await load() }
         .sheet(isPresented: $showPicker) { pickerSheet }
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
+        .sheet(isPresented: $showPaywall) {
+            PaywallSheet(draftQuestion: "") {
+                Task { await purchases.sync(auth: auth); showPaywall = false }
+            }.environmentObject(auth).environmentObject(purchases)
+        }
         .navigationDestination(isPresented: $showCompatibilityResult) {
             if let compatibilityReport, let selected {
                 CompatibilityResultView(report: compatibilityReport, partnerName: selected.displayName, relationshipType: relationshipType) { card in
@@ -166,13 +185,18 @@ struct PartnerProfilesView: View {
             showCompatibilityResult = true
             return
         }
-        isGenerating = true; errorMessage = nil; compatibilityFailed = false; defer { isGenerating = false }
+        isGenerating = true; errorMessage = nil; compatibilityFailed = false; needsPurchaseRecovery = false; defer { isGenerating = false }
         do {
             compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, relationshipLabel: relationshipLabel, auth: auth) { generationProgress = $0 }
             compatibilityKey = key
             showCompatibilityResult = true
         }
-        catch { compatibilityFailed = true; errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。"; errorKind = errorStateKind(error) }
+        catch {
+            compatibilityFailed = true
+            if case APIError.paymentRequired = error { needsPurchaseRecovery = true }
+            errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。"
+            errorKind = errorStateKind(error)
+        }
     }
 }
 

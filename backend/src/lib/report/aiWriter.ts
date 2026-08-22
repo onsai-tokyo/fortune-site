@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '../supabaseAdmin.js'
 import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
 import { japanDateContext, japanDateParts } from '../japanDate.js'
+import { stripMarkdown } from '../markdown.js'
 
 const GENERATOR_VERSION = 'ai-cards-v6-domain-contract'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
@@ -81,9 +82,13 @@ function parseAndValidateAiCard(raw: string, fallback: ReportCard): ReportCard {
   const value = parsed.card ?? (Array.isArray(parsed.cards) ? parsed.cards[0] : parsed)
   if (!value || typeof value !== 'object') throw new Error('Invalid AI card')
   const card = value as Record<string, unknown>
-  const title = typeof card.title === 'string' ? card.title.trim() : ''
-  const summary = typeof card.summary === 'string' ? card.summary.trim() : ''
-  const pages = Array.isArray(card.pages) ? card.pages : []
+  const title = typeof card.title === 'string' ? stripMarkdown(card.title).trim() : ''
+  const summary = typeof card.summary === 'string' ? stripMarkdown(card.summary).trim() : ''
+  const pages = Array.isArray(card.pages) ? card.pages.map(value => {
+    if (!value || typeof value !== 'object') return value
+    const page = value as Record<string, unknown>
+    return { ...page, label: typeof page.label === 'string' ? stripMarkdown(page.label) : page.label, text: typeof page.text === 'string' ? stripMarkdown(page.text) : page.text }
+  }) : []
   const metadataRefs = Array.isArray(card.metadataRefs) ? card.metadataRefs.filter((item): item is string => typeof item === 'string' && item.length > 0) : []
   if (!title || nakedTitles.has(title) || !summary || [...summary].length > 120) throw new Error('Invalid AI title or summary')
   const minimumPages = fallback.kind === 'timing' ? 8 : 15
@@ -128,6 +133,7 @@ function promptForCard(card: ReportCard, metadata: ReportMetadata, index: number
 出力は {"card":{"title":"...","summary":"...","metadataRefs":["missingElements:火"],"pages":[{"role":"opening","label":"はじまり","text":"..."}]}}。
 ${pageContract}
 openingは短く、sceneは60〜120字にする。各textは120字以内で1ページ1主張。具体的な場面を先に書き、感情、葛藤、余韻まで描く。同じ内容を語尾だけ変えて繰り返さない。二面性と都合の悪い面を含める。断定調にする。
+出力にMarkdown記法を使わない。**、*、#、-、バッククォート、>などの記号で装飾しない。強調も文章として書く。
 「かもしれません」「傾向がある人もいます」「大切です」「意識しましょう」を使わない。裸のカテゴリ名をtitleにしない。
 元ページの情報を捨てず、根拠と入力メタデータの具体値を最低1つ本文に反映し、そのパスをmetadataRefsへ入れる。内部仕様やmetadataという語は本文に書かない。`
 }

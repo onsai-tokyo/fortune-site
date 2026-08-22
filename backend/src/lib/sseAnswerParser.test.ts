@@ -22,3 +22,12 @@ test('NEXTマーカーがなくても保留末尾を本文として返す', () =
   assert.equal(result.answer, '通常の回答---NE')
   assert.deepEqual(result.suggestions, [])
 })
+
+test('Markdown強調がチャンクをまたいでも本文へ残らない', () => {
+  const parser = new StreamingAnswerParser()
+  const streamed = parser.push('これは*') + parser.push('*大切な場面**です。\n---NEXT---\n次を聞く')
+  const result = parser.finish()
+  assert.equal(streamed + result.finalDelta, 'これは大切な場面です。\n')
+  assert.equal(result.answer, 'これは大切な場面です。')
+  assert.deepEqual(result.suggestions, ['次を聞く'])
+})

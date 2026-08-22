@@ -43,14 +43,16 @@ struct RootView: View {
             get: { tabRouter.selectedTab },
             set: { tabRouter.selectTab($0) }
         )) {
-            NavigationStack { YourReadingRootView(initialConversationID: latestConversationID) }
-                .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(0)
-            NavigationStack { PartnerProfilesView() }
-                .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(1)
-            NavigationStack { AIChatTabView() }
-                .tabItem { Label { Text("対話") } icon: { Image(systemName: "bubble.left.and.bubble.right").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(2)
-            NavigationStack { SettingsView() }
-                .tabItem { Label { Text("設定") } icon: { Image(systemName: "gearshape").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(3)
+            ResettableTabStack(tab: .you) { YourReadingRootView(initialConversationID: latestConversationID) }
+                .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.you)
+            ResettableTabStack(tab: .couple) { PartnerProfilesView() }
+                .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.couple)
+            ResettableTabStack(tab: .readings) { ReadingLibraryRootView() }
+                .tabItem { Label { Text("鑑定書") } icon: { Image(systemName: "books.vertical").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.readings)
+            ResettableTabStack(tab: .chat) { AIChatTabView() }
+                .tabItem { Label { Text("対話") } icon: { Image(systemName: "bubble.left.and.bubble.right").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.chat)
+            ResettableTabStack(tab: .settings) { SettingsView() }
+                .tabItem { Label { Text("設定") } icon: { Image(systemName: "gearshape").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.settings)
         }
         .tint(FateTheme.ink)
         .background(FateTheme.canvas)
@@ -75,6 +77,23 @@ struct RootView: View {
         case newUser
         case returning(UUID)
         case failed(FLErrorState.Kind)
+    }
+}
+
+enum AppTab: Int, Hashable { case you, couple, readings, chat, settings }
+
+private struct ResettableTabStack<Content: View>: View {
+    @EnvironmentObject private var tabRouter: AppTabRouter
+    let tab: AppTab
+    @ViewBuilder let content: Content
+    var body: some View { NavigationStack { content }.id(tabRouter.resetToken(for: tab)) }
+}
+
+private struct ReadingLibraryRootView: View {
+    @State private var showNewReading = false
+    var body: some View {
+        ReadingListView { showNewReading = true }
+            .navigationDestination(isPresented: $showNewReading) { HomeView() }
     }
 }
 
@@ -120,26 +139,32 @@ private struct SplashView: View {
 
 @MainActor
 final class AppTabRouter: ObservableObject {
-    @Published var selectedTab = 0
+    @Published var selectedTab: AppTab = .you
     @Published private(set) var yourRootResetToken = 0
+    @Published private var resetTokens: [AppTab: Int] = [:]
     @Published var chatConversationID: UUID?
     @Published var chatContextTitle: String?
 
-    func selectTab(_ tab: Int) {
-        if tab == 0 { yourRootResetToken += 1 }
+    func selectTab(_ tab: AppTab) {
+        if tab == selectedTab {
+            resetTokens[tab, default: 0] += 1
+            if tab == .you { yourRootResetToken += 1 }
+        }
         selectedTab = tab
     }
+
+    func resetToken(for tab: AppTab) -> Int { resetTokens[tab, default: 0] }
 
     func openChat(conversationID: UUID, contextTitle: String? = nil) {
         chatConversationID = conversationID
         chatContextTitle = contextTitle
-        selectedTab = 2
+        selectedTab = .chat
     }
 
     func closeMissingChat() {
         chatConversationID = nil
         chatContextTitle = nil
-        selectedTab = 0
+        selectedTab = .you
     }
 }
 

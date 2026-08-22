@@ -16,6 +16,7 @@ import { calcAstrology } from '../lib/astrology.js'
 import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
 import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
 import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
+import { stripMarkdown } from '../lib/markdown.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -99,7 +100,13 @@ function extractJsonObject(raw: string): Record<string, unknown> {
 
 export function parseCompatibilityCard(raw: string, minimumPages = 8): ReportCard {
   const value = extractJsonObject(raw)
-  const card = (value.card ?? (Array.isArray(value.cards) ? value.cards[0] : undefined)) as ReportCard | undefined
+  const source = (value.card ?? (Array.isArray(value.cards) ? value.cards[0] : undefined)) as ReportCard | undefined
+  const card = source ? {
+    ...source,
+    title: stripMarkdown(source.title ?? ''),
+    summary: stripMarkdown(source.summary ?? ''),
+    pages: Array.isArray(source.pages) ? source.pages.map(page => ({ ...page, label: stripMarkdown(page.label), text: stripMarkdown(page.text) })) : source.pages,
+  } : undefined
   if (!card?.title || /^恋愛|友人|相性$/.test(card.title) || !Array.isArray(card.pages) || card.pages.length < minimumPages || card.pages.length > 12) {
     throw new Error('相性カード形式が不正です')
   }
@@ -266,6 +273,7 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
 相手: ${JSON.stringify({ name: partner.display_name, ...compactContext.partner })}
 カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"内部の占術系統","system":"内部の占術名","detail":"判断に使った計算上の根拠"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"物語上の短い見出し","text":"120字以内"}]}}
 opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。
+出力にMarkdown記法を使わない。**、*、#、-、バッククォート、>などの記号で装飾しない。強調も文章として書く。
 本文に天中殺、日柱、日主、干支、五行、通変星、宿曜、納音、命宮、夫妻宮、星名、干支名などの占術用語を一切書かない。根拠は evidence にのみ保存し、本文では二人に起きる場面や行動へ翻訳する。`
     progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

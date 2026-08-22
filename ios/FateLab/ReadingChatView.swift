@@ -270,7 +270,7 @@ struct ReadingChatView: View {
     }
 }
 
-private struct PaywallSheet: View {
+struct PaywallSheet: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @Environment(\.dismiss) private var dismiss
