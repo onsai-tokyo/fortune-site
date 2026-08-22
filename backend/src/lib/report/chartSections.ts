@@ -14,6 +14,14 @@ function number(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
+export function normalizePalaceName(value: string): string {
+  return value.normalize('NFKC')
+    .replace(/宮$/, '')
+    .replace(/祿/g, '禄')
+    .replace(/德/g, '徳')
+    .replace(/藝/g, '芸')
+}
+
 export function buildChartSections(calculatedData: unknown): ChartSection[] {
   const data = record(calculatedData)
   const hasKnownValue = ['shichuYear', 'shichuMonth', 'shichuDay', 'lifePathNumber', 'honmeiName', 'nayin', 'sukuyo']
@@ -48,8 +56,9 @@ export function buildChartSections(calculatedData: unknown): ChartSection[] {
   const palaces = Array.isArray(ziwei.palaces) ? ziwei.palaces.map(record) : []
   const ziweiNames = ['命宮', '官禄宮', '財帛宮', '夫妻宮', '遷移宮', '福徳宮']
   const ziweiGrid = ziweiNames.map(name => {
-    const palace = palaces.find(item => text(item.name) === name)
-    if (!palace) return { position: name, value: '—（出生時刻が必要）' }
+    if (ziwei.available !== true) return { position: name, value: '—（出生時刻が必要）' }
+    const palace = palaces.find(item => normalizePalaceName(text(item.name)) === normalizePalaceName(name))
+    if (!palace) return { position: name, value: '—' }
     const stars = Array.isArray(palace.majorStars) ? palace.majorStars.map(value => text(record(value).name)).filter(value => value !== '—') : []
     return { position: name, value: stars.join('・') || '主星なし' }
   })

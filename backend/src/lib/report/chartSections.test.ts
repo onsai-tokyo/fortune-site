@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildChartSections } from './chartSections.js'
+import { buildChartSections, normalizePalaceName } from './chartSections.js'
+import { calcZiwei } from '../ziwei.js'
 
 const calculated = {
   shichuYear: '乙亥', shichuMonth: '戊寅', shichuDay: '壬午', shichuHour: null,
@@ -39,4 +40,47 @@ test('五行0と出生時刻が必要な項目を空欄にしない', () => {
 
 test('計算データが空なら命式セクションを作らない', () => {
   assert.deepEqual(buildChartSections({}), [])
+})
+
+test('紫微斗数の宮名は旧字体と宮接尾辞のゆれを同一視する', () => {
+  assert.equal(normalizePalaceName('官祿'), normalizePalaceName('官禄宮'))
+  assert.equal(normalizePalaceName('福德'), normalizePalaceName('福徳宮'))
+  assert.equal(normalizePalaceName('命宮'), normalizePalaceName('命宮'))
+})
+
+test('出生時刻ありの紫微斗数は6宮すべてに値を表示する', () => {
+  const sections = buildChartSections({
+    ...calculated,
+    ziwei: {
+      available: true,
+      earthlyBranchOfSoulPalace: '子',
+      earthlyBranchOfBodyPalace: '辰',
+      palaces: [
+        { name: '命宮', majorStars: [{ name: '破軍' }] },
+        { name: '官祿', majorStars: [{ name: '武曲' }] },
+        { name: '財帛', majorStars: [] },
+        { name: '夫妻', majorStars: [{ name: '天相' }] },
+        { name: '遷移', majorStars: [{ name: '太陽' }] },
+        { name: '福德', majorStars: [{ name: '天府' }] },
+      ],
+    },
+  })
+  const ziwei = sections.find(section => section.id === 'chart-ziwei')!
+  assert.equal(ziwei.grid?.length, 6)
+  assert.deepEqual(ziwei.grid?.map(item => item.value), ['破軍', '武曲', '主星なし', '天相', '太陽', '天府'])
+  assert.doesNotMatch(JSON.stringify(ziwei), /出生時刻が必要/)
+})
+
+test('紫微斗数の宮データ不足を出生時刻不足と誤表示しない', () => {
+  const sections = buildChartSections({ ...calculated, ziwei: { available: true, palaces: [] } })
+  const ziwei = sections.find(section => section.id === 'chart-ziwei')!
+  assert.ok(ziwei.grid?.every(item => item.value === '—'))
+  assert.doesNotMatch(JSON.stringify(ziwei), /出生時刻が必要/)
+})
+
+test('1995-02-20 03:02 女性の実際の宮名で6宮すべてを表示する', () => {
+  const sections = buildChartSections({ ...calculated, ziwei: calcZiwei(1995, 2, 20, 3, 'female', '愛知県') })
+  const ziwei = sections.find(section => section.id === 'chart-ziwei')!
+  assert.equal(ziwei.grid?.length, 6)
+  assert.ok(ziwei.grid?.every(item => item.value !== '—' && !item.value.includes('出生時刻が必要')))
 })
