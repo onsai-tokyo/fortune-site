@@ -4,20 +4,21 @@ import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoint
 
 const themes = ['仕事', '暮らし', '学び', '関係', '挑戦', '休息']
 function annual(offset = 0): CoupleAnnualTiming[] {
-  return Array.from({ length: 14 }, (_, index) => ({
-    year: 2023 + index,
+  return Array.from({ length: 17 }, (_, index) => ({
+    year: 2020 + index,
     score: (index + offset) % 6,
     themes: [themes[(index + offset) % themes.length]],
   }))
 }
 
-test('二人の年運から範囲内の節目を6〜8件抽出し、相違年も残す', () => {
+test('二人の年運から過去5年を含む節目を6〜10件抽出し、過去の相違年も残す', () => {
   const partner = annual(2)
-  partner[5] = { ...partner[5], score: annual()[5].score, themes: ['二人だけの別テーマ'] }
+  partner[3] = { ...partner[3], score: annual()[3].score, themes: ['二人だけの別テーマ'] }
   const points = findCoupleTurningPoints(annual(), partner, 1995, 1992, 2026)
-  assert.ok(points.length >= 6 && points.length <= 8)
-  assert.ok(points.every(point => point.year >= 2023 && point.year <= 2036))
+  assert.ok(points.length >= 6 && points.length <= 10)
+  assert.ok(points.every(point => point.year >= 2021 && point.year <= 2036))
   assert.ok(points.some(point => point.kind === 'divergent'))
+  assert.ok(points.some(point => point.year < 2026 && point.kind === 'divergent'))
   assert.ok(points.every(point => point.selfAge === point.year - 1995 && point.partnerAge === point.year - 1992))
 })
 
@@ -29,6 +30,7 @@ test('節目カードは決定論的な8ページで二人の節目タブに入�
   assert.ok(first.every(card => card.kind === 'timing' && card.tab === 'timing'))
   assert.ok(first.every(card => card.pages.length >= 8 && card.pages.length <= 12))
   assert.ok(first.every(card => card.period?.label.includes('あなた') && card.period.label.includes('相手')))
+  assert.equal(new Set(first.map(card => card.title)).size, first.length)
   assert.ok(first.every(card => card.pages.every(page => [...page.text].length <= 120)))
 })
 

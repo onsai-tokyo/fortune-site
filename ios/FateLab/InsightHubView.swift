@@ -167,6 +167,8 @@ struct InsightCard: View {
         VStack(alignment: .leading, spacing: 7) {
             if let period = item.period?.label {
                 Text(period).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            } else if item.resolvedTab == "essence", let category = essenceCategory {
+                Text(category).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
             }
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 7) {
@@ -180,6 +182,13 @@ struct InsightCard: View {
         .padding(.vertical, 16)
         .overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .bottom)
         .contentShape(Rectangle())
+    }
+
+    private var essenceCategory: String? {
+        item.tags.first { tag in
+            let normalized = tag.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+            return normalized != "本質" && !normalized.isEmpty
+        }?.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
     }
 }
 

@@ -210,11 +210,11 @@ struct TimeMenuPicker: View {
     var body: some View {
         HStack(spacing: 8) {
             Picker("時", selection: hour) {
-                Text("").tag(Int?.none)
+                Text("--時").tag(Int?.none)
                 ForEach(0..<24, id: \.self) { Text(verbatim: "\($0)時").tag(Int?.some($0)) }
             }
             Picker("分", selection: minute) {
-                Text("").tag(Int?.none)
+                Text("--分").tag(Int?.none)
                 ForEach(0..<60, id: \.self) { Text(verbatim: "\($0)分").tag(Int?.some($0)) }
             }.disabled(time == nil)
             Spacer()

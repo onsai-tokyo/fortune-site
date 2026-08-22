@@ -18,19 +18,19 @@ export interface CoupleTurningPoint {
 
 const kindCopy = {
   aligned: {
-    title: '同じ方向へ動くほど、二人の歩幅がそろう年',
+    titles: ['同じ方向へ動くほど、二人の歩幅がそろう年', '重なる願いを、二人の選択へ変える年', '一緒に決めることが、次の景色を開く年'],
     summary: '二人の関心が重なりやすく、一緒に決めて進むことで関係が育つ節目です。',
   },
   divergent: {
-    title: '違う方向を向くからこそ、約束を選び直す年',
+    titles: ['違う方向を向くからこそ、約束を選び直す年', '別々の課題を、戻れる場所へつなぐ年', '歩幅の違いから、二人の距離を整え直す年'],
     summary: 'それぞれが別の課題へ向かいやすく、距離と役割を言葉にすることが必要な節目です。',
   },
   'self-heavy': {
-    title: 'あなたの変化を、二人の暮らしへなじませる年',
+    titles: ['あなたの変化を、二人の暮らしへなじませる年', 'あなたの決断を、二人の安心へつなぐ年', '先に進むあなたが、相手へ経過を渡す年'],
     summary: 'あなた側の動きが大きくなりやすく、相手に経過を伝えるほど安心が育つ節目です。',
   },
   'partner-heavy': {
-    title: '相手の変化を、二人で受け止め直す年',
+    titles: ['相手の変化を、二人で受け止め直す年', '相手の転換を、二人の暮らしで支える年', '変わる相手と、無理のない約束を結ぶ年'],
     summary: '相手側の動きが大きくなりやすく、急がせず支え方を確かめることが鍵になる節目です。',
   },
 } as const
@@ -60,7 +60,7 @@ export function findCoupleTurningPoints(
   const partnerByYear = new Map(partnerAnnual.map(item => [item.year, item]))
   const candidates = selfAnnual.flatMap(self => {
     const partner = partnerByYear.get(self.year)
-    if (!partner || self.year < currentYear - 3 || self.year > currentYear + 10) return []
+    if (!partner || self.year < currentYear - 5 || self.year > currentYear + 10) return []
     const kind = classify(self, partner)
     const overlap = sharedThemes(self.themes, partner.themes).length
     return [{
@@ -74,15 +74,25 @@ export function findCoupleTurningPoints(
     }]
   })
   const ranked = [...candidates].sort((a, b) => b.score - a.score || a.year - b.year)
-  const selected = ranked.slice(0, Math.min(8, ranked.length))
+  const selected = ranked.slice(0, Math.min(10, ranked.length))
   const divergent = ranked.find(item => item.kind === 'divergent')
   if (divergent && !selected.some(item => item.kind === 'divergent') && selected.length > 0) selected[selected.length - 1] = divergent
+  const pastDivergent = ranked.find(item => item.year < currentYear && item.kind === 'divergent')
+  if (pastDivergent && !selected.some(item => item.year === pastDivergent.year) && selected.length > 0) selected[selected.length - 1] = pastDivergent
   return [...new Map(selected.map(item => [item.year, item])).values()].sort((a, b) => a.year - b.year)
 }
 
 export function buildCoupleTimingCards(points: CoupleTurningPoint[]): ReportCard[] {
+  const occurrences = new Map<CoupleTurningPoint['kind'], number>()
+  const usedTitles = new Set<string>()
+  const firstFutureYear = points.find(point => point.year >= new Date().getFullYear())?.year
   return points.map(point => {
     const copy = kindCopy[point.kind]
+    const occurrence = occurrences.get(point.kind) ?? 0
+    occurrences.set(point.kind, occurrence + 1)
+    let title: string = copy.titles[occurrence] ?? `${copy.titles[copy.titles.length - 1]}――${themeText(point.selfThemes)}`
+    if (usedTitles.has(title)) title = `${copy.titles[copy.titles.length - 1]}――${point.year}年に選び直すこと`
+    usedTitles.add(title)
     const selfTheme = themeText(point.selfThemes)
     const partnerTheme = themeText(point.partnerThemes)
     const pages: ReportCard['pages'] = [
@@ -99,10 +109,10 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[]): ReportCard
       id: `couple-timing-${point.year}`,
       kind: 'timing',
       tab: 'timing',
-      title: copy.title,
+      title,
       summary: copy.summary,
       tags: ['二人の節目', point.kind],
-      period: { label: `${point.year}年（あなた${point.selfAge}歳・相手${point.partnerAge}歳）` },
+      period: { label: `${point.year === firstFutureYear ? 'これから　' : ''}${point.year}年（あなた${point.selfAge}歳・相手${point.partnerAge}歳）` },
       pages,
       evidence: [
         { family: '本人の年運', system: '年ごとの推移', detail: `${point.year}: score=${point.score}; themes=${point.selfThemes.join('/')}` },

@@ -330,8 +330,9 @@ ${conciseConversationInstruction}
     res.flushHeaders()
     const parser = new StreamingAnswerParser()
     let disconnected = false
+    let stopReason: string | null = null
     const stream = getClient().beta.promptCaching.messages.stream({
-      model: 'claude-haiku-4-5-20251001', max_tokens: 400,
+      model: 'claude-haiku-4-5-20251001', max_tokens: 1000,
       system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
       messages: history,
     })
@@ -344,6 +345,11 @@ ${conciseConversationInstruction}
         const safeText = parser.push(event.delta.text)
         if (safeText) res.write(`data: ${JSON.stringify({ delta: { text: safeText } })}\n\n`)
       }
+      if (event.type === 'message_delta') stopReason = event.delta.stop_reason
+    }
+    if (stopReason === 'max_tokens') {
+      console.warn('Reading answer truncated', { correlationId: correlationId(req), stopReason })
+      throw new Error('Reading answer reached max_tokens')
     }
     const { answer, suggestions, finalDelta } = parser.finish()
     if (finalDelta) res.write(`data: ${JSON.stringify({ delta: { text: finalDelta } })}\n\n`)

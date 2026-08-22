@@ -5,10 +5,10 @@ import { titlesAreSimilar } from './aiWriter.js'
 
 interface ChapterSpec { id: string; internalLabel: string; tags: string[]; axes: FactAxis[] }
 const chapters: ChapterSpec[] = [
-  { id: 'life-mission', internalLabel: '人生の軸', tags: ['本質', '人生'], axes: ['drive'] },
-  { id: 'core-mind-1', internalLabel: '判断の順序', tags: ['本質', '判断'], axes: ['cognition', 'expression'] },
+  { id: 'life-mission', internalLabel: '価値観', tags: ['本質', '価値観'], axes: ['drive'] },
+  { id: 'core-mind-1', internalLabel: '行動パターン', tags: ['本質', '行動パターン'], axes: ['cognition', 'expression'] },
   { id: 'core-mind-2', internalLabel: '人との距離', tags: ['本質', '人間関係'], axes: ['relation'] },
-  { id: 'core-mind-3', internalLabel: '見失いやすい瞬間', tags: ['本質', '注意点'], axes: ['shadow', 'deficit', 'tension'] },
+  { id: 'core-mind-3', internalLabel: '弱点・注意点', tags: ['本質', '弱点・注意点'], axes: ['shadow', 'deficit', 'tension'] },
   { id: 'love-beginning', internalLabel: '恋愛の入口', tags: ['恋愛'], axes: ['domain-love', 'relation'] },
   { id: 'love-pattern', internalLabel: '関係の続き方', tags: ['恋愛', '結婚'], axes: ['domain-love', 'tension'] },
   { id: 'work-mode', internalLabel: '仕事の進め方', tags: ['仕事'], axes: ['domain-work', 'drive'] },

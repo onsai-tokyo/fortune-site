@@ -233,7 +233,8 @@ test('設定は4グループに整理し購入復元とログアウトを各カ�
 test('読書画面と入力・生成UIは小画面でも簡潔な表示を保つ', () => {
   const theme = read('ios/FateLab/Theme.swift')
   const hub = read('ios/FateLab/InsightHubView.swift')
-  assert.match(theme, /Text\(""\)\.tag\(Int\?\.none\)/)
+  assert.match(theme, /Text\("--時"\)\.tag\(Int\?\.none\)/)
+  assert.match(theme, /Text\("--分"\)\.tag\(Int\?\.none\)/)
   assert.doesNotMatch(theme, /Text\("未入力"\)\.tag\(Int\?\.none\)/)
   assert.match(theme, /\.lineLimit\(1\)\.minimumScaleFactor\(0\.85\)/)
   assert.match(theme, /padding\(\.horizontal, 24\)/)
