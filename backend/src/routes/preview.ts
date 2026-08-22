@@ -144,6 +144,11 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const sanmeiRelations = calcSanmeiRelations(shichu, sanmei.chusatsu)
     const ziwei = calcZiwei(year, month, day, birthHour, gender === 'male' ? 'male' : 'female', birthplace)
     const astrology = calcAstrology(year, month, day, birthHour, birthMinute, birthplace)
+    console.info('Birth-time calculation metric', {
+      ziweiAvailable: ziwei.available,
+      ziweiPalaceNames: ziwei.available ? ziwei.palaces.map(palace => palace.name) : [],
+      kyuseiTimeStarAvailable: Boolean(kyuseiProfile.timeStar),
+    })
     progress(38, '複数の見方を重ねています', '共通する特徴を探しています')
     const reportInput = {
       birthDate,

@@ -122,6 +122,19 @@ test('相性生成は個人情報を含めず停止理由と出力量を計測�
   assert.doesNotMatch(partners, /Compatibility generation metric[\s\S]{0,500}(birth_data|calculated_data|display_name)/)
 })
 
+test('出生時刻と相性会話の根本原因を判別できる計測を残す', () => {
+  const preview = read('backend/src/routes/preview.ts')
+  const reading = read('backend/src/routes/reading.ts')
+  const partners = read('backend/src/routes/partners.ts')
+  assert.match(preview, /Birth-time calculation metric/)
+  assert.match(preview, /ziweiPalaceNames/)
+  assert.match(preview, /kyuseiTimeStarAvailable/)
+  assert.match(reading, /Reading conversation lookup miss/)
+  assert.match(reading, /conversationId: req\.params\.id/)
+  assert.match(partners, /Compatibility conversation persistence metric/)
+  assert.match(partners, /conversationPersisted: false/)
+})
+
 test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を通る', () => {
   const partners = read('backend/src/routes/partners.ts')
   const analyze = read('backend/src/routes/analyze.ts')

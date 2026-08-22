@@ -14,6 +14,7 @@ import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsage.js'
 import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
+import { correlationId } from '../lib/apiError.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -273,7 +274,14 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
     const question = checkedQuestion.value
     const { data: conversation } = await db.from('reading_conversations').select('*')
       .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
-    if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+    if (!conversation) {
+      console.warn('Reading conversation lookup miss', {
+        correlationId: correlationId(req),
+        conversationId: req.params.id,
+        route: 'questions',
+      })
+      res.status(404).json({ error: '鑑定履歴が見つかりません' }); return
+    }
 
     const premium = await hasPremiumAccess(req.userId!)
     if (!premium) {

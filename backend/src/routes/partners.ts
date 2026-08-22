@@ -270,6 +270,10 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     }, relationshipType)
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
+    console.info('Compatibility conversation persistence metric', {
+      conversationPersisted: false,
+      sourceConversationPresent: true,
+    })
     complete(report)
   } catch (error) {
     console.error('Partner compatibility failed', error)
