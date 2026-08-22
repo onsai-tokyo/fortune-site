@@ -273,8 +273,20 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(root, /SavedReadingView\(conversationID: initialConversationID\)/)
   assert.match(reading, /latestConversationId/)
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
-  assert.match(reading, /\.or\('kind\.is\.null,kind\.eq\.personal'\)/)
-  assert.match(root, /latest\.isCompatibility \? "二人の関係性" : "あなたの取扱説明書"/)
+  assert.match(reading, /\.or\('kind\.is\.null,kind\.eq\.personal,kind\.eq\.self'\)/)
+  assert.match(root, /ReadingListView\(chatsOnly: true\)/)
+})
+
+test('基本鑑定は一種類だけ表示し質問は独立したチャット履歴へ保存する', () => {
+  const reading = read('backend/src/routes/reading.ts')
+  const list = read('ios/FateLab/ReadingListView.swift')
+  const chat = read('ios/FateLab/ReadingChatView.swift')
+  assert.match(reading, /if \(item\.kind === 'chat'\) return true/)
+  assert.match(reading, /: 'personal'/)
+  assert.match(reading, /readingRouter\.post\('\/conversations\/:id\/chat'/)
+  assert.match(reading, /kind: 'chat'/)
+  assert.match(list, /Section\("チャット履歴"\)/)
+  assert.match(chat, /createChatConversation\(sourceID:/)
 })
 
 test('鑑定の保存は会話を複製せずブックマーク状態を更新する', () => {

@@ -166,14 +166,17 @@ final class AppTabRouter: ObservableObject {
         chatContextTitle = nil
         selectedTab = .you
     }
+
+    func showChatHistory() {
+        chatConversationID = nil
+        chatContextTitle = nil
+        selectedTab = .chat
+    }
 }
 
 private struct AIChatTabView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var tabRouter: AppTabRouter
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var errorKind: FLErrorState.Kind = .dataFetch
 
     var body: some View {
         Group {
@@ -196,29 +199,18 @@ private struct AIChatTabView: View {
                 } actions: {
                     Button("ログインする") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
-            } else if isLoading {
-                ProgressView("会話を読み込んでいます…").tint(FateTheme.ink)
-            } else if errorMessage != nil {
-                FLErrorState(kind: errorKind) { Task { await openLatestConversation() } }
-                    .padding(24)
             } else {
-                ContentUnavailableView("鑑定結果がありません", systemImage: "doc.text.magnifyingglass",
-                                       description: Text("「あなたについて」から最初の鑑定を作成してください。"))
+                ReadingListView(chatsOnly: true)
             }
         }
         .background(FateTheme.canvas)
-        .task(id: auth.session?.user.id) { await openLatestConversation() }
-    }
-
-    private func openLatestConversation() async {
-        guard auth.session != nil, tabRouter.chatConversationID == nil else { return }
-        isLoading = true; defer { isLoading = false }
-        do {
-            if let latest = try await APIClient.shared.readings(auth: auth).first {
-                tabRouter.chatConversationID = latest.id
-                tabRouter.chatContextTitle = latest.isCompatibility ? "二人の関係性" : "あなたの取扱説明書"
+        .toolbar {
+            if tabRouter.chatConversationID != nil {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("履歴") { tabRouter.showChatHistory() }
+                }
             }
-        } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
+        }
     }
 }
 

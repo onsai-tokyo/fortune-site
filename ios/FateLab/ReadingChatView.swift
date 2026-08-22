@@ -5,6 +5,7 @@ struct ReadingChatView: View {
     @EnvironmentObject private var purchases: PurchaseManager
     @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
+    @State private var activeConversationID: UUID
     @State private var detail: ConversationDetail?
     @State private var messages: [ReadingMessage] = []
     @State private var status: ReadingStatus?
@@ -24,6 +25,11 @@ struct ReadingChatView: View {
     @State private var isSaved = false
     @State private var isSaving = false
     @State private var saveMessage: String?
+
+    init(conversationID: UUID) {
+        self.conversationID = conversationID
+        _activeConversationID = State(initialValue: conversationID)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -195,7 +201,7 @@ struct ReadingChatView: View {
     private func load() async {
         guard auth.session != nil else { return }
         do {
-            let value = try await APIClient.shared.conversation(id: conversationID, auth: auth)
+            let value = try await APIClient.shared.conversation(id: activeConversationID, auth: auth)
             detail = value; messages = value.messages; isSaved = value.conversation.isSaved ?? false
             await loadStatus()
         } catch { handleChatError(error) }
@@ -206,7 +212,7 @@ struct ReadingChatView: View {
         isSaving = true; saveMessage = nil
         defer { isSaving = false }
         do {
-            try await APIClient.shared.setConversationSaved(id: conversationID, isSaved: true, auth: auth)
+            try await APIClient.shared.setConversationSaved(id: activeConversationID, isSaved: true, auth: auth)
             isSaved = true
             saveMessage = "保存しました"
         } catch {
@@ -223,6 +229,8 @@ struct ReadingChatView: View {
         guard auth.session != nil else { return }
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty else { return }
+        let needsNewThread = detail?.conversation.kind != "chat" && messages.isEmpty
+        var createdNewThread = false
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true
         messages.append(ReadingMessage(id: nil, role: "user", content: question, createdAt: nil))
@@ -231,8 +239,14 @@ struct ReadingChatView: View {
         let assistantIndex = messages.count - 1
         forceScrollRevision += 1
         do {
+            if needsNewThread {
+                activeConversationID = try await APIClient.shared.createChatConversation(sourceID: activeConversationID, question: question, auth: auth)
+                detail = try await APIClient.shared.conversation(id: activeConversationID, auth: auth)
+                isSaved = true
+                createdNewThread = true
+            }
             var didFinish = false
-            for try await event in APIClient.shared.askStream(conversationID: conversationID, question: question, auth: auth) {
+            for try await event in APIClient.shared.askStream(conversationID: activeConversationID, question: question, auth: auth) {
                 switch event {
                 case .delta(let text):
                     messages[assistantIndex].content += text
@@ -242,6 +256,10 @@ struct ReadingChatView: View {
                 }
             }
             if !didFinish { throw CancellationError() }
+            if createdNewThread {
+                tabRouter.chatConversationID = activeConversationID
+                tabRouter.chatContextTitle = question
+            }
             await loadStatus()
         } catch {
             messages.removeSubrange(firstNewIndex..<messages.count)

@@ -344,7 +344,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       }
       const insertPayload = {
         user_id: req.userId,
-        title: compatibilityReadingTitle(partner.display_name),
+        title: compatibilityReadingTitle(selfBirth.nickname, partner.display_name),
         kind: 'compatibility',
         partner_profile_id: partner.id,
         idempotency_key: compatibilityIdentity,
@@ -364,6 +364,9 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       else compatibilityConversationId = createdConversation?.id
     }
     if (!compatibilityConversationId) throw new Error('相性鑑定の会話を保存できませんでした')
+    await db.from('reading_conversations').update({
+      title: compatibilityReadingTitle(selfBirth.nickname, partner.display_name),
+    }).eq('id', compatibilityConversationId).eq('user_id', req.userId!)
     console.info('Compatibility conversation persistence metric', {
       conversationPersisted: true,
       conversationReused: Boolean(existingConversation?.id),

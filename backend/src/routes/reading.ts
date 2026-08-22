@@ -16,7 +16,7 @@ import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsag
 import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { correlationId } from '../lib/apiError.js'
-import { personalReadingTitle } from '../lib/conversationTitle.js'
+import { chatReadingTitle, compatibilityReadingTitle, personalReadingTitle } from '../lib/conversationTitle.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -68,7 +68,7 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
       hasPremiumAccess(req.userId!),
       db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
       db.from('reading_conversations').select('id').eq('user_id', req.userId!)
-        .or('kind.is.null,kind.eq.personal')
+        .or('kind.is.null,kind.eq.personal,kind.eq.self')
         .order('updated_at', { ascending: false }).limit(1),
     ])
     if (latestError) throw latestError
@@ -186,9 +186,22 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
   const primary = await db.from('reading_conversations')
-    .select('id,secret_token,title,kind,is_saved,source_section,source_year,created_at,updated_at,reading_messages(count)')
-    .eq('user_id', req.userId!).order('is_saved', { ascending: false }).order('updated_at', { ascending: false }).limit(100)
-  if (!primary.error) { res.json({ conversations: primary.data }); return }
+    .select('id,secret_token,title,kind,is_saved,partner_profile_id,birth_data,source_section,source_year,created_at,updated_at,reading_messages(count)')
+    .eq('user_id', req.userId!).order('updated_at', { ascending: false }).order('is_saved', { ascending: false }).limit(100)
+  if (!primary.error) {
+    const seen = new Set<string>()
+    const conversations = (primary.data ?? []).filter(item => {
+      if (item.kind === 'chat') return true
+      const key = item.kind === 'compatibility' ? `couple:${item.partner_profile_id ?? item.id}` : 'personal'
+      if (seen.has(key)) return false
+      seen.add(key); return true
+    }).map(item => {
+      if (item.kind !== 'compatibility') return item
+      const birth = item.birth_data as { self?: { nickname?: unknown }, partner?: { displayName?: unknown } } | null
+      return { ...item, title: compatibilityReadingTitle(birth?.self?.nickname, birth?.partner?.displayName) }
+    })
+    res.json({ conversations }); return
+  }
   if (!['42703', 'PGRST204'].includes(primary.error.code ?? '')) {
     res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return
   }
@@ -198,6 +211,37 @@ readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) =
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
   if (legacy.error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
   res.json({ conversations: (legacy.data ?? []).map(item => ({ ...item, is_saved: false })) })
+})
+
+readingRouter.post('/conversations/:id/chat', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const db = getSupabaseUser(req.accessToken!)
+    const { data: source, error: sourceError } = await db.from('reading_conversations').select('*')
+      .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    if (sourceError) throw sourceError
+    if (!source) { res.status(404).json({ error: 'もとの鑑定書が見つかりません' }); return }
+    if (source.kind === 'chat') { res.json({ id: source.id, reused: true }); return }
+    const question = String(req.body?.question ?? '').trim()
+    if (!question) { res.status(400).json({ error: '質問を入力してください' }); return }
+    const birthData = { ...(source.birth_data as Record<string, unknown>), _sourceConversationId: source.id, _sourceKind: source.kind ?? 'personal' }
+    const { data, error } = await db.from('reading_conversations').insert({
+      user_id: req.userId,
+      title: chatReadingTitle(question),
+      kind: 'chat',
+      is_saved: true,
+      partner_profile_id: source.partner_profile_id,
+      birth_data: birthData,
+      calculated_data: source.calculated_data,
+      report_text: source.report_text,
+      source_section: source.source_section,
+      source_year: source.source_year,
+    }).select('id').single()
+    if (error) throw error
+    res.status(201).json({ id: data.id })
+  } catch (error) {
+    console.error('Create chat conversation failed:', error)
+    res.status(500).json({ error: '新しい対話を作成できませんでした' })
+  }
 })
 
 readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
@@ -214,11 +258,12 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('report_text,calculated_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    .select('report_text,calculated_data,birth_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
-  const expectedScope = data.kind === 'compatibility' ? 'couple' : 'self'
+  const birth = data.birth_data as { _sourceKind?: string } | null
+  const expectedScope = data.kind === 'compatibility' || birth?._sourceKind === 'compatibility' ? 'couple' : 'self'
   const cards = report.cards
     .filter(card => card.tab !== 'chart' && card.kind !== 'chart')
     .filter(card => !card.scope || card.scope === expectedScope)

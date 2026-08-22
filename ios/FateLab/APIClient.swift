@@ -275,6 +275,15 @@ struct APIClient {
         return try JSONDecoder().decode(ConversationDetail.self, from: raw)
     }
 
+    func createChatConversation(sourceID: UUID, question: String, auth: AuthStore) async throws -> UUID {
+        let token = try await auth.validAccessToken()
+        let raw = try await data(for: request(path: "/api/reading/conversations/\(sourceID.uuidString)/chat", method: "POST", token: token,
+                                             json: ["question": question]), auth: auth)
+        let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
+        guard let value = object?["id"] as? String, let id = UUID(uuidString: value) else { throw APIError.invalidResponse }
+        return id
+    }
+
     func setConversationSaved(id: UUID, isSaved: Bool, auth: AuthStore) async throws {
         let token = try await auth.validAccessToken()
         _ = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)/saved",

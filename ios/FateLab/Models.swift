@@ -66,6 +66,7 @@ struct ReadingSummary: Codable, Identifiable {
     }
 
     var isCompatibility: Bool { kind == "compatibility" }
+    var isChat: Bool { kind == "chat" }
 }
 
 struct ReadingStatus: Decodable {
