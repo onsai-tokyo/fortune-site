@@ -25,6 +25,7 @@ export interface ReportMetadata {
   lifeStage: 'teen' | 'early-20s' | 'late-20s' | '30s' | '40s' | '50s' | '60-plus' | 'unknown'
   profile: OptionalProfile
   combinationSignature: string
+  contentCacheSignature: string
 }
 
 const concernTag: Record<CurrentConcern, string> = {
@@ -58,6 +59,16 @@ function cleanProfile(profile: OptionalProfile): OptionalProfile {
     ...(profile.currentRole ? { currentRole: profile.currentRole } : {}),
     ...(profile.currentConcern ? { currentConcern: profile.currentConcern } : {}),
   }
+}
+
+export function normalizeBirthTime(value: string | null | undefined): string | null {
+  if (!value?.trim()) return null
+  const match = value.trim().match(/^(\d{1,2}):(\d{1,2})$/)
+  if (!match) return null
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23 || !Number.isInteger(minute) || minute < 0 || minute > 59) return null
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
 export function extractReportMetadata(input: ReportInput, optionalProfile: OptionalProfile = {}): ReportMetadata {
@@ -105,6 +116,21 @@ export function extractReportMetadata(input: ReportInput, optionalProfile: Optio
     sukuyo: input.sukuyo,
   })
 
+  const combinationSignature = createHash('sha256').update(signatureSource).digest('hex').slice(0, 16)
+  const profileDigest = createHash('sha256').update(JSON.stringify({
+    nickname: profile.nickname ?? null,
+    currentRole: profile.currentRole ?? null,
+    currentConcern: profile.currentConcern ?? null,
+  })).digest('hex').slice(0, 16)
+  const contentCacheSignature = createHash('sha256').update(JSON.stringify({
+    birthDate: input.birthDate ?? null,
+    birthTime: normalizeBirthTime(input.birthTime),
+    birthplace: input.birthplace ?? null,
+    gender: input.gender ?? null,
+    profileDigest,
+    combinationSignature,
+  })).digest('hex').slice(0, 32)
+
   return {
     dominantElements,
     missingElements,
@@ -118,6 +144,7 @@ export function extractReportMetadata(input: ReportInput, optionalProfile: Optio
     age: input.age ?? null,
     lifeStage: lifeStage(input.age),
     profile,
-    combinationSignature: createHash('sha256').update(signatureSource).digest('hex').slice(0, 16),
+    combinationSignature,
+    contentCacheSignature,
   }
 }

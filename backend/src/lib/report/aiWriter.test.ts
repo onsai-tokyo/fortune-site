@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { StructuredReport } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
-import { titlesAreSimilar, writeReportWithAi } from './aiWriter.js'
+import { reportCacheKey, reportCardCacheKey, titlesAreSimilar, writeReportWithAi } from './aiWriter.js'
 
 const fallback: StructuredReport = { version: 3, reportText: 'fallback', cards: [{
   id: 'core', kind: 'essence', title: '元の題', summary: '元の要約', tags: ['本質'], period: null, evidence: [], pages: [],
 }] }
-const metadata = { combinationSignature: 'abc', missingElements: [{ element: '火', score: 0, severity: 'missing' }], dominantElements: [], contradictions: [], relationshipDistortions: [], domainHighlights: [], turningPoints: { decades: [], annual: [] }, age: 30, lifeStage: '30s', profile: {} } as ReportMetadata
+const metadata = { combinationSignature: 'abc', contentCacheSignature: 'content-abc', missingElements: [{ element: '火', score: 0, severity: 'missing' }], dominantElements: [], contradictions: [], relationshipDistortions: [], domainHighlights: [], turningPoints: { decades: [], annual: [] }, age: 30, lifeStage: '30s', profile: {} } as ReportMetadata
 const pages = Array.from({ length: 15 }, (_, index) => ({ role: index === 0 ? 'opening' : index === 14 ? 'closing' : 'core', label: `頁${index}`, text: `火が欠ける命式を具体的に読む場面${index}。` }))
 const raw = JSON.stringify({ cards: [{ title: '勢いより準備から始める人です', summary: '熱を外から補うと動きが明確になります。', metadataRefs: ['missingElements:火'], pages }] })
 
@@ -24,6 +24,37 @@ test('同じ入力の2回目はキャッシュを返しAIを再実行しない',
   assert.deepEqual(second, first)
   assert.equal(generated, 1)
   assert.equal(first.generator, 'ai')
+})
+
+test('v2キャッシュはseedを無視し内容署名を使い、フラグ無効時は旧キーへ戻る', () => {
+  assert.equal(reportCacheKey('seed-a', metadata, true), reportCacheKey('seed-b', metadata, true))
+  assert.equal(reportCardCacheKey('seed-a', metadata, 'core', true), reportCardCacheKey('seed-b', metadata, 'core', true))
+  assert.notEqual(reportCacheKey('seed-a', metadata, false), reportCacheKey('seed-b', metadata, false))
+  assert.notEqual(reportCacheKey('seed-a', metadata, true), reportCacheKey('seed-a', { ...metadata, contentCacheSignature: 'content-def' }, true))
+})
+
+test('AI生成上限に達したカードはエラーにせず決定論版へ戻す', async () => {
+  const source = { ...fallback, cards: [fallback.cards[0], { ...fallback.cards[0], id: 'second', title: '二枚目' }] }
+  let generated = 0
+  const result = await writeReportWithAi('limited', source, metadata, {
+    async readCache() { return null }, async writeCache() {}, async readCardCache() { return null },
+    maxCardsPerReport: 1,
+    async generate() { generated += 1; return raw },
+  })
+  assert.equal(generated, 1)
+  assert.equal(result.cards[0].title, '勢いより準備から始める人です')
+  assert.equal(result.cards[1].title, '二枚目')
+})
+
+test('日次スロットを確保できない場合はAIを呼ばない', async () => {
+  let generated = 0
+  const result = await writeReportWithAi('daily-limited', fallback, metadata, {
+    async readCache() { return null }, async writeCache() {}, async readCardCache() { return null },
+    reserveGenerationSlot() { return false },
+    async generate() { generated += 1; return raw },
+  })
+  assert.equal(generated, 0)
+  assert.equal(result.generator, 'deterministic')
 })
 
 test('120字超過やメタデータ未参照のAI出力は決定論版へ戻す', async () => {

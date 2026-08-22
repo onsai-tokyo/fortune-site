@@ -8,9 +8,12 @@ import { stripMarkdown } from '../markdown.js'
 import { aggregateGenerator, classifyFallbackReason, logCardGeneration, logReportGeneration, type FallbackReason, type GenerationContext } from './generationMetrics.js'
 
 const GENERATOR_VERSION = 'ai-cards-v6-domain-contract'
+const AI_CACHE_KEY_VERSION = 'v2'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
 const AI_TOTAL_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TOTAL_TIMEOUT_MS ?? 100_000))
 const AI_MAX_CONCURRENCY = Math.max(1, Number(process.env.AI_REPORT_MAX_CONCURRENCY ?? 4))
+const AI_DAILY_CARD_LIMIT = Math.max(0, Number(process.env.AI_DAILY_CARD_LIMIT ?? 500))
+const AI_MAX_CARDS_PER_REPORT = Math.max(0, Number(process.env.AI_MAX_CARDS_PER_REPORT ?? 25))
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
 
@@ -33,14 +36,22 @@ export interface AiWriterDependencies {
   overallTimeoutMs?: number
   cardTimeoutMs?: number
   maxConcurrency?: number
+  maxCardsPerReport?: number
+  reserveGenerationSlot?(): boolean | Promise<boolean>
 }
 
-function cacheKey(seed: string, metadata: ReportMetadata) {
-  return createHash('sha256').update(`${GENERATOR_VERSION}|${japanDateParts().year}|${seed}|${metadata.combinationSignature}`).digest('hex')
+export function reportCacheKey(seed: string, metadata: ReportMetadata, useV2 = process.env.AI_CACHE_KEY_V2 !== '0') {
+  const source = useV2
+    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|${metadata.contentCacheSignature}`
+    : `${GENERATOR_VERSION}|${japanDateParts().year}|${seed}|${metadata.combinationSignature}`
+  return createHash('sha256').update(source).digest('hex')
 }
 
-function cardCacheKey(seed: string, metadata: ReportMetadata, cardId: string) {
-  return createHash('sha256').update(`${GENERATOR_VERSION}|${japanDateParts().year}|card|${seed}|${metadata.combinationSignature}|${cardId}`).digest('hex')
+export function reportCardCacheKey(seed: string, metadata: ReportMetadata, cardId: string, useV2 = process.env.AI_CACHE_KEY_V2 !== '0') {
+  const source = useV2
+    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|card|${metadata.contentCacheSignature}|${cardId}`
+    : `${GENERATOR_VERSION}|${japanDateParts().year}|card|${seed}|${metadata.combinationSignature}|${cardId}`
+  return createHash('sha256').update(source).digest('hex')
 }
 
 function cleanJson(raw: string) {
@@ -167,7 +178,7 @@ export async function writeReportWithAi(
   generationContext?: GenerationContext,
 ): Promise<StructuredReport> {
   const startedAt = Date.now()
-  const key = cacheKey(seed, metadata)
+  const key = reportCacheKey(seed, metadata)
   const cardStartedAt = new Map(fallback.cards.map((card, index) => [index, Date.now()]))
   const cardSources = new Map<number, 'cache_hit' | 'generated'>()
   const cardFailures = new Map<number, FallbackReason>()
@@ -208,13 +219,24 @@ export async function writeReportWithAi(
     const deadlineAt = Date.now() + overallTimeoutMs
     const generatedCards = [...fallback.cards]
     const completedByAi = new Set<number>()
+    let generatedThisReport = 0
+    const maxCardsPerReport = dependencies.maxCardsPerReport ?? AI_MAX_CARDS_PER_REPORT
+    const reserveGeneration = async () => {
+      if (generatedThisReport >= maxCardsPerReport) return false
+      generatedThisReport += 1
+      if (dependencies.reserveGenerationSlot && !await dependencies.reserveGenerationSlot()) {
+        generatedThisReport -= 1
+        return false
+      }
+      return true
+    }
     let nextIndex = 0
     const worker = async () => {
       while (true) {
         const index = nextIndex++
         if (index >= fallback.cards.length) return
         const card = fallback.cards[index]
-        const cardKey = cardCacheKey(seed, metadata, card.id)
+        const cardKey = reportCardCacheKey(seed, metadata, card.id)
         try {
           const cardCached = await dependencies.readCardCache?.(cardKey)
           if (cardCached) {
@@ -222,6 +244,11 @@ export async function writeReportWithAi(
             completedByAi.add(index)
             cardSources.set(index, 'cache_hit')
             logGeneration('cache_hit', startedAt, undefined, card.id)
+            continue
+          }
+          if (!await reserveGeneration()) {
+            cardFailures.set(index, 'api_error')
+            console.warn('AI report generation limit reached; deterministic fallback used', { cardId: card.id })
             continue
           }
           const generated = await generateCard(card, promptForCard(card, metadata, index, fallback.cards.length), dependencies)
@@ -253,11 +280,12 @@ export async function writeReportWithAi(
       try {
         const remainingMs = deadlineAt - Date.now()
         if (remainingMs <= 0) throw new Error('No time remained for duplicate title retry')
+        if (!await reserveGeneration()) throw new Error('AI report generation limit reached')
         const retry = await generateCard(fallback.cards[index], `${promptForCard(fallback.cards[index], metadata, index, fallback.cards.length)}\n既出タイトル「${cards.map(card => card.title).join('」「')}」と異なる焦点・語彙のタイトルにしてください。`, {
           ...dependencies, cardTimeoutMs: Math.min(dependencies.cardTimeoutMs ?? AI_REWRITE_TIMEOUT_MS, remainingMs),
         })
         if (cards.some(card => titlesAreSimilar(card.title, retry.title))) throw new Error('AI title remained too similar after retry')
-        try { await dependencies.writeCardCache?.(cardCacheKey(seed, metadata, fallback.cards[index].id), retry) }
+        try { await dependencies.writeCardCache?.(reportCardCacheKey(seed, metadata, fallback.cards[index].id), retry) }
         catch (error) { console.warn('AI card cache write failed', { cardId: fallback.cards[index].id, reason: error instanceof Error ? error.message : String(error) }) }
         cards.push(retry)
       } catch (error) {
@@ -296,6 +324,14 @@ export async function writeReportWithAi(
 
 function productionDependencies(): AiWriterDependencies {
   return {
+    async reserveGenerationSlot() {
+      const { data, error } = await getSupabaseAdmin().rpc('reserve_ai_card_generation', { p_limit: AI_DAILY_CARD_LIMIT })
+      if (error) {
+        console.error('AI daily generation budget check failed; deterministic fallback used', { reason: error.message })
+        return false
+      }
+      return data === true
+    },
     async readCache(key) {
       const { data, error } = await getSupabaseAdmin().from('ai_report_cache').select('payload').eq('cache_key', key).maybeSingle()
       if (error) { console.error('AI report cache read failed', error.message); return null }
