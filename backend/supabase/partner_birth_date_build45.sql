@@ -2,6 +2,9 @@
 -- cutoff は45-1のiOSビルドを配信した日時へ置き換え、修正後の登録を二重補正しない。
 begin;
 
+alter table public.partner_profiles
+  add column if not exists updated_at timestamptz not null default now();
+
 create table if not exists public.partner_profiles_build45_backup as
 select * from public.partner_profiles where false;
 insert into public.partner_profiles_build45_backup
