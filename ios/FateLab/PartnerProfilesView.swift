@@ -88,7 +88,7 @@ struct PartnerProfilesView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle().fill(Color(red: 0.937, green: 0.914, blue: 0.867))
-                Circle().stroke(isEmpty ? FateTheme.ink : FateTheme.line, lineWidth: 0.5)
+                Circle().stroke(FateTheme.line, lineWidth: 0.5)
                 Image(systemName: icon).font(.system(size: 26, weight: .light))
                     .foregroundStyle(isEmpty ? FateTheme.ink : FateTheme.muted)
             }.frame(width: 68, height: 68)

@@ -211,6 +211,14 @@ test('読書画面と入力・生成UIは小画面でも簡潔な表示を保つ
   assert.doesNotMatch(hub, /overlay\(Rectangle\(\)\.stroke\(FateTheme\.line/)
 })
 
+test('本人と相手のプロフィール円は未設定でも同じ背景と枠線を使う', () => {
+  const partners = read('ios/FateLab/PartnerProfilesView.swift')
+  assert.match(partners, /Circle\(\)\.stroke\(FateTheme\.line, lineWidth: 0\.5\)/)
+  assert.doesNotMatch(partners, /Circle\(\)\.stroke\(isEmpty \? FateTheme\.ink/)
+  assert.match(partners, /icon: selected == nil \? "plus" : "person"/)
+  assert.match(partners, /subtitle: selected\.map\(typeLabel\) \?\? "未設定"/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')
