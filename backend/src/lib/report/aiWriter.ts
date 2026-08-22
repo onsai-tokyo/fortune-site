@@ -5,6 +5,7 @@ import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } fro
 import type { ReportMetadata } from './metadata.js'
 import { japanDateContext, japanDateParts } from '../japanDate.js'
 import { stripMarkdown } from '../markdown.js'
+import { aggregateGenerator, classifyFallbackReason, logCardGeneration, logReportGeneration, type FallbackReason, type GenerationContext } from './generationMetrics.js'
 
 const GENERATOR_VERSION = 'ai-cards-v6-domain-contract'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
@@ -163,13 +164,44 @@ export async function writeReportWithAi(
   fallback: StructuredReport,
   metadata: ReportMetadata,
   dependencies: AiWriterDependencies = productionDependencies(),
+  generationContext?: GenerationContext,
 ): Promise<StructuredReport> {
   const startedAt = Date.now()
   const key = cacheKey(seed, metadata)
+  const cardStartedAt = new Map(fallback.cards.map((card, index) => [index, Date.now()]))
+  const cardSources = new Map<number, 'cache_hit' | 'generated'>()
+  const cardFailures = new Map<number, FallbackReason>()
+  const logCompletedReport = (cards: ReportCard[], aiIndexes: Set<number>) => {
+    if (!generationContext) return
+    cards.forEach((card, index) => {
+      const isAi = aiIndexes.has(index)
+      logCardGeneration({
+        ...generationContext,
+        cardId: card.id,
+        generator: isAi ? 'ai' : 'deterministic',
+        source: isAi ? (cardSources.get(index) ?? 'generated') : 'fallback',
+        fallbackReason: isAi ? null : (cardFailures.get(index) ?? 'api_error'),
+        durationMs: Date.now() - (cardStartedAt.get(index) ?? startedAt),
+      })
+    })
+    const aiCardCount = aiIndexes.size
+    const deterministicCardCount = cards.length - aiCardCount
+    logReportGeneration({
+      ...generationContext,
+      totalCardCount: cards.length,
+      aiCardCount,
+      deterministicCardCount,
+      savedGenerator: aggregateGenerator(aiCardCount, deterministicCardCount),
+      durationMs: Date.now() - startedAt,
+    })
+  }
   try {
     const cached = await dependencies.readCache(key)
     if (cached) {
       logGeneration('cache_hit', startedAt)
+      const aiIndexes = new Set(cached.cards.map((_card, index) => index))
+      cached.cards.forEach((_card, index) => cardSources.set(index, 'cache_hit'))
+      logCompletedReport(cached.cards, aiIndexes)
       return { ...cached, generator: 'ai' }
     }
     const overallTimeoutMs = dependencies.overallTimeoutMs ?? AI_TOTAL_TIMEOUT_MS
@@ -188,15 +220,20 @@ export async function writeReportWithAi(
           if (cardCached) {
             generatedCards[index] = cardCached
             completedByAi.add(index)
+            cardSources.set(index, 'cache_hit')
             logGeneration('cache_hit', startedAt, undefined, card.id)
             continue
           }
           const generated = await generateCard(card, promptForCard(card, metadata, index, fallback.cards.length), dependencies)
           generatedCards[index] = generated
           completedByAi.add(index)
+          cardSources.set(index, 'generated')
           try { await dependencies.writeCardCache?.(cardKey, generated) }
           catch (error) { console.warn('AI card cache write failed', { cardId: card.id, reason: error instanceof Error ? error.message : String(error) }) }
-        } catch { /* この章だけ決定論版を残す */ }
+        } catch (error) {
+          cardFailures.set(index, classifyFallbackReason(error))
+          /* この章だけ決定論版を残す */
+        }
       }
     }
     const concurrency = Math.min(fallback.cards.length, dependencies.maxConcurrency ?? AI_MAX_CONCURRENCY)
@@ -223,7 +260,16 @@ export async function writeReportWithAi(
         try { await dependencies.writeCardCache?.(cardCacheKey(seed, metadata, fallback.cards[index].id), retry) }
         catch (error) { console.warn('AI card cache write failed', { cardId: fallback.cards[index].id, reason: error instanceof Error ? error.message : String(error) }) }
         cards.push(retry)
-      } catch { completedByAi.delete(index); cards.push(fallback.cards[index]) }
+      } catch (error) {
+        completedByAi.delete(index)
+        cardFailures.set(index, classifyFallbackReason(error, !completedWithinDeadline || deadlineAt - Date.now() <= 0))
+        cards.push(fallback.cards[index])
+      }
+    }
+    if (!completedWithinDeadline) {
+      fallback.cards.forEach((_card, index) => {
+        if (!completedByAi.has(index)) cardFailures.set(index, 'overall_timeout')
+      })
     }
     const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
     const aiCardCount = completedByAi.size
@@ -236,11 +282,14 @@ export async function writeReportWithAi(
       const reason = `${cards.length - aiCardCount}/${cards.length} cards used deterministic fallback${completedWithinDeadline ? '' : ' after overall timeout'}`
       logGeneration('fallback', startedAt, reason)
     }
+    logCompletedReport(cards, completedByAi)
     return report
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     console.error('AI report generation rejected; deterministic fallback used', reason)
     logGeneration('fallback', startedAt, reason)
+    fallback.cards.forEach((_card, index) => cardFailures.set(index, classifyFallbackReason(error)))
+    logCompletedReport(fallback.cards, new Set())
     return { ...fallback, generator: 'deterministic' }
   }
 }

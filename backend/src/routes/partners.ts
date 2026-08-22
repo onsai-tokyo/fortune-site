@@ -17,6 +17,7 @@ import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
 import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
 import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 import { stripMarkdown } from '../lib/markdown.js'
+import { aggregateGenerator, logCardGeneration, logReportGeneration } from '../lib/report/generationMetrics.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -72,6 +73,11 @@ type CompatibilityCardSpec = { id: string; purpose: string; titleDirection: stri
 export type CompatibilityCardCache = {
   read: (spec: CompatibilityCardSpec) => Promise<ReportCard | null>
   write: (spec: CompatibilityCardSpec, card: ReportCard) => Promise<void>
+}
+type CompatibilityCardObservation = {
+  cardId: string
+  source: 'cache_hit' | 'generated'
+  durationMs: number
 }
 
 const compatibilityBaseSpecs: CompatibilityCardSpec[] = [
@@ -148,14 +154,19 @@ export async function generateCompatibilityCards(
   onCardComplete?: (completed: number, total: number) => void,
   cache?: CompatibilityCardCache,
   relationshipType: 'romantic' | 'friend' | 'family' = 'romantic',
+  observeCard?: (observation: CompatibilityCardObservation) => void,
 ): Promise<StructuredReport> {
   const specs = compatibilityCardSpecs(relationshipType)
   let completed = 0
   const results = await Promise.all(specs.map(async spec => {
+    const cardStartedAt = Date.now()
     if (cache) {
       try {
         const cached = validateCompatibilityCard(await cache.read(spec), spec)
-        if (cached) return cached
+        if (cached) {
+          observeCard?.({ cardId: spec.id, source: 'cache_hit', durationMs: Date.now() - cardStartedAt })
+          return cached
+        }
       } catch (error) {
         console.warn('Compatibility card cache read failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
       }
@@ -167,6 +178,7 @@ export async function generateCompatibilityCards(
       if (first.stopReason !== 'max_tokens') {
         const card = { ...parseCompatibilityCard(first.text, 8), id: spec.id }
         if (cache) await cache.write(spec, card).catch(error => console.warn('Compatibility card cache write failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) }))
+        observeCard?.({ cardId: spec.id, source: 'generated', durationMs: Date.now() - cardStartedAt })
         return card
       }
       console.warn('Compatibility card initial generation failed', { cardId: spec.id, kind: 'truncated', reason: 'max_tokens' })
@@ -181,6 +193,7 @@ export async function generateCompatibilityCards(
       if (retry.stopReason === 'max_tokens') throw new Error('再生成も最大トークン数に到達しました')
       const card = { ...parseCompatibilityCard(retry.text, 6), id: spec.id }
       if (cache) await cache.write(spec, card).catch(error => console.warn('Compatibility card cache write failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) }))
+      observeCard?.({ cardId: spec.id, source: 'generated', durationMs: Date.now() - cardStartedAt })
       return card
     } catch (error) {
       console.error('Compatibility card regeneration failed', { cardId: spec.id, kind: compatibilityFailureKind(error, error instanceof Error && /最大トークン/.test(error.message) ? 'max_tokens' : null), reason: error instanceof Error ? error.message : String(error) })
@@ -221,6 +234,7 @@ async function loadCompatibilityContext(req: AuthRequest, res: Response, next: N
 
 partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoints(3), async (req: AuthRequest, res) => {
   const useSse = req.query.format === 'sse'
+  const requestId = correlationId(req)
   const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
   const complete = (report: StructuredReport, conversationId: string) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
   try {
@@ -279,6 +293,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const compatibilityStartedAt = Date.now()
     let generationAttempt = 0
+    const compatibilityCardObservations = new Map<string, CompatibilityCardObservation>()
     const keepAlive = useSse ? setInterval(() => res.write(': keep-alive\n\n'), 10_000) : null
     const relationshipReport = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
@@ -316,7 +331,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-card-v1', payload: card })
         if (error) throw error
       },
-    }, relationshipType)
+    }, relationshipType, observation => compatibilityCardObservations.set(observation.cardId, observation))
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
     const selfBirth = self.birth_data as Record<string, unknown>
     const selfBirthDate = String(selfBirth.birthDate ?? selfBirth.birth_date ?? '')
@@ -329,6 +344,30 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       cards: timingReport.cards.map(card => ({ ...card, scope: 'couple' as const })),
       chartSections: buildCoupleChartSections(self.calculated_data, partnerCalculated),
     }
+    report.cards.forEach(card => {
+      const observation = compatibilityCardObservations.get(card.id)
+      const isAi = Boolean(observation)
+      logCardGeneration({
+        correlationId: requestId,
+        kind: 'compatibility',
+        cardId: card.id,
+        generator: isAi ? 'ai' : 'deterministic',
+        source: observation?.source ?? 'deterministic',
+        fallbackReason: null,
+        durationMs: observation?.durationMs ?? Date.now() - compatibilityStartedAt,
+      })
+    })
+    const aiCardCount = report.cards.filter(card => compatibilityCardObservations.has(card.id)).length
+    const deterministicCardCount = report.cards.length - aiCardCount
+    logReportGeneration({
+      correlationId: requestId,
+      kind: 'compatibility',
+      totalCardCount: report.cards.length,
+      aiCardCount,
+      deterministicCardCount,
+      savedGenerator: aggregateGenerator(aiCardCount, deterministicCardCount),
+      durationMs: Date.now() - compatibilityStartedAt,
+    })
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     const { data: existingConversation, error: conversationLookupError } = await db.from('reading_conversations')
       .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
@@ -380,12 +419,12 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     if (req.isPremium === false && req.userId && req.accessToken && req.pointsAfter !== undefined) {
       try {
         await addPoints(req.userId, req.accessToken, 3)
-        console.info('Compatibility points refunded', { correlationId: correlationId(req), cost: 3 })
+        console.info('Compatibility points refunded', { correlationId: requestId, cost: 3 })
       } catch (refundError) {
-        console.error('Compatibility points refund failed', { correlationId: correlationId(req), refundError })
+        console.error('Compatibility points refund failed', { correlationId: requestId, refundError })
       }
     }
     if (res.headersSent) { res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '相性鑑定を作成できませんでした', retryable: true })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }
-    else sendApiError(res, 500, 'GENERATION_FAILED', '相性鑑定を作成できませんでした', true, correlationId(req))
+    else sendApiError(res, 500, 'GENERATION_FAILED', '相性鑑定を作成できませんでした', true, requestId)
   }
 })

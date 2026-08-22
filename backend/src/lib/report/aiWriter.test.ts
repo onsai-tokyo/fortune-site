@@ -157,3 +157,24 @@ test('全体期限時も完成済みの章を採用し、次回は失敗章だ�
   await writeReportWithAi('partial-timeout', source, metadata, dependencies)
   assert.equal(calls, 3)
 })
+
+test('内部観測を追加しても返却する鑑定書を変更しない', async () => {
+  const originalInfo = console.info
+  const metrics: unknown[][] = []
+  console.info = (...args: unknown[]) => { metrics.push(args) }
+  try {
+    const result = await writeReportWithAi('observability', fallback, metadata, {
+      async readCache() { return null }, async writeCache() {}, async generate() { return raw },
+    }, { correlationId: 'test-correlation-id', kind: 'self' })
+    assert.equal(result.generator, 'ai')
+    assert.equal(result.cards[0].title, '勢いより準備から始める人です')
+    const cardMetric = metrics.find(entry => entry[0] === 'Report card generation completed')?.[1] as Record<string, unknown>
+    const reportMetric = metrics.find(entry => entry[0] === 'Report generation completed')?.[1] as Record<string, unknown>
+    assert.equal(cardMetric.correlationId, 'test-correlation-id')
+    assert.equal(cardMetric.generator, 'ai')
+    assert.equal(reportMetric.aiCardCount, 1)
+    assert.equal(reportMetric.deterministicCardCount, 0)
+  } finally {
+    console.info = originalInfo
+  }
+})

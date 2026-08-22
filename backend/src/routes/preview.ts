@@ -88,6 +88,7 @@ interface CalculatedData {
 // POST /api/preview/generate
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   const useSse = req.query.format === 'sse'
+  const requestId = correlationId(req)
   let keepAlive: ReturnType<typeof setInterval> | undefined
   const progress = (percent: number, title: string, detail: string) => {
     if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
@@ -182,7 +183,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
       ? { ...deterministicReport, generator: 'deterministic' as const }
-      : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata)
+      : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
+        correlationId: requestId,
+        kind: 'self',
+      })
     const orderedReport = currentConcern
       ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }
       : writtenReport
@@ -203,7 +207,6 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     return
   } catch (err) {
     if (keepAlive) clearInterval(keepAlive)
-    const requestId = correlationId(req)
     console.error('Preview generate error', {
       correlationId: requestId,
       inputHash: requestCorrelationId(req.body),
