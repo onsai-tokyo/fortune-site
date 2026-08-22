@@ -4,6 +4,7 @@ struct SavedReadingView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
+    var readingKind: String? = nil
 
     @State private var detail: ConversationDetail?
     @State private var isLoading = true
@@ -53,7 +54,7 @@ struct SavedReadingView: View {
             .padding(FateSpacing.screenH)
         }
         .background(FateTheme.canvas)
-        .fateScreenTitle(detail?.conversation.title ?? "あなたの鑑定")
+        .fateScreenTitle(detail?.conversation.title ?? (readingKind == "compatibility" ? "二人の関係鑑定" : "あなたの鑑定"))
         .task { await load() }
         .refreshable { await load() }
     }

@@ -183,7 +183,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
   const { data, error } = await db.from('reading_conversations')
-    .select('id,secret_token,title,source_section,source_year,created_at,updated_at,reading_messages(count)')
+    .select('id,secret_token,title,kind,source_section,source_year,created_at,updated_at,reading_messages(count)')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
   if (error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
   res.json({ conversations: data })

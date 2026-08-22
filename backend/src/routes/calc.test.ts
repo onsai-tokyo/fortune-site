@@ -17,7 +17,7 @@ import {
   KYUSEI_NAMES,
 } from './calc.js'
 import { buildDeterministicReport, buildTwoStageConsensus, renderReportBlocks } from '../lib/deterministicReport.js'
-import { calcZiwei } from '../lib/ziwei.js'
+import { calcZiwei, timeIndex } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { buildStructuredReport } from '../lib/reportCards.js'
 
@@ -312,6 +312,12 @@ test('1995-02-20 05:40 女性の紫微斗数十二宮を固定値で再現する
   assert.equal(ziwei.annual.find(item => item.year === 2019)?.activePalaces[0], '命宮')
   assert.equal(ziwei.annual.find(item => item.year === 2023)?.activePalaces[0], '官禄')
   assert.ok(new Set(ziwei.annual.flatMap(item => item.activePalaces)).size > 1)
+  assert.ok(ziwei.annual.some(item => item.signals.length > 0))
+})
+
+test('紫微斗数は早子時と晩子時を別のインデックスで扱う', () => {
+  assert.equal(timeIndex(0), 0)
+  assert.equal(timeIndex(23), 12)
 })
 
 test('恋愛年運は吉凶ではなく関係の出来事類型を組み合わせで判定する', () => {

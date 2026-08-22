@@ -63,6 +63,7 @@ struct FLCard<Content: View>: View {
 struct FLListRow: View {
     let title: String
     var subtitle: String? = nil
+    var showsChevron = true
     var body: some View {
         HStack(spacing: FateSpacing.regular) {
             VStack(alignment: .leading, spacing: 5) {
@@ -70,7 +71,7 @@ struct FLListRow: View {
                 if let subtitle { Text(subtitle).font(FateType.caption).foregroundStyle(FateTheme.muted).lineLimit(2) }
             }
             Spacer(minLength: 8)
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted)
+            if showsChevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
         }
         .padding(.vertical, FateSpacing.rowV)
         .overlay(FLDivider(), alignment: .bottom)

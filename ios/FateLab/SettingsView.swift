@@ -62,13 +62,18 @@ struct SettingsView: View {
                 .font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(size: 19, weight: .semibold))
-                if purchases.isPremium {
+                if auth.session != nil && purchases.accessState == .unknown {
+                    HStack(spacing: 10) {
+                        ProgressView().tint(FateTheme.ink)
+                        Text("購入状況を確認しています").foregroundStyle(FateTheme.muted)
+                    }.frame(minHeight: 56)
+                } else if purchases.accessState == .premium {
                     Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.ink)
                     Button("サブスクリプションを管理") {
                         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
                         Task { try? await AppStore.showManageSubscriptions(in: scene) }
                     }
-                } else if let session = auth.session {
+                } else if purchases.accessState == .standard, let session = auth.session {
                     Text("保存した鑑定書をもとに、回数の制限なく質問できます。")
                         .font(.system(size: 14)).foregroundStyle(FateTheme.muted).lineSpacing(4)
                     Button(purchases.product.map { "\($0.displayPrice)／月で始める" } ?? "料金を確認しています") {

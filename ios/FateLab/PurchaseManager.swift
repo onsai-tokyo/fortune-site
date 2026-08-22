@@ -4,12 +4,14 @@ import Combine
 
 @MainActor
 final class PurchaseManager: ObservableObject {
+    enum AccessState { case unknown, premium, standard }
     @Published private(set) var product: Product?
-    @Published private(set) var isPremium = false
+    @Published private(set) var accessState: AccessState = .unknown
     @Published var isWorking = false
     @Published var errorMessage: String?
     private var hasStoreKitEntitlement = false
     private var updates: Task<Void, Never>?
+    var isPremium: Bool { accessState == .premium }
 
     init() {
         updates = Task { await listenForTransactions() }
@@ -74,6 +76,7 @@ final class PurchaseManager: ObservableObject {
     /// The server status remains the single source of truth used by the UI.
     func sync(auth: AuthStore) async {
         errorMessage = nil
+        accessState = .unknown
         await refreshLocalEntitlements()
         do {
             var status = try await APIClient.shared.status(auth: auth)
@@ -87,9 +90,9 @@ final class PurchaseManager: ObservableObject {
                 }
                 status = try await APIClient.shared.status(auth: auth)
             }
-            isPremium = status.isPremium
+            accessState = status.isPremium ? .premium : .standard
         } catch {
-            isPremium = false
+            accessState = .unknown
             if userFacingErrorMessage(error) != nil {
                 errorMessage = "購入内容を確認できませんでした。購入を復元してください。"
             }

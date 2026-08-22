@@ -7,8 +7,8 @@ const STAR_DETAIL: Record<string, string> = {
   七殺: '突破、決断、緊張下での実行力', 破軍: '刷新、破壊と再構築、大きな転換力',
 }
 
-function timeIndex(hour: number): number {
-  return hour === 23 ? 0 : Math.floor((hour + 1) / 2)
+export function timeIndex(hour: number): number {
+  return hour === 23 ? 12 : Math.floor((hour + 1) / 2)
 }
 
 export function calcZiwei(year: number, month: number, day: number, hour: number | undefined, gender: 'male' | 'female', birthplace?: string) {
@@ -40,12 +40,13 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
     // it here made every year look like a Life-Palace year.
     const annualLifePalace = String(chart.palaces[yearly.index]?.name ?? '').replace('祿', '禄')
     const activePalaces = annualLifePalace ? [annualLifePalace] : []
+    const palace = annualLifePalace.replace(/宮$/, '')
     const signals: string[] = []
-    if (activePalaces.includes('官禄') || activePalaces.includes('財帛')) signals.push('practicality', 'responsibility')
-    if (activePalaces.includes('夫妻')) signals.push('harmony', 'stability')
-    if (activePalaces.includes('命宮')) signals.push('initiative', 'transformation')
-    if (activePalaces.includes('遷移')) signals.push('transformation', 'exploration')
-    if (activePalaces.includes('田宅')) signals.push('stability', 'transformation')
+    if (palace === '官禄' || palace === '財帛') signals.push('practicality', 'responsibility')
+    if (palace === '夫妻') signals.push('harmony', 'stability')
+    if (palace === '命') signals.push('initiative', 'transformation')
+    if (palace === '遷移') signals.push('transformation', 'exploration')
+    if (palace === '田宅') signals.push('stability', 'transformation')
     return { year: targetYear, heavenlyStem: yearly.heavenlyStem, earthlyBranch: yearly.earthlyBranch, activePalaces, mutagenStars: yearly.mutagen, signals: [...new Set(signals)] }
   })
 

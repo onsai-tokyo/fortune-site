@@ -6,7 +6,6 @@ struct ReadingListView: View {
     @State private var readings: [ReadingSummary] = []
     @State private var errorMessage: String?
     @State private var errorKind: FLErrorState.Kind = .dataFetch
-    @State private var path: [UUID] = []
     @State private var isLoading = false
 
     var body: some View {
@@ -24,8 +23,10 @@ struct ReadingListView: View {
                     }
                     Section("\(readings.count)件") {
                     ForEach(readings) { reading in
-                    NavigationLink(value: reading.id) {
-                        FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))")
+                    NavigationLink {
+                        SavedReadingView(conversationID: reading.id, readingKind: reading.kind)
+                    } label: {
+                        FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))", showsChevron: false)
                     }.listRowBackground(FateTheme.canvas)
                     }
                     }
@@ -37,7 +38,6 @@ struct ReadingListView: View {
                                        description: Text("無料登録すると、鑑定書と質問を続きから開けます。"))
             }
         }.background(FateTheme.canvas).fateScreenTitle("鑑定書一覧")
-            .navigationDestination(for: UUID.self) { SavedReadingView(conversationID: $0) }
             .toolbar { if auth.session == nil { Button("ログイン") { AuthPresentation.shared.isPresented = true } } }
     }
 

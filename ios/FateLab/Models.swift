@@ -47,6 +47,7 @@ struct ReadingSummary: Codable, Identifiable {
     let id: UUID
     let secretToken: String?
     let title: String
+    let kind: String?
     let createdAt: String?
     let updatedAt: String?
     let readingMessages: [MessageCount]?
@@ -55,12 +56,14 @@ struct ReadingSummary: Codable, Identifiable {
     var questionCount: Int { (readingMessages?.first?.count ?? 0) / 2 }
 
     enum CodingKeys: String, CodingKey {
-        case id, title
+        case id, title, kind
         case secretToken = "secret_token"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case readingMessages = "reading_messages"
     }
+
+    var isCompatibility: Bool { kind == "compatibility" }
 }
 
 struct ReadingStatus: Decodable {
