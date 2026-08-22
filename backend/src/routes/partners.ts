@@ -19,6 +19,7 @@ import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 import { stripMarkdown } from '../lib/markdown.js'
 import { aggregateGenerator, logCardGeneration, logReportGeneration } from '../lib/report/generationMetrics.js'
 import { finalizeReportProvenance, withCardProvenance } from '../lib/report/provenance.js'
+import { buildDeterministicCompatibilityReport } from '../lib/report/deterministicCompatibility.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -296,7 +297,10 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     let generationAttempt = 0
     const compatibilityCardObservations = new Map<string, CompatibilityCardObservation>()
     const keepAlive = useSse ? setInterval(() => res.write(': keep-alive\n\n'), 10_000) : null
-    const relationshipReport = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
+    const deterministicScopes = new Set((process.env.DETERMINISTIC_SCOPE ?? '').split(',').map(value => value.trim()).filter(Boolean))
+    const relationshipReport = deterministicScopes.has('all') || deterministicScopes.has('compatibility')
+      ? buildDeterministicCompatibilityReport(compactContext.self, compactContext.partner, relationshipType, relationshipLabel)
+      : await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
       const attemptStartedAt = Date.now()
       const message = await client.beta.promptCaching.messages.create({
