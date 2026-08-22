@@ -184,6 +184,20 @@ test('存在しない鑑定のチャットは404を再送せず一覧へ戻せ�
   assert.match(chat, /else if !input\.trimmingCharacters/)
 })
 
+test('設定は4グループに整理し購入復元とログアウトを各カード内に保つ', () => {
+  const settings = read('ios/FateLab/SettingsView.swift')
+  for (const title of ['あなたのデータ', '鑑定と対話', 'メンバーシップ', 'アカウント']) {
+    assert.match(settings, new RegExp(title))
+  }
+  assert.match(settings, /private var membershipCard/)
+  assert.match(settings, /RoundedRectangle\(cornerRadius: 12\)/)
+  assert.match(settings, /SettingsDivider\(edgeInset: 0\)/)
+  assert.match(settings, /Button\("購入を復元"\)/)
+  assert.match(settings, /SettingsActionRow\(title: "ログアウト"\)/)
+  assert.doesNotMatch(settings, /Section\("購入"\)/)
+  assert.match(settings, /padding\(\.bottom, 48\)/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')
