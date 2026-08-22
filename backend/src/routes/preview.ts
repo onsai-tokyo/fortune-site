@@ -14,6 +14,7 @@ import { buildReportFacts } from '../lib/report/facts.js'
 import { buildReportFindings } from '../lib/report/findings.js'
 import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
 import { finalizeReportProvenance } from '../lib/report/provenance.js'
+import { observeShadowFacts } from '../lib/report/shadowMetrics.js'
 import { replaceTimingCards } from '../lib/report/timingCards.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 
@@ -178,6 +179,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     }
     progress(58, 'あなたらしさを整理しています', '重複しない8つの視点を選んでいます')
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
+    observeShadowFacts(requestId, reportInput, metadata)
     const facts = buildReportFacts(reportInput, metadata)
     const findings = buildReportFindings(facts)
     const deterministicReport = replaceTimingCards(buildEditorialStructuredReport(facts, findings), reportInput)
