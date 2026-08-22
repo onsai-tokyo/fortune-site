@@ -145,6 +145,12 @@ struct StructuredReportResponse: Codable {
     let reportText: String
     let cards: [ReadingCard]
     let chartSections: [ChartSection]?
+    let conversationID: UUID?
+
+    enum CodingKeys: String, CodingKey {
+        case version, reportText, cards, chartSections
+        case conversationID = "conversationId"
+    }
 }
 
 struct ChartSection: Codable, Identifiable {

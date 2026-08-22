@@ -72,7 +72,14 @@ struct PartnerProfilesView: View {
         .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
         .navigationDestination(isPresented: $showCompatibilityResult) {
             if let compatibilityReport, let selected {
-                CompatibilityResultView(report: compatibilityReport, partnerName: selected.displayName, relationshipType: relationshipType)
+                CompatibilityResultView(report: compatibilityReport, partnerName: selected.displayName, relationshipType: relationshipType) { card in
+                    guard let conversationID = compatibilityReport.conversationID else {
+                        errorMessage = "この相性鑑定を開き直してください。"
+                        showCompatibilityResult = false
+                        return
+                    }
+                    tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
+                }
             }
         }
     }
@@ -150,6 +157,7 @@ private struct CompatibilityResultView: View {
     let report: StructuredReportResponse
     let partnerName: String
     let relationshipType: String
+    let onQuestion: (ReadingCard) -> Void
 
     var body: some View {
         ScrollView {
@@ -157,7 +165,7 @@ private struct CompatibilityResultView: View {
                 Text("二人の関係性").font(FateType.screenTitle)
                 Text("あなたと\(partnerName)さんの、\(relationshipType == "friend" ? "友情" : "恋愛")の物語を読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
-                ReadingCardList(cards: report.cards) { _ in }
+                ReadingCardList(cards: report.cards, onQuestion: onQuestion)
             }
             .padding(FateSpacing.screenH)
         }

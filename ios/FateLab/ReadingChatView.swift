@@ -3,6 +3,7 @@ import SwiftUI
 struct ReadingChatView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
+    @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
     @State private var detail: ConversationDetail?
     @State private var messages: [ReadingMessage] = []
@@ -10,6 +11,7 @@ struct ReadingChatView: View {
     @State private var input = ""
     @State private var isWorking = false
     @State private var errorMessage: String?
+    @State private var conversationMissing = false
     @State private var showPaywall = false
     @State private var showSourceReport = false
     @State private var followUpSuggestions: [String] = []
@@ -78,7 +80,9 @@ struct ReadingChatView: View {
                     HStack(spacing: 10) {
                         Text(errorMessage).font(.caption).foregroundStyle(.red)
                         Spacer()
-                        if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        if conversationMissing {
+                            Button("鑑定一覧へ") { tabRouter.closeMissingChat() }.font(.caption.weight(.semibold))
+                        } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             Button("もう一度送る") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
                         }
                     }
@@ -182,7 +186,7 @@ struct ReadingChatView: View {
             let value = try await APIClient.shared.conversation(id: conversationID, auth: auth)
             detail = value; messages = value.messages
             await loadStatus()
-        } catch { errorMessage = userFacingMessage(error) }
+        } catch { handleChatError(error) }
     }
 
     private func loadStatus() async {
@@ -216,12 +220,28 @@ struct ReadingChatView: View {
             await loadStatus()
         } catch {
             messages.removeSubrange(firstNewIndex..<messages.count)
-            input = question; errorMessage = userFacingMessage(error)
+            if isMissingConversation(error) { input = "" } else { input = question }
+            handleChatError(error)
             if case APIError.paymentRequired = error { showPaywall = true }
             await loadStatus()
         }
         isWorking = false
         streamTask = nil
+    }
+
+    private func handleChatError(_ error: Error) {
+        if isMissingConversation(error) {
+            conversationMissing = true
+            errorMessage = "この鑑定を開き直してください。"
+        } else {
+            conversationMissing = false
+            errorMessage = userFacingMessage(error)
+        }
+    }
+
+    private func isMissingConversation(_ error: Error) -> Bool {
+        if case APIError.http(status: 404, message: _) = error { return true }
+        return false
     }
 }
 

@@ -118,6 +118,12 @@ final class AppTabRouter: ObservableObject {
         chatContextTitle = contextTitle
         selectedTab = 2
     }
+
+    func closeMissingChat() {
+        chatConversationID = nil
+        chatContextTitle = nil
+        selectedTab = 0
+    }
 }
 
 private struct AIChatTabView: View {

@@ -161,12 +161,27 @@ test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を
 test('相性結果は選択画面と分離し本人鑑定と同じカード導線を使う', () => {
   const partners = read('ios/FateLab/PartnerProfilesView.swift')
   const insightHub = read('ios/FateLab/InsightHubView.swift')
+  const api = read('ios/FateLab/APIClient.swift')
+  const models = read('ios/FateLab/Models.swift')
   assert.match(partners, /navigationDestination\(isPresented: \$showCompatibilityResult\)/)
   assert.match(partners, /CompatibilityResultView/)
-  assert.match(partners, /ReadingCardList\(cards: report\.cards\)/)
+  assert.match(partners, /ReadingCardList\(cards: report\.cards, onQuestion: onQuestion\)/)
+  assert.match(partners, /tabRouter\.openChat\(conversationID: conversationID, contextTitle: card\.title\)/)
+  assert.doesNotMatch(partners, /ReadingCardList\(cards: report\.cards\) \{ _ in \}/)
+  assert.match(models, /case conversationID = "conversationId"/)
+  assert.match(api, /report\["conversationId"\] = object\["conversationId"\]/)
   assert.doesNotMatch(partners, /if let compatibilityReport \{[\s\S]{0,300}ForEach/)
   assert.match(insightHub, /struct ReadingCardList/)
   assert.match(insightHub, /InsightDetailView\(item: item\)/)
+})
+
+test('存在しない鑑定のチャットは404を再送せず一覧へ戻せる', () => {
+  const chat = read('ios/FateLab/ReadingChatView.swift')
+  assert.match(chat, /APIError\.http\(status: 404/)
+  assert.match(chat, /conversationMissing = true/)
+  assert.match(chat, /この鑑定を開き直してください/)
+  assert.match(chat, /Button\("鑑定一覧へ"\)/)
+  assert.match(chat, /else if !input\.trimmingCharacters/)
 })
 
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {

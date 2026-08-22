@@ -200,7 +200,24 @@ struct APIClient {
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard 200..<300 ~= http.statusCode else { var body = ""; for try await line in bytes.lines { body += line }; let object = body.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }; let message = object?["error"] as? String ?? "相性鑑定を作成できませんでした"; if http.statusCode == 402 { throw APIError.paymentRequired(message) }; if http.statusCode == 409 { throw APIError.selfReadingRequired(message) }; throw APIError.http(status: http.statusCode, message: message) }
         var result: StructuredReportResponse?
-        for try await line in bytes.lines { guard line.hasPrefix("data: ") else { continue }; let payload = String(line.dropFirst(6)); if payload == "[DONE]" { break }; guard let data = payload.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }; if object["type"] as? String == "progress", let percent = object["percent"] as? Int { progress(.init(percent: percent, title: object["title"] as? String ?? "関係を読んでいます", detail: object["detail"] as? String ?? "")) }; if object["type"] as? String == "complete", let report = object["report"], let reportData = try? JSONSerialization.data(withJSONObject: report) { result = try JSONDecoder().decode(StructuredReportResponse.self, from: reportData) }; if object["type"] as? String == "error" { throw APIError.server(object["error"] as? String ?? "相性鑑定を作成できませんでした") } }
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }
+            let payload = String(line.dropFirst(6))
+            if payload == "[DONE]" { break }
+            guard let data = payload.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+            if object["type"] as? String == "progress", let percent = object["percent"] as? Int {
+                progress(.init(percent: percent, title: object["title"] as? String ?? "関係を読んでいます", detail: object["detail"] as? String ?? ""))
+            }
+            if object["type"] as? String == "complete", var report = object["report"] as? [String: Any] {
+                report["conversationId"] = object["conversationId"]
+                let reportData = try JSONSerialization.data(withJSONObject: report)
+                result = try JSONDecoder().decode(StructuredReportResponse.self, from: reportData)
+            }
+            if object["type"] as? String == "error" {
+                throw APIError.server(object["error"] as? String ?? "相性鑑定を作成できませんでした")
+            }
+        }
         guard let result else { throw APIError.invalidResponse }; return result
     }
 
