@@ -253,7 +253,6 @@ struct APIClient {
         let encodedSections = try JSONEncoder().encode(report.chartSections)
         let sectionObjects = try JSONSerialization.jsonObject(with: encodedSections)
         var call = try request(path: "/api/reading/conversations", method: "POST", token: token, json: [
-            "title": readingTitle(report),
             "birthData": report.birthData,
             "calculatedData": report.calculatedData,
             "reportText": report.text,
@@ -265,14 +264,6 @@ struct APIClient {
         guard let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any],
               let id = object["id"] as? String, let uuid = UUID(uuidString: id) else { throw APIError.invalidResponse }
         return uuid
-    }
-
-    private func readingTitle(_ report: GeneratedReport) -> String {
-        let rawDate = report.birthData["birthDate"] as? String ?? ""
-        let parts = rawDate.split(separator: "-")
-        let date = parts.count == 3 ? "\(parts[0])年\(Int(parts[1]) ?? 0)月\(Int(parts[2]) ?? 0)日" : "あなた"
-        let chapter = report.cards.first { $0.resolvedTab == "essence" }?.title ?? "取扱説明書"
-        return String("\(date)｜\(chapter)".prefix(80))
     }
 
     func conversation(id: UUID, auth: AuthStore) async throws -> ConversationDetail {

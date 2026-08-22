@@ -15,6 +15,7 @@ import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsag
 import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { correlationId } from '../lib/apiError.js'
+import { personalReadingTitle } from '../lib/conversationTitle.js'
 
 export const readingRouter = Router()
 const FREE_QUESTION_LIMIT = Math.max(0, Number(process.env.FREE_QUESTION_LIMIT ?? 2))
@@ -120,7 +121,7 @@ readingRouter.delete('/profile/traits/:id', requireAuth, async (req: AuthRequest
 
 readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { title, birthData, calculatedData, reportText, structuredReport, sourceSection, sourceYear } = req.body as Record<string, unknown>
+    const { birthData, calculatedData, reportText, structuredReport, sourceSection, sourceYear } = req.body as Record<string, unknown>
     if (!birthData || typeof birthData !== 'object' || !calculatedData || typeof calculatedData !== 'object' || typeof reportText !== 'string') {
       res.status(400).json({ error: '鑑定データが不足しています' }); return
     }
@@ -128,7 +129,7 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
       res.status(413).json({ error: '鑑定データが大きすぎます' }); return
     }
     const db = getSupabaseUser(req.accessToken!)
-    const safeTitle = validateConversationTitle(title) ?? '鑑定結果について'
+    const safeTitle = personalReadingTitle()
     const rawIdempotencyKey = req.header('Idempotency-Key') ?? ''
     const idempotencyKey = /^[a-f0-9]{64}$/.test(rawIdempotencyKey) ? rawIdempotencyKey : null
     let hasIdempotencyColumn = true

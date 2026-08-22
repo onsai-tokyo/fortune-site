@@ -81,13 +81,14 @@ test('PR14でキャンセル表示・チャット再生成・旧入力UIを戻�
   assert.doesNotMatch(home, /INSTANT ANALYSIS|\.background\(\.regularMaterial\)/)
 })
 
-test('鑑定書保存は出生情報の正規化キーで冪等になり内容由来のタイトルを持つ', () => {
+test('鑑定書保存は出生情報の正規化キーで冪等になりサーバー生成タイトルを持つ', () => {
   const api = read('ios/FateLab/APIClient.swift')
   const reading = read('backend/src/routes/reading.ts')
   assert.match(api, /options: \[\.sortedKeys\]/)
   assert.doesNotMatch(api, /String\(describing: report\.birthData\)/)
-  assert.match(api, /readingTitle\(report\)/)
+  assert.doesNotMatch(api, /readingTitle\(report\)/)
   assert.doesNotMatch(api, /"title": "命式鑑定書"/)
+  assert.match(reading, /personalReadingTitle\(\)/)
   assert.match(reading, /idempotency_key/)
   assert.match(reading, /\.limit\(1\)\.maybeSingle\(\)/)
 })
@@ -224,6 +225,7 @@ test('設定は4グループに整理し購入復元とログアウトを各カ�
   assert.match(settings, /Button\("購入を復元"\)/)
   assert.match(settings, /SettingsActionRow\(title: "ログアウト"\)/)
   assert.doesNotMatch(settings, /Section\("購入"\)/)
+  assert.doesNotMatch(settings, /会話からわかったこと/)
   assert.match(settings, /padding\(\.bottom, 48\)/)
 })
 
@@ -259,14 +261,15 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
 })
 
-test('認証画面はメールを主役にしGoogleとAppleを同格で残す', () => {
+test('認証画面はメール・Google・Appleを同幅の縦一列で残す', () => {
   const authView = read('ios/FateLab/AuthView.swift')
   const authStore = read('ios/FateLab/AuthStore.swift')
   assert.match(authView, /メールアドレスでログイン/)
   assert.match(authView, /新規登録はこちら/)
   assert.match(authView, /registrationMethods/)
   assert.match(authView, /メールアドレスで登録/)
-  assert.match(authView, /HStack\(spacing: 12\) \{[\s\S]{0,300}Button\("Google"\)[\s\S]{0,500}SignInWithAppleButton\(\.signIn\)/)
+  assert.match(authView, /VStack\(spacing: 12\) \{[\s\S]{0,300}Button\("Googleでログイン"\)[\s\S]{0,500}SignInWithAppleButton\(\.signIn\)/)
+  assert.match(authView, /Button\("Googleで登録"\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signIn\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signUp\)/)
   assert.match(authView, /signInWithAppleButtonStyle\(\.whiteOutline\).*frame\(height: 56\)/)

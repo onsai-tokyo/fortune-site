@@ -15,8 +15,6 @@ struct SettingsView: View {
 
                 SettingsGroup(title: "鑑定と対話") {
                     NavigationLink { ReadingListView() } label: { SettingsNavigationRow(title: "鑑定履歴") }
-                    SettingsDivider()
-                    NavigationLink { ProfileView() } label: { SettingsNavigationRow(title: "会話からわかったこと") }
                 }
 
                 membershipCard

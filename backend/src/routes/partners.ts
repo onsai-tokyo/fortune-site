@@ -14,6 +14,7 @@ import { buildCoupleChartSections } from '../lib/report/chartSections.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
+import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -328,7 +329,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       }
       const insertPayload = {
         user_id: req.userId,
-        title: `あなたと${String(partner.display_name).slice(0, 40)}さんの相性鑑定`,
+        title: compatibilityReadingTitle(partner.display_name),
         kind: 'compatibility',
         partner_profile_id: partner.id,
         idempotency_key: compatibilityIdentity,

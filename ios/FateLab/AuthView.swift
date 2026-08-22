@@ -38,8 +38,8 @@ struct AuthView: View {
             Button("メールアドレスでログイン") { move(to: .loginEmail) }
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
             socialDivider
-            HStack(spacing: 12) {
-                Button("Google") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+            VStack(spacing: 12) {
+                Button("Googleでログイン") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
                     .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
                 SignInWithAppleButton(.signIn) { auth.prepareAppleSignIn($0) } onCompletion: { result in
                     Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
@@ -65,8 +65,8 @@ struct AuthView: View {
             Button("メールアドレスで登録") { move(to: .registerEmail) }
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
             socialDivider
-            HStack(spacing: 12) {
-                Button("Google") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
+            VStack(spacing: 12) {
+                Button("Googleで登録") { Task { await auth.signInWithGoogle(); closeIfAuthenticated() } }
                     .buttonStyle(FLSecondaryButtonStyle()).disabled(auth.isWorking)
                 SignInWithAppleButton(.signUp) { auth.prepareAppleSignIn($0) } onCompletion: { result in
                     Task { await auth.completeAppleSignIn(result); closeIfAuthenticated() }
