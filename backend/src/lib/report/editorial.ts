@@ -151,10 +151,47 @@ const collisionTitles: Record<string, string> = {
   'work-mode': '目的と裁量が見えると、仕事の力が立ち上がる', 'work-fit': '自分の手順を持てる環境で、力が長く続く',
 }
 
+const supplementLanguage: Record<string, FindingLanguage> = {
+  'life-mission': { trait: '自分で納得できる順序', statement: '大切な選択ほど、自分で納得できる順序を確かめます', title: '納得できる順序を守ると、人生の軸が見えてくる' },
+  'core-mind-1': { trait: '考えてから動くための間', statement: '動く前に一度考える時間を置くと、本来の判断へ戻れます', title: '考えるための間を持つと、行動が迷いにくくなる' },
+  'core-mind-2': { trait: '安心できる距離を確かめる感覚', statement: '相手との距離を確かめながら、関係を丁寧に育てます', title: '安心できる距離を見つけるほど、関係が長く続く' },
+  'core-mind-3': { trait: '反応が強くなる場面を見分ける力', statement: '心が大きく動く場面を知ると、自分を見失わずに戻れます', title: '反応が強くなる場面を知ると、自分へ戻りやすくなる' },
+  'love-beginning': { trait: '相手を確かめるための時間', statement: '心が動いても、安心できる相手かを見極めてから近づきます', title: '安心を確かめる時間が、恋の入口をひらく' },
+  'love-pattern': { trait: '関係を続ける条件を整える力', statement: '気持ちだけでなく、約束や距離を整えることで関係を育てます', title: '約束と距離を整えるほど、関係は深く続いていく' },
+  'work-mode': { trait: '目的と役割を確かめる姿勢', statement: '何のために、どこまで担うかが見えると仕事へ集中できます', title: '目的と役割が見えると、仕事の力が立ち上がる' },
+  'work-fit': { trait: '自分の手順を保てる環境', statement: '自分なりの手順と余白がある場所で、力を長く保てます', title: '自分の手順を持てる環境で、力が長く続く' },
+}
+
+function supplementFinding(spec: ChapterSpec): ReportFinding {
+  return { id: `supplement-${spec.id}`, key: `supplement-${spec.id}`, kind: 'signature', axis: spec.axes[0], confidence: 0,
+    lineages: [], primaryFacts: [], supportingFacts: [] }
+}
+
+function supplementPages(spec: ChapterSpec, language: FindingLanguage): ReportCardPage[] {
+  const pages = pagesFor(supplementFinding(spec), language, spec)
+  const certainty = `${spec.internalLabel}について、ここでは命式から確かに読める範囲をたどります。断定を広げず、日常で確かめられる手がかりを残します。`
+  return pages.map((page, index) => index === 0 ? { ...page, text: certainty }
+    : index === 5 ? { ...page, text: `${language.trait}は、今ある根拠から無理なく読める中心です。状況が変わると表れ方も変わるため、ひとつの場面だけで決めつけなくて構いません。` }
+    : index === 7 ? { ...page, text: `${language.trait}が当てはまらない日は、性質が消えたのではありません。安心や疲れなど、その日の条件によって使い方が変わっている可能性があります。` }
+    : index === 10 ? { ...page, text: `${language.trait}を守ることと、慣れた方法へ留まることは別です。今の自分に必要な条件かを確かめると、同じ性質を柔らかく使えます。` }
+    : index === 12 ? { ...page, text: `${language.statement}。最近そう感じた場面を一つ思い出すと、この章が自分にどう現れるかを確かめられます。` }
+    : index === 14 ? { ...page, text: `${language.trait}は、答えを固定するための言葉ではありません。これからの選択で自分を理解するための、静かな手がかりとして残ります。` }
+    : page)
+}
+
 export function buildEditorialStructuredReport(facts: ReportFact[], findings: ReportFinding[]): StructuredReport {
   const factById = new Map(facts.map(fact => [fact.id, fact]))
+  const assignedByChapter = new Map(assignFindingsToChapters(findings).map(item => [item.spec.id, item.finding]))
   const cards: ReportCard[] = []
-  for (const { spec, finding } of assignFindingsToChapters(findings)) {
+  for (const spec of chapters) {
+    const finding = assignedByChapter.get(spec.id)
+    if (!finding) {
+      const language = supplementLanguage[spec.id]
+      const pages = supplementPages(spec, language)
+      cards.push(withCardProvenance({ id: spec.id, kind: 'essence', scope: 'self', tab: 'essence', title: language.title,
+        summary: summaryFor(language, supplementFinding(spec)), tags: spec.tags, period: null, pages, evidence: [], metadataRefs: [`supplement:${spec.id}`] }, 'deterministic', 'mixed', 6))
+      continue
+    }
     const language = specializedLanguage(finding, factById)
     const title = cards.some(card => titlesAreSimilar(card.title, language.title)) ? collisionTitles[spec.id] : language.title
     const pages = pagesFor(finding, { ...language, title }, spec)

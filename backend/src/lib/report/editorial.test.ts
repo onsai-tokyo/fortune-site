@@ -14,11 +14,20 @@ test('章の主Findingと主Factを重複割当しない', () => {
   assert.equal(new Set(assigned.flatMap(item => item.finding.primaryFacts)).size, assigned.flatMap(item => item.finding.primaryFacts).length)
 })
 
-test('Editorialカードはtabとtagsを持ち固定文で不足章を埋めない', () => {
+test('Editorialカードは所見不足でも8章を維持し補完を追跡する', () => {
   const report = buildEditorialStructuredReport(facts, findings)
-  assert.ok(report.cards.length < 8)
+  assert.equal(report.cards.length, 8)
   assert.ok(report.cards.every(card => card.tab === 'essence' && card.tags.length > 0))
   assert.equal(new Set(report.cards.map(card => card.title)).size, report.cards.length)
+  assert.ok(report.cards.some(card => card.compositionMode === 'mixed' && card.supplementPageCount === 6))
+  assert.ok(report.cards.every(card => card.pages.length >= 15 && card.pages.length <= 18))
+  assert.ok(report.cards.every(card => (card.supplementPageCount ?? 0) <= 6))
+  const loveText = report.cards.filter(card => card.id.startsWith('love-')).flatMap(card => card.pages.map(page => page.text)).join('\n')
+  const workText = report.cards.filter(card => card.id.startsWith('work-')).flatMap(card => card.pages.map(page => page.text)).join('\n')
+  assert.doesNotMatch(loveText, /仕事|職場|キャリア|上司/u)
+  assert.doesNotMatch(workText, /恋愛|恋人|結婚|パートナー/u)
+  const allPages = report.cards.flatMap(card => card.pages.map(page => page.text))
+  assert.equal(new Set(allPages).size, allPages.length)
 })
 
 test('人物像の各章は役割の異なる15〜20ページの読み物になる', () => {
@@ -26,8 +35,10 @@ test('人物像の各章は役割の異なる15〜20ページの読み物にな�
   for (const card of report.cards) {
     assert.ok(card.pages.length >= 15 && card.pages.length <= 20)
     assert.ok([...card.pages[0].text].length < [...card.pages[2].text].length)
-    assert.ok(card.pages.some(page => page.label === '恋愛で現れる面'))
-    assert.ok(card.pages.some(page => page.label === '仕事で現れる面'))
+    if (card.id.startsWith('love-')) assert.ok(card.pages.some(page => page.label === '関係が日常になるとき'))
+    else assert.ok(card.pages.some(page => page.label === '仕事で現れる面'))
+    if (card.id.startsWith('work-')) assert.ok(card.pages.some(page => page.label === '任され方との相性'))
+    else assert.ok(card.pages.some(page => page.label === '恋愛で現れる面'))
     assert.ok(card.pages.some(page => page.label === '余韻'))
     assert.equal(new Set(card.pages.map(page => page.text)).size, card.pages.length)
     assert.ok(card.pages.every(page => [...page.text].length <= 120))
@@ -71,6 +82,8 @@ test('異なるFindingでは全ページが別の文章になり、似たタイ�
   ]
   const collisionFindings: ReportFinding[] = collisionFacts.map(fact => ({ id: `finding-${fact.id}`, key: 'initiative', kind: 'signature', axis: fact.axis, confidence: 1, lineages: ['stems'], primaryFacts: [fact.id], supportingFacts: [] }))
   const collisionReport = buildEditorialStructuredReport(collisionFacts, collisionFindings)
-  assert.equal(collisionReport.cards.length, 2)
-  assert.equal(titlesAreSimilar(collisionReport.cards[0].title, collisionReport.cards[1].title), false)
+  assert.equal(collisionReport.cards.length, 8)
+  const findingCards = collisionReport.cards.filter(card => card.compositionMode === 'finding')
+  assert.equal(findingCards.length, 2)
+  assert.equal(titlesAreSimilar(findingCards[0].title, findingCards[1].title), false)
 })
