@@ -8,7 +8,7 @@ import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
-import { writeReportWithAi } from '../lib/report/aiWriter.js'
+import { deterministicCardIds, writeReportWithAi } from '../lib/report/aiWriter.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
 import { buildReportFacts } from '../lib/report/facts.js'
 import { buildReportFindings } from '../lib/report/findings.js'
@@ -184,7 +184,8 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const findings = buildReportFindings(facts)
     const deterministicReport = replaceTimingCards(buildEditorialStructuredReport(facts, findings), reportInput)
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
-    const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
+    const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
+    const writtenReport = process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
       ? finalizeReportProvenance(deterministicReport, 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,

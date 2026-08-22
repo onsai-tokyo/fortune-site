@@ -49,6 +49,12 @@ test('旧AI鑑定プロンプトをpreviewへ戻さない', () => {
   assert.doesNotMatch(preview, /Legacy AI report generator|const hasPartner|const timeLine/)
 })
 
+test('決定論scopeが全カードを覆う場合は古いAIキャッシュを読まない', () => {
+  const preview = read('backend/src/routes/preview.ts')
+  assert.match(preview, /deterministicCardIds\(deterministicReport\.cards\)\.size === deterministicReport\.cards\.length/)
+  assert.match(preview, /AI_REPORT_ENABLED === 'false' \|\| fullyDeterministic/)
+})
+
 test('PR12の鑑定APIは認証トークンを送り、チャット本文と次質問を分離する', () => {
   const api = read('ios/FateLab/APIClient.swift')
   const reading = read('backend/src/routes/reading.ts')
