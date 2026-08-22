@@ -13,6 +13,7 @@ import { correlationId, sendApiError } from '../lib/apiError.js'
 import { buildReportFacts } from '../lib/report/facts.js'
 import { buildReportFindings } from '../lib/report/findings.js'
 import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
+import { finalizeReportProvenance } from '../lib/report/provenance.js'
 import { replaceTimingCards } from '../lib/report/timingCards.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 
@@ -182,7 +183,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     const deterministicReport = replaceTimingCards(buildEditorialStructuredReport(facts, findings), reportInput)
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false'
-      ? { ...deterministicReport, generator: 'deterministic' as const }
+      ? finalizeReportProvenance(deterministicReport, 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
         kind: 'self',

@@ -1,4 +1,5 @@
 import type { ReportCard, StructuredReport } from '../reportCards.js'
+import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 import { japanDateParts } from '../japanDate.js'
 
 export interface CoupleAnnualTiming {
@@ -119,7 +120,7 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear
       { role: 'question', label: '二人で確かめること', text: `この年に守りたいものと、変えてもよいものを一つずつ話してください。答えの違いが、次の約束を具体的にします。` },
       { role: 'closing', label: 'この年の鍵', text: point.kind === 'aligned' ? '一緒に選ぶ回数を増やすこと。二人の意思が同じ場所に積み重なり、次の節目を支えます。' : '違いをなくすのではなく、扱い方を決めること。その約束が二人らしい距離をつくります。' },
     ]
-    return {
+    return withCardProvenance({
       id: `couple-timing-${point.year}`,
       kind: 'timing',
       scope: 'couple',
@@ -134,15 +135,15 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear
         { family: '相手の年運', system: '年ごとの推移', detail: `${point.year}: themes=${point.partnerThemes.join('/')}; kind=${point.kind}` },
       ],
       metadataRefs: [`self.timing.annual.${point.year}`, `partner.timing.annual.${point.year}`],
-    }
+    }, 'deterministic')
   })
 }
 
 export function appendCoupleTimingCards(report: StructuredReport, cards: ReportCard[]): StructuredReport {
   const combined = [...report.cards.filter(card => card.tab !== 'timing' && card.kind !== 'timing'), ...cards]
-  return {
+  return finalizeReportProvenance({
     ...report,
     cards: combined,
     reportText: combined.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'),
-  }
+  }, 'compat-card-v1+couple-timing-v1')
 }

@@ -1,4 +1,5 @@
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
+import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 import type { FactAxis, ReportFact } from './facts.js'
 import type { ReportFinding } from './findings.js'
 import { titlesAreSimilar } from './aiWriter.js'
@@ -157,10 +158,10 @@ export function buildEditorialStructuredReport(facts: ReportFact[], findings: Re
     const language = specializedLanguage(finding, factById)
     const title = cards.some(card => titlesAreSimilar(card.title, language.title)) ? collisionTitles[spec.id] : language.title
     const pages = pagesFor(finding, { ...language, title }, spec)
-    cards.push({ id: spec.id, kind: 'essence', scope: 'self', tab: 'essence', title, summary: summaryFor(language, finding),
+    cards.push(withCardProvenance({ id: spec.id, kind: 'essence', scope: 'self', tab: 'essence', title, summary: summaryFor(language, finding),
       tags: spec.tags, period: null, pages,
       evidence: finding.primaryFacts.flatMap(id => { const fact = factById.get(id); return fact ? [{ family: fact.lineage, system: fact.system, detail: fact.factor }] : [] }),
-      metadataRefs: [`finding:${finding.id}`, ...finding.primaryFacts.map(id => `fact:${id}`)] })
+      metadataRefs: [`finding:${finding.id}`, ...finding.primaryFacts.map(id => `fact:${id}`)] }, 'deterministic'))
   }
-  return { version: 3, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'), generator: 'deterministic' }
+  return finalizeReportProvenance({ version: 3, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'editorial-v3')
 }

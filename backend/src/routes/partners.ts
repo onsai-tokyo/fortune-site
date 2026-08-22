@@ -18,6 +18,7 @@ import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
 import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 import { stripMarkdown } from '../lib/markdown.js'
 import { aggregateGenerator, logCardGeneration, logReportGeneration } from '../lib/report/generationMetrics.js'
+import { finalizeReportProvenance, withCardProvenance } from '../lib/report/provenance.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -65,7 +66,8 @@ export function parseCompatibility(raw: string): StructuredReport {
     if (!card.title || /^恋愛|友人|相性$/.test(card.title) || !Array.isArray(card.pages) || card.pages.length < 8 || card.pages.length > 12) throw new Error('相性カード形式が不正です')
     if (card.pages.some(page => !page.text || [...page.text].length > 120)) throw new Error('相性カード本文が不正です')
   }
-  return { version: 2, cards: value.cards, reportText: value.cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'), generator: 'ai' }
+  const cards = value.cards.map(card => withCardProvenance(card, 'ai'))
+  return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-report-v1', 'ai')
 }
 
 type CompatibilityGeneration = { text: string; stopReason?: string | null }
@@ -120,7 +122,7 @@ export function parseCompatibilityCard(raw: string, minimumPages = 8): ReportCar
   const readerFacingText = [card.title, card.summary, ...card.pages.flatMap(page => [page.label, page.text])].join('\n')
   if (compatibilityForbiddenTerms.test(readerFacingText)) throw new Error('相性カード本文に占術用語が含まれています')
   if (!Array.isArray(card.evidence) || card.evidence.length === 0) throw new Error('相性カードの根拠が不足しています')
-  return card
+  return withCardProvenance(card, 'ai')
 }
 
 function validateCompatibilityCard(card: ReportCard | null, spec: CompatibilityCardSpec): ReportCard | null {
@@ -140,12 +142,11 @@ function compatibilityFailureKind(error: unknown, stopReason?: string | null) {
 }
 
 function assembleCompatibilityReport(cards: ReportCard[]): StructuredReport {
-  return {
+  return finalizeReportProvenance({
     version: 2,
     cards,
     reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'),
-    generator: 'ai',
-  }
+  }, 'compat-card-v1', 'ai')
 }
 
 export async function generateCompatibilityCards(
@@ -339,11 +340,11 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const selfTiming = (self.calculated_data as { timing?: { annual?: Array<{ year: number; score: number; themes: string[] }> } }).timing?.annual ?? []
     const turningPoints = findCoupleTurningPoints(selfTiming, partnerTiming.annual, selfBirthYear, year)
     const timingReport = appendCoupleTimingCards(relationshipReport, buildCoupleTimingCards(turningPoints))
-    const report: StructuredReport = {
+    const report = finalizeReportProvenance({
       ...timingReport,
       cards: timingReport.cards.map(card => ({ ...card, scope: 'couple' as const })),
       chartSections: buildCoupleChartSections(self.calculated_data, partnerCalculated),
-    }
+    }, 'compat-card-v1+couple-timing-v1')
     report.cards.forEach(card => {
       const observation = compatibilityCardObservations.get(card.id)
       const isAi = Boolean(observation)

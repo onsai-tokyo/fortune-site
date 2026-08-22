@@ -2,6 +2,7 @@ import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 import { titlesAreSimilar } from './aiWriter.js'
 import { japanDateParts } from '../japanDate.js'
+import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
@@ -142,9 +143,9 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
 }
 
 export function replaceTimingCards(report: StructuredReport, input: ReportInput): StructuredReport {
-  const timing = buildTurningPointCards(input)
+  const timing = buildTurningPointCards(input).map(card => withCardProvenance(card, 'deterministic'))
   if (timing.length === 0) return report
   const cards = [...report.cards.filter(item => item.kind !== 'timing'), ...timing]
   const reportText = cards.flatMap(item => [`【${item.title}】`, ...item.pages.map(page => page.text)]).join('\n\n')
-  return { ...report, reportText, cards }
+  return finalizeReportProvenance({ ...report, reportText, cards }, 'self-report-v3')
 }

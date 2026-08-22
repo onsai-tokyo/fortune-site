@@ -26,6 +26,10 @@ export interface ReportCard {
   pages: ReportCardPage[]
   evidence: ReportCardEvidence[]
   metadataRefs?: string[]
+  /** Optional while reading reports saved before PR-0b-metadata; always written for newly generated reports. */
+  generator?: 'ai' | 'deterministic'
+  compositionMode?: 'finding' | 'supplement' | 'mixed'
+  supplementPageCount?: number
 }
 
 export interface ChartSection {
@@ -46,7 +50,11 @@ export interface StructuredReport {
   reportText: string
   cards: ReportCard[]
   chartSections?: ChartSection[]
-  generator?: 'ai' | 'deterministic'
+  generator?: 'ai' | 'deterministic' | 'mixed'
+  generatorVersion?: string
+  aiCardCount?: number
+  deterministicCardCount?: number
+  supplementCardCount?: number
 }
 
 const markerPattern = /\[\[([A-Z]+):([\s\S]*?)\]\]/g

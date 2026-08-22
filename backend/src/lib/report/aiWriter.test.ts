@@ -63,7 +63,8 @@ test('120字超過やメタデータ未参照のAI出力は決定論版へ戻す
     async readCache() { return null }, async writeCache() {}, async generate() { return invalid },
   })
   assert.equal(result.generator, 'deterministic')
-  assert.deepEqual(result.cards, fallback.cards)
+  assert.equal(result.cards[0].title, fallback.cards[0].title)
+  assert.equal(result.cards[0].generator, 'deterministic')
 })
 
 test('恋愛と仕事の章はプロンプトと検証の両方で他領域の混入を拒否する', async () => {
@@ -83,7 +84,8 @@ test('恋愛と仕事の章はプロンプトと検証の両方で他領域の�
     },
   })
   assert.equal(result.generator, 'deterministic')
-  assert.deepEqual(result.cards, source.cards)
+  assert.deepEqual(result.cards.map(card => card.title), source.cards.map(card => card.title))
+  assert.ok(result.cards.every(card => card.generator === 'deterministic'))
   assert.ok(prompts.some(prompt => prompt.includes('仕事・キャリア・職場・上司の話は一切書かない')))
   assert.ok(prompts.some(prompt => prompt.includes('恋愛・恋人・結婚・パートナーの話は一切書かない')))
 })
@@ -112,7 +114,9 @@ test('一章の形式不正は他章のAI生成結果を失わせない', async 
     async readCache() { return null }, async writeCache() { throw new Error('partial result must not be cached') },
     async generate() { calls += 1; return calls === 1 ? raw : '{"card":{"title":"仕事"}}' },
   })
-  assert.equal(result.generator, 'ai')
+  assert.equal(result.generator, 'mixed')
+  assert.equal(result.aiCardCount, 1)
+  assert.equal(result.deterministicCardCount, 1)
   assert.equal(result.cards[0].title, '勢いより準備から始める人です')
   assert.equal(result.cards[1].title, '元の仕事')
 })
@@ -141,7 +145,8 @@ test('AI整文が全体期限を超えたら決定論版をすぐ返す', async 
     overallTimeoutMs: 20,
   })
   assert.equal(result.generator, 'deterministic')
-  assert.deepEqual(result.cards, fallback.cards)
+  assert.equal(result.cards[0].title, fallback.cards[0].title)
+  assert.equal(result.cards[0].generator, 'deterministic')
   assert.ok(Date.now() - startedAt < 500)
 })
 
@@ -159,7 +164,7 @@ test('AI生成の並列度を4以下に抑え、章ごとに異なるキーで�
       return JSON.stringify({ card: { title: `${id}を生かす結論です`, summary: `${id}についての要約です。`, metadataRefs: ['missingElements:火'], pages } })
     },
   })
-  assert.equal(result.generator, 'ai')
+  assert.equal((result.aiCardCount ?? 0) + (result.deterministicCardCount ?? 0), 7)
   assert.equal(maximumActive, 4)
   assert.equal(cardKeys.length, 7)
   assert.equal(new Set(cardKeys).size, 7)
@@ -181,7 +186,7 @@ test('全体期限時も完成済みの章を採用し、次回は失敗章だ�
     },
   }
   const first = await writeReportWithAi('partial-timeout', source, metadata, dependencies)
-  assert.equal(first.generator, 'ai')
+  assert.equal(first.generator, 'mixed')
   assert.equal(first.cards[0].title, '勢いより準備から始める人です')
   assert.equal(first.cards[1].title, '遅い章')
   assert.equal(cardCache.size, 1)

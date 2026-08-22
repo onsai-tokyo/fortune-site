@@ -6,6 +6,7 @@ import type { ReportMetadata } from './metadata.js'
 import { japanDateContext, japanDateParts } from '../japanDate.js'
 import { stripMarkdown } from '../markdown.js'
 import { aggregateGenerator, classifyFallbackReason, logCardGeneration, logReportGeneration, type FallbackReason, type GenerationContext } from './generationMetrics.js'
+import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 
 const GENERATOR_VERSION = 'ai-cards-v6-domain-contract'
 const AI_CACHE_KEY_VERSION = 'v2'
@@ -108,7 +109,7 @@ function parseAndValidateAiCard(raw: string, fallback: ReportCard): ReportCard {
   if (pages.length < minimumPages || pages.length > maximumPages || !pages.every(validatePage)) throw new Error('Invalid AI pages')
   if (containsForbiddenDomain(fallback.id, pages as ReportCardPage[])) throw new Error('AI card mixed an unrelated domain')
   if (metadataRefs.length === 0) throw new Error('AI card did not reference metadata')
-  return { ...fallback, title, summary, pages, metadataRefs }
+  return withCardProvenance({ ...fallback, title, summary, pages, metadataRefs }, 'ai')
 }
 
 export function parseAndValidateAiReport(raw: string, fallback: StructuredReport): StructuredReport {
@@ -116,7 +117,7 @@ export function parseAndValidateAiReport(raw: string, fallback: StructuredReport
   if (!Array.isArray(parsed.cards) || parsed.cards.length !== fallback.cards.length) throw new Error('AI cards count mismatch')
   const cards = parsed.cards.map((value, index) => parseAndValidateAiCard(JSON.stringify(value), fallback.cards[index]))
   const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
-  return { version: 3, reportText, cards, generator: 'ai' }
+  return finalizeReportProvenance({ version: 3, reportText, cards }, GENERATOR_VERSION, 'ai')
 }
 
 function pageContractFor(card: ReportCard): string {
@@ -213,11 +214,11 @@ export async function writeReportWithAi(
       const aiIndexes = new Set(cached.cards.map((_card, index) => index))
       cached.cards.forEach((_card, index) => cardSources.set(index, 'cache_hit'))
       logCompletedReport(cached.cards, aiIndexes)
-      return { ...cached, generator: 'ai' }
+      return finalizeReportProvenance({ ...cached, cards: cached.cards.map(card => withCardProvenance(card, 'ai')) }, GENERATOR_VERSION, 'ai')
     }
     const overallTimeoutMs = dependencies.overallTimeoutMs ?? AI_TOTAL_TIMEOUT_MS
     const deadlineAt = Date.now() + overallTimeoutMs
-    const generatedCards = [...fallback.cards]
+    const generatedCards = fallback.cards.map(card => withCardProvenance(card, 'deterministic'))
     const completedByAi = new Set<number>()
     let generatedThisReport = 0
     const maxCardsPerReport = dependencies.maxCardsPerReport ?? AI_MAX_CARDS_PER_REPORT
@@ -240,7 +241,7 @@ export async function writeReportWithAi(
         try {
           const cardCached = await dependencies.readCardCache?.(cardKey)
           if (cardCached) {
-            generatedCards[index] = cardCached
+            generatedCards[index] = withCardProvenance(cardCached, 'ai')
             completedByAi.add(index)
             cardSources.set(index, 'cache_hit')
             logGeneration('cache_hit', startedAt, undefined, card.id)
@@ -291,7 +292,7 @@ export async function writeReportWithAi(
       } catch (error) {
         completedByAi.delete(index)
         cardFailures.set(index, classifyFallbackReason(error, !completedWithinDeadline || deadlineAt - Date.now() <= 0))
-        cards.push(fallback.cards[index])
+        cards.push(withCardProvenance(fallback.cards[index], 'deterministic'))
       }
     }
     if (!completedWithinDeadline) {
@@ -301,7 +302,7 @@ export async function writeReportWithAi(
     }
     const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
     const aiCardCount = completedByAi.size
-    const report: StructuredReport = { version: 3, reportText, cards, generator: aiCardCount > 0 ? 'ai' : 'deterministic' }
+    const report = finalizeReportProvenance({ version: 3, reportText, cards }, GENERATOR_VERSION)
     if (aiCardCount === cards.length) {
       try { await dependencies.writeCache(key, report) }
       catch (error) { console.warn('AI report cache write failed', { reason: error instanceof Error ? error.message : String(error) }) }
@@ -318,7 +319,7 @@ export async function writeReportWithAi(
     logGeneration('fallback', startedAt, reason)
     fallback.cards.forEach((_card, index) => cardFailures.set(index, classifyFallbackReason(error)))
     logCompletedReport(fallback.cards, new Set())
-    return { ...fallback, generator: 'deterministic' }
+    return finalizeReportProvenance(fallback, GENERATOR_VERSION, 'deterministic')
   }
 }
 
