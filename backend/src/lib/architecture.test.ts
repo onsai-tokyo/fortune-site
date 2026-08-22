@@ -122,6 +122,18 @@ test('相性生成は個人情報を含めず停止理由と出力量を計測�
   assert.doesNotMatch(partners, /Compatibility generation metric[\s\S]{0,500}(birth_data|calculated_data|display_name)/)
 })
 
+test('相性とチャットは共通プロンプトをキャッシュし相性データを圧縮する', () => {
+  const partners = read('backend/src/routes/partners.ts')
+  const reading = read('backend/src/routes/reading.ts')
+  assert.match(partners, /beta\.promptCaching\.messages\.create/)
+  assert.match(reading, /beta\.promptCaching\.messages\.stream/)
+  assert.match(partners, /cache_control: \{ type: 'ephemeral' \}/)
+  assert.match(reading, /cache_control: \{ type: 'ephemeral' \}/)
+  assert.match(partners, /compactCompatibilityContext/)
+  assert.match(partners, /cardInputIdentity/)
+  assert.doesNotMatch(partners, /本人: \$\{JSON\.stringify\(\{ birth: self\.birth_data, calculated: self\.calculated_data \}\)\}/)
+})
+
 test('出生時刻と相性会話の根本原因を判別できる計測を残す', () => {
   const preview = read('backend/src/routes/preview.ts')
   const reading = read('backend/src/routes/reading.ts')

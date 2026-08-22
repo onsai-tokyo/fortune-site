@@ -329,7 +329,11 @@ ${conciseConversationInstruction}
     res.flushHeaders()
     const parser = new StreamingAnswerParser()
     let disconnected = false
-    const stream = getClient().messages.stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, system, messages: history })
+    const stream = getClient().beta.promptCaching.messages.stream({
+      model: 'claude-haiku-4-5-20251001', max_tokens: 400,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: history,
+    })
     res.once('close', () => {
       if (!res.writableEnded) { disconnected = true; stream.abort() }
     })

@@ -13,6 +13,7 @@ import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoint
 import { buildCoupleChartSections } from '../lib/report/chartSections.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
+import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -133,7 +134,7 @@ function assembleCompatibilityReport(cards: ReportCard[]): StructuredReport {
 }
 
 export async function generateCompatibilityCards(
-  basePrompt: string,
+  _basePrompt: string,
   generate: (prompt: string, spec: CompatibilityCardSpec, attempt: number) => Promise<CompatibilityGeneration>,
   onCardComplete?: (completed: number, total: number) => void,
   cache?: CompatibilityCardCache,
@@ -150,7 +151,7 @@ export async function generateCompatibilityCards(
         console.warn('Compatibility card cache read failed', { cardId: spec.id, reason: error instanceof Error ? error.message : String(error) })
       }
     }
-    const prompt = `${basePrompt}\n今回生成する章: ${spec.purpose}\nID: ${spec.id}\nタイトル方針: ${spec.titleDirection}\n形式は {"card":{...}}。章は1枚だけ、ページは8〜12枚。JSON以外を返さないでください。本文・タイトル・要約・ページラベルに占術の専門語を書かず、起きることの言葉へ翻訳してください。主語は「二人」または「あなた／あの人」にし、占いの解説ではなく二人の物語として書いてください。根拠となる占術データは本文に出さず evidence にだけ残してください。`
+    const prompt = `今回生成する章: ${spec.purpose}\nID: ${spec.id}\nタイトル方針: ${spec.titleDirection}\n形式は {"card":{...}}。章は1枚だけ、ページは8〜12枚。JSON以外を返さないでください。本文・タイトル・要約・ページラベルに占術の専門語を書かず、起きることの言葉へ翻訳してください。主語は「二人」または「あなた／あの人」にし、占いの解説ではなく二人の物語として書いてください。根拠となる占術データは本文に出さず evidence にだけ残してください。`
     let first: CompatibilityGeneration
     try {
       first = await generate(prompt, spec, 1)
@@ -248,18 +249,14 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
       astrology: calcAstrology(year, month, day, hour, minute, partner.birthplace),
       ...partnerExpanded,
     }
-    const partnerFacts = {
-      name: partner.display_name, birthDate: partner.birth_date, gender: partner.gender,
-      day: shichu.day.kanshi, nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
-      sanmei: partnerSanmei,
-      sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)), timing: partnerTiming,
-    }
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
-    const compatibilityIdentity = createHash('sha256').update(`compat-v5|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
+    const compactContext = compactCompatibilityContext(self.calculated_data, partnerCalculated, relationshipType)
+    const cardInputIdentity = createHash('sha256').update(`compat-card-v1|${JSON.stringify(compactContext)}`).digest('hex')
+    const compatibilityIdentity = createHash('sha256').update(`compat-v6|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
-本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
-相手: ${JSON.stringify(partnerFacts)}
+本人: ${JSON.stringify(compactContext.self)}
+相手: ${JSON.stringify({ name: partner.display_name, ...compactContext.partner })}
 カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"内部の占術系統","system":"内部の占術名","detail":"判断に使った計算上の根拠"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"物語上の短い見出し","text":"120字以内"}]}}
 opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。
 本文に天中殺、日柱、日主、干支、五行、通変星、宿曜、納音、命宮、夫妻宮、星名、干支名などの占術用語を一切書かない。根拠は evidence にのみ保存し、本文では二人に起きる場面や行動へ翻訳する。`
@@ -271,7 +268,11 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const relationshipReport = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
       const attemptStartedAt = Date.now()
-      const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 8000, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
+      const message = await client.beta.promptCaching.messages.create({
+        model: 'claude-sonnet-4-6', max_tokens: 8000, temperature: 0,
+        system: [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: generationPrompt }],
+      })
       const block = message.content.find(item => item.type === 'text')
       if (!block || block.type !== 'text') throw new Error('AI応答がありません')
       console.info('Compatibility generation metric', {
@@ -281,6 +282,8 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         phase: cardAttempt === 1 ? 'initial' : 'regenerate',
         stopReason: message.stop_reason,
         outputTokens: message.usage.output_tokens,
+        cacheCreationInputTokens: message.usage.cache_creation_input_tokens,
+        cacheReadInputTokens: message.usage.cache_read_input_tokens,
         outputChars: block.text.length,
         attemptDurationMs: Date.now() - attemptStartedAt,
         totalDurationMs: Date.now() - compatibilityStartedAt,
@@ -288,14 +291,14 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       return { text: block.text, stopReason: message.stop_reason }
     }, (completed, total) => progress(66 + Math.floor(completed / total * 24), '二人の関係を書いています', `${completed}/${total}の関係性カードを整えました`), {
       read: async spec => {
-        const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
+        const cardCacheKey = createHash('sha256').update(`${cardInputIdentity}|${spec.id}`).digest('hex')
         const { data, error } = await db.from('ai_report_cache').select('payload').eq('cache_key', cardCacheKey).maybeSingle()
         if (error) throw error
         return (data?.payload as ReportCard | undefined) ?? null
       },
       write: async (spec, card) => {
-        const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
-        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v5-card', payload: card })
+        const cardCacheKey = createHash('sha256').update(`${cardInputIdentity}|${spec.id}`).digest('hex')
+        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-card-v1', payload: card })
         if (error) throw error
       },
     }, relationshipType)
@@ -330,7 +333,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
         partner_profile_id: partner.id,
         idempotency_key: compatibilityIdentity,
         birth_data: { self: self.birth_data, partner: partnerBirth, relationshipType },
-        calculated_data: calculatedDataWithReport({ self: self.calculated_data, partner: partnerCalculated, relationshipType }, report),
+        calculated_data: calculatedDataWithReport(compactContext, report),
         report_text: report.reportText,
         source_section: '二人の関係',
       }
