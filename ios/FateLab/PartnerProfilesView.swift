@@ -147,7 +147,11 @@ struct PartnerProfilesView: View {
             async let profiles = APIClient.shared.partnerProfiles(auth: auth)
             async let readings = APIClient.shared.readings(auth: auth)
             let (response, availableReadings) = try await (profiles, readings)
-            partners = response.partners; remaining = response.remaining; selfReading = availableReadings.first
+            partners = response.partners
+            remaining = response.remaining
+            // A compatibility conversation can be the most recently updated item.
+            // It must never be reused as the source "self" reading.
+            selfReading = availableReadings.first(where: { !$0.isCompatibility })
             if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
         } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }

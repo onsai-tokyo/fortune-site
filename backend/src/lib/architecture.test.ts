@@ -177,6 +177,7 @@ test('相性鑑定は凪等な会話を1件保存し完了イベントでIDを�
 
 test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を通る', () => {
   const partners = read('backend/src/routes/partners.ts')
+  const partnerView = read('ios/FateLab/PartnerProfilesView.swift')
   const analyze = read('backend/src/routes/analyze.ts')
   const api = read('ios/FateLab/APIClient.swift')
   assert.match(partners, /post\('\/:id\/compatibility', loadCompatibilityContext, requirePoints\(3\)/)
@@ -185,6 +186,7 @@ test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を
   assert.match(api, /\/api\/partners\/\\\(partnerID\.uuidString\)\/compatibility/)
   assert.doesNotMatch(api, /\/api\/analyze\/compatibility/)
   assert.match(api, /http\.statusCode == 402.*APIError\.paymentRequired/)
+  assert.match(partnerView, /availableReadings\.first\(where: \{ !\$0\.isCompatibility \}\)/)
 })
 
 test('相性結果は選択画面と分離し本人鑑定と同じカード導線を使う', () => {

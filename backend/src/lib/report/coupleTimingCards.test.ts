@@ -22,6 +22,18 @@ test('二人の年運から過去5年を含む節目を6〜10件抽出し、過�
   assert.ok(points.every(point => point.selfAge === point.year - 1995 && point.partnerAge === point.year - 1992))
 })
 
+test('出会いの兆しが未来だけなら今年から、過去にもあれば最古の年から始める', () => {
+  const futureSelf = annual().map(item => ({ ...item, themes: item.year === 2029 ? ['出会い'] : ['仕事'] }))
+  const futurePartner = annual(2).map(item => ({ ...item, themes: ['学び'] }))
+  const futurePoints = findCoupleTurningPoints(futureSelf, futurePartner, 1995, 1992, 2026)
+  assert.ok(futurePoints.every(point => point.year >= 2026))
+
+  const pastSelf = futureSelf.map(item => ({ ...item, themes: item.year === 2022 ? ['縁が始まる'] : item.themes }))
+  const pastPoints = findCoupleTurningPoints(pastSelf, futurePartner, 1995, 1992, 2026)
+  assert.ok(pastPoints.every(point => point.year >= 2022))
+  assert.ok(pastPoints.some(point => point.year < 2026))
+})
+
 test('節目カードは決定論的な8ページで二人の節目タブに入る', () => {
   const points = findCoupleTurningPoints(annual(), annual(2), 1995, 1992, 2026)
   const first = buildCoupleTimingCards(points)

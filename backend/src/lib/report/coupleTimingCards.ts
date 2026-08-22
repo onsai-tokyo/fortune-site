@@ -62,8 +62,11 @@ export function findCoupleTurningPoints(
   const meetingPattern = /出会|縁.*始|交際.*始|関係.*始|恋愛.*始/
   const meetingYears = [...selfAnnual, ...partnerAnnual]
     .filter(item => item.themes.some(theme => meetingPattern.test(theme)))
-    .map(item => item.year).filter(year => year <= currentYear)
-  const startYear = meetingYears.length > 0 ? Math.min(...meetingYears) : currentYear - 3
+    .map(item => item.year)
+  const earliestMeetingYear = meetingYears.length > 0 ? Math.min(...meetingYears) : null
+  const startYear = earliestMeetingYear == null
+    ? currentYear - 3
+    : Math.min(earliestMeetingYear, currentYear)
   const candidates = selfAnnual.flatMap(self => {
     const partner = partnerByYear.get(self.year)
     if (!partner || self.year < startYear || self.year > currentYear + 10) return []
@@ -85,6 +88,11 @@ export function findCoupleTurningPoints(
   if (divergent && !selected.some(item => item.kind === 'divergent') && selected.length > 0) selected[selected.length - 1] = divergent
   const pastDivergent = ranked.find(item => item.year < currentYear && item.kind === 'divergent')
   if (pastDivergent && !selected.some(item => item.year === pastDivergent.year) && selected.length > 0) selected[selected.length - 1] = pastDivergent
+  const startCandidate = candidates.find(item => item.year === startYear)
+  if (startCandidate && !selected.some(item => item.year === startYear) && selected.length > 0) {
+    const replaceIndex = selected.findIndex(item => item.kind !== 'divergent')
+    selected[replaceIndex >= 0 ? replaceIndex : selected.length - 1] = startCandidate
+  }
   return [...new Map(selected.map(item => [item.year, item])).values()].sort((a, b) => a.year - b.year)
 }
 
