@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import OSLog
 
 struct GenerationProgress: Equatable { let percent: Int; let title: String; let detail: String }
 enum GenerationKind { case selfReading, compatibility }
@@ -42,6 +43,7 @@ enum ChatEvent: Sendable {
 @MainActor
 struct APIClient {
     static let shared = APIClient()
+    private static let logger = Logger(subsystem: "com.onsai.fatelab", category: "network")
     private init() {}
 
     private func request(path: String, method: String = "GET", token: String? = nil, json: Any? = nil) throws -> URLRequest {
@@ -54,6 +56,7 @@ struct APIClient {
         request.timeoutInterval = 40
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(UUID().uuidString, forHTTPHeaderField: "X-Correlation-ID")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         if let json { request.httpBody = try JSONSerialization.data(withJSONObject: json) }
         return request
@@ -112,6 +115,7 @@ struct APIClient {
                     try await Task.sleep(for: .seconds(delay))
                     continue
                 }
+                logFailure(currentRequest, status: http.statusCode, error: error)
                 throw error
             } catch {
                 let normalizedError: Error
@@ -132,10 +136,17 @@ struct APIClient {
                     try await Task.sleep(for: .seconds(delay))
                     continue
                 }
+                if userFacingErrorMessage(normalizedError) != nil { logFailure(currentRequest, error: normalizedError) }
                 throw normalizedError
             }
         }
         throw lastError
+    }
+
+    private func logFailure(_ request: URLRequest, status: Int? = nil, error: Error) {
+        let requestId = request.value(forHTTPHeaderField: "X-Correlation-ID") ?? "missing"
+        let path = request.url?.path ?? "unknown"
+        Self.logger.error("API request failed correlationId=\(requestId, privacy: .public) status=\(status ?? 0) path=\(path, privacy: .public) error=\(String(describing: type(of: error)), privacy: .public)")
     }
 
     func warmup() async {
@@ -145,13 +156,13 @@ struct APIClient {
 
     func status(auth: AuthStore) async throws -> ReadingStatus {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/reading/status", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/reading/status", token: token), retryTransient: true, auth: auth)
         return try JSONDecoder().decode(ReadingStatus.self, from: raw)
     }
 
     func readings(auth: AuthStore) async throws -> [ReadingSummary] {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/reading/conversations", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/reading/conversations", token: token), retryTransient: true, auth: auth)
         let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
         let list = try JSONSerialization.data(withJSONObject: object?["conversations"] ?? [])
         return try JSONDecoder().decode([ReadingSummary].self, from: list)
@@ -159,7 +170,7 @@ struct APIClient {
 
     func traits(auth: AuthStore) async throws -> [ProfileTrait] {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/reading/profile/traits", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/reading/profile/traits", token: token), retryTransient: true, auth: auth)
         let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
         let list = try JSONSerialization.data(withJSONObject: object?["traits"] ?? [])
         return try JSONDecoder().decode([ProfileTrait].self, from: list)
@@ -172,7 +183,7 @@ struct APIClient {
 
     func partnerProfiles(auth: AuthStore) async throws -> PartnerProfilesResponse {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/partners", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/partners", token: token), retryTransient: true, auth: auth)
         return try JSONDecoder().decode(PartnerProfilesResponse.self, from: raw)
     }
 
@@ -266,13 +277,13 @@ struct APIClient {
 
     func conversation(id: UUID, auth: AuthStore) async throws -> ConversationDetail {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)", token: token), retryTransient: true, auth: auth)
         return try JSONDecoder().decode(ConversationDetail.self, from: raw)
     }
 
     func cards(id: UUID, auth: AuthStore) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
-        let raw = try await data(for: request(path: "/api/reading/\(id.uuidString)/cards", token: token), auth: auth)
+        let raw = try await data(for: request(path: "/api/reading/\(id.uuidString)/cards", token: token), retryTransient: true, auth: auth)
         return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
     }
 

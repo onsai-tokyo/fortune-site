@@ -5,6 +5,7 @@ struct ReadingListView: View {
     @EnvironmentObject private var auth: AuthStore
     @State private var readings: [ReadingSummary] = []
     @State private var errorMessage: String?
+    @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var path: [UUID] = []
     @State private var isLoading = false
 
@@ -14,7 +15,7 @@ struct ReadingListView: View {
                 List {
                     if isLoading { ProgressView("読み込んでいます…").frame(maxWidth: .infinity).listRowBackground(FateTheme.canvas) }
                     if let errorMessage {
-                        FLErrorState(title: "読み込めませんでした", message: errorMessage) { Task { await load() } }
+                        FLErrorState(kind: errorKind) { Task { await load() } }
                             .listRowBackground(FateTheme.canvas)
                     }
                     if readings.isEmpty {
@@ -44,7 +45,7 @@ struct ReadingListView: View {
         isLoading = true; errorMessage = nil
         defer { isLoading = false }
         do { readings = try await APIClient.shared.readings(auth: auth) }
-        catch { errorMessage = userFacingMessage(error) }
+        catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
 
     private func shortDate(_ value: String?) -> String {

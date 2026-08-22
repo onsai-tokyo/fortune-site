@@ -100,15 +100,47 @@ struct FLEmptyState: View {
 }
 
 struct FLErrorState: View {
-    let title: String
-    let message: String
-    let retry: () -> Void
+    enum Kind { case network, dataFetch, system }
+    let kind: Kind
+    let customTitle: String?
+    let customMessage: String?
+    let onRetry: () -> Void
+    let onBack: (() -> Void)?
+
+    init(kind: Kind, onRetry: @escaping () -> Void, onBack: (() -> Void)? = nil) {
+        self.kind = kind; customTitle = nil; customMessage = nil
+        self.onRetry = onRetry; self.onBack = onBack
+    }
+
+    init(title: String, message: String, retry: @escaping () -> Void) {
+        kind = .dataFetch; customTitle = title; customMessage = message
+        onRetry = retry; onBack = nil
+    }
+
+    private var title: String {
+        if let customTitle { return customTitle }
+        return switch kind {
+        case .network: "通信エラーが発生しました"
+        case .dataFetch: "データの取得に失敗しました"
+        case .system: "予期しないエラーが発生しました"
+        }
+    }
+    private var message: String {
+        if let customMessage { return customMessage }
+        return switch kind {
+        case .network: "インターネット接続を確認して、もう一度お試しください。"
+        case .dataFetch: "しばらく時間をおいてから、もう一度お試しください。"
+        case .system: "ご不便をおかけして申し訳ありません。"
+        }
+    }
     var body: some View {
         FLCard {
             VStack(alignment: .leading, spacing: FateSpacing.regular) {
                 Text(title).font(FateType.cardTitle)
                 Text(message).font(FateType.caption).foregroundStyle(FateTheme.muted).lineSpacing(4)
-                Button("もう一度試す", action: retry).buttonStyle(FLSecondaryButtonStyle())
+                Button("再試行", action: onRetry).buttonStyle(FLSecondaryButtonStyle())
+                if let onBack { Button("戻る", action: onBack).foregroundStyle(FateTheme.ink) }
+                else if kind == .system { Link("お問い合わせ", destination: AppConfig.websiteBaseURL.appending(path: "/contact")).foregroundStyle(FateTheme.ink) }
             }
         }
     }
@@ -123,6 +155,15 @@ struct ReadingGenerationProgressView: View {
 
 struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { FLCard { content } } }
 func userFacingErrorMessage(_ error: Error) -> String? { if error is CancellationError { return nil }; if let urlError = error as? URLError, urlError.code == .cancelled { return nil }; return error.localizedDescription }
+func errorStateKind(_ error: Error) -> FLErrorState.Kind {
+    if let urlError = error as? URLError {
+        let networkCodes: Set<URLError.Code> = [.notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed]
+        return networkCodes.contains(urlError.code) ? .network : .dataFetch
+    }
+    if case APIError.http(let status, _) = error, status >= 500 { return .dataFetch }
+    if error is APIError { return .dataFetch }
+    return .system
+}
 extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
 
 struct DateMenuPicker: View {

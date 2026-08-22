@@ -23,11 +23,9 @@ struct RootView: View {
                     mainTabs(latestConversationID: nil)
                 case .returning(let conversationID):
                     mainTabs(latestConversationID: conversationID)
-                case .failed(let message):
-                    VStack(spacing: 16) {
-                        ContentUnavailableView("鑑定書を確認できませんでした", systemImage: "wifi.exclamationmark", description: Text(message))
-                        Button("再試行") { Task { await loadLandingState() } }.buttonStyle(FLSecondaryButtonStyle())
-                    }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
+                case .failed(let kind):
+                    FLErrorState(kind: kind) { Task { await loadLandingState() } }
+                        .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
                 }
             }
         }
@@ -66,14 +64,17 @@ struct RootView: View {
             let status = try await APIClient.shared.status(auth: auth)
             if let conversationID = status.latestConversationID { landingState = .returning(conversationID) }
             else { landingState = .newUser }
-        } catch { landingState = .failed(userFacingMessage(error) ?? "通信状態を確認して、もう一度お試しください。") }
+        } catch {
+            guard userFacingMessage(error) != nil else { return }
+            landingState = .failed(errorStateKind(error))
+        }
     }
 
     private enum LandingState {
         case loading
         case newUser
         case returning(UUID)
-        case failed(String)
+        case failed(FLErrorState.Kind)
     }
 }
 
@@ -147,6 +148,7 @@ private struct AIChatTabView: View {
     @EnvironmentObject private var tabRouter: AppTabRouter
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var errorKind: FLErrorState.Kind = .dataFetch
 
     var body: some View {
         Group {
@@ -171,9 +173,12 @@ private struct AIChatTabView: View {
                 }
             } else if isLoading {
                 ProgressView("会話を読み込んでいます…").tint(FateTheme.ink)
+            } else if errorMessage != nil {
+                FLErrorState(kind: errorKind) { Task { await openLatestConversation() } }
+                    .padding(24)
             } else {
                 ContentUnavailableView("鑑定結果がありません", systemImage: "doc.text.magnifyingglass",
-                                       description: Text(errorMessage ?? "「あなたについて」から最初の鑑定を作成してください。"))
+                                       description: Text("「あなたについて」から最初の鑑定を作成してください。"))
             }
         }
         .background(FateTheme.canvas)
@@ -185,7 +190,7 @@ private struct AIChatTabView: View {
         isLoading = true; defer { isLoading = false }
         do {
             tabRouter.chatConversationID = try await APIClient.shared.readings(auth: auth).first?.id
-        } catch { errorMessage = userFacingMessage(error) }
+        } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
 }
 

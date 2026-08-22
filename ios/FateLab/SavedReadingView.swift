@@ -8,6 +8,7 @@ struct SavedReadingView: View {
     @State private var detail: ConversationDetail?
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var cards: [ReadingCard] = []
     @State private var chartSections: [ChartSection] = []
 
@@ -44,7 +45,7 @@ struct SavedReadingView: View {
 
                     }
                 } else {
-                    FLErrorState(title: "鑑定書を開けませんでした", message: errorMessage ?? "少し待ってから、もう一度お試しください。") {
+                    FLErrorState(kind: errorKind) {
                         Task { await load() }
                     }.frame(minHeight: 520)
                 }
@@ -75,6 +76,7 @@ struct SavedReadingView: View {
             chartSections = report.chartSections ?? []
         } catch {
             errorMessage = userFacingMessage(error)
+            errorKind = errorStateKind(error)
         }
     }
 }

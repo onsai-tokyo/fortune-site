@@ -306,3 +306,17 @@ test('あなたタブは再選択で取扱説明書へ戻り本質も共通リ�
   assert.doesNotMatch(hub, /EssenceCard|EssenceTags/)
   assert.match(hub, /ReadingCardList\(cards: report\.cards\.filter \{ \$0\.resolvedTab == selectedTab \}/)
 })
+
+test('共通エラー画面は種別・再試行・戻るを持ちGETを自動再試行する', () => {
+  const theme = read('ios/FateLab/Theme.swift')
+  const api = read('ios/FateLab/APIClient.swift')
+  const root = read('ios/FateLab/RootView.swift')
+  for (const kind of ['network', 'dataFetch', 'system']) assert.match(theme, new RegExp(`case \\.${kind}`))
+  assert.match(theme, /Button\("再試行", action: onRetry\)/)
+  assert.match(theme, /Button\("戻る", action: onBack\)/)
+  assert.match(api, /X-Correlation-ID/)
+  assert.match(api, /status[\s\S]{0,250}retryTransient: true/)
+  assert.match(api, /readings[\s\S]{0,300}retryTransient: true/)
+  assert.match(root, /FLErrorState\(kind: kind\)/)
+  assert.doesNotMatch(root, /wifi\.exclamationmark/)
+})

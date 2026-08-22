@@ -9,6 +9,7 @@ struct PartnerProfilesView: View {
     @State private var showPicker = false
     @State private var showRegistration = false
     @State private var errorMessage: String?
+    @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var relationshipType = "romantic"
     @State private var compatibilityReport: StructuredReportResponse?
     @State private var compatibilityKey: String?
@@ -58,10 +59,7 @@ struct PartnerProfilesView: View {
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(errorMessage).foregroundStyle(.red).font(.caption)
-                        Button("もう一度試す") { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }.buttonStyle(FLSecondaryButtonStyle())
-                    }
+                    FLErrorState(kind: errorKind) { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }
                 }
             }.padding(FateSpacing.screenH)
         }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }
@@ -130,11 +128,11 @@ struct PartnerProfilesView: View {
             let (response, availableReadings) = try await (profiles, readings)
             partners = response.partners; remaining = response.remaining; selfReading = availableReadings.first
             if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
-        } catch { errorMessage = userFacingMessage(error) }
+        } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
     private func delete(_ partner: PartnerProfile) async {
         do { try await APIClient.shared.deletePartner(id: partner.id, auth: auth); if selected?.id == partner.id { selected = nil }; await load() }
-        catch { errorMessage = userFacingMessage(error) }
+        catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
     private func openCompatibility(force: Bool = false) async {
         guard let selected, let selfReading else { return }
@@ -149,7 +147,7 @@ struct PartnerProfilesView: View {
             compatibilityKey = key
             showCompatibilityResult = true
         }
-        catch { compatibilityFailed = true; errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。" }
+        catch { compatibilityFailed = true; errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。"; errorKind = errorStateKind(error) }
     }
 }
 
