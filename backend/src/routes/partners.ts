@@ -7,7 +7,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
-import { requirePoints } from '../middleware/points.js'
+import { addPoints, requirePoints } from '../middleware/points.js'
 import { calculatedDataWithReport } from '../lib/report/storedReport.js'
 import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoints } from '../lib/report/coupleTimingCards.js'
 import { buildCoupleChartSections } from '../lib/report/chartSections.js'
@@ -364,6 +364,16 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     complete(report, compatibilityConversationId)
   } catch (error) {
     console.error('Partner compatibility failed', error)
+    // Generation starts after the usage cost is deducted. Do not charge the user
+    // when generation, validation, or persistence fails before a result is returned.
+    if (req.isPremium === false && req.userId && req.accessToken && req.pointsAfter !== undefined) {
+      try {
+        await addPoints(req.userId, req.accessToken, 3)
+        console.info('Compatibility points refunded', { correlationId: correlationId(req), cost: 3 })
+      } catch (refundError) {
+        console.error('Compatibility points refund failed', { correlationId: correlationId(req), refundError })
+      }
+    }
     if (res.headersSent) { res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '相性鑑定を作成できませんでした', retryable: true })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }
     else sendApiError(res, 500, 'GENERATION_FAILED', '相性鑑定を作成できませんでした', true, correlationId(req))
   }

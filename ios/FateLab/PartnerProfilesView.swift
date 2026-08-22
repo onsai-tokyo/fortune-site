@@ -43,7 +43,8 @@ struct PartnerProfilesView: View {
                         Text("&").font(.callout).foregroundStyle(FateTheme.muted)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
-                                        subtitle: selected.map(typeLabel) ?? "未設定", icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
+                                        subtitle: selected == nil ? "未設定" : relationshipLabel,
+                                        icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
                         }.buttonStyle(.plain)
                 }.padding(.bottom, 28)
                 Menu {
@@ -76,7 +77,10 @@ struct PartnerProfilesView: View {
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
-                    FLErrorState(kind: errorKind) { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }
+                    FLErrorState(
+                        title: errorKind == .network ? "通信エラーが発生しました" : "相性鑑定を完了できませんでした",
+                        message: errorMessage
+                    ) { Task { if compatibilityFailed { await openCompatibility(force: true) } else { await load() } } }
                 }
             }.padding(FateSpacing.screenH)
         }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }

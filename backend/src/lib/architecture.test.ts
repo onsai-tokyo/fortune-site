@@ -180,6 +180,7 @@ test('相性鑑定はpartnersの一経路だけで生成し同じ課金判定を
   const analyze = read('backend/src/routes/analyze.ts')
   const api = read('ios/FateLab/APIClient.swift')
   assert.match(partners, /post\('\/:id\/compatibility', loadCompatibilityContext, requirePoints\(3\)/)
+  assert.match(partners, /await addPoints\(req\.userId, req\.accessToken, 3\)/)
   assert.doesNotMatch(analyze, /post\('\/compatibility'/)
   assert.match(api, /\/api\/partners\/\\\(partnerID\.uuidString\)\/compatibility/)
   assert.doesNotMatch(api, /\/api\/analyze\/compatibility/)
@@ -249,7 +250,7 @@ test('本人と相手のプロフィール円は未設定でも同じ背景と�
   assert.match(partners, /Circle\(\)\.stroke\(FateTheme\.line, lineWidth: 0\.5\)/)
   assert.doesNotMatch(partners, /Circle\(\)\.stroke\(isEmpty \? FateTheme\.ink/)
   assert.match(partners, /icon: selected == nil \? "plus" : "person"/)
-  assert.match(partners, /subtitle: selected\.map\(typeLabel\) \?\? "未設定"/)
+  assert.match(partners, /subtitle: selected == nil \? "未設定" : relationshipLabel/)
 })
 
 test('相手の出生日時はUTC変換せず端末カレンダーの成分から送る', () => {
