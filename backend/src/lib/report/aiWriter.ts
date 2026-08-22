@@ -18,6 +18,12 @@ const AI_MAX_CARDS_PER_REPORT = Math.max(0, Number(process.env.AI_MAX_CARDS_PER_
 const roles = new Set<ReportPageRole>(['opening', 'core', 'scene', 'shadow', 'exception', 'question', 'action', 'closing'])
 const nakedTitles = new Set(['仕事', '恋愛', '恋愛・結婚', '結婚', '人間関係', '本質', '性格', '時期の流れ'])
 
+export function deterministicCardIds(cards: ReportCard[], scope = process.env.DETERMINISTIC_SCOPE ?? ''): Set<string> {
+  const values = new Set(scope.split(',').map(value => value.trim()).filter(Boolean))
+  if (values.has('all') || values.has('self')) return new Set(cards.map(card => card.id))
+  return new Set(cards.filter(card => (values.has('timing') && card.kind === 'timing') || values.has(card.id)).map(card => card.id))
+}
+
 function logGeneration(event: 'cache_hit' | 'generated' | 'fallback' | 'timeout' | 'validation_failure', startedAt: number, reason?: string, cardId?: string) {
   console.info('AI report generation metric', {
     event,
@@ -183,6 +189,7 @@ export async function writeReportWithAi(
   const cardStartedAt = new Map(fallback.cards.map((card, index) => [index, Date.now()]))
   const cardSources = new Map<number, 'cache_hit' | 'generated'>()
   const cardFailures = new Map<number, FallbackReason>()
+  const forcedDeterministicIds = deterministicCardIds(fallback.cards)
   const logCompletedReport = (cards: ReportCard[], aiIndexes: Set<number>) => {
     if (!generationContext) return
     cards.forEach((card, index) => {
@@ -191,8 +198,8 @@ export async function writeReportWithAi(
         ...generationContext,
         cardId: card.id,
         generator: isAi ? 'ai' : 'deterministic',
-        source: isAi ? (cardSources.get(index) ?? 'generated') : 'fallback',
-        fallbackReason: isAi ? null : (cardFailures.get(index) ?? 'api_error'),
+        source: isAi ? (cardSources.get(index) ?? 'generated') : forcedDeterministicIds.has(card.id) ? 'deterministic' : 'fallback',
+        fallbackReason: isAi || forcedDeterministicIds.has(card.id) ? null : (cardFailures.get(index) ?? 'api_error'),
         durationMs: Date.now() - (cardStartedAt.get(index) ?? startedAt),
       })
     })
@@ -211,10 +218,15 @@ export async function writeReportWithAi(
     const cached = await dependencies.readCache(key)
     if (cached) {
       logGeneration('cache_hit', startedAt)
-      const aiIndexes = new Set(cached.cards.map((_card, index) => index))
-      cached.cards.forEach((_card, index) => cardSources.set(index, 'cache_hit'))
-      logCompletedReport(cached.cards, aiIndexes)
-      return finalizeReportProvenance({ ...cached, cards: cached.cards.map(card => withCardProvenance(card, 'ai')) }, GENERATOR_VERSION, 'ai')
+      const fallbackById = new Map(fallback.cards.map(card => [card.id, card]))
+      const cards = cached.cards.map(card => forcedDeterministicIds.has(card.id)
+        ? withCardProvenance(fallbackById.get(card.id) ?? card, 'deterministic')
+        : withCardProvenance(card, 'ai'))
+      const aiIndexes = new Set(cards.flatMap((card, index) => card.generator === 'ai' ? [index] : []))
+      cards.forEach((card, index) => { if (card.generator === 'ai') cardSources.set(index, 'cache_hit') })
+      logCompletedReport(cards, aiIndexes)
+      const reportText = cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n')
+      return finalizeReportProvenance({ ...cached, reportText, cards }, GENERATOR_VERSION)
     }
     const overallTimeoutMs = dependencies.overallTimeoutMs ?? AI_TOTAL_TIMEOUT_MS
     const deadlineAt = Date.now() + overallTimeoutMs
@@ -237,6 +249,9 @@ export async function writeReportWithAi(
         const index = nextIndex++
         if (index >= fallback.cards.length) return
         const card = fallback.cards[index]
+        if (forcedDeterministicIds.has(card.id)) {
+          continue
+        }
         const cardKey = reportCardCacheKey(seed, metadata, card.id)
         try {
           const cardCached = await dependencies.readCardCache?.(cardKey)

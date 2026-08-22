@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { StructuredReport } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
-import { reportCacheKey, reportCardCacheKey, titlesAreSimilar, writeReportWithAi } from './aiWriter.js'
+import { deterministicCardIds, reportCacheKey, reportCardCacheKey, titlesAreSimilar, writeReportWithAi } from './aiWriter.js'
 
 const fallback: StructuredReport = { version: 3, reportText: 'fallback', cards: [{
   id: 'core', kind: 'essence', title: '元の題', summary: '元の要約', tags: ['本質'], period: null, evidence: [], pages: [],
@@ -31,6 +31,41 @@ test('v2キャッシュはseedを無視し内容署名を使い、フラグ無�
   assert.equal(reportCardCacheKey('seed-a', metadata, 'core', true), reportCardCacheKey('seed-b', metadata, 'core', true))
   assert.notEqual(reportCacheKey('seed-a', metadata, false), reportCacheKey('seed-b', metadata, false))
   assert.notEqual(reportCacheKey('seed-a', metadata, true), reportCacheKey('seed-a', { ...metadata, contentCacheSignature: 'content-def' }, true))
+})
+
+test('決定論scopeは時期と指定章だけを選び、selfとallは全カードを選ぶ', () => {
+  const cards = [
+    { ...fallback.cards[0], id: 'core-mind-3' },
+    { ...fallback.cards[0], id: 'work-mode' },
+    { ...fallback.cards[0], id: 'turning-year-2026', kind: 'timing' as const },
+  ]
+  assert.deepEqual([...deterministicCardIds(cards, 'timing,core-mind-3')], ['core-mind-3', 'turning-year-2026'])
+  assert.equal(deterministicCardIds(cards, 'self').size, 3)
+  assert.equal(deterministicCardIds(cards, 'all').size, 3)
+})
+
+test('既存AIキャッシュがあっても指定章は決定論版へ差し戻す', async () => {
+  const previous = process.env.DETERMINISTIC_SCOPE
+  process.env.DETERMINISTIC_SCOPE = 'core-mind-3'
+  try {
+    const deterministic = { ...fallback.cards[0], id: 'core-mind-3', title: '決定論の注意点' }
+    const other = { ...fallback.cards[0], id: 'work-mode', title: '決定論の仕事' }
+    const cached: StructuredReport = { ...fallback, cards: [
+      { ...deterministic, title: 'AIの注意点' },
+      { ...other, title: 'AIの仕事' },
+    ] }
+    const result = await writeReportWithAi('scoped-cache', { ...fallback, cards: [deterministic, other] }, metadata, {
+      async readCache() { return cached }, async writeCache() {}, async generate() { throw new Error('not called') },
+    })
+    assert.equal(result.cards[0].title, '決定論の注意点')
+    assert.equal(result.cards[0].generator, 'deterministic')
+    assert.equal(result.cards[1].title, 'AIの仕事')
+    assert.equal(result.cards[1].generator, 'ai')
+    assert.equal(result.generator, 'mixed')
+  } finally {
+    if (previous == null) delete process.env.DETERMINISTIC_SCOPE
+    else process.env.DETERMINISTIC_SCOPE = previous
+  }
 })
 
 test('AI生成上限に達したカードはエラーにせず決定論版へ戻す', async () => {
