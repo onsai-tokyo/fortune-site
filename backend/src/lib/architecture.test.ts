@@ -232,6 +232,7 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
 
 test('認証画面はメールを主役にしGoogleとAppleを同格で残す', () => {
   const authView = read('ios/FateLab/AuthView.swift')
+  const authStore = read('ios/FateLab/AuthStore.swift')
   assert.match(authView, /メールアドレスでログイン/)
   assert.match(authView, /新規登録はこちら/)
   assert.match(authView, /registrationMethods/)
@@ -240,8 +241,15 @@ test('認証画面はメールを主役にしGoogleとAppleを同格で残す', 
   assert.match(authView, /SignInWithAppleButton\(\.signIn\)/)
   assert.match(authView, /SignInWithAppleButton\(\.signUp\)/)
   assert.match(authView, /signInWithAppleButtonStyle\(\.whiteOutline\).*frame\(height: 56\)/)
+  assert.match(authView, /VStack\(alignment: \.center, spacing: 0\)/)
+  assert.match(authView, /VStack\(alignment: \.center, spacing: 20\)/)
+  assert.match(authView, /overlay\(alignment: \.topLeading\)/)
   assert.match(authView, /auth\.errorMessage = nil; route = \.pending/)
   assert.match(authView, /パスワード未設定の場合はGoogleまたはAppleでログインしてください/)
+  assert.match(authStore, /credential\.fullName/)
+  assert.match(authStore, /pending\.apple\.name/)
+  assert.match(authStore, /UserAttributes\(data: \["full_name": \.string\(fullName\)\]\)/)
+  assert.match(authStore, /sdkSession\.user\.id/)
 })
 
 test('本質カードは1列で相手と本人の出生情報入力を共通化する', () => {

@@ -13,6 +13,7 @@ final class AuthStore: ObservableObject {
     private let account = "primary"
     private var refreshTask: Task<Session, Error>?
     private let callbackURL = URL(string: "fatelab://auth/callback")!
+    private let pendingAppleNameAccount = "pending.apple.name"
     private var appleNonce: String?
     private lazy var supabase = SupabaseClient(
         supabaseURL: AppConfig.supabaseURL,
@@ -93,6 +94,11 @@ final class AuthStore: ObservableObject {
                   let nonce = appleNonce else {
                 throw authError("Appleの認証情報を読み取れませんでした。もう一度お試しください。")
             }
+            if let fullName = credential.fullName {
+                let formatted = PersonNameComponentsFormatter().string(from: fullName)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if !formatted.isEmpty { try KeychainStore.save(Data(formatted.utf8), account: pendingAppleNameAccount) }
+            }
             let sdkSession = try await supabase.auth.signInWithIdToken(
                 credentials: OpenIDConnectCredentials(
                     provider: .apple,
@@ -100,6 +106,11 @@ final class AuthStore: ObservableObject {
                     nonce: nonce
                 )
             )
+            if let nameData = KeychainStore.read(account: pendingAppleNameAccount),
+               let fullName = String(data: nameData, encoding: .utf8), !fullName.isEmpty {
+                _ = try await supabase.auth.update(user: UserAttributes(data: ["full_name": .string(fullName)]))
+                KeychainStore.delete(account: pendingAppleNameAccount)
+            }
             try persist(session(from: sdkSession))
             noticeMessage = "Appleでログインしました。"
         } catch {

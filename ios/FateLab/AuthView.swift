@@ -28,12 +28,12 @@ struct AuthView: View {
     }
 
     private var loginLanding: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .center, spacing: 0) {
             Spacer(); FateMark(size: 84).frame(maxWidth: .infinity); Text("FATE LAB").font(.system(size: 13, weight: .medium)).tracking(4).frame(maxWidth: .infinity).padding(.top, 20)
             Spacer().frame(height: 48)
-            Text("ログインして、\n鑑定を続きから。").font(.system(size: 30, weight: .bold)).lineSpacing(5)
-            Text("ログインすると、鑑定結果と対話をいつでも引き継げます。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 16)
-            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger).padding(.top, 12) }
+            Text("ログインして、\n鑑定を続きから。").font(.system(size: 30, weight: .bold)).lineSpacing(5).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            Text("ログインすると、鑑定結果と対話をいつでも引き継げます。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 16)
+            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger).multilineTextAlignment(.center).padding(.top, 12) }
             Spacer()
             Button("メールアドレスでログイン") { move(to: .loginEmail) }
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
@@ -56,12 +56,11 @@ struct AuthView: View {
     }
 
     private var registrationMethods: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            backButton(to: .landing)
-            Spacer().frame(height: 20)
-            Text("新規登録").font(.system(size: 30, weight: .bold))
-            Text("登録方法を選択してください。").foregroundStyle(FateTheme.muted)
-            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
+        VStack(alignment: .center, spacing: 20) {
+            Spacer()
+            Text("新規登録").font(.system(size: 30, weight: .bold)).frame(maxWidth: .infinity)
+            Text("登録方法を選択してください。").foregroundStyle(FateTheme.muted).frame(maxWidth: .infinity)
+            if let message = auth.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger).multilineTextAlignment(.center) }
             Spacer()
             Button("メールアドレスで登録") { move(to: .registerEmail) }
                 .buttonStyle(FLPrimaryButtonStyle()).disabled(auth.isWorking)
@@ -77,6 +76,7 @@ struct AuthView: View {
             }
             FLTextLink(title: "ログインへ戻る") { move(to: .landing) }.frame(maxWidth: .infinity)
         }
+        .overlay(alignment: .topLeading) { backButton(to: .landing) }
     }
 
     private func emailForm(registering: Bool) -> some View {
