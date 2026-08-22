@@ -182,11 +182,19 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
-  const { data, error } = await db.from('reading_conversations')
+  const primary = await db.from('reading_conversations')
+    .select('id,secret_token,title,kind,is_saved,source_section,source_year,created_at,updated_at,reading_messages(count)')
+    .eq('user_id', req.userId!).order('is_saved', { ascending: false }).order('updated_at', { ascending: false }).limit(100)
+  if (!primary.error) { res.json({ conversations: primary.data }); return }
+  if (!['42703', 'PGRST204'].includes(primary.error.code ?? '')) {
+    res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return
+  }
+  // DB migrationとアプリ配信の短いずれでも一覧自体は利用可能にする。
+  const legacy = await db.from('reading_conversations')
     .select('id,secret_token,title,kind,source_section,source_year,created_at,updated_at,reading_messages(count)')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).limit(100)
-  if (error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
-  res.json({ conversations: data })
+  if (legacy.error) { res.status(500).json({ error: '鑑定履歴を取得できませんでした' }); return }
+  res.json({ conversations: (legacy.data ?? []).map(item => ({ ...item, is_saved: false })) })
 })
 
 readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
@@ -253,6 +261,16 @@ readingRouter.patch('/conversations/:id', requireAuth, async (req: AuthRequest, 
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations').update({ title, updated_at: new Date().toISOString() })
     .eq('id', req.params.id).eq('user_id', req.userId!).select('id,title,updated_at').maybeSingle()
   if (error) { res.status(500).json({ error: '鑑定履歴の名前を変更できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  res.json({ conversation: data })
+})
+
+readingRouter.patch('/conversations/:id/saved', requireAuth, async (req: AuthRequest, res) => {
+  if (typeof req.body?.isSaved !== 'boolean') { res.status(400).json({ error: '保存状態が正しくありません' }); return }
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
+    .update({ is_saved: req.body.isSaved })
+    .eq('id', req.params.id).eq('user_id', req.userId!).select('id,is_saved').maybeSingle()
+  if (error) { res.status(500).json({ error: '鑑定を保存できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   res.json({ conversation: data })
 })

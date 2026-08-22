@@ -272,6 +272,12 @@ struct APIClient {
         return try JSONDecoder().decode(ConversationDetail.self, from: raw)
     }
 
+    func setConversationSaved(id: UUID, isSaved: Bool, auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
+        _ = try await data(for: request(path: "/api/reading/conversations/\(id.uuidString)/saved",
+                                       method: "PATCH", token: token, json: ["isSaved": isSaved]), auth: auth)
+    }
+
     func cards(id: UUID, auth: AuthStore) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
         let raw = try await data(for: request(path: "/api/reading/\(id.uuidString)/cards", token: token), retryTransient: true, auth: auth)

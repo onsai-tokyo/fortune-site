@@ -21,6 +21,9 @@ struct ReadingChatView: View {
     @State private var forceScrollRevision = 0
     @State private var lastStreamScroll = Date.distantPast
     @State private var streamTask: Task<Void, Never>?
+    @State private var isSaved = false
+    @State private var isSaving = false
+    @State private var saveMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +32,17 @@ struct ReadingChatView: View {
                     LazyVStack(alignment: .leading, spacing: 18) {
                         if let status, !status.premium {
                             freeUsageStatus(status)
+                        }
+                        Button {
+                            Task { await saveConversation() }
+                        } label: {
+                            Label(isSaved ? "保存済み" : "この鑑定を保存する", systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(FLSecondaryButtonStyle())
+                        .disabled(isSaved || isSaving)
+                        if let saveMessage {
+                            Text(saveMessage).font(.caption).foregroundStyle(saveMessage == "保存しました" ? FateTheme.muted : .red)
                         }
                         if messages.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
@@ -184,9 +198,22 @@ struct ReadingChatView: View {
         guard auth.session != nil else { return }
         do {
             let value = try await APIClient.shared.conversation(id: conversationID, auth: auth)
-            detail = value; messages = value.messages
+            detail = value; messages = value.messages; isSaved = value.conversation.isSaved ?? false
             await loadStatus()
         } catch { handleChatError(error) }
+    }
+
+    private func saveConversation() async {
+        guard !isSaved, !isSaving else { return }
+        isSaving = true; saveMessage = nil
+        defer { isSaving = false }
+        do {
+            try await APIClient.shared.setConversationSaved(id: conversationID, isSaved: true, auth: auth)
+            isSaved = true
+            saveMessage = "保存しました"
+        } catch {
+            saveMessage = userFacingMessage(error) ?? "鑑定を保存できませんでした。もう一度お試しください。"
+        }
     }
 
     private func loadStatus() async {

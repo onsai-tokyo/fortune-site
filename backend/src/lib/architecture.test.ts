@@ -263,6 +263,18 @@ test('ログイン後の初期表示は端末フラグでなく最新の保存�
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
 })
 
+test('鑑定の保存は会話を複製せずブックマーク状態を更新する', () => {
+  const reading = read('backend/src/routes/reading.ts')
+  const chat = read('ios/FateLab/ReadingChatView.swift')
+  const api = read('ios/FateLab/APIClient.swift')
+  assert.match(reading, /patch\('\/conversations\/:id\/saved'/)
+  assert.match(reading, /update\(\{ is_saved: req\.body\.isSaved \}\)/)
+  assert.match(reading, /order\('is_saved', \{ ascending: false \}\)/)
+  assert.match(chat, /この鑑定を保存する/)
+  assert.match(chat, /保存しました/)
+  assert.match(api, /setConversationSaved/)
+})
+
 test('認証画面はメール・Google・Appleを同幅の縦一列で残す', () => {
   const authView = read('ios/FateLab/AuthView.swift')
   const authStore = read('ios/FateLab/AuthStore.swift')

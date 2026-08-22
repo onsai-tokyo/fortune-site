@@ -26,7 +26,7 @@ struct ReadingListView: View {
                     NavigationLink {
                         SavedReadingView(conversationID: reading.id, readingKind: reading.kind)
                     } label: {
-                        FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))", showsChevron: false)
+                        FLListRow(title: reading.title, subtitle: "\(reading.isSaved == true ? "保存済み ・ " : "")質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))", showsChevron: false)
                     }.listRowBackground(FateTheme.canvas)
                     }
                     }

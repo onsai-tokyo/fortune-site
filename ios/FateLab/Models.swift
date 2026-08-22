@@ -48,6 +48,7 @@ struct ReadingSummary: Codable, Identifiable {
     let secretToken: String?
     let title: String
     let kind: String?
+    let isSaved: Bool?
     let createdAt: String?
     let updatedAt: String?
     let readingMessages: [MessageCount]?
@@ -57,6 +58,7 @@ struct ReadingSummary: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id, title, kind
+        case isSaved = "is_saved"
         case secretToken = "secret_token"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -235,10 +237,12 @@ struct ConversationRecord: Codable {
     let id: UUID
     let title: String
     let reportText: String
+    let isSaved: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id, title
         case reportText = "report_text"
+        case isSaved = "is_saved"
     }
 }
 
