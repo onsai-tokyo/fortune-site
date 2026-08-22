@@ -188,10 +188,10 @@ struct APIClient {
     }
 
     func createPartner(displayName: String, birthDate: String, birthTime: String?, birthplace: String,
-                       gender: String, relationshipType: String, auth: AuthStore) async throws -> PartnerProfile {
+                       gender: String, relationshipType: String, relationshipLabel: String, auth: AuthStore) async throws -> PartnerProfile {
         let token = try await auth.validAccessToken()
         var body: [String: Any] = ["displayName": displayName, "birthDate": birthDate, "birthplace": birthplace,
-                                   "gender": gender, "relationshipType": relationshipType]
+                                   "gender": gender, "relationshipType": relationshipType, "relationshipLabel": relationshipLabel]
         if let birthTime { body["birthTime"] = birthTime }
         let raw = try await data(for: request(path: "/api/partners", method: "POST", token: token, json: body), auth: auth)
         let object = try JSONSerialization.jsonObject(with: raw) as? [String: Any]
@@ -204,9 +204,9 @@ struct APIClient {
         _ = try await data(for: request(path: "/api/partners/\(id.uuidString)", method: "DELETE", token: token), auth: auth)
     }
 
-    func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, auth: AuthStore, progress: @MainActor (GenerationProgress) -> Void = { _ in }) async throws -> StructuredReportResponse {
+    func compatibility(partnerID: UUID, conversationID: UUID, relationshipType: String, relationshipLabel: String, auth: AuthStore, progress: @MainActor (GenerationProgress) -> Void = { _ in }) async throws -> StructuredReportResponse {
         let token = try await auth.validAccessToken()
-        let call = try request(path: "/api/partners/\(partnerID.uuidString)/compatibility?format=sse", method: "POST", token: token, json: ["relationshipType": relationshipType, "conversationId": conversationID.uuidString])
+        let call = try request(path: "/api/partners/\(partnerID.uuidString)/compatibility?format=sse", method: "POST", token: token, json: ["relationshipType": relationshipType, "relationshipLabel": relationshipLabel, "conversationId": conversationID.uuidString])
         let (bytes, response) = try await URLSession.shared.bytes(for: call)
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard 200..<300 ~= http.statusCode else { var body = ""; for try await line in bytes.lines { body += line }; let object = body.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }; let message = object?["error"] as? String ?? "相性鑑定を作成できませんでした"; if http.statusCode == 402 { throw APIError.paymentRequired(message) }; if http.statusCode == 409 { throw APIError.selfReadingRequired(message) }; throw APIError.http(status: http.statusCode, message: message) }

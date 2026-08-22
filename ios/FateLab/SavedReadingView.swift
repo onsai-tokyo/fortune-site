@@ -27,6 +27,7 @@ struct SavedReadingView: View {
                     }
                     .frame(maxWidth: .infinity, minHeight: 520)
                 } else if let detail {
+                    let isCompatibility = (detail.conversation.kind ?? readingKind) == "compatibility"
                     let report = GeneratedReport(
                         birthData: [:],
                         calculatedData: [:],
@@ -35,7 +36,7 @@ struct SavedReadingView: View {
                         chartSections: chartSections
                     )
                     VStack(alignment: .leading, spacing: 18) {
-                        InsightHubView(report: report, onQuestion: { card in
+                        InsightHubView(report: report, scope: isCompatibility ? .couple : .self, onQuestion: { card in
                             tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
                         }, onReload: { Task { await load() } })
 

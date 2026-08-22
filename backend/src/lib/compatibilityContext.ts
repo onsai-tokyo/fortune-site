@@ -29,7 +29,7 @@ export function compactCompatibilityPerson(calculatedData: unknown): JsonRecord 
   }
 }
 
-export function compactCompatibilityContext(selfData: unknown, partnerData: unknown, relationshipType: 'romantic' | 'friend') {
+export function compactCompatibilityContext(selfData: unknown, partnerData: unknown, relationshipType: 'romantic' | 'friend' | 'family') {
   return {
     self: compactCompatibilityPerson(selfData),
     partner: compactCompatibilityPerson(partnerData),

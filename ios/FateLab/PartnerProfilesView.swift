@@ -1,5 +1,16 @@
 import SwiftUI
 
+private let relationshipOptions = [
+    "片思い", "お付き合い中", "婚約中", "夫婦", "復縁希望", "元恋人",
+    "友人", "親友", "会社の同僚", "上司", "部下", "取引先",
+    "親", "子", "兄弟姉妹", "配偶者の家族", "その他"
+]
+private func relationshipGroup(_ label: String) -> String {
+    if ["片思い", "お付き合い中", "婚約中", "夫婦", "復縁希望", "元恋人"].contains(label) { return "romantic" }
+    if ["親", "子", "兄弟姉妹", "配偶者の家族"].contains(label) { return "family" }
+    return "friend"
+}
+
 struct PartnerProfilesView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var tabRouter: AppTabRouter
@@ -11,6 +22,7 @@ struct PartnerProfilesView: View {
     @State private var errorMessage: String?
     @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var relationshipType = "romantic"
+    @State private var relationshipLabel = "お付き合い中"
     @State private var compatibilityReport: StructuredReportResponse?
     @State private var compatibilityKey: String?
     @State private var showCompatibilityResult = false
@@ -34,9 +46,14 @@ struct PartnerProfilesView: View {
                                         subtitle: selected.map(typeLabel) ?? "未設定", icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
                         }.buttonStyle(.plain)
                 }.padding(.bottom, 28)
-                Picker("関係性", selection: $relationshipType) {
-                    Text("恋愛").tag("romantic"); Text("友人").tag("friend")
-                }.pickerStyle(.segmented).disabled(selected == nil).padding(.bottom, 24)
+                Menu {
+                    ForEach(relationshipOptions, id: \.self) { label in
+                        Button(label) { relationshipLabel = label; relationshipType = relationshipGroup(label) }
+                    }
+                } label: {
+                    HStack { Text("関係性"); Spacer(); Text(relationshipLabel).foregroundStyle(FateTheme.muted); Image(systemName: "chevron.up.chevron.down") }
+                        .padding(.vertical, 14)
+                }.disabled(selected == nil).padding(.bottom, 24)
                 if selected == nil {
                     Text("先に相手を登録または選択してください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
@@ -106,7 +123,7 @@ struct PartnerProfilesView: View {
                 } footer: { Text(remaining == 0 ? "上限に達しています。行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
                 Section("登録済みの相手") {
                     ForEach(partners) { partner in
-                        Button { selected = partner; relationshipType = partner.relationshipType; compatibilityReport = nil; compatibilityKey = nil; showPicker = false } label: {
+                        Button { selected = partner; relationshipType = partner.relationshipType; relationshipLabel = partner.relationshipLabel ?? (partner.relationshipType == "friend" ? "友人" : "お付き合い中"); compatibilityReport = nil; compatibilityKey = nil; showPicker = false } label: {
                             HStack {
                                 Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.ink)
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
@@ -119,7 +136,7 @@ struct PartnerProfilesView: View {
         }
     }
 
-    private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipType == "friend" ? "友人" : "恋愛" }
+    private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipLabel ?? (partner.relationshipType == "friend" ? "友人" : "お付き合い中") }
     private func load(selectNewest: Bool = false) async {
         errorMessage = nil
         do {
@@ -136,14 +153,14 @@ struct PartnerProfilesView: View {
     }
     private func openCompatibility(force: Bool = false) async {
         guard let selected, let selfReading else { return }
-        let key = "\(selected.id.uuidString)|\(selfReading.id.uuidString)|\(relationshipType)"
+        let key = "\(selected.id.uuidString)|\(selfReading.id.uuidString)|\(relationshipType)|\(relationshipLabel)"
         if !force, compatibilityKey == key, compatibilityReport != nil {
             showCompatibilityResult = true
             return
         }
         isGenerating = true; errorMessage = nil; compatibilityFailed = false; defer { isGenerating = false }
         do {
-            compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, auth: auth) { generationProgress = $0 }
+            compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, relationshipLabel: relationshipLabel, auth: auth) { generationProgress = $0 }
             compatibilityKey = key
             showCompatibilityResult = true
         }
@@ -196,7 +213,7 @@ private struct CoupleChartPair: Identifiable {
     let partnerSection: ChartSection?
 }
 
-private struct CoupleChartDetailsView: View {
+struct CoupleChartDetailsView: View {
     let sections: [ChartSection]
     let partnerName: String
 
@@ -253,7 +270,7 @@ private struct PartnerRegistrationView: View {
     @Environment(\.dismiss) private var dismiss
     let onSaved: () async -> Void
     @State private var name = ""; @State private var date = Calendar.current.date(from: DateComponents(year: 1990, month: 1, day: 1))!; @State private var birthTime: Date?
-    @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationship = "romantic"; @State private var error: String?
+    @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationshipLabel = "お付き合い中"; @State private var error: String?
     var body: some View {
         NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
             Text("新しく相手を登録する").font(.system(size: 25, weight: .medium))
@@ -262,7 +279,7 @@ private struct PartnerRegistrationView: View {
             BirthProfileFields(date: $date, birthTime: $birthTime, birthplace: $birthplace, gender: $gender)
             FLDivider()
             Text("関係").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
-            Picker("関係", selection: $relationship) { Text("恋愛").tag("romantic"); Text("友人").tag("friend") }.pickerStyle(.segmented)
+            Picker("関係", selection: $relationshipLabel) { ForEach(relationshipOptions, id: \.self) { Text($0).tag($0) } }.pickerStyle(.menu)
             if let error { Text(error).foregroundStyle(.red) }
         }.padding(20) }.background(FateTheme.canvas).toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }
@@ -270,9 +287,19 @@ private struct PartnerRegistrationView: View {
         } }
     }
     private func save() async {
-        let dateText = date.formatted(.iso8601.year().month().day())
-        let timeText = birthTime?.formatted(.iso8601.time(includingFractionalSeconds: false))
-        do { _ = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationship, auth: auth); await onSaved(); dismiss() }
+        let dateText = Self.localDateText(date, calendar: .current)
+        let timeText = birthTime.map { Self.localTimeText($0, calendar: .current) }
+        do { _ = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationshipGroup(relationshipLabel), relationshipLabel: relationshipLabel, auth: auth); await onSaved(); dismiss() }
         catch { self.error = userFacingMessage(error) }
+    }
+
+    static func localDateText(_ value: Date, calendar: Calendar) -> String {
+        let components = calendar.dateComponents([.year, .month, .day], from: value)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+    }
+
+    static func localTimeText(_ value: Date, calendar: Calendar) -> String {
+        let components = calendar.dateComponents([.hour, .minute], from: value)
+        return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
     }
 }

@@ -117,6 +117,7 @@ struct PartnerProfile: Codable, Identifiable, Equatable {
     let birthplace: String
     let gender: String
     let relationshipType: String
+    let relationshipLabel: String?
 
     enum CodingKeys: String, CodingKey {
         case id, birthplace, gender
@@ -124,6 +125,7 @@ struct PartnerProfile: Codable, Identifiable, Equatable {
         case birthDate = "birth_date"
         case birthTime = "birth_time"
         case relationshipType = "relationship_type"
+        case relationshipLabel = "relationship_label"
     }
 }
 
@@ -194,6 +196,7 @@ struct ReadingCard: Codable, Identifiable {
     let id: String
     let kind: String
     let tab: String?
+    let scope: String?
     let title: String
     let summary: String
     let tags: [String]
@@ -238,9 +241,10 @@ struct ConversationRecord: Codable {
     let title: String
     let reportText: String
     let isSaved: Bool?
+    let kind: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, title
+        case id, title, kind
         case reportText = "report_text"
         case isSaved = "is_saved"
     }

@@ -10,6 +10,7 @@ import { filterTraitCandidates } from '../lib/profileTraits.js'
 import { hasPremiumAccess } from '../lib/premium.js'
 import { buildStructuredReport } from '../lib/reportCards.js'
 import { StreamingAnswerParser } from '../lib/sseAnswerParser.js'
+import { japanDateContext } from '../lib/japanDate.js'
 import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 import { consumeFreeQuestion, refundFreeQuestion } from '../lib/freeQuestionUsage.js'
 import { calculatedDataWithReport, isStructuredReport, storedReportFromCalculatedData } from '../lib/report/storedReport.js'
@@ -211,11 +212,15 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('report_text,calculated_data').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    .select('report_text,calculated_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
-  const cards = report.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart')
+  const expectedScope = data.kind === 'compatibility' ? 'couple' : 'self'
+  const cards = report.cards
+    .filter(card => card.tab !== 'chart' && card.kind !== 'chart')
+    .filter(card => !card.scope || card.scope === expectedScope)
+    .map(card => ({ ...card, scope: card.scope ?? expectedScope }))
   res.json({ ...report, cards, chartSections: buildChartSections(data.calculated_data) })
 })
 
@@ -322,7 +327,8 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
     const reportExcerpt = String(conversation.report_text).slice(0, 16000)
     const calculated = JSON.stringify(conversation.calculated_data).slice(0, 18000)
     const birth = JSON.stringify(conversation.birth_data).slice(0, 3000)
-    const system = `あなたはFate Labの鑑定結果を読み解くシステムです。
+    const system = `現在日は${japanDateContext()}です。過去の出来事と今後の可能性を、この日付を基準に区別してください。
+あなたはFate Labの鑑定結果を読み解くシステムです。
 必ず提供された命式・計算結果・鑑定データだけを根拠として回答してください。提供されていない命式や星、配置、運勢を推測して作らないでください。
 複数の見方で一致する場合は共通点を説明し、異なる場合は無理に統合せず違いを明示してください。未来を確定事項として断言せず「傾向」「流れ」「可能性」「起こりやすい」を使ってください。
 利用者向け文章でAI、LLM、ChatGPT、Claudeなどの内部技術名を名乗らず、人間の占い師・鑑定士であるようにも振る舞わないでください。

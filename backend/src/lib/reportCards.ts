@@ -17,6 +17,7 @@ export interface ReportCardEvidence {
 export interface ReportCard {
   id: string
   kind: ReportCardKind
+  scope?: 'self' | 'couple'
   tab?: 'essence' | 'timing' | 'chart'
   title: string
   summary: string

@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getSupabaseAdmin } from '../supabaseAdmin.js'
 import type { StructuredReport, ReportCard, ReportCardPage, ReportPageRole } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
+import { japanDateContext, japanDateParts } from '../japanDate.js'
 
 const GENERATOR_VERSION = 'ai-cards-v5-longform'
 const AI_REWRITE_TIMEOUT_MS = Math.max(1_000, Number(process.env.AI_REPORT_TIMEOUT_MS ?? 60_000))
@@ -33,11 +34,11 @@ export interface AiWriterDependencies {
 }
 
 function cacheKey(seed: string, metadata: ReportMetadata) {
-  return createHash('sha256').update(`${GENERATOR_VERSION}|${seed}|${metadata.combinationSignature}`).digest('hex')
+  return createHash('sha256').update(`${GENERATOR_VERSION}|${japanDateParts().year}|${seed}|${metadata.combinationSignature}`).digest('hex')
 }
 
 function cardCacheKey(seed: string, metadata: ReportMetadata, cardId: string) {
-  return createHash('sha256').update(`${GENERATOR_VERSION}|card|${seed}|${metadata.combinationSignature}|${cardId}`).digest('hex')
+  return createHash('sha256').update(`${GENERATOR_VERSION}|${japanDateParts().year}|card|${seed}|${metadata.combinationSignature}|${cardId}`).digest('hex')
 }
 
 function cleanJson(raw: string) {
@@ -95,7 +96,8 @@ function promptForCard(card: ReportCard, metadata: ReportMetadata, index: number
   const pageContract = card.kind === 'timing'
     ? 'この時期章だけを8〜12ページで書く。'
     : 'この人物像の章だけを15〜20ページで書く。導入、核、表の顔、内側の感情、強み、苦手、人との距離、恋愛、仕事、過去からの変化、今後の使い方、余韻を別々のページにする。'
-  return `全${total}章のうち第${index + 1}章だけを書きます。次の鑑定事実を、読み手本人について断定するカードJSONへ書き換えてください。JSON以外は返さないでください。
+  return `現在日は${japanDateContext()}です。過去の年を未来として、未来の年を過去として書かないでください。
+全${total}章のうち第${index + 1}章だけを書きます。次の鑑定事実を、読み手本人について断定するカードJSONへ書き換えてください。JSON以外は返さないでください。
 入力メタデータ: ${JSON.stringify(metadata)}
 この章の元データ: ${JSON.stringify(source)}
 

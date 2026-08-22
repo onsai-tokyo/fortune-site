@@ -1,4 +1,5 @@
 import type { ReportCard, StructuredReport } from '../reportCards.js'
+import { japanDateParts } from '../japanDate.js'
 
 export interface CoupleAnnualTiming {
   year: number
@@ -55,12 +56,17 @@ export function findCoupleTurningPoints(
   partnerAnnual: CoupleAnnualTiming[],
   selfBirthYear: number,
   partnerBirthYear: number,
-  currentYear = new Date().getFullYear(),
+  currentYear = japanDateParts().year,
 ): CoupleTurningPoint[] {
   const partnerByYear = new Map(partnerAnnual.map(item => [item.year, item]))
+  const meetingPattern = /出会|縁.*始|交際.*始|関係.*始|恋愛.*始/
+  const meetingYears = [...selfAnnual, ...partnerAnnual]
+    .filter(item => item.themes.some(theme => meetingPattern.test(theme)))
+    .map(item => item.year).filter(year => year <= currentYear)
+  const startYear = meetingYears.length > 0 ? Math.min(...meetingYears) : currentYear - 3
   const candidates = selfAnnual.flatMap(self => {
     const partner = partnerByYear.get(self.year)
-    if (!partner || self.year < currentYear - 5 || self.year > currentYear + 10) return []
+    if (!partner || self.year < startYear || self.year > currentYear + 10) return []
     const kind = classify(self, partner)
     const overlap = sharedThemes(self.themes, partner.themes).length
     return [{
@@ -82,10 +88,10 @@ export function findCoupleTurningPoints(
   return [...new Map(selected.map(item => [item.year, item])).values()].sort((a, b) => a.year - b.year)
 }
 
-export function buildCoupleTimingCards(points: CoupleTurningPoint[]): ReportCard[] {
+export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear = japanDateParts().year): ReportCard[] {
   const occurrences = new Map<CoupleTurningPoint['kind'], number>()
   const usedTitles = new Set<string>()
-  const firstFutureYear = points.find(point => point.year >= new Date().getFullYear())?.year
+  const firstFutureYear = points.find(point => point.year >= currentYear)?.year
   return points.map(point => {
     const copy = kindCopy[point.kind]
     const occurrence = occurrences.get(point.kind) ?? 0
@@ -108,9 +114,10 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[]): ReportCard
     return {
       id: `couple-timing-${point.year}`,
       kind: 'timing',
+      scope: 'couple',
       tab: 'timing',
       title,
-      summary: copy.summary,
+      summary: `${point.year}年、あなたは${selfTheme}へ、相手は${partnerTheme}へ意識が向きます。${copy.summary}`,
       tags: ['二人の節目', point.kind],
       period: { label: `${point.year === firstFutureYear ? 'これから　' : ''}${point.year}年（あなた${point.selfAge}歳・相手${point.partnerAge}歳）` },
       pages,

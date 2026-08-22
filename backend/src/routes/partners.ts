@@ -1,7 +1,7 @@
 import { Router, type NextFunction, type Response } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
-import { assertPartnerCapacity, MAX_PARTNER_PROFILES, validatePartnerProfile } from '../lib/partnerProfiles.js'
+import { assertPartnerCapacity, MAX_PARTNER_PROFILES, normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
 import { createHash } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
@@ -15,6 +15,7 @@ import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
 import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
+import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -84,7 +85,7 @@ const compatibilityBaseSpecs: CompatibilityCardSpec[] = [
 const compatibilityMarriageSpec: CompatibilityCardSpec = { id: 'compat-marriage', purpose: '結婚したらどんな夫婦になりやすいか', titleDirection: '結婚後の二人の暮らし方を表す断定文' }
 const compatibilityForbiddenTerms = /天中殺|日柱|日主|干支|五行|通変星|宿曜|納音|命宮|夫妻宮|壬水|乙亥|巨門|調舒星/
 
-function compatibilityCardSpecs(relationshipType: 'romantic' | 'friend') {
+function compatibilityCardSpecs(relationshipType: 'romantic' | 'friend' | 'family') {
   return relationshipType === 'romantic' ? [...compatibilityBaseSpecs, compatibilityMarriageSpec] : compatibilityBaseSpecs
 }
 
@@ -139,7 +140,7 @@ export async function generateCompatibilityCards(
   generate: (prompt: string, spec: CompatibilityCardSpec, attempt: number) => Promise<CompatibilityGeneration>,
   onCardComplete?: (completed: number, total: number) => void,
   cache?: CompatibilityCardCache,
-  relationshipType: 'romantic' | 'friend' = 'romantic',
+  relationshipType: 'romantic' | 'friend' | 'family' = 'romantic',
 ): Promise<StructuredReport> {
   const specs = compatibilityCardSpecs(relationshipType)
   let completed = 0
@@ -219,7 +220,9 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     const { db, partner, self } = res.locals.compatibility
     if (useSse) { res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders() }
     progress(5, '二人の情報を確認しています', '鑑定に使うプロフィールを準備しています')
-    const relationshipType = req.body?.relationshipType === 'friend' ? 'friend' : 'romantic'
+    const normalizedRelationship = normalizeRelationship(req.body?.relationshipLabel, req.body?.relationshipType)
+    const relationshipType = normalizedRelationship.relationshipType
+    const relationshipLabel = normalizedRelationship.relationshipLabel
     const [year, month, day] = String(partner.birth_date).split('-').map(Number)
     const [hour, minute] = partner.birth_time ? String(partner.birth_time).split(':').map(Number) : [undefined, 0]
     progress(22, '相手のデータを読み解いています', '二人の命式を重ねる準備をしています')
@@ -252,10 +255,13 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     }
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
     const compactContext = compactCompatibilityContext(self.calculated_data, partnerCalculated, relationshipType)
-    const cardInputIdentity = createHash('sha256').update(`compat-card-v1|${JSON.stringify(compactContext)}`).digest('hex')
-    const compatibilityIdentity = createHash('sha256').update(`compat-v6|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
+    const currentYear = japanDateParts().year
+    const cardInputIdentity = createHash('sha256').update(`compat-card-v2|${currentYear}|${JSON.stringify(compactContext)}`).digest('hex')
+    const compatibilityIdentity = createHash('sha256').update(`compat-v7|${currentYear}|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}|${relationshipLabel}`).digest('hex')
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
-    const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
+    const prompt = `現在日は${japanDateContext()}です。過去と未来をこの日付を基準に区別してください。
+本人と相手の命式事実を照合し、「${relationshipLabel}」という${relationshipType === 'romantic' ? '恋愛' : relationshipType === 'family' ? '家族' : '友人・知人'}関係のカードを作成してください。
+具体的な関係名を文章の前提にしてください。元恋人は「もし関係が戻り共に暮らすなら」、片思いは「関係が始まり続いた先に」、夫婦は現在進行形で結婚章を書いてください。
 本人: ${JSON.stringify(compactContext.self)}
 相手: ${JSON.stringify({ name: partner.display_name, ...compactContext.partner })}
 カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"内部の占術系統","system":"内部の占術名","detail":"判断に使った計算上の根拠"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"物語上の短い見出し","text":"120字以内"}]}}
@@ -312,6 +318,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const timingReport = appendCoupleTimingCards(relationshipReport, buildCoupleTimingCards(turningPoints))
     const report: StructuredReport = {
       ...timingReport,
+      cards: timingReport.cards.map(card => ({ ...card, scope: 'couple' as const })),
       chartSections: buildCoupleChartSections(self.calculated_data, partnerCalculated),
     }
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')

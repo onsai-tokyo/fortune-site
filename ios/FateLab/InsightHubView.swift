@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct InsightHubView: View {
+    enum Scope { case `self`, couple }
     let report: GeneratedReport
+    var scope: Scope = .self
     let onQuestion: (ReadingCard) -> Void
     var onReload: (() -> Void)? = nil
     @State private var selectedTab = "essence"
@@ -9,22 +11,28 @@ struct InsightHubView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-                Text("あなたの取扱説明書").font(FateType.screenTitle)
-                Text("本質、時期、命式を行き来しながら読み進める")
+                Text(scope == .couple ? "二人の関係性" : "あなたの取扱説明書").font(FateType.screenTitle)
+                Text(scope == .couple ? "同じ計算結果を並べて、二人の違いと重なりを確かめる" : "本質、時期、命式を行き来しながら読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
             }
 
             Picker("鑑定書の表示", selection: $selectedTab) {
-                Text("あなたの本質").tag("essence")
-                Text("時期の流れ").tag("timing")
-                Text("命式詳細").tag("chart")
+                Text(scope == .couple ? "二人の関係" : "あなたの本質").tag("essence")
+                Text(scope == .couple ? "二人の節目" : "時期の流れ").tag("timing")
+                Text(scope == .couple ? "二人の命式" : "命式詳細").tag("chart")
             }
             .pickerStyle(.segmented)
 
             if selectedTab == "chart" {
-                ChartDetailsView(report: report, onQuestion: onQuestion, onReload: onReload)
+                if scope == .couple {
+                    CoupleChartDetailsView(sections: report.chartSections, partnerName: "相手")
+                } else {
+                    ChartDetailsView(report: report, onQuestion: onQuestion, onReload: onReload)
+                }
             } else {
-                ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
+                ReadingCardList(cards: report.cards.filter {
+                    $0.resolvedTab == selectedTab && ($0.scope == nil || $0.scope == (scope == .couple ? "couple" : "self"))
+                }, onQuestion: onQuestion)
             }
         }
         .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)

@@ -1,6 +1,7 @@
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 import { titlesAreSimilar } from './aiWriter.js'
+import { japanDateParts } from '../japanDate.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
@@ -107,7 +108,7 @@ function card(input: ReportInput, item: Annual, decade?: Decade): ReportCard {
   const pages = pagesFor(input, item, decade)
   const details = unique([item.kanshi, item.tenGod, ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
   return {
-    id: `turning-year-${item.year}`, kind: 'timing', tab: 'timing', title: titleFor(values, item.year), summary: summaryFor(item),
+    id: `turning-year-${item.year}`, kind: 'timing', scope: 'self', tab: 'timing', title: titleFor(values, item.year), summary: summaryFor(item),
     tags: tagsFor(values), period: { label: `${item.year}年（${item.ageRange}）` }, pages,
     evidence: [{ family: '干支系', system: '四柱推命', detail: details.join('・').slice(0, 120) }], metadataRefs: ['turningPoints'],
   }
@@ -117,7 +118,7 @@ function signature(item: Annual) {
   return unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]).sort().join('|')
 }
 
-export function buildTurningPointCards(input: ReportInput, nowYear = new Date().getFullYear()): ReportCard[] {
+export function buildTurningPointCards(input: ReportInput, nowYear = japanDateParts().year): ReportCard[] {
   const start = nowYear - 15
   const end = nowYear + 20
   const allAnnual = [...(input.timing?.annual ?? [])].sort((a, b) => a.year - b.year)

@@ -114,10 +114,10 @@ function summaryFor(language: FindingLanguage, finding: ReportFinding): string {
   return `あなたは、${language.statement}。${sceneByAxis[finding.axis]}`
 }
 
-function pagesFor(finding: ReportFinding, language: FindingLanguage): ReportCardPage[] {
+function pagesFor(finding: ReportFinding, language: FindingLanguage, spec: ChapterSpec): ReportCardPage[] {
   const subject = language.trait
   const basis = finding.kind === 'consensus' ? 'いくつもの見方が同じ方向を示すため' : 'ひときわ強く出ている特徴として'
-  return [
+  const pages: ReportCardPage[] = [
     { role: 'opening', label: '扉', text: `${language.title}。${sceneByAxis[finding.axis]}` },
     { role: 'core', label: '変わらない核', text: `選択肢がいくつも並ぶとき、最後にあなたを動かすのは${subject}です。迷っているように見える時間にも、内側では譲れない順序が静かに決まっています。` },
     { role: 'scene', label: '人から見える顔', text: `${subject}が表に出ると、周囲には落ち着いて見えます。けれど頭の中では、誰が何を必要としているかを細かく読み分けています。` },
@@ -134,6 +134,13 @@ function pagesFor(finding: ReportFinding, language: FindingLanguage): ReportCard
     { role: 'action', label: 'これからの使い方', text: `次に迷ったら、守る条件、試す条件、手放す条件を一つずつ書きます。${basis}、${subject}を最も生かせる場面から選び直すと答えが軽くなります。` },
     { role: 'closing', label: '余韻', text: `変えるべきなのは、あなたの核ではありません。${subject}を別の感情や現実の条件と結び直すこと。そのとき同じ性質が、これまでとは違う景色を開きます。` },
   ]
+  const isLove = spec.id.startsWith('love-')
+  const isWork = spec.id.startsWith('work-')
+  return pages.map(page => {
+    if (isLove && page.label === '仕事で現れる面') return { ...page, label: '関係が日常になるとき', text: `関係が日常になると、${subject}は連絡や約束の小さな扱いに現れます。一緒にいる時間より、離れている時間にも安心できる形が続く条件になります。` }
+    if (isWork && page.label === '恋愛で現れる面') return { ...page, label: '任され方との相性', text: `役割を任されると、${subject}は判断と段取りに現れます。目的と責任の境界が明確な仕事ほど、迷いを減らして長く集中できます。` }
+    return page
+  })
 }
 
 const collisionTitles: Record<string, string> = {
@@ -149,8 +156,8 @@ export function buildEditorialStructuredReport(facts: ReportFact[], findings: Re
   for (const { spec, finding } of assignFindingsToChapters(findings)) {
     const language = specializedLanguage(finding, factById)
     const title = cards.some(card => titlesAreSimilar(card.title, language.title)) ? collisionTitles[spec.id] : language.title
-    const pages = pagesFor(finding, { ...language, title })
-    cards.push({ id: spec.id, kind: 'essence', tab: 'essence', title, summary: summaryFor(language, finding),
+    const pages = pagesFor(finding, { ...language, title }, spec)
+    cards.push({ id: spec.id, kind: 'essence', scope: 'self', tab: 'essence', title, summary: summaryFor(language, finding),
       tags: spec.tags, period: null, pages,
       evidence: finding.primaryFacts.flatMap(id => { const fact = factById.get(id); return fact ? [{ family: fact.lineage, system: fact.system, detail: fact.factor }] : [] }),
       metadataRefs: [`finding:${finding.id}`, ...finding.primaryFacts.map(id => `fact:${id}`)] })

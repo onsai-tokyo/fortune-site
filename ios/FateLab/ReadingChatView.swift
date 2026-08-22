@@ -33,17 +33,6 @@ struct ReadingChatView: View {
                         if let status, !status.premium {
                             freeUsageStatus(status)
                         }
-                        Button {
-                            Task { await saveConversation() }
-                        } label: {
-                            Label(isSaved ? "保存済み" : "この鑑定を保存する", systemImage: isSaved ? "bookmark.fill" : "bookmark")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(FLSecondaryButtonStyle())
-                        .disabled(isSaved || isSaving)
-                        if let saveMessage {
-                            Text(saveMessage).font(.caption).foregroundStyle(saveMessage == "保存しました" ? FateTheme.muted : .red)
-                        }
                         if messages.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("どこから読み解きますか？")
@@ -113,6 +102,15 @@ struct ReadingChatView: View {
                     .accessibilityLabel(isWorking ? "回答を停止" : "送信")
                     .padding(.trailing, 5).padding(.vertical, 5)
                 }.background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
+                Button { Task { await saveConversation() } } label: {
+                    Label(isSaved ? "保存済み" : "この鑑定を保存する", systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(FLSecondaryButtonStyle())
+                .disabled(isSaved || isSaving)
+                if let saveMessage {
+                    Text(saveMessage).font(.caption).foregroundStyle(saveMessage == "保存しました" ? FateTheme.muted : .red)
+                }
             }.padding(14).background(FateTheme.canvas)
         }
         .background(FateTheme.canvas).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")

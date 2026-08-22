@@ -252,6 +252,14 @@ test('本人と相手のプロフィール円は未設定でも同じ背景と�
   assert.match(partners, /subtitle: selected\.map\(typeLabel\) \?\? "未設定"/)
 })
 
+test('相手の出生日時はUTC変換せず端末カレンダーの成分から送る', () => {
+  const partners = read('ios/FateLab/PartnerProfilesView.swift')
+  assert.doesNotMatch(partners, /\.formatted\(\.iso8601/)
+  assert.match(partners, /dateComponents\(\[\.year, \.month, \.day\], from: value\)/)
+  assert.match(partners, /String\(format: "%04d-%02d-%02d"/)
+  assert.match(partners, /dateComponents\(\[\.hour, \.minute\], from: value\)/)
+})
+
 test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')
@@ -305,7 +313,7 @@ test('本質カードは1列で相手と本人の出生情報入力を共通化�
   const theme = read('ios/FateLab/Theme.swift')
   assert.doesNotMatch(hub, /essenceColumns|LazyVGrid\(columns: essence/)
   assert.doesNotMatch(hub, /EssenceCard|EssenceTags/)
-  assert.match(hub, /ReadingCardList\(cards: report\.cards\.filter \{ \$0\.resolvedTab == selectedTab \}/)
+  assert.match(hub, /ReadingCardList\(cards: report\.cards\.filter/)
   assert.match(theme, /struct BirthProfileFields/)
   assert.match(home, /BirthProfileFields\(date: \$input\.date/)
   assert.match(partners, /BirthProfileFields\(date: \$date/)
@@ -321,7 +329,7 @@ test('あなたタブは再選択で取扱説明書へ戻り本質も共通リ�
   assert.match(root, /onChange\(of: tabRouter\.yourRootResetToken\)/)
   assert.match(root, /showsList = false/)
   assert.doesNotMatch(hub, /EssenceCard|EssenceTags/)
-  assert.match(hub, /ReadingCardList\(cards: report\.cards\.filter \{ \$0\.resolvedTab == selectedTab \}/)
+  assert.match(hub, /ReadingCardList\(cards: report\.cards\.filter/)
 })
 
 test('共通エラー画面は種別・再試行・戻るを持ちGETを自動再試行する', () => {
