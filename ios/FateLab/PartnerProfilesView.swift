@@ -158,6 +158,13 @@ private struct CompatibilityResultView: View {
     let partnerName: String
     let relationshipType: String
     let onQuestion: (ReadingCard) -> Void
+    @State private var selectedTab = "essence"
+
+    private var availableTabs: [(id: String, title: String)] {
+        var tabs = [("essence", "二人の関係")]
+        if report.cards.contains(where: { $0.resolvedTab == "timing" }) { tabs.append(("timing", "二人の節目")) }
+        return tabs
+    }
 
     var body: some View {
         ScrollView {
@@ -165,7 +172,11 @@ private struct CompatibilityResultView: View {
                 Text("二人の関係性").font(FateType.screenTitle)
                 Text("あなたと\(partnerName)さんの、\(relationshipType == "friend" ? "友情" : "恋愛")の物語を読み進める")
                     .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
-                ReadingCardList(cards: report.cards, onQuestion: onQuestion)
+                Picker("鑑定の章", selection: $selectedTab) {
+                    ForEach(availableTabs, id: \.id) { tab in Text(tab.title).tag(tab.id) }
+                }
+                .pickerStyle(.segmented)
+                ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
             }
             .padding(FateSpacing.screenH)
         }

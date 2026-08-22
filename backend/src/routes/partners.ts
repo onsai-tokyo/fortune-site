@@ -4,11 +4,12 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { assertPartnerCapacity, MAX_PARTNER_PROFILES, validatePartnerProfile } from '../lib/partnerProfiles.js'
 import { createHash } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
-import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber } from './calc.js'
+import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
 import { requirePoints } from '../middleware/points.js'
 import { calculatedDataWithReport } from '../lib/report/storedReport.js'
+import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoints } from '../lib/report/coupleTimingCards.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -218,14 +219,15 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     const [hour, minute] = partner.birth_time ? String(partner.birth_time).split(':').map(Number) : [undefined, 0]
     progress(22, '相手のデータを読み解いています', '二人の命式を重ねる準備をしています')
     const shichu = calcShichu(year, month, day, hour, minute)
+    const partnerTiming = calcTimingCycles(year, month, day, hour, minute, partner.gender === 'male' ? 'male' : 'female')
     const partnerFacts = {
       name: partner.display_name, birthDate: partner.birth_date, gender: partner.gender,
       day: shichu.day.kanshi, nayin: calcNayin(shichu.day.stemIdx, shichu.day.branchIdx),
       sanmei: calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays),
-      sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)),
+      sukuyo: getSukuyo(year, month, day), lifePathNumber: calcLifePathNumber(String(partner.birth_date)), timing: partnerTiming,
     }
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
-    const compatibilityIdentity = createHash('sha256').update(`compat-v3|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
+    const compatibilityIdentity = createHash('sha256').update(`compat-v4|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}`).digest('hex')
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
     const prompt = `本人と相手の命式事実を照合し、${relationshipType === 'friend' ? '友人' : '恋愛'}関係のカードを作成してください。
 本人: ${JSON.stringify({ birth: self.birth_data, calculated: self.calculated_data })}
@@ -238,7 +240,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const compatibilityStartedAt = Date.now()
     let generationAttempt = 0
     const keepAlive = useSse ? setInterval(() => res.write(': keep-alive\n\n'), 10_000) : null
-    const report = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
+    const relationshipReport = await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
       const attemptStartedAt = Date.now()
       const message = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 8000, temperature: 0, messages: [{ role: 'user', content: generationPrompt }] })
@@ -265,11 +267,17 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       },
       write: async (spec, card) => {
         const cardCacheKey = createHash('sha256').update(`${compatibilityIdentity}|${spec.id}`).digest('hex')
-        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v3-card', payload: card })
+        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-v4-card', payload: card })
         if (error) throw error
       },
     }, relationshipType)
       .finally(() => { if (keepAlive) clearInterval(keepAlive) })
+    const selfBirth = self.birth_data as Record<string, unknown>
+    const selfBirthDate = String(selfBirth.birthDate ?? selfBirth.birth_date ?? '')
+    const selfBirthYear = Number(selfBirthDate.slice(0, 4))
+    const selfTiming = (self.calculated_data as { timing?: { annual?: Array<{ year: number; score: number; themes: string[] }> } }).timing?.annual ?? []
+    const turningPoints = findCoupleTurningPoints(selfTiming, partnerTiming.annual, selfBirthYear, year)
+    const report = appendCoupleTimingCards(relationshipReport, buildCoupleTimingCards(turningPoints))
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     const { data: existingConversation, error: conversationLookupError } = await db.from('reading_conversations')
       .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
