@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
 import { AuthRequest } from './auth.js'
 import { hasPremiumAccess } from '../lib/premium.js'
+import { correlationId } from '../lib/apiError.js'
 
 function getSupabaseWithToken(token: string) {
   return createClient(
@@ -33,10 +34,19 @@ export function requirePoints(cost: number) {
       .rpc('deduct_points', { target_user_id: req.userId, cost })
 
     if (error || newBalance === null || newBalance === -1) {
+      const requestId = correlationId(req)
+      console.warn('Point requirement blocked request', {
+        correlationId: requestId,
+        route: req.originalUrl,
+        cost,
+        premium: false,
+        rpcErrorCode: error?.code ?? null,
+      })
       res.status(402).json({
-        error: 'ポイントが不足しています',
+        error: '無料利用枠を使い切りました。継続鑑定を始めるか、購入を復元してください。',
         code: 'INSUFFICIENT_POINTS',
         required: cost,
+        correlationId: requestId,
       })
       return
     }

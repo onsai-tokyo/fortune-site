@@ -70,7 +70,7 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
     if (latestError) throw latestError
     const used = usage?.free_questions_used ?? 0
     const latestConversationId = latestConversations?.[0]?.id ?? null
-    res.json({ premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0, hasReading: Boolean(latestConversationId), latestConversationId })
+    res.json({ premium, isPremium: premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0, hasReading: Boolean(latestConversationId), latestConversationId })
   } catch (error) {
     console.error('Reading status failed:', error)
     res.status(500).json({ error: '利用状況を確認できませんでした' })

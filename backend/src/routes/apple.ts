@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { Environment, JWSTransactionDecodedPayload, SignedDataVerifier } from '@apple/app-store-server-library'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+import { correlationId } from '../lib/apiError.js'
 
 export const appleRouter = Router()
 
@@ -78,14 +79,31 @@ appleRouter.get('/plan', (_req, res) => {
 })
 
 appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, res) => {
+  const requestId = correlationId(req)
   try {
     const signedTransaction = typeof req.body?.signedTransaction === 'string' ? req.body.signedTransaction : ''
     if (!signedTransaction || signedTransaction.length > 20000) { res.status(400).json({ error: '購入情報が不足しています' }); return }
     const transaction = await verifyTransaction(signedTransaction)
-    res.json({ verified: true, subscription: await mirrorTransaction(transaction, req.userId) })
+    const subscription = await mirrorTransaction(transaction, req.userId)
+    console.info('App Store purchase synchronized', {
+      correlationId: requestId,
+      environment: transaction.environment ?? 'Unknown',
+      status: subscription.status,
+    })
+    res.json({ verified: true, subscription, correlationId: requestId })
   } catch (error) {
-    console.error('App Store purchase verification failed:', error)
-    res.status(400).json({ error: '購入情報を確認できませんでした' })
+    console.error('App Store purchase verification failed', {
+      correlationId: requestId,
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      configPresent: {
+        rootCertificates: Boolean(process.env.APPLE_ROOT_CA_BASE64?.trim()),
+        bundleId: Boolean(process.env.APPLE_BUNDLE_ID?.trim()),
+        appId: Boolean(process.env.APPLE_APP_ID?.trim()),
+        productId: Boolean(process.env.APPLE_SUBSCRIPTION_PRODUCT_ID?.trim()),
+      },
+    })
+    res.status(400).json({ error: '購入情報を確認できませんでした', correlationId: requestId })
   }
 })
 

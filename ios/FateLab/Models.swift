@@ -63,8 +63,8 @@ struct ReadingSummary: Codable, Identifiable {
     }
 }
 
-struct ReadingStatus: Codable {
-    let premium: Bool
+struct ReadingStatus: Decodable {
+    let isPremium: Bool
     let used: Int
     let limit: Int
     let remaining: Int?
@@ -73,8 +73,22 @@ struct ReadingStatus: Codable {
     let latestConversationID: UUID?
 
     enum CodingKeys: String, CodingKey {
-        case premium, used, limit, remaining, approvedCount, hasReading
+        case isPremium, premium, used, limit, remaining, approvedCount, hasReading
         case latestConversationID = "latestConversationId"
+    }
+
+    var premium: Bool { isPremium }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        isPremium = try values.decodeIfPresent(Bool.self, forKey: .isPremium)
+            ?? values.decode(Bool.self, forKey: .premium)
+        used = try values.decode(Int.self, forKey: .used)
+        limit = try values.decode(Int.self, forKey: .limit)
+        remaining = try values.decodeIfPresent(Int.self, forKey: .remaining)
+        approvedCount = try values.decodeIfPresent(Int.self, forKey: .approvedCount)
+        hasReading = try values.decodeIfPresent(Bool.self, forKey: .hasReading)
+        latestConversationID = try values.decodeIfPresent(UUID.self, forKey: .latestConversationID)
     }
 }
 

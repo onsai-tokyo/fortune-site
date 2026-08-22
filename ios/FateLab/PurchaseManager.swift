@@ -8,6 +8,7 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var isPremium = false
     @Published var isWorking = false
     @Published var errorMessage: String?
+    private var hasStoreKitEntitlement = false
     private var updates: Task<Void, Never>?
 
     init() {
@@ -22,7 +23,7 @@ final class PurchaseManager: ObservableObject {
         do {
             product = try await Product.products(for: [AppConfig.subscriptionProductID]).first
             if product == nil { errorMessage = "商品情報を取得できませんでした" }
-            await refreshEntitlements()
+            await refreshLocalEntitlements()
         } catch {
             product = nil
             if userFacingErrorMessage(error) != nil { errorMessage = "商品情報を取得できませんでした" }
@@ -40,7 +41,7 @@ final class PurchaseManager: ObservableObject {
                 let transaction = try verified(verification)
                 try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, auth: auth)
                 await transaction.finish()
-                isPremium = true
+                await sync(auth: auth)
             case .userCancelled, .pending: break
             @unknown default: break
             }
@@ -55,7 +56,7 @@ final class PurchaseManager: ObservableObject {
                 guard let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID else { continue }
                 try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth)
             }
-            await refreshEntitlements()
+            await sync(auth: auth)
         } catch {
             if userFacingErrorMessage(error) != nil { errorMessage = "購入内容を復元できませんでした" }
         }
@@ -65,17 +66,48 @@ final class PurchaseManager: ObservableObject {
         for await result in Transaction.updates {
             guard let transaction = try? verified(result) else { continue }
             await transaction.finish()
-            await refreshEntitlements()
+            await refreshLocalEntitlements()
         }
     }
 
-    private func refreshEntitlements() async {
+    /// StoreKit is only a signal that the server mirror may need updating.
+    /// The server status remains the single source of truth used by the UI.
+    func sync(auth: AuthStore) async {
+        errorMessage = nil
+        await refreshLocalEntitlements()
+        do {
+            var status = try await APIClient.shared.status(auth: auth)
+            if hasStoreKitEntitlement && !status.isPremium {
+                for await result in Transaction.currentEntitlements {
+                    guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }
+                    try await APIClient.shared.verifyApplePurchase(
+                        signedTransaction: result.jwsRepresentation,
+                        auth: auth
+                    )
+                }
+                status = try await APIClient.shared.status(auth: auth)
+            }
+            isPremium = status.isPremium
+        } catch {
+            isPremium = false
+            if userFacingErrorMessage(error) != nil {
+                errorMessage = "購入内容を確認できませんでした。購入を復元してください。"
+            }
+        }
+    }
+
+    private func refreshLocalEntitlements() async {
         var active = false
         for await result in Transaction.currentEntitlements {
-            if let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID,
-               transaction.revocationDate == nil, transaction.expirationDate.map({ $0 > Date() }) ?? true { active = true }
+            if let transaction = try? verified(result), isActiveSubscription(transaction) { active = true }
         }
-        isPremium = active
+        hasStoreKitEntitlement = active
+    }
+
+    private func isActiveSubscription(_ transaction: Transaction) -> Bool {
+        transaction.productID == AppConfig.subscriptionProductID
+            && transaction.revocationDate == nil
+            && (transaction.expirationDate.map { $0 > Date() } ?? true)
     }
 
     private func verified<T>(_ result: VerificationResult<T>) throws -> T {

@@ -22,6 +22,20 @@ test('プレミアム判定はhasPremiumAccessだけを使用する', () => {
   assert.match(points, /hasPremiumAccess/)
 })
 
+test('StoreKitは同期検知だけに使いプレミアム表示はサーバー状態を正とする', () => {
+  const purchases = read('ios/FateLab/PurchaseManager.swift')
+  const settings = read('ios/FateLab/SettingsView.swift')
+  const root = read('ios/FateLab/RootView.swift')
+  const reading = read('backend/src/routes/reading.ts')
+  assert.match(purchases, /func sync\(auth: AuthStore\)/)
+  assert.match(purchases, /hasStoreKitEntitlement && !status\.isPremium/)
+  assert.match(purchases, /verifyApplePurchase[\s\S]{0,300}status = try await APIClient\.shared\.status/)
+  assert.match(purchases, /isPremium = status\.isPremium/)
+  assert.doesNotMatch(settings, /purchases\.isPremium \|\|/)
+  assert.match(root, /await purchases\.sync\(auth: auth\)/)
+  assert.match(reading, /isPremium: premium/)
+})
+
 test('本人の鑑定操作はservice role clientを使用しない', () => {
   const reading = read('backend/src/routes/reading.ts')
   const adminUsages = [...reading.matchAll(/getSupabaseAdmin\(\)/g)]

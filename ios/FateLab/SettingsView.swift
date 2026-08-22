@@ -4,7 +4,6 @@ import StoreKit
 struct SettingsView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
-    @State private var serverPremium = false
     @State private var showDeleteConfirmation = false
 
     var body: some View {
@@ -56,10 +55,7 @@ struct SettingsView: View {
         } message: {
             Text("保存した鑑定書と質問の履歴がすべて削除されます。この操作は取り消せません。継続鑑定をご利用中の場合は、App Storeの設定から別途解約してください。")
         }
-        .task {
-            guard auth.session != nil else { return }
-            serverPremium = (try? await APIClient.shared.status(auth: auth).premium) ?? false
-        }
+        .task { if auth.session != nil { await purchases.sync(auth: auth) } }
     }
 
     private var membershipCard: some View {
@@ -68,7 +64,7 @@ struct SettingsView: View {
                 .font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(size: 19, weight: .semibold))
-                if purchases.isPremium || serverPremium {
+                if purchases.isPremium {
                     Label("継続鑑定をご利用中です", systemImage: "checkmark.seal.fill").foregroundStyle(FateTheme.ink)
                     Button("サブスクリプションを管理") {
                         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }

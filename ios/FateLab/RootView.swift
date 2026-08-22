@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var purchases: PurchaseManager
     @StateObject private var authPresentation = AuthPresentation.shared
     @StateObject private var tabRouter = AppTabRouter()
     @State private var showingSplash = true
@@ -57,6 +58,7 @@ struct RootView: View {
     private func loadLandingState() async {
         guard auth.session != nil else { landingState = .loading; return }
         landingState = .loading
+        await purchases.sync(auth: auth)
         do {
             let status = try await APIClient.shared.status(auth: auth)
             if let conversationID = status.latestConversationID { landingState = .returning(conversationID) }
