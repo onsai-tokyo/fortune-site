@@ -6,6 +6,7 @@ import { assignFindingsToChaptersV2, CHAPTER_CONTRACT } from './chapterPlannerV2
 import { selectNarrativeBlock } from './blockSelectorV2.js'
 import type { NarrativeBlock } from './narrativeV2.js'
 import { validateNarrativeBlocks } from './narrativeValidatorV2.js'
+import { NARRATIVE_BLOCKS_V2 } from './narrativeAssetsV2.js'
 
 function finding(id: string, axis: ReportFindingV2['axis'], key = id, confidence = 0.8): ReportFindingV2 {
   return { id, key, kind: 'consensus', axis, confidence, lineages: ['stems', 'number'], systems: ['四柱推命', '数秘術'], independence: 1, primaryFacts: [`fact-${id}`], supportingFacts: [] }
@@ -46,4 +47,9 @@ test('相性条件と領域混入をブロック登録時に拒否する', () =>
 
 test('空の文章ライブラリはPR-4基盤として有効', () => {
   assert.deepEqual(validateNarrativeBlocks([]), [])
+})
+
+test('PR-2文章資産はID重複・領域混入・空本文がない', () => {
+  assert.deepEqual(validateNarrativeBlocks(NARRATIVE_BLOCKS_V2), [])
+  assert.ok(NARRATIVE_BLOCKS_V2.length >= 800)
 })

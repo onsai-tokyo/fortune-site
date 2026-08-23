@@ -1,5 +1,6 @@
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
+import { buildSynastryFacts, computeRelationScores, type RelationAxis } from './synastryFacts.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -14,6 +15,7 @@ interface PairContext {
   shared: string
   difference: string
   evidence: ReportCard['evidence']
+  strongestAxis: RelationAxis
 }
 
 const stemStyle: Record<string, string> = {
@@ -43,6 +45,9 @@ function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType
   const sameStem = Boolean(selfDay && partnerDay && selfDay[0] === partnerDay[0])
   const sameNumberRhythm = selfNumber > 0 && partnerNumber > 0 && selfNumber % 3 === partnerNumber % 3
   const kind: PairKind = sameStem ? 'aligned' : sameNumberRhythm ? 'complementary' : 'clashing'
+  const synastry = buildSynastryFacts(selfValue, partnerValue)
+  const relationScores = computeRelationScores(synastry)
+  const strongestAxis = relationScores.filter(item => item.confidence > 0).sort((a, b) => b.value * b.confidence - a.value * a.confidence || a.key.localeCompare(b.key))[0]?.key ?? 'communication'
   return {
     relationshipLabel, relationshipType, selfStyle, partnerStyle, kind,
     shared: sameStem ? '判断の入口が似ていること' : sameNumberRhythm ? '動き出す時のリズムが近いこと' : '大切な相手ほど真剣に向き合うこと',
@@ -50,14 +55,17 @@ function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType
     evidence: [
       { family: '本人の命式', system: '複数占術の統合', detail: `day=${selfDay}; lifePath=${selfNumber}; sukuyo=${text(self.sukuyo)}` },
       { family: '相手の命式', system: '複数占術の統合', detail: `day=${partnerDay}; lifePath=${partnerNumber}; sukuyo=${text(partner.sukuyo)}` },
+      ...synastry.slice(0, 8).map(fact => ({ family: '二人の照合', system: fact.kind, detail: `${fact.axis}:${fact.detail}` })),
     ],
+    strongestAxis,
   }
 }
 
 function pagesFor(id: string, context: PairContext): ReportCardPage[] {
   const frame = relationshipFrame(context.relationshipLabel)
   const relation = context.relationshipLabel
-  const core = context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人'
+  const axisCore: Record<RelationAxis, string> = { attraction: '互いの違いが強い魅力として動きやすい二人', depth: '言葉になる前の気持ちまで受け取りやすい二人', communication: '言葉の選び方が関係の鍵になる二人', fun: '一緒に動くほど自然な楽しさが育つ二人', safety: '戻れる安心を作るほど深まる二人', values: '大切にする基準を共有しやすい二人', growth: '違いを通して新しい自分へ進む二人', domestic: '暮らしのリズムを整えるほど安定する二人', conflict: '衝突を調整へ変えるほど強くなる二人', repair: '拗れたあとに戻る方法を育てる二人', binding: '節目を越えるたび結びつきが深まる二人' }
+  const core = axisCore[context.strongestAxis] ?? (context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人')
   const chapter: Record<string, { focus: string; action: string }> = {
     'compat-overview': { focus: core, action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
     'compat-beginning': { focus: `${relation}として距離が縮まる入口`, action: '短い会話の回数を増やし、相手の返事を急いで意味づけない' },
