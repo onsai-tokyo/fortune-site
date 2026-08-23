@@ -17,7 +17,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.deepEqual(TRAIT_SCORE_RULES, [])
+  assert.equal(TRAIT_SCORE_RULES.length, 11)
 })
 
 test('空ルールでも71スコアを安全に返す', () => {
@@ -90,4 +90,25 @@ test('PR-2cルールの空matcher・ゼロweight・完全重複・不足スコ�
   assert.ok(result.errors.some(error => error.includes('matcher must not be empty')))
   assert.ok(result.errors.some(error => error.includes('duplicates an earlier rule')))
   assert.ok(result.errors.includes('private_introversion requires at least 2 rules; found 0'))
+})
+
+test('PR-2c確認済みルールは実在する根拠節を参照し許可された重みだけを使う', () => {
+  const result = validateTraitScoreRules(TRAIT_SCORE_RULES, {
+    availableSections: { 性格: new Set([1, 2, 7, 8]) },
+    requiredScores: ['social_extraversion', 'private_introversion', 'attraction_respect', 'attraction_status'],
+  })
+  assert.deepEqual(result.errors, [])
+  assert.ok(TRAIT_SCORE_RULES.every(rule => new Set([0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1]).has(Math.abs(rule.weight))))
+})
+
+test('PR-2c確認済みルールは現在発行されるfactor表記へ一致する', () => {
+  const scores = computeTraitScores([
+    fact({ id: 'moon-water', factor: 'planet:月:魚座', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'asc-fire', factor: 'ascendant:牡羊座:12.3', axis: 'expression', signal: 'initiative', canonicalSourceId: 'ascendant' }),
+    fact({ id: 'venus-house-10', factor: 'house:10:金星', axis: 'domain-work', signal: 'responsibility', canonicalSourceId: 'house:10' }),
+  ], TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  assert.ok(scores.private_introversion.raw > 0)
+  assert.ok(scores.social_extraversion.raw > 0)
+  assert.ok(scores.attraction_respect.raw > 0)
+  assert.ok(scores.attraction_status.raw > 0)
 })

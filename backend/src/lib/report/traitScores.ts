@@ -1,5 +1,6 @@
 import type { FactAxis, FactLineage } from './facts.js'
 import type { ReportFactV2 } from './factsV2.js'
+import { CONFIRMED_PERSONALITY_SCORE_RULES } from './traitScoreRules.personality.js'
 
 export type PersonalityScoreKey =
   | 'social_extraversion' | 'private_introversion' | 'social_sensitivity'
@@ -98,7 +99,7 @@ export interface TraitScoreRule {
   source: string
 }
 
-export const TRAIT_SCORE_RULES: readonly TraitScoreRule[] = []
+export const TRAIT_SCORE_RULES: readonly TraitScoreRule[] = CONFIRMED_PERSONALITY_SCORE_RULES
 
 export function matchesTraitFact(fact: ReportFactV2, matcher: FactMatcher): boolean {
   if (matcher.system && !matcher.system.includes(fact.system)) return false
