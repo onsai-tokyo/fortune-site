@@ -13,6 +13,7 @@ test('恋愛相性は決定論で8章・各10ページを返す', () => {
   assert.ok(first.cards.every(card => card.pages.length === 10 && card.generator === 'deterministic' && card.scope === 'couple'))
   assert.ok(first.cards.every(card => card.pages.every(page => [...page.text].length <= 120)))
   assert.equal(new Set(first.cards.map(card => card.title)).size, 8)
+  assert.equal(new Set(first.cards.map(card => card.summary)).size, 8)
   assert.equal(new Set(first.cards.flatMap(card => card.pages.map(page => page.text))).size, 80)
 })
 

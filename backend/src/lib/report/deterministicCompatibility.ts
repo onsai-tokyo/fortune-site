@@ -112,28 +112,28 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const axisCore: Record<RelationAxis, string> = { attraction: '互いの違いが強い魅力として動きやすい二人', depth: '言葉になる前の気持ちまで受け取りやすい二人', communication: '言葉の選び方が関係の鍵になる二人', fun: '一緒に動くほど自然な楽しさが育つ二人', safety: '戻れる安心を作るほど深まる二人', values: '大切にする基準を共有しやすい二人', growth: '違いを通して新しい自分へ進む二人', domestic: '暮らしのリズムを整えるほど安定する二人', conflict: '衝突を調整へ変えるほど強くなる二人', repair: '拗れたあとに戻る方法を育てる二人', binding: '節目を越えるたび結びつきが深まる二人' }
   const chapterAxis = resolvedAxis ?? axisForChapter(id, context)
   const core = axisCore[chapterAxis] ?? (context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人')
-  const chapter: Record<string, { focus: string; action: string }> = {
-    'compat-overview': { focus: core, action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
-    'compat-beginning': { focus: `${relation}として距離が縮まる入口`, action: '短い会話の回数を増やし、相手の返事を急いで意味づけない' },
-    'compat-attraction': { focus: `自分にない動きが、相手の魅力として見える理由`, action: '惹かれた場面を具体的に伝え、期待だけを膨らませない' },
-    'compat-caution': { focus: `親しさが増えたあとに、見落としやすい違い`, action: '分かっているはずをやめ、変わった条件を一つずつ言い直す' },
-    'compat-friction': { focus: `二人の衝突が、気持ちより速度の違いから始まる場面`, action: '結論の前に、いま答えが要るのか時間が要るのかを確かめる' },
-    'compat-repair': { focus: `拗れたあと、安心を取り戻すための順序`, action: '事実、受け取った気持ち、次に望む行動を分けて伝える' },
-    'compat-growth': { focus: `違いを消さずに、関係の強さへ変える方法`, action: '同じでなくてよい項目と、揃えたい約束を分けて持つ' },
-    'compat-marriage': { focus: `関係が暮らしになったあと、二人らしさを守る条件`, action: '時間、お金、家の役割を気持ちとは別に定期的に話す' },
+  const chapter: Record<string, { cue: string; focus: string; action: string }> = {
+    'compat-overview': { cue: '二人の輪郭', focus: core, action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
+    'compat-beginning': { cue: '距離の始まり', focus: `${relation}として距離が縮まる入口`, action: '短い会話の回数を増やし、相手の返事を急いで意味づけない' },
+    'compat-attraction': { cue: '魅力の正体', focus: `自分にない動きが、相手の魅力として見える理由`, action: '惹かれた場面を具体的に伝え、期待だけを膨らませない' },
+    'compat-caution': { cue: '見落としやすい違い', focus: `親しさが増えたあとに、見落としやすい違い`, action: '分かっているはずをやめ、変わった条件を一つずつ言い直す' },
+    'compat-friction': { cue: '衝突の扱い', focus: `二人の衝突が、気持ちより速度の違いから始まる場面`, action: '結論の前に、いま答えが要るのか時間が要るのかを確かめる' },
+    'compat-repair': { cue: '安心への戻り道', focus: `拗れたあと、安心を取り戻すための順序`, action: '事実、受け取った気持ち、次に望む行動を分けて伝える' },
+    'compat-growth': { cue: '関係が育つ力', focus: `違いを消さずに、関係の強さへ変える方法`, action: '同じでなくてよい項目と、揃えたい約束を分けて持つ' },
+    'compat-marriage': { cue: '二人の暮らし', focus: `関係が暮らしになったあと、二人らしさを守る条件`, action: '時間、お金、家の役割を気持ちとは別に定期的に話す' },
   }
   const item = chapter[id]
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
-    { role: 'core', label: '二人の核', text: `${item.focus}には、あなたの${context.selfStyle}と、あの人の${context.partnerStyle}が表れます。その違いが関係の輪郭を作ります。` },
-    { role: 'scene', label: '日常に現れる場面', text: `${item.focus}は、予定を決める時や返事を待つ時に現れます。${context.difference}を拒絶と受け取らないことが大切です。` },
-    { role: 'shadow', label: 'すれ違うとき', text: `${item.focus}を見失う時ほど、${frame}。言葉を省くと、互いに別の物語を想像しやすくなります。` },
-    { role: 'exception', label: '意外な強さ', text: `${item.focus}では、${context.shared}が違う答えを持った時の二人を支えます。戻って話せることが、この相性の強さです。` },
-    { role: 'question', label: '確かめたいこと', text: `二人にとって${item.focus}とは、どんな場面でしょう。最近の出来事を一つ選ぶと、関係の現在地が見えてきます。` },
+    { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
+    { role: 'scene', label: '日常に現れる場面', text: `${item.cue}は、予定を決める時や返事を待つ時に現れます。${context.difference}を拒絶と受け取らないことが大切です。` },
+    { role: 'shadow', label: 'すれ違うとき', text: `${item.cue}を見失う時ほど、${frame}。言葉を省くと、互いに別の物語を想像しやすくなります。` },
+    { role: 'exception', label: '意外な強さ', text: `${item.cue}では、${context.shared}が違う答えを持った時の二人を支えます。戻って話せることが、この相性の強さです。` },
+    { role: 'question', label: '確かめたいこと', text: `${item.cue}が最も表れたのはどんな場面でしょう。最近の出来事を一つ選ぶと、関係の現在地が見えてきます。` },
     { role: 'action', label: '二人で試すこと', text: `${item.action}。${context.selfStyle}と${context.partnerStyle}の両方を約束に含めてください。` },
-    { role: 'core', label: '長く続く条件', text: `${item.focus}を長く育てる鍵は、${frame}です。${relation}の親しさが増えても、確認することを手放さないでください。` },
-    { role: 'scene', label: '次の節目', text: `${item.focus}の次の節目では、${context.shared}を思い出してください。${context.difference}を勝ち負けでなく調整として扱えます。` },
-    { role: 'closing', label: 'この章の余韻', text: `${item.focus}。二人の関係は、同じになることではなく、違いを知ったあとも戻れる場所を作ることで育ちます。` },
+    { role: 'core', label: '長く続く条件', text: `${item.cue}を長く育てる鍵は、${frame}です。${relation}の親しさが増えても、確認することを手放さないでください。` },
+    { role: 'scene', label: '次の節目', text: `${item.cue}の次の節目では、${context.shared}を思い出してください。${context.difference}を勝ち負けでなく調整として扱えます。` },
+    { role: 'closing', label: 'この章の余韻', text: `この章で見えてきたのは、${item.cue}に宿る${core}という二人の形です。違いを知ったあとも戻れる場所を作ることで育ちます。` },
   ]
 }
 
@@ -152,7 +152,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
-    summary: `${relationshipLabel}の二人は、${context.shared}を足場にしながら、${context.difference}を扱う関係です。`, tags: ['相性', relationshipLabel], period: null,
+    summary: `${relationshipLabel}の二人には、${axisLead[chapterAxis]}という特徴があります。この章では「${title}」を手がかりに、${context.difference}を扱う順序を読み解きます。`, tags: ['相性', relationshipLabel], period: null,
     pages: pagesFor(id, context, chapterAxis), evidence: context.evidence, metadataRefs: ['self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`] }, 'deterministic')
   })
   return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-deterministic-v1')
