@@ -7,7 +7,7 @@ import {
   ALL_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact,
   normalizeTraitScore, traitScoreConfidence, type TraitScoreRule,
 } from './traitScores.js'
-import { extractRuleSourceSections, parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
+import { auditRuleSourceDocument, extractRuleSourceSections, parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
 
 const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
   id: 'fact-a', system: '西洋占星術', lineage: 'ephemeris', factor: 'planet:月:魚座', axis: 'relation', signal: 'sensitivity',
@@ -76,6 +76,19 @@ test('PR-2cルールの根拠項番を構文解析し、存在しない節を拒
   })
   assert.deepEqual(result.ruleCountByScore, { social_extraversion: 1, private_introversion: 1 })
   assert.deepEqual(result.errors, ['rule[1] references missing source: 性格§59'])
+})
+
+test('根拠文書は期待する全項番の欠落・重複・範囲外を検出する', () => {
+  const complete = auditRuleSourceDocument('# 1. A\n\n# 2. B\n\n# 3. C\n', 3)
+  assert.equal(complete.complete, true)
+  assert.deepEqual(complete.sections, [1, 2, 3])
+
+  const invalid = auditRuleSourceDocument('# 1. A\n\n# 1. duplicate\n\n# 3. C\n\n# 4. extra\n', 3)
+  assert.equal(invalid.complete, false)
+  assert.deepEqual(invalid.missingSections, [2])
+  assert.deepEqual(invalid.duplicateSections, [1])
+  assert.deepEqual(invalid.outOfRangeSections, [4])
+  assert.throws(() => auditRuleSourceDocument('', 0), /positive integer/)
 })
 
 test('PR-2cルールの空matcher・ゼロweight・完全重複・不足スコアを検出する', () => {

@@ -18,6 +18,15 @@ export interface TraitScoreRuleValidationResult {
   ruleCountByScore: Partial<Record<TraitScoreKey, number>>
 }
 
+export interface RuleSourceDocumentAudit {
+  expectedSectionCount: number
+  sections: number[]
+  missingSections: number[]
+  outOfRangeSections: number[]
+  duplicateSections: number[]
+  complete: boolean
+}
+
 const SOURCE_PATTERN = /^(性格|時期)§([1-9]\d*)$/
 const MARKDOWN_SECTION_PATTERN = /^#\s+([1-9]\d*)\.\s+.+$/gm
 
@@ -31,6 +40,34 @@ export function extractRuleSourceSections(markdown: string): ReadonlySet<number>
   const sections = new Set<number>()
   for (const match of markdown.matchAll(MARKDOWN_SECTION_PATTERN)) sections.add(Number(match[1]))
   return sections
+}
+
+/**
+ * 原文資料の受領時に、見出しの欠落や重複を実装前に検出する。
+ * Setだけでは重複を失うため、本文を直接走査する。
+ */
+export function auditRuleSourceDocument(markdown: string, expectedSectionCount: number): RuleSourceDocumentAudit {
+  if (!Number.isInteger(expectedSectionCount) || expectedSectionCount < 1) {
+    throw new Error('expectedSectionCount must be a positive integer')
+  }
+  const counts = new Map<number, number>()
+  for (const match of markdown.matchAll(MARKDOWN_SECTION_PATTERN)) {
+    const section = Number(match[1])
+    counts.set(section, (counts.get(section) ?? 0) + 1)
+  }
+  const sections = [...counts.keys()].sort((a, b) => a - b)
+  const missingSections = Array.from({ length: expectedSectionCount }, (_, index) => index + 1)
+    .filter(section => !counts.has(section))
+  const outOfRangeSections = sections.filter(section => section > expectedSectionCount)
+  const duplicateSections = sections.filter(section => (counts.get(section) ?? 0) > 1)
+  return {
+    expectedSectionCount,
+    sections,
+    missingSections,
+    outOfRangeSections,
+    duplicateSections,
+    complete: missingSections.length === 0 && outOfRangeSections.length === 0 && duplicateSections.length === 0,
+  }
 }
 
 const stableRuleIdentity = (rule: TraitScoreRule): string => JSON.stringify({
