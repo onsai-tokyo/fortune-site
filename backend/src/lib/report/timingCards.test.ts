@@ -58,3 +58,35 @@ test('同じ事象が複数年に続いてもタイトルを重複させない',
   assert.ok(cards.every(card => /[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/.test(card.summary)))
   assert.ok(cards.every(card => card.summary.includes(card.evidence[0].detail.split('・')[1])))
 })
+
+test('同じタイトルが離れた年に再登場しても鑑定書全体で重複させない', () => {
+  const repeated: ReportInput = { ...input, timing: { ...input.timing!, annual: [
+    { year: 2024, ageRange: '26歳', kanshi: '甲辰', tenGod: '正官', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+    { year: 2025, ageRange: '27歳', kanshi: '乙巳', tenGod: '偏印', score: 9, relationshipSignals: [], themes: ['学び'] },
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+  ] } }
+  const cards = buildTurningPointCards(repeated, 2026)
+  assert.equal(new Set(cards.map(card => card.title)).size, cards.length)
+  assert.ok(cards.every((card, index) => cards.slice(0, index).every(previous => !titlesAreSimilar(previous.title, card.title))))
+})
+
+test('別々の語句を連結して根拠のない別離フラグを作らない', () => {
+  const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9,
+      relationshipSignals: [], relationshipEvents: [], themes: ['環境や関係の組み替え', '隠れていたずれや前提の見直し'] },
+  ] } }
+  const [result] = buildTurningPointCards(report, 2026)
+  assert.ok(result)
+  assert.doesNotMatch(result.title, /区切り|距離|残す関係/)
+  assert.ok(!result.tags.includes('関係の見直し'))
+})
+
+test('移動を含む上流テーマから環境変化の分岐へ到達する', () => {
+  const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9,
+      relationshipSignals: [], relationshipEvents: [], themes: ['移動・配置転換・関係の組み替え'] },
+  ] } }
+  const [result] = buildTurningPointCards(report, 2026)
+  assert.ok(result.tags.includes('引越し・環境変化'))
+  assert.match(result.title, /居場所|活動する場所/)
+})

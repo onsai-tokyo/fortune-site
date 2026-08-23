@@ -47,17 +47,17 @@ export interface AiWriterDependencies {
   reserveGenerationSlot?(): boolean | Promise<boolean>
 }
 
-export function reportCacheKey(seed: string, metadata: ReportMetadata, useV2 = process.env.AI_CACHE_KEY_V2 !== '0') {
+export function reportCacheKey(seed: string, metadata: ReportMetadata, useV2 = process.env.AI_CACHE_KEY_V2 !== '0', cacheNamespace = '') {
   const source = useV2
-    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|${metadata.contentCacheSignature}`
-    : `${GENERATOR_VERSION}|${japanDateParts().year}|${seed}|${metadata.combinationSignature}`
+    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|${cacheNamespace}|${metadata.contentCacheSignature}`
+    : `${GENERATOR_VERSION}|${japanDateParts().year}|${cacheNamespace}|${seed}|${metadata.combinationSignature}`
   return createHash('sha256').update(source).digest('hex')
 }
 
-export function reportCardCacheKey(seed: string, metadata: ReportMetadata, cardId: string, useV2 = process.env.AI_CACHE_KEY_V2 !== '0') {
+export function reportCardCacheKey(seed: string, metadata: ReportMetadata, cardId: string, useV2 = process.env.AI_CACHE_KEY_V2 !== '0', cacheNamespace = '') {
   const source = useV2
-    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|card|${metadata.contentCacheSignature}|${cardId}`
-    : `${GENERATOR_VERSION}|${japanDateParts().year}|card|${seed}|${metadata.combinationSignature}|${cardId}`
+    ? `${GENERATOR_VERSION}|${AI_CACHE_KEY_VERSION}|${japanDateParts().year}|${cacheNamespace}|card|${metadata.contentCacheSignature}|${cardId}`
+    : `${GENERATOR_VERSION}|${japanDateParts().year}|${cacheNamespace}|card|${seed}|${metadata.combinationSignature}|${cardId}`
   return createHash('sha256').update(source).digest('hex')
 }
 
@@ -183,9 +183,10 @@ export async function writeReportWithAi(
   metadata: ReportMetadata,
   dependencies: AiWriterDependencies = productionDependencies(),
   generationContext?: GenerationContext,
+  cacheNamespace = '',
 ): Promise<StructuredReport> {
   const startedAt = Date.now()
-  const key = reportCacheKey(seed, metadata)
+  const key = reportCacheKey(seed, metadata, undefined, cacheNamespace)
   const cardStartedAt = new Map(fallback.cards.map((card, index) => [index, Date.now()]))
   const cardSources = new Map<number, 'cache_hit' | 'generated'>()
   const cardFailures = new Map<number, FallbackReason>()
@@ -252,7 +253,7 @@ export async function writeReportWithAi(
         if (forcedDeterministicIds.has(card.id)) {
           continue
         }
-        const cardKey = reportCardCacheKey(seed, metadata, card.id)
+        const cardKey = reportCardCacheKey(seed, metadata, card.id, undefined, cacheNamespace)
         try {
           const cardCached = await dependencies.readCardCache?.(cardKey)
           if (cardCached) {

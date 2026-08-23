@@ -10,13 +10,10 @@ import { requireReadingAuth } from '../middleware/auth.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { deterministicCardIds, writeReportWithAi } from '../lib/report/aiWriter.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
-import { buildReportFacts } from '../lib/report/facts.js'
-import { buildReportFindings } from '../lib/report/findings.js'
-import { buildEditorialStructuredReport } from '../lib/report/editorial.js'
 import { finalizeReportProvenance } from '../lib/report/provenance.js'
 import { observeShadowFacts } from '../lib/report/shadowMetrics.js'
-import { replaceTimingCards } from '../lib/report/timingCards.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
+import { buildSelfReport, resolveSelfReportOptions } from '../lib/report/buildSelfReport.js'
 
 export const previewRouter = Router()
 
@@ -180,9 +177,9 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     progress(58, 'あなたらしさを整理しています', '重複しない8つの視点を選んでいます')
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
     observeShadowFacts(requestId, reportInput, metadata)
-    const facts = buildReportFacts(reportInput, metadata)
-    const findings = buildReportFindings(facts)
-    const deterministicReport = replaceTimingCards(buildEditorialStructuredReport(facts, findings), reportInput)
+    const selfReportOptions = resolveSelfReportOptions()
+    const { report: deterministicReport, pipelineTag } = buildSelfReport(reportInput, metadata, selfReportOptions)
+    console.info('Self-report pipeline metric', { correlationId: requestId, pipelineTag })
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
     const writtenReport = process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
@@ -190,7 +187,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
         kind: 'self',
-      })
+      }, pipelineTag)
     const orderedReport = currentConcern
       ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }
       : writtenReport

@@ -273,6 +273,7 @@ function relationshipEventLabels(signals: string[]): string[] {
     hasBreak ? '隠れていたずれや前提が表面化しやすい' : '',
     hasClash && hasSpouse ? '交際開始・別離・復縁など関係の状態が切り替わりやすい' : '',
     hasClash && !hasSpouse ? '関係や生活環境を組み替えやすい' : '',
+    hasSpouse && hasCombine && hasBreak ? '交際・同居・婚約・結婚、または関係の見直しなど節目を定めやすい' : '',
     hasSpouse && hasCombine && !hasBreak ? '交際・同居・婚約・結婚、または正式な終了など関係を定めやすい' : '',
     hasSpouse && !hasCombine && !hasClash && !hasBreak ? '関係の定義や将来を現実的に決めやすい' : '',
   ].filter(Boolean)
@@ -289,17 +290,21 @@ const PEACH_BLOSSOM: Record<string, string> = {
 }
 
 function timingThemes(tenGod: string, branchRelation?: string): string[] {
-  const themes = ['偏財', '正財'].includes(tenGod)
-    ? ['成果・収入・現実的な選択']
-    : ['偏官', '正官'].includes(tenGod)
-      ? ['責任・肩書・関係の正式化']
-      : ['食神', '傷官'].includes(tenGod)
-        ? ['発信・創作・新しい挑戦']
-        : tenGod.includes('印')
-          ? ['学び・資格・支援を受けること']
-          : ['自立・仲間・活動範囲の変化']
+  const themeByTenGod: Record<string, string> = {
+    比肩: '自分の基準を立て直し、主体的に進めること',
+    劫財: '仲間との役割を組み替え、活動範囲を広げること',
+    食神: '楽しみや得意なことを、無理なく外へ表すこと',
+    傷官: '違和感を言葉にし、表現や方法を磨き直すこと',
+    偏財: '人との接点を広げ、機会や成果を動かすこと',
+    正財: '収入と暮らしの基準を整え、継続できる形にすること',
+    偏官: '変化へすばやく対応し、難しい役割へ踏み出すこと',
+    正官: '責任や肩書を引き受け、関係や役割を正式にすること',
+    偏印: '慣れた見方を離れ、専門性や新しい方法を試すこと',
+    正印: '学びや支援を受け取り、次の土台を固めること',
+  }
+  const themes = [themeByTenGod[tenGod] ?? '自分の基準を確かめ、活動の形を整えること']
   if (branchRelation === '六合') themes.push('縁がまとまりやすい')
-  if (branchRelation === '冲') themes.push('環境や関係の組み替え')
+  if (branchRelation === '冲') themes.push('移動・配置転換・関係の組み替え')
   if (branchRelation === '破') themes.push('隠れていたずれや前提の見直し')
   return themes
 }

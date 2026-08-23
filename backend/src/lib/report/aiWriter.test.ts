@@ -31,6 +31,8 @@ test('v2キャッシュはseedを無視し内容署名を使い、フラグ無�
   assert.equal(reportCardCacheKey('seed-a', metadata, 'core', true), reportCardCacheKey('seed-b', metadata, 'core', true))
   assert.notEqual(reportCacheKey('seed-a', metadata, false), reportCacheKey('seed-b', metadata, false))
   assert.notEqual(reportCacheKey('seed-a', metadata, true), reportCacheKey('seed-a', { ...metadata, contentCacheSignature: 'content-def' }, true))
+  assert.notEqual(reportCacheKey('seed-a', metadata, true, 'fact:v1|narrative:legacy'), reportCacheKey('seed-a', metadata, true, 'fact:v2|narrative:legacy'))
+  assert.notEqual(reportCardCacheKey('seed-a', metadata, 'core', true, 'fact:v1|narrative:legacy'), reportCardCacheKey('seed-a', metadata, 'core', true, 'fact:v2|narrative:legacy'))
 })
 
 test('決定論scopeは時期と指定章だけを選び、selfとallは全カードを選ぶ', () => {

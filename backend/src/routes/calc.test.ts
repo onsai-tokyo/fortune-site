@@ -261,8 +261,8 @@ test('算命学の人体星図は節入り後の日数に応じて二十八元�
 
 test('傷官と劫財を官星・財星として誤分類しない', () => {
   const timing = calcTimingCycles(1995, 2, 20, 5, 40, 'female')
-  assert.deepEqual(timing.annual.find(item => item.year === 2025)?.themes, ['発信・創作・新しい挑戦'])
-  assert.deepEqual(timing.annual.find(item => item.year === 2013)?.themes, ['自立・仲間・活動範囲の変化'])
+  assert.deepEqual(timing.annual.find(item => item.year === 2025)?.themes, ['違和感を言葉にし、表現や方法を磨き直すこと'])
+  assert.deepEqual(timing.annual.find(item => item.year === 2013)?.themes, ['仲間との役割を組み替え、活動範囲を広げること'])
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {
@@ -292,6 +292,15 @@ test('1995-02-20 05:40 女性の大運・流年を固定値で再現する', () 
   assert.equal(year2027?.kanshi, '丁未')
   assert.deepEqual(year2027?.relationshipSignals, ['地支に配偶者星の正官', '日支と六合（縁がまとまりやすい）'])
   assert.ok(timing.marriageCandidates.some(item => item.year === 2027))
+})
+
+test('六合と六破が重なる日支でも関係を定める候補を失わない', () => {
+  const timing = calcTimingCycles(1982, 1, 1, 12, 0, 'female')
+  const year2001 = timing.annual.find(item => item.year === 2001)
+  assert.ok(year2001?.relationshipSignals.some(signal => signal.includes('六合')))
+  assert.ok(year2001?.relationshipSignals.some(signal => signal.includes('破')))
+  assert.ok(year2001?.relationshipEvents?.some(event => /婚約|結婚/.test(event)))
+  assert.ok(timing.marriageCandidates.some(item => item.year === 2001))
 })
 
 test('1995-02-20 05:40 女性の紫微斗数十二宮を固定値で再現する', () => {

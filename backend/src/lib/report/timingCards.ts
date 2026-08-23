@@ -12,12 +12,12 @@ function unique(values: string[]) {
 }
 
 function eventFlags(values: string[]) {
-  const joined = values.join('・')
+  const has = (pattern: RegExp) => values.some(value => pattern.test(value))
   return {
-    meeting: /出会|縁が始|交際開始|恋愛開始/.test(joined), marriage: /結婚|婚約|入籍|同居/.test(joined),
-    separation: /別れ|離別|失恋|関係.*見直|距離/.test(joined), work: /仕事|転職|昇進|責任|役割|成果|独立|肩書/.test(joined),
-    move: /引越|転居|移動|環境.*変|住む場所/.test(joined), study: /学|資格|探究|知識|訓練/.test(joined),
-    money: /収入|財|お金|資産|現実/.test(joined), reset: /休|整理|内省|見直|手放|刷新/.test(joined),
+    meeting: has(/出会|縁が始|交際開始|恋愛開始/), marriage: has(/結婚|婚約|入籍|同居/),
+    separation: has(/別れ|離別|失恋|関係.*見直|距離/), work: has(/仕事|転職|昇進|責任|役割|成果|独立|肩書/),
+    move: has(/引越|転居|移動|配置転換|環境.*変|住む場所/), study: has(/学|資格|探究|知識|訓練|専門/),
+    money: has(/収入|財|お金|資産|現実/), reset: has(/休|整理|内省|見直|手放|刷新|立て直/),
   }
 }
 
@@ -30,7 +30,7 @@ function stableIndex(values: string[], year: number, length: number) {
 
 function titleFor(values: string[], year: number) {
   const flags = eventFlags(values)
-  if (flags.move && flags.work) return '住む場所と働き方を同時に変える年'
+  if (flags.move && flags.work) return '活動する場所と働き方を同時に変える年'
   if (flags.marriage) return flags.work ? '関係を形にし、仕事との配分を決める年' : '関係を形にし、暮らしの前提を決める年'
   if (flags.meeting && flags.separation) return '新しい縁が入り、続ける関係を選び直す年'
   if (flags.meeting) return flags.work ? '仕事の広がりから、新しい縁が入る年' : '出会いが増え、関係の前提を決める年'
@@ -135,8 +135,9 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
   for (const item of selected) {
     const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
     const result = card(input, item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
-    const previous = results.at(-1)
-    const title = previous && titlesAreSimilar(previous.title, result.title) ? collisionTitle(item, values) : result.title
+    const title = results.some(previous => titlesAreSimilar(previous.title, result.title))
+      ? collisionTitle(item, values)
+      : result.title
     results.push({ ...result, title })
   }
   return results
