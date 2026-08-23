@@ -91,6 +91,8 @@ final class AuthStore: ObservableObject {
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
                   let tokenData = credential.identityToken,
                   let idToken = String(data: tokenData, encoding: .utf8),
+                  let codeData = credential.authorizationCode,
+                  let authorizationCode = String(data: codeData, encoding: .utf8),
                   let nonce = appleNonce else {
                 throw authError("Appleの認証情報を読み取れませんでした。もう一度お試しください。")
             }
@@ -112,6 +114,10 @@ final class AuthStore: ObservableObject {
                 KeychainStore.delete(account: pendingAppleNameAccount)
             }
             try persist(session(from: sdkSession))
+            // The backend exchanges this one-time code immediately. Failure does not
+            // invalidate the successful login, but is logged server-side and retried
+            // on the next Apple sign-in.
+            try? await APIClient.shared.retainAppleSignInToken(authorizationCode: authorizationCode, auth: self)
             noticeMessage = "Appleでログインしました。"
         } catch {
             if (error as NSError).code != ASAuthorizationError.canceled.rawValue {

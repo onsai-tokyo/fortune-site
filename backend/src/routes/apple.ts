@@ -3,6 +3,7 @@ import { Environment, JWSTransactionDecodedPayload, SignedDataVerifier } from '@
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { correlationId } from '../lib/apiError.js'
+import { exchangeAppleAuthorizationCode } from '../lib/appleSignIn.js'
 
 export const appleRouter = Router()
 
@@ -104,6 +105,35 @@ appleRouter.get('/plan', (_req, res) => {
   const productId = process.env.APPLE_SUBSCRIPTION_PRODUCT_ID
   if (!productId) { res.status(503).json({ error: 'App Storeプランは現在準備中です' }); return }
   res.json({ productId })
+})
+
+// Apple authorization codes are short-lived and returned only during sign-in.
+// Exchange immediately and keep the refresh token server-side for account deletion.
+appleRouter.post('/sign-in-token', requireAuth, async (req: AuthRequest, res) => {
+  const authorizationCode = typeof req.body?.authorizationCode === 'string'
+    ? req.body.authorizationCode.trim()
+    : ''
+  if (!authorizationCode || authorizationCode.length > 4096) {
+    res.status(400).json({ error: 'Apple認証情報が不足しています' })
+    return
+  }
+  try {
+    const refreshToken = await exchangeAppleAuthorizationCode(authorizationCode)
+    const { error } = await getSupabaseAdmin().from('apple_sign_in_tokens').upsert({
+      user_id: req.userId!,
+      refresh_token: refreshToken,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+    if (error) throw error
+    res.status(204).end()
+  } catch (error) {
+    console.error('Apple sign-in token retention failed', {
+      correlationId: correlationId(req),
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    })
+    res.status(503).json({ error: 'Apple連携情報を保存できませんでした' })
+  }
 })
 
 appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, res) => {

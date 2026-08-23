@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import rateLimit from 'express-rate-limit'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+import { revokeAppleToken } from '../lib/appleSignIn.js'
 import { getSupabaseUser } from '../lib/supabaseUser.js'
 import { validateConversationTitle, validateReadingQuestion } from '../lib/readingValidation.js'
 import { buildPublicReadingShare } from '../lib/readingShare.js'
@@ -94,7 +95,27 @@ readingRouter.get('/profile/traits', requireAuth, async (req: AuthRequest, res) 
 
 readingRouter.delete('/account', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(req.userId!)
+    const admin = getSupabaseAdmin()
+    const { data: userResult, error: userError } = await admin.auth.admin.getUserById(req.userId!)
+    if (userError) throw userError
+    const usesApple = userResult.user?.identities?.some(identity => identity.provider === 'apple') ?? false
+    if (usesApple) {
+      try {
+        const { data: stored, error: tokenError } = await admin.from('apple_sign_in_tokens')
+          .select('refresh_token').eq('user_id', req.userId!).maybeSingle()
+        if (tokenError) throw tokenError
+        if (stored?.refresh_token) await revokeAppleToken(stored.refresh_token)
+        else console.warn('Apple token revoke skipped: refresh token missing', { userId: req.userId })
+      } catch (revokeError) {
+        // Apple availability or configuration must never prevent local account deletion.
+        console.error('Apple token revoke failed; continuing account deletion', {
+          userId: req.userId,
+          errorName: revokeError instanceof Error ? revokeError.name : 'UnknownError',
+          errorMessage: revokeError instanceof Error ? revokeError.message : String(revokeError),
+        })
+      }
+    }
+    const { error } = await admin.auth.admin.deleteUser(req.userId!)
     if (error) throw error
     res.status(204).end()
   } catch (error) {

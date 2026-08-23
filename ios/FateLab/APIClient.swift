@@ -241,6 +241,12 @@ struct APIClient {
         return (object?["skipped"] as? Bool) != true
     }
 
+    func retainAppleSignInToken(authorizationCode: String, auth: AuthStore) async throws {
+        let token = try await auth.validAccessToken()
+        _ = try await data(for: request(path: "/api/apple/sign-in-token", method: "POST", token: token,
+                                       json: ["authorizationCode": authorizationCode]), auth: auth)
+    }
+
     func deleteAccount(auth: AuthStore) async throws {
         let token = try await auth.validAccessToken()
         _ = try await data(for: request(path: "/api/reading/account", method: "DELETE", token: token), auth: auth)
