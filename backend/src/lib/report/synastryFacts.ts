@@ -32,8 +32,15 @@ const SIGN_INDEX: Record<string, number> = { 牡羊座: 0, Aries: 0, 牡牛座: 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.axis, value.signal, value.detail]), ...value }) }
 
 function planetMap(person: JsonRecord): Map<string, number> {
-  const planets = record(record(record(person.astrology).western).planets)
-  return new Map(Object.entries(planets).flatMap(([name, raw]) => {
+  const rawPlanets = record(record(person.astrology).western).planets
+  const entries: Array<[string, unknown]> = Array.isArray(rawPlanets)
+    ? rawPlanets.flatMap(raw => {
+      const point = record(raw)
+      const name = text(point.name)
+      return name ? [[name, point]] : []
+    })
+    : Object.entries(record(rawPlanets))
+  return new Map(entries.flatMap(([name, raw]) => {
     const point = record(raw)
     const longitude = numeric(point.longitude)
     if (longitude !== null) return [[name, ((longitude % 360) + 360) % 360] as const]

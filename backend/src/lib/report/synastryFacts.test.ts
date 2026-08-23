@@ -14,3 +14,23 @@ test('PR-4 Synastry Factは複数系統を統合し再現可能', () => {
   assert.equal(scores.length, 11)
   assert.ok(scores.every(score => score.value >= 0 && score.value <= 1))
 })
+
+test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
+  const withArray = {
+    ...self,
+    astrology: { western: { planets: [
+      { name: '月', longitude: 100 },
+      { name: '金星', longitude: 5 },
+    ] } },
+  }
+  const partnerWithArray = {
+    ...partner,
+    astrology: { western: { planets: [
+      { name: '月', longitude: 220 },
+      { name: '火星', longitude: 185 },
+    ] } },
+  }
+  const facts = buildSynastryFacts(withArray, partnerWithArray)
+  assert.ok(facts.some(fact => fact.kind === 'cross-aspect'))
+  assert.ok(facts.some(fact => fact.axis === 'attraction'))
+})
