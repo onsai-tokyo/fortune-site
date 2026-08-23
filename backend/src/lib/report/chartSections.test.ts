@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import './notationNormalization.test.js'
 import { buildChartSections, buildCoupleChartSections, normalizePalaceName } from './chartSections.js'
 import { calcZiwei } from '../ziwei.js'
 

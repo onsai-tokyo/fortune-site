@@ -1,5 +1,6 @@
 import { buildStructuredReport, StructuredReport } from './reportCards.js'
 import { recordConsensusMetric } from './report/metrics.js'
+import { NAYIN_ALIAS, normalizeSukuyo } from './report/keywordSignalMappings.js'
 
 export interface ReportInput {
   birthDate?: string
@@ -314,7 +315,7 @@ const LIFE_PATH: Record<number, string> = {
   9: '広い視野で人や社会に還元すること', 11: '直感を言葉や創造へ変えること', 22: '大きな構想を現実の仕組みにすること', 33: '包容力を通して人を癒やし育てること',
 }
 
-const SUKUYO_DETAIL: Record<string, string> = {
+export const SUKUYO_DETAIL: Record<string, string> = {
   婁: '観察力と実務感覚で、細部を整えながら信頼を築く宿', 胃: '目標へ向かう意欲が強く、現実的な成果を取りにいく宿', 昴: '品位と美意識を備え、人から注目されやすい宿',
   畢: '粘り強く基盤を守り、時間をかけて完成させる宿', 觜: '言葉と分析に優れ、交渉や説明で力を発揮する宿', 参: '好奇心と行動力が強く、新しい環境を切り開く宿',
   井: '秩序と公平性を重視し、集団の仕組みを整える宿', 鬼: '感受性と奉仕性が高く、人の気持ちを支える宿', 柳: '情熱と集中力が強く、感情を創造へ変える宿',
@@ -337,20 +338,22 @@ const NUMEROLOGY_DETAIL: Record<number, string> = {
   11: '直感と啓発', 22: '大きな構想の現実化', 33: '無条件の包容と育成',
 }
 
-const NAYIN_DETAIL: Record<string, string> = {
+export const NAYIN_DETAIL: Record<string, string> = {
   海中金: '海中に眠る金。価値を内側で育て、時機を待って形にする', 炉中火: '炉の火。集中と鍛錬によって素材を変化させる', 大林木: '広い森林。人や企画を育て、長期的な広がりを作る',
-  路旁土: '道を支える土。生活や組織の基盤を実務で整える', 剣鋒金: '刃先の金。判断力を磨き、曖昧さを切り分ける', 山頭火: '山上の火。遠くまで届く目標や理念を掲げる',
-  涧下水: '谷間の水。細い流れから知識や縁をつないでいく', 城頭土: '城壁の土。境界線と責任範囲を守る', 白蜡金: '精製途中の金。経験と技術によって完成度を高める',
-  楊柳木: 'しなやかな柳。環境へ適応しながら折れずに伸びる', 泉中水: '湧き出る泉。内側の知恵や感性を人へ届ける', 屋上土: '屋根を覆う土。人の暮らしや安心を保護する',
+  路傍土: '道を支える土。生活や組織の基盤を実務で整える', 剣鋒金: '刃先の金。判断力を磨き、曖昧さを切り分ける', 山頭火: '山上の火。遠くまで届く目標や理念を掲げる',
+  澗下水: '谷間の水。細い流れから知識や縁をつないでいく', 城頭土: '城壁の土。境界線と責任範囲を守る', 白鑞金: '精製途中の金。経験と技術によって完成度を高める',
+  楊柳木: 'しなやかな柳。環境へ適応しながら折れずに伸びる', 井泉水: '湧き出る泉。内側の知恵や感性を人へ届ける', 屋上土: '屋根を覆う土。人の暮らしや安心を保護する',
   霹靂火: '雷の火。停滞を一気に破り、状況を転換させる', 松柏木: '常緑の木。逆境でも原則を守り、長く継続する', 長流水: '大きく続く水。情報や経験を絶えず循環させる',
-  砂中金: '砂中の金。多くの選択肢から本当に価値あるものを選ぶ', 山下火: '山麓の火。身近な場を照らし、実用的な熱を届ける', 平地木: '平地に育つ木。協力できる環境で可能性を大きく広げる',
+  沙中金: '砂中の金。多くの選択肢から本当に価値あるものを選ぶ', 山下火: '山麓の火。身近な場を照らし、実用的な熱を届ける', 平地木: '平地に育つ木。協力できる環境で可能性を大きく広げる',
   壁上土: '壁の土。役割や仕組みを明確にし、場を守る', 金箔金: '薄く輝く金。美意識や見せ方によって価値を高める', 覆燈火: '灯火。小さくても必要な場所を継続して照らす',
   天河水: '天上の川。大きな発想や理想を現実へ降ろす', 大駅土: '往来を支える土。人と資源が動く拠点を整える', 釵釧金: '装飾の金。洗練と対人感覚で魅力を形にする',
-  桑柘木: '暮らしを支える木。役立つ技能や成果を着実に育てる', 大溪水: '渓谷の大水。変化の中で道を切り開き、流れを作る', 沙中土: '砂の中の土。柔軟に形を変えながら足場を固める',
+  桑柘木: '暮らしを支える木。役立つ技能や成果を着実に育てる', 大渓水: '渓谷の大水。変化の中で道を切り開き、流れを作る', 沙中土: '砂の中の土。柔軟に形を変えながら足場を固める',
   天上火: '天の火。広い視野と影響力で周囲を明るくする', 石榴木: '実を結ぶ木。内に蓄えた力を成果として結実させる', 大海水: '大海の水。多様性を受け入れ、大きな可能性を包む',
 }
 
 export function buildDeterministicReport(input: ReportInput): string {
+  const sukuyoName = normalizeSukuyo(input.sukuyo)
+  const nayinName = NAYIN_ALIAS[input.nayin] ?? input.nayin
   const identityKey = [
     input.birthDate, input.birthTime || 'time-unknown', input.birthplace, input.gender,
     input.shichuDay, input.nayin, input.sanmeiStar, input.sukuyo, input.lifePathNumber,
@@ -367,8 +370,8 @@ export function buildDeterministicReport(input: ReportInput): string {
   const day = DAY_STEM[input.shichuDay[0]] ?? DAY_STEM.甲
   const sanmei = SANMEI[input.sanmeiStar] ?? '資質を着実に活かす力'
   const mission = LIFE_PATH[input.lifePathNumber] ?? LIFE_PATH[1]
-  const sukuyoDetail = SUKUYO_DETAIL[input.sukuyo] ?? '本命宿の性質を、対人関係と行動傾向の補助線として読みます'
-  const nayinDetail = NAYIN_DETAIL[input.nayin] ?? '干支の組み合わせを自然界のイメージへ置き換えた分類です'
+  const sukuyoDetail = SUKUYO_DETAIL[sukuyoName] ?? '本命宿の性質を、対人関係と行動傾向の補助線として読みます'
+  const nayinDetail = NAYIN_DETAIL[nayinName] ?? '干支の組み合わせを自然界のイメージへ置き換えた分類です'
   const honmeiDetail = KYUSEI_DETAIL[input.honmeiName] ?? '社会で繰り返しやすい行動パターンを表します'
   const pillarDetail = input.fourPillars?.map(pillar => {
     const tenGodMeaning = TEN_GOD_DETAIL[pillar.stemTenGod] ?? '命式全体を補う性質'
@@ -615,7 +618,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     if (source === 'インド占星術') return `月 ${vedicMoon?.sign ?? '算出なし'}${vedicMoon ? vedicMoon.degree.toFixed(1) : ''}°／土星 ${vedicSaturn?.sign ?? '算出なし'}${vedicSaturn ? vedicSaturn.degree.toFixed(1) : ''}°`
     if (source === '数秘術') return `運命数 ${input.lifePathNumber}`
     if (source === '九星気学') return input.kyuseiProfile?.yearStar ?? input.honmeiName
-    return `${input.sukuyo}宿`
+    return `${sukuyoName}宿`
   }
   const evidenceMarker = (items: Array<{ lineage: Lineage; system: string; factor: string }>) =>
     `[[EVIDENCE:${items.map(item => `${lineageName[item.lineage]}｜${item.system}｜${item.factor}`).join('||')}]]`
@@ -1134,14 +1137,14 @@ ${timingBlocks}
 
   /* 旧・占術別詳細レポート（全占術一致版への移行履歴として一時保持）
   return `【全占術統合鑑定 — 総合結論】
-四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${input.sukuyo}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
+四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${sukuyoName}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
 これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
 **最大の強みは${day.strength}。注意点は${day.caution}です。** 外から期待される役割と自分が守りたい感覚を分け、判断の理由を短く言葉にすると、持ち味が安定して発揮されます。
 ${western && vedic ? `西洋占星術では太陽${westernSun?.sign}・月${westernMoon?.sign}・ASC${western.ascendant.sign}、インド占星術では太陽${vedicSun?.sign}・月${vedicMoon?.sign}・ラグナ${vedic.ascendant.sign}です。**東洋の命式が示す資質に、太陽の目的意識、月の感情反応、ASC／ラグナの外への見せ方を重ねて総合判断しています。**` : ''}
 
 【全占術統合鑑定 — 思考・感情・行動・対人】
 **思考：** 算命学の北方${northStar}は「${SANMEI[northStar] ?? '自分なりの視点'}」を示し、日主${input.shichuDay[0]}の${day.core}と重なります。情報を広く集めてから本質を選び取る一方、選択肢が増えるほど結論が遅れやすいため、判断期限と基準を先に決めると力を活かせます。
-**感情：** 中心星${input.sanmeiStar}の${sanmei}と宿曜${input.sukuyo}宿の「${sukuyoDetail}」から、表面は自然体でも内側では人や場の変化を細かく感じ取る傾向があります。感情をすぐ結論にせず、事実・解釈・希望の三つに分けて言葉にすると安定します。
+**感情：** 中心星${input.sanmeiStar}の${sanmei}と宿曜${sukuyoName}宿の「${sukuyoDetail}」から、表面は自然体でも内側では人や場の変化を細かく感じ取る傾向があります。感情をすぐ結論にせず、事実・解釈・希望の三つに分けて言葉にすると安定します。
 **行動：** 南方${southStar}の「${SANMEI[southStar] ?? '行動力'}」と数秘${input.lifePathNumber}の「${mission}」が、受け身より自分で始めるほど運が動くことを示します。大きく賭けるより、小さく開始して改善する方法が向きます。
 **対人：** 東方${eastStar}は社会での距離感、西方${westStar}は近しい相手への接し方です。外では${WORK_STYLE[eastStar] ?? '自分の方針を保つ'}、内では${LOVE_STYLE[westStar] ?? '信頼を積み重ねる'}という使い分けがあり、親しくなるほど約束と継続を重視します。
 
@@ -1155,7 +1158,7 @@ ${vedic ? `インド占星術ではラグナ${vedic.ascendant.sign}の「${ASTRO
 **つまずきやすい点：** ${day.caution}。完成度を上げ続ける前に、締切・採算・終了条件を数値で置くことが重要です。
 
 【全占術統合鑑定 — 恋愛・結婚・パートナーシップ】
-算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${input.sukuyo}宿は、相手の本音や場の機微を読む対人感覚を加えます。
+算命学の西方${westStar}は「${LOVE_STYLE[westStar] ?? '信頼を積み重ねる関係'}」、四柱推命の日主${input.shichuDay[0]}は「${day.love}」を求めやすく、紫微斗数の夫妻宮は${couplePalaceStars}です。宿曜の${sukuyoName}宿は、相手の本音や場の機微を読む対人感覚を加えます。
 ${westernVenus && westernMars ? `西洋占星術では、金星${westernVenus.sign}が「好み・受け取る愛情」、火星${westernMars.sign}が「欲求・自分から動く方法」を示します。金星の${ASTRO_SIGN[westernVenus.sign]}と火星の${ASTRO_SIGN[westernMars.sign]}を両立できる関係が自然です。` : ''}
 ${vedicVenus && vedicMars ? `インド占星術では金星${vedicVenus.sign}が関係に求める価値、火星${vedicMars.sign}${vedicMars.retrograde ? '逆行' : ''}が欲求と衝突時の反応を示します。**惹かれる気持ちだけでなく、安心できる生活条件と怒りや違和感を安全に話せるかを確認すること**が関係を守ります。` : ''}
 **恋愛・結婚の総合結論は、安心できる日常と互いの自由を同時に守れる関係を選ぶこと。** 好意だけで進めず、生活の分担、金銭感覚、仕事への理解、一人になる時間を具体的に話すほど長続きします。婚期候補は確定日ではなく、出会い・進展・見直しが起こりやすい期間として活用してください。
@@ -1244,8 +1247,8 @@ ${annualDetail}
 年運は立春前後で切り替わります。仕事・恋愛・結婚の判断は、この傾向だけで決めず、本人の希望、相手との関係、健康、資金、契約など現実条件を優先してください。
 
 【宿曜詳細 — 本命宿の気質と対人傾向】
-あなたの本命宿は**${input.sukuyo}宿**です。${sukuyoDetail}。
-宿曜では本命宿だけで運命を断定せず、相手の宿との距離と関係分類を重ねて相性を見ます。単独鑑定では、${input.sukuyo}宿の長所を発揮できる環境と、感情・行動の偏りを確認するために使います。
+あなたの本命宿は**${sukuyoName}宿**です。${sukuyoDetail}。
+宿曜では本命宿だけで運命を断定せず、相手の宿との距離と関係分類を重ねて相性を見ます。単独鑑定では、${sukuyoName}宿の長所を発揮できる環境と、感情・行動の偏りを確認するために使います。
 
 【九星気学詳細 — 本命・月命・日命・時命】
 本命星は**${input.kyuseiProfile?.yearStar ?? input.honmeiName}**です。${honmeiDetail}。
@@ -1256,7 +1259,7 @@ ${annualDetail}
 誕生日の日付から見る誕生数は**${input.numerologyProfile?.birthDayNumber ?? '算出なし'}（${NUMEROLOGY_DETAIL[input.numerologyProfile?.birthDayNumber ?? 0] ?? '生まれ持った得意分野'}）**、月と日から見る態度数は**${input.numerologyProfile?.attitudeNumber ?? '算出なし'}（${NUMEROLOGY_DETAIL[input.numerologyProfile?.attitudeNumber ?? 0] ?? '第一印象と行動の入口'}）**です。${input.numerologyProfile ? `${input.numerologyProfile.personalYear}年の個人年は**${input.numerologyProfile.personalYearNumber}（${NUMEROLOGY_DETAIL[input.numerologyProfile.personalYearNumber] ?? '一年のテーマ'}）**です。` : ''}
 
 【納音詳細 — 干支が示す自然界のイメージ】
-あなたの納音は**${input.nayin}**です。${nayinDetail}。
+あなたの納音は**${nayinName}**です。${nayinDetail}。
 納音は日柱の干支を二つ一組で分類する補助的な見方です。四柱推命の旺衰や通変星より優先して吉凶を決めず、**自分の資質をどのような環境で形にしやすいか**をイメージするために使います。
 
 【運気を扱うときの注意】

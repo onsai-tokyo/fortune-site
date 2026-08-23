@@ -7,6 +7,13 @@ const STAR_DETAIL: Record<string, string> = {
   七殺: '突破、決断、緊張下での実行力', 破軍: '刷新、破壊と再構築、大きな転換力',
 }
 
+export function resolveZiweiStarDetail(value: string): string | undefined {
+  const raw = value.trim()
+  if (STAR_DETAIL[raw]) return STAR_DETAIL[raw]
+  const stripped = raw.replace(/星$/, '')
+  return STAR_DETAIL[stripped]
+}
+
 export function timeIndex(hour: number): number {
   return hour === 23 ? 12 : Math.floor((hour + 1) / 2)
 }
@@ -26,7 +33,7 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
       name: star.name,
       brightness: star.brightness || '',
       mutagen: star.mutagen || '',
-      detail: STAR_DETAIL[star.name] ?? 'この宮位のテーマを具体化する主星',
+      detail: resolveZiweiStarDetail(star.name) ?? 'この宮位のテーマを具体化する主星',
     })),
     minorStars: palace.minorStars.map(star => star.name),
     decadal: palace.decadal,

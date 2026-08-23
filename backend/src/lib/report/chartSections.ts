@@ -1,4 +1,5 @@
 import type { ChartSection } from '../reportCards.js'
+import { NAYIN_ALIAS, normalizeSukuyo } from './keywordSignalMappings.js'
 
 type JsonRecord = Record<string, unknown>
 
@@ -24,6 +25,9 @@ export function normalizePalaceName(value: string): string {
 
 export function buildChartSections(calculatedData: unknown): ChartSection[] {
   const data = record(calculatedData)
+  const sukuyoName = normalizeSukuyo(text(data.sukuyo, ''))
+  const rawNayin = text(data.nayin)
+  const nayinName = NAYIN_ALIAS[rawNayin] ?? rawNayin
   const hasKnownValue = ['shichuYear', 'shichuMonth', 'shichuDay', 'lifePathNumber', 'honmeiName', 'nayin', 'sukuyo']
     .some(key => data[key] !== undefined && data[key] !== null)
   if (!hasKnownValue) return []
@@ -78,7 +82,7 @@ export function buildChartSections(calculatedData: unknown): ChartSection[] {
     ] },
     { id: 'chart-ziwei', system: '紫微斗数', title: '紫微斗数', layout: 'grid', grid: ziweiGrid, note: ziwei.available === true ? `命宮 ${text(ziwei.earthlyBranchOfSoulPalace)}・身宮 ${text(ziwei.earthlyBranchOfBodyPalace)}` : text(ziwei.reason, '出生時刻が必要です。') },
     { id: 'chart-lunar', system: '宿曜・納音', title: '宿曜・納音', layout: 'list', list: [
-      { label: '本命宿', value: `${text(data.sukuyo)}宿` }, { label: '納音', value: text(data.nayin) },
+      { label: '本命宿', value: sukuyoName ? `${sukuyoName}宿` : '—' }, { label: '納音', value: nayinName },
     ] },
   ]
 }
