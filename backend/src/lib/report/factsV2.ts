@@ -27,6 +27,22 @@ function makeFact(value: Omit<ReportFactV2, 'id'>): ReportFactV2 {
 
 const pillarKeys: DerivationKey[] = ['year-pillar', 'month-pillar', 'day-pillar', 'hour-pillar']
 
+function normalizedSignalPart(value: string): string {
+  const readable = value.normalize('NFKC').replace(/[\s:|/]+/g, '-').replace(/[^\p{L}\p{N}\-]/gu, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  return readable.slice(0, 64) || createHash('sha256').update(value).digest('hex').slice(0, 12)
+}
+
+/** PR-2a: shadow V2 keys describe content, never array position. Legacy production Facts remain untouched. */
+function contentBasedLegacySignal(fact: ReportFact): string {
+  const contradiction = /^contradiction:\d+:([^:]+):(.+)$/.exec(fact.factor)
+  if (contradiction) return `tension-${normalizedSignalPart(contradiction[1])}-${normalizedSignalPart(contradiction[2])}`
+  const distortion = /^distortion:\d+:([^:]+):(.+)$/.exec(fact.factor)
+  if (distortion) return `distortion-${normalizedSignalPart(distortion[1])}-${normalizedSignalPart(distortion[2])}`
+  const mutagen = /^mutagen:\d+:([^:]+):([^:]+):(.+)$/.exec(fact.factor)
+  if (mutagen) return `mutagen-${normalizedSignalPart(mutagen[1])}-${normalizedSignalPart(mutagen[2])}-${normalizedSignalPart(mutagen[3])}`
+  return fact.signal
+}
+
 function provenanceForLegacy(fact: ReportFact): Pick<ReportFactV2, 'derivations' | 'canonicalSourceId' | 'votesInConsensus'> {
   if (fact.system === '紫微斗数') return {
     derivations: [{ key: 'lunar-date', weight: 1 }, { key: 'birth-time', weight: 1 }, { key: 'year-stem', weight: 0.4 }],
@@ -64,7 +80,17 @@ const keywordSignal = (value: string): { axis: FactAxis; signal: string } => {
 const subordinateStrength: Record<string, number> = { 天馳星: 0.55, 天極星: 0.55, 天報星: 0.6, 天胡星: 0.6, 天庫星: 0.65, 天印星: 0.65, 天恍星: 0.7, 天堂星: 0.75, 天貴星: 0.8, 天南星: 0.85, 天禄星: 0.9, 天将星: 1 }
 
 export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata): ReportFactV2[] {
-  const facts = buildReportFacts(input, metadata).map(fact => ({ ...fact, ...provenanceForLegacy(fact), lineage: fact.system === '紫微斗数' ? 'lunar' as const : fact.lineage }))
+  const facts = buildReportFacts(input, metadata).map(fact => {
+    const provenance = provenanceForLegacy(fact)
+    const signal = contentBasedLegacySignal(fact)
+    return {
+      ...fact,
+      id: signal === fact.signal ? fact.id : factId([fact.system, fact.factor, fact.axis, signal, provenance.canonicalSourceId]),
+      signal,
+      ...provenance,
+      lineage: fact.system === '紫微斗数' ? 'lunar' as const : fact.lineage,
+    }
+  })
   const add = (value: Omit<ReportFactV2, 'id'>) => facts.push(makeFact(value))
 
   const nayin = keywordSignal(input.nayin)

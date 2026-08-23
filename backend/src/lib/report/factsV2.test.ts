@@ -72,3 +72,20 @@ test('PR-1は従来Factの出力を変更しない', () => {
   assert.deepEqual(buildReportFacts(source, extractReportMetadata(source)), legacy)
   assert.ok(legacy.every(fact => !('derivations' in fact) && !('canonicalSourceId' in fact) && !('votesInConsensus' in fact)))
 })
+
+test('PR-2aは配列位置ではなく内容からsignature keyを作る', () => {
+  const source = input()
+  const metadata = extractReportMetadata(source)
+  metadata.contradictions = [
+    { source: 'astrology', detail: '月と太陽の緊張' },
+    { source: 'astrology', detail: '金星と土星の緊張' },
+  ]
+  metadata.relationshipDistortions = [{ relation: '冲', pillars: '日支と月支', meaning: '関係の揺れ' }]
+  metadata.domainHighlights = [{ palace: '夫妻宮', star: '天相', mutagen: '化忌' }]
+  const facts = buildReportFactsV2(source, metadata)
+  assert.ok(facts.some(fact => fact.signal === 'tension-astrology-月と太陽の緊張'))
+  assert.ok(facts.some(fact => fact.signal === 'tension-astrology-金星と土星の緊張'))
+  assert.ok(facts.some(fact => fact.signal === 'distortion-冲-日支と月支'))
+  assert.ok(facts.some(fact => fact.signal === 'mutagen-夫妻宮-天相-化忌'))
+  assert.equal(facts.some(fact => /^tension-astrology-\d+$/.test(fact.signal)), false)
+})

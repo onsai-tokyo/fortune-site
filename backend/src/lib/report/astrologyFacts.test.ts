@@ -63,6 +63,15 @@ test('ハウスは出生時刻がある場合だけ発行する', () => {
   assert.equal(untimed.some(fact => fact.requiresBirthTime), false)
 })
 
+test('月が一日中同じ星座なら出生時刻なしでも西洋・インドの月Factを保持する', () => {
+  const input = source({ birthDate: '1995-02-02', birthTime: undefined, astrology: { available: false, reason: '時刻なし', method: '出生時刻なし' } })
+  assert.equal(isMoonSignStableForDay(input), true)
+  const facts = buildReportFactsV2(input, extractReportMetadata(input))
+  assert.ok(facts.some(fact => fact.factor.startsWith('planet:月:')))
+  assert.ok(facts.some(fact => fact.factor.startsWith('vedic-planet:月:')))
+  assert.equal(facts.filter(fact => /planet:月:/.test(fact.factor)).some(fact => fact.requiresBirthTime), false)
+})
+
 test('同一入力のFact ID配列は完全一致する', () => {
   const input = source()
   const metadata = extractReportMetadata(input)

@@ -111,6 +111,7 @@ test('PR-1: 同年10件で外惑星がfindingを支配しない', () => {
   const common = [...samples[0].keys].filter(key => samples.every(sample => sample.keys.has(key)))
   const commonPr1 = [...samples[0].pr1Keys].filter(key => samples.every(sample => sample.pr1Keys.has(key)))
   console.info('PR-1 generation-bias comparison', { commonFindingKeys: common, commonCount: common.length, commonPr1FindingKeys: commonPr1, commonPr1Count: commonPr1.length, outerRatios: samples.map(sample => sample.outerRatio) })
+  assert.ok(common.length <= 3)
   assert.ok(commonPr1.length <= 3)
   assert.ok(samples.every(sample => sample.outerRatio <= 0.2))
 })
