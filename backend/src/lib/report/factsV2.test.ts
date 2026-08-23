@@ -5,6 +5,7 @@ import { buildReportFacts } from './facts.js'
 import { buildReportFactsV2 } from './factsV2.js'
 import { extractReportMetadata } from './metadata.js'
 import './traitScores.test.js'
+import './gapFindings.test.js'
 
 function input(overrides: Partial<ReportInput> = {}): ReportInput {
   return {
