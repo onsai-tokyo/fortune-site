@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportMetadata } from './metadata.js'
 import { buildReportFacts, type FactAxis, type FactLineage, type ReportFact } from './facts.js'
+import { extractAstrologyFacts } from './astrologyFacts.js'
 
 export type DerivationKey =
   | 'year-pillar' | 'month-pillar' | 'day-pillar' | 'hour-pillar' | 'day-stem'
@@ -104,6 +105,8 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
         derivations: [{ key: 'solar-longitude', weight: 0.5 }, { key: 'birth-time', weight: 1 }, { key: 'birthplace', weight: 1 }], canonicalSourceId: factor, votesInConsensus: true })
     }
   }
+
+  for (const fact of extractAstrologyFacts(input)) add(fact)
 
   const filtered = input.birthTime ? facts : facts.filter(fact => !fact.requiresBirthTime)
   return [...new Map(filtered.map(fact => [fact.id, fact])).values()]
