@@ -6,6 +6,7 @@ import {
   ALL_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact,
   normalizeTraitScore, traitScoreConfidence, type TraitScoreRule,
 } from './traitScores.js'
+import { parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
 
 const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
   id: 'fact-a', system: '西洋占星術', lineage: 'ephemeris', factor: 'planet:月:魚座', axis: 'relation', signal: 'sensitivity',
@@ -56,4 +57,37 @@ test('正規化・confidence・校正は境界を安全に扱い再現可能で�
   assert.deepEqual(scales, calibrateTraitScoreScale(ALL_TRAIT_SCORE_KEYS, [
     { social_extraversion: -1 }, { social_extraversion: 0 }, { social_extraversion: 1 },
   ]))
+})
+
+test('PR-2cルールの根拠項番を構文解析し、存在しない節を拒否する', () => {
+  assert.deepEqual(parseTraitScoreRuleSource('性格§58'), { document: '性格', section: 58 })
+  assert.deepEqual(parseTraitScoreRuleSource('時期§1'), { document: '時期', section: 1 })
+  assert.equal(parseTraitScoreRuleSource('性格58'), null)
+  assert.equal(parseTraitScoreRuleSource('性格§0'), null)
+
+  const rules: TraitScoreRule[] = [
+    { score: 'social_extraversion', match: { signal: ['communication'] }, weight: 0.8, source: '性格§1' },
+    { score: 'private_introversion', match: { signal: ['sensitivity'] }, weight: 0.7, source: '性格§59' },
+  ]
+  const result = validateTraitScoreRules(rules, {
+    availableSections: { 性格: new Set([1, 2]) },
+    requiredScores: ['social_extraversion', 'private_introversion'],
+  })
+  assert.deepEqual(result.ruleCountByScore, { social_extraversion: 1, private_introversion: 1 })
+  assert.deepEqual(result.errors, ['rule[1] references missing source: 性格§59'])
+})
+
+test('PR-2cルールの空matcher・ゼロweight・完全重複・不足スコアを検出する', () => {
+  const duplicated: TraitScoreRule = {
+    score: 'social_extraversion', match: {}, weight: 0, source: '性格§1',
+  }
+  const result = validateTraitScoreRules([duplicated, duplicated], {
+    availableSections: { 性格: new Set([1]) },
+    requiredScores: ['social_extraversion', 'private_introversion'],
+    minimumRulesPerScore: 2,
+  })
+  assert.ok(result.errors.some(error => error.includes('weight must be')))
+  assert.ok(result.errors.some(error => error.includes('matcher must not be empty')))
+  assert.ok(result.errors.some(error => error.includes('duplicates an earlier rule')))
+  assert.ok(result.errors.includes('private_introversion requires at least 2 rules; found 0'))
 })
