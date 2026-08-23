@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
+import { buildCalibrationFixtures } from './fixtures.js'
 import type { ReportFactV2 } from './factsV2.js'
 import { bootstrapTraitScoreScale, calibrateTraitScoreScale } from './traitScoreScale.js'
 import {
@@ -19,6 +20,17 @@ test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
   assert.equal(TRAIT_SCORE_RULES.length, 11)
+})
+
+test('校正用1000件は固定回帰fixtureと分離され再現可能である', () => {
+  const first = buildCalibrationFixtures(1000)
+  const second = buildCalibrationFixtures(1000)
+  assert.equal(first.length, 1000)
+  assert.deepEqual(first, second)
+  assert.equal(new Set(first.map(item => item.id)).size, 1000)
+  assert.ok(first.some(item => item.birthTime === null))
+  assert.ok(first.some(item => item.birthTime !== null))
+  assert.throws(() => buildCalibrationFixtures(0), /positive integer/)
 })
 
 test('空ルールでも71スコアを安全に返す', () => {

@@ -85,6 +85,35 @@ export const BIRTH_FIXTURES: readonly BirthFixture[] = [
   { id: 'f040', birthDate: '1978-04-04', birthTime: null, birthplace: '岩手県盛岡市', gender: 'male', group: 'no-time' },
 ]
 
+const CALIBRATION_PLACES = [
+  '北海道札幌市', '宮城県仙台市', '東京都新宿区', '神奈川県横浜市',
+  '愛知県名古屋市', '大阪府大阪市', '広島県広島市', '福岡県福岡市',
+] as const
+
+/**
+ * Trait Scoreの分布校正専用コーパス。
+ * 固定40件の回帰fixtureとは分離し、同じ件数なら常に同じ出生条件を返す。
+ */
+export function buildCalibrationFixtures(count = 1000): BirthFixture[] {
+  if (!Number.isInteger(count) || count < 1) throw new Error('count must be a positive integer')
+  return Array.from({ length: count }, (_, index) => {
+    const year = 1955 + (index * 37) % 66
+    const month = 1 + (index * 7) % 12
+    const day = 1 + (index * 11) % 28
+    const hour = (index * 5) % 24
+    const minute = (index * 13) % 60
+    const hasBirthTime = index % 5 !== 0
+    return {
+      id: `cal-${String(index + 1).padStart(4, '0')}`,
+      birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      birthTime: hasBirthTime ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` : null,
+      birthplace: CALIBRATION_PLACES[index % CALIBRATION_PLACES.length],
+      gender: index % 2 === 0 ? 'female' : 'male',
+      group: hasBirthTime ? 'baseline' : 'no-time',
+    }
+  })
+}
+
 function calcAge(birthDate: string, today: Date): number {
   const birth = new Date(birthDate)
   let age = today.getFullYear() - birth.getFullYear()

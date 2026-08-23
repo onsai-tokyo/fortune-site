@@ -8,6 +8,7 @@
     "test:selfreport": "tsx --test src/lib/report/selfReportSnapshot.test.ts src/lib/report/factPipelineContract.test.ts src/lib/report/narrativeBlocksDistribution.test.ts",
     "snapshot:write": "tsx src/scripts/snapshotSelfReports.ts",
     "snapshot:metrics": "tsx src/scripts/snapshotSelfReports.ts --metrics-only",
+    "scores:calibrate": "tsx src/scripts/calibrateTraitScores.ts 1000",
     "test:apple": "tsx --test src/lib/appleSignIn.test.ts",
     "test:pr15": "tsx --test src/lib/report/pr15Structural.test.ts",
     "test:pr15:e2e": "tsx --test src/lib/report/pr15E2E.test.ts",
