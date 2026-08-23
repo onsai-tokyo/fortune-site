@@ -262,7 +262,7 @@ export function resolveNakshatra(value: string): SignalMapping | null {
 }
 
 export function resolveZiweiStar(value: string): SignalMapping | null {
-  const raw = value.trim()
+  const raw = value.trim().replace(/祿/g, '禄')
   if (ZIWEI_MAJOR_MAPPING[raw]) return ZIWEI_MAJOR_MAPPING[raw]
   if (ZIWEI_MINOR_MAPPING[raw]) return ZIWEI_MINOR_MAPPING[raw]
   const stripped = raw.replace(/星$/, '')

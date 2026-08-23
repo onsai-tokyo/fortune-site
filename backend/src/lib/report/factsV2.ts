@@ -1,8 +1,9 @@
 import { createHash } from 'crypto'
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportMetadata } from './metadata.js'
-import { buildReportFacts, type FactAxis, type FactLineage, type ReportFact } from './facts.js'
-import { extractAstrologyFacts } from './astrologyFacts.js'
+import { buildReportFacts, type FactLineage, type ReportFact } from './facts.js'
+import { extractAstrologyFacts, SIGN_SPEC } from './astrologyFacts.js'
+import { logUnmatched, resolveNakshatra, resolveNayin, resolveSukuyo, resolveZiweiStar } from './keywordSignalMappings.js'
 
 export type DerivationKey =
   | 'year-pillar' | 'month-pillar' | 'day-pillar' | 'hour-pillar' | 'day-stem'
@@ -67,16 +68,6 @@ function provenanceForLegacy(fact: ReportFact): Pick<ReportFactV2, 'derivations'
   return { derivations: [{ key: pillar, weight: 1 }, { key: 'day-stem', weight: pillar === 'day-pillar' ? 1 : 0.5 }], canonicalSourceId: pillar === 'day-pillar' ? 'day-stem' : pillar, votesInConsensus: true }
 }
 
-const keywordSignal = (value: string): { axis: FactAxis; signal: string } => {
-  if (/責任|守|安定|支え|育/.test(value)) return { axis: 'relation', signal: 'care' }
-  if (/言葉|伝|聞|会話|社交|協調/.test(value)) return { axis: 'expression', signal: 'communication' }
-  if (/洞察|本質|深|直感|内面/.test(value)) return { axis: 'cognition', signal: 'insight' }
-  if (/創造|美|表現|魅力/.test(value)) return { axis: 'expression', signal: 'expression' }
-  if (/変化|改革|再構築|切り分け/.test(value)) return { axis: 'drive', signal: 'transformation' }
-  if (/学|探|未知|可能性/.test(value)) return { axis: 'cognition', signal: 'exploration' }
-  return { axis: 'drive', signal: 'independence' }
-}
-
 const subordinateStrength: Record<string, number> = { 天馳星: 0.55, 天極星: 0.55, 天報星: 0.6, 天胡星: 0.6, 天庫星: 0.65, 天印星: 0.65, 天恍星: 0.7, 天堂星: 0.75, 天貴星: 0.8, 天南星: 0.85, 天禄星: 0.9, 天将星: 1 }
 
 export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata): ReportFactV2[] {
@@ -93,19 +84,22 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
   })
   const add = (value: Omit<ReportFactV2, 'id'>) => facts.push(makeFact(value))
 
-  const nayin = keywordSignal(input.nayin)
-  add({ system: '納音', lineage: 'stems', factor: `nayin:${input.nayin}`, ...nayin, polarity: 1, strength: 0.55, requiresBirthTime: false, signature: false,
+  const nayin = resolveNayin(input.nayin)
+  if (nayin) add({ system: '納音', lineage: 'stems', factor: `nayin:${input.nayin}`, ...nayin, polarity: 1, requiresBirthTime: false, signature: false,
     derivations: [{ key: 'year-pillar', weight: 1 }], canonicalSourceId: 'year-pillar', votesInConsensus: false })
+  else logUnmatched('nayin', input.nayin)
 
-  const sukuyo = keywordSignal(input.sukuyo)
-  add({ system: '宿曜', lineage: 'lunar', factor: `lunarMansion:${input.sukuyo}`, ...sukuyo, polarity: 1, strength: 0.7, requiresBirthTime: false, signature: false,
+  const sukuyo = resolveSukuyo(input.sukuyo)
+  if (sukuyo) add({ system: '宿曜', lineage: 'lunar', factor: `lunarMansion:${input.sukuyo}`, ...sukuyo, polarity: 1, requiresBirthTime: false, signature: false,
     derivations: [{ key: 'lunar-date', weight: 1 }, { key: 'moon-longitude', weight: 0.6 }], canonicalSourceId: 'lunar-date', votesInConsensus: true })
+  else logUnmatched('sukuyo', input.sukuyo)
 
   const nakshatra = input.astrology?.vedic?.moonNakshatra
   if (nakshatra) {
-    const mapped = keywordSignal(nakshatra)
-    add({ system: 'インド占星術', lineage: 'ephemeris', factor: `moonNakshatra:${nakshatra}:pada:${input.astrology?.vedic?.moonPada ?? ''}`, ...mapped, polarity: 1, strength: 0.8, requiresBirthTime: false, signature: false,
+    const mapped = resolveNakshatra(nakshatra)
+    if (mapped) add({ system: 'インド占星術', lineage: 'ephemeris', factor: `moonNakshatra:${nakshatra}:pada:${input.astrology?.vedic?.moonPada ?? ''}`, ...mapped, polarity: 1, requiresBirthTime: false, signature: false,
       derivations: [{ key: 'moon-longitude', weight: 1 }, { key: 'solar-longitude', weight: 0.3 }], canonicalSourceId: 'moon-longitude', votesInConsensus: true })
+    else logUnmatched('nakshatra', nakshatra)
   }
 
   for (const [position, star] of Object.entries(input.sanmeiChart?.subordinateStars ?? {})) {
@@ -116,9 +110,12 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
 
   for (const palace of input.ziwei?.palaces ?? []) {
     for (const [index, star] of (palace.minorStars ?? []).entries()) {
-      add({ system: '紫微斗数', lineage: 'lunar', factor: `minorStar:${palace.name}:${index}:${star}`, axis: /官禄|財帛/.test(palace.name) ? 'domain-work' : /夫妻/.test(palace.name) ? 'domain-love' : 'relation', signal: keywordSignal(star).signal,
-        polarity: 0, strength: 0.45, requiresBirthTime: true, signature: false,
+      const mapped = resolveZiweiStar(star)
+      if (mapped) add({ system: '紫微斗数', lineage: 'lunar', factor: `minorStar:${palace.name}:${index}:${star}`, ...mapped,
+        axis: /官禄|財帛/.test(palace.name) ? 'domain-work' : /夫妻/.test(palace.name) ? 'domain-love' : mapped.axis,
+        polarity: 0, requiresBirthTime: true, signature: false,
         derivations: [{ key: 'lunar-date', weight: 1 }, { key: 'birth-time', weight: 1 }, { key: 'year-stem', weight: 0.4 }], canonicalSourceId: 'lunar-date+birth-time', votesInConsensus: true })
+      else logUnmatched('ziwei-minor', star)
     }
   }
 
@@ -126,9 +123,10 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
   if (western && input.birthTime) {
     for (const [factor, point, axis] of [['ascendant', western.ascendant, 'expression'], ['midheaven', western.midheaven, 'domain-work']] as const) {
       if (!point?.sign) continue
-      const mapped = keywordSignal(point.sign)
-      add({ system: '西洋占星術', lineage: 'ephemeris', factor: `${factor}:${point.sign}:${point.degree}`, axis, signal: mapped.signal, polarity: 1, strength: 0.75, requiresBirthTime: true, signature: false,
+      const mapped = SIGN_SPEC[point.sign]
+      if (mapped) add({ system: '西洋占星術', lineage: 'ephemeris', factor: `${factor}:${point.sign}:${point.degree}`, axis, signal: mapped.signal, polarity: 1, strength: 0.75, requiresBirthTime: true, signature: false,
         derivations: [{ key: 'solar-longitude', weight: 0.5 }, { key: 'birth-time', weight: 1 }, { key: 'birthplace', weight: 1 }], canonicalSourceId: factor, votesInConsensus: true })
+      else logUnmatched(factor, point.sign)
     }
   }
 

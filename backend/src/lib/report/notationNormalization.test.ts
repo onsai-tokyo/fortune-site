@@ -42,6 +42,7 @@ test('宿曜は内部単字へ正規化する', () => {
 test('紫微斗数は完全一致を優先して火星と鈴星を壊さない', () => {
   assert.strictEqual(resolveZiweiStar('火星'), ZIWEI_MINOR_MAPPING.火星)
   assert.strictEqual(resolveZiweiStar('鈴星'), ZIWEI_MINOR_MAPPING.鈴星)
+  assert.strictEqual(resolveZiweiStar('祿存'), ZIWEI_MINOR_MAPPING.禄存)
   assert.strictEqual(resolveZiweiStar('紫微星'), ZIWEI_MAJOR_MAPPING.紫微)
   assert.strictEqual(resolveZiweiStar('紫微'), ZIWEI_MAJOR_MAPPING.紫微)
 })

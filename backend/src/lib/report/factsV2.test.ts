@@ -24,7 +24,7 @@ function input(overrides: Partial<ReportInput> = {}): ReportInput {
     ziwei: { palaces: [{ name: '夫妻宮', majorStars: [{ name: '紫微', mutagen: '' }], minorStars: ['文曲'] }] } as NonNullable<ReportInput['ziwei']>,
     astrology: {
       western: { aspects: ['Mercury trine Moon'], ascendant: { sign: '天秤座', degree: 12 }, midheaven: { sign: '蟹座', degree: 4 } },
-      vedic: { moonNakshatra: 'Revati', moonPada: 2 },
+      vedic: { moonNakshatra: 'レーヴァティー', moonPada: 2 },
     } as NonNullable<ReportInput['astrology']>,
     ...overrides,
   }
@@ -88,4 +88,28 @@ test('PR-2aは配列位置ではなく内容からsignature keyを作る', () =>
   assert.ok(facts.some(fact => fact.signal === 'distortion-冲-日支と月支'))
   assert.ok(facts.some(fact => fact.signal === 'mutagen-夫妻宮-天相-化忌'))
   assert.equal(facts.some(fact => /^tension-astrology-\d+$/.test(fact.signal)), false)
+})
+
+test('PR-2a-2は固有名詞を明示表で解決しindependenceへフォールバックしない', () => {
+  const source = input({ nayin: '楊柳木', sukuyo: '心宿' })
+  const facts = buildReportFactsV2(source, extractReportMetadata(source))
+  assert.ok(facts.some(fact => fact.factor === 'nayin:楊柳木' && fact.signal === 'adaptability'))
+  assert.ok(facts.some(fact => fact.factor === 'lunarMansion:心宿' && fact.signal === 'insight'))
+  assert.ok(facts.some(fact => fact.factor.includes('moonNakshatra:レーヴァティー') && fact.signal === 'sensitivity'))
+  assert.ok(facts.some(fact => fact.factor.includes('minorStar:夫妻宮:0:文曲') && fact.signal === 'expression'))
+})
+
+test('PR-2a-2は未知名称でFactを捏造しない', () => {
+  const warnings: unknown[][] = []
+  const original = console.warn
+  console.warn = (...args: unknown[]) => { warnings.push(args) }
+  try {
+    const source = input({ nayin: '未知納音', sukuyo: '未知宿', astrology: { vedic: { moonNakshatra: '未知ナクシャトラ' } } as NonNullable<ReportInput['astrology']> })
+    const facts = buildReportFactsV2(source, extractReportMetadata(source))
+    assert.equal(facts.some(fact => /未知/.test(fact.factor)), false)
+    assert.equal(facts.some(fact => /未知/.test(fact.factor) && fact.signal === 'independence'), false)
+    assert.equal(warnings.length, 3)
+  } finally {
+    console.warn = original
+  }
 })

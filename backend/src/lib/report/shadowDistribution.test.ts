@@ -75,12 +75,23 @@ function inputFor(index: number): ReportInput {
 }
 
 test('PR-1: 100件のシャドー経路で天体Fact追加前後を評価する', () => {
-  const samples = Array.from({ length: 100 }, (_, index) => {
-    const input = inputFor(index)
-    const facts = buildReportFactsV2(input, extractReportMetadata(input))
-    assert.equal(!input.birthTime && facts.some(fact => fact.requiresBirthTime), false)
-    return { before: evaluate(beforePr1(facts)), after: evaluate(facts) }
-  })
+  const unmatched: unknown[][] = []
+  const originalWarn = console.warn
+  console.warn = (...args: unknown[]) => {
+    if (args[0] === 'Signal mapping unmatched') unmatched.push(args)
+    else originalWarn(...args)
+  }
+  let samples: Array<{ before: Result; after: Result }>
+  try {
+    samples = Array.from({ length: 100 }, (_, index) => {
+      const input = inputFor(index)
+      const facts = buildReportFactsV2(input, extractReportMetadata(input))
+      assert.equal(!input.birthTime && facts.some(fact => fact.requiresBirthTime), false)
+      return { before: evaluate(beforePr1(facts)), after: evaluate(facts) }
+    })
+  } finally {
+    console.warn = originalWarn
+  }
   const before = summarize(samples.map(sample => sample.before))
   const after = summarize(samples.map(sample => sample.after))
   console.info('PR-1 shadow distribution', { before, after, factMedianIncrease: (after.factMedian ?? 0) - (before.factMedian ?? 0) })
@@ -93,6 +104,7 @@ test('PR-1: 100件のシャドー経路で天体Fact追加前後を評価する'
   assert.equal(after.findingZeroCount, 0)
   assert.ok((after.assignedChapterMedian ?? 0) >= 7)
   assert.ok(after.duplicateFindingKeyPairs <= 5)
+  assert.deepEqual(unmatched, [])
 })
 
 test('PR-1: 同年10件で外惑星がfindingを支配しない', () => {
