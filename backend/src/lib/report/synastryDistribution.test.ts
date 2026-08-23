@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { BIRTH_FIXTURES, buildFixtureReportInput } from './fixtures.js'
 import { buildDeterministicCompatibilityReport } from './deterministicCompatibility.js'
-import { buildSynastryFacts, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeRelationScores, type RelationAxis } from './synastryFacts.js'
 
 const pairs = Array.from({ length: 20 }, (_, index) => ({
   self: buildFixtureReportInput(BIRTH_FIXTURES[index]),
@@ -37,6 +37,10 @@ test('PR-4相性レポートは20組で同じ内容へ収束せず関係ラベ�
     const report = buildDeterministicCompatibilityReport(self, partner, 'romantic', label)
     assert.equal(report.cards.length, 8)
     assert.ok(report.cards.every(card => card.scope === 'couple' && card.generator === 'deterministic'))
+    const chapterAxes = new Set(report.cards.flatMap(card => (card.metadataRefs ?? []).filter(ref => ref.startsWith('synastry.axis.'))))
+    const availableAxes = new Set(buildSynastryFacts(self, partner).map(fact => fact.axis))
+    assert.ok(chapterAxes.size >= Math.min(4, availableAxes.size))
+    assert.ok([...chapterAxes].every(ref => availableAxes.has(ref.replace('synastry.axis.', '') as RelationAxis)))
     const text = report.cards.flatMap(card => [card.title, card.summary, ...card.pages.map(page => page.text)]).join('\n')
     if (label === '片思い') assert.doesNotMatch(text, /お付き合い中|交際中/)
     return report.cards.map(card => `${card.title}\n${card.summary}`).join('\n')

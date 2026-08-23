@@ -1,6 +1,6 @@
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
-import { buildSynastryFacts, computeRelationScores, type RelationAxis } from './synastryFacts.js'
+import { buildSynastryFacts, computeRelationScores, type RelationAxis, type RelationScore } from './synastryFacts.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -16,6 +16,7 @@ interface PairContext {
   difference: string
   evidence: ReportCard['evidence']
   strongestAxis: RelationAxis
+  relationScores: RelationScore[]
 }
 
 const stemStyle: Record<string, string> = {
@@ -57,15 +58,60 @@ function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType
       { family: '相手の命式', system: '複数占術の統合', detail: `day=${partnerDay}; lifePath=${partnerNumber}; sukuyo=${text(partner.sukuyo)}` },
       ...synastry.slice(0, 8).map(fact => ({ family: '二人の照合', system: fact.kind, detail: `${fact.axis}:${fact.detail}` })),
     ],
-    strongestAxis,
+    strongestAxis, relationScores,
   }
 }
 
-function pagesFor(id: string, context: PairContext): ReportCardPage[] {
+const chapterAxes: Record<string, readonly RelationAxis[]> = {
+  'compat-overview': ['values', 'communication', 'safety', 'growth'],
+  'compat-beginning': ['attraction', 'communication', 'fun', 'safety'],
+  'compat-attraction': ['attraction', 'binding', 'depth', 'fun'],
+  'compat-caution': ['conflict', 'values', 'communication', 'depth'],
+  'compat-friction': ['conflict', 'communication', 'values', 'growth'],
+  'compat-repair': ['repair', 'safety', 'communication', 'depth'],
+  'compat-growth': ['growth', 'values', 'repair', 'fun'],
+  'compat-marriage': ['domestic', 'binding', 'safety', 'values'],
+}
+
+function axisForChapter(id: string, context: PairContext): RelationAxis {
+  const preferred = new Set(chapterAxes[id] ?? [])
+  return context.relationScores
+    .filter(score => preferred.has(score.key) && score.confidence > 0)
+    .sort((a, b) => b.confidence - a.confidence || Math.abs(b.value - 0.5) - Math.abs(a.value - 0.5) || a.key.localeCompare(b.key))[0]?.key
+    ?? context.strongestAxis
+}
+
+function chapterAxisPlan(ids: readonly string[], context: PairContext): Map<string, RelationAxis> {
+  const available = context.relationScores
+    .filter(score => score.confidence > 0)
+    .sort((a, b) => b.confidence - a.confidence || Math.abs(b.value - 0.5) - Math.abs(a.value - 0.5) || a.key.localeCompare(b.key))
+  const used = new Set<RelationAxis>()
+  const plan = new Map<string, RelationAxis>()
+  for (const id of ids) {
+    const preferred = new Set(chapterAxes[id] ?? [])
+    const selected = available.find(score => preferred.has(score.key) && !used.has(score.key))
+      ?? available.find(score => !used.has(score.key))
+      ?? available.find(score => preferred.has(score.key))
+    const axis = selected?.key ?? axisForChapter(id, context)
+    plan.set(id, axis)
+    used.add(axis)
+  }
+  return plan
+}
+
+const axisLead: Record<RelationAxis, string> = {
+  attraction: '惹かれる力が先に動く', depth: '言葉の奥まで感じ取る', communication: '言葉の選び方が距離を変える',
+  fun: '一緒に動くほど楽しさが育つ', safety: '戻れる安心が二人を支える', values: '大切な基準を分かち合う',
+  growth: '違いが次の成長を連れてくる', domestic: '暮らしのリズムが関係を整える', conflict: '進む速度の違いが表に出る',
+  repair: 'すれ違った後の戻り方を覚える', binding: '節目を越えるほど結びつきが深まる',
+}
+
+function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis): ReportCardPage[] {
   const frame = relationshipFrame(context.relationshipLabel)
   const relation = context.relationshipLabel
   const axisCore: Record<RelationAxis, string> = { attraction: '互いの違いが強い魅力として動きやすい二人', depth: '言葉になる前の気持ちまで受け取りやすい二人', communication: '言葉の選び方が関係の鍵になる二人', fun: '一緒に動くほど自然な楽しさが育つ二人', safety: '戻れる安心を作るほど深まる二人', values: '大切にする基準を共有しやすい二人', growth: '違いを通して新しい自分へ進む二人', domestic: '暮らしのリズムを整えるほど安定する二人', conflict: '衝突を調整へ変えるほど強くなる二人', repair: '拗れたあとに戻る方法を育てる二人', binding: '節目を越えるたび結びつきが深まる二人' }
-  const core = axisCore[context.strongestAxis] ?? (context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人')
+  const chapterAxis = resolvedAxis ?? axisForChapter(id, context)
+  const core = axisCore[chapterAxis] ?? (context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人')
   const chapter: Record<string, { focus: string; action: string }> = {
     'compat-overview': { focus: core, action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
     'compat-beginning': { focus: `${relation}として距離が縮まる入口`, action: '短い会話の回数を増やし、相手の返事を急いで意味づけない' },
@@ -101,8 +147,13 @@ const specs = [
 export function buildDeterministicCompatibilityReport(self: unknown, partner: unknown, relationshipType: RelationshipType, relationshipLabel: string): StructuredReport {
   const context = pairContext(self, partner, relationshipType, relationshipLabel)
   const selected = relationshipType === 'romantic' ? specs : specs.filter(([id]) => id !== 'compat-marriage')
-  const cards = selected.map(([id, title]) => withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title,
+  const axisPlan = chapterAxisPlan(selected.map(([id]) => id), context)
+  const cards = selected.map(([id, title]) => {
+    const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
+    const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
+    return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
     summary: `${relationshipLabel}の二人は、${context.shared}を足場にしながら、${context.difference}を扱う関係です。`, tags: ['相性', relationshipLabel], period: null,
-    pages: pagesFor(id, context), evidence: context.evidence, metadataRefs: ['self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber'] }, 'deterministic'))
+    pages: pagesFor(id, context, chapterAxis), evidence: context.evidence, metadataRefs: ['self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`] }, 'deterministic')
+  })
   return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-deterministic-v1')
 }
