@@ -19,11 +19,18 @@ export interface TraitScoreRuleValidationResult {
 }
 
 const SOURCE_PATTERN = /^(性格|時期)§([1-9]\d*)$/
+const MARKDOWN_SECTION_PATTERN = /^#\s+([1-9]\d*)\.\s+.+$/gm
 
 export function parseTraitScoreRuleSource(source: string): ParsedRuleSource | null {
   const match = SOURCE_PATTERN.exec(source.trim())
   if (!match) return null
   return { document: match[1] as RuleSourceDocument, section: Number(match[2]) }
+}
+
+export function extractRuleSourceSections(markdown: string): ReadonlySet<number> {
+  const sections = new Set<number>()
+  for (const match of markdown.matchAll(MARKDOWN_SECTION_PATTERN)) sections.add(Number(match[1]))
+  return sections
 }
 
 const stableRuleIdentity = (rule: TraitScoreRule): string => JSON.stringify({

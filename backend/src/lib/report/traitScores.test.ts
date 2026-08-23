@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import type { ReportFactV2 } from './factsV2.js'
 import { bootstrapTraitScoreScale, calibrateTraitScoreScale } from './traitScoreScale.js'
 import {
   ALL_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact,
   normalizeTraitScore, traitScoreConfidence, type TraitScoreRule,
 } from './traitScores.js'
-import { parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
+import { extractRuleSourceSections, parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
 
 const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
   id: 'fact-a', system: '西洋占星術', lineage: 'ephemeris', factor: 'planet:月:魚座', axis: 'relation', signal: 'sensitivity',
@@ -93,8 +94,11 @@ test('PR-2cルールの空matcher・ゼロweight・完全重複・不足スコ�
 })
 
 test('PR-2c確認済みルールは実在する根拠節を参照し許可された重みだけを使う', () => {
+  const sourceDocument = readFileSync(new URL('./rules/PERSONALITY_RULES.md', import.meta.url), 'utf8')
+  const availableSections = extractRuleSourceSections(sourceDocument)
+  assert.deepEqual([...availableSections], [1, 2, 7, 8])
   const result = validateTraitScoreRules(TRAIT_SCORE_RULES, {
-    availableSections: { 性格: new Set([1, 2, 7, 8]) },
+    availableSections: { 性格: availableSections },
     requiredScores: ['social_extraversion', 'private_introversion', 'attraction_respect', 'attraction_status'],
   })
   assert.deepEqual(result.errors, [])
