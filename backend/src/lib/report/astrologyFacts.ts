@@ -155,14 +155,17 @@ function balanceFacts(planets: Planet[], points: Array<{ sign?: string }>): Fact
   return facts
 }
 
-const SPECIAL_ASPECTS: Record<string, { axis: FactAxis; signal: string; hardOnly?: boolean }> = {
-  '太陽-月': { axis: 'tension', signal: 'integration', hardOnly: true },
-  '月-火星': { axis: 'shadow', signal: 'transformation' }, '月-天王星': { axis: 'shadow', signal: 'transformation' },
-  '月-冥王星': { axis: 'shadow', signal: 'transformation' }, '土星-金星': { axis: 'domain-love', signal: 'responsibility', hardOnly: true },
-  '冥王星-金星': { axis: 'domain-love', signal: 'transformation' }, '木星-水星': { axis: 'expression', signal: 'communication' },
-}
-
 function aspectKey(a: string, b: string) { return [a, b].sort((left, right) => left.localeCompare(right, 'ja')).join('-') }
+
+const SPECIAL_ASPECTS: Record<string, { axis: FactAxis; signal: string; hardOnly?: boolean }> = {
+  [aspectKey('太陽', '月')]: { axis: 'tension', signal: 'integration', hardOnly: true },
+  [aspectKey('月', '火星')]: { axis: 'shadow', signal: 'transformation' },
+  [aspectKey('月', '天王星')]: { axis: 'shadow', signal: 'transformation' },
+  [aspectKey('月', '冥王星')]: { axis: 'shadow', signal: 'transformation' },
+  [aspectKey('土星', '金星')]: { axis: 'domain-love', signal: 'responsibility', hardOnly: true },
+  [aspectKey('冥王星', '金星')]: { axis: 'domain-love', signal: 'transformation' },
+  [aspectKey('木星', '水星')]: { axis: 'expression', signal: 'communication' },
+}
 
 function aspectFacts(aspects: string[]): FactValue[] {
   return aspects.flatMap(text => {

@@ -8,6 +8,8 @@ import { buildReportFactsV2 } from './factsV2.js'
 import { buildReportFindingsV2 } from './findingsV2.js'
 import { extractReportMetadata } from './metadata.js'
 import { assignableChapterCount, median } from './shadowEvaluation.js'
+import { bootstrapTraitScoreScale } from './traitScoreScale.js'
+import { ALL_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact } from './traitScores.js'
 
 const pr1Factor = /^(?:planet:|vedic-planet:|elementDominant:|elementMissing:|modalityDominant:|structuredAspect:|house:)/
 const beforePr1 = (facts: ReturnType<typeof buildReportFactsV2>) => facts.filter(fact => !pr1Factor.test(fact.factor))
@@ -142,4 +144,36 @@ test('PR-1: 時刻なしは時刻依存・ハウスFactを含まない', () => {
     timedFactCount: timedFacts.length, untimedFactCount: untimedFacts.length,
     timedFindingCount: buildReportFindingsV2(timedFacts).length, untimedFindingCount: buildReportFindingsV2(untimedFacts).length,
   })
+})
+
+const standardDeviation = (values: number[]) => {
+  if (values.length === 0) return 0
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length)
+}
+
+test('PR-2c: 確認済みルールを100件でシャドー計測する', () => {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const samples = Array.from({ length: 100 }, (_, index) => {
+    const input = inputFor(index)
+    const facts = buildReportFactsV2(input, extractReportMetadata(input))
+    return { facts, scores: computeTraitScores(facts, TRAIT_SCORE_RULES, scale) }
+  })
+  const implementedKeys = [...new Set(TRAIT_SCORE_RULES.map(rule => rule.score))]
+  const distribution = Object.fromEntries(implementedKeys.map(key => {
+    const scores = samples.map(sample => sample.scores[key])
+    const values = scores.map(score => score.value)
+    return [key, {
+      standardDeviation: Number(standardDeviation(values).toFixed(3)),
+      middleBandRatio: Number((values.filter(value => value >= 0.4 && value <= 0.6).length / values.length).toFixed(3)),
+      nonZeroRatio: Number((scores.filter(score => score.contributingFacts.length > 0).length / scores.length).toFixed(3)),
+      confidenceMean: Number((scores.reduce((sum, score) => sum + score.confidence, 0) / scores.length).toFixed(3)),
+    }]
+  }))
+  const unmatchedRules = TRAIT_SCORE_RULES.filter(rule => !samples.some(sample => sample.facts.some(fact => matchesTraitFact(fact, rule.match))))
+    .map(rule => `${rule.score}:${rule.source}:${JSON.stringify(rule.match)}`)
+
+  console.info('PR-2c confirmed-rule shadow distribution', { ruleCount: TRAIT_SCORE_RULES.length, implementedKeys, distribution, unmatchedRules })
+  assert.equal(samples.length, 100)
+  assert.ok(implementedKeys.every(key => samples.some(sample => sample.scores[key].contributingFacts.length > 0)))
 })

@@ -37,6 +37,19 @@ test('アスペクト文字列を構造化し、外惑星同士は除外する',
   assert.equal(facts.some(fact => fact.factor.includes('天王星:コンジャンクション:海王星')), false)
 })
 
+test('特別アスペクトは天体名の入力順に依存せず同じsignalを返す', () => {
+  const western = source().astrology!.western!
+  const facts = extractAstrologyFacts(source({
+    astrology: { ...source().astrology!, western: { ...western, aspects: [
+      '金星と土星のスクエア（オーブ1.0°）',
+      '土星と金星のオポジション（オーブ1.5°）',
+    ] } },
+  }))
+  const relevant = facts.filter(fact => fact.factor.startsWith('structuredAspect:'))
+  assert.equal(relevant.length, 2)
+  assert.ok(relevant.every(fact => fact.signal === 'responsibility' && fact.axis === 'domain-love'))
+})
+
 test('元素の突出と欠落をFact化する', () => {
   const input = source({
     astrology: {
