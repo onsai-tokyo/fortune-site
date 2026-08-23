@@ -70,6 +70,19 @@ test('同じタイトルが離れた年に再登場しても鑑定書全体で�
   assert.ok(cards.every((card, index) => cards.slice(0, index).every(previous => !titlesAreSimilar(previous.title, card.title))))
 })
 
+test('同じ事象が4回続いても差し替え後のタイトル同士を重複させない', () => {
+  const repeated: ReportInput = { ...input, timing: { ...input.timing!, annual: [
+    { year: 2024, ageRange: '26歳', kanshi: '甲辰', tenGod: '正官', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+    { year: 2025, ageRange: '27歳', kanshi: '乙巳', tenGod: '偏印', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+    { year: 2027, ageRange: '29歳', kanshi: '丁未', tenGod: '傷官', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+  ] } }
+  const cards = buildTurningPointCards(repeated, 2026)
+  assert.equal(cards.length, 4)
+  assert.equal(new Set(cards.map(card => card.title)).size, cards.length)
+  assert.ok(cards.every((card, index) => cards.slice(0, index).every(previous => !titlesAreSimilar(previous.title, card.title))))
+})
+
 test('別々の語句を連結して根拠のない別離フラグを作らない', () => {
   const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [
     { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9,
