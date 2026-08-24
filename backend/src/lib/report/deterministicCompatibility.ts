@@ -131,7 +131,10 @@ function effectiveRelationScores(id: string, context: PairContext): RelationScor
   const pairScores = pairScoresForChapter(id, context).filter(score => score.confidence > 0)
   return context.relationScores.map(relation => {
     const related = pairScores.filter(score => pairScoreAxes[score.key].includes(relation.key))
-    const profileKey = relation.key === 'communication' ? 'conversational_flow' : relation.key === 'depth' ? 'emotional_intimacy' : null
+    const profileKey = relation.key === 'communication' ? 'conversational_flow'
+      : relation.key === 'depth' ? 'emotional_intimacy'
+      : relation.key === 'repair' ? 'repair_capacity'
+      : null
     const profile = profileKey ? context.compatibilityProfile.find(score => score.key === profileKey && score.confidence > 0) : undefined
     if (!related.length && !profile) return relation
     const pairWeight = related.reduce((sum, score) => sum + score.confidence, 0)
@@ -238,8 +241,9 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
   const cards = selected.map(([id, title]) => {
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
     const chapterScores = pairScoresForChapter(id, context)
-    const chapterProfileKeys: CompatibilityProfileScore['key'][] = ['compat-attraction', 'compat-caution', 'compat-repair'].includes(id)
-      ? ['emotional_intimacy']
+    const chapterProfileKeys: CompatibilityProfileScore['key'][] = id === 'compat-repair'
+      ? ['repair_capacity', 'emotional_intimacy']
+      : ['compat-attraction', 'compat-caution'].includes(id) ? ['emotional_intimacy']
       : ['compat-beginning', 'compat-friction'].includes(id) ? ['conversational_flow'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`

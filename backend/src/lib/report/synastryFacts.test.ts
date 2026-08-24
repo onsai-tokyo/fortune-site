@@ -47,6 +47,19 @@ test('相性§43は出生時刻なしでも感情親密度を返すが確信度�
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const repair = computeCompatibilityProfile(facts).find(score => score.key === 'repair_capacity')!
+  assert.ok(repair.contributingFacts.length > 0)
+  assert.ok(repair.confidence > 0)
+  assert.ok(repair.contributingFacts.every(id => {
+    const signal = facts.find(fact => fact.id === id)?.signal ?? ''
+    return /木星|月|金星|水星/.test(signal) && !signal.includes('火星')
+  }))
+})
+
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
   const withArray = {
     ...self,

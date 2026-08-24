@@ -18,7 +18,7 @@ export interface SynastryFact {
 }
 
 export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
-export type CompatibilityProfileKey = 'conversational_flow' | 'emotional_intimacy'
+export type CompatibilityProfileKey = 'conversational_flow' | 'emotional_intimacy' | 'repair_capacity'
 export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
@@ -36,6 +36,7 @@ const pairKey = (left: string, right: string) => [canonicalPlanet(left), canonic
 const FLOW_PAIRS = new Set(['水星:水星', '太陽:水星', '水星:金星', '木星:水星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:月', '太陽:月', '月:金星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
+const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
@@ -108,6 +109,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const conversationSigned = conversation.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
+  const repairSigned = repair.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
   return [{
     key: 'conversational_flow',
@@ -119,6 +122,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.85, emotional.length * 0.18) * timeConfidenceFactor).toFixed(3)),
     contributingFacts: emotional.map(fact => fact.id),
+  }, {
+    key: 'repair_capacity',
+    value: Number((repair.length ? 1 / (1 + Math.exp(-repairSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.85, repair.length * 0.18).toFixed(3)),
+    contributingFacts: repair.map(fact => fact.id),
   }]
 }
 
