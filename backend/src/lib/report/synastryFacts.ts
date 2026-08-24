@@ -18,7 +18,16 @@ export interface SynastryFact {
 }
 
 export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
-export type CompatibilityProfileKey = 'conversational_flow' | 'emotional_intimacy' | 'repair_capacity' | 'emotional_safety' | 'conflict_intensity' | 'growth_compatibility' | 'value_alignment'
+export const COMPATIBILITY_PROFILE_KEYS = [
+  'conversational_flow',
+  'emotional_intimacy',
+  'repair_capacity',
+  'emotional_safety',
+  'conflict_intensity',
+  'growth_compatibility',
+  'value_alignment',
+] as const
+export type CompatibilityProfileKey = typeof COMPATIBILITY_PROFILE_KEYS[number]
 export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}

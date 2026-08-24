@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { assessDeterministicCutoverReadiness } from './deterministicCutoverReadiness.js'
+import { assessCompatibilityCutoverReadiness, assessDeterministicCutoverReadiness, REQUIRED_COMPATIBILITY_SCORE_KEYS } from './deterministicCutoverReadiness.js'
 import { auditRuleSourceDocument } from './traitScoreRuleValidation.js'
 import { REQUIRED_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, type TraitScoreRule } from './traitScores.js'
+import { COMPATIBILITY_PROFILE_KEYS } from './synastryFacts.js'
 
 const sections = (count: number) => Array.from({ length: count }, (_, index) => `# ${index + 1}. source`).join('\n\n')
 
@@ -24,6 +25,20 @@ test('相性原典は全58節に欠番・重複がない', () => {
   assert.equal(audit.complete, true)
   assert.deepEqual(audit.missingSections, [])
   assert.deepEqual(audit.duplicateSections, [])
+})
+
+test('相性の切替診断を本人鑑定から分離し主要39スコアで判定する', () => {
+  const compatibility = readFileSync(new URL('./rules/COMPATIBILITY_RULES.md', import.meta.url), 'utf8')
+  const current = assessCompatibilityCutoverReadiness(compatibility, COMPATIBILITY_PROFILE_KEYS)
+  assert.equal(current.ready, false)
+  assert.equal(current.compatibilitySections, 58)
+  assert.equal(current.coveredScores, 7)
+  assert.equal(current.requiredScores, 39)
+  assert.deepEqual(current.reasons, ['相性の主要スコアが未完了（7/39種）'])
+
+  const complete = assessCompatibilityCutoverReadiness(compatibility, REQUIRED_COMPATIBILITY_SCORE_KEYS)
+  assert.equal(complete.ready, true)
+  assert.deepEqual(complete.reasons, [])
 })
 
 test('全原典と全スコアの根拠が揃った場合だけ切替可能にする', () => {
