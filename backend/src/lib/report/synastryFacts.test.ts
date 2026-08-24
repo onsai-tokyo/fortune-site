@@ -129,6 +129,23 @@ test('相性§25は暮らしの相性を月・金星から算出し感情親密�
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('相性§3・§26は新体験の相性を木星・天王星と個人天体の接触から算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '天王星', longitude: 70 }] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Sun', longitude: 10 }, { name: 'Moon', longitude: 130 }, { name: 'Mercury', longitude: 70 },
+    { name: 'Venus', longitude: 190 }, { name: 'Mars', longitude: 250 }, { name: 'Jupiter', longitude: 10 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'novelty_compatibility')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'novelty_compatibility')!
+  assert.ok(unknown.contributingFacts.length >= 5)
+  assert.equal(new Set(unknown.contributingFacts).size, unknown.contributingFacts.length)
+  assert.ok(unknown.contributingFacts.every(id => /木星|天王星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(unknown.contributingFacts.every(id => !/木星-木星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence < known.confidence)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
