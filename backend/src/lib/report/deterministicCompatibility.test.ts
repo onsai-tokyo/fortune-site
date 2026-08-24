@@ -64,6 +64,7 @@ test('個人情報を渡さず集計済みの二人比較スコアだけを根�
   assert.deepEqual(bundle.pair.map(score => score.key), [
     'compatibility_transparency', 'compatibility_independence', 'compatibility_lifestyle', 'compatibility_value_match',
   ])
+  assert.equal(bundle.profile[0].key, 'conversational_flow')
   const report = buildDeterministicCompatibilityReport(selfInput, partnerInput, 'romantic', '片思い', bundle)
   const serialized = JSON.stringify(report)
   assert.doesNotMatch(serialized, /1995-02-20|03:02|名古屋市/)

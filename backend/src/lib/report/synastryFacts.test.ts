@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeCompatibilityProfile, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -13,6 +13,22 @@ test('PR-4 Synastry Factは複数系統を統合し再現可能', () => {
   const scores = computeRelationScores(first)
   assert.equal(scores.length, 11)
   assert.ok(scores.every(score => score.value >= 0 && score.value <= 1))
+})
+
+test('相性§44は会話の流れと心の深さを別スコアにする', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '水星', longitude: 10 }, { name: '月', longitude: 40 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Mercury', longitude: 10 }, { name: 'Moon', longitude: 12 }, { name: 'Jupiter', longitude: 70 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  assert.ok(facts.some(fact => fact.signal.startsWith('水星-水星-') && fact.axis === 'communication'))
+  assert.ok(facts.some(fact => /^(月-水星|水星-月)-/.test(fact.signal) && fact.axis === 'depth'))
+  const profile = computeCompatibilityProfile(facts)
+  assert.equal(profile[0].key, 'conversational_flow')
+  assert.ok(profile[0].confidence > 0)
+  assert.ok(profile[0].contributingFacts.every(id => facts.find(fact => fact.id === id)?.axis === 'communication'))
 })
 
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {

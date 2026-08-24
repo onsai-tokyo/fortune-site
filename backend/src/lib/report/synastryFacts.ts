@@ -18,6 +18,8 @@ export interface SynastryFact {
 }
 
 export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
+export type CompatibilityProfileKey = 'conversational_flow'
+export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
 const text = (value: unknown) => typeof value === 'string' ? value : ''
@@ -28,8 +30,13 @@ const STEM_ELEMENT: Record<string, string> = { 甲: 'wood', 乙: 'wood', 丙: 'f
 const GENERATES: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' }
 const CONTROLS: Record<string, string> = { wood: 'earth', earth: 'water', water: 'fire', fire: 'metal', metal: 'wood' }
 const SIGN_INDEX: Record<string, number> = { 牡羊座: 0, Aries: 0, 牡牛座: 1, Taurus: 1, 双子座: 2, Gemini: 2, 蟹座: 3, Cancer: 3, 獅子座: 4, Leo: 4, 乙女座: 5, Virgo: 5, 天秤座: 6, Libra: 6, 蠍座: 7, Scorpio: 7, 射手座: 8, Sagittarius: 8, 山羊座: 9, Capricorn: 9, 水瓶座: 10, Aquarius: 10, 魚座: 11, Pisces: 11 }
+const PLANET_NAME: Record<string, string> = { Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星' }
+const canonicalPlanet = (name: string) => PLANET_NAME[name] ?? name
+const pairKey = (left: string, right: string) => [canonicalPlanet(left), canonicalPlanet(right)].sort().join(':')
+const FLOW_PAIRS = new Set(['水星:水星', '太陽:水星', '水星:金星', '木星:水星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
+const DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:月', '太陽:月', '月:金星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
 
-function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.axis, value.signal, value.detail]), ...value }) }
+function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
 function planetMap(person: JsonRecord): Map<string, number> {
   const rawPlanets = record(record(person.astrology).western).planets
@@ -81,15 +88,28 @@ export function buildSynastryFacts(selfValue: unknown, partnerValue: unknown): S
   const selfSukuyo = text(self.sukuyo).replace(/宿$/, ''); const partnerSukuyo = text(partner.sukuyo).replace(/宿$/, '')
   if (selfSukuyo && partnerSukuyo) add(result, { kind: 'sukuyo', selfFactId: `sukuyo:${selfSukuyo}`, partnerFactId: `sukuyo:${partnerSukuyo}`, axis: selfSukuyo === partnerSukuyo ? 'depth' : 'repair', signal: selfSukuyo === partnerSukuyo ? 'emotional-recognition' : 'different-recovery', polarity: selfSukuyo === partnerSukuyo ? 1 : 0, strength: selfSukuyo === partnerSukuyo ? 0.85 : 0.55, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfSukuyo}:${partnerSukuyo}` })
   const selfPlanets = planetMap(self); const partnerPlanets = planetMap(partner)
-  const personal = ['太陽', '月', '水星', '金星', '火星', 'Sun', 'Moon', 'Mercury', 'Venus', 'Mars']
+  const relevant = new Set(['太陽', '月', '水星', '金星', '火星', '木星', '土星', '天王星', '冥王星'])
   for (const [selfName, selfLongitude] of selfPlanets) for (const [partnerName, partnerLongitude] of partnerPlanets) {
-    if (!personal.includes(selfName) || !personal.includes(partnerName)) continue
+    if (!relevant.has(canonicalPlanet(selfName)) || !relevant.has(canonicalPlanet(partnerName))) continue
     const found = aspect(selfLongitude, partnerLongitude)
     if (!found) continue
-    const axis: RelationAxis = /水星|Mercury/.test(`${selfName}${partnerName}`) ? 'communication' : /金星|火星|Venus|Mars/.test(`${selfName}${partnerName}`) ? 'attraction' : found.axis
-    add(result, { kind: 'cross-aspect', selfFactId: `planet:${selfName}`, partnerFactId: `planet:${partnerName}`, axis, signal: `${selfName}-${partnerName}-${found.name}`, polarity: found.polarity, strength: found.strength, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfName}:${partnerName}:${found.name}` })
+    const planets = pairKey(selfName, partnerName)
+    const axis: RelationAxis = FLOW_PAIRS.has(planets) ? 'communication' : DEPTH_PAIRS.has(planets) ? 'depth' : /金星|火星/.test(planets) ? 'attraction' : found.axis
+    add(result, { kind: 'cross-aspect', selfFactId: `planet:${canonicalPlanet(selfName)}`, partnerFactId: `planet:${canonicalPlanet(partnerName)}`, axis, signal: `${planets.replace(':', '-')}-${found.name}`, polarity: found.polarity, strength: found.strength, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${planets}:${found.name}` })
   }
   return result.sort((a, b) => b.strength - a.strength || a.id.localeCompare(b.id))
+}
+
+/** 相性§44。会話の流れだけを算出し、月・冥王星による深い理解とは分離する。 */
+export function computeCompatibilityProfile(facts: SynastryFact[]): CompatibilityProfileScore[] {
+  const contributors = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'communication' && FLOW_PAIRS.has(fact.signal.split('-').slice(0, 2).sort().join(':')))
+  const signed = contributors.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  return [{
+    key: 'conversational_flow',
+    value: Number((contributors.length ? 1 / (1 + Math.exp(-signed)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.9, contributors.length * 0.18).toFixed(3)),
+    contributingFacts: contributors.map(fact => fact.id),
+  }]
 }
 
 export function computeRelationScores(facts: SynastryFact[]): RelationScore[] {
