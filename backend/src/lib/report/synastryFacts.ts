@@ -18,7 +18,7 @@ export interface SynastryFact {
 }
 
 export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
-export type CompatibilityProfileKey = 'conversational_flow' | 'emotional_intimacy' | 'repair_capacity' | 'emotional_safety' | 'conflict_intensity'
+export type CompatibilityProfileKey = 'conversational_flow' | 'emotional_intimacy' | 'repair_capacity' | 'emotional_safety' | 'conflict_intensity' | 'growth_compatibility'
 export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
@@ -39,6 +39,7 @@ const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星',
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '木星:月'].map(value => value.split(':').sort().join(':')))
 const CONFLICT_INTENSITY_PAIRS = new Set(['太陽:火星', '火星:火星', '水星:火星', '月:火星'].map(value => value.split(':').sort().join(':')))
+const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
@@ -120,6 +121,9 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     && /-(square|opposition)$/.test(fact.signal))
   const conflictStrength = conflict.reduce((sum, fact) => sum + fact.strength, 0)
   const conflictHasMoon = conflict.some(fact => pairFromSignal(fact).includes('月'))
+  const growth = facts.filter(fact => fact.kind === 'cross-aspect' && GROWTH_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const growthSigned = growth.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const growthHasMoon = growth.some(fact => pairFromSignal(fact).includes('月'))
   const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
   return [{
     key: 'conversational_flow',
@@ -146,6 +150,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((conflict.length ? 1 - Math.exp(-conflictStrength) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.7, conflict.length * 0.16) * (conflictHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
     contributingFacts: conflict.map(fact => fact.id),
+  }, {
+    key: 'growth_compatibility',
+    value: Number((growth.length ? 1 / (1 + Math.exp(-growthSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.7, growth.length * 0.16) * (growthHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: growth.map(fact => fact.id),
   }]
 }
 

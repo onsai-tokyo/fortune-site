@@ -85,6 +85,18 @@ test('衝突強度は太陽・水星・火星のハードな接触だけを部�
   assert.ok(conflict.contributingFacts.every(id => /square|opposition/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
 })
 
+test('相性§45は時刻不要の木星接触だけで共同成長を部分算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 0 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Sun', longitude: 0 }, { name: 'Mercury', longitude: 120 }, { name: 'Venus', longitude: 0 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const growth = computeCompatibilityProfile(facts).find(score => score.key === 'growth_compatibility')!
+  assert.equal(growth.contributingFacts.length, 2)
+  assert.ok(growth.value > 0.5)
+  assert.ok(growth.confidence > 0 && growth.confidence <= 0.7)
+  assert.ok(growth.contributingFacts.every(id => /木星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(growth.contributingFacts.every(id => !/金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
   const withArray = {
     ...self,
