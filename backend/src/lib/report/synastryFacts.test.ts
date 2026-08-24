@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -273,6 +273,37 @@ test('相性§42は冥王星と個人天体のハード接触を頻度へ含め�
   assert.equal(frequency.contributingFacts.length, 1)
   assert.equal(intensity.contributingFacts.length, 0)
   assert.ok(frequency.confidence > 0)
+})
+
+test('相性§4・§5は双方の達成志向から目標の熱量一致を独立算出する', () => {
+  const trait = (value: number, confidence: number, fact: string) => ({ value, confidence, contributingFacts: [fact] })
+  const high = computeAmbitionAlignmentProfile(
+    { career_absorption: trait(0.9, 0.8, 'self-career'), recognition_motivation: trait(0.8, 0.7, 'self-recognition') },
+    { career_absorption: trait(0.85, 0.75, 'partner-career'), recognition_motivation: trait(0.9, 0.65, 'partner-recognition') },
+  )
+  const mismatch = computeAmbitionAlignmentProfile(
+    { career_absorption: trait(0.9, 0.8, 'self-career'), recognition_motivation: trait(0.8, 0.7, 'self-recognition') },
+    { career_absorption: trait(0.15, 0.75, 'partner-career'), recognition_motivation: trait(0.1, 0.65, 'partner-recognition') },
+  )
+  assert.equal(high.key, 'ambition_alignment')
+  assert.ok(high.value > 0.7)
+  assert.ok(mismatch.value < 0.15)
+  assert.equal(high.confidence, 0.65)
+})
+
+test('目標志向と共同プロジェクト相性は互いを打ち消さず同時に保持できる', () => {
+  const trait = { value: 0.9, confidence: 0.8, contributingFacts: ['trait'] }
+  const ambition = computeAmbitionAlignmentProfile(
+    { career_absorption: trait, recognition_motivation: trait },
+    { career_absorption: trait, recognition_motivation: trait },
+  )
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '火星', longitude: 10 }, { name: '木星', longitude: 70 }] } } },
+    { astrology: { western: { planets: [{ name: 'Mars', longitude: 10 }, { name: 'Saturn', longitude: 130 }] } } },
+  )
+  const project = computeCompatibilityProfile(facts).find(score => score.key === 'shared_project_compatibility')!
+  assert.ok(ambition.value > 0.8)
+  assert.ok(project.confidence > 0)
 })
 
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {

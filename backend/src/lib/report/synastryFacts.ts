@@ -31,6 +31,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'pride_collision',
   'ego_competition',
   'conflict_frequency',
+  'ambition_alignment',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -336,6 +337,25 @@ export function computeEgoCompetitionProfile(
     : 0.5
   return {
     key: 'ego_competition',
+    value: Number(value.toFixed(3)),
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§4・§5。双方の達成志向を比較し、共同作業のシナストリーとは別に保持する。 */
+export function computeAmbitionAlignmentProfile(
+  self: { career_absorption: TraitScoreInput; recognition_motivation: TraitScoreInput },
+  partner: { career_absorption: TraitScoreInput; recognition_motivation: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.career_absorption, partner.career_absorption, self.recognition_motivation, partner.recognition_motivation]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const value = hasEvidence
+    ? (self.career_absorption.value * partner.career_absorption.value
+      + self.recognition_motivation.value * partner.recognition_motivation.value) / 2
+    : 0.5
+  return {
+    key: 'ambition_alignment',
     value: Number(value.toFixed(3)),
     confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
