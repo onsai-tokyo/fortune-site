@@ -112,6 +112,12 @@ const partnershipTeamFeelingText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、同じ目標でも別々の方法で進む方が力を出しやすい二人です。一緒に動かないことを支え合えない証拠とは決めないでください。`,
 }
 
+const fateCompanionFeelingText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手を自分の人生の一部として記憶しやすい関係です。ただし、この感覚だけで運命の相手や将来の継続を断定しないでください。`,
+  middle: cue => `${cue}では、人生を重ねて感じる場面と、それぞれの道を意識する場面があります。共通の経験と現在の選択を分けてください。`,
+  low: cue => `${cue}では、親しくても互いの人生を一つにまとめず捉えやすい二人です。その距離を縁の弱さとは決めないでください。`,
+}
+
 
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
@@ -169,6 +175,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   lifestyle_alignment: lifestyleAlignmentText,
   shared_identity: sharedIdentityText,
   partnership_team_feeling: partnershipTeamFeelingText,
+  fate_companion_feeling: fateCompanionFeelingText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -194,6 +201,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   lifestyle_alignment: '相性§14・§25・§53・§57',
   shared_identity: '相性§2・§35・§39・§53',
   partnership_team_feeling: '相性§2・§4・§5・§53',
+  fate_companion_feeling: '相性§2・§35・§39・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

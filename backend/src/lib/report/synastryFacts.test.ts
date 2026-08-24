@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -372,6 +372,26 @@ test('相性§4は共同作業か目標志向の片方が根拠不足ならチ�
   assert.equal(team.value, 0.5)
   assert.equal(team.confidence, 0)
   assert.deepEqual(team.contributingFacts, [])
+})
+
+test('相性§2は共有自己感とチーム感の両方から人生の一部として残る感覚を部分算出する', () => {
+  const result = computeFateCompanionFeelingProfile([
+    { key: 'shared_identity', value: 0.8, confidence: 0.6, contributingFacts: ['identity'] },
+    { key: 'partnership_team_feeling', value: 0.9, confidence: 0.65, contributingFacts: ['team'] },
+  ])
+  assert.equal(result.key, 'fate_companion_feeling')
+  assert.equal(result.value, 0.85)
+  assert.equal(result.confidence, 0.55)
+  assert.deepEqual(result.contributingFacts.sort(), ['identity', 'team'])
+})
+
+test('相性§2は共有自己感かチーム感が欠ける場合に運命共同体感を推測しない', () => {
+  const result = computeFateCompanionFeelingProfile([
+    { key: 'shared_identity', value: 0.9, confidence: 0.6, contributingFacts: ['identity'] },
+  ])
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
 })
 
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {

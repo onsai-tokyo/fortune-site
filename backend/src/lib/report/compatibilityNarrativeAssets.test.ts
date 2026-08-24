@@ -266,6 +266,20 @@ test('チーム感を恋愛の深さや常時一緒に動くことと混同し�
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('人生の一部として残る感覚を運命や将来保証へ変換しない', () => {
+  const profile = (value: number, confidence = 0.55): CompatibilityProfileScore => ({
+    key: 'fate_companion_feeling', value, confidence, contributingFacts: ['identity', 'team'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の本質')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の本質')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の本質')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /運命の相手や将来の継続を断定しない/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず結ばれる|前世|別れられない/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

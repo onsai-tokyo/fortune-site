@@ -35,6 +35,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'lifestyle_alignment',
   'shared_identity',
   'partnership_team_feeling',
+  'fate_companion_feeling',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -397,6 +398,22 @@ export function computePartnershipTeamFeelingProfile(
     value: hasEvidence ? Number(((project!.value + ambition!.value) / 2).toFixed(3)) : 0.5,
     confidence: hasEvidence ? Number(Math.min(project!.confidence, ambition!.confidence).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set([...project!.contributingFacts, ...ambition!.contributingFacts])] : [],
+  }
+}
+
+/** 相性§2。共有自己感とチーム感がともに根拠を持つ場合だけ部分算出する。 */
+export function computeFateCompanionFeelingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const identity = profiles.find(score => score.key === 'shared_identity')
+  const team = profiles.find(score => score.key === 'partnership_team_feeling')
+  const hasEvidence = Boolean(identity && team && identity.confidence > 0 && team.confidence > 0)
+  return {
+    key: 'fate_companion_feeling',
+    value: hasEvidence ? Number(((identity!.value + team!.value) / 2).toFixed(3)) : 0.5,
+    // 4/7/8室・ノード・生活共有の環境補正が未接続なので部分算出上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, identity!.confidence, team!.confidence).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set([...identity!.contributingFacts, ...team!.contributingFacts])] : [],
   }
 }
 

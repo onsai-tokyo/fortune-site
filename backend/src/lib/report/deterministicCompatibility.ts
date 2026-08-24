@@ -2,7 +2,7 @@ import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCard
 import type { ReportInput } from '../deterministicReport.js'
 import { extractReportMetadata } from './metadata.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores, type CompatibilityProfileScore, type MutualUnderstandingProfile, type RelationAxis, type RelationScore } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores, type CompatibilityProfileScore, type MutualUnderstandingProfile, type RelationAxis, type RelationScore } from './synastryFacts.js'
 import { buildReportFactsV2 } from './factsV2.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
@@ -49,11 +49,12 @@ export function buildCompatibilityTraitScoreBundle(self: ReportInput, partner: R
     computeEgoCompetitionProfile(selfScores, partnerScores),
     computeAmbitionAlignmentProfile(selfScores, partnerScores),
   ]
+  const profileWithTeam = [...profile, computePartnershipTeamFeelingProfile(profile)]
   return {
     self: selfScores,
     partner: partnerScores,
     pair: computePairTraitScores(selfScores, partnerScores, relations),
-    profile: [...profile, computePartnershipTeamFeelingProfile(profile)],
+    profile: [...profileWithTeam, computeFateCompanionFeelingProfile(profileWithTeam)],
     mutualUnderstanding: computeMutualUnderstanding(synastry, { self: Boolean(self.birthTime), partner: Boolean(partner.birthTime) }),
   }
 }
@@ -289,12 +290,15 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const sharedIdentityBlock = id === 'compat-overview'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'shared_identity'), item.cue)
     : null
+  const fateCompanionBlock = id === 'compat-overview'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'fate_companion_feeling'), item.cue)
+    : null
   const pairScoreBlock = pairScoresForChapter(id, context)
     .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? teamFeelingBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? teamFeelingBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? fateCompanionBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -331,7 +335,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       : id === 'compat-attraction' ? ['emotional_intimacy', 'admiration_mutual']
       : id === 'compat-friction' ? ['conflict_frequency', 'conflict_intensity', 'pride_collision', 'ego_competition', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-growth' ? ['growth_compatibility', 'novelty_compatibility', 'shared_project_compatibility', 'adventure_compatibility', 'ambition_alignment', 'partnership_team_feeling']
-      : id === 'compat-overview' ? ['value_alignment', 'shared_identity']
+      : id === 'compat-overview' ? ['value_alignment', 'shared_identity', 'fate_companion_feeling']
       : id === 'compat-marriage' ? ['domestic_compatibility', 'lifestyle_alignment']
       : id === 'compat-beginning' ? ['conversational_flow', 'humor_compatibility', 'friendship_compatibility'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
