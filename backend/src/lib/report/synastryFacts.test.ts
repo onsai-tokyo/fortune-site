@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -479,6 +479,30 @@ test('相性§31は安心・修復・個人信頼のいずれかが欠ければ�
   const result = computeTrustStabilityProfile([
     { key: 'emotional_safety', value: 0.8, confidence: 0.7, contributingFacts: ['safety'] },
   ], { compatibility_reliability: known }, { compatibility_reliability: known })
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
+})
+
+test('相性§57は惹かれる強さを使わず維持要因と未修復摩擦から長期結合を部分算出する', () => {
+  const positiveKeys = ['emotional_safety', 'value_alignment', 'domestic_compatibility', 'friendship_compatibility', 'repair_capacity', 'growth_compatibility'] as const
+  const profiles = positiveKeys.map((key, index) => ({ key, value: 0.8, confidence: 0.7, contributingFacts: [`positive-${index}`] }))
+  const result = computeLongTermBindingProfile([
+    ...profiles,
+    { key: 'conflict_intensity', value: 0.8, confidence: 0.65, contributingFacts: ['conflict'] },
+    { key: 'power_balance', value: 0.7, confidence: 0.6, contributingFacts: ['power'] },
+    { key: 'admiration_mutual', value: 1, confidence: 1, contributingFacts: ['attraction-not-used'] },
+  ])
+  assert.equal(result.key, 'long_term_binding')
+  assert.equal(result.value, 0.758)
+  assert.equal(result.confidence, 0.5)
+  assert.ok(!result.contributingFacts.includes('attraction-not-used'))
+})
+
+test('相性§57は維持要因か摩擦要因が欠ける場合に長期結合を推測しない', () => {
+  const result = computeLongTermBindingProfile([
+    { key: 'emotional_safety', value: 0.8, confidence: 0.7, contributingFacts: ['safety'] },
+  ])
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.deepEqual(result.contributingFacts, [])

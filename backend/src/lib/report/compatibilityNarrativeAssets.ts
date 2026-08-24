@@ -179,6 +179,12 @@ const trustStabilityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、一度の行き違いが長く残りやすい二人です。不信を人格の結論にせず、何を確認すれば安心へ戻れるかを小さく決めてください。`,
 }
 
+const longTermBindingText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、安心・暮らし・友情・修復を重ねるほど長期の土台を作りやすい二人です。ただし、惹かれる強さや交際期間だけで将来を保証しません。`,
+  middle: cue => `${cue}では、続ける力になる要素と、調整が必要な摩擦が混ざります。気持ちだけでなく、暮らしと仲直りの約束を更新してください。`,
+  low: cue => `${cue}では、長く続ける条件を自然には共有しにくい二人です。別れを予測する値ではなく、安心・生活・修復の不足を話す手がかりにしてください。`,
+}
+
 const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
   middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
@@ -211,6 +217,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   power_balance: powerBalanceText,
   relationship_boredom_risk: relationshipBoredomRiskText,
   trust_stability: trustStabilityText,
+  long_term_binding: longTermBindingText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -242,6 +249,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   power_balance: '相性§5・§19・§33・§53',
   relationship_boredom_risk: '相性§3・§26・§28・§50',
   trust_stability: '相性§31・§34・§41・§57',
+  long_term_binding: '相性§21・§28・§40・§41・§57',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

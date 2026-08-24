@@ -41,6 +41,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'power_balance',
   'relationship_boredom_risk',
   'trust_stability',
+  'long_term_binding',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -511,6 +512,35 @@ export function computeTrustStabilityProfile(
     contributingFacts: hasEvidence
       ? [...new Set([...safety!.contributingFacts, ...repair!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
       : [],
+  }
+}
+
+/** 相性§57。惹かれる強さを使わず、長期維持要因と未修復の摩擦を正規化して部分算出する。 */
+export function computeLongTermBindingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const positiveKeys: CompatibilityProfileKey[] = [
+    'emotional_safety', 'value_alignment', 'domestic_compatibility',
+    'friendship_compatibility', 'repair_capacity', 'growth_compatibility',
+  ]
+  const positives = positiveKeys.map(key => profiles.find(score => score.key === key))
+  const conflict = profiles.find(score => score.key === 'conflict_intensity')
+  const power = profiles.find(score => score.key === 'power_balance')
+  const hasEvidence = positives.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+    && Boolean(conflict && power && conflict.confidence > 0 && power.confidence > 0)
+  if (!hasEvidence) return { key: 'long_term_binding', value: 0.5, confidence: 0, contributingFacts: [] }
+  const safety = positives.find(score => score.key === 'emotional_safety')!
+  const repair = positives.find(score => score.key === 'repair_capacity')!
+  const destructiveConflict = conflict!.value * (1 - repair.value) * (1 - safety.value)
+  const normalized = (positives.reduce((sum, score) => sum + score.value, 0)
+    + (1 - destructiveConflict) + (1 - power!.value)) / (positives.length + 2)
+  const inputs = [...positives, conflict!, power!]
+  return {
+    key: 'long_term_binding',
+    value: Number(normalized.toFixed(3)),
+    // transparency・secrecy・実際の継続期間を未入力のため、部分算出上限を設ける。
+    confidence: Number(Math.min(0.5, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
   }
 }
 

@@ -322,6 +322,20 @@ test('信頼安定性を秘密や裏切りの有無の予測へ変換しない',
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('長期結合を将来保証や交際期間の逆算へ変換しない', () => {
+  const profile = (value: number, confidence = 0.5): CompatibilityProfileScore => ({
+    key: 'long_term_binding', value, confidence, contributingFacts: ['safety', 'domestic', 'repair'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の暮らし')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の暮らし')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の暮らし')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /将来を保証しません/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず続く|結婚できる|長く付き合ったから/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
