@@ -322,6 +322,20 @@ test('依存強度を幸福・安心・関係継続の証明へ変換しない',
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('力関係の高値を良好な均衡や優劣へ変換しない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'power_balance', value, confidence, contributingFacts: ['self', 'partner'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '衝突の扱い')
+  const middle = compatibilityProfileBlock(profile(0.5), '衝突の扱い')
+  const high = compatibilityProfileBlock(profile(0.8), '衝突の扱い')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /拮抗しやすい/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /相性が良い|上の立場|下の立場|支配される/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('修復力を衝突の少なさや破局判定と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'repair_capacity', value, confidence, contributingFacts: ['cross-aspect:jupiter'],

@@ -149,6 +149,12 @@ const dependencyIntensityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、相手への強い執着より、それぞれの生活を保ちながら関係を育てやすい二人です。距離があることを気持ちの薄さとは決めないでください。`,
 }
 
+const powerBalanceText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、互いの主導権や譲れない感覚が拮抗しやすい二人です。対等さを良し悪しで決めず、どちらが決めるかを場面ごとに分けてください。`,
+  middle: cue => `${cue}では、自然に役割が分かれる場面と、互いに譲りにくい場面があります。結論より先に、今は誰が責任を持つかを決めてください。`,
+  low: cue => `${cue}では、主導する側と支える側が分かれやすい二人です。固定した上下関係にせず、得意分野ごとに役割を入れ替えてください。`,
+}
+
 const growthCompatibilityText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、一緒に新しい目標へ向かう時ほど関係が生き生きしやすい二人です。挑戦の大きさより、互いの前進を認めてください。`,
   middle: cue => `${cue}では、同じ目標が力になる時と、別々に進む方がよい時があります。応援と同行のどちらが必要か確かめてください。`,
@@ -190,6 +196,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   fate_companion_feeling: fateCompanionFeelingText,
   relationship_stimulation_need: relationshipStimulationNeedText,
   dependency_intensity: dependencyIntensityText,
+  power_balance: powerBalanceText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -218,6 +225,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   fate_companion_feeling: '相性§2・§35・§39・§53',
   relationship_stimulation_need: '相性§3・§26・§50・§53',
   dependency_intensity: '相性§35・§43・§53・§54',
+  power_balance: '相性§5・§19・§33・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

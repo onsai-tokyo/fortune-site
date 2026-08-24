@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores, computeRelationshipStimulationNeedProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipStimulationNeedProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -363,6 +363,34 @@ test('相性§4は共同作業と目標志向からチーム感を派生し競�
   assert.equal(team.confidence, 0.6)
   assert.deepEqual(team.contributingFacts.sort(), ['ambition', 'project'])
   assert.ok(!team.contributingFacts.includes('competition'))
+})
+
+test('相性§19は個人傾向の差が小さいほど力関係の拮抗度を高くする', () => {
+  const trait = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const close = computePowerBalanceProfile(
+    { pride_sensitivity: trait(0.8, 'self-pride'), group_coordination: trait(0.7, 'self-lead') },
+    { pride_sensitivity: trait(0.75, 'partner-pride'), group_coordination: trait(0.65, 'partner-lead') },
+  )
+  const distant = computePowerBalanceProfile(
+    { pride_sensitivity: trait(0.9, 'self-pride'), group_coordination: trait(0.9, 'self-lead') },
+    { pride_sensitivity: trait(0.1, 'partner-pride'), group_coordination: trait(0.2, 'partner-lead') },
+  )
+  assert.equal(close.key, 'power_balance')
+  assert.ok(close.value > distant.value)
+  assert.equal(close.confidence, 0.8)
+  assert.equal(close.contributingFacts.length, 4)
+})
+
+test('相性§19は個人傾向の根拠が欠ける場合に力関係を推測しない', () => {
+  const known = { value: 0.7, confidence: 0.8, contributingFacts: ['known'] }
+  const unknown = { value: 0.5, confidence: 0, contributingFacts: [] }
+  const result = computePowerBalanceProfile(
+    { pride_sensitivity: known, group_coordination: known },
+    { pride_sensitivity: known, group_coordination: unknown },
+  )
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
 })
 
 test('相性§4は共同作業か目標志向の片方が根拠不足ならチーム感を推測しない', () => {

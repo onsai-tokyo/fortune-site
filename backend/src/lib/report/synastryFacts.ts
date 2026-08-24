@@ -38,6 +38,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'fate_companion_feeling',
   'relationship_stimulation_need',
   'dependency_intensity',
+  'power_balance',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -393,6 +394,25 @@ export function computeAmbitionAlignmentProfile(
   return {
     key: 'ambition_alignment',
     value: Number(value.toFixed(3)),
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§19。値は「良い均衡」ではなく、双方の力が拮抗する度合いを表す。 */
+export function computePowerBalanceProfile(
+  self: { pride_sensitivity: TraitScoreInput; group_coordination: TraitScoreInput },
+  partner: { pride_sensitivity: TraitScoreInput; group_coordination: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.group_coordination, partner.group_coordination]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const similarity = (left: number, right: number) => 1 - Math.min(1, Math.abs(left - right))
+  return {
+    key: 'power_balance',
+    value: hasEvidence ? Number(((
+      similarity(self.pride_sensitivity.value, partner.pride_sensitivity.value)
+      + similarity(self.group_coordination.value, partner.group_coordination.value)
+    ) / 2).toFixed(3)) : 0.5,
     confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
   }
