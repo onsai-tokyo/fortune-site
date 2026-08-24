@@ -135,6 +135,7 @@ function effectiveRelationScores(id: string, context: PairContext): RelationScor
       : relation.key === 'depth' ? 'emotional_intimacy'
       : relation.key === 'repair' ? 'repair_capacity'
       : relation.key === 'safety' ? 'emotional_safety'
+      : relation.key === 'conflict' ? 'conflict_intensity'
       : null
     const profile = profileKey ? context.compatibilityProfile.find(score => score.key === profileKey && score.confidence > 0) : undefined
     if (!related.length && !profile) return relation
@@ -252,7 +253,8 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       ? ['repair_capacity', 'emotional_safety']
       : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety']
       : id === 'compat-attraction' ? ['emotional_intimacy']
-      : ['compat-beginning', 'compat-friction'].includes(id) ? ['conversational_flow'] : []
+      : id === 'compat-friction' ? ['conflict_intensity', 'conversational_flow']
+      : id === 'compat-beginning' ? ['conversational_flow'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,

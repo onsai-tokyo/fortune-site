@@ -73,6 +73,18 @@ test('感情の安心感は会話の流れと修復力から独立して算出�
   assert.ok(safety.contributingFacts.every(id => /月/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
 })
 
+test('衝突強度は太陽・水星・火星のハードな接触だけを部分算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '太陽', longitude: 0 }, { name: '水星', longitude: 180 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Mars', longitude: 90 }, { name: 'Venus', longitude: 0 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const conflict = computeCompatibilityProfile(facts).find(score => score.key === 'conflict_intensity')!
+  assert.ok(conflict.contributingFacts.length >= 2)
+  assert.ok(conflict.value > 0.5)
+  assert.ok(conflict.confidence > 0 && conflict.confidence <= 0.7)
+  assert.ok(conflict.contributingFacts.every(id => /火星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(conflict.contributingFacts.every(id => /square|opposition/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
   const withArray = {
     ...self,
