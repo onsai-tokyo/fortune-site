@@ -39,6 +39,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'relationship_stimulation_need',
   'dependency_intensity',
   'power_balance',
+  'relationship_boredom_risk',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -465,6 +466,27 @@ export function computeRelationshipStimulationNeedProfile(
     // 個人のNovelty Needと9/11室を未接続のため、関係Factだけによる部分算出として制限する。
     confidence: hasEvidence ? Number(Math.min(0.55, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§3・§26。双方の新奇性傾向と関係の刺激必要度からマンネリ化リスクを派生する。 */
+export function computeRelationshipBoredomRiskProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { novelty_attraction: TraitScoreInput },
+  partner: { novelty_attraction: TraitScoreInput },
+): CompatibilityProfileScore {
+  const stimulation = profiles.find(score => score.key === 'relationship_stimulation_need')
+  const inputs = [self.novelty_attraction, partner.novelty_attraction]
+  const hasEvidence = Boolean(stimulation && stimulation.confidence > 0 && inputs.every(score => score.confidence > 0))
+  const sharedNoveltyNeed = self.novelty_attraction.value * partner.novelty_attraction.value
+  return {
+    key: 'relationship_boredom_risk',
+    value: hasEvidence ? Number(((sharedNoveltyNeed + stimulation!.value) / 2).toFixed(3)) : 0.5,
+    // 実際の生活環境・接触量を未入力のため、傾向スコアとして上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, stimulation!.confidence, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...stimulation!.contributingFacts, ...inputs.flatMap(score => score.contributingFacts)])]
+      : [],
   }
 }
 

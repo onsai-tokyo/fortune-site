@@ -167,6 +167,12 @@ const relationshipStimulationNeedText: Record<ScoreBand, (cue: string) => string
   low: cue => `${cue}では、次々と変化を起こすより、安心できる日常の中へ小さな新しさを置く方が育ちやすい二人です。停滞と安定を混同しないでください。`,
 }
 
+const relationshipBoredomRiskText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、同じ過ごし方が続くと関係の勢いを感じにくくなる傾向があります。飽きを破局の兆しと決めず、外出や学びなど小さな共通体験を足してください。`,
+  middle: cue => `${cue}では、慣れが安心になる時と刺激不足になる時があります。予定を増やすより、最近二人で初めて試したことを一つ思い出してください。`,
+  low: cue => `${cue}では、変化を増やし続けなくても、馴染んだ時間から関係を育てやすい二人です。穏やかさを停滞と決めず、必要な時だけ新しさを選んでください。`,
+}
+
 const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
   middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
@@ -197,6 +203,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   relationship_stimulation_need: relationshipStimulationNeedText,
   dependency_intensity: dependencyIntensityText,
   power_balance: powerBalanceText,
+  relationship_boredom_risk: relationshipBoredomRiskText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -226,6 +233,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   relationship_stimulation_need: '相性§3・§26・§50・§53',
   dependency_intensity: '相性§35・§43・§53・§54',
   power_balance: '相性§5・§19・§33・§53',
+  relationship_boredom_risk: '相性§3・§26・§28・§50',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

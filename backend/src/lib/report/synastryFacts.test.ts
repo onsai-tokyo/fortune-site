@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipStimulationNeedProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -437,6 +437,26 @@ test('相性§3は構成軸が一つでも欠ける場合に刺激必要度を�
   const result = computeRelationshipStimulationNeedProfile([
     { key: 'novelty_compatibility', value: 0.9, confidence: 0.7, contributingFacts: ['novelty'] },
   ])
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
+})
+
+test('相性§3・§26は双方の新奇性傾向と刺激必要度からマンネリ化リスクを派生する', () => {
+  const novelty = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const result = computeRelationshipBoredomRiskProfile([
+    { key: 'relationship_stimulation_need', value: 0.8, confidence: 0.55, contributingFacts: ['stimulation'] },
+  ], { novelty_attraction: novelty(0.9, 'self') }, { novelty_attraction: novelty(0.8, 'partner') })
+  assert.equal(result.key, 'relationship_boredom_risk')
+  assert.equal(result.value, 0.76)
+  assert.equal(result.confidence, 0.55)
+  assert.deepEqual(result.contributingFacts.sort(), ['partner', 'self', 'stimulation'])
+})
+
+test('相性§26は個人傾向か刺激必要度の根拠が欠ける場合にマンネリ化を推測しない', () => {
+  const known = { value: 0.8, confidence: 0.8, contributingFacts: ['known'] }
+  const unknown = { value: 0.5, confidence: 0, contributingFacts: [] }
+  const result = computeRelationshipBoredomRiskProfile([], { novelty_attraction: known }, { novelty_attraction: unknown })
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.deepEqual(result.contributingFacts, [])

@@ -294,6 +294,20 @@ test('刺激必要度を愛情不足や停滞の断定へ変換しない', () =>
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('マンネリ化リスクを破局や愛情消失の予測へ変換しない', () => {
+  const profile = (value: number, confidence = 0.55): CompatibilityProfileScore => ({
+    key: 'relationship_boredom_risk', value, confidence, contributingFacts: ['novelty', 'stimulation'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '関係が育つ力')
+  const middle = compatibilityProfileBlock(profile(0.5), '関係が育つ力')
+  const high = compatibilityProfileBlock(profile(0.8), '関係が育つ力')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /破局の兆しと決めず/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず別れる|愛情が消える|浮気する/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
