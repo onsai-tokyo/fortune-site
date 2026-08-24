@@ -29,6 +29,22 @@ test('相性§44は会話の流れと心の深さを別スコアにする', () =
   assert.equal(profile[0].key, 'conversational_flow')
   assert.ok(profile[0].confidence > 0)
   assert.ok(profile[0].contributingFacts.every(id => facts.find(fact => fact.id === id)?.axis === 'communication'))
+  const emotional = profile.find(score => score.key === 'emotional_intimacy')
+  assert.ok(emotional)
+  assert.ok(emotional.contributingFacts.every(id => facts.find(fact => fact.id === id)?.axis === 'depth'))
+  assert.ok(emotional.contributingFacts.every(id => !facts.find(fact => fact.id === id)?.signal.includes('冥王星')))
+})
+
+test('相性§43は出生時刻なしでも感情親密度を返すが確信度を抑える', () => {
+  const left = { astrology: { western: { planets: [{ name: '月', longitude: 10 }, { name: '太陽', longitude: 40 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 40 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'emotional_intimacy')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'emotional_intimacy')!
+  assert.ok(unknown.contributingFacts.length > 0)
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence > 0)
+  assert.ok(unknown.confidence < known.confidence)
 })
 
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
