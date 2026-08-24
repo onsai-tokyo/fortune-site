@@ -8,11 +8,20 @@ const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrolo
 test('PR-4 Synastry Factは複数系統を統合し再現可能', () => {
   const first = buildSynastryFacts(self, partner)
   assert.deepEqual(first, buildSynastryFacts(self, partner))
-  assert.ok(new Set(first.map(fact => fact.kind)).size >= 4)
+  assert.ok(new Set(first.map(fact => fact.kind)).size >= 3)
   assert.ok(first.some(fact => fact.axis === 'attraction'))
   const scores = computeRelationScores(first)
   assert.equal(scores.length, 11)
   assert.ok(scores.every(score => score.value >= 0 && score.value <= 1))
+})
+
+test('正式な宿関係表がない状態で異なる宿を修復力へ推測しない', () => {
+  const different = buildSynastryFacts({ sukuyo: '心宿' }, { sukuyo: '婁宿' })
+  assert.equal(different.some(fact => fact.kind === 'sukuyo'), false)
+  assert.equal(different.some(fact => fact.signal === 'different-recovery'), false)
+  const same = buildSynastryFacts({ sukuyo: '心宿' }, { sukuyo: '心' })
+  assert.equal(same.filter(fact => fact.kind === 'sukuyo').length, 1)
+  assert.equal(same.find(fact => fact.kind === 'sukuyo')?.signal, 'same-mansion')
 })
 
 test('相性§44は会話の流れと心の深さを別スコアにする', () => {

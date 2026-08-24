@@ -14,7 +14,9 @@ test('PR-4相性分布は20組で入力差・再現性・根拠参照を維持�
     const facts = buildSynastryFacts(self, partner)
     const scores = computeRelationScores(facts)
     assert.deepEqual(facts, buildSynastryFacts(self, partner))
-    assert.ok(facts.length >= 3)
+    assert.ok(facts.length >= 2)
+    assert.ok(facts.some(fact => fact.kind === 'stem-relation'))
+    assert.ok(facts.some(fact => fact.kind === 'number'))
     assert.ok(facts.every(fact => fact.selfFactId && fact.partnerFactId))
     assert.equal(new Set(facts.map(fact => fact.id)).size, facts.length)
     return {
@@ -28,7 +30,7 @@ test('PR-4相性分布は20組で入力差・再現性・根拠参照を維持�
   console.info('PR-4 synastry distribution', { sampleCount: samples.length, uniqueFactSignatures, uniqueScoreSignatures })
   assert.ok(uniqueFactSignatures >= 18)
   assert.ok(uniqueScoreSignatures >= 18)
-  assert.ok(samples.every(sample => sample.axes.size >= 3))
+  assert.ok(samples.every(sample => sample.axes.size >= 2))
 })
 
 test('PR-4相性レポートは20組で同じ内容へ収束せず関係ラベルを守る', () => {
@@ -52,7 +54,9 @@ test('出生時刻なし同士でも相性を生成し時刻依存Factを混入�
   const self = buildFixtureReportInput(BIRTH_FIXTURES[36])
   const partner = buildFixtureReportInput(BIRTH_FIXTURES[37])
   const facts = buildSynastryFacts(self, partner)
-  assert.ok(facts.length >= 3)
+  assert.ok(facts.length >= 2)
+  assert.ok(facts.some(fact => fact.kind === 'stem-relation'))
+  assert.ok(facts.some(fact => fact.kind === 'number'))
   assert.equal(facts.some(fact => fact.requiresSelfBirthTime || fact.requiresPartnerBirthTime), false)
   assert.equal(buildDeterministicCompatibilityReport(self, partner, 'friend', '友人').cards.length, 7)
 })

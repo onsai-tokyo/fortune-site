@@ -92,7 +92,13 @@ export function buildSynastryFacts(selfValue: unknown, partnerValue: unknown): S
     add(result, { kind: 'number', selfFactId: `lifePath:${selfNumber}`, partnerFactId: `lifePath:${partnerNumber}`, axis: distance <= 2 ? 'fun' : 'growth', signal: distance === 0 ? 'same-tempo' : distance <= 2 ? 'near-tempo' : 'different-tempo', polarity: distance <= 2 ? 1 : 0, strength: Math.max(0.45, 0.85 - distance * 0.05), requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfNumber}:${partnerNumber}` })
   }
   const selfSukuyo = text(self.sukuyo).replace(/宿$/, ''); const partnerSukuyo = text(partner.sukuyo).replace(/宿$/, '')
-  if (selfSukuyo && partnerSukuyo) add(result, { kind: 'sukuyo', selfFactId: `sukuyo:${selfSukuyo}`, partnerFactId: `sukuyo:${partnerSukuyo}`, axis: selfSukuyo === partnerSukuyo ? 'depth' : 'repair', signal: selfSukuyo === partnerSukuyo ? 'emotional-recognition' : 'different-recovery', polarity: selfSukuyo === partnerSukuyo ? 1 : 0, strength: selfSukuyo === partnerSukuyo ? 0.85 : 0.55, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfSukuyo}:${partnerSukuyo}` })
+  // 正式な27宿×27宿の関係表が未収録のため、異なる宿を栄親・安壊等へ推測分類しない。
+  // 同一宿だけは入力から直接確定できる事実として保持する。
+  if (selfSukuyo && partnerSukuyo && selfSukuyo === partnerSukuyo) add(result, {
+    kind: 'sukuyo', selfFactId: `sukuyo:${selfSukuyo}`, partnerFactId: `sukuyo:${partnerSukuyo}`,
+    axis: 'depth', signal: 'same-mansion', polarity: 1, strength: 0.85,
+    requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfSukuyo}:${partnerSukuyo}`,
+  })
   const selfPlanets = planetMap(self); const partnerPlanets = planetMap(partner)
   const relevant = new Set(['太陽', '月', '水星', '金星', '火星', '木星', '土星', '天王星', '冥王星'])
   for (const [selfName, selfLongitude] of selfPlanets) for (const [partnerName, partnerLongitude] of partnerPlanets) {
