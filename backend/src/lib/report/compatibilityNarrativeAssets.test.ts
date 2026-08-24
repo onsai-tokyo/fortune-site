@@ -17,6 +17,20 @@ test('相性スコアを高・中・低の別文章へ変換する', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('恋愛的な引力を身体的な魅力・交際成立・長期相性へ変換しない', () => {
+  const profile = (value: number, confidence = 0.7): CompatibilityProfileScore => ({
+    key: 'romantic_attraction', value, confidence, contributingFacts: ['venus-sun'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '魅力の正体')
+  const middle = compatibilityProfileBlock(profile(0.5), '魅力の正体')
+  const high = compatibilityProfileBlock(profile(0.8), '魅力の正体')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /身体的な引力や長期相性は別/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず付き合う|性的に惹かれる|長く続く/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('確信度不足は一般論で埋めず既存文へフォールバックする', () => {
   assert.equal(compatibilityScoreBlock(score('compatibility_transparency', 0.9, 0.24), '会話'), null)
 })

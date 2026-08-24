@@ -19,6 +19,7 @@ export interface SynastryFact {
 
 export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
 export const COMPATIBILITY_PROFILE_KEYS = [
+  'romantic_attraction',
   'conversational_flow',
   'conversational_depth',
   'humor_compatibility',
@@ -95,6 +96,7 @@ const CONVERSATIONAL_DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '�
 const HUMOR_COMPATIBILITY_PAIRS = new Set(['木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const FRIENDSHIP_COMPATIBILITY_PAIRS = new Set(['水星:水星', '月:水星', '水星:金星', '木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const DOMESTIC_COMPATIBILITY_PAIRS = new Set(['月:月', '月:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const ROMANTIC_ATTRACTION_PAIRS = new Set(['太陽:金星', '月:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
 const NOVELTY_COMPATIBILITY_PAIRS = new Set([
   '木星:太陽', '木星:月', '木星:水星', '木星:金星', '木星:火星',
   '天王星:太陽', '天王星:月', '天王星:水星', '天王星:金星', '天王星:火星',
@@ -218,6 +220,9 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const domestic = facts.filter(fact => fact.kind === 'cross-aspect' && DOMESTIC_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const domesticSigned = domestic.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const domesticHasMoon = domestic.some(fact => pairFromSignal(fact).includes('月'))
+  const romantic = facts.filter(fact => fact.kind === 'cross-aspect' && ROMANTIC_ATTRACTION_PAIRS.has(pairFromSignal(fact)))
+  const romanticSigned = romantic.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const romanticHasMoon = romantic.some(fact => pairFromSignal(fact).includes('月'))
   const novelty = facts.filter(fact => fact.kind === 'cross-aspect' && NOVELTY_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const noveltySigned = novelty.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const noveltyHasMoon = novelty.some(fact => pairFromSignal(fact).includes('月'))
@@ -269,6 +274,12 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((conversation.length ? 1 / (1 + Math.exp(-conversationSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.9, conversation.length * 0.18).toFixed(3)),
     contributingFacts: conversation.map(fact => fact.id),
+  }, {
+    key: 'romantic_attraction',
+    value: Number((romantic.length ? 1 / (1 + Math.exp(-romanticSigned)) : 0.5).toFixed(3)),
+    // 5室・7室・ASC/DESCを未接続のため、個人天体クロスアスペクトだけの部分算出。
+    confidence: Number((Math.min(0.7, romantic.length * 0.18) * (romanticHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(romantic.map(fact => fact.id))],
   }, {
     key: 'conversational_depth',
     value: Number((conversationDepth.length ? 1 / (1 + Math.exp(-conversationDepthSigned)) : 0.5).toFixed(3)),

@@ -191,6 +191,12 @@ const transparencyText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、気持ちを言葉にするまでの時間が二方向で違いやすい関係です。沈黙を秘密や拒絶と決めず、待てる期限を伝えてください。`,
 }
 
+const romanticAttractionText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手の存在や表現を恋愛的な心地よさとして受け取りやすい二人です。ただし、身体的な引力や長期相性は別に確かめます。`,
+  middle: cue => `${cue}では、自然に惹かれる部分と、関係の中で育つ魅力が混ざります。ときめきの強さだけで続き方を決めないでください。`,
+  low: cue => `${cue}では、恋愛的な引力が最初から強く表れにくい傾向があります。相性の悪さとは決めず、友情や安心から育つ可能性と分けて見ます。`,
+}
+
 const mysteryDistanceText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の本音を読み取ろうとして推測が増えやすい方向があります。わからなさを嘘や拒絶と決めず、確認できる事実へ戻ってください。`,
   middle: cue => `${cue}では、自然にわかる場面と、言葉で確かめる場面が方向ごとに分かれます。察した内容を結論にせず、一度問い直してください。`,
@@ -219,6 +225,7 @@ type ContextualProfileKey = 'conflict_intensity'
 type StandaloneProfileKey = Exclude<CompatibilityProfileScore['key'], ContextualProfileKey>
 
 const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: string) => string>> = {
+  romantic_attraction: romanticAttractionText,
   conversational_flow: conversationalFlowText,
   conversational_depth: conversationalDepthText,
   humor_compatibility: humorCompatibilityText,
@@ -255,6 +262,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
 }
 
 const profileSourceByScore: Record<StandaloneProfileKey, string> = {
+  romantic_attraction: '相性§36・§40・§53',
   conversational_flow: '相性§44・§53',
   conversational_depth: '相性§10・§44・§52・§53',
   humor_compatibility: '相性§9・§44・§53',

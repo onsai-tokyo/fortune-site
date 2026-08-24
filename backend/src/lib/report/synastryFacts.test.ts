@@ -61,6 +61,31 @@ test('相性§43は出生時刻なしでも感情親密度を返すが確信度�
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('恋愛的な引力は金星と太陽・月・金星から部分算出し身体的引力と混ぜない', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '金星', longitude: 10 }, { name: '火星', longitude: 40 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Sun', longitude: 10 }, { name: 'Moon', longitude: 130 }, { name: 'Mars', longitude: 40 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const romantic = computeCompatibilityProfile(facts).find(score => score.key === 'romantic_attraction')!
+  assert.ok(romantic.confidence > 0)
+  assert.ok(romantic.contributingFacts.every(id => /金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(romantic.contributingFacts.every(id => !/金星-火星|火星-火星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
+test('恋愛的な個人天体接触がなければ引力を一般論で推測しない', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '水星', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Mercury', longitude: 10 }] } } },
+  )
+  const romantic = computeCompatibilityProfile(facts).find(score => score.key === 'romantic_attraction')!
+  assert.equal(romantic.value, 0.5)
+  assert.equal(romantic.confidence, 0)
+  assert.deepEqual(romantic.contributingFacts, [])
+})
+
 test('相性§52は相互理解を認知・感情・深層の3成分で保持する', () => {
   const left = { astrology: { western: { planets: [
     { name: '水星', longitude: 10 }, { name: '月', longitude: 40 }, { name: '冥王星', longitude: 70 },
