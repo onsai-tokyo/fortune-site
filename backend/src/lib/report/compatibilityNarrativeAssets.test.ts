@@ -34,3 +34,17 @@ test('会話の流れを深い理解と混同しない文章へ変換する', ()
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
   assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '距離の始まり'), null)
 })
+
+test('感情の深さを安心感と混同しない文章へ変換する', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '魅力の正体')
+  const middle = compatibilityProfileBlock(profile(0.5), '魅力の正体')
+  const high = compatibilityProfileBlock(profile(0.8), '魅力の正体')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /強く感じ取れることと安心して頼れることは別/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+  assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '魅力の正体'), null)
+})

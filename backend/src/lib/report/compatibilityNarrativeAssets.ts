@@ -16,6 +16,12 @@ const conversationalFlowText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、考えを組み立てる順序に差が出やすい二人です。返事の速さを理解の深さと決めず、言い直せる余白を作ってください。`,
 }
 
+const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
+  middle: cue => `${cue}では、自然に分かる気持ちと、言葉にしないと届かない気持ちがあります。察したことを確認へ変えるほど親密さが育ちます。`,
+  low: cue => `${cue}では、同じ出来事でも心に残る部分が違いやすい二人です。分かり合えないと決めず、何が痛かったかを一つずつ伝えてください。`,
+}
+
 function band(value: number): ScoreBand {
   if (value >= 0.6) return 'high'
   if (value <= 0.4) return 'low'
@@ -52,9 +58,10 @@ export function compatibilityScoreBlock(score: PairTraitScore | undefined, cue: 
   return { scoreKey: score.key, band: scoreBand, text: textByScore[score.key][scoreBand](cue), source: '相性§41・§52・§53' }
 }
 
-/** 相性§44・§53。話しやすさを、感情の深い理解や安心感と混同しない。 */
+/** 相性§43・§44・§53。話しやすさ／感情の深さ／安心感を混同しない。 */
 export function compatibilityProfileBlock(score: CompatibilityProfileScore | undefined, cue: string): CompatibilityScoreBlock | null {
-  if (!score || score.key !== 'conversational_flow' || score.confidence < 0.25) return null
+  if (!score || score.confidence < 0.25) return null
   const scoreBand = band(score.value)
-  return { scoreKey: score.key, band: scoreBand, text: conversationalFlowText[scoreBand](cue), source: '相性§44・§53' }
+  const texts = score.key === 'conversational_flow' ? conversationalFlowText : emotionalIntimacyText
+  return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source: score.key === 'conversational_flow' ? '相性§44・§53' : '相性§43・§53・§54' }
 }
