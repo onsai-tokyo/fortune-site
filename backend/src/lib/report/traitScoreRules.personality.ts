@@ -66,4 +66,44 @@ export const CONFIRMED_PERSONALITY_SCORE_RULES: readonly TraitScoreRule[] = [
   { score: 'compatibility_stability', source: '性格§10', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.8 },
   { score: 'compatibility_reliability', source: '性格§10', match: { factorPrefix: ['house:7:土星', 'house:4:土星'] }, weight: 0.8 },
   { score: 'compatibility_domestic', source: '性格§10', match: { factorPrefix: ['house:4:月', 'house:4:金星'] }, weight: 0.8 },
+
+  // §11: 相手や環境を映す力。海王星は月との個人的接触がある場合だけ採用する。
+  { score: 'partner_mirroring', source: '性格§11', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '海王星'] }, weight: 0.8 },
+  { score: 'partner_mirroring', source: '性格§11', match: { factorPrefix: ['house:7:月', 'house:7:海王星'] }, weight: 0.7 },
+  { score: 'lifestyle_adaptability', source: '性格§11', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '海王星'] }, weight: 0.7 },
+  { score: 'lifestyle_adaptability', source: '性格§11', match: { factorPrefix: ['modalityDominant:mutable:'] }, weight: 0.6 },
+
+  // §12–13: 社会の型・計画・継続。土星と山羊座、7室/10室への直接配置のみを使う。
+  { score: 'social_conformity', source: '性格§12', match: { factorPrefix: ['planet:土星:山羊座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'social_conformity', source: '性格§12', match: { factorPrefix: ['house:10:土星', 'house:10:月', 'house:10:金星'] }, weight: 0.7 },
+  { score: 'plan_orientation', source: '性格§12', match: { factorPrefix: ['planet:土星:山羊座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'plan_orientation', source: '性格§13', match: { factorPrefix: ['elementDominant:earth:', 'house:7:土星', 'house:10:土星'] }, weight: 0.7 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.8 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '土星'] }, weight: 0.7 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['house:7:土星'] }, weight: 0.8 },
+
+  // §15: 評価されることが推進力になる配置。MCとのアスペクトは未発行なので10室で限定する。
+  { score: 'recognition_motivation', source: '性格§15', match: { factorPrefix: ['house:10:太陽', 'house:10:月', 'house:10:木星'] }, weight: 0.9 },
+  { score: 'recognition_motivation', source: '性格§15', match: { factorPrefix: ['midheaven:獅子座', 'midheaven:射手座'] }, weight: 0.7 },
+
+  // §18: 内面の複雑さと孤独感。世代天体の星座だけでは加点しない。
+  { score: 'loneliness_tendency', source: '性格§18', match: { factorPrefix: ['house:8:土星', 'house:12:土星', 'house:8:冥王星', 'house:12:冥王星'] }, weight: 0.8 },
+  { score: 'self_complexity', source: '性格§18', match: { factorPrefix: ['house:8:月', 'house:12:月', 'house:8:冥王星', 'house:12:冥王星'] }, weight: 0.8 },
+
+  // §19: 境界線と受容性。冥王星単独ではなく個人天体の蠍座・水/柔軟宮を使う。
+  { score: 'relationship_boundary_strength', source: '性格§19', match: { factorPrefix: ['planet:太陽:蠍座', 'planet:月:蠍座', 'planet:水星:蠍座', 'planet:金星:蠍座', 'planet:火星:蠍座'] }, weight: 0.8 },
+  { score: 'relationship_boundary_strength', source: '性格§19', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'tolerance', source: '性格§19', match: { factorPrefix: ['elementDominant:water:', 'modalityDominant:mutable:', 'planet:月:天秤座'] }, weight: 0.7 },
+
+  // §20–21: 友情における価値観・自立・人生段階。天王星は11室にある場合だけ採用する。
+  { score: 'friendship_value_match', source: '性格§20', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'friendship_orientation', source: '性格§20', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'life_stage_alignment', source: '性格§21', match: { factorPrefix: ['house:11:天王星', 'house:11:月'] }, weight: 0.8 },
+  { score: 'friendship_independence', source: '性格§21', match: { factorPrefix: ['house:11:天王星'] }, weight: 0.9 },
+  { score: 'partner_mirroring', source: '性格§21', match: { factorPrefix: ['house:11:月'] }, weight: 0.6 },
+
+  // §22–23: 努力への敬意と集団調整。仕事・家庭の室に直接配置された場合だけ発行する。
+  { score: 'effort_respect', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.9 },
+  { score: 'respect_attraction', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.8 },
+  { score: 'group_coordination', source: '性格§23', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:太陽', 'house:10:太陽', 'house:10:土星'] }, weight: 0.8 },
 ]

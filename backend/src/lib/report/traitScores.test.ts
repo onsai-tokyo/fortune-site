@@ -19,7 +19,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.equal(TRAIT_SCORE_RULES.length, 38)
+  assert.equal(TRAIT_SCORE_RULES.length, 64)
 })
 
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
@@ -187,5 +187,29 @@ test('R-4第2弾は引力・没頭と長期適合を別スコアとして保持�
   for (const key of [
     'career_absorption', 'romantic_absorption', 'approval_need', 'attraction_intensity', 'charisma_attraction', 'attraction_charisma',
     'novelty_attraction', 'attraction_novelty', 'compatibility_stability', 'compatibility_reliability', 'compatibility_domestic',
+  ] as const) assert.ok(scores[key].raw > 0, key)
+})
+
+test('R-4第3弾は距離感・計画性・友情を個人配置からスコア化する', () => {
+  const facts = [
+    fact({ id: 'moon-neptune', factor: 'structuredAspect:海王星:トライン:月:orb1', axis: 'relation', signal: 'sensitivity', canonicalSourceId: 'aspect:月-海王星' }),
+    fact({ id: 'mutable', factor: 'modalityDominant:mutable:5', axis: 'drive', signal: 'adaptability', canonicalSourceId: 'modality:mutable' }),
+    fact({ id: 'saturn-capricorn', factor: 'planet:土星:山羊座', axis: 'drive', signal: 'responsibility', canonicalSourceId: 'planet:土星' }),
+    fact({ id: 'house7-saturn', factor: 'house:7:土星', axis: 'domain-love', signal: 'responsibility', canonicalSourceId: 'house:7' }),
+    fact({ id: 'house10-sun', factor: 'house:10:太陽', axis: 'domain-work', signal: 'expression', canonicalSourceId: 'house:10' }),
+    fact({ id: 'house12-pluto', factor: 'house:12:冥王星', axis: 'shadow', signal: 'transformation', canonicalSourceId: 'house:12' }),
+    fact({ id: 'moon-scorpio', factor: 'planet:月:蠍座', axis: 'relation', signal: 'depth', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'fixed', factor: 'modalityDominant:fixed:5', axis: 'drive', signal: 'stability', canonicalSourceId: 'modality:fixed' }),
+    fact({ id: 'house9-mercury', factor: 'house:9:水星', axis: 'cognition', signal: 'communication', canonicalSourceId: 'house:9' }),
+    fact({ id: 'house11-uranus', factor: 'house:11:天王星', axis: 'relation', signal: 'independence', canonicalSourceId: 'house:11' }),
+    fact({ id: 'house10-mars', factor: 'house:10:火星', axis: 'domain-work', signal: 'responsibility', canonicalSourceId: 'house:10:mars' }),
+    fact({ id: 'house4-moon', factor: 'house:4:月', axis: 'relation', signal: 'care', canonicalSourceId: 'house:4' }),
+  ]
+  const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  for (const key of [
+    'partner_mirroring', 'lifestyle_adaptability', 'social_conformity', 'plan_orientation', 'marriage_binding',
+    'recognition_motivation', 'loneliness_tendency', 'self_complexity', 'relationship_boundary_strength', 'tolerance',
+    'friendship_value_match', 'friendship_orientation', 'life_stage_alignment', 'friendship_independence',
+    'effort_respect', 'respect_attraction', 'group_coordination',
   ] as const) assert.ok(scores[key].raw > 0, key)
 })
