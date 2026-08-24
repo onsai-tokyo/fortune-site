@@ -252,6 +252,20 @@ test('共有自己感を運命や継続保証と混同しない', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('チーム感を恋愛の深さや常時一緒に動くことと混同しない', () => {
+  const profile = (value: number, confidence = 0.6): CompatibilityProfileScore => ({
+    key: 'partnership_team_feeling', value, confidence, contributingFacts: ['project', 'ambition'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人だからできること')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人だからできること')
+  const high = compatibilityProfileBlock(profile(0.8), '二人だからできること')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /恋愛の深さとは決めない/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /いつも一緒|必ず成功|運命共同体/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

@@ -34,6 +34,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'ambition_alignment',
   'lifestyle_alignment',
   'shared_identity',
+  'partnership_team_feeling',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -381,6 +382,21 @@ export function computeAmbitionAlignmentProfile(
     value: Number(value.toFixed(3)),
     confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§4。共同作業と目標志向を合成し、競争性では減点しない。 */
+export function computePartnershipTeamFeelingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const project = profiles.find(score => score.key === 'shared_project_compatibility')
+  const ambition = profiles.find(score => score.key === 'ambition_alignment')
+  const hasEvidence = Boolean(project && ambition && project.confidence > 0 && ambition.confidence > 0)
+  return {
+    key: 'partnership_team_feeling',
+    value: hasEvidence ? Number(((project!.value + ambition!.value) / 2).toFixed(3)) : 0.5,
+    confidence: hasEvidence ? Number(Math.min(project!.confidence, ambition!.confidence).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set([...project!.contributingFacts, ...ambition!.contributingFacts])] : [],
   }
 }
 

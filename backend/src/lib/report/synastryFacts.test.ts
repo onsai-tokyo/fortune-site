@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -346,6 +346,32 @@ test('相性§2はハード接触だけで運命共同体感を捏造しない',
   const shared = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'shared_identity')!
   assert.equal(shared.confidence, 0)
   assert.deepEqual(shared.contributingFacts, [])
+})
+
+test('相性§4は共同作業と目標志向からチーム感を派生し競争性で相殺しない', () => {
+  const score = (key: 'shared_project_compatibility' | 'ambition_alignment' | 'ego_competition', value: number, confidence: number, fact: string) => ({
+    key, value, confidence, contributingFacts: [fact],
+  })
+  const profiles = [
+    score('shared_project_compatibility', 0.8, 0.7, 'project'),
+    score('ambition_alignment', 0.9, 0.6, 'ambition'),
+    score('ego_competition', 0.95, 0.8, 'competition'),
+  ]
+  const team = computePartnershipTeamFeelingProfile(profiles)
+  assert.equal(team.key, 'partnership_team_feeling')
+  assert.equal(team.value, 0.85)
+  assert.equal(team.confidence, 0.6)
+  assert.deepEqual(team.contributingFacts.sort(), ['ambition', 'project'])
+  assert.ok(!team.contributingFacts.includes('competition'))
+})
+
+test('相性§4は共同作業か目標志向の片方が根拠不足ならチーム感を推測しない', () => {
+  const team = computePartnershipTeamFeelingProfile([
+    { key: 'shared_project_compatibility', value: 0.9, confidence: 0.8, contributingFacts: ['project'] },
+  ])
+  assert.equal(team.value, 0.5)
+  assert.equal(team.confidence, 0)
+  assert.deepEqual(team.contributingFacts, [])
 })
 
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {

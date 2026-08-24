@@ -106,6 +106,12 @@ const sharedIdentityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、親しくても互いを独立した存在として捉えやすい二人です。一体感の弱さを愛情不足とは決めないでください。`,
 }
 
+const partnershipTeamFeelingText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、役割を持って同じ目標へ進むほど、二人で一つのチームだと感じやすい関係です。ただし、協力できることを恋愛の深さとは決めないでください。`,
+  middle: cue => `${cue}では、課題によってチームになれる時と個別に進む方がよい時があります。担当と決定権を先に分けてください。`,
+  low: cue => `${cue}では、同じ目標でも別々の方法で進む方が力を出しやすい二人です。一緒に動かないことを支え合えない証拠とは決めないでください。`,
+}
+
 
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
@@ -162,6 +168,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   ambition_alignment: ambitionAlignmentText,
   lifestyle_alignment: lifestyleAlignmentText,
   shared_identity: sharedIdentityText,
+  partnership_team_feeling: partnershipTeamFeelingText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -186,6 +193,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   ambition_alignment: '相性§3・§4・§5・§22・§53',
   lifestyle_alignment: '相性§14・§25・§53・§57',
   shared_identity: '相性§2・§35・§39・§53',
+  partnership_team_feeling: '相性§2・§4・§5・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',
