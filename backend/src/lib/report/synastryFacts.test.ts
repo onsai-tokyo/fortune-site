@@ -113,6 +113,22 @@ test('相性§9・§21は友達的な結びつきを水星系Factの重複なし
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('相性§25は暮らしの相性を月・金星から算出し感情親密度と分離する', () => {
+  const left = { astrology: { western: { planets: [{ name: '月', longitude: 10 }, { name: '金星', longitude: 70 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 70 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'domestic_compatibility')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'domestic_compatibility')!
+  const emotional = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'emotional_intimacy')!
+  assert.ok(unknown.contributingFacts.length >= 3)
+  assert.equal(new Set(unknown.contributingFacts).size, unknown.contributingFacts.length)
+  assert.ok(unknown.contributingFacts.every(id => /月|金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(unknown.contributingFacts.some(id => /金星-金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.notDeepEqual(known.contributingFacts, emotional.contributingFacts)
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence < known.confidence)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }

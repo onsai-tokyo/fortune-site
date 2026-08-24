@@ -40,6 +40,12 @@ const friendshipCompatibilityText: Record<ScoreBand, (cue: string) => string> = 
   low: cue => `${cue}では、友達らしい気軽さより、目的のある会話の方が続きやすい二人です。無理に盛り上げず、共有できる時間を選んでください。`,
 }
 
+const domesticCompatibilityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、食事や休息など日々の過ごし方を重ねやすい二人です。ただし、一緒にいる時間の長さを心の深さとは決めないでください。`,
+  middle: cue => `${cue}では、自然に共有できる習慣と調整が要る習慣があります。家事、休息、ひとりの時間を別々に決めてください。`,
+  low: cue => `${cue}では、休み方や心地よい生活の速度に差が出やすい二人です。同じ暮らし方を求めず、譲れない条件から話してください。`,
+}
+
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
   middle: cue => `${cue}では、自然に分かる気持ちと、言葉にしないと届かない気持ちがあります。察したことを確認へ変えるほど親密さが育ちます。`,
@@ -84,6 +90,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   conversational_depth: conversationalDepthText,
   humor_compatibility: humorCompatibilityText,
   friendship_compatibility: friendshipCompatibilityText,
+  domestic_compatibility: domesticCompatibilityText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -97,6 +104,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   conversational_depth: '相性§10・§44・§52・§53',
   humor_compatibility: '相性§9・§44・§53',
   friendship_compatibility: '相性§9・§21・§34・§53',
+  domestic_compatibility: '相性§25・§53・§57',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

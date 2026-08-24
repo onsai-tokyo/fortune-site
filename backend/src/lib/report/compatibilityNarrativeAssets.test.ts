@@ -98,6 +98,20 @@ test('友達的な近さを恋愛や長期継続の保証にしない', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('暮らしの相性を同棲時間や感情の深さと混同しない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'domestic_compatibility', value, confidence, contributingFacts: ['moon-venus'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の暮らし')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の暮らし')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の暮らし')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /一緒にいる時間の長さを心の深さとは決めない/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /同棲すれば親密|必ず結婚/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
