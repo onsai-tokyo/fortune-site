@@ -40,6 +40,12 @@ const growthCompatibilityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、成長したい方向や速度が違いやすい二人です。同じ歩幅を求めず、相手の変化を関係への拒絶と決めないでください。`,
 }
 
+const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
+  middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
+  low: cue => `${cue}では、同じ出来事にも違う意味を置きやすい二人です。結論を揃える前に、なぜ大切なのかを交換してください。`,
+}
+
 function band(value: number): ScoreBand {
   if (value >= 0.6) return 'high'
   if (value <= 0.4) return 'low'
@@ -84,12 +90,14 @@ export function compatibilityProfileBlock(score: CompatibilityProfileScore | und
     : score.key === 'emotional_intimacy' ? emotionalIntimacyText
     : score.key === 'repair_capacity' ? repairCapacityText
     : score.key === 'emotional_safety' ? emotionalSafetyText
-    : growthCompatibilityText
+    : score.key === 'growth_compatibility' ? growthCompatibilityText
+    : valueAlignmentText
   const source = score.key === 'conversational_flow' ? '相性§44・§53'
     : score.key === 'emotional_intimacy' ? '相性§43・§53・§54'
     : score.key === 'repair_capacity' ? '相性§7・§42・§53'
     : score.key === 'emotional_safety' ? '相性§7・§34・§42・§54'
-    : '相性§45・§53・§54'
+    : score.key === 'growth_compatibility' ? '相性§45・§53・§54'
+    : '相性§14・§34・§53・§54'
   return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source }
 }
 

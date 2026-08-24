@@ -226,12 +226,15 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const growthBlock = id === 'compat-growth'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'growth_compatibility'), item.cue)
     : null
+  const valueBlock = id === 'compat-overview'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'value_alignment'), item.cue)
+    : null
   const pairScoreBlock = pairScoresForChapter(id, context)
     .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? tensionBlock ?? growthBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
