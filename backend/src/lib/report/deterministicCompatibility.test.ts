@@ -69,4 +69,10 @@ test('個人情報を渡さず集計済みの二人比較スコアだけを根�
   assert.doesNotMatch(serialized, /1995-02-20|03:02|名古屋市/)
   assert.ok(report.cards.every(card => card.metadataRefs?.some(ref => ref.startsWith('pairTraitScore.'))))
   assert.ok(report.cards.every(card => card.evidence.some(item => item.system === '決定論スコア')))
+  assert.deepEqual(report.cards.find(card => card.id === 'compat-beginning')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [
+    'pairTraitScore.compatibility_transparency',
+  ])
+  assert.deepEqual(report.cards.find(card => card.id === 'compat-marriage')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [
+    'pairTraitScore.compatibility_independence', 'pairTraitScore.compatibility_lifestyle', 'pairTraitScore.compatibility_value_match',
+  ].sort())
 })

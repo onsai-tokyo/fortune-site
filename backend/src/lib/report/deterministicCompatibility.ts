@@ -95,21 +95,60 @@ const chapterAxes: Record<string, readonly RelationAxis[]> = {
   'compat-marriage': ['domestic', 'binding', 'safety', 'values'],
 }
 
+const pairScoreAxes: Record<PairTraitScore['key'], readonly RelationAxis[]> = {
+  compatibility_transparency: ['communication', 'safety', 'repair'],
+  compatibility_independence: ['domestic', 'safety'],
+  compatibility_lifestyle: ['domestic', 'fun'],
+  compatibility_value_match: ['values', 'growth'],
+}
+
+const chapterPairScores: Record<string, readonly PairTraitScore['key'][]> = {
+  'compat-overview': ['compatibility_value_match', 'compatibility_lifestyle'],
+  'compat-beginning': ['compatibility_transparency'],
+  'compat-attraction': ['compatibility_lifestyle'],
+  'compat-caution': ['compatibility_transparency', 'compatibility_value_match'],
+  'compat-friction': ['compatibility_transparency', 'compatibility_value_match'],
+  'compat-repair': ['compatibility_transparency'],
+  'compat-growth': ['compatibility_value_match', 'compatibility_lifestyle'],
+  'compat-marriage': ['compatibility_lifestyle', 'compatibility_independence', 'compatibility_value_match'],
+}
+
+function pairScoresForChapter(id: string, context: PairContext): PairTraitScore[] {
+  const allowed = new Set(chapterPairScores[id] ?? [])
+  return context.pairTraitScores.filter(score => allowed.has(score.key))
+}
+
+function effectiveRelationScores(id: string, context: PairContext): RelationScore[] {
+  const pairScores = pairScoresForChapter(id, context).filter(score => score.confidence > 0)
+  return context.relationScores.map(relation => {
+    const related = pairScores.filter(score => pairScoreAxes[score.key].includes(relation.key))
+    if (!related.length) return relation
+    const pairWeight = related.reduce((sum, score) => sum + score.confidence, 0)
+    const weightedPairValue = related.reduce((sum, score) => sum + score.value * score.confidence, 0) / pairWeight
+    const totalWeight = relation.confidence + pairWeight
+    return {
+      ...relation,
+      value: Number(((relation.value * relation.confidence + weightedPairValue * pairWeight) / totalWeight).toFixed(3)),
+      confidence: Number(Math.min(1, Math.max(relation.confidence, pairWeight / related.length)).toFixed(3)),
+    }
+  })
+}
+
 function axisForChapter(id: string, context: PairContext): RelationAxis {
   const preferred = new Set(chapterAxes[id] ?? [])
-  return context.relationScores
+  return effectiveRelationScores(id, context)
     .filter(score => preferred.has(score.key) && score.confidence > 0)
     .sort((a, b) => b.confidence - a.confidence || Math.abs(b.value - 0.5) - Math.abs(a.value - 0.5) || a.key.localeCompare(b.key))[0]?.key
     ?? context.strongestAxis
 }
 
 function chapterAxisPlan(ids: readonly string[], context: PairContext): Map<string, RelationAxis> {
-  const available = context.relationScores
-    .filter(score => score.confidence > 0)
-    .sort((a, b) => b.confidence - a.confidence || Math.abs(b.value - 0.5) - Math.abs(a.value - 0.5) || a.key.localeCompare(b.key))
   const used = new Set<RelationAxis>()
   const plan = new Map<string, RelationAxis>()
   for (const id of ids) {
+    const available = effectiveRelationScores(id, context)
+      .filter(score => score.confidence > 0)
+      .sort((a, b) => b.confidence - a.confidence || Math.abs(b.value - 0.5) - Math.abs(a.value - 0.5) || a.key.localeCompare(b.key))
     const preferred = new Set(chapterAxes[id] ?? [])
     const selected = available.find(score => preferred.has(score.key) && !used.has(score.key))
       ?? available.find(score => !used.has(score.key))
@@ -172,19 +211,20 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
   const axisPlan = chapterAxisPlan(selected.map(([id]) => id), context)
   const cards = selected.map(([id, title]) => {
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
+    const chapterScores = pairScoresForChapter(id, context)
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
     summary: `${relationshipLabel}の二人には、${axisLead[chapterAxis]}という特徴があります。この章では「${title}」を手がかりに、${context.difference}を扱う順序を読み解きます。`, tags: ['相性', relationshipLabel], period: null,
     pages: pagesFor(id, context, chapterAxis),
     evidence: [
       ...context.evidence,
-      ...context.pairTraitScores.map(score => ({
+      ...chapterScores.map(score => ({
         family: '二人の特性比較', system: '決定論スコア', detail: `${score.key}=${score.value}; confidence=${score.confidence}`,
       })),
     ],
     metadataRefs: [
       'self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`,
-      ...context.pairTraitScores.map(score => `pairTraitScore.${score.key}`),
+      ...chapterScores.map(score => `pairTraitScore.${score.key}`),
     ] }, 'deterministic')
   })
   return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-deterministic-v1')
