@@ -30,6 +30,18 @@ export const COMPATIBILITY_PROFILE_KEYS = [
 ] as const
 export type CompatibilityProfileKey = typeof COMPATIBILITY_PROFILE_KEYS[number]
 export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
+export type UnderstandingComponentKey = 'cognitive' | 'emotional' | 'deep'
+export interface UnderstandingComponentScore {
+  key: UnderstandingComponentKey
+  value: number
+  confidence: number
+  contributingFacts: string[]
+}
+export interface MutualUnderstandingProfile {
+  key: 'mutual_understanding'
+  components: Record<UnderstandingComponentKey, UnderstandingComponentScore>
+}
+export const IMPLEMENTED_COMPATIBILITY_SCORE_KEYS = [...COMPATIBILITY_PROFILE_KEYS, 'mutual_understanding'] as const
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
 const text = (value: unknown) => typeof value === 'string' ? value : ''
@@ -52,6 +64,9 @@ const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '
 const CONFLICT_INTENSITY_PAIRS = new Set(['太陽:火星', '火星:火星', '水星:火星', '月:火星'].map(value => value.split(':').sort().join(':')))
 const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
 const VALUE_ALIGNMENT_PAIRS = new Set(['太陽:太陽', '太陽:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
+const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
+const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
@@ -189,6 +204,37 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     confidence: Number(Math.min(0.65, values.length * 0.16).toFixed(3)),
     contributingFacts: values.map(fact => fact.id),
   }]
+}
+
+/** 相性§52。認知・感情・深層の理解を平均せず、3成分のまま保持する。 */
+export function computeMutualUnderstanding(
+  facts: SynastryFact[],
+  birthTimeKnown = { self: false, partner: false },
+): MutualUnderstandingProfile {
+  const pairFromSignal = (fact: SynastryFact) => fact.signal.split('-').slice(0, 2).sort().join(':')
+  const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
+  const component = (
+    key: UnderstandingComponentKey,
+    pairs: Set<string>,
+    usesMoon: boolean,
+  ): UnderstandingComponentScore => {
+    const contributors = facts.filter(fact => fact.kind === 'cross-aspect' && pairs.has(pairFromSignal(fact)))
+    const signed = contributors.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+    return {
+      key,
+      value: Number((contributors.length ? 1 / (1 + Math.exp(-signed)) : 0.5).toFixed(3)),
+      confidence: Number((Math.min(0.8, contributors.length * 0.18) * (usesMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+      contributingFacts: contributors.map(fact => fact.id),
+    }
+  }
+  return {
+    key: 'mutual_understanding',
+    components: {
+      cognitive: component('cognitive', COGNITIVE_UNDERSTANDING_PAIRS, false),
+      emotional: component('emotional', EMOTIONAL_UNDERSTANDING_PAIRS, true),
+      deep: component('deep', DEEP_UNDERSTANDING_PAIRS, true),
+    },
+  }
 }
 
 export function computeRelationScores(facts: SynastryFact[]): RelationScore[] {

@@ -1,13 +1,19 @@
 import type { PairTraitScore } from './derivedTraitScores.js'
-import type { CompatibilityProfileScore } from './synastryFacts.js'
+import type { CompatibilityProfileScore, MutualUnderstandingProfile, UnderstandingComponentKey } from './synastryFacts.js'
 
 type ScoreBand = 'low' | 'middle' | 'high'
 
 export interface CompatibilityScoreBlock {
-  scoreKey: PairTraitScore['key'] | CompatibilityProfileScore['key']
+  scoreKey: PairTraitScore['key'] | CompatibilityProfileScore['key'] | MutualUnderstandingProfile['key']
   band: ScoreBand
   text: string
   source: string
+}
+
+const understandingLabel: Record<UnderstandingComponentKey, string> = {
+  cognitive: '考えの筋道',
+  emotional: '感じていること',
+  deep: 'まだ言葉にならない部分',
 }
 
 const conversationalFlowText: Record<ScoreBand, (cue: string) => string> = {
@@ -147,4 +153,19 @@ export function relationshipTensionBlock(
         ? `${cue}では、表立った衝突は起こりにくい二人です。静かであることを納得と決めず、小さな違和感を定期的に確かめてください。`
         : `${cue}では、話題によって反応の強さが変わります。勝ち負けを決める前に、事実と受け取った気持ちを分けてください。`
   return { scoreKey: conflict.key, band: conflictBand, text, source: '相性§7・§42' }
+}
+
+/** 相性§52。理解の3成分を平均せず、確かな成分と届きにくい成分を同時に書く。 */
+export function mutualUnderstandingBlock(profile: MutualUnderstandingProfile | undefined, cue: string): CompatibilityScoreBlock | null {
+  if (!profile) return null
+  const available = Object.values(profile.components).filter(component => component.confidence >= 0.25)
+  if (!available.length) return null
+  const strongest = [...available].sort((a, b) => b.confidence - a.confidence || b.value - a.value || a.key.localeCompare(b.key))[0]
+  const weakest = [...available].sort((a, b) => a.value - b.value || b.confidence - a.confidence || a.key.localeCompare(b.key))[0]
+  const scoreBand = band(strongest.value)
+  const contrast = weakest.key !== strongest.key
+    ? `一方、${understandingLabel[weakest.key]}は言葉で確かめてください。`
+    : '分かったつもりで終わらず、本人の言葉で確かめてください。'
+  const text = `${cue}では、${understandingLabel[strongest.key]}を受け取りやすい二人です。${contrast}`
+  return { scoreKey: profile.key, band: scoreBand, text, source: '相性§10・§11・§44・§52・§53' }
 }

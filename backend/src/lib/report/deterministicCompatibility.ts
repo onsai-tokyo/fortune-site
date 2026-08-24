@@ -2,12 +2,12 @@ import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCard
 import type { ReportInput } from '../deterministicReport.js'
 import { extractReportMetadata } from './metadata.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
-import { buildSynastryFacts, computeCompatibilityProfile, computeRelationScores, type CompatibilityProfileScore, type RelationAxis, type RelationScore } from './synastryFacts.js'
+import { buildSynastryFacts, computeCompatibilityProfile, computeMutualUnderstanding, computeRelationScores, type CompatibilityProfileScore, type MutualUnderstandingProfile, type RelationAxis, type RelationScore } from './synastryFacts.js'
 import { buildReportFactsV2 } from './factsV2.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { computePairTraitScores, type PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityProfileBlock, compatibilityScoreBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock, mutualUnderstandingBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -26,6 +26,7 @@ interface PairContext {
   relationScores: RelationScore[]
   pairTraitScores: PairTraitScore[]
   compatibilityProfile: CompatibilityProfileScore[]
+  mutualUnderstanding?: MutualUnderstandingProfile
 }
 
 export interface CompatibilityTraitScoreBundle {
@@ -33,6 +34,7 @@ export interface CompatibilityTraitScoreBundle {
   partner: TraitScoreSet
   pair: PairTraitScore[]
   profile: CompatibilityProfileScore[]
+  mutualUnderstanding: MutualUnderstandingProfile
 }
 
 /** 生年月日などの入力はここでのみ読み、相性レポートへは集計済みスコアだけを渡す。 */
@@ -47,6 +49,7 @@ export function buildCompatibilityTraitScoreBundle(self: ReportInput, partner: R
     partner: partnerScores,
     pair: computePairTraitScores(selfScores, partnerScores, relations),
     profile: computeCompatibilityProfile(synastry, { self: Boolean(self.birthTime), partner: Boolean(partner.birthTime) }),
+    mutualUnderstanding: computeMutualUnderstanding(synastry, { self: Boolean(self.birthTime), partner: Boolean(partner.birthTime) }),
   }
 }
 
@@ -90,6 +93,7 @@ function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType
       ...synastry.slice(0, 8).map(fact => ({ family: '二人の照合', system: fact.kind, detail: `${fact.axis}:${fact.detail}` })),
     ],
     strongestAxis, relationScores, pairTraitScores: scoreBundle?.pair ?? [], compatibilityProfile: scoreBundle?.profile ?? [],
+    mutualUnderstanding: scoreBundle?.mutualUnderstanding,
   }
 }
 
@@ -218,6 +222,9 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const conversationalDepthBlock = id === 'compat-caution'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'conversational_depth'), item.cue)
     : null
+  const understandingBlock = id === 'compat-caution'
+    ? mutualUnderstandingBlock(context.mutualUnderstanding, item.cue)
+    : null
   const tensionBlock = id === 'compat-friction'
     ? relationshipTensionBlock(
       context.compatibilityProfile.find(score => score.key === 'conflict_intensity'),
@@ -237,7 +244,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? conversationalDepthBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -277,6 +284,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       : id === 'compat-overview' ? ['value_alignment']
       : id === 'compat-beginning' ? ['conversational_flow'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
+    const chapterUnderstanding = id === 'compat-caution' ? context.mutualUnderstanding : undefined
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
     summary: `${relationshipLabel}の二人には、${axisLead[chapterAxis]}という特徴があります。この章では「${title}」を手がかりに、${context.difference}を扱う順序を読み解きます。`, tags: ['相性', relationshipLabel], period: null,
@@ -287,11 +295,13 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
         family: '二人の特性比較', system: '決定論スコア', detail: `${score.key}=${score.value}; confidence=${score.confidence}`,
       })),
       ...chapterProfiles.map(profile => ({ family: '二人の相性プロファイル', system: '決定論スコア', detail: `${profile.key}=${profile.value}; confidence=${profile.confidence}` })),
+      ...Object.values(chapterUnderstanding?.components ?? {}).map(component => ({ family: '二人の理解プロファイル', system: '決定論スコア', detail: `mutual_understanding.${component.key}=${component.value}; confidence=${component.confidence}` })),
     ],
     metadataRefs: [
       'self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`,
       ...chapterScores.map(score => `pairTraitScore.${score.key}`),
       ...chapterProfiles.map(profile => `compatibilityProfile.${profile.key}`),
+      ...Object.keys(chapterUnderstanding?.components ?? {}).map(key => `mutualUnderstanding.${key}`),
     ] }, 'deterministic')
   })
   return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-deterministic-v1')

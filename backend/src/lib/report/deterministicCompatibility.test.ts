@@ -65,6 +65,7 @@ test('個人情報を渡さず集計済みの二人比較スコアだけを根�
     'compatibility_transparency', 'compatibility_independence', 'compatibility_lifestyle', 'compatibility_value_match',
   ])
   assert.equal(bundle.profile[0].key, 'conversational_flow')
+  assert.deepEqual(Object.keys(bundle.mutualUnderstanding.components), ['cognitive', 'emotional', 'deep'])
   const report = buildDeterministicCompatibilityReport(selfInput, partnerInput, 'romantic', '片思い', bundle)
   const serialized = JSON.stringify(report)
   assert.doesNotMatch(serialized, /1995-02-20|03:02|名古屋市/)
@@ -76,4 +77,7 @@ test('個人情報を渡さず集計済みの二人比較スコアだけを根�
   assert.deepEqual(report.cards.find(card => card.id === 'compat-marriage')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [
     'pairTraitScore.compatibility_independence', 'pairTraitScore.compatibility_lifestyle', 'pairTraitScore.compatibility_value_match',
   ].sort())
+  assert.deepEqual(report.cards.find(card => card.id === 'compat-caution')?.metadataRefs?.filter(ref => ref.startsWith('mutualUnderstanding.')), [
+    'mutualUnderstanding.cognitive', 'mutualUnderstanding.emotional', 'mutualUnderstanding.deep',
+  ])
 })

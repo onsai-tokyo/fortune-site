@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeCompatibilityProfile, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeCompatibilityProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -59,6 +59,26 @@ test('相性§43は出生時刻なしでも感情親密度を返すが確信度�
   assert.equal(unknown.value, known.value)
   assert.ok(unknown.confidence > 0)
   assert.ok(unknown.confidence < known.confidence)
+})
+
+test('相性§52は相互理解を認知・感情・深層の3成分で保持する', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '水星', longitude: 10 }, { name: '月', longitude: 40 }, { name: '冥王星', longitude: 70 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Mercury', longitude: 10 }, { name: 'Moon', longitude: 12 }, { name: 'Pluto', longitude: 10 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const unknown = computeMutualUnderstanding(facts)
+  const known = computeMutualUnderstanding(facts, { self: true, partner: true })
+  assert.deepEqual(Object.keys(unknown.components), ['cognitive', 'emotional', 'deep'])
+  assert.ok(unknown.components.cognitive.contributingFacts.length > 0)
+  assert.ok(unknown.components.emotional.contributingFacts.length > 0)
+  assert.ok(unknown.components.deep.contributingFacts.length > 0)
+  assert.equal(unknown.components.cognitive.confidence, known.components.cognitive.confidence)
+  assert.ok(unknown.components.emotional.confidence < known.components.emotional.confidence)
+  assert.ok(unknown.components.deep.confidence < known.components.deep.confidence)
+  assert.notDeepEqual(unknown.components.cognitive.contributingFacts, unknown.components.deep.contributingFacts)
 })
 
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityProfileBlock, compatibilityScoreBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
-import type { CompatibilityProfileScore } from './synastryFacts.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock, mutualUnderstandingBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
+import type { CompatibilityProfileScore, MutualUnderstandingProfile } from './synastryFacts.js'
 
 const score = (key: PairTraitScore['key'], value: number, confidence = 0.8): PairTraitScore => ({
   key, value, confidence, inputScores: ['social_sensitivity'], relationAxes: [],
@@ -47,6 +47,27 @@ test('心の会話を会話量や同意と混同しない文章へ変換する',
   assert.match(high?.text ?? '', /深く話せることを同意と決めない/)
   assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /会話が多いから理解|必ず分かり合える/)
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
+test('相互理解の3成分を平均せず文章へ残す', () => {
+  const profile: MutualUnderstandingProfile = {
+    key: 'mutual_understanding',
+    components: {
+      cognitive: { key: 'cognitive', value: 0.8, confidence: 0.7, contributingFacts: ['mercury'] },
+      emotional: { key: 'emotional', value: 0.3, confidence: 0.6, contributingFacts: ['moon'] },
+      deep: { key: 'deep', value: 0.5, confidence: 0.2, contributingFacts: [] },
+    },
+  }
+  const block = mutualUnderstandingBlock(profile, '相手を理解する時')
+  assert.equal(block?.scoreKey, 'mutual_understanding')
+  assert.match(block?.text ?? '', /考えの筋道を受け取りやすい/)
+  assert.match(block?.text ?? '', /感じていることは言葉で確かめて/)
+  assert.ok([...(block?.text ?? '')].length <= 120)
+  assert.equal(mutualUnderstandingBlock({ ...profile, components: {
+    ...profile.components,
+    cognitive: { ...profile.components.cognitive, confidence: 0.24 },
+    emotional: { ...profile.components.emotional, confidence: 0.24 },
+  } }, '相手を理解する時'), null)
 })
 
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
