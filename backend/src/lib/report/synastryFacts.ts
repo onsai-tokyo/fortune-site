@@ -29,6 +29,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'adventure_compatibility',
   'admiration_mutual',
   'pride_collision',
+  'ego_competition',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -39,6 +40,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
 ] as const
 export type CompatibilityProfileKey = typeof COMPATIBILITY_PROFILE_KEYS[number]
 export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
+interface TraitScoreInput { value: number; confidence: number; contributingFacts: string[] }
 export type UnderstandingComponentKey = 'cognitive' | 'emotional' | 'deep'
 export interface UnderstandingComponentScore {
   key: UnderstandingComponentKey
@@ -304,6 +306,25 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     confidence: Number(Math.min(0.65, values.length * 0.16).toFixed(3)),
     contributingFacts: values.map(fact => fact.id),
   }]
+}
+
+/** 相性§4・§5・§19。占術Factを再加算せず、双方の個人Traitの積から競争性を派生する。 */
+export function computeEgoCompetitionProfile(
+  self: { pride_sensitivity: TraitScoreInput; status_attraction: TraitScoreInput },
+  partner: { pride_sensitivity: TraitScoreInput; status_attraction: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.status_attraction, partner.status_attraction]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const value = hasEvidence
+    ? (self.pride_sensitivity.value * partner.pride_sensitivity.value
+      + self.status_attraction.value * partner.status_attraction.value) / 2
+    : 0.5
+  return {
+    key: 'ego_competition',
+    value: Number(value.toFixed(3)),
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
 }
 
 /** 相性§52。認知・感情・深層の理解を平均せず、3成分のまま保持する。 */

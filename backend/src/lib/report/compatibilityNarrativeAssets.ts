@@ -76,6 +76,12 @@ const prideCollisionText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、意見の違いを自分への否定と結びつけにくい二人です。それでも、穏やかさを我慢の証拠とは決めないでください。`,
 }
 
+const egoCompetitionText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手の力を認めるほど、自分も負けたくない気持ちが動きやすい二人です。成果を比べる前に、互いが担った役割を言葉にしてください。`,
+  middle: cue => `${cue}では、励まし合える分野と張り合いやすい分野が分かれます。競争する範囲と協力する範囲を先に決めてください。`,
+  low: cue => `${cue}では、相手の成功を自分の評価と結びつけにくい二人です。それでも、競わないことを関心の薄さとは決めないでください。`,
+}
+
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
   middle: cue => `${cue}では、自然に分かる気持ちと、言葉にしないと届かない気持ちがあります。察したことを確認へ変えるほど親密さが育ちます。`,
@@ -126,6 +132,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   adventure_compatibility: adventureCompatibilityText,
   admiration_mutual: admirationMutualText,
   pride_collision: prideCollisionText,
+  ego_competition: egoCompetitionText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -145,6 +152,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   adventure_compatibility: '相性§3・§26・§36・§53',
   admiration_mutual: '相性§19・§27・§33・§53',
   pride_collision: '相性§6・§19・§42・§53',
+  ego_competition: '相性§4・§5・§19・§33・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeCompatibilityProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeCompatibilityProfile, computeEgoCompetitionProfile, computeMutualUnderstanding, computeRelationScores } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -213,6 +213,34 @@ test('相性§6はプライド衝突を火星系のハード接触だけから�
   assert.notDeepEqual(known.contributingFacts, conflict.contributingFacts)
   assert.equal(unknown.value, known.value)
   assert.ok(unknown.confidence < known.confidence)
+})
+
+test('相性§4・§5は双方の個人Traitの積から競争性を独立算出する', () => {
+  const trait = (value: number, confidence: number, fact: string) => ({ value, confidence, contributingFacts: [fact] })
+  const high = computeEgoCompetitionProfile(
+    { pride_sensitivity: trait(0.9, 0.8, 'self-pride'), status_attraction: trait(0.8, 0.7, 'self-status') },
+    { pride_sensitivity: trait(0.85, 0.75, 'partner-pride'), status_attraction: trait(0.9, 0.65, 'partner-status') },
+  )
+  const low = computeEgoCompetitionProfile(
+    { pride_sensitivity: trait(0.2, 0.8, 'self-pride'), status_attraction: trait(0.3, 0.7, 'self-status') },
+    { pride_sensitivity: trait(0.25, 0.75, 'partner-pride'), status_attraction: trait(0.2, 0.65, 'partner-status') },
+  )
+  assert.equal(high.key, 'ego_competition')
+  assert.ok(high.value > 0.7)
+  assert.ok(low.value < 0.1)
+  assert.equal(high.confidence, 0.65)
+  assert.deepEqual(high.contributingFacts.sort(), ['partner-pride', 'partner-status', 'self-pride', 'self-status'])
+})
+
+test('相性§5は根拠のない個人Traitから競争性を推測しない', () => {
+  const score = { value: 0.9, confidence: 0, contributingFacts: [] }
+  const result = computeEgoCompetitionProfile(
+    { pride_sensitivity: score, status_attraction: score },
+    { pride_sensitivity: score, status_attraction: score },
+  )
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
 })
 
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
