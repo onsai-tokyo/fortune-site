@@ -81,6 +81,22 @@ test('相性§52は相互理解を認知・感情・深層の3成分で保持す
   assert.notDeepEqual(unknown.components.cognitive.contributingFacts, unknown.components.deep.contributingFacts)
 })
 
+test('相性§9は掛け合いの楽しさを会話の流れから分離する', () => {
+  const left = { astrology: { western: { planets: [{ name: '水星', longitude: 10 }] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Mars', longitude: 70 }, { name: 'Jupiter', longitude: 130 }, { name: 'Uranus', longitude: 190 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const profiles = computeCompatibilityProfile(facts)
+  const humor = profiles.find(score => score.key === 'humor_compatibility')!
+  const flow = profiles.find(score => score.key === 'conversational_flow')!
+  assert.equal(humor.contributingFacts.length, 3)
+  assert.ok(humor.confidence > 0)
+  assert.equal(flow.contributingFacts.length, 2)
+  assert.notDeepEqual(humor.contributingFacts, flow.contributingFacts)
+  assert.ok(humor.contributingFacts.every(id => /木星|火星|天王星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }

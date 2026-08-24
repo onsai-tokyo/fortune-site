@@ -70,6 +70,20 @@ test('相互理解の3成分を平均せず文章へ残す', () => {
   } }, '相手を理解する時'), null)
 })
 
+test('掛け合いの楽しさを安心感の保証にしない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'humor_compatibility', value, confidence, contributingFacts: ['mercury-jupiter'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の会話')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の会話')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の会話')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /笑えることと安心できることは別/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず仲が良い|長続きする/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

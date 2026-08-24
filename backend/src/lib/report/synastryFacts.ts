@@ -21,6 +21,7 @@ export interface RelationScore { key: RelationAxis; value: number; confidence: n
 export const COMPATIBILITY_PROFILE_KEYS = [
   'conversational_flow',
   'conversational_depth',
+  'humor_compatibility',
   'emotional_intimacy',
   'repair_capacity',
   'emotional_safety',
@@ -58,6 +59,7 @@ const pairKey = (left: string, right: string) => [canonicalPlanet(left), canonic
 const FLOW_PAIRS = new Set(['水星:水星', '太陽:水星', '水星:金星', '木星:水星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:月', '太陽:月', '月:金星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
 const CONVERSATIONAL_DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
+const HUMOR_COMPATIBILITY_PAIRS = new Set(['木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '木星:月'].map(value => value.split(':').sort().join(':')))
@@ -146,6 +148,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const conversationDepth = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && CONVERSATIONAL_DEPTH_PAIRS.has(pairFromSignal(fact)))
   const conversationDepthSigned = conversationDepth.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const conversationDepthHasMoon = conversationDepth.some(fact => pairFromSignal(fact).includes('月'))
+  const humor = facts.filter(fact => fact.kind === 'cross-aspect' && HUMOR_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const humorSigned = humor.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -173,6 +177,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((conversationDepth.length ? 1 / (1 + Math.exp(-conversationDepthSigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.8, conversationDepth.length * 0.18) * (conversationDepthHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
     contributingFacts: conversationDepth.map(fact => fact.id),
+  }, {
+    key: 'humor_compatibility',
+    value: Number((humor.length ? 1 / (1 + Math.exp(-humorSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, humor.length * 0.18).toFixed(3)),
+    contributingFacts: humor.map(fact => fact.id),
   }, {
     key: 'emotional_intimacy',
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),

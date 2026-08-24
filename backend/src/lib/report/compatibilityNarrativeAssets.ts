@@ -28,6 +28,12 @@ const conversationalDepthText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、会話が続いても心の奥を見せる時機に差が出やすい二人です。話題の多さで測らず、言葉を待てる余白を作ってください。`,
 }
 
+const humorCompatibilityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、意外な返しや話題の広がりを一緒に楽しみやすい二人です。笑えることと安心できることは別に確かめてください。`,
+  middle: cue => `${cue}では、話題や場面によって掛け合いの楽しさが変わります。二人だけで笑えた出来事を重ねるほど自然さが育ちます。`,
+  low: cue => `${cue}では、面白いと感じる速さや方向が違いやすい二人です。反応を求めず、相手が楽しむ形を観察してください。`,
+}
+
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
   middle: cue => `${cue}では、自然に分かる気持ちと、言葉にしないと届かない気持ちがあります。察したことを確認へ変えるほど親密さが育ちます。`,
@@ -64,6 +70,7 @@ type StandaloneProfileKey = Exclude<CompatibilityProfileScore['key'], Contextual
 const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: string) => string>> = {
   conversational_flow: conversationalFlowText,
   conversational_depth: conversationalDepthText,
+  humor_compatibility: humorCompatibilityText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   emotional_safety: emotionalSafetyText,
@@ -74,6 +81,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
 const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   conversational_flow: '相性§44・§53',
   conversational_depth: '相性§10・§44・§52・§53',
+  humor_compatibility: '相性§9・§44・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   emotional_safety: '相性§7・§34・§42・§54',

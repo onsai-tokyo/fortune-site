@@ -213,6 +213,9 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const emotionalBlock = id === 'compat-attraction'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'emotional_intimacy'), item.cue)
     : null
+  const humorBlock = id === 'compat-beginning'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'humor_compatibility'), item.cue)
+    : null
   const repairBlock = id === 'compat-repair'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'repair_capacity'), item.cue)
     : null
@@ -244,7 +247,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -282,7 +285,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       : id === 'compat-friction' ? ['conflict_intensity', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-growth' ? ['growth_compatibility']
       : id === 'compat-overview' ? ['value_alignment']
-      : id === 'compat-beginning' ? ['conversational_flow'] : []
+      : id === 'compat-beginning' ? ['conversational_flow', 'humor_compatibility'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const chapterUnderstanding = id === 'compat-caution' ? context.mutualUnderstanding : undefined
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
