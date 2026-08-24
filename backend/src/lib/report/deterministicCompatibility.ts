@@ -7,7 +7,7 @@ import { buildReportFactsV2 } from './factsV2.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { computePairTraitScores, type PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -190,11 +190,15 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     'compat-marriage': { cue: '二人の暮らし', focus: `関係が暮らしになったあと、二人らしさを守る条件`, action: '時間、お金、家の役割を気持ちとは別に定期的に話す' },
   }
   const item = chapter[id]
-  const scoreBlock = pairScoresForChapter(id, context)
+  const conversationBlock = id === 'compat-beginning'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'conversational_flow'), item.cue)
+    : null
+  const pairScoreBlock = pairScoresForChapter(id, context)
     .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
+  const scoreBlock = conversationBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },

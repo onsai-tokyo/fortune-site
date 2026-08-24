@@ -1,12 +1,19 @@
 import type { PairTraitScore } from './derivedTraitScores.js'
+import type { CompatibilityProfileScore } from './synastryFacts.js'
 
 type ScoreBand = 'low' | 'middle' | 'high'
 
 export interface CompatibilityScoreBlock {
-  scoreKey: PairTraitScore['key']
+  scoreKey: PairTraitScore['key'] | CompatibilityProfileScore['key']
   band: ScoreBand
   text: string
   source: string
+}
+
+const conversationalFlowText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、互いの話を受け取り、次の話題へつなぎやすい二人です。ただし、話が弾むことと心の奥まで分かることは別に確かめてください。`,
+  middle: cue => `${cue}では、話題によって会話の自然さが変わります。分かりやすい話だけでなく、答えにくい気持ちにも時間を取ってください。`,
+  low: cue => `${cue}では、考えを組み立てる順序に差が出やすい二人です。返事の速さを理解の深さと決めず、言い直せる余白を作ってください。`,
 }
 
 function band(value: number): ScoreBand {
@@ -43,4 +50,11 @@ export function compatibilityScoreBlock(score: PairTraitScore | undefined, cue: 
   if (!score || score.confidence < 0.25) return null
   const scoreBand = band(score.value)
   return { scoreKey: score.key, band: scoreBand, text: textByScore[score.key][scoreBand](cue), source: '相性§41・§52・§53' }
+}
+
+/** 相性§44・§53。話しやすさを、感情の深い理解や安心感と混同しない。 */
+export function compatibilityProfileBlock(score: CompatibilityProfileScore | undefined, cue: string): CompatibilityScoreBlock | null {
+  if (!score || score.key !== 'conversational_flow' || score.confidence < 0.25) return null
+  const scoreBand = band(score.value)
+  return { scoreKey: score.key, band: scoreBand, text: conversationalFlowText[scoreBand](cue), source: '相性§44・§53' }
 }

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
+import type { CompatibilityProfileScore } from './synastryFacts.js'
 
 const score = (key: PairTraitScore['key'], value: number, confidence = 0.8): PairTraitScore => ({
   key, value, confidence, inputScores: ['social_sensitivity'], relationAxes: [],
@@ -18,4 +19,18 @@ test('相性スコアを高・中・低の別文章へ変換する', () => {
 
 test('確信度不足は一般論で埋めず既存文へフォールバックする', () => {
   assert.equal(compatibilityScoreBlock(score('compatibility_transparency', 0.9, 0.24), '会話'), null)
+})
+
+test('会話の流れを深い理解と混同しない文章へ変換する', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'conversational_flow', value, confidence, contributingFacts: ['cross-aspect:test'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '距離の始まり')
+  const middle = compatibilityProfileBlock(profile(0.5), '距離の始まり')
+  const high = compatibilityProfileBlock(profile(0.8), '距離の始まり')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /話が弾むことと心の奥まで分かることは別/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+  assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '距離の始まり'), null)
 })
