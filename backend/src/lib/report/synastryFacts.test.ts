@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePredictabilityProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeBetrayalRiskPatternProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePredictabilityProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -643,6 +643,31 @@ test('相性§31は安心・修復・個人信頼のいずれかが欠ければ�
   const result = computeTrustStabilityProfile([
     { key: 'emotional_safety', value: 0.8, confidence: 0.7, contributingFacts: ['safety'] },
   ], { compatibility_reliability: known }, { compatibility_reliability: known })
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
+})
+
+test('相性§1・§34・§41は複数の警戒条件が重なる時だけ裏切りリスクパターンを算出する', () => {
+  const profile = (key: 'transparency' | 'trust_stability' | 'repair_capacity' | 'relationship_boredom_risk', value: number, fact: string) => ({
+    key, value, confidence: 0.55, contributingFacts: [fact],
+  })
+  const result = computeBetrayalRiskPatternProfile([
+    profile('transparency', 0.2, 'transparency'),
+    profile('trust_stability', 0.3, 'trust'),
+    profile('repair_capacity', 0.4, 'repair'),
+    profile('relationship_boredom_risk', 0.8, 'boredom'),
+  ])
+  assert.equal(result.key, 'betrayal_risk_pattern')
+  assert.equal(result.value, 0.725)
+  assert.equal(result.confidence, 0.45)
+  assert.deepEqual(result.contributingFacts.sort(), ['boredom', 'repair', 'transparency', 'trust'])
+})
+
+test('警戒条件が一つでも不明なら実際の裏切りリスクを推測しない', () => {
+  const result = computeBetrayalRiskPatternProfile([
+    { key: 'transparency', value: 0.2, confidence: 0.55, contributingFacts: ['transparency'] },
+  ])
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.deepEqual(result.contributingFacts, [])

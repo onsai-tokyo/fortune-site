@@ -30,11 +30,11 @@ test('相性原典は全58節に欠番・重複がない', () => {
 test('相性の切替診断を本人鑑定から分離し主要39スコアで判定する', () => {
   const compatibility = readFileSync(new URL('./rules/COMPATIBILITY_RULES.md', import.meta.url), 'utf8')
   const current = assessCompatibilityCutoverReadiness(compatibility, IMPLEMENTED_COMPATIBILITY_SCORE_KEYS)
-  assert.equal(current.ready, false)
+  assert.equal(current.ready, true)
   assert.equal(current.compatibilitySections, 58)
-  assert.equal(current.coveredScores, 38)
+  assert.equal(current.coveredScores, 39)
   assert.equal(current.requiredScores, 39)
-  assert.deepEqual(current.reasons, ['相性の主要スコアが未完了（38/39種）'])
+  assert.deepEqual(current.reasons, [])
 
   const complete = assessCompatibilityCutoverReadiness(compatibility, REQUIRED_COMPATIBILITY_SCORE_KEYS)
   assert.equal(complete.ready, true)

@@ -179,6 +179,12 @@ const trustStabilityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、一度の行き違いが長く残りやすい二人です。不信を人格の結論にせず、何を確認すれば安心へ戻れるかを小さく決めてください。`,
 }
 
+const betrayalRiskPatternText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、不明点・不信・刺激不足を放置すると、関係の外へ気持ちが逸れる不安を抱えやすい構造があります。実際の裏切りを予測する値ではありません。`,
+  middle: cue => `${cue}では、安心できる時と疑いが生まれる時が分かれます。人物を疑う前に、秘密・排他性・連絡について二人の合意を言葉にしてください。`,
+  low: cue => `${cue}では、不安を生む条件が同時に重なりにくい傾向があります。それでも裏切りがない保証にはせず、守りたい約束を更新してください。`,
+}
+
 const longTermBindingText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、安心・暮らし・友情・修復を重ねるほど長期の土台を作りやすい二人です。ただし、惹かれる強さや交際期間だけで将来を保証しません。`,
   middle: cue => `${cue}では、続ける力になる要素と、調整が必要な摩擦が混ざります。気持ちだけでなく、暮らしと仲直りの約束を更新してください。`,
@@ -261,6 +267,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   power_balance: powerBalanceText,
   relationship_boredom_risk: relationshipBoredomRiskText,
   trust_stability: trustStabilityText,
+  betrayal_risk_pattern: betrayalRiskPatternText,
   long_term_binding: longTermBindingText,
   transparency: transparencyText,
   predictability: predictabilityText,
@@ -300,6 +307,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   power_balance: '相性§5・§19・§33・§53',
   relationship_boredom_risk: '相性§3・§26・§28・§50',
   trust_stability: '相性§31・§34・§41・§57',
+  betrayal_risk_pattern: '相性§1・§34・§41',
   long_term_binding: '相性§21・§28・§40・§41・§57',
   transparency: '相性§11・§29・§30・§31・§34',
   predictability: '相性§1・§34',

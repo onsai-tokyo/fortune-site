@@ -357,6 +357,18 @@ test('予測しやすさを支配・退屈・未来行動の断定へ変換し�
   assert.ok(blocks.every(block => block && [...block.text].length <= 120))
 })
 
+test('裏切りリスクパターンを浮気や嘘の予言・人物評価へ変換しない', () => {
+  const profile = (value: number, confidence = 0.45): CompatibilityProfileScore => ({
+    key: 'betrayal_risk_pattern', value, confidence, contributingFacts: ['transparency', 'trust', 'repair', 'boredom'],
+  })
+  const blocks = [0.2, 0.5, 0.8].map(value => compatibilityProfileBlock(profile(value), '見落としやすい違い'))
+  assert.deepEqual(blocks.map(block => block?.band), ['low', 'middle', 'high'])
+  assert.equal(new Set(blocks.map(block => block?.text)).size, 3)
+  assert.match(blocks[2]?.text ?? '', /実際の裏切りを予測する値ではありません/)
+  assert.doesNotMatch(blocks.map(block => block?.text).join(''), /浮気する人|必ず裏切る|嘘をつく人/)
+  assert.ok(blocks.every(block => block && [...block.text].length <= 120))
+})
+
 test('長期結合を将来保証や交際期間の逆算へ変換しない', () => {
   const profile = (value: number, confidence = 0.5): CompatibilityProfileScore => ({
     key: 'long_term_binding', value, confidence, contributingFacts: ['safety', 'domestic', 'repair'],

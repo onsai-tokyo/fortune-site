@@ -43,6 +43,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'power_balance',
   'relationship_boredom_risk',
   'trust_stability',
+  'betrayal_risk_pattern',
   'long_term_binding',
   'transparency',
   'predictability',
@@ -688,6 +689,28 @@ export function computeTrustStabilityProfile(
     contributingFacts: hasEvidence
       ? [...new Set([...safety!.contributingFacts, ...repair!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
       : [],
+  }
+}
+
+/**
+ * 相性§1・§34・§41。低い透明性と信頼・修復の弱さ、刺激不足リスクの重なりだけを扱う。
+ * 実際の浮気・嘘・裏切りを予測せず、観測情報なしでは人物評価にも使わない。
+ */
+export function computeBetrayalRiskPatternProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const required = ['transparency', 'trust_stability', 'repair_capacity', 'relationship_boredom_risk'] as const
+  const inputs = required.map(key => profiles.find(score => score.key === key))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  if (!hasEvidence) return { key: 'betrayal_risk_pattern', value: 0.5, confidence: 0, contributingFacts: [] }
+  const [transparency, trust, repair, boredom] = inputs
+  const value = ((1 - transparency.value) + (1 - trust.value) + (1 - repair.value) + boredom.value) / 4
+  return {
+    key: 'betrayal_risk_pattern',
+    value: Number(value.toFixed(3)),
+    // 関係の排他性・合意・現実の行動を未入力のため、警戒パターン以上の意味を持たせない。
+    confidence: Number(Math.min(0.45, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
   }
 }
 
