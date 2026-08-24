@@ -7,15 +7,15 @@ import { REQUIRED_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, type TraitScoreRule } fro
 
 const sections = (count: number) => Array.from({ length: count }, (_, index) => `# ${index + 1}. source`).join('\n\n')
 
-test('原典が揃っても根拠付きスコア不足を決定論の本番切替可能と誤判定しない', () => {
+test('直接65種と派生5種が揃うとスコア層の切替条件を満たす', () => {
   const personality = readFileSync(new URL('./rules/PERSONALITY_RULES.md', import.meta.url), 'utf8')
   const events = readFileSync(new URL('./rules/EVENT_RULES.md', import.meta.url), 'utf8')
   const readiness = assessDeterministicCutoverReadiness(personality, events, TRAIT_SCORE_RULES)
-  assert.equal(readiness.ready, false)
+  assert.equal(readiness.ready, true)
   assert.equal(readiness.personalitySections, 58)
   assert.equal(readiness.eventSections, 53)
-  assert.equal(readiness.coveredScores, 65)
-  assert.ok(readiness.reasons.some(reason => reason.includes('65/70種')))
+  assert.equal(readiness.coveredScores, 70)
+  assert.deepEqual(readiness.reasons, [])
 })
 
 test('相性原典は全58節に欠番・重複がない', () => {

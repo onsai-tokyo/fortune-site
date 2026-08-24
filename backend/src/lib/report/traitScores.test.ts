@@ -9,6 +9,7 @@ import {
   normalizeTraitScore, traitScoreConfidence, type TraitScoreRule,
 } from './traitScores.js'
 import { auditRuleSourceDocument, extractRuleSourceSections, parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
+import { computePairTraitScores, DERIVED_TRAIT_SCORE_KEYS } from './derivedTraitScores.js'
 
 const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
   id: 'fact-a', system: '西洋占星術', lineage: 'ephemeris', factor: 'planet:月:魚座', axis: 'relation', signal: 'sensitivity',
@@ -25,6 +26,9 @@ test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
   assert.deepEqual(RESERVED_TRAIT_SCORE_KEYS, ['attraction_physical'])
   assert.equal(REQUIRED_TRAIT_SCORE_KEYS.length, 70)
+  assert.deepEqual(DERIVED_TRAIT_SCORE_KEYS, [
+    'private_assertiveness', 'compatibility_transparency', 'compatibility_independence', 'compatibility_lifestyle', 'compatibility_value_match',
+  ])
   const scores = computeTraitScores([], TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
   assert.equal(scores.attraction_physical.confidence, 0)
   assert.deepEqual(scores.attraction_physical.contributingFacts, [])
@@ -169,7 +173,7 @@ test('R-4第1弾は§3・§14・§16・§24の発行済みFactを根拠にスコ
   assert.ok(scores.social_sensitivity.raw > 0)
   assert.ok(scores.public_agreeableness.raw > 0)
   assert.ok(scores.emotional_volatility.raw > 0)
-  assert.equal(scores.private_assertiveness.confidence, 0)
+  assert.ok(scores.private_assertiveness.confidence > 0)
 })
 
 test('R-4第2弾は引力・没頭と長期適合を別スコアとして保持する', () => {
@@ -250,4 +254,39 @@ test('R-4第5弾は家族・生活上の愛情と責任による結びつきを�
     'status_attraction', 'reliability_preference', 'family_orientation', 'compatibility_family_orientation',
     'domestic_binding', 'domestic_affection', 'practical_generosity', 'responsibility_binding',
   ] as const) assert.ok(scores[key].raw > 0, key)
+})
+
+test('派生本人スコアは既存Factを再利用し新しい占術票を作らない', () => {
+  const scores = computeTraitScores([
+    fact({ id: 'sensitive', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'boundary', factor: 'modalityDominant:fixed:5', axis: 'drive', signal: 'stability', canonicalSourceId: 'modality:fixed' }),
+  ], TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  assert.ok(scores.private_assertiveness.confidence > 0)
+  assert.deepEqual(scores.private_assertiveness.contributingFacts.sort(), ['boundary', 'sensitive'])
+  assert.ok(scores.private_assertiveness.value >= 0 && scores.private_assertiveness.value <= 1)
+})
+
+test('二人比較専用4スコアは本人差分とSynastry軸から再現可能に算出する', () => {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const self = computeTraitScores([
+    fact({ id: 'self-moon', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'self-fixed', factor: 'modalityDominant:fixed:5', axis: 'drive', signal: 'stability', canonicalSourceId: 'modality:fixed' }),
+  ], TRAIT_SCORE_RULES, scale)
+  const partner = computeTraitScores([
+    fact({ id: 'partner-moon', factor: 'planet:月:魚座', axis: 'relation', signal: 'sensitivity', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'partner-fixed', factor: 'modalityDominant:fixed:4', axis: 'drive', signal: 'stability', canonicalSourceId: 'modality:fixed' }),
+  ], TRAIT_SCORE_RULES, scale)
+  const relations = [
+    { key: 'communication' as const, value: 0.8, confidence: 0.6, contributingFacts: ['syn-communication'] },
+    { key: 'safety' as const, value: 0.7, confidence: 0.6, contributingFacts: ['syn-safety'] },
+    { key: 'values' as const, value: 0.9, confidence: 0.6, contributingFacts: ['syn-values'] },
+  ]
+  const first = computePairTraitScores(self, partner, relations)
+  const second = computePairTraitScores(self, partner, relations)
+  assert.deepEqual(first, second)
+  assert.deepEqual(first.map(score => score.key), [
+    'compatibility_transparency', 'compatibility_independence', 'compatibility_lifestyle', 'compatibility_value_match',
+  ])
+  assert.ok(first.every(score => score.value >= 0 && score.value <= 1))
+  assert.ok(first.every(score => score.inputScores.length > 0))
 })

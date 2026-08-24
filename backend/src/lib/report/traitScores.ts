@@ -1,6 +1,7 @@
 import type { FactAxis, FactLineage } from './facts.js'
 import type { ReportFactV2 } from './factsV2.js'
 import { CONFIRMED_PERSONALITY_SCORE_RULES } from './traitScoreRules.personality.js'
+import { applyDerivedPersonalTraitScores, DERIVED_TRAIT_SCORE_KEYS } from './derivedTraitScores.js'
 
 export type PersonalityScoreKey =
   | 'social_extraversion' | 'private_introversion' | 'social_sensitivity'
@@ -74,6 +75,8 @@ export const ALL_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = [
 export const RESERVED_TRAIT_SCORE_KEYS = ['attraction_physical'] as const satisfies readonly TraitScoreKey[]
 export const REQUIRED_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = ALL_TRAIT_SCORE_KEYS
   .filter(key => !RESERVED_TRAIT_SCORE_KEYS.includes(key as typeof RESERVED_TRAIT_SCORE_KEYS[number]))
+export const DIRECT_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = REQUIRED_TRAIT_SCORE_KEYS
+  .filter(key => !DERIVED_TRAIT_SCORE_KEYS.includes(key as typeof DERIVED_TRAIT_SCORE_KEYS[number]))
 
 export interface TraitScore {
   key: TraitScoreKey
@@ -137,7 +140,7 @@ export function computeTraitScores(
   rules: readonly TraitScoreRule[],
   scale: Record<TraitScoreKey, TraitScoreScale>,
 ): TraitScoreSet {
-  return Object.fromEntries(ALL_TRAIT_SCORE_KEYS.map(key => {
+  const scores = Object.fromEntries(ALL_TRAIT_SCORE_KEYS.map(key => {
     const hits = rules.filter(rule => rule.score === key).flatMap(rule =>
       facts.filter(fact => matchesTraitFact(fact, rule.match)).map(fact => ({ fact, rule })),
     )
@@ -158,4 +161,5 @@ export function computeTraitScores(
     }
     return [key, value]
   })) as TraitScoreSet
+  return applyDerivedPersonalTraitScores(scores)
 }

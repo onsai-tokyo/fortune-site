@@ -1,5 +1,6 @@
 import type { TraitScoreRule } from './traitScores.js'
-import { REQUIRED_TRAIT_SCORE_KEYS } from './traitScores.js'
+import { DIRECT_TRAIT_SCORE_KEYS, REQUIRED_TRAIT_SCORE_KEYS } from './traitScores.js'
+import { DERIVED_TRAIT_SCORE_KEYS } from './derivedTraitScores.js'
 import { auditRuleSourceDocument, extractRuleSourceSections, validateTraitScoreRules } from './traitScoreRuleValidation.js'
 
 export interface DeterministicCutoverReadiness {
@@ -23,9 +24,11 @@ export function assessDeterministicCutoverReadiness(
       性格: extractRuleSourceSections(personalityMarkdown),
       時期: extractRuleSourceSections(eventMarkdown),
     },
-    requiredScores: REQUIRED_TRAIT_SCORE_KEYS,
+    requiredScores: DIRECT_TRAIT_SCORE_KEYS,
   })
-  const coveredScores = REQUIRED_TRAIT_SCORE_KEYS.filter(score => (validation.ruleCountByScore[score] ?? 0) > 0).length
+  const coveredScores = REQUIRED_TRAIT_SCORE_KEYS.filter(score =>
+    DERIVED_TRAIT_SCORE_KEYS.includes(score as typeof DERIVED_TRAIT_SCORE_KEYS[number]) || (validation.ruleCountByScore[score] ?? 0) > 0,
+  ).length
   const reasons = [
     ...(!personality.complete ? [`性格・恋愛傾向の原典が未完了（${personality.sections.length}/58節）`] : []),
     ...(!events.complete ? [`時期・出来事の原典が未完了（${events.sections.length}/53節）`] : []),
