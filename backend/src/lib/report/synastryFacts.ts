@@ -27,6 +27,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'novelty_compatibility',
   'shared_project_compatibility',
   'adventure_compatibility',
+  'admiration_mutual',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -78,6 +79,10 @@ const SHARED_PROJECT_COMPATIBILITY_PAIRS = new Set([
 // 相性§26。同じ新体験Fact群のうち、実際の行動へつながる太陽・火星接触を強く扱う。
 const ADVENTURE_COMPATIBILITY_PAIRS = new Set([
   '木星:太陽', '木星:火星', '天王星:太陽', '天王星:火星',
+].map(value => value.split(':').sort().join(':')))
+// 相性§27・§33。職業・役職入力は推測せず、相手の核と行動を支える接触だけを部分算出する。
+const ADMIRATION_MUTUAL_PAIRS = new Set([
+  '木星:太陽', '土星:太陽', '木星:火星', '土星:火星',
 ].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
@@ -183,6 +188,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const sharedProjectSigned = sharedProject.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const adventure = facts.filter(fact => fact.kind === 'cross-aspect' && ADVENTURE_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const adventureSigned = adventure.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const admiration = facts.filter(fact => fact.kind === 'cross-aspect' && ADMIRATION_MUTUAL_PAIRS.has(pairFromSignal(fact)))
+  const admirationSigned = admiration.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -242,6 +249,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((adventure.length ? 1 / (1 + Math.exp(-adventureSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.75, adventure.length * 0.18).toFixed(3)),
     contributingFacts: [...new Set(adventure.map(fact => fact.id))],
+  }, {
+    key: 'admiration_mutual',
+    value: Number((admiration.length ? 1 / (1 + Math.exp(-admirationSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.65, admiration.length * 0.16).toFixed(3)),
+    contributingFacts: [...new Set(admiration.map(fact => fact.id))],
   }, {
     key: 'emotional_intimacy',
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),

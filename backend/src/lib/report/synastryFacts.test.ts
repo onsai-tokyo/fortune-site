@@ -180,6 +180,21 @@ test('相性§26は旅行や外出の行動相性を広い新体験スコアか�
   assert.ok(adventure.confidence > 0)
 })
 
+test('相性§27・§33は相互尊敬を職業情報の推測なしで部分算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '土星', longitude: 70 }] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Sun', longitude: 10 }, { name: 'Mars', longitude: 130 }, { name: 'Mercury', longitude: 70 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const admiration = computeCompatibilityProfile(facts).find(score => score.key === 'admiration_mutual')!
+  assert.ok(admiration.contributingFacts.length >= 3)
+  assert.equal(new Set(admiration.contributingFacts).size, admiration.contributingFacts.length)
+  assert.ok(admiration.contributingFacts.every(id => /太陽|火星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(admiration.contributingFacts.every(id => /木星|土星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(admiration.confidence > 0)
+  assert.ok(admiration.confidence <= 0.65)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
