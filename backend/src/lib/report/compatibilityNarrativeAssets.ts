@@ -46,6 +46,31 @@ const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、同じ出来事にも違う意味を置きやすい二人です。結論を揃える前に、なぜ大切なのかを交換してください。`,
 }
 
+type ContextualProfileKey = 'conflict_intensity'
+type StandaloneProfileKey = Exclude<CompatibilityProfileScore['key'], ContextualProfileKey>
+
+const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: string) => string>> = {
+  conversational_flow: conversationalFlowText,
+  emotional_intimacy: emotionalIntimacyText,
+  repair_capacity: repairCapacityText,
+  emotional_safety: emotionalSafetyText,
+  growth_compatibility: growthCompatibilityText,
+  value_alignment: valueAlignmentText,
+}
+
+const profileSourceByScore: Record<StandaloneProfileKey, string> = {
+  conversational_flow: '相性§44・§53',
+  emotional_intimacy: '相性§43・§53・§54',
+  repair_capacity: '相性§7・§42・§53',
+  emotional_safety: '相性§7・§34・§42・§54',
+  growth_compatibility: '相性§45・§53・§54',
+  value_alignment: '相性§14・§34・§53・§54',
+}
+
+function isStandaloneProfileKey(key: CompatibilityProfileScore['key']): key is StandaloneProfileKey {
+  return key !== 'conflict_intensity'
+}
+
 function band(value: number): ScoreBand {
   if (value >= 0.6) return 'high'
   if (value <= 0.4) return 'low'
@@ -84,21 +109,14 @@ export function compatibilityScoreBlock(score: PairTraitScore | undefined, cue: 
 
 /** 相性§43・§44・§53。話しやすさ／感情の深さ／安心感を混同しない。 */
 export function compatibilityProfileBlock(score: CompatibilityProfileScore | undefined, cue: string): CompatibilityScoreBlock | null {
-  if (!score || score.confidence < 0.25) return null
+  if (!score || score.confidence < 0.25 || !isStandaloneProfileKey(score.key)) return null
   const scoreBand = band(score.value)
-  const texts = score.key === 'conversational_flow' ? conversationalFlowText
-    : score.key === 'emotional_intimacy' ? emotionalIntimacyText
-    : score.key === 'repair_capacity' ? repairCapacityText
-    : score.key === 'emotional_safety' ? emotionalSafetyText
-    : score.key === 'growth_compatibility' ? growthCompatibilityText
-    : valueAlignmentText
-  const source = score.key === 'conversational_flow' ? '相性§44・§53'
-    : score.key === 'emotional_intimacy' ? '相性§43・§53・§54'
-    : score.key === 'repair_capacity' ? '相性§7・§42・§53'
-    : score.key === 'emotional_safety' ? '相性§7・§34・§42・§54'
-    : score.key === 'growth_compatibility' ? '相性§45・§53・§54'
-    : '相性§14・§34・§53・§54'
-  return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source }
+  return {
+    scoreKey: score.key,
+    band: scoreBand,
+    text: profileTextByScore[score.key][scoreBand](cue),
+    source: profileSourceByScore[score.key],
+  }
 }
 
 /** 相性§7・§42。衝突強度だけで関係の良否を決めず、修復力と安心感を併記する。 */

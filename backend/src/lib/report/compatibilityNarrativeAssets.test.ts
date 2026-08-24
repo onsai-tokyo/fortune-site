@@ -90,6 +90,14 @@ test('同じ衝突強度でも修復力によって扱い方を変える', () =>
   assert.equal(relationshipTensionBlock(profile('conflict_intensity', 0.8, 0.24), undefined, undefined, '衝突の扱い'), null)
 })
 
+test('衝突強度を単独プロフィール文へ誤って変換しない', () => {
+  const conflict: CompatibilityProfileScore = {
+    key: 'conflict_intensity', value: 0.8, confidence: 0.8, contributingFacts: ['cross-aspect:mars'],
+  }
+  assert.equal(compatibilityProfileBlock(conflict, '二人の価値観'), null)
+  assert.equal(relationshipTensionBlock(conflict, undefined, undefined, '衝突の扱い')?.scoreKey, 'conflict_intensity')
+})
+
 test('共同成長を関係の継続保証とせず行動へ変換する', () => {
   const profile = (value: number, confidence = 0.6): CompatibilityProfileScore => ({
     key: 'growth_compatibility', value, confidence, contributingFacts: ['cross-aspect:jupiter-sun'],
