@@ -7,7 +7,7 @@ import { buildReportFactsV2 } from './factsV2.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { computePairTraitScores, type PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityProfileBlock, compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -213,12 +213,20 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const safetyBlock = id === 'compat-caution'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'emotional_safety'), item.cue)
     : null
+  const tensionBlock = id === 'compat-friction'
+    ? relationshipTensionBlock(
+      context.compatibilityProfile.find(score => score.key === 'conflict_intensity'),
+      context.compatibilityProfile.find(score => score.key === 'repair_capacity'),
+      context.compatibilityProfile.find(score => score.key === 'emotional_safety'),
+      item.cue,
+    )
+    : null
   const pairScoreBlock = pairScoresForChapter(id, context)
     .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? tensionBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -253,7 +261,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       ? ['repair_capacity', 'emotional_safety']
       : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety']
       : id === 'compat-attraction' ? ['emotional_intimacy']
-      : id === 'compat-friction' ? ['conflict_intensity', 'conversational_flow']
+      : id === 'compat-friction' ? ['conflict_intensity', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-beginning' ? ['conversational_flow'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`

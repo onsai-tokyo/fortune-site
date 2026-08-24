@@ -84,3 +84,25 @@ export function compatibilityProfileBlock(score: CompatibilityProfileScore | und
     : '相性§7・§34・§42・§54'
   return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source }
 }
+
+/** 相性§7・§42。衝突強度だけで関係の良否を決めず、修復力と安心感を併記する。 */
+export function relationshipTensionBlock(
+  conflict: CompatibilityProfileScore | undefined,
+  repair: CompatibilityProfileScore | undefined,
+  safety: CompatibilityProfileScore | undefined,
+  cue: string,
+): CompatibilityScoreBlock | null {
+  if (!conflict || conflict.key !== 'conflict_intensity' || conflict.confidence < 0.25) return null
+  const conflictBand = band(conflict.value)
+  const repairAvailable = repair?.key === 'repair_capacity' && repair.confidence >= 0.25
+  const safetyAvailable = safety?.key === 'emotional_safety' && safety.confidence >= 0.25
+  const returnStrength = Math.max(repairAvailable ? repair.value : 0, safetyAvailable ? safety.value : 0)
+  const text = conflictBand === 'high' && returnStrength >= 0.6
+    ? `${cue}では、反応が強くぶつかっても、関係へ戻る手がかりを見つけやすい二人です。勢いに任せず、仲直りの順序を決めてください。`
+    : conflictBand === 'high'
+      ? `${cue}では、言葉や行動の反応が強くなりやすい二人です。その場で決着を求めず、落ち着く時刻と話し直す時刻を分けてください。`
+      : conflictBand === 'low'
+        ? `${cue}では、表立った衝突は起こりにくい二人です。静かであることを納得と決めず、小さな違和感を定期的に確かめてください。`
+        : `${cue}では、話題によって反応の強さが変わります。勝ち負けを決める前に、事実と受け取った気持ちを分けてください。`
+  return { scoreKey: conflict.key, band: conflictBand, text, source: '相性§7・§42' }
+}

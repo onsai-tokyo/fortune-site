@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PairTraitScore } from './derivedTraitScores.js'
-import { compatibilityProfileBlock, compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
+import { compatibilityProfileBlock, compatibilityScoreBlock, relationshipTensionBlock } from './compatibilityNarrativeAssets.js'
 import type { CompatibilityProfileScore } from './synastryFacts.js'
 
 const score = (key: PairTraitScore['key'], value: number, confidence = 0.8): PairTraitScore => ({
@@ -75,4 +75,17 @@ test('感情的安心感を愛情の有無や親密度と混同しない文章�
   assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /愛情がない|相性が悪い/)
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
   assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '見落としやすい違い'), null)
+})
+
+test('同じ衝突強度でも修復力によって扱い方を変える', () => {
+  const profile = (key: CompatibilityProfileScore['key'], value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key, value, confidence, contributingFacts: [`fact:${key}`],
+  })
+  const supported = relationshipTensionBlock(profile('conflict_intensity', 0.8), profile('repair_capacity', 0.8), profile('emotional_safety', 0.7), '衝突の扱い')
+  const unsupported = relationshipTensionBlock(profile('conflict_intensity', 0.8), profile('repair_capacity', 0.2), profile('emotional_safety', 0.2), '衝突の扱い')
+  assert.notEqual(supported?.text, unsupported?.text)
+  assert.match(supported?.text ?? '', /関係へ戻る手がかり/)
+  assert.match(unsupported?.text ?? '', /話し直す時刻/)
+  assert.doesNotMatch(`${supported?.text}${unsupported?.text}`, /破局|別れる|相性が悪い/)
+  assert.equal(relationshipTensionBlock(profile('conflict_intensity', 0.8, 0.24), undefined, undefined, '衝突の扱い'), null)
 })
