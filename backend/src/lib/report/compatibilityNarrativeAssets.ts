@@ -46,6 +46,12 @@ const repairCapacityText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、同じ方法で仲直りしようとすると片方が置き去りになりやすい二人です。謝罪、説明、時間のどれが必要かを先に尋ねてください。`,
 }
 
+const forgivenessCapacityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、間違いを一度の結論にせず、相手の事情を受け取り直しやすい二人です。ただし、許すことと我慢を続けることは分けてください。`,
+  middle: cue => `${cue}では、手放せる出来事と心に残る出来事が分かれます。謝罪の言葉だけでなく、次に変える行動まで確かめてください。`,
+  low: cue => `${cue}では、傷ついた理由を理解できるまで気持ちを手放しにくい二人です。急いで許しを求めず、何を償うかを具体的にしてください。`,
+}
+
 const emotionalSafetyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、揺れた気持ちを見せても関係がすぐ壊れるとは感じにくい二人です。それでも、沈黙を了承と決めず確認を続けてください。`,
   middle: cue => `${cue}では、安心して話せる場面と身を守りたくなる場面が分かれます。難しい話ほど、時間と場所を先に選んでください。`,
@@ -73,6 +79,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   humor_compatibility: humorCompatibilityText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
+  forgiveness_capacity: forgivenessCapacityText,
   emotional_safety: emotionalSafetyText,
   growth_compatibility: growthCompatibilityText,
   value_alignment: valueAlignmentText,
@@ -84,6 +91,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   humor_compatibility: '相性§9・§44・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
+  forgiveness_capacity: '相性§7・§53・§54',
   emotional_safety: '相性§7・§34・§42・§54',
   growth_compatibility: '相性§45・§53・§54',
   value_alignment: '相性§14・§34・§53・§54',

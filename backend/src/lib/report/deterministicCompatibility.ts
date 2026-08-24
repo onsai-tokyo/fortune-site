@@ -219,6 +219,9 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const repairBlock = id === 'compat-repair'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'repair_capacity'), item.cue)
     : null
+  const forgivenessBlock = id === 'compat-repair'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'forgiveness_capacity'), item.cue)
+    : null
   const safetyBlock = id === 'compat-caution'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'emotional_safety'), item.cue)
     : null
@@ -247,7 +250,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? humorBlock ?? emotionalBlock ?? repairBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -279,7 +282,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
     const chapterScores = pairScoresForChapter(id, context)
     const chapterProfileKeys: CompatibilityProfileScore['key'][] = id === 'compat-repair'
-      ? ['repair_capacity', 'emotional_safety']
+      ? ['repair_capacity', 'forgiveness_capacity', 'emotional_safety']
       : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety', 'conversational_depth']
       : id === 'compat-attraction' ? ['emotional_intimacy']
       : id === 'compat-friction' ? ['conflict_intensity', 'repair_capacity', 'emotional_safety', 'conversational_flow']

@@ -110,6 +110,19 @@ test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出す�
   }))
 })
 
+test('相性§7は許す力を修復手段全体から分離する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '月', longitude: 70 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Venus', longitude: 10 }, { name: 'Mercury', longitude: 130 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const profiles = computeCompatibilityProfile(facts)
+  const repair = profiles.find(score => score.key === 'repair_capacity')!
+  const forgiveness = profiles.find(score => score.key === 'forgiveness_capacity')!
+  assert.ok(repair.contributingFacts.length > forgiveness.contributingFacts.length)
+  assert.ok(forgiveness.contributingFacts.length > 0)
+  assert.ok(forgiveness.contributingFacts.every(id => /木星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(repair.contributingFacts.some(id => !/木星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('感情の安心感は会話の流れと修復力から独立して算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '月', longitude: 10 }, { name: '水星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Sun', longitude: 10 }, { name: 'Mercury', longitude: 90 }] } } }

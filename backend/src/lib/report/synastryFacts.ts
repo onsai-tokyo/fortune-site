@@ -24,6 +24,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'humor_compatibility',
   'emotional_intimacy',
   'repair_capacity',
+  'forgiveness_capacity',
   'emotional_safety',
   'conflict_intensity',
   'growth_compatibility',
@@ -62,6 +63,7 @@ const CONVERSATIONAL_DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '�
 const HUMOR_COMPATIBILITY_PAIRS = new Set(['木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
+const FORGIVENESS_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '木星:月'].map(value => value.split(':').sort().join(':')))
 const CONFLICT_INTENSITY_PAIRS = new Set(['太陽:火星', '火星:火星', '水星:火星', '月:火星'].map(value => value.split(':').sort().join(':')))
 const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
@@ -154,6 +156,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
   const repairSigned = repair.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const forgiveness = facts.filter(fact => fact.kind === 'cross-aspect' && FORGIVENESS_CAPACITY_PAIRS.has(pairFromSignal(fact)))
+  const forgivenessSigned = forgiveness.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const safety = facts.filter(fact => fact.kind === 'cross-aspect' && EMOTIONAL_SAFETY_PAIRS.has(pairFromSignal(fact)))
   const safetySigned = safety.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const conflict = facts.filter(fact => fact.kind === 'cross-aspect'
@@ -192,6 +196,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((repair.length ? 1 / (1 + Math.exp(-repairSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.85, repair.length * 0.18).toFixed(3)),
     contributingFacts: repair.map(fact => fact.id),
+  }, {
+    key: 'forgiveness_capacity',
+    value: Number((forgiveness.length ? 1 / (1 + Math.exp(-forgivenessSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, forgiveness.length * 0.18).toFixed(3)),
+    contributingFacts: forgiveness.map(fact => fact.id),
   }, {
     key: 'emotional_safety',
     value: Number((safety.length ? 1 / (1 + Math.exp(-safetySigned)) : 0.5).toFixed(3)),

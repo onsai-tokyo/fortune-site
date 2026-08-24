@@ -112,6 +112,20 @@ test('修復力を衝突の少なさや破局判定と混同しない文章へ�
   assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '安心への戻り道'), null)
 })
 
+test('許す力を我慢や修復手段そのものと混同しない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'forgiveness_capacity', value, confidence, contributingFacts: ['jupiter-moon'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '仲直りのあと')
+  const middle = compatibilityProfileBlock(profile(0.5), '仲直りのあと')
+  const high = compatibilityProfileBlock(profile(0.8), '仲直りのあと')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /許すことと我慢を続けることは分けて/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /何をされても許せる|必ず仲直り/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情的安心感を愛情の有無や親密度と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_safety', value, confidence, contributingFacts: ['cross-aspect:moon-sun'],
