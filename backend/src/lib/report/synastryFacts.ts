@@ -40,6 +40,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'dependency_intensity',
   'power_balance',
   'relationship_boredom_risk',
+  'trust_stability',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -486,6 +487,29 @@ export function computeRelationshipBoredomRiskProfile(
     confidence: hasEvidence ? Number(Math.min(0.55, stimulation!.confidence, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence
       ? [...new Set([...stimulation!.contributingFacts, ...inputs.flatMap(score => score.contributingFacts)])]
+      : [],
+  }
+}
+
+/** 相性§31・§34。個人の信頼維持傾向と、二人の安心・修復を分けたまま基礎信頼を算出する。 */
+export function computeTrustStabilityProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { compatibility_reliability: TraitScoreInput },
+  partner: { compatibility_reliability: TraitScoreInput },
+): CompatibilityProfileScore {
+  const safety = profiles.find(score => score.key === 'emotional_safety')
+  const repair = profiles.find(score => score.key === 'repair_capacity')
+  const personal = [self.compatibility_reliability, partner.compatibility_reliability]
+  const hasEvidence = Boolean(safety && repair && safety.confidence > 0 && repair.confidence > 0
+    && personal.every(score => score.confidence > 0))
+  const sharedReliability = self.compatibility_reliability.value * partner.compatibility_reliability.value
+  return {
+    key: 'trust_stability',
+    value: hasEvidence ? Number(((sharedReliability + safety!.value + repair!.value) / 3).toFixed(3)) : 0.5,
+    // 関係開始時の透明性・排他性・相互性を未入力のため、基礎値として制限する。
+    confidence: hasEvidence ? Number(Math.min(0.55, safety!.confidence, repair!.confidence, ...personal.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...safety!.contributingFacts, ...repair!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
       : [],
   }
 }

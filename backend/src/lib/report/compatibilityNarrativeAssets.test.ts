@@ -308,6 +308,20 @@ test('マンネリ化リスクを破局や愛情消失の予測へ変換しな�
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('信頼安定性を秘密や裏切りの有無の予測へ変換しない', () => {
+  const profile = (value: number, confidence = 0.55): CompatibilityProfileScore => ({
+    key: 'trust_stability', value, confidence, contributingFacts: ['reliability', 'safety', 'repair'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '見落としやすい違い')
+  const middle = compatibilityProfileBlock(profile(0.5), '見落としやすい違い')
+  const high = compatibilityProfileBlock(profile(0.8), '見落としやすい違い')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /秘密や裏切りがないとは予測できません/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /浮気しない|裏切る人|必ず続く/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

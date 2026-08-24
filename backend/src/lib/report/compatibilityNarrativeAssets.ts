@@ -173,6 +173,12 @@ const relationshipBoredomRiskText: Record<ScoreBand, (cue: string) => string> = 
   low: cue => `${cue}では、変化を増やし続けなくても、馴染んだ時間から関係を育てやすい二人です。穏やかさを停滞と決めず、必要な時だけ新しさを選んでください。`,
 }
 
+const trustStabilityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、揺れたあとも言葉と行動を重ね直し、信頼を保ちやすい二人です。ただし、この値だけで秘密や裏切りがないとは予測できません。`,
+  middle: cue => `${cue}では、信じられる場面と確認が必要な場面が分かれます。安心を察し合うより、守れた約束を具体的に積み重ねてください。`,
+  low: cue => `${cue}では、一度の行き違いが長く残りやすい二人です。不信を人格の結論にせず、何を確認すれば安心へ戻れるかを小さく決めてください。`,
+}
+
 const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
   middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
@@ -204,6 +210,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   dependency_intensity: dependencyIntensityText,
   power_balance: powerBalanceText,
   relationship_boredom_risk: relationshipBoredomRiskText,
+  trust_stability: trustStabilityText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -234,6 +241,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   dependency_intensity: '相性§35・§43・§53・§54',
   power_balance: '相性§5・§19・§33・§53',
   relationship_boredom_risk: '相性§3・§26・§28・§50',
+  trust_stability: '相性§31・§34・§41・§57',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',
