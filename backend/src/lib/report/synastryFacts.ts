@@ -37,6 +37,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'partnership_team_feeling',
   'fate_companion_feeling',
   'relationship_stimulation_need',
+  'dependency_intensity',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -113,6 +114,7 @@ const SHARED_IDENTITY_PAIRS = new Set(['太陽:太陽', '月:月', '太陽:月',
 const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
+const DEPENDENCY_INTENSITY_PAIRS = new Set(['月:冥王星'].map(value => value.split(':').sort().join(':')))
 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
@@ -216,6 +218,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const prideHasMoon = pride.some(fact => pairFromSignal(fact).includes('月'))
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const dependency = facts.filter(fact => fact.kind === 'cross-aspect' && DEPENDENCY_INTENSITY_PAIRS.has(pairFromSignal(fact)))
+  const dependencyStrength = dependency.reduce((sum, fact) => sum + fact.strength, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
   const repairSigned = repair.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const forgiveness = facts.filter(fact => fact.kind === 'cross-aspect' && FORGIVENESS_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -299,6 +303,13 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.85, emotional.length * 0.18) * timeConfidenceFactor).toFixed(3)),
     contributingFacts: emotional.map(fact => fact.id),
+  }, {
+    key: 'dependency_intensity',
+    // 調和・緊張を問わず、月―冥王星接触の強さを依存・執着側へ独立計上する。
+    value: Number((dependency.length ? 1 - Math.exp(-dependencyStrength) : 0.5).toFixed(3)),
+    // 8室・ノード・生活環境を未接続の部分算出で、月を使うため時刻確信度も反映する。
+    confidence: Number((Math.min(0.55, dependency.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: dependency.map(fact => fact.id),
   }, {
     key: 'repair_capacity',
     value: Number((repair.length ? 1 / (1 + Math.exp(-repairSigned)) : 0.5).toFixed(3)),

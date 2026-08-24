@@ -427,6 +427,30 @@ test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出す�
   }))
 })
 
+test('相性§43は月と冥王星の接触を親密さや安心と分けて依存強度へ保持する', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '月', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Pluto', longitude: 10 }] } } },
+  )
+  const profiles = computeCompatibilityProfile(facts, { self: true, partner: true })
+  const dependency = profiles.find(score => score.key === 'dependency_intensity')!
+  const safety = profiles.find(score => score.key === 'emotional_safety')!
+  assert.ok(dependency.value > 0.5)
+  assert.ok(dependency.confidence > 0)
+  assert.equal(safety.confidence, 0)
+  assert.ok(dependency.contributingFacts.every(factId => /月-冥王星|冥王星-月/.test(facts.find(fact => fact.id === factId)?.signal ?? '')))
+})
+
+test('相性§43は月と冥王星の接触がなければ依存強度を推測しない', () => {
+  const result = computeCompatibilityProfile(buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '月', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Venus', longitude: 10 }] } } },
+  )).find(score => score.key === 'dependency_intensity')!
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
+})
+
 test('相性§7は許す力を修復手段全体から分離する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '月', longitude: 70 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Venus', longitude: 10 }, { name: 'Mercury', longitude: 130 }] } } }
