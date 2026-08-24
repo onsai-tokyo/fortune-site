@@ -243,6 +243,38 @@ test('相性§5は根拠のない個人Traitから競争性を推測しない', 
   assert.deepEqual(result.contributingFacts, [])
 })
 
+test('相性§6・§42は衝突の回数と強さを別スコアとして保持する', () => {
+  const fact = (id: string, signal: string, strength: number) => ({
+    id, kind: 'cross-aspect' as const, selfFactId: 'planet:太陽', partnerFactId: 'planet:火星',
+    axis: 'conflict' as const, signal, polarity: -1 as const, strength,
+    requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: signal,
+  })
+  const close = [fact('close-1', '太陽-火星-square', 0.95), fact('close-2', '火星-火星-opposition', 0.9)]
+  const wide = [fact('wide-1', '太陽-火星-square', 0.25), fact('wide-2', '火星-火星-opposition', 0.2)]
+  const closeScores = computeCompatibilityProfile(close)
+  const wideScores = computeCompatibilityProfile(wide)
+  const closeFrequency = closeScores.find(score => score.key === 'conflict_frequency')!
+  const wideFrequency = wideScores.find(score => score.key === 'conflict_frequency')!
+  const closeIntensity = closeScores.find(score => score.key === 'conflict_intensity')!
+  const wideIntensity = wideScores.find(score => score.key === 'conflict_intensity')!
+  assert.equal(closeFrequency.value, wideFrequency.value)
+  assert.equal(closeFrequency.confidence, wideFrequency.confidence)
+  assert.ok(closeIntensity.value > wideIntensity.value)
+})
+
+test('相性§42は冥王星と個人天体のハード接触を頻度へ含め強度の火星集合には混ぜない', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '冥王星', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Venus', longitude: 100 }] } } },
+  )
+  const profile = computeCompatibilityProfile(facts)
+  const frequency = profile.find(score => score.key === 'conflict_frequency')!
+  const intensity = profile.find(score => score.key === 'conflict_intensity')!
+  assert.equal(frequency.contributingFacts.length, 1)
+  assert.equal(intensity.contributingFacts.length, 0)
+  assert.ok(frequency.confidence > 0)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }

@@ -196,6 +196,20 @@ test('競争心を尊敬や共同作業の不成立と混同しない', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('衝突頻度だけで不仲や破局を断定しない', () => {
+  const profile = (value: number, confidence = 0.7): CompatibilityProfileScore => ({
+    key: 'conflict_frequency', value, confidence, contributingFacts: ['sun-mars-square'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), 'すれ違う場面')
+  const middle = compatibilityProfileBlock(profile(0.5), 'すれ違う場面')
+  const high = compatibilityProfileBlock(profile(0.8), 'すれ違う場面')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /回数だけで関係の良し悪しを決めず/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず別れる|不仲|相性が悪い/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

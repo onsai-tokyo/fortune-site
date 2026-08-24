@@ -30,6 +30,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'admiration_mutual',
   'pride_collision',
   'ego_competition',
+  'conflict_frequency',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -95,6 +96,10 @@ const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:�
 const FORGIVENESS_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '木星:月'].map(value => value.split(':').sort().join(':')))
 const CONFLICT_INTENSITY_PAIRS = new Set(['太陽:火星', '火星:火星', '水星:火星', '月:火星'].map(value => value.split(':').sort().join(':')))
+const CONFLICT_FREQUENCY_PAIRS = new Set([
+  '太陽:火星', '火星:火星', '水星:火星', '月:火星',
+  '冥王星:太陽', '冥王星:月', '冥王星:水星', '冥王星:金星', '冥王星:火星',
+].map(value => value.split(':').sort().join(':')))
 const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
 const VALUE_ALIGNMENT_PAIRS = new Set(['太陽:太陽', '太陽:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
 const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
@@ -214,6 +219,10 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     && /-(square|opposition)$/.test(fact.signal))
   const conflictStrength = conflict.reduce((sum, fact) => sum + fact.strength, 0)
   const conflictHasMoon = conflict.some(fact => pairFromSignal(fact).includes('月'))
+  const conflictFrequency = facts.filter(fact => fact.kind === 'cross-aspect'
+    && CONFLICT_FREQUENCY_PAIRS.has(pairFromSignal(fact))
+    && /-(square|opposition)$/.test(fact.signal))
+  const conflictFrequencyHasMoon = conflictFrequency.some(fact => pairFromSignal(fact).includes('月'))
   const growth = facts.filter(fact => fact.kind === 'cross-aspect' && GROWTH_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const growthSigned = growth.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const growthHasMoon = growth.some(fact => pairFromSignal(fact).includes('月'))
@@ -290,6 +299,12 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((safety.length ? 1 / (1 + Math.exp(-safetySigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.85, safety.length * 0.18) * timeConfidenceFactor).toFixed(3)),
     contributingFacts: safety.map(fact => fact.id),
+  }, {
+    key: 'conflict_frequency',
+    // 頻度は接触数、強度はorb由来のstrengthで別々に保持する。
+    value: Number((conflictFrequency.length ? 1 - Math.exp(-conflictFrequency.length * 0.45) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.75, conflictFrequency.length * 0.14) * (conflictFrequencyHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(conflictFrequency.map(fact => fact.id))],
   }, {
     key: 'conflict_intensity',
     value: Number((conflict.length ? 1 - Math.exp(-conflictStrength) : 0.5).toFixed(3)),
