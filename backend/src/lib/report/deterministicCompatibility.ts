@@ -7,6 +7,7 @@ import { buildReportFactsV2 } from './factsV2.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { computePairTraitScores, type PairTraitScore } from './derivedTraitScores.js'
+import { compatibilityScoreBlock } from './compatibilityNarrativeAssets.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -184,12 +185,19 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     'compat-marriage': { cue: '二人の暮らし', focus: `関係が暮らしになったあと、二人らしさを守る条件`, action: '時間、お金、家の役割を気持ちとは別に定期的に話す' },
   }
   const item = chapter[id]
+  const scoreBlock = pairScoresForChapter(id, context)
+    .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
+    .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
+    .map(({ score }) => compatibilityScoreBlock(score, item.cue))
+    .find((block): block is NonNullable<typeof block> => Boolean(block))
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
     { role: 'scene', label: '日常に現れる場面', text: `${item.cue}は、予定を決める時や返事を待つ時に現れます。${context.difference}を拒絶と受け取らないことが大切です。` },
     { role: 'shadow', label: 'すれ違うとき', text: `${item.cue}を見失う時ほど、${frame}。言葉を省くと、互いに別の物語を想像しやすくなります。` },
-    { role: 'exception', label: '意外な強さ', text: `${item.cue}では、${context.shared}が違う答えを持った時の二人を支えます。戻って話せることが、この相性の強さです。` },
+    scoreBlock
+      ? { role: 'exception', label: '二人に現れる特徴', text: scoreBlock.text }
+      : { role: 'exception', label: '意外な強さ', text: `${item.cue}では、${context.shared}が違う答えを持った時の二人を支えます。戻って話せることが、この相性の強さです。` },
     { role: 'question', label: '確かめたいこと', text: `${item.cue}が最も表れたのはどんな場面でしょう。最近の出来事を一つ選ぶと、関係の現在地が見えてきます。` },
     { role: 'action', label: '二人で試すこと', text: `${item.action}。${context.selfStyle}と${context.partnerStyle}の両方を約束に含めてください。` },
     { role: 'core', label: '長く続く条件', text: `${item.cue}を長く育てる鍵は、${frame}です。${relation}の親しさが増えても、確認することを手放さないでください。` },
