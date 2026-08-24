@@ -26,6 +26,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'domestic_compatibility',
   'novelty_compatibility',
   'shared_project_compatibility',
+  'adventure_compatibility',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -73,6 +74,10 @@ const NOVELTY_COMPATIBILITY_PAIRS = new Set([
 ].map(value => value.split(':').sort().join(':')))
 const SHARED_PROJECT_COMPATIBILITY_PAIRS = new Set([
   '火星:火星', '木星:火星', '土星:火星', '木星:木星', '土星:木星', '土星:土星',
+].map(value => value.split(':').sort().join(':')))
+// 相性§26。同じ新体験Fact群のうち、実際の行動へつながる太陽・火星接触を強く扱う。
+const ADVENTURE_COMPATIBILITY_PAIRS = new Set([
+  '木星:太陽', '木星:火星', '天王星:太陽', '天王星:火星',
 ].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
@@ -176,6 +181,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const noveltyHasMoon = novelty.some(fact => pairFromSignal(fact).includes('月'))
   const sharedProject = facts.filter(fact => fact.kind === 'cross-aspect' && SHARED_PROJECT_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const sharedProjectSigned = sharedProject.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const adventure = facts.filter(fact => fact.kind === 'cross-aspect' && ADVENTURE_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const adventureSigned = adventure.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -230,6 +237,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((sharedProject.length ? 1 / (1 + Math.exp(-sharedProjectSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.8, sharedProject.length * 0.16).toFixed(3)),
     contributingFacts: [...new Set(sharedProject.map(fact => fact.id))],
+  }, {
+    key: 'adventure_compatibility',
+    value: Number((adventure.length ? 1 / (1 + Math.exp(-adventureSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, adventure.length * 0.18).toFixed(3)),
+    contributingFacts: [...new Set(adventure.map(fact => fact.id))],
   }, {
     key: 'emotional_intimacy',
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),

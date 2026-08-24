@@ -164,6 +164,22 @@ test('相性§4は共同プロジェクトの推進力を火星・木星・土�
   assert.ok(project.confidence > 0)
 })
 
+test('相性§26は旅行や外出の行動相性を広い新体験スコアから分離する', () => {
+  const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '天王星', longitude: 70 }] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Sun', longitude: 10 }, { name: 'Mars', longitude: 130 }, { name: 'Mercury', longitude: 70 }, { name: 'Venus', longitude: 190 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const adventure = computeCompatibilityProfile(facts).find(score => score.key === 'adventure_compatibility')!
+  const novelty = computeCompatibilityProfile(facts).find(score => score.key === 'novelty_compatibility')!
+  assert.ok(adventure.contributingFacts.length >= 3)
+  assert.equal(new Set(adventure.contributingFacts).size, adventure.contributingFacts.length)
+  assert.ok(adventure.contributingFacts.every(id => /太陽|火星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(novelty.contributingFacts.length > adventure.contributingFacts.length)
+  assert.notDeepEqual(adventure.contributingFacts, novelty.contributingFacts)
+  assert.ok(adventure.confidence > 0)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
