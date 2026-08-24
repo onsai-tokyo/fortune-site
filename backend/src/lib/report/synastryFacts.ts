@@ -36,6 +36,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'shared_identity',
   'partnership_team_feeling',
   'fate_companion_feeling',
+  'relationship_stimulation_need',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -414,6 +415,25 @@ export function computeFateCompanionFeelingProfile(
     // 4/7/8室・ノード・生活共有の環境補正が未接続なので部分算出上限を設ける。
     confidence: hasEvidence ? Number(Math.min(0.55, identity!.confidence, team!.confidence).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set([...identity!.contributingFacts, ...team!.contributingFacts])] : [],
+  }
+}
+
+/** 相性§3。関係を活性化する5軸がすべて根拠を持つ場合だけ、刺激必要度を部分算出する。 */
+export function computeRelationshipStimulationNeedProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const keys: CompatibilityProfileKey[] = [
+    'novelty_compatibility', 'adventure_compatibility', 'growth_compatibility',
+    'shared_project_compatibility', 'ambition_alignment',
+  ]
+  const inputs = keys.map(key => profiles.find(score => score.key === key))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  return {
+    key: 'relationship_stimulation_need',
+    value: hasEvidence ? Number((inputs.reduce((sum, score) => sum + score.value, 0) / inputs.length).toFixed(3)) : 0.5,
+    // 個人のNovelty Needと9/11室を未接続のため、関係Factだけによる部分算出として制限する。
+    confidence: hasEvidence ? Number(Math.min(0.55, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
   }
 }
 

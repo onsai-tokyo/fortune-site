@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computeRelationScores, computeRelationshipStimulationNeedProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -388,6 +388,26 @@ test('相性§2は共有自己感とチーム感の両方から人生の一部�
 test('相性§2は共有自己感かチーム感が欠ける場合に運命共同体感を推測しない', () => {
   const result = computeFateCompanionFeelingProfile([
     { key: 'shared_identity', value: 0.9, confidence: 0.6, contributingFacts: ['identity'] },
+  ])
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
+})
+
+test('相性§3は新体験・冒険・成長・共同目標・野心の5軸から刺激必要度を部分算出する', () => {
+  const keys = ['novelty_compatibility', 'adventure_compatibility', 'growth_compatibility', 'shared_project_compatibility', 'ambition_alignment'] as const
+  const result = computeRelationshipStimulationNeedProfile(keys.map((key, index) => ({
+    key, value: 0.6 + index * 0.05, confidence: 0.7, contributingFacts: [`fact-${index}`],
+  })))
+  assert.equal(result.key, 'relationship_stimulation_need')
+  assert.equal(result.value, 0.7)
+  assert.equal(result.confidence, 0.55)
+  assert.equal(result.contributingFacts.length, 5)
+})
+
+test('相性§3は構成軸が一つでも欠ける場合に刺激必要度を推測しない', () => {
+  const result = computeRelationshipStimulationNeedProfile([
+    { key: 'novelty_compatibility', value: 0.9, confidence: 0.7, contributingFacts: ['novelty'] },
   ])
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
