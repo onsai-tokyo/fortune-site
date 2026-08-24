@@ -18,6 +18,10 @@ services:
         value: true
       - key: AI_REPORT_ENABLED
         value: true
+      # 自己鑑定・相性鑑定は品質ゲート通過済みの決定論エンジンを使用する。
+      # AI_REPORT_ENABLED は追加質問チャットと緊急ロールバック用に維持する。
+      - key: DETERMINISTIC_SCOPE
+        value: all
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SUPABASE_URL

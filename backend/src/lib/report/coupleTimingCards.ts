@@ -1,6 +1,7 @@
 import type { ReportCard, StructuredReport } from '../reportCards.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 import { japanDateParts } from '../japanDate.js'
+import { titlesAreSimilar } from './aiWriter.js'
 
 export interface CoupleAnnualTiming {
   year: number
@@ -56,6 +57,19 @@ function themeText(themes: string[]) {
   return themes.slice(0, 2).join('、') || '足元を整えること'
 }
 
+function laterTitle(occurrence: number, selfTheme: string, partnerTheme: string) {
+  const titles = [
+    `${selfTheme}を先に言葉にし、${partnerTheme}の余白を守る年`,
+    `${partnerTheme}を支えながら、${selfTheme}の選択を進める年`,
+    `二人の予定を開き、${selfTheme}と${partnerTheme}を並べる年`,
+    `別々の歩幅を認め、${selfTheme}を暮らしへ戻す年`,
+    `守る約束を見直し、${partnerTheme}へ余白を渡す年`,
+    `話す順序を変え、${selfTheme}を二人の課題にする年`,
+    `同じ答えを急がず、${partnerTheme}との接点を作る年`,
+  ]
+  return titles[Math.min(Math.max(occurrence - 3, 0), titles.length - 1)]
+}
+
 export function findCoupleTurningPoints(
   selfAnnual: CoupleAnnualTiming[],
   partnerAnnual: CoupleAnnualTiming[],
@@ -103,17 +117,18 @@ export function findCoupleTurningPoints(
 
 export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear = japanDateParts().year): ReportCard[] {
   const occurrences = new Map<CoupleTurningPoint['kind'], number>()
-  const usedTitles = new Set<string>()
+  const usedTitles: string[] = []
   const firstFutureYear = points.find(point => point.year >= currentYear)?.year
   return points.map(point => {
     const copy = kindCopy[point.kind]
     const occurrence = occurrences.get(point.kind) ?? 0
     occurrences.set(point.kind, occurrence + 1)
-    let title: string = copy.titles[occurrence] ?? `${copy.titles[copy.titles.length - 1]}――${themeText(point.selfThemes)}`
-    if (usedTitles.has(title)) title = `${copy.titles[copy.titles.length - 1]}――${point.year}年に選び直すこと`
-    usedTitles.add(title)
     const selfTheme = themeText(point.selfThemes)
     const partnerTheme = themeText(point.partnerThemes)
+    const candidates = [copy.titles[occurrence], laterTitle(occurrence, selfTheme, partnerTheme)].filter((value): value is string => Boolean(value))
+    const title = candidates.find(candidate => usedTitles.every(previous => !titlesAreSimilar(previous, candidate)))
+      ?? `${selfTheme}の進め方を変え、${partnerTheme}との約束を結び直す年`
+    usedTitles.push(title)
     const pages: ReportCard['pages'] = [
       { role: 'opening', label: 'この年の二人', text: `${yearLead(point.year)}${copy.summary}` },
       { role: 'core', label: 'あなたに起きること', text: `${point.year}年のあなたは「${selfTheme}」へ意識が向きます。変えたいことを小さく共有すると、相手も置いていかれません。` },

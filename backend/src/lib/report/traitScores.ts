@@ -1,6 +1,7 @@
 import type { FactAxis, FactLineage } from './facts.js'
 import type { ReportFactV2 } from './factsV2.js'
 import { CONFIRMED_PERSONALITY_SCORE_RULES } from './traitScoreRules.personality.js'
+import { applyDerivedPersonalTraitScores, DERIVED_TRAIT_SCORE_KEYS } from './derivedTraitScores.js'
 
 export type PersonalityScoreKey =
   | 'social_extraversion' | 'private_introversion' | 'social_sensitivity'
@@ -70,6 +71,13 @@ export const ALL_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = [
   ...PERSONALITY_SCORE_KEYS, ...ATTRACTION_SCORE_KEYS, ...COMPATIBILITY_SCORE_KEYS, ...BINDING_SCORE_KEYS,
 ]
 
+/** 原典に判定根拠がなく、推測でルールを作らない保留キー。常に confidence: 0 のまま保持する。 */
+export const RESERVED_TRAIT_SCORE_KEYS = ['attraction_physical'] as const satisfies readonly TraitScoreKey[]
+export const REQUIRED_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = ALL_TRAIT_SCORE_KEYS
+  .filter(key => !RESERVED_TRAIT_SCORE_KEYS.includes(key as typeof RESERVED_TRAIT_SCORE_KEYS[number]))
+export const DIRECT_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = REQUIRED_TRAIT_SCORE_KEYS
+  .filter(key => !DERIVED_TRAIT_SCORE_KEYS.includes(key as typeof DERIVED_TRAIT_SCORE_KEYS[number]))
+
 export interface TraitScore {
   key: TraitScoreKey
   value: number
@@ -88,6 +96,8 @@ export interface FactMatcher {
   axis?: FactAxis[]
   signal?: string[]
   factorPrefix?: string[]
+  /** 同じFact内に指定要素がすべて存在する場合だけ一致する。アスペクトの両天体判定に使う。 */
+  factorIncludesAll?: string[]
   polarity?: Array<-1 | 0 | 1>
   minStrength?: number
 }
@@ -107,6 +117,7 @@ export function matchesTraitFact(fact: ReportFactV2, matcher: FactMatcher): bool
   if (matcher.axis && !matcher.axis.includes(fact.axis)) return false
   if (matcher.signal && !matcher.signal.includes(fact.signal)) return false
   if (matcher.factorPrefix && !matcher.factorPrefix.some(prefix => fact.factor.startsWith(prefix))) return false
+  if (matcher.factorIncludesAll && !matcher.factorIncludesAll.every(value => fact.factor.includes(value))) return false
   if (matcher.polarity && !matcher.polarity.includes(fact.polarity)) return false
   if (matcher.minStrength !== undefined && fact.strength < matcher.minStrength) return false
   return true
@@ -129,7 +140,7 @@ export function computeTraitScores(
   rules: readonly TraitScoreRule[],
   scale: Record<TraitScoreKey, TraitScoreScale>,
 ): TraitScoreSet {
-  return Object.fromEntries(ALL_TRAIT_SCORE_KEYS.map(key => {
+  const scores = Object.fromEntries(ALL_TRAIT_SCORE_KEYS.map(key => {
     const hits = rules.filter(rule => rule.score === key).flatMap(rule =>
       facts.filter(fact => matchesTraitFact(fact, rule.match)).map(fact => ({ fact, rule })),
     )
@@ -150,4 +161,5 @@ export function computeTraitScores(
     }
     return [key, value]
   })) as TraitScoreSet
+  return applyDerivedPersonalTraitScores(scores)
 }

@@ -1,0 +1,785 @@
+import { createHash } from 'node:crypto'
+
+export type RelationAxis = 'attraction' | 'depth' | 'communication' | 'fun' | 'safety' | 'values' | 'growth' | 'domestic' | 'conflict' | 'repair' | 'binding'
+export type SynastryKind = 'cross-aspect' | 'element' | 'stem-relation' | 'sukuyo' | 'number' | 'shared-timing'
+
+export interface SynastryFact {
+  id: string
+  kind: SynastryKind
+  selfFactId: string | null
+  partnerFactId: string | null
+  axis: RelationAxis
+  signal: string
+  polarity: -1 | 0 | 1
+  strength: number
+  requiresSelfBirthTime: boolean
+  requiresPartnerBirthTime: boolean
+  detail: string
+}
+
+export interface RelationScore { key: RelationAxis; value: number; confidence: number; contributingFacts: string[] }
+export const COMPATIBILITY_PROFILE_KEYS = [
+  'romantic_attraction',
+  'physical_attraction',
+  'conversational_flow',
+  'conversational_depth',
+  'humor_compatibility',
+  'friendship_compatibility',
+  'domestic_compatibility',
+  'novelty_compatibility',
+  'shared_project_compatibility',
+  'adventure_compatibility',
+  'admiration_mutual',
+  'pride_collision',
+  'ego_competition',
+  'conflict_frequency',
+  'ambition_alignment',
+  'lifestyle_alignment',
+  'shared_identity',
+  'partnership_team_feeling',
+  'fate_companion_feeling',
+  'relationship_stimulation_need',
+  'dependency_intensity',
+  'power_balance',
+  'relationship_boredom_risk',
+  'trust_stability',
+  'betrayal_risk_pattern',
+  'long_term_binding',
+  'transparency',
+  'predictability',
+  'mystery_distance',
+  'social_display_affection',
+  'private_affection',
+  'emotional_intimacy',
+  'repair_capacity',
+  'forgiveness_capacity',
+  'emotional_safety',
+  'conflict_intensity',
+  'growth_compatibility',
+  'value_alignment',
+] as const
+export type CompatibilityProfileKey = typeof COMPATIBILITY_PROFILE_KEYS[number]
+export interface CompatibilityProfileScore {
+  key: CompatibilityProfileKey
+  value: number
+  confidence: number
+  contributingFacts: string[]
+  /** 非対称項目は平均値だけで潰さず、誰から誰への値かを保持する。 */
+  directions?: { selfToPartner: number; partnerToSelf: number }
+}
+interface TraitScoreInput { value: number; confidence: number; contributingFacts: string[] }
+export type UnderstandingComponentKey = 'cognitive' | 'emotional' | 'deep'
+export interface UnderstandingComponentScore {
+  key: UnderstandingComponentKey
+  value: number
+  confidence: number
+  contributingFacts: string[]
+}
+export interface MutualUnderstandingProfile {
+  key: 'mutual_understanding'
+  components: Record<UnderstandingComponentKey, UnderstandingComponentScore>
+}
+export const IMPLEMENTED_COMPATIBILITY_SCORE_KEYS = [...COMPATIBILITY_PROFILE_KEYS, 'mutual_understanding'] as const
+type JsonRecord = Record<string, unknown>
+const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
+const text = (value: unknown) => typeof value === 'string' ? value : ''
+const numeric = (value: unknown) => Number.isFinite(Number(value)) ? Number(value) : null
+const id = (parts: unknown[]) => createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 16)
+
+const STEM_ELEMENT: Record<string, string> = { 甲: 'wood', 乙: 'wood', 丙: 'fire', 丁: 'fire', 戊: 'earth', 己: 'earth', 庚: 'metal', 辛: 'metal', 壬: 'water', 癸: 'water' }
+const GENERATES: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' }
+const CONTROLS: Record<string, string> = { wood: 'earth', earth: 'water', water: 'fire', fire: 'metal', metal: 'wood' }
+const SIGN_INDEX: Record<string, number> = { 牡羊座: 0, Aries: 0, 牡牛座: 1, Taurus: 1, 双子座: 2, Gemini: 2, 蟹座: 3, Cancer: 3, 獅子座: 4, Leo: 4, 乙女座: 5, Virgo: 5, 天秤座: 6, Libra: 6, 蠍座: 7, Scorpio: 7, 射手座: 8, Sagittarius: 8, 山羊座: 9, Capricorn: 9, 水瓶座: 10, Aquarius: 10, 魚座: 11, Pisces: 11 }
+const PLANET_NAME: Record<string, string> = { Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星' }
+const canonicalPlanet = (name: string) => PLANET_NAME[name] ?? name
+const pairKey = (left: string, right: string) => [canonicalPlanet(left), canonicalPlanet(right)].sort().join(':')
+const FLOW_PAIRS = new Set(['水星:水星', '太陽:水星', '水星:金星', '木星:水星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
+const DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:月', '太陽:月', '月:金星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
+const CONVERSATIONAL_DEPTH_PAIRS = new Set(['月:水星', '冥王星:水星', '月:冥王星'].map(value => value.split(':').sort().join(':')))
+const HUMOR_COMPATIBILITY_PAIRS = new Set(['木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
+const FRIENDSHIP_COMPATIBILITY_PAIRS = new Set(['水星:水星', '月:水星', '水星:金星', '木星:水星', '水星:火星', '天王星:水星'].map(value => value.split(':').sort().join(':')))
+const DOMESTIC_COMPATIBILITY_PAIRS = new Set(['月:月', '月:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const ROMANTIC_ATTRACTION_PAIRS = new Set(['太陽:金星', '月:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const PHYSICAL_ATTRACTION_PAIRS = new Set(['金星:火星', '火星:火星'].map(value => value.split(':').sort().join(':')))
+const NOVELTY_COMPATIBILITY_PAIRS = new Set([
+  '木星:太陽', '木星:月', '木星:水星', '木星:金星', '木星:火星',
+  '天王星:太陽', '天王星:月', '天王星:水星', '天王星:金星', '天王星:火星',
+].map(value => value.split(':').sort().join(':')))
+const SHARED_PROJECT_COMPATIBILITY_PAIRS = new Set([
+  '火星:火星', '木星:火星', '土星:火星', '木星:木星', '土星:木星', '土星:土星',
+].map(value => value.split(':').sort().join(':')))
+// 相性§26。同じ新体験Fact群のうち、実際の行動へつながる太陽・火星接触を強く扱う。
+const ADVENTURE_COMPATIBILITY_PAIRS = new Set([
+  '木星:太陽', '木星:火星', '天王星:太陽', '天王星:火星',
+].map(value => value.split(':').sort().join(':')))
+// 相性§27・§33。職業・役職入力は推測せず、相手の核と行動を支える接触だけを部分算出する。
+const ADMIRATION_MUTUAL_PAIRS = new Set([
+  '木星:太陽', '土星:太陽', '木星:火星', '土星:火星',
+].map(value => value.split(':').sort().join(':')))
+const PRIDE_COLLISION_PAIRS = new Set([
+  '太陽:火星', '火星:火星', '太陽:太陽', '月:月',
+].map(value => value.split(':').sort().join(':')))
+const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
+const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
+const FORGIVENESS_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星'].map(value => value.split(':').sort().join(':')))
+const EMOTIONAL_SAFETY_PAIRS = new Set(['月:月', '太陽:月', '月:金星', '木星:月'].map(value => value.split(':').sort().join(':')))
+const CONFLICT_INTENSITY_PAIRS = new Set(['太陽:火星', '火星:火星', '水星:火星', '月:火星'].map(value => value.split(':').sort().join(':')))
+const CONFLICT_FREQUENCY_PAIRS = new Set([
+  '太陽:火星', '火星:火星', '水星:火星', '月:火星',
+  '冥王星:太陽', '冥王星:月', '冥王星:水星', '冥王星:金星', '冥王星:火星',
+].map(value => value.split(':').sort().join(':')))
+const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
+const VALUE_ALIGNMENT_PAIRS = new Set(['太陽:太陽', '太陽:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const LIFESTYLE_ALIGNMENT_PAIRS = new Set(['月:月', '太陽:月', '月:金星'].map(value => value.split(':').sort().join(':')))
+const SHARED_IDENTITY_PAIRS = new Set(['太陽:太陽', '月:月', '太陽:月', '月:金星'].map(value => value.split(':').sort().join(':')))
+const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
+const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
+const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
+const DEPENDENCY_INTENSITY_PAIRS = new Set(['月:冥王星'].map(value => value.split(':').sort().join(':')))
+const MYSTERY_DISTANCE_PERSONAL_PLANETS = new Set(['月', '水星', '金星'])
+
+function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
+
+function planetMap(person: JsonRecord): Map<string, number> {
+  const rawPlanets = record(record(person.astrology).western).planets
+  const entries: Array<[string, unknown]> = Array.isArray(rawPlanets)
+    ? rawPlanets.flatMap(raw => {
+      const point = record(raw)
+      const name = text(point.name)
+      return name ? [[name, point]] : []
+    })
+    : Object.entries(record(rawPlanets))
+  return new Map(entries.flatMap(([name, raw]) => {
+    const point = record(raw)
+    const longitude = numeric(point.longitude)
+    if (longitude !== null) return [[name, ((longitude % 360) + 360) % 360] as const]
+    const sign = SIGN_INDEX[text(point.sign)]
+    const degree = numeric(point.degree)
+    return sign !== undefined && degree !== null ? [[name, sign * 30 + degree] as const] : []
+  }))
+}
+
+function aspect(left: number, right: number): { name: string; polarity: -1 | 1; strength: number; axis: RelationAxis } | null {
+  const distance = Math.min(Math.abs(left - right), 360 - Math.abs(left - right))
+  const specs = [
+    { angle: 0, orb: 8, name: 'conjunction', polarity: 1 as const, axis: 'binding' as const },
+    { angle: 60, orb: 5, name: 'sextile', polarity: 1 as const, axis: 'fun' as const },
+    { angle: 90, orb: 7, name: 'square', polarity: -1 as const, axis: 'conflict' as const },
+    { angle: 120, orb: 7, name: 'trine', polarity: 1 as const, axis: 'safety' as const },
+    { angle: 180, orb: 8, name: 'opposition', polarity: -1 as const, axis: 'growth' as const },
+  ]
+  const match = specs.find(item => Math.abs(distance - item.angle) <= item.orb)
+  return match ? { name: match.name, polarity: match.polarity, axis: match.axis, strength: Number((1 - Math.abs(distance - match.angle) / (match.orb + 1)).toFixed(3)) } : null
+}
+
+export function buildSynastryFacts(selfValue: unknown, partnerValue: unknown): SynastryFact[] {
+  const self = record(selfValue); const partner = record(partnerValue); const result: SynastryFact[] = []
+  const selfStem = text(self.shichuDay)[0]; const partnerStem = text(partner.shichuDay)[0]
+  const selfElement = STEM_ELEMENT[selfStem]; const partnerElement = STEM_ELEMENT[partnerStem]
+  if (selfElement && partnerElement) {
+    const aligned = selfElement === partnerElement
+    const generating = GENERATES[selfElement] === partnerElement || GENERATES[partnerElement] === selfElement
+    const controlling = CONTROLS[selfElement] === partnerElement || CONTROLS[partnerElement] === selfElement
+    add(result, { kind: 'stem-relation', selfFactId: `stem:${selfStem}`, partnerFactId: `stem:${partnerStem}`, axis: aligned ? 'values' : generating ? 'growth' : controlling ? 'conflict' : 'communication', signal: aligned ? 'shared-rhythm' : generating ? 'mutual-growth' : controlling ? 'pace-friction' : 'different-language', polarity: controlling ? -1 : 1, strength: aligned ? 0.9 : generating ? 0.8 : 0.7, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfStem}:${partnerStem}` })
+  }
+  const selfNumber = numeric(self.lifePathNumber); const partnerNumber = numeric(partner.lifePathNumber)
+  if (selfNumber && partnerNumber) {
+    const distance = Math.abs(selfNumber - partnerNumber)
+    add(result, { kind: 'number', selfFactId: `lifePath:${selfNumber}`, partnerFactId: `lifePath:${partnerNumber}`, axis: distance <= 2 ? 'fun' : 'growth', signal: distance === 0 ? 'same-tempo' : distance <= 2 ? 'near-tempo' : 'different-tempo', polarity: distance <= 2 ? 1 : 0, strength: Math.max(0.45, 0.85 - distance * 0.05), requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfNumber}:${partnerNumber}` })
+  }
+  const selfSukuyo = text(self.sukuyo).replace(/宿$/, ''); const partnerSukuyo = text(partner.sukuyo).replace(/宿$/, '')
+  // 正式な27宿×27宿の関係表が未収録のため、異なる宿を栄親・安壊等へ推測分類しない。
+  // 同一宿だけは入力から直接確定できる事実として保持する。
+  if (selfSukuyo && partnerSukuyo && selfSukuyo === partnerSukuyo) add(result, {
+    kind: 'sukuyo', selfFactId: `sukuyo:${selfSukuyo}`, partnerFactId: `sukuyo:${partnerSukuyo}`,
+    axis: 'depth', signal: 'same-mansion', polarity: 1, strength: 0.85,
+    requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfSukuyo}:${partnerSukuyo}`,
+  })
+  const selfPlanets = planetMap(self); const partnerPlanets = planetMap(partner)
+  const relevant = new Set(['太陽', '月', '水星', '金星', '火星', '木星', '土星', '天王星', '海王星', '冥王星'])
+  for (const [selfName, selfLongitude] of selfPlanets) for (const [partnerName, partnerLongitude] of partnerPlanets) {
+    if (!relevant.has(canonicalPlanet(selfName)) || !relevant.has(canonicalPlanet(partnerName))) continue
+    const found = aspect(selfLongitude, partnerLongitude)
+    if (!found) continue
+    const planets = pairKey(selfName, partnerName)
+    const axis: RelationAxis = FLOW_PAIRS.has(planets) ? 'communication' : DEPTH_PAIRS.has(planets) ? 'depth' : /金星|火星/.test(planets) ? 'attraction' : found.axis
+    add(result, { kind: 'cross-aspect', selfFactId: `planet:${canonicalPlanet(selfName)}`, partnerFactId: `planet:${canonicalPlanet(partnerName)}`, axis, signal: `${planets.replace(':', '-')}-${found.name}`, polarity: found.polarity, strength: found.strength, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${planets}:${found.name}` })
+  }
+  return result.sort((a, b) => b.strength - a.strength || a.id.localeCompare(b.id))
+}
+
+/** 相性§44。会話の流れだけを算出し、月・冥王星による深い理解とは分離する。 */
+export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnown = { self: false, partner: false }): CompatibilityProfileScore[] {
+  const pairFromSignal = (fact: SynastryFact) => fact.signal.split('-').slice(0, 2).sort().join(':')
+  const conversation = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'communication' && FLOW_PAIRS.has(pairFromSignal(fact)))
+  const conversationSigned = conversation.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const conversationDepth = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && CONVERSATIONAL_DEPTH_PAIRS.has(pairFromSignal(fact)))
+  const conversationDepthSigned = conversationDepth.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const conversationDepthHasMoon = conversationDepth.some(fact => pairFromSignal(fact).includes('月'))
+  const humor = facts.filter(fact => fact.kind === 'cross-aspect' && HUMOR_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const humorSigned = humor.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const friendship = facts.filter(fact => fact.kind === 'cross-aspect' && FRIENDSHIP_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const friendshipSigned = friendship.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const friendshipHasMoon = friendship.some(fact => pairFromSignal(fact).includes('月'))
+  const domestic = facts.filter(fact => fact.kind === 'cross-aspect' && DOMESTIC_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const domesticSigned = domestic.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const domesticHasMoon = domestic.some(fact => pairFromSignal(fact).includes('月'))
+  const romantic = facts.filter(fact => fact.kind === 'cross-aspect' && ROMANTIC_ATTRACTION_PAIRS.has(pairFromSignal(fact)))
+  const romanticSigned = romantic.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const romanticHasMoon = romantic.some(fact => pairFromSignal(fact).includes('月'))
+  const physical = facts.filter(fact => fact.kind === 'cross-aspect' && PHYSICAL_ATTRACTION_PAIRS.has(pairFromSignal(fact)))
+  const physicalSigned = physical.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const novelty = facts.filter(fact => fact.kind === 'cross-aspect' && NOVELTY_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const noveltySigned = novelty.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const noveltyHasMoon = novelty.some(fact => pairFromSignal(fact).includes('月'))
+  const sharedProject = facts.filter(fact => fact.kind === 'cross-aspect' && SHARED_PROJECT_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const sharedProjectSigned = sharedProject.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const adventure = facts.filter(fact => fact.kind === 'cross-aspect' && ADVENTURE_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const adventureSigned = adventure.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const admiration = facts.filter(fact => fact.kind === 'cross-aspect' && ADMIRATION_MUTUAL_PAIRS.has(pairFromSignal(fact)))
+  const admirationSigned = admiration.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const pride = facts.filter(fact => fact.kind === 'cross-aspect'
+    && PRIDE_COLLISION_PAIRS.has(pairFromSignal(fact))
+    && /-(square|opposition)$/.test(fact.signal))
+  const prideStrength = pride.reduce((sum, fact) => sum + fact.strength, 0)
+  const prideHasMoon = pride.some(fact => pairFromSignal(fact).includes('月'))
+  const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
+  const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const dependency = facts.filter(fact => fact.kind === 'cross-aspect' && DEPENDENCY_INTENSITY_PAIRS.has(pairFromSignal(fact)))
+  const dependencyStrength = dependency.reduce((sum, fact) => sum + fact.strength, 0)
+  const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
+  const repairSigned = repair.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const forgiveness = facts.filter(fact => fact.kind === 'cross-aspect' && FORGIVENESS_CAPACITY_PAIRS.has(pairFromSignal(fact)))
+  const forgivenessSigned = forgiveness.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const safety = facts.filter(fact => fact.kind === 'cross-aspect' && EMOTIONAL_SAFETY_PAIRS.has(pairFromSignal(fact)))
+  const safetySigned = safety.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const conflict = facts.filter(fact => fact.kind === 'cross-aspect'
+    && CONFLICT_INTENSITY_PAIRS.has(pairFromSignal(fact))
+    && /-(square|opposition)$/.test(fact.signal))
+  const conflictStrength = conflict.reduce((sum, fact) => sum + fact.strength, 0)
+  const conflictHasMoon = conflict.some(fact => pairFromSignal(fact).includes('月'))
+  const conflictFrequency = facts.filter(fact => fact.kind === 'cross-aspect'
+    && CONFLICT_FREQUENCY_PAIRS.has(pairFromSignal(fact))
+    && /-(square|opposition)$/.test(fact.signal))
+  const conflictFrequencyHasMoon = conflictFrequency.some(fact => pairFromSignal(fact).includes('月'))
+  const growth = facts.filter(fact => fact.kind === 'cross-aspect' && GROWTH_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const growthSigned = growth.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const growthHasMoon = growth.some(fact => pairFromSignal(fact).includes('月'))
+  const values = facts.filter(fact => fact.kind === 'cross-aspect' && VALUE_ALIGNMENT_PAIRS.has(pairFromSignal(fact)))
+  const valuesSigned = values.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const lifestyle = facts.filter(fact => fact.kind === 'cross-aspect'
+    && LIFESTYLE_ALIGNMENT_PAIRS.has(pairFromSignal(fact)))
+  const lifestyleSigned = lifestyle.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const sharedIdentity = facts.filter(fact => fact.kind === 'cross-aspect'
+    && SHARED_IDENTITY_PAIRS.has(pairFromSignal(fact))
+    && /-(conjunction|sextile|trine)$/.test(fact.signal))
+  const sharedIdentityStrength = sharedIdentity.reduce((sum, fact) => sum + fact.strength, 0)
+  const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
+  return [{
+    key: 'conversational_flow',
+    value: Number((conversation.length ? 1 / (1 + Math.exp(-conversationSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.9, conversation.length * 0.18).toFixed(3)),
+    contributingFacts: conversation.map(fact => fact.id),
+  }, {
+    key: 'romantic_attraction',
+    value: Number((romantic.length ? 1 / (1 + Math.exp(-romanticSigned)) : 0.5).toFixed(3)),
+    // 5室・7室・ASC/DESCを未接続のため、個人天体クロスアスペクトだけの部分算出。
+    confidence: Number((Math.min(0.7, romantic.length * 0.18) * (romanticHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(romantic.map(fact => fact.id))],
+  }, {
+    key: 'physical_attraction',
+    value: Number((physical.length ? 1 / (1 + Math.exp(-physicalSigned)) : 0.5).toFixed(3)),
+    // 金星―火星と火星同士の反応性だけを扱い、性的行動・恋愛感情・交際成立は推測しない。
+    confidence: Number(Math.min(0.65, physical.length * 0.2).toFixed(3)),
+    contributingFacts: [...new Set(physical.map(fact => fact.id))],
+  }, {
+    key: 'conversational_depth',
+    value: Number((conversationDepth.length ? 1 / (1 + Math.exp(-conversationDepthSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, conversationDepth.length * 0.18) * (conversationDepthHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: conversationDepth.map(fact => fact.id),
+  }, {
+    key: 'humor_compatibility',
+    value: Number((humor.length ? 1 / (1 + Math.exp(-humorSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, humor.length * 0.18).toFixed(3)),
+    contributingFacts: humor.map(fact => fact.id),
+  }, {
+    key: 'friendship_compatibility',
+    value: Number((friendship.length ? 1 / (1 + Math.exp(-friendshipSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, friendship.length * 0.15) * (friendshipHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(friendship.map(fact => fact.id))],
+  }, {
+    key: 'domestic_compatibility',
+    value: Number((domestic.length ? 1 / (1 + Math.exp(-domesticSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, domestic.length * 0.2) * (domesticHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(domestic.map(fact => fact.id))],
+  }, {
+    key: 'novelty_compatibility',
+    value: Number((novelty.length ? 1 / (1 + Math.exp(-noveltySigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, novelty.length * 0.16) * (noveltyHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(novelty.map(fact => fact.id))],
+  }, {
+    key: 'shared_project_compatibility',
+    value: Number((sharedProject.length ? 1 / (1 + Math.exp(-sharedProjectSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.8, sharedProject.length * 0.16).toFixed(3)),
+    contributingFacts: [...new Set(sharedProject.map(fact => fact.id))],
+  }, {
+    key: 'adventure_compatibility',
+    value: Number((adventure.length ? 1 / (1 + Math.exp(-adventureSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, adventure.length * 0.18).toFixed(3)),
+    contributingFacts: [...new Set(adventure.map(fact => fact.id))],
+  }, {
+    key: 'admiration_mutual',
+    value: Number((admiration.length ? 1 / (1 + Math.exp(-admirationSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.65, admiration.length * 0.16).toFixed(3)),
+    contributingFacts: [...new Set(admiration.map(fact => fact.id))],
+  }, {
+    key: 'pride_collision',
+    value: Number((pride.length ? 1 - Math.exp(-prideStrength) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.75, pride.length * 0.18) * (prideHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(pride.map(fact => fact.id))],
+  }, {
+    key: 'emotional_intimacy',
+    value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.85, emotional.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: emotional.map(fact => fact.id),
+  }, {
+    key: 'dependency_intensity',
+    // 調和・緊張を問わず、月―冥王星接触の強さを依存・執着側へ独立計上する。
+    value: Number((dependency.length ? 1 - Math.exp(-dependencyStrength) : 0.5).toFixed(3)),
+    // 8室・ノード・生活環境を未接続の部分算出で、月を使うため時刻確信度も反映する。
+    confidence: Number((Math.min(0.55, dependency.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: dependency.map(fact => fact.id),
+  }, {
+    key: 'repair_capacity',
+    value: Number((repair.length ? 1 / (1 + Math.exp(-repairSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.85, repair.length * 0.18).toFixed(3)),
+    contributingFacts: repair.map(fact => fact.id),
+  }, {
+    key: 'forgiveness_capacity',
+    value: Number((forgiveness.length ? 1 / (1 + Math.exp(-forgivenessSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.75, forgiveness.length * 0.18).toFixed(3)),
+    contributingFacts: forgiveness.map(fact => fact.id),
+  }, {
+    key: 'emotional_safety',
+    value: Number((safety.length ? 1 / (1 + Math.exp(-safetySigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.85, safety.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: safety.map(fact => fact.id),
+  }, {
+    key: 'conflict_frequency',
+    // 頻度は接触数、強度はorb由来のstrengthで別々に保持する。
+    value: Number((conflictFrequency.length ? 1 - Math.exp(-conflictFrequency.length * 0.45) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.75, conflictFrequency.length * 0.14) * (conflictFrequencyHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(conflictFrequency.map(fact => fact.id))],
+  }, {
+    key: 'conflict_intensity',
+    value: Number((conflict.length ? 1 - Math.exp(-conflictStrength) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.7, conflict.length * 0.16) * (conflictHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: conflict.map(fact => fact.id),
+  }, {
+    key: 'growth_compatibility',
+    value: Number((growth.length ? 1 / (1 + Math.exp(-growthSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.7, growth.length * 0.16) * (growthHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: growth.map(fact => fact.id),
+  }, {
+    key: 'value_alignment',
+    value: Number((values.length ? 1 / (1 + Math.exp(-valuesSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.65, values.length * 0.16).toFixed(3)),
+    contributingFacts: values.map(fact => fact.id),
+  }, {
+    key: 'lifestyle_alignment',
+    value: Number((lifestyle.length ? 1 / (1 + Math.exp(-lifestyleSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, lifestyle.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: [...new Set(lifestyle.map(fact => fact.id))],
+  }, {
+    key: 'shared_identity',
+    value: Number((sharedIdentity.length ? 1 - Math.exp(-sharedIdentityStrength) : 0.5).toFixed(3)),
+    // ASC・ハウス・ノード未接続の部分算出なので確信度を0.65で制限する。
+    confidence: Number((Math.min(0.65, sharedIdentity.length * 0.16) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: [...new Set(sharedIdentity.map(fact => fact.id))],
+  }]
+}
+
+/** 相性§4・§5・§19。占術Factを再加算せず、双方の個人Traitの積から競争性を派生する。 */
+export function computeEgoCompetitionProfile(
+  self: { pride_sensitivity: TraitScoreInput; status_attraction: TraitScoreInput },
+  partner: { pride_sensitivity: TraitScoreInput; status_attraction: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.status_attraction, partner.status_attraction]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const value = hasEvidence
+    ? (self.pride_sensitivity.value * partner.pride_sensitivity.value
+      + self.status_attraction.value * partner.status_attraction.value) / 2
+    : 0.5
+  return {
+    key: 'ego_competition',
+    value: Number(value.toFixed(3)),
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§4・§5。双方の達成志向を比較し、共同作業のシナストリーとは別に保持する。 */
+export function computeAmbitionAlignmentProfile(
+  self: { career_absorption: TraitScoreInput; recognition_motivation: TraitScoreInput },
+  partner: { career_absorption: TraitScoreInput; recognition_motivation: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.career_absorption, partner.career_absorption, self.recognition_motivation, partner.recognition_motivation]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const value = hasEvidence
+    ? (self.career_absorption.value * partner.career_absorption.value
+      + self.recognition_motivation.value * partner.recognition_motivation.value) / 2
+    : 0.5
+  return {
+    key: 'ambition_alignment',
+    value: Number(value.toFixed(3)),
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§19。値は「良い均衡」ではなく、双方の力が拮抗する度合いを表す。 */
+export function computePowerBalanceProfile(
+  self: { pride_sensitivity: TraitScoreInput; group_coordination: TraitScoreInput },
+  partner: { pride_sensitivity: TraitScoreInput; group_coordination: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.group_coordination, partner.group_coordination]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const similarity = (left: number, right: number) => 1 - Math.min(1, Math.abs(left - right))
+  return {
+    key: 'power_balance',
+    value: hasEvidence ? Number(((
+      similarity(self.pride_sensitivity.value, partner.pride_sensitivity.value)
+      + similarity(self.group_coordination.value, partner.group_coordination.value)
+    ) / 2).toFixed(3)) : 0.5,
+    confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§11・§30。各自の開示傾向を方向別に保持し、同じ値だと仮定しない。 */
+export function computeTransparencyProfile(
+  self: { compatibility_transparency: TraitScoreInput },
+  partner: { compatibility_transparency: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.compatibility_transparency, partner.compatibility_transparency]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'transparency', value: 0.5, confidence: 0, contributingFacts: [] }
+  const directions = {
+    selfToPartner: Number(self.compatibility_transparency.value.toFixed(3)),
+    partnerToSelf: Number(partner.compatibility_transparency.value.toFixed(3)),
+  }
+  return {
+    key: 'transparency',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 関係開始時の秘密・相互性は別入力なので、出生傾向だけの上限を設ける。
+    confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
+  }
+}
+
+/**
+ * 相性§1・§34。双方の安定志向と、関係内で見える形にしやすい度合いから部分算出する。
+ * 実際の予定遵守・連絡頻度・行動履歴は未入力なので、未来の行動予測には使わない。
+ */
+export function computePredictabilityProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { compatibility_stability: TraitScoreInput },
+  partner: { compatibility_stability: TraitScoreInput },
+): CompatibilityProfileScore {
+  const transparency = profiles.find(score => score.key === 'transparency')
+  const personal = [self.compatibility_stability, partner.compatibility_stability]
+  const hasEvidence = Boolean(transparency && transparency.confidence > 0
+    && personal.every(score => score.confidence > 0))
+  const sharedRegularity = self.compatibility_stability.value * partner.compatibility_stability.value
+  return {
+    key: 'predictability',
+    value: hasEvidence ? Number(((sharedRegularity + transparency!.value) / 2).toFixed(3)) : 0.5,
+    // 行動履歴・生活環境・合意済みルールを未入力のため、関係傾向として上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, transparency!.confidence, ...personal.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...transparency!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
+      : [],
+  }
+}
+
+/**
+ * 相性§11・§30。
+ * 海王星と個人天体の接触、および相手から自分への開示傾向を方向別に合成する。
+ * 海王星単独は世代要因なので採用せず、嘘・秘密・好意の有無も推定しない。
+ */
+export function computeMysteryDistanceProfile(
+  facts: readonly SynastryFact[],
+  transparency: CompatibilityProfileScore,
+): CompatibilityProfileScore {
+  if (!transparency.directions || transparency.confidence <= 0) {
+    return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
+  }
+  const mysteryFacts = facts.filter(fact => {
+    if (fact.kind !== 'cross-aspect') return false
+    const selfPlanet = fact.selfFactId?.replace(/^planet:/, '') ?? ''
+    const partnerPlanet = fact.partnerFactId?.replace(/^planet:/, '') ?? ''
+    return (selfPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(partnerPlanet))
+      || (partnerPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(selfPlanet))
+  })
+  if (mysteryFacts.length === 0) {
+    return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
+  }
+  const directionalIntensity = (neptuneOwner: 'self' | 'partner') => {
+    const strength = mysteryFacts
+      .filter(fact => neptuneOwner === 'self'
+        ? fact.selfFactId === 'planet:海王星'
+        : fact.partnerFactId === 'planet:海王星')
+      .reduce((sum, fact) => sum + fact.strength, 0)
+    return 1 - Math.exp(-strength)
+  }
+  // selfToPartner は「自分から見て相手が読み取りにくい」方向。
+  const directions = {
+    selfToPartner: Number(((directionalIntensity('partner') + (1 - transparency.directions.partnerToSelf)) / 2).toFixed(3)),
+    partnerToSelf: Number(((directionalIntensity('self') + (1 - transparency.directions.selfToPartner)) / 2).toFixed(3)),
+  }
+  return {
+    key: 'mystery_distance',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // DESC・12室オーバーレイを未計算のため、部分算出の上限を設ける。
+    confidence: Number(Math.min(0.55, transparency.confidence).toFixed(3)),
+    contributingFacts: [...new Set([...transparency.contributingFacts, ...mysteryFacts.map(fact => fact.id)])],
+    directions,
+  }
+}
+
+/** 相性§29。人前で見える愛情表現のしやすさを各自の方向別傾向として保持する。 */
+export function computeSocialDisplayAffectionProfile(
+  self: { social_neutrality: TraitScoreInput; public_agreeableness: TraitScoreInput },
+  partner: { social_neutrality: TraitScoreInput; public_agreeableness: TraitScoreInput },
+): CompatibilityProfileScore {
+  const selfInputs = [self.social_neutrality, self.public_agreeableness]
+  const partnerInputs = [partner.social_neutrality, partner.public_agreeableness]
+  const inputs = [...selfInputs, ...partnerInputs]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'social_display_affection', value: 0.5, confidence: 0, contributingFacts: [] }
+  const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
+  const directions = {
+    selfToPartner: Number(mean(selfInputs).toFixed(3)),
+    partnerToSelf: Number(mean(partnerInputs).toFixed(3)),
+  }
+  return {
+    key: 'social_display_affection',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 実際の記念日行動・贈答・周囲の評価は未入力なので傾向の上限を設ける。
+    confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
+  }
+}
+
+/** 相性§16・性格§35・§36。生活内の世話や実務で示す好意を各自の方向別傾向として保持する。 */
+export function computePrivateAffectionProfile(
+  self: { domestic_affection: TraitScoreInput; practical_generosity: TraitScoreInput },
+  partner: { domestic_affection: TraitScoreInput; practical_generosity: TraitScoreInput },
+): CompatibilityProfileScore {
+  const selfInputs = [self.domestic_affection, self.practical_generosity]
+  const partnerInputs = [partner.domestic_affection, partner.practical_generosity]
+  const inputs = [...selfInputs, ...partnerInputs]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'private_affection', value: 0.5, confidence: 0, contributingFacts: [] }
+  const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
+  const directions = {
+    selfToPartner: Number(mean(selfInputs).toFixed(3)),
+    partnerToSelf: Number(mean(partnerInputs).toFixed(3)),
+  }
+  return {
+    key: 'private_affection',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 実際の同居・世話・支出履歴は未入力なので、出生傾向だけの部分算出とする。
+    confidence: Number(Math.min(0.6, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
+  }
+}
+
+/** 相性§4。共同作業と目標志向を合成し、競争性では減点しない。 */
+export function computePartnershipTeamFeelingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const project = profiles.find(score => score.key === 'shared_project_compatibility')
+  const ambition = profiles.find(score => score.key === 'ambition_alignment')
+  const hasEvidence = Boolean(project && ambition && project.confidence > 0 && ambition.confidence > 0)
+  return {
+    key: 'partnership_team_feeling',
+    value: hasEvidence ? Number(((project!.value + ambition!.value) / 2).toFixed(3)) : 0.5,
+    confidence: hasEvidence ? Number(Math.min(project!.confidence, ambition!.confidence).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set([...project!.contributingFacts, ...ambition!.contributingFacts])] : [],
+  }
+}
+
+/** 相性§2。共有自己感とチーム感がともに根拠を持つ場合だけ部分算出する。 */
+export function computeFateCompanionFeelingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const identity = profiles.find(score => score.key === 'shared_identity')
+  const team = profiles.find(score => score.key === 'partnership_team_feeling')
+  const hasEvidence = Boolean(identity && team && identity.confidence > 0 && team.confidence > 0)
+  return {
+    key: 'fate_companion_feeling',
+    value: hasEvidence ? Number(((identity!.value + team!.value) / 2).toFixed(3)) : 0.5,
+    // 4/7/8室・ノード・生活共有の環境補正が未接続なので部分算出上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, identity!.confidence, team!.confidence).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set([...identity!.contributingFacts, ...team!.contributingFacts])] : [],
+  }
+}
+
+/** 相性§3。関係を活性化する5軸がすべて根拠を持つ場合だけ、刺激必要度を部分算出する。 */
+export function computeRelationshipStimulationNeedProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const keys: CompatibilityProfileKey[] = [
+    'novelty_compatibility', 'adventure_compatibility', 'growth_compatibility',
+    'shared_project_compatibility', 'ambition_alignment',
+  ]
+  const inputs = keys.map(key => profiles.find(score => score.key === key))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  return {
+    key: 'relationship_stimulation_need',
+    value: hasEvidence ? Number((inputs.reduce((sum, score) => sum + score.value, 0) / inputs.length).toFixed(3)) : 0.5,
+    // 個人のNovelty Needと9/11室を未接続のため、関係Factだけによる部分算出として制限する。
+    confidence: hasEvidence ? Number(Math.min(0.55, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§3・§26。双方の新奇性傾向と関係の刺激必要度からマンネリ化リスクを派生する。 */
+export function computeRelationshipBoredomRiskProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { novelty_attraction: TraitScoreInput },
+  partner: { novelty_attraction: TraitScoreInput },
+): CompatibilityProfileScore {
+  const stimulation = profiles.find(score => score.key === 'relationship_stimulation_need')
+  const inputs = [self.novelty_attraction, partner.novelty_attraction]
+  const hasEvidence = Boolean(stimulation && stimulation.confidence > 0 && inputs.every(score => score.confidence > 0))
+  const sharedNoveltyNeed = self.novelty_attraction.value * partner.novelty_attraction.value
+  return {
+    key: 'relationship_boredom_risk',
+    value: hasEvidence ? Number(((sharedNoveltyNeed + stimulation!.value) / 2).toFixed(3)) : 0.5,
+    // 実際の生活環境・接触量を未入力のため、傾向スコアとして上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, stimulation!.confidence, ...inputs.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...stimulation!.contributingFacts, ...inputs.flatMap(score => score.contributingFacts)])]
+      : [],
+  }
+}
+
+/** 相性§31・§34。個人の信頼維持傾向と、二人の安心・修復を分けたまま基礎信頼を算出する。 */
+export function computeTrustStabilityProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { compatibility_reliability: TraitScoreInput },
+  partner: { compatibility_reliability: TraitScoreInput },
+): CompatibilityProfileScore {
+  const safety = profiles.find(score => score.key === 'emotional_safety')
+  const repair = profiles.find(score => score.key === 'repair_capacity')
+  const personal = [self.compatibility_reliability, partner.compatibility_reliability]
+  const hasEvidence = Boolean(safety && repair && safety.confidence > 0 && repair.confidence > 0
+    && personal.every(score => score.confidence > 0))
+  const sharedReliability = self.compatibility_reliability.value * partner.compatibility_reliability.value
+  return {
+    key: 'trust_stability',
+    value: hasEvidence ? Number(((sharedReliability + safety!.value + repair!.value) / 3).toFixed(3)) : 0.5,
+    // 関係開始時の透明性・排他性・相互性を未入力のため、基礎値として制限する。
+    confidence: hasEvidence ? Number(Math.min(0.55, safety!.confidence, repair!.confidence, ...personal.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...safety!.contributingFacts, ...repair!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
+      : [],
+  }
+}
+
+/**
+ * 相性§1・§34・§41。低い透明性と信頼・修復の弱さ、刺激不足リスクの重なりだけを扱う。
+ * 実際の浮気・嘘・裏切りを予測せず、観測情報なしでは人物評価にも使わない。
+ */
+export function computeBetrayalRiskPatternProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const required = ['transparency', 'trust_stability', 'repair_capacity', 'relationship_boredom_risk'] as const
+  const inputs = required.map(key => profiles.find(score => score.key === key))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  if (!hasEvidence) return { key: 'betrayal_risk_pattern', value: 0.5, confidence: 0, contributingFacts: [] }
+  const [transparency, trust, repair, boredom] = inputs
+  const value = ((1 - transparency.value) + (1 - trust.value) + (1 - repair.value) + boredom.value) / 4
+  return {
+    key: 'betrayal_risk_pattern',
+    value: Number(value.toFixed(3)),
+    // 関係の排他性・合意・現実の行動を未入力のため、警戒パターン以上の意味を持たせない。
+    confidence: Number(Math.min(0.45, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+  }
+}
+
+/** 相性§57。惹かれる強さを使わず、長期維持要因と未修復の摩擦を正規化して部分算出する。 */
+export function computeLongTermBindingProfile(
+  profiles: readonly CompatibilityProfileScore[],
+): CompatibilityProfileScore {
+  const positiveKeys: CompatibilityProfileKey[] = [
+    'emotional_safety', 'value_alignment', 'domestic_compatibility',
+    'friendship_compatibility', 'repair_capacity', 'growth_compatibility',
+  ]
+  const positives = positiveKeys.map(key => profiles.find(score => score.key === key))
+  const conflict = profiles.find(score => score.key === 'conflict_intensity')
+  const power = profiles.find(score => score.key === 'power_balance')
+  const hasEvidence = positives.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+    && Boolean(conflict && power && conflict.confidence > 0 && power.confidence > 0)
+  if (!hasEvidence) return { key: 'long_term_binding', value: 0.5, confidence: 0, contributingFacts: [] }
+  const safety = positives.find(score => score.key === 'emotional_safety')!
+  const repair = positives.find(score => score.key === 'repair_capacity')!
+  const destructiveConflict = conflict!.value * (1 - repair.value) * (1 - safety.value)
+  const normalized = (positives.reduce((sum, score) => sum + score.value, 0)
+    + (1 - destructiveConflict) + (1 - power!.value)) / (positives.length + 2)
+  const inputs = [...positives, conflict!, power!]
+  return {
+    key: 'long_term_binding',
+    value: Number(normalized.toFixed(3)),
+    // transparency・secrecy・実際の継続期間を未入力のため、部分算出上限を設ける。
+    confidence: Number(Math.min(0.5, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+  }
+}
+
+/** 相性§52。認知・感情・深層の理解を平均せず、3成分のまま保持する。 */
+export function computeMutualUnderstanding(
+  facts: SynastryFact[],
+  birthTimeKnown = { self: false, partner: false },
+): MutualUnderstandingProfile {
+  const pairFromSignal = (fact: SynastryFact) => fact.signal.split('-').slice(0, 2).sort().join(':')
+  const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
+  const component = (
+    key: UnderstandingComponentKey,
+    pairs: Set<string>,
+    usesMoon: boolean,
+  ): UnderstandingComponentScore => {
+    const contributors = facts.filter(fact => fact.kind === 'cross-aspect' && pairs.has(pairFromSignal(fact)))
+    const signed = contributors.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+    return {
+      key,
+      value: Number((contributors.length ? 1 / (1 + Math.exp(-signed)) : 0.5).toFixed(3)),
+      confidence: Number((Math.min(0.8, contributors.length * 0.18) * (usesMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+      contributingFacts: contributors.map(fact => fact.id),
+    }
+  }
+  return {
+    key: 'mutual_understanding',
+    components: {
+      cognitive: component('cognitive', COGNITIVE_UNDERSTANDING_PAIRS, false),
+      emotional: component('emotional', EMOTIONAL_UNDERSTANDING_PAIRS, true),
+      deep: component('deep', DEEP_UNDERSTANDING_PAIRS, true),
+    },
+  }
+}
+
+export function computeRelationScores(facts: SynastryFact[]): RelationScore[] {
+  const axes: RelationAxis[] = ['attraction', 'depth', 'communication', 'fun', 'safety', 'values', 'growth', 'domestic', 'conflict', 'repair', 'binding']
+  return axes.map(key => {
+    const contributors = facts.filter(fact => fact.axis === key)
+    const signed = contributors.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+    const value = contributors.length ? 1 / (1 + Math.exp(-signed)) : 0.5
+    return { key, value: Number(value.toFixed(3)), confidence: Number(Math.min(0.95, contributors.length * 0.2 + new Set(contributors.map(fact => fact.kind)).size * 0.2).toFixed(3)), contributingFacts: contributors.map(fact => fact.id) }
+  })
+}

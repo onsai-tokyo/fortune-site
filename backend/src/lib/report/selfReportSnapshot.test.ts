@@ -49,13 +49,17 @@ test('PR-0a: 既定オプションは v1 / legacy であり、環境変数の不
   assert.deepEqual(resolveSelfReportOptions({ FACT_PIPELINE: 'v2' }).factPipeline, 'v2')
 })
 
-test('PR-1: V2 Fact経路を明示指定でき、未実装の本文経路は明示的に失敗する', () => {
+test('PR-2: V2 Fact経路とブロック本文経路を明示指定できる', () => {
   const input = buildFixtureReportInput(BIRTH_FIXTURES[0])
   const metadata = extractReportMetadata(input)
   const v2 = buildSelfReport(input, metadata, { factPipeline: 'v2', narrativeEngine: 'legacy' })
   assert.equal(v2.pipelineTag, 'fact:v2|narrative:legacy')
   assert.ok(v2.facts.length > 0)
-  assert.throws(() => buildSelfReport(input, metadata, { factPipeline: 'v1', narrativeEngine: 'blocks' }), /PR-2/)
+  const blocks = buildSelfReport(input, metadata, { factPipeline: 'v2', narrativeEngine: 'blocks' })
+  assert.equal(blocks.pipelineTag, 'fact:v2|narrative:blocks')
+  assert.equal(blocks.report.cards.filter(card => card.kind === 'essence').length, 8)
+  assert.ok(blocks.report.cards.filter(card => card.kind === 'essence').every(card => card.generator === 'deterministic'))
+  assert.throws(() => buildSelfReport(input, metadata, { factPipeline: 'v1', narrativeEngine: 'blocks' }), /factPipeline='v2'/)
 })
 
 test('PR-0a: 経路タグはキャッシュ署名に使える形で経路を区別する', () => {

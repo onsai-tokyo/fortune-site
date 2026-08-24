@@ -67,6 +67,30 @@ function collisionTitle(item: Annual, values: string[]) {
   return `${action}ことで、これから守る基準を決める年`
 }
 
+function tenGodTitle(item: Annual, values: string[]) {
+  const flags = eventFlags(values)
+  const focus: Record<string, string> = {
+    比肩: '自分の意思を優先し、選択を引き受ける', 劫財: '人との競い方を変え、協力の形を選ぶ',
+    食神: '楽しみを育て、続けられる日常へ広げる', 傷官: '違和感を言葉にし、古い基準から離れる',
+    偏財: '人との接点を増やし、動かす範囲を広げる', 正財: '暮らしの基準を整え、確かな形に残す',
+    偏官: '難しい役割に踏み込み、突破口を作る', 正官: '責任の範囲を定め、信頼を形にする',
+    偏印: '見慣れない方法を試し、発想を切り替える', 印綬: '受け取った知恵を深め、次へ受け渡す',
+  }
+  const action = focus[item.tenGod] ?? `${personalLens(item.kanshi)}を使い、選択の軸を定める`
+  if (flags.marriage || flags.meeting) return `${action}ことで、関係の次の段階を選ぶ年`
+  if (flags.separation) return `${action}ことで、続ける関係の条件を見直す年`
+  if (flags.work) return `${action}ことで、働き方の輪郭を決める年`
+  if (flags.move) return `${action}ことで、暮らす場所の前提を変える年`
+  if (flags.study) return `${action}ことで、学びを現実の力に変える年`
+  return `${action}ことで、日常の優先順位を組み直す年`
+}
+
+function uniqueTimingTitle(item: Annual, values: string[], previousTitles: string[]) {
+  const candidates = [titleFor(values, item.year), collisionTitle(item, values), tenGodTitle(item, values)]
+  return candidates.find(candidate => previousTitles.every(previous => !titlesAreSimilar(previous, candidate)))
+    ?? `${personalLens(item.kanshi)}を使い、${item.tenGod}の選択を形にする年`
+}
+
 function tagsFor(values: string[]) {
   const flags = eventFlags(values)
   return unique(['時期', flags.meeting ? '出会い' : '', flags.marriage ? '結婚' : '', flags.separation ? '関係の見直し' : '',
@@ -135,9 +159,7 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
   for (const item of selected) {
     const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
     const result = card(input, item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
-    const title = results.some(previous => titlesAreSimilar(previous.title, result.title))
-      ? collisionTitle(item, values)
-      : result.title
+    const title = uniqueTimingTitle(item, values, results.map(previous => previous.title))
     results.push({ ...result, title })
   }
   return results

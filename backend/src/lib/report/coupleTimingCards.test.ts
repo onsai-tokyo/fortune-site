@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoints, type CoupleAnnualTiming } from './coupleTimingCards.js'
+import { titlesAreSimilar } from './aiWriter.js'
 
 const themes = ['仕事', '暮らし', '学び', '関係', '挑戦', '休息']
 function annual(offset = 0): CoupleAnnualTiming[] {
@@ -47,6 +48,18 @@ test('節目カードは決定論的な8ページで二人の節目タブに入�
   const pageTexts = first.flatMap(card => card.pages.map(page => page.text))
   assert.equal(new Set(pageTexts).size, pageTexts.length)
   assert.ok(first.every(card => card.pages.every(page => page.text.includes(card.period!.label.match(/\d{4}年/)![0]))))
+})
+
+test('同じ種類の節目が10回続いても年号に頼らず異なる見出しを返す', () => {
+  const points = Array.from({ length: 10 }, (_, index) => ({
+    year: 2025 + index, selfAge: 30 + index, partnerAge: 35 + index, kind: 'divergent' as const,
+    selfThemes: ['仕事'], partnerThemes: ['暮らし'], score: 12,
+  }))
+  const cards = buildCoupleTimingCards(points, 2026)
+  assert.equal(cards.length, 10)
+  assert.ok(cards.every(card => !/\d{4}年/.test(card.title)))
+  assert.equal(new Set(cards.map(card => card.title)).size, cards.length)
+  assert.ok(cards.every((card, index) => cards.slice(0, index).every(previous => !titlesAreSimilar(previous.title, card.title))))
 })
 
 test('異なる二人の年運は異なる節目を返し、既存の関係カードを保持する', () => {

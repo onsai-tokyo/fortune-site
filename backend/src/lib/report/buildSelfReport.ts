@@ -7,6 +7,8 @@ import { buildReportFactsV2 } from './factsV2.js'
 import { buildReportFindingsV2 } from './findingsV2.js'
 import { buildEditorialStructuredReport } from './editorial.js'
 import { replaceTimingCards } from './timingCards.js'
+import { buildBlockStructuredReport } from './narrativeComposerV2.js'
+import { augmentFindingsWithScoresV2 } from './scoreFindingsV2.js'
 
 /**
  * PR-0a: 自己鑑定の生成経路をHTTPから切り離す。
@@ -78,9 +80,7 @@ export function buildSelfReport(
   metadata: ReportMetadata,
   options: SelfReportOptions = DEFAULT_SELF_REPORT_OPTIONS,
 ): SelfReportResult {
-  if (options.narrativeEngine !== 'legacy') {
-    throw new Error(`narrativeEngine='${options.narrativeEngine}' は未実装です（PR-2で有効化）。NARRATIVE_ENGINE を legacy へ戻してください。`)
-  }
+  if (options.narrativeEngine === 'blocks' && options.factPipeline !== 'v2') throw new Error("narrativeEngine='blocks' には factPipeline='v2' が必要です")
 
   const generated = options.factPipeline === 'v2'
     ? (() => {
@@ -91,8 +91,13 @@ export function buildSelfReport(
         const facts = buildReportFacts(input, metadata)
         return { facts, findings: buildReportFindings(facts) }
       })()
-  const { facts, findings } = generated
-  const report = replaceTimingCards(buildEditorialStructuredReport(facts, findings), input)
+  const facts = generated.facts
+  const findings = options.factPipeline === 'v2' && options.narrativeEngine === 'blocks'
+    ? augmentFindingsWithScoresV2(facts as ReturnType<typeof buildReportFactsV2>, generated.findings as ReturnType<typeof buildReportFindingsV2>)
+    : generated.findings
+  const report = replaceTimingCards(options.narrativeEngine === 'blocks'
+    ? buildBlockStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input, metadata)
+    : buildEditorialStructuredReport(facts, findings), input)
 
   return { report, facts, findings, options, pipelineTag: selfReportPipelineTag(options) }
 }

@@ -21,4 +21,153 @@ export const CONFIRMED_PERSONALITY_SCORE_RULES: readonly TraitScoreRule[] = [
   { score: 'attraction_respect', source: '性格§7', match: { factorPrefix: ['house:10:金星', 'house:10:月'] }, weight: 0.9 },
   { score: 'attraction_status', source: '性格§7', match: { factorPrefix: ['house:10:金星'] }, weight: 1 },
   { score: 'attraction_status', source: '性格§8', match: { factorPrefix: ['structuredAspect:金星:コンジャンクション:木星', 'structuredAspect:木星:コンジャンクション:金星'] }, weight: 0.7 },
+
+  // §3: 8室・蠍座・火星/冥王星・固定宮は「一つを深く追う」共通の入力になる。
+  { score: 'immersion_intensity', source: '性格§3', match: { factorPrefix: ['house:8:'] }, weight: 0.9 },
+  { score: 'immersion_intensity', source: '性格§3', match: { factorPrefix: ['planet:太陽:蠍座', 'planet:月:蠍座', 'planet:水星:蠍座', 'planet:金星:蠍座', 'planet:火星:蠍座'] }, weight: 0.7 },
+  { score: 'immersion_intensity', source: '性格§3', match: { factorPrefix: ['planet:火星:', 'planet:冥王星:'] }, weight: 0.3 },
+  { score: 'immersion_intensity', source: '性格§3', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.6 },
+
+  // §14: Pride Sensitivityは自己肯定感ではなく、能力・実績への評価に対する敏感さ。
+  { score: 'pride_sensitivity', source: '性格§14', match: { factorPrefix: ['planet:太陽:獅子座', 'house:10:太陽', 'midheaven:獅子座'] }, weight: 0.9 },
+  { score: 'pride_sensitivity', source: '性格§14', match: { factorPrefix: ['house:10:月'] }, weight: 0.8 },
+  { score: 'social_neutrality', source: '性格§14', match: { factorPrefix: ['elementDominant:air:'] }, weight: 0.6 },
+  { score: 'neutrality_pride', source: '性格§14', match: { factorPrefix: ['planet:太陽:山羊座', 'planet:土星:山羊座', 'elementDominant:air:'] }, weight: 0.5 },
+
+  // §16: 公的な気遣い。親しい場での自己主張はスコア間条件なのでここでは捏造しない。
+  { score: 'social_sensitivity', source: '性格§16', match: { factorPrefix: ['planet:月:蟹座', 'planet:月:蠍座', 'planet:月:魚座', 'planet:月:天秤座', 'planet:月:乙女座'] }, weight: 0.8 },
+  { score: 'social_sensitivity', source: '性格§16', match: { factorPrefix: ['elementDominant:water:', 'house:7:月'] }, weight: 0.6 },
+  { score: 'public_agreeableness', source: '性格§16', match: { factorPrefix: ['planet:月:天秤座', 'planet:月:乙女座', 'house:7:月'] }, weight: 0.7 },
+
+  // §24: 強い太陽–月、月–火星/天王星/冥王星と、水・柔軟宮の受容性を分けて保持する。
+  { score: 'emotional_volatility', source: '性格§24', match: { factorPrefix: ['structuredAspect:太陽:スクエア:月', 'structuredAspect:月:スクエア:太陽', 'structuredAspect:太陽:オポジション:月', 'structuredAspect:月:オポジション:太陽'] }, weight: 1 },
+  { score: 'emotional_volatility', source: '性格§24', match: { factorPrefix: ['structuredAspect:月:', 'structuredAspect:火星:', 'structuredAspect:天王星:', 'structuredAspect:冥王星:'], axis: ['shadow'] }, weight: 0.8 },
+  { score: 'emotional_volatility', source: '性格§24', match: { factorPrefix: ['elementDominant:water:', 'modalityDominant:mutable:'] }, weight: 0.5 },
+
+  // §4: 仕事領域へ没頭要素が入る場合。時期の活性度はここへ混ぜない。
+  { score: 'career_absorption', source: '性格§4', match: { factorPrefix: ['house:10:火星', 'house:10:土星', 'house:10:冥王星'] }, weight: 0.9 },
+  { score: 'career_absorption', source: '性格§4', match: { factorPrefix: ['midheaven:山羊座', 'midheaven:蠍座'] }, weight: 0.7 },
+
+  // §5: 恋愛領域の金星・火星・冥王星と強い接触を、仕事没頭とは別に保持する。
+  { score: 'romantic_absorption', source: '性格§5', match: { factorPrefix: ['house:5:金星', 'house:5:火星', 'house:7:金星', 'house:7:火星', 'house:8:金星', 'house:8:火星'] }, weight: 0.8 },
+  { score: 'romantic_absorption', source: '性格§5', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '冥王星'] }, weight: 0.8 },
+  { score: 'attraction_intensity', source: '性格§5', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '冥王星'] }, weight: 0.9 },
+
+  // §6: 「好かれること」と社会的魅力を混同せず、月・金星が評価領域にある時だけ加点する。
+  { score: 'approval_need', source: '性格§6', match: { factorPrefix: ['house:10:月', 'house:10:金星'] }, weight: 0.8 },
+
+  // §9: 強い引力・新奇性。外惑星単独ではなく必ず金星または火星との接触を要求する。
+  { score: 'charisma_attraction', source: '性格§9', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '冥王星'] }, weight: 0.8 },
+  { score: 'attraction_charisma', source: '性格§9', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '冥王星'] }, weight: 0.8 },
+  { score: 'novelty_attraction', source: '性格§9', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '天王星'] }, weight: 0.8 },
+  { score: 'attraction_novelty', source: '性格§9', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '天王星'] }, weight: 0.8 },
+
+  // §10: 引力とは独立した「続けやすさ」。土星・4室・7室の生活/継続Factだけを使う。
+  { score: 'compatibility_stability', source: '性格§10', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.8 },
+  { score: 'compatibility_reliability', source: '性格§10', match: { factorPrefix: ['house:7:土星', 'house:4:土星'] }, weight: 0.8 },
+  { score: 'compatibility_domestic', source: '性格§10', match: { factorPrefix: ['house:4:月', 'house:4:金星'] }, weight: 0.8 },
+
+  // §11: 相手や環境を映す力。海王星は月との個人的接触がある場合だけ採用する。
+  { score: 'partner_mirroring', source: '性格§11', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '海王星'] }, weight: 0.8 },
+  { score: 'partner_mirroring', source: '性格§11', match: { factorPrefix: ['house:7:月', 'house:7:海王星'] }, weight: 0.7 },
+  { score: 'lifestyle_adaptability', source: '性格§11', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '海王星'] }, weight: 0.7 },
+  { score: 'lifestyle_adaptability', source: '性格§11', match: { factorPrefix: ['modalityDominant:mutable:'] }, weight: 0.6 },
+
+  // §12–13: 社会の型・計画・継続。土星と山羊座、7室/10室への直接配置のみを使う。
+  { score: 'social_conformity', source: '性格§12', match: { factorPrefix: ['planet:土星:山羊座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'social_conformity', source: '性格§12', match: { factorPrefix: ['house:10:土星', 'house:10:月', 'house:10:金星'] }, weight: 0.7 },
+  { score: 'plan_orientation', source: '性格§12', match: { factorPrefix: ['planet:土星:山羊座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'plan_orientation', source: '性格§13', match: { factorPrefix: ['elementDominant:earth:', 'house:7:土星', 'house:10:土星'] }, weight: 0.7 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.8 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '土星'] }, weight: 0.7 },
+  { score: 'marriage_binding', source: '性格§13', match: { factorPrefix: ['house:7:土星'] }, weight: 0.8 },
+
+  // §15: 評価されることが推進力になる配置。MCとのアスペクトは未発行なので10室で限定する。
+  { score: 'recognition_motivation', source: '性格§15', match: { factorPrefix: ['house:10:太陽', 'house:10:月', 'house:10:木星'] }, weight: 0.9 },
+  { score: 'recognition_motivation', source: '性格§15', match: { factorPrefix: ['midheaven:獅子座', 'midheaven:射手座'] }, weight: 0.7 },
+
+  // §18: 内面の複雑さと孤独感。世代天体の星座だけでは加点しない。
+  { score: 'loneliness_tendency', source: '性格§18', match: { factorPrefix: ['house:8:土星', 'house:12:土星', 'house:8:冥王星', 'house:12:冥王星'] }, weight: 0.8 },
+  { score: 'self_complexity', source: '性格§18', match: { factorPrefix: ['house:8:月', 'house:12:月', 'house:8:冥王星', 'house:12:冥王星'] }, weight: 0.8 },
+
+  // §19: 境界線と受容性。冥王星単独ではなく個人天体の蠍座・水/柔軟宮を使う。
+  { score: 'relationship_boundary_strength', source: '性格§19', match: { factorPrefix: ['planet:太陽:蠍座', 'planet:月:蠍座', 'planet:水星:蠍座', 'planet:金星:蠍座', 'planet:火星:蠍座'] }, weight: 0.8 },
+  { score: 'relationship_boundary_strength', source: '性格§19', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'tolerance', source: '性格§19', match: { factorPrefix: ['elementDominant:water:', 'modalityDominant:mutable:', 'planet:月:天秤座'] }, weight: 0.7 },
+
+  // §20–21: 友情における価値観・自立・人生段階。天王星は11室にある場合だけ採用する。
+  { score: 'friendship_value_match', source: '性格§20', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'friendship_orientation', source: '性格§20', match: { factorPrefix: ['modalityDominant:fixed:'] }, weight: 0.5 },
+  { score: 'life_stage_alignment', source: '性格§21', match: { factorPrefix: ['house:11:天王星', 'house:11:月'] }, weight: 0.8 },
+  { score: 'friendship_independence', source: '性格§21', match: { factorPrefix: ['house:11:天王星'] }, weight: 0.9 },
+  { score: 'partner_mirroring', source: '性格§21', match: { factorPrefix: ['house:11:月'] }, weight: 0.6 },
+
+  // §22–23: 努力への敬意と集団調整。仕事・家庭の室に直接配置された場合だけ発行する。
+  { score: 'effort_respect', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.9 },
+  { score: 'respect_attraction', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.8 },
+  { score: 'group_coordination', source: '性格§23', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:太陽', 'house:10:太陽', 'house:10:土星'] }, weight: 0.8 },
+
+  // §25: 感情の振れ幅とは別に、涙・言葉・身体反応として外へ出る傾向を保持する。
+  { score: 'emotional_expression', source: '性格§25', match: { factorPrefix: ['planet:月:蟹座', 'planet:月:魚座', 'elementDominant:water:'] }, weight: 0.8 },
+  { score: 'emotional_expression', source: '性格§25', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '火星'] }, weight: 0.8 },
+
+  // §26: 射手座・木星・5室による経験の面白がり方。外惑星は使わない。
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['planet:太陽:射手座', 'planet:水星:射手座', 'planet:木星:射手座', 'ascendant:射手座'] }, weight: 0.8 },
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['house:5:太陽', 'house:5:水星', 'house:5:木星'] }, weight: 0.8 },
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '木星'] }, weight: 0.7 },
+  { score: 'compatibility_playfulness', source: '性格§26', match: { factorPrefix: ['planet:太陽:射手座', 'planet:水星:射手座', 'house:5:木星'] }, weight: 0.7 },
+
+  // §27: 話量・展開力・濃い話題への知的関心を、知的な引力と会話力へ分ける。
+  { score: 'conversation_entertainment', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星', 'house:5:水星'] }, weight: 0.9 },
+  { score: 'conversation_entertainment', source: '性格§27', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '木星'] }, weight: 0.8 },
+  { score: 'intellectual_attraction', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星'] }, weight: 0.8 },
+  { score: 'attraction_intellectual', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星'] }, weight: 0.8 },
+
+  // §28–29: 人の本音への関心とタブー領域への関心。本文では断定語を避ける。
+  { score: 'gossip_curiosity', source: '性格§28', match: { factorPrefix: ['planet:水星:蠍座', 'house:8:水星'] }, weight: 0.9 },
+  { score: 'gossip_curiosity', source: '性格§28', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '冥王星'] }, weight: 0.8 },
+  { score: 'taboo_curiosity', source: '性格§29', match: { factorPrefix: ['planet:水星:蠍座', 'house:8:水星'] }, weight: 0.9 },
+  { score: 'taboo_curiosity', source: '性格§29', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '天王星'] }, weight: 0.7 },
+
+  // §30: 年齢差と立場差への引力。尊敬スコアとは出力を分離する。
+  { score: 'age_gap_attraction', source: '性格§30', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.9 },
+  { score: 'age_gap_attraction', source: '性格§30', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '土星'] }, weight: 0.8 },
+  { score: 'attraction_age_gap', source: '性格§30', match: { factorPrefix: ['house:7:土星', 'house:10:金星', 'house:10:月'] }, weight: 0.8 },
+  { score: 'authority_attraction', source: '性格§30', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'house:7:土星'] }, weight: 0.8 },
+  { score: 'attraction_authority', source: '性格§30', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'house:7:土星'] }, weight: 0.8 },
+
+  // §31: 華やかさとは独立した、相手に求める安心と堅実さ。
+  { score: 'stability_preference', source: '性格§31', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:乙女座', 'planet:月:山羊座', 'house:7:土星'] }, weight: 0.8 },
+  { score: 'compatibility_emotional_safety', source: '性格§31', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:蟹座', 'house:4:月', 'house:7:土星'] }, weight: 0.8 },
+
+  // §32: 恋人を親友としても選ぶ配置。7室・11室・会話/遊びのFactを使う。
+  { score: 'friendship_orientation', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:水星', 'house:11:金星'] }, weight: 0.8 },
+  { score: 'attraction_friendship', source: '性格§32', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:7:水星'] }, weight: 0.7 },
+  { score: 'compatibility_friendship', source: '性格§32', match: { factorPrefix: ['house:11:水星', 'house:11:金星', 'house:5:水星'] }, weight: 0.8 },
+  { score: 'friendship_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.8 },
+  { score: 'long_term_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.7 },
+
+  // §6–8: 相手の能力・実績・社会的位置を魅力として受け取る本人側の傾向。
+  { score: 'status_attraction', source: '性格§7', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'midheaven:獅子座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'status_attraction', source: '性格§7', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '木星'] }, weight: 0.7 },
+
+  // §10・§13: 刺激性とは分離した、安定・責任・継続を相手へ求める傾向。
+  { score: 'reliability_preference', source: '性格§10', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:乙女座', 'planet:月:山羊座', 'elementDominant:earth:'] }, weight: 0.7 },
+  { score: 'reliability_preference', source: '性格§13', match: { factorPrefix: ['house:4:土星', 'house:7:土星'] }, weight: 0.9 },
+
+  // §34–35: 家族への志向と、食事・世話・生活を通じた愛情表現を分離する。
+  { score: 'family_orientation', source: '性格§34', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:金星', 'house:5:月'] }, weight: 0.9 },
+  { score: 'compatibility_family_orientation', source: '性格§34', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:金星'] }, weight: 0.8 },
+  { score: 'domestic_binding', source: '性格§34', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:5:月'] }, weight: 0.8 },
+  { score: 'domestic_affection', source: '性格§35', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:5:月', 'house:5:金星', 'house:7:月'] }, weight: 0.9 },
+  { score: 'domestic_affection', source: '性格§35', match: { factorPrefix: ['planet:月:蟹座', 'planet:金星:蟹座'] }, weight: 0.7 },
+  { score: 'domestic_binding', source: '性格§35', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:7:月'] }, weight: 0.8 },
+
+  // §36: 言葉ではなく、資源・時間・移動・世話を使って好意を示す傾向。
+  { score: 'practical_generosity', source: '性格§36', match: { factorPrefix: ['house:2:月', 'house:2:金星', 'house:4:月', 'house:4:金星', 'house:6:月', 'house:6:金星', 'house:6:土星'] }, weight: 0.8 },
+  { score: 'practical_generosity', source: '性格§36', match: { system: ['四柱推命', '算命学'], signal: ['practicality', 'care'] }, weight: 0.7 },
+
+  // §13: 土星がパートナー領域へ入る時の、責任・契約・義務による結びつき。
+  { score: 'responsibility_binding', source: '性格§13', match: { factorPrefix: ['house:7:土星'] }, weight: 0.9 },
+  { score: 'responsibility_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.7 },
 ]

@@ -12,6 +12,7 @@ export interface BlockSelectionContext {
   lifeStage: ReportMetadata['lifeStage']
   relationshipType?: RelationshipType
   seed: string
+  usedBlockIds?: ReadonlySet<string>
 }
 
 function matches(block: NarrativeBlock, context: BlockSelectionContext): boolean {
@@ -33,7 +34,7 @@ function matches(block: NarrativeBlock, context: BlockSelectionContext): boolean
 }
 
 export function selectNarrativeBlock(blocks: NarrativeBlock[], context: BlockSelectionContext): NarrativeBlock | null {
-  const candidates = blocks.filter(block => matches(block, context)).sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id))
+  const candidates = blocks.filter(block => matches(block, context) && !context.usedBlockIds?.has(block.id)).sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id))
   if (!candidates.length) return null
   const topPriority = candidates[0].priority
   const top = candidates.filter(block => block.priority === topPriority)

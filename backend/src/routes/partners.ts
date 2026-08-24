@@ -19,7 +19,8 @@ import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 import { stripMarkdown } from '../lib/markdown.js'
 import { aggregateGenerator, logCardGeneration, logReportGeneration } from '../lib/report/generationMetrics.js'
 import { finalizeReportProvenance, withCardProvenance } from '../lib/report/provenance.js'
-import { buildDeterministicCompatibilityReport } from '../lib/report/deterministicCompatibility.js'
+import { buildCompatibilityTraitScoreBundle, buildDeterministicCompatibilityReport } from '../lib/report/deterministicCompatibility.js'
+import type { ReportInput } from '../lib/deterministicReport.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -298,8 +299,13 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const compatibilityCardObservations = new Map<string, CompatibilityCardObservation>()
     const keepAlive = useSse ? setInterval(() => res.write(': keep-alive\n\n'), 10_000) : null
     const deterministicScopes = new Set((process.env.DETERMINISTIC_SCOPE ?? '').split(',').map(value => value.trim()).filter(Boolean))
-    const relationshipReport = deterministicScopes.has('all') || deterministicScopes.has('compatibility')
-      ? buildDeterministicCompatibilityReport(compactContext.self, compactContext.partner, relationshipType, relationshipLabel)
+    const useDeterministicCompatibility = deterministicScopes.has('all') || deterministicScopes.has('compatibility')
+    const selfReportInput = { ...(self.calculated_data as Record<string, unknown>), ...(self.birth_data as Record<string, unknown>) }
+    const compatibilityScores = useDeterministicCompatibility
+      ? buildCompatibilityTraitScoreBundle(selfReportInput as unknown as ReportInput, partnerCalculated as ReportInput)
+      : undefined
+    const relationshipReport = useDeterministicCompatibility
+      ? buildDeterministicCompatibilityReport(compactContext.self, compactContext.partner, relationshipType, relationshipLabel, compatibilityScores)
       : await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
       generationAttempt += 1
       const attemptStartedAt = Date.now()
