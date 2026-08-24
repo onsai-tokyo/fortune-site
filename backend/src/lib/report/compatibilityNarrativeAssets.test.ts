@@ -84,6 +84,20 @@ test('掛け合いの楽しさを安心感の保証にしない', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('友達的な近さを恋愛や長期継続の保証にしない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'friendship_compatibility', value, confidence, contributingFacts: ['mercury-mercury'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の自然さ')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の自然さ')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の自然さ')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /親友のような近さと、恋愛の約束は別/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず恋愛になる|長続きする/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
