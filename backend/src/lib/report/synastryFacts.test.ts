@@ -97,6 +97,18 @@ test('相性§45は時刻不要の木星接触だけで共同成長を部分算�
   assert.ok(growth.contributingFacts.every(id => !/金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
 })
 
+test('相性§14・§54は太陽と金星だけで価値観一致を部分算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '太陽', longitude: 0 }, { name: '金星', longitude: 120 }, { name: '水星', longitude: 30 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Sun', longitude: 0 }, { name: 'Venus', longitude: 120 }, { name: 'Mercury', longitude: 30 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const values = computeCompatibilityProfile(facts).find(score => score.key === 'value_alignment')!
+  assert.ok(values.contributingFacts.length >= 2)
+  assert.ok(values.value > 0.5)
+  assert.ok(values.confidence > 0 && values.confidence <= 0.65)
+  assert.ok(values.contributingFacts.every(id => /太陽|金星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(values.contributingFacts.every(id => !/水星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
   const withArray = {
     ...self,
