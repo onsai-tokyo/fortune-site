@@ -28,6 +28,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'shared_project_compatibility',
   'adventure_compatibility',
   'admiration_mutual',
+  'pride_collision',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -83,6 +84,9 @@ const ADVENTURE_COMPATIBILITY_PAIRS = new Set([
 // 相性§27・§33。職業・役職入力は推測せず、相手の核と行動を支える接触だけを部分算出する。
 const ADMIRATION_MUTUAL_PAIRS = new Set([
   '木星:太陽', '土星:太陽', '木星:火星', '土星:火星',
+].map(value => value.split(':').sort().join(':')))
+const PRIDE_COLLISION_PAIRS = new Set([
+  '太陽:火星', '火星:火星', '太陽:太陽', '月:月',
 ].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
@@ -190,6 +194,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const adventureSigned = adventure.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const admiration = facts.filter(fact => fact.kind === 'cross-aspect' && ADMIRATION_MUTUAL_PAIRS.has(pairFromSignal(fact)))
   const admirationSigned = admiration.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const pride = facts.filter(fact => fact.kind === 'cross-aspect'
+    && PRIDE_COLLISION_PAIRS.has(pairFromSignal(fact))
+    && /-(square|opposition)$/.test(fact.signal))
+  const prideStrength = pride.reduce((sum, fact) => sum + fact.strength, 0)
+  const prideHasMoon = pride.some(fact => pairFromSignal(fact).includes('月'))
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -254,6 +263,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((admiration.length ? 1 / (1 + Math.exp(-admirationSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.65, admiration.length * 0.16).toFixed(3)),
     contributingFacts: [...new Set(admiration.map(fact => fact.id))],
+  }, {
+    key: 'pride_collision',
+    value: Number((pride.length ? 1 - Math.exp(-prideStrength) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.75, pride.length * 0.18) * (prideHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
+    contributingFacts: [...new Set(pride.map(fact => fact.id))],
   }, {
     key: 'emotional_intimacy',
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),

@@ -248,6 +248,9 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
       item.cue,
     )
     : null
+  const prideBlock = id === 'compat-friction'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'pride_collision'), item.cue)
+    : null
   const growthBlock = id === 'compat-growth'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'growth_compatibility'), item.cue)
     : null
@@ -268,7 +271,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? tensionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? prideBlock ?? tensionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -303,7 +306,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       ? ['repair_capacity', 'forgiveness_capacity', 'emotional_safety']
       : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety', 'conversational_depth']
       : id === 'compat-attraction' ? ['emotional_intimacy', 'admiration_mutual']
-      : id === 'compat-friction' ? ['conflict_intensity', 'repair_capacity', 'emotional_safety', 'conversational_flow']
+      : id === 'compat-friction' ? ['conflict_intensity', 'pride_collision', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-growth' ? ['growth_compatibility', 'novelty_compatibility', 'shared_project_compatibility', 'adventure_compatibility']
       : id === 'compat-overview' ? ['value_alignment']
       : id === 'compat-marriage' ? ['domestic_compatibility']

@@ -168,6 +168,20 @@ test('相互尊敬を服従や競争心の低さと混同しない', () => {
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('プライド衝突を喧嘩全般や破局判定と混同しない', () => {
+  const profile = (value: number, confidence = 0.7): CompatibilityProfileScore => ({
+    key: 'pride_collision', value, confidence, contributingFacts: ['sun-mars-square'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '衝突の扱い')
+  const middle = compatibilityProfileBlock(profile(0.5), '衝突の扱い')
+  const high = compatibilityProfileBlock(profile(0.8), '衝突の扱い')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /何を尊重してほしかったか/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず別れる|相性が悪い/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

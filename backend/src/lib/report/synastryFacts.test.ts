@@ -195,6 +195,26 @@ test('相性§27・§33は相互尊敬を職業情報の推測なしで部分算
   assert.ok(admiration.confidence <= 0.65)
 })
 
+test('相性§6はプライド衝突を火星系のハード接触だけから算出する', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '太陽', longitude: 10 }, { name: '火星', longitude: 70 }, { name: '月', longitude: 130 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Sun', longitude: 100 }, { name: 'Mars', longitude: 160 }, { name: 'Moon', longitude: 310 }, { name: 'Mercury', longitude: 160 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'pride_collision')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'pride_collision')!
+  const conflict = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'conflict_intensity')!
+  assert.ok(unknown.contributingFacts.length >= 3)
+  assert.equal(new Set(unknown.contributingFacts).size, unknown.contributingFacts.length)
+  assert.ok(unknown.contributingFacts.every(id => /square|opposition/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(unknown.contributingFacts.every(id => !/水星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.notDeepEqual(known.contributingFacts, conflict.contributingFacts)
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence < known.confidence)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
