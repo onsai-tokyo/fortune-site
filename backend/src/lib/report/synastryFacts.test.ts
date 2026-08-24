@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -435,6 +435,30 @@ test('海王星接触または方向別透明性がなければ読み取りに�
   const transparent = { key: 'transparency' as const, value: 0.5, confidence: 0.65, contributingFacts: ['known'], directions: { selfToPartner: 0.5, partnerToSelf: 0.5 } }
   assert.equal(computeMysteryDistanceProfile([], transparent).confidence, 0)
   assert.equal(computeMysteryDistanceProfile([], { ...transparent, confidence: 0, directions: undefined }).confidence, 0)
+})
+
+test('相性§29は人前での愛情表現傾向を二方向で保持する', () => {
+  const trait = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const result = computeSocialDisplayAffectionProfile(
+    { social_neutrality: trait(0.8, 'self-neutral'), public_agreeableness: trait(0.6, 'self-public') },
+    { social_neutrality: trait(0.2, 'partner-neutral'), public_agreeableness: trait(0.4, 'partner-public') },
+  )
+  assert.equal(result.key, 'social_display_affection')
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0.65)
+  assert.deepEqual(result.directions, { selfToPartner: 0.7, partnerToSelf: 0.3 })
+  assert.equal(result.contributingFacts.length, 4)
+})
+
+test('相性§29は片方の個人傾向が欠ける場合に人前の愛情表現を推測しない', () => {
+  const known = { value: 0.7, confidence: 0.8, contributingFacts: ['known'] }
+  const unknown = { value: 0.5, confidence: 0, contributingFacts: [] }
+  const result = computeSocialDisplayAffectionProfile(
+    { social_neutrality: known, public_agreeableness: known },
+    { social_neutrality: known, public_agreeableness: unknown },
+  )
+  assert.equal(result.confidence, 0)
+  assert.equal(result.directions, undefined)
 })
 
 test('相性§4は共同作業か目標志向の片方が根拠不足ならチーム感を推測しない', () => {

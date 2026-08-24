@@ -44,6 +44,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'long_term_binding',
   'transparency',
   'mystery_distance',
+  'social_display_affection',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -494,6 +495,31 @@ export function computeMysteryDistanceProfile(
     // DESC・12室オーバーレイを未計算のため、部分算出の上限を設ける。
     confidence: Number(Math.min(0.55, transparency.confidence).toFixed(3)),
     contributingFacts: [...new Set([...transparency.contributingFacts, ...mysteryFacts.map(fact => fact.id)])],
+    directions,
+  }
+}
+
+/** 相性§29。人前で見える愛情表現のしやすさを各自の方向別傾向として保持する。 */
+export function computeSocialDisplayAffectionProfile(
+  self: { social_neutrality: TraitScoreInput; public_agreeableness: TraitScoreInput },
+  partner: { social_neutrality: TraitScoreInput; public_agreeableness: TraitScoreInput },
+): CompatibilityProfileScore {
+  const selfInputs = [self.social_neutrality, self.public_agreeableness]
+  const partnerInputs = [partner.social_neutrality, partner.public_agreeableness]
+  const inputs = [...selfInputs, ...partnerInputs]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'social_display_affection', value: 0.5, confidence: 0, contributingFacts: [] }
+  const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
+  const directions = {
+    selfToPartner: Number(mean(selfInputs).toFixed(3)),
+    partnerToSelf: Number(mean(partnerInputs).toFixed(3)),
+  }
+  return {
+    key: 'social_display_affection',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 実際の記念日行動・贈答・周囲の評価は未入力なので傾向の上限を設ける。
+    confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
     directions,
   }
 }
