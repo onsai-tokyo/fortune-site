@@ -134,6 +134,7 @@ function effectiveRelationScores(id: string, context: PairContext): RelationScor
     const profileKey = relation.key === 'communication' ? 'conversational_flow'
       : relation.key === 'depth' ? 'emotional_intimacy'
       : relation.key === 'repair' ? 'repair_capacity'
+      : relation.key === 'safety' ? 'emotional_safety'
       : null
     const profile = profileKey ? context.compatibilityProfile.find(score => score.key === profileKey && score.confidence > 0) : undefined
     if (!related.length && !profile) return relation
@@ -245,8 +246,9 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
     const chapterScores = pairScoresForChapter(id, context)
     const chapterProfileKeys: CompatibilityProfileScore['key'][] = id === 'compat-repair'
-      ? ['repair_capacity', 'emotional_intimacy']
-      : ['compat-attraction', 'compat-caution'].includes(id) ? ['emotional_intimacy']
+      ? ['repair_capacity', 'emotional_safety']
+      : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety']
+      : id === 'compat-attraction' ? ['emotional_intimacy']
       : ['compat-beginning', 'compat-friction'].includes(id) ? ['conversational_flow'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`

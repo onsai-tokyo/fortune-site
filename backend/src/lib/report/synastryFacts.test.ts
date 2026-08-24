@@ -60,6 +60,19 @@ test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出す�
   }))
 })
 
+test('感情の安心感は会話の流れと修復力から独立して算出する', () => {
+  const left = { astrology: { western: { planets: [{ name: '月', longitude: 10 }, { name: '水星', longitude: 90 }] } } }
+  const right = { astrology: { western: { planets: [{ name: 'Sun', longitude: 10 }, { name: 'Mercury', longitude: 90 }] } } }
+  const facts = buildSynastryFacts(left, right)
+  const profiles = computeCompatibilityProfile(facts, { self: true, partner: true })
+  const safety = profiles.find(score => score.key === 'emotional_safety')!
+  const conversation = profiles.find(score => score.key === 'conversational_flow')!
+  assert.ok(safety.contributingFacts.length > 0)
+  assert.ok(conversation.contributingFacts.length > 0)
+  assert.notDeepEqual(safety.contributingFacts, conversation.contributingFacts)
+  assert.ok(safety.contributingFacts.every(id => /月/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+})
+
 test('本番calcAstrologyのplanets配列から天体間Factを生成する', () => {
   const withArray = {
     ...self,
