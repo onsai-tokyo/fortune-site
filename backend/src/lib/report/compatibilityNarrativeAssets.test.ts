@@ -224,6 +224,20 @@ test('目標志向の一致を進路の一致や恋愛の保証と混同しな�
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('生活リズムを家事分担や感情の深さと混同しない', () => {
+  const profile = (value: number, confidence = 0.7): CompatibilityProfileScore => ({
+    key: 'lifestyle_alignment', value, confidence, contributingFacts: ['moon-moon'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人の暮らし')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人の暮らし')
+  const high = compatibilityProfileBlock(profile(0.8), '二人の暮らし')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /家事や役割の一致とは決めない/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず同棲できる|愛情が深い|家事が得意/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

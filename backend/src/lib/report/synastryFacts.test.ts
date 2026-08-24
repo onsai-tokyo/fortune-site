@@ -306,6 +306,23 @@ test('目標志向と共同プロジェクト相性は互いを打ち消さず�
   assert.ok(project.confidence > 0)
 })
 
+test('相性§14は月を中心に生活リズムを算出し価値観や家事適性と分離する', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '月', longitude: 10 }, { name: '金星', longitude: 70 }] } } },
+    { astrology: { western: { planets: [{ name: 'Moon', longitude: 130 }, { name: 'Sun', longitude: 10 }, { name: 'Venus', longitude: 70 }] } } },
+  )
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'lifestyle_alignment')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'lifestyle_alignment')!
+  const values = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'value_alignment')!
+  const domestic = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'domestic_compatibility')!
+  assert.ok(unknown.contributingFacts.length >= 2)
+  assert.ok(unknown.contributingFacts.every(id => /月/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.notDeepEqual(known.contributingFacts, values.contributingFacts)
+  assert.notDeepEqual(known.contributingFacts, domestic.contributingFacts)
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence < known.confidence)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }

@@ -32,6 +32,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'ego_competition',
   'conflict_frequency',
   'ambition_alignment',
+  'lifestyle_alignment',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -103,6 +104,7 @@ const CONFLICT_FREQUENCY_PAIRS = new Set([
 ].map(value => value.split(':').sort().join(':')))
 const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
 const VALUE_ALIGNMENT_PAIRS = new Set(['太陽:太陽', '太陽:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
+const LIFESTYLE_ALIGNMENT_PAIRS = new Set(['月:月', '太陽:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
@@ -229,6 +231,9 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const growthHasMoon = growth.some(fact => pairFromSignal(fact).includes('月'))
   const values = facts.filter(fact => fact.kind === 'cross-aspect' && VALUE_ALIGNMENT_PAIRS.has(pairFromSignal(fact)))
   const valuesSigned = values.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const lifestyle = facts.filter(fact => fact.kind === 'cross-aspect'
+    && LIFESTYLE_ALIGNMENT_PAIRS.has(pairFromSignal(fact)))
+  const lifestyleSigned = lifestyle.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
   return [{
     key: 'conversational_flow',
@@ -321,6 +326,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((values.length ? 1 / (1 + Math.exp(-valuesSigned)) : 0.5).toFixed(3)),
     confidence: Number(Math.min(0.65, values.length * 0.16).toFixed(3)),
     contributingFacts: values.map(fact => fact.id),
+  }, {
+    key: 'lifestyle_alignment',
+    value: Number((lifestyle.length ? 1 / (1 + Math.exp(-lifestyleSigned)) : 0.5).toFixed(3)),
+    confidence: Number((Math.min(0.8, lifestyle.length * 0.18) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: [...new Set(lifestyle.map(fact => fact.id))],
   }]
 }
 
