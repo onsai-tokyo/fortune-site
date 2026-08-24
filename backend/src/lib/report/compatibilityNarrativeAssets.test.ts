@@ -31,6 +31,16 @@ test('恋愛的な引力を身体的な魅力・交際成立・長期相性へ�
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('身体的な魅力を性的行動・恋愛感情・交際成立へ変換しない', () => {
+  const blocks = [0.2, 0.5, 0.8].map(value => compatibilityProfileBlock({
+    key: 'physical_attraction', value, confidence: 0.65, contributingFacts: ['venus-mars'],
+  }, '近づいたとき'))
+  assert.deepEqual(blocks.map(block => block?.band), ['low', 'middle', 'high'])
+  assert.equal(new Set(blocks.map(block => block?.text)).size, 3)
+  assert.doesNotMatch(blocks.map(block => block?.text).join(''), /必ず付き合う|性行為|恋愛感情がある/)
+  assert.ok(blocks.every(block => block && [...block.text].length <= 120))
+})
+
 test('確信度不足は一般論で埋めず既存文へフォールバックする', () => {
   assert.equal(compatibilityScoreBlock(score('compatibility_transparency', 0.9, 0.24), '会話'), null)
 })

@@ -86,6 +86,33 @@ test('恋愛的な個人天体接触がなければ引力を一般論で推測�
   assert.deepEqual(romantic.contributingFacts, [])
 })
 
+test('身体的な魅力は金星―火星と火星同士から算出し恋愛的な引力と分ける', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '金星', longitude: 10 }, { name: '火星', longitude: 40 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Venus', longitude: 70 }, { name: 'Mars', longitude: 10 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const profile = computeCompatibilityProfile(facts)
+  const physical = profile.find(score => score.key === 'physical_attraction')!
+  const romantic = profile.find(score => score.key === 'romantic_attraction')!
+  assert.ok(physical.confidence > 0)
+  assert.ok(physical.contributingFacts.every(id => /金星-火星|火星-金星|火星-火星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(physical.contributingFacts.every(id => !romantic.contributingFacts.includes(id)))
+})
+
+test('金星―火星または火星同士の接触がなければ身体的な魅力を推測しない', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '金星', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Sun', longitude: 10 }] } } },
+  )
+  const physical = computeCompatibilityProfile(facts).find(score => score.key === 'physical_attraction')!
+  assert.equal(physical.value, 0.5)
+  assert.equal(physical.confidence, 0)
+  assert.deepEqual(physical.contributingFacts, [])
+})
+
 test('相性§52は相互理解を認知・感情・深層の3成分で保持する', () => {
   const left = { astrology: { western: { planets: [
     { name: '水星', longitude: 10 }, { name: '月', longitude: 40 }, { name: '冥王星', longitude: 70 },

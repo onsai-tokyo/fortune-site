@@ -197,6 +197,12 @@ const romanticAttractionText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、恋愛的な引力が最初から強く表れにくい傾向があります。相性の悪さとは決めず、友情や安心から育つ可能性と分けて見ます。`,
 }
 
+const physicalAttractionText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、互いの動きや雰囲気に身体感覚が反応しやすい二人です。ただし、性的な行動や恋愛感情、交際の成立を示す値ではありません。`,
+  middle: cue => `${cue}では、近づきたくなる瞬間と自分の間合いを守りたい瞬間が混ざります。反応の強さを好意の証明にせず、心地よい距離を確かめてください。`,
+  low: cue => `${cue}では、身体感覚の反応が最初から強く表れにくい傾向があります。魅力の欠如とは決めず、恋愛的な心地よさや安心感とは分けて見ます。`,
+}
+
 const mysteryDistanceText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の本音を読み取ろうとして推測が増えやすい方向があります。わからなさを嘘や拒絶と決めず、確認できる事実へ戻ってください。`,
   middle: cue => `${cue}では、自然にわかる場面と、言葉で確かめる場面が方向ごとに分かれます。察した内容を結論にせず、一度問い直してください。`,
@@ -226,6 +232,7 @@ type StandaloneProfileKey = Exclude<CompatibilityProfileScore['key'], Contextual
 
 const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: string) => string>> = {
   romantic_attraction: romanticAttractionText,
+  physical_attraction: physicalAttractionText,
   conversational_flow: conversationalFlowText,
   conversational_depth: conversationalDepthText,
   humor_compatibility: humorCompatibilityText,
@@ -263,6 +270,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
 
 const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   romantic_attraction: '相性§36・§40・§53',
+  physical_attraction: '相性§36・§40・§53',
   conversational_flow: '相性§44・§53',
   conversational_depth: '相性§10・§44・§52・§53',
   humor_compatibility: '相性§9・§44・§53',

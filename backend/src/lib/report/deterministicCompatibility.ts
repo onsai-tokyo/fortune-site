@@ -235,6 +235,9 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const romanticAttractionBlock = id === 'compat-attraction'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'romantic_attraction'), item.cue)
     : null
+  const physicalAttractionBlock = id === 'compat-attraction'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'physical_attraction'), item.cue)
+    : null
   const humorBlock = id === 'compat-beginning'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'humor_compatibility'), item.cue)
     : null
@@ -341,7 +344,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? longTermBlock ?? romanticAttractionBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? mysteryDistanceBlock ?? privateAffectionBlock ?? socialDisplayAffectionBlock ?? transparencyBlock ?? trustBlock ?? dependencyBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? powerBalanceBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? boredomBlock ?? stimulationBlock ?? teamFeelingBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? fateCompanionBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? longTermBlock ?? physicalAttractionBlock ?? romanticAttractionBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? mysteryDistanceBlock ?? privateAffectionBlock ?? socialDisplayAffectionBlock ?? transparencyBlock ?? trustBlock ?? dependencyBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? powerBalanceBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? boredomBlock ?? stimulationBlock ?? teamFeelingBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? fateCompanionBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -375,7 +378,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
     const chapterProfileKeys: CompatibilityProfileScore['key'][] = id === 'compat-repair'
       ? ['repair_capacity', 'forgiveness_capacity', 'emotional_safety']
       : id === 'compat-caution' ? ['emotional_intimacy', 'emotional_safety', 'mystery_distance', 'private_affection', 'social_display_affection', 'transparency', 'trust_stability', 'dependency_intensity', 'conversational_depth']
-      : id === 'compat-attraction' ? ['romantic_attraction', 'emotional_intimacy', 'admiration_mutual']
+      : id === 'compat-attraction' ? ['physical_attraction', 'romantic_attraction', 'emotional_intimacy', 'admiration_mutual']
       : id === 'compat-friction' ? ['conflict_frequency', 'conflict_intensity', 'pride_collision', 'ego_competition', 'power_balance', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-growth' ? ['growth_compatibility', 'novelty_compatibility', 'shared_project_compatibility', 'adventure_compatibility', 'ambition_alignment', 'partnership_team_feeling', 'relationship_stimulation_need', 'relationship_boredom_risk']
       : id === 'compat-overview' ? ['value_alignment', 'shared_identity', 'fate_companion_feeling']
