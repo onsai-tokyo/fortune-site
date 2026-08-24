@@ -93,6 +93,8 @@ export interface FactMatcher {
   axis?: FactAxis[]
   signal?: string[]
   factorPrefix?: string[]
+  /** 同じFact内に指定要素がすべて存在する場合だけ一致する。アスペクトの両天体判定に使う。 */
+  factorIncludesAll?: string[]
   polarity?: Array<-1 | 0 | 1>
   minStrength?: number
 }
@@ -112,6 +114,7 @@ export function matchesTraitFact(fact: ReportFactV2, matcher: FactMatcher): bool
   if (matcher.axis && !matcher.axis.includes(fact.axis)) return false
   if (matcher.signal && !matcher.signal.includes(fact.signal)) return false
   if (matcher.factorPrefix && !matcher.factorPrefix.some(prefix => fact.factor.startsWith(prefix))) return false
+  if (matcher.factorIncludesAll && !matcher.factorIncludesAll.every(value => fact.factor.includes(value))) return false
   if (matcher.polarity && !matcher.polarity.includes(fact.polarity)) return false
   if (matcher.minStrength !== undefined && fact.strength < matcher.minStrength) return false
   return true

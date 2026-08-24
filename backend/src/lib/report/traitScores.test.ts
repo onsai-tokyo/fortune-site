@@ -19,7 +19,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.equal(TRAIT_SCORE_RULES.length, 25)
+  assert.equal(TRAIT_SCORE_RULES.length, 38)
 })
 
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
@@ -52,6 +52,9 @@ test('FactMatcherは完全一致とfactor前方一致を組み合わせる', () 
   assert.equal(matchesTraitFact(fact(), { system: ['西洋占星術'], lineage: ['ephemeris'], axis: ['relation'], signal: ['sensitivity'], factorPrefix: ['planet:月:'], polarity: [1], minStrength: 0.7 }), true)
   assert.equal(matchesTraitFact(fact(), { factorPrefix: ['planet:太陽:'] }), false)
   assert.equal(matchesTraitFact(fact(), { minStrength: 0.9 }), false)
+  const aspect = fact({ factor: 'structuredAspect:金星:スクエア:冥王星:orb2', axis: 'domain-love', signal: 'transformation' })
+  assert.equal(matchesTraitFact(aspect, { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '冥王星'] }), true)
+  assert.equal(matchesTraitFact(aspect, { factorIncludesAll: ['金星', '土星'] }), false)
 })
 
 test('同一canonicalSourceIdは絶対寄与が最大の1件だけを採用する', () => {
@@ -167,4 +170,22 @@ test('R-4第1弾は§3・§14・§16・§24の発行済みFactを根拠にスコ
   assert.ok(scores.public_agreeableness.raw > 0)
   assert.ok(scores.emotional_volatility.raw > 0)
   assert.equal(scores.private_assertiveness.confidence, 0)
+})
+
+test('R-4第2弾は引力・没頭と長期適合を別スコアとして保持する', () => {
+  const facts = [
+    fact({ id: 'career', factor: 'house:10:火星', axis: 'domain-work', signal: 'responsibility', canonicalSourceId: 'house:10' }),
+    fact({ id: 'approval', factor: 'house:10:月', axis: 'domain-work', signal: 'responsibility', canonicalSourceId: 'house:10' }),
+    fact({ id: 'romance', factor: 'house:5:金星', axis: 'domain-love', signal: 'expression', canonicalSourceId: 'house:5' }),
+    fact({ id: 'venus-pluto', factor: 'structuredAspect:金星:コンジャンクション:冥王星:orb1', axis: 'domain-love', signal: 'transformation', canonicalSourceId: 'aspect:冥王星-金星' }),
+    fact({ id: 'venus-uranus', factor: 'structuredAspect:天王星:トライン:金星:orb2', axis: 'domain-love', signal: 'harmony', canonicalSourceId: 'aspect:天王星-金星' }),
+    fact({ id: 'venus-saturn', factor: 'structuredAspect:土星:スクエア:金星:orb2', axis: 'domain-love', signal: 'responsibility', polarity: -1, canonicalSourceId: 'aspect:土星-金星' }),
+    fact({ id: 'house4-moon', factor: 'house:4:月', axis: 'relation', signal: 'care', canonicalSourceId: 'house:4' }),
+    fact({ id: 'house7-saturn', factor: 'house:7:土星', axis: 'domain-love', signal: 'harmony', canonicalSourceId: 'house:7' }),
+  ]
+  const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  for (const key of [
+    'career_absorption', 'romantic_absorption', 'approval_need', 'attraction_intensity', 'charisma_attraction', 'attraction_charisma',
+    'novelty_attraction', 'attraction_novelty', 'compatibility_stability', 'compatibility_reliability', 'compatibility_domestic',
+  ] as const) assert.ok(scores[key].raw > 0, key)
 })
