@@ -381,6 +381,21 @@ test('人前での愛情表現を二人きりの親密さや愛情量へ変換�
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('生活内の愛情表現を心の深さや好意の有無へ変換しない', () => {
+  const profile = (value: number, confidence = 0.6): CompatibilityProfileScore => ({
+    key: 'private_affection', value, confidence, contributingFacts: ['self-care', 'partner-care'],
+    directions: { selfToPartner: 0.8, partnerToSelf: 0.4 },
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '見落としやすい違い')
+  const middle = compatibilityProfileBlock(profile(0.5), '見落としやすい違い')
+  const high = compatibilityProfileBlock(profile(0.8), '見落としやすい違い')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /心の深さは決めません/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /愛情が強い|愛情が弱い|好意がない/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

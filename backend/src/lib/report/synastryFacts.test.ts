@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -456,6 +456,30 @@ test('相性§29は片方の個人傾向が欠ける場合に人前の愛情表�
   const result = computeSocialDisplayAffectionProfile(
     { social_neutrality: known, public_agreeableness: known },
     { social_neutrality: known, public_agreeableness: unknown },
+  )
+  assert.equal(result.confidence, 0)
+  assert.equal(result.directions, undefined)
+})
+
+test('相性§16・性格§35・§36は生活内の愛情表現を二方向で保持する', () => {
+  const trait = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const result = computePrivateAffectionProfile(
+    { domestic_affection: trait(0.9, 'self-domestic'), practical_generosity: trait(0.7, 'self-practical') },
+    { domestic_affection: trait(0.3, 'partner-domestic'), practical_generosity: trait(0.5, 'partner-practical') },
+  )
+  assert.equal(result.key, 'private_affection')
+  assert.equal(result.value, 0.6)
+  assert.equal(result.confidence, 0.6)
+  assert.deepEqual(result.directions, { selfToPartner: 0.8, partnerToSelf: 0.4 })
+  assert.equal(result.contributingFacts.length, 4)
+})
+
+test('生活内の愛情表現は片方向の根拠が欠ける場合に対称値を推測しない', () => {
+  const known = { value: 0.7, confidence: 0.8, contributingFacts: ['known'] }
+  const unknown = { value: 0.5, confidence: 0, contributingFacts: [] }
+  const result = computePrivateAffectionProfile(
+    { domestic_affection: known, practical_generosity: known },
+    { domestic_affection: unknown, practical_generosity: known },
   )
   assert.equal(result.confidence, 0)
   assert.equal(result.directions, undefined)

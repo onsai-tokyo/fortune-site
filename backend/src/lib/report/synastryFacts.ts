@@ -45,6 +45,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'transparency',
   'mystery_distance',
   'social_display_affection',
+  'private_affection',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -519,6 +520,31 @@ export function computeSocialDisplayAffectionProfile(
     value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
     // 実際の記念日行動・贈答・周囲の評価は未入力なので傾向の上限を設ける。
     confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
+  }
+}
+
+/** 相性§16・性格§35・§36。生活内の世話や実務で示す好意を各自の方向別傾向として保持する。 */
+export function computePrivateAffectionProfile(
+  self: { domestic_affection: TraitScoreInput; practical_generosity: TraitScoreInput },
+  partner: { domestic_affection: TraitScoreInput; practical_generosity: TraitScoreInput },
+): CompatibilityProfileScore {
+  const selfInputs = [self.domestic_affection, self.practical_generosity]
+  const partnerInputs = [partner.domestic_affection, partner.practical_generosity]
+  const inputs = [...selfInputs, ...partnerInputs]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'private_affection', value: 0.5, confidence: 0, contributingFacts: [] }
+  const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
+  const directions = {
+    selfToPartner: Number(mean(selfInputs).toFixed(3)),
+    partnerToSelf: Number(mean(partnerInputs).toFixed(3)),
+  }
+  return {
+    key: 'private_affection',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 実際の同居・世話・支出履歴は未入力なので、出生傾向だけの部分算出とする。
+    confidence: Number(Math.min(0.6, ...inputs.map(score => score.confidence)).toFixed(3)),
     contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
     directions,
   }
