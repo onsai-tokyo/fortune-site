@@ -25,6 +25,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'friendship_compatibility',
   'domestic_compatibility',
   'novelty_compatibility',
+  'shared_project_compatibility',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -69,6 +70,9 @@ const DOMESTIC_COMPATIBILITY_PAIRS = new Set(['月:月', '月:金星', '金星:�
 const NOVELTY_COMPATIBILITY_PAIRS = new Set([
   '木星:太陽', '木星:月', '木星:水星', '木星:金星', '木星:火星',
   '天王星:太陽', '天王星:月', '天王星:水星', '天王星:金星', '天王星:火星',
+].map(value => value.split(':').sort().join(':')))
+const SHARED_PROJECT_COMPATIBILITY_PAIRS = new Set([
+  '火星:火星', '木星:火星', '土星:火星', '木星:木星', '土星:木星', '土星:土星',
 ].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_INTIMACY_PAIRS = new Set(['月:月', '太陽:月', '月:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
 const REPAIR_CAPACITY_PAIRS = new Set(['木星:月', '木星:金星', '木星:水星', '月:金星'].map(value => value.split(':').sort().join(':')))
@@ -170,6 +174,8 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const novelty = facts.filter(fact => fact.kind === 'cross-aspect' && NOVELTY_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
   const noveltySigned = novelty.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const noveltyHasMoon = novelty.some(fact => pairFromSignal(fact).includes('月'))
+  const sharedProject = facts.filter(fact => fact.kind === 'cross-aspect' && SHARED_PROJECT_COMPATIBILITY_PAIRS.has(pairFromSignal(fact)))
+  const sharedProjectSigned = sharedProject.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const emotional = facts.filter(fact => fact.kind === 'cross-aspect' && fact.axis === 'depth' && EMOTIONAL_INTIMACY_PAIRS.has(pairFromSignal(fact)))
   const emotionalSigned = emotional.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
   const repair = facts.filter(fact => fact.kind === 'cross-aspect' && REPAIR_CAPACITY_PAIRS.has(pairFromSignal(fact)))
@@ -219,6 +225,11 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((novelty.length ? 1 / (1 + Math.exp(-noveltySigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.8, novelty.length * 0.16) * (noveltyHasMoon ? timeConfidenceFactor : 1)).toFixed(3)),
     contributingFacts: [...new Set(novelty.map(fact => fact.id))],
+  }, {
+    key: 'shared_project_compatibility',
+    value: Number((sharedProject.length ? 1 / (1 + Math.exp(-sharedProjectSigned)) : 0.5).toFixed(3)),
+    confidence: Number(Math.min(0.8, sharedProject.length * 0.16).toFixed(3)),
+    contributingFacts: [...new Set(sharedProject.map(fact => fact.id))],
   }, {
     key: 'emotional_intimacy',
     value: Number((emotional.length ? 1 / (1 + Math.exp(-emotionalSigned)) : 0.5).toFixed(3)),

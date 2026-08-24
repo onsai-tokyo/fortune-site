@@ -146,6 +146,24 @@ test('相性§3・§26は新体験の相性を木星・天王星と個人天体�
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('相性§4は共同プロジェクトの推進力を火星・木星・土星から算出する', () => {
+  const left = { astrology: { western: { planets: [
+    { name: '火星', longitude: 10 }, { name: '木星', longitude: 70 }, { name: '土星', longitude: 130 },
+  ] } } }
+  const right = { astrology: { western: { planets: [
+    { name: 'Mars', longitude: 10 }, { name: 'Jupiter', longitude: 70 }, { name: 'Saturn', longitude: 130 },
+  ] } } }
+  const facts = buildSynastryFacts(left, right)
+  const project = computeCompatibilityProfile(facts).find(score => score.key === 'shared_project_compatibility')!
+  const novelty = computeCompatibilityProfile(facts).find(score => score.key === 'novelty_compatibility')!
+  assert.ok(project.contributingFacts.length >= 6)
+  assert.equal(new Set(project.contributingFacts).size, project.contributingFacts.length)
+  assert.ok(project.contributingFacts.every(id => /火星|木星|土星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.ok(project.contributingFacts.some(id => /土星/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.notDeepEqual(project.contributingFacts, novelty.contributingFacts)
+  assert.ok(project.confidence > 0)
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }

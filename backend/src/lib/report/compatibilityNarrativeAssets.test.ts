@@ -126,6 +126,20 @@ test('新体験の相性を刺激の強さや愛情の深さと混同しない',
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('共同プロジェクトの相性を恋愛の充実や競争心と混同しない', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'shared_project_compatibility', value, confidence, contributingFacts: ['mars-jupiter'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '二人でできること')
+  const middle = compatibilityProfileBlock(profile(0.5), '二人でできること')
+  const high = compatibilityProfileBlock(profile(0.8), '二人でできること')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /共同作業の充実を恋愛の充実とは決めない/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /仕事ができれば恋愛も成功|競争心がない/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],
