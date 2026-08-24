@@ -19,7 +19,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.equal(TRAIT_SCORE_RULES.length, 11)
+  assert.equal(TRAIT_SCORE_RULES.length, 25)
 })
 
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
@@ -148,4 +148,23 @@ test('PR-2c確認済みルールは現在発行されるfactor表記へ一致す
   assert.ok(scores.social_extraversion.raw > 0)
   assert.ok(scores.attraction_respect.raw > 0)
   assert.ok(scores.attraction_status.raw > 0)
+})
+
+test('R-4第1弾は§3・§14・§16・§24の発行済みFactを根拠にスコア化する', () => {
+  const facts = [
+    fact({ id: 'fixed', factor: 'modalityDominant:fixed:5', axis: 'drive', signal: 'stability', canonicalSourceId: 'modality:fixed' }),
+    fact({ id: 'sun-leo', factor: 'planet:太陽:獅子座', axis: 'drive', signal: 'expression', canonicalSourceId: 'planet:太陽' }),
+    fact({ id: 'air', factor: 'elementDominant:air:4', axis: 'cognition', signal: 'communication', canonicalSourceId: 'element:air' }),
+    fact({ id: 'moon-libra', factor: 'planet:月:天秤座', axis: 'relation', signal: 'harmony', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'sun-moon', factor: 'structuredAspect:太陽:スクエア:月:orb2', axis: 'tension', signal: 'integration', polarity: -1, canonicalSourceId: 'aspect:太陽-月' }),
+  ]
+  const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  assert.ok(scores.immersion_intensity.raw > 0)
+  assert.ok(scores.pride_sensitivity.raw > 0)
+  assert.ok(scores.social_neutrality.raw > 0)
+  assert.ok(scores.neutrality_pride.raw > 0)
+  assert.ok(scores.social_sensitivity.raw > 0)
+  assert.ok(scores.public_agreeableness.raw > 0)
+  assert.ok(scores.emotional_volatility.raw > 0)
+  assert.equal(scores.private_assertiveness.confidence, 0)
 })
