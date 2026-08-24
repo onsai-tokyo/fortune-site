@@ -22,6 +22,12 @@ const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、同じ出来事でも心に残る部分が違いやすい二人です。分かり合えないと決めず、何が痛かったかを一つずつ伝えてください。`,
 }
 
+const repairCapacityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、すれ違っても関係を終わりと決めず、戻るきっかけを見つけやすい二人です。謝り方を決めておくと、その力が安定します。`,
+  middle: cue => `${cue}では、戻れる時と気持ちを残す時があります。話す前に時間を置くのか、その日のうちに確認するのかを決めてください。`,
+  low: cue => `${cue}では、同じ方法で仲直りしようとすると片方が置き去りになりやすい二人です。謝罪、説明、時間のどれが必要かを先に尋ねてください。`,
+}
+
 function band(value: number): ScoreBand {
   if (value >= 0.6) return 'high'
   if (value <= 0.4) return 'low'
@@ -62,6 +68,11 @@ export function compatibilityScoreBlock(score: PairTraitScore | undefined, cue: 
 export function compatibilityProfileBlock(score: CompatibilityProfileScore | undefined, cue: string): CompatibilityScoreBlock | null {
   if (!score || score.confidence < 0.25) return null
   const scoreBand = band(score.value)
-  const texts = score.key === 'conversational_flow' ? conversationalFlowText : emotionalIntimacyText
-  return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source: score.key === 'conversational_flow' ? '相性§44・§53' : '相性§43・§53・§54' }
+  const texts = score.key === 'conversational_flow' ? conversationalFlowText
+    : score.key === 'emotional_intimacy' ? emotionalIntimacyText
+    : repairCapacityText
+  const source = score.key === 'conversational_flow' ? '相性§44・§53'
+    : score.key === 'emotional_intimacy' ? '相性§43・§53・§54'
+    : '相性§7・§42・§53'
+  return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source }
 }

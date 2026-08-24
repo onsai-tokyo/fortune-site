@@ -48,3 +48,17 @@ test('感情の深さを安心感と混同しない文章へ変換する', () =>
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
   assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '魅力の正体'), null)
 })
+
+test('修復力を衝突の少なさや破局判定と混同しない文章へ変換する', () => {
+  const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
+    key: 'repair_capacity', value, confidence, contributingFacts: ['cross-aspect:jupiter'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '安心への戻り道')
+  const middle = compatibilityProfileBlock(profile(0.5), '安心への戻り道')
+  const high = compatibilityProfileBlock(profile(0.8), '安心への戻り道')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /破局|別れる/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+  assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '安心への戻り道'), null)
+})
