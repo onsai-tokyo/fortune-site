@@ -226,7 +226,7 @@ export function extractAstrologyFacts(input: ReportInput): FactValue[] {
   if (!western) return []
   const moonStable = isMoonSignStableForDay(input)
   const hasBirthTime = Boolean(input.birthTime)
-  const points = hasBirthTime ? [western.ascendant, western.midheaven] : []
+  const points = hasBirthTime ? [western.ascendant, western.midheaven].filter((point): point is { sign: string; degree: number } => Boolean(point)) : []
   return [
     ...placementFacts(western.planets, '西洋占星術', moonStable),
     ...balanceFacts(western.planets, points),

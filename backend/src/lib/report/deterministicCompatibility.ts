@@ -1,6 +1,12 @@
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
+import type { ReportInput } from '../deterministicReport.js'
+import { extractReportMetadata } from './metadata.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 import { buildSynastryFacts, computeRelationScores, type RelationAxis, type RelationScore } from './synastryFacts.js'
+import { buildReportFactsV2 } from './factsV2.js'
+import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
+import { bootstrapTraitScoreScale } from './traitScoreScale.js'
+import { computePairTraitScores, type PairTraitScore } from './derivedTraitScores.js'
 
 type RelationshipType = 'romantic' | 'friend' | 'family'
 type PairKind = 'aligned' | 'complementary' | 'clashing'
@@ -17,6 +23,22 @@ interface PairContext {
   evidence: ReportCard['evidence']
   strongestAxis: RelationAxis
   relationScores: RelationScore[]
+  pairTraitScores: PairTraitScore[]
+}
+
+export interface CompatibilityTraitScoreBundle {
+  self: TraitScoreSet
+  partner: TraitScoreSet
+  pair: PairTraitScore[]
+}
+
+/** 生年月日などの入力はここでのみ読み、相性レポートへは集計済みスコアだけを渡す。 */
+export function buildCompatibilityTraitScoreBundle(self: ReportInput, partner: ReportInput): CompatibilityTraitScoreBundle {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const selfScores = computeTraitScores(buildReportFactsV2(self, extractReportMetadata(self)), TRAIT_SCORE_RULES, scale)
+  const partnerScores = computeTraitScores(buildReportFactsV2(partner, extractReportMetadata(partner)), TRAIT_SCORE_RULES, scale)
+  const relations = computeRelationScores(buildSynastryFacts(self, partner))
+  return { self: selfScores, partner: partnerScores, pair: computePairTraitScores(selfScores, partnerScores, relations) }
 }
 
 const stemStyle: Record<string, string> = {
@@ -37,7 +59,7 @@ function relationshipFrame(label: string) {
   return '親しさだけに頼らず、互いが守りたい境界を確かめること'
 }
 
-function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType: RelationshipType, relationshipLabel: string): PairContext {
+function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType: RelationshipType, relationshipLabel: string, scoreBundle?: CompatibilityTraitScoreBundle): PairContext {
   const self = record(selfValue); const partner = record(partnerValue)
   const selfDay = text(self.shichuDay); const partnerDay = text(partner.shichuDay)
   const selfStyle = stemStyle[selfDay[0]] ?? '自分の順序で答えを選ぶこと'
@@ -58,7 +80,7 @@ function pairContext(selfValue: unknown, partnerValue: unknown, relationshipType
       { family: '相手の命式', system: '複数占術の統合', detail: `day=${partnerDay}; lifePath=${partnerNumber}; sukuyo=${text(partner.sukuyo)}` },
       ...synastry.slice(0, 8).map(fact => ({ family: '二人の照合', system: fact.kind, detail: `${fact.axis}:${fact.detail}` })),
     ],
-    strongestAxis, relationScores,
+    strongestAxis, relationScores, pairTraitScores: scoreBundle?.pair ?? [],
   }
 }
 
@@ -144,8 +166,8 @@ const specs = [
   ['compat-growth', '違いを残したまま約束を作ると、関係が強くなる'], ['compat-marriage', '暮らしの条件を話し続けるほど、二人らしい夫婦になる'],
 ] as const
 
-export function buildDeterministicCompatibilityReport(self: unknown, partner: unknown, relationshipType: RelationshipType, relationshipLabel: string): StructuredReport {
-  const context = pairContext(self, partner, relationshipType, relationshipLabel)
+export function buildDeterministicCompatibilityReport(self: unknown, partner: unknown, relationshipType: RelationshipType, relationshipLabel: string, scoreBundle?: CompatibilityTraitScoreBundle): StructuredReport {
+  const context = pairContext(self, partner, relationshipType, relationshipLabel, scoreBundle)
   const selected = relationshipType === 'romantic' ? specs : specs.filter(([id]) => id !== 'compat-marriage')
   const axisPlan = chapterAxisPlan(selected.map(([id]) => id), context)
   const cards = selected.map(([id, title]) => {
@@ -153,7 +175,17 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
     const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
     summary: `${relationshipLabel}の二人には、${axisLead[chapterAxis]}という特徴があります。この章では「${title}」を手がかりに、${context.difference}を扱う順序を読み解きます。`, tags: ['相性', relationshipLabel], period: null,
-    pages: pagesFor(id, context, chapterAxis), evidence: context.evidence, metadataRefs: ['self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`] }, 'deterministic')
+    pages: pagesFor(id, context, chapterAxis),
+    evidence: [
+      ...context.evidence,
+      ...context.pairTraitScores.map(score => ({
+        family: '二人の特性比較', system: '決定論スコア', detail: `${score.key}=${score.value}; confidence=${score.confidence}`,
+      })),
+    ],
+    metadataRefs: [
+      'self.shichuDay', 'partner.shichuDay', 'self.lifePathNumber', 'partner.lifePathNumber', `synastry.axis.${chapterAxis}`,
+      ...context.pairTraitScores.map(score => `pairTraitScore.${score.key}`),
+    ] }, 'deterministic')
   })
   return finalizeReportProvenance({ version: 2, cards, reportText: cards.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n') }, 'compat-deterministic-v1')
 }
