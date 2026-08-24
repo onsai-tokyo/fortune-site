@@ -282,12 +282,15 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const valueBlock = id === 'compat-overview'
     ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'value_alignment'), item.cue)
     : null
+  const sharedIdentityBlock = id === 'compat-overview'
+    ? compatibilityProfileBlock(context.compatibilityProfile.find(score => score.key === 'shared_identity'), item.cue)
+    : null
   const pairScoreBlock = pairScoresForChapter(id, context)
     .map(score => ({ score, weight: score.confidence * Math.abs(score.value - 0.5) }))
     .sort((left, right) => right.weight - left.weight || left.score.key.localeCompare(right.score.key))
     .map(({ score }) => compatibilityScoreBlock(score, item.cue))
     .find((block): block is NonNullable<typeof block> => Boolean(block))
-  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? valueBlock ?? pairScoreBlock
+  const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
   return [
     { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
@@ -324,7 +327,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       : id === 'compat-attraction' ? ['emotional_intimacy', 'admiration_mutual']
       : id === 'compat-friction' ? ['conflict_frequency', 'conflict_intensity', 'pride_collision', 'ego_competition', 'repair_capacity', 'emotional_safety', 'conversational_flow']
       : id === 'compat-growth' ? ['growth_compatibility', 'novelty_compatibility', 'shared_project_compatibility', 'adventure_compatibility', 'ambition_alignment']
-      : id === 'compat-overview' ? ['value_alignment']
+      : id === 'compat-overview' ? ['value_alignment', 'shared_identity']
       : id === 'compat-marriage' ? ['domestic_compatibility', 'lifestyle_alignment']
       : id === 'compat-beginning' ? ['conversational_flow', 'humor_compatibility', 'friendship_compatibility'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))

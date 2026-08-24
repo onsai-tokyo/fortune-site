@@ -100,6 +100,12 @@ const lifestyleAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、日常の速度や落ち着く方法に差が出やすい二人です。同じ過ごし方を求めず、譲れない習慣を一つずつ確かめてください。`,
 }
 
+const sharedIdentityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手の存在を自分の日常や選択の一部として感じやすい二人です。ただし、近さを運命や関係の継続保証とは決めないでください。`,
+  middle: cue => `${cue}では、二人で考える場面と一人で決めたい場面が分かれます。共通のことと個人のことを言葉で区切ってください。`,
+  low: cue => `${cue}では、親しくても互いを独立した存在として捉えやすい二人です。一体感の弱さを愛情不足とは決めないでください。`,
+}
+
 
 const emotionalIntimacyText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の気持ちの変化を深く受け取りやすい二人です。ただし、強く感じ取れることと安心して頼れることは別に育ててください。`,
@@ -155,6 +161,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   conflict_frequency: conflictFrequencyText,
   ambition_alignment: ambitionAlignmentText,
   lifestyle_alignment: lifestyleAlignmentText,
+  shared_identity: sharedIdentityText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -178,6 +185,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   conflict_frequency: '相性§6・§7・§13・§42・§53',
   ambition_alignment: '相性§3・§4・§5・§22・§53',
   lifestyle_alignment: '相性§14・§25・§53・§57',
+  shared_identity: '相性§2・§35・§39・§53',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',

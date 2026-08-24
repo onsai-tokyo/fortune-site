@@ -33,6 +33,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'conflict_frequency',
   'ambition_alignment',
   'lifestyle_alignment',
+  'shared_identity',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -105,6 +106,7 @@ const CONFLICT_FREQUENCY_PAIRS = new Set([
 const GROWTH_COMPATIBILITY_PAIRS = new Set(['木星:太陽', '木星:月', '木星:水星', '木星:火星'].map(value => value.split(':').sort().join(':')))
 const VALUE_ALIGNMENT_PAIRS = new Set(['太陽:太陽', '太陽:金星', '金星:金星'].map(value => value.split(':').sort().join(':')))
 const LIFESTYLE_ALIGNMENT_PAIRS = new Set(['月:月', '太陽:月', '月:金星'].map(value => value.split(':').sort().join(':')))
+const SHARED_IDENTITY_PAIRS = new Set(['太陽:太陽', '月:月', '太陽:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星'].map(value => value.split(':').sort().join(':')))
 const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
@@ -234,6 +236,10 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
   const lifestyle = facts.filter(fact => fact.kind === 'cross-aspect'
     && LIFESTYLE_ALIGNMENT_PAIRS.has(pairFromSignal(fact)))
   const lifestyleSigned = lifestyle.reduce((sum, fact) => sum + fact.strength * fact.polarity, 0)
+  const sharedIdentity = facts.filter(fact => fact.kind === 'cross-aspect'
+    && SHARED_IDENTITY_PAIRS.has(pairFromSignal(fact))
+    && /-(conjunction|sextile|trine)$/.test(fact.signal))
+  const sharedIdentityStrength = sharedIdentity.reduce((sum, fact) => sum + fact.strength, 0)
   const timeConfidenceFactor = birthTimeKnown.self && birthTimeKnown.partner ? 1 : birthTimeKnown.self || birthTimeKnown.partner ? 0.75 : 0.55
   return [{
     key: 'conversational_flow',
@@ -331,6 +337,12 @@ export function computeCompatibilityProfile(facts: SynastryFact[], birthTimeKnow
     value: Number((lifestyle.length ? 1 / (1 + Math.exp(-lifestyleSigned)) : 0.5).toFixed(3)),
     confidence: Number((Math.min(0.8, lifestyle.length * 0.18) * timeConfidenceFactor).toFixed(3)),
     contributingFacts: [...new Set(lifestyle.map(fact => fact.id))],
+  }, {
+    key: 'shared_identity',
+    value: Number((sharedIdentity.length ? 1 - Math.exp(-sharedIdentityStrength) : 0.5).toFixed(3)),
+    // ASC・ハウス・ノード未接続の部分算出なので確信度を0.65で制限する。
+    confidence: Number((Math.min(0.65, sharedIdentity.length * 0.16) * timeConfidenceFactor).toFixed(3)),
+    contributingFacts: [...new Set(sharedIdentity.map(fact => fact.id))],
   }]
 }
 

@@ -323,6 +323,31 @@ test('相性§14は月を中心に生活リズムを算出し価値観や家事�
   assert.ok(unknown.confidence < known.confidence)
 })
 
+test('相性§2は中核天体の調和が複数ある時だけ共有自己感を部分算出する', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '太陽', longitude: 10 }, { name: '月', longitude: 70 }] } } },
+    { astrology: { western: { planets: [{ name: 'Sun', longitude: 10 }, { name: 'Moon', longitude: 130 }, { name: 'Venus', longitude: 70 }] } } },
+  )
+  const unknown = computeCompatibilityProfile(facts).find(score => score.key === 'shared_identity')!
+  const known = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'shared_identity')!
+  assert.ok(unknown.contributingFacts.length >= 2)
+  assert.ok(unknown.contributingFacts.every(id => /conjunction|sextile|trine/.test(facts.find(fact => fact.id === id)?.signal ?? '')))
+  assert.equal(new Set(unknown.contributingFacts).size, unknown.contributingFacts.length)
+  assert.equal(unknown.value, known.value)
+  assert.ok(unknown.confidence < known.confidence)
+  assert.ok(known.confidence <= 0.65)
+})
+
+test('相性§2はハード接触だけで運命共同体感を捏造しない', () => {
+  const facts = buildSynastryFacts(
+    { astrology: { western: { planets: [{ name: '太陽', longitude: 10 }, { name: '月', longitude: 10 }] } } },
+    { astrology: { western: { planets: [{ name: 'Sun', longitude: 100 }, { name: 'Moon', longitude: 190 }] } } },
+  )
+  const shared = computeCompatibilityProfile(facts, { self: true, partner: true }).find(score => score.key === 'shared_identity')!
+  assert.equal(shared.confidence, 0)
+  assert.deepEqual(shared.contributingFacts, [])
+})
+
 test('相性§7は衝突量ではなく仲直りへ戻る力を独立算出する', () => {
   const left = { astrology: { western: { planets: [{ name: '木星', longitude: 10 }, { name: '火星', longitude: 90 }] } } }
   const right = { astrology: { western: { planets: [{ name: 'Moon', longitude: 10 }, { name: 'Venus', longitude: 130 }] } } }
