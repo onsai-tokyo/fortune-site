@@ -19,7 +19,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.equal(TRAIT_SCORE_RULES.length, 64)
+  assert.equal(TRAIT_SCORE_RULES.length, 90)
 })
 
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
@@ -211,5 +211,26 @@ test('R-4第3弾は距離感・計画性・友情を個人配置からスコア�
     'recognition_motivation', 'loneliness_tendency', 'self_complexity', 'relationship_boundary_strength', 'tolerance',
     'friendship_value_match', 'friendship_orientation', 'life_stage_alignment', 'friendship_independence',
     'effort_respect', 'respect_attraction', 'group_coordination',
+  ] as const) assert.ok(scores[key].raw > 0, key)
+})
+
+test('R-4第4弾は感情表現・会話・好奇心・友達型恋愛を分離して保持する', () => {
+  const facts = [
+    fact({ id: 'moon-cancer', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'mercury-sagittarius', factor: 'planet:水星:射手座', axis: 'cognition', signal: 'communication', canonicalSourceId: 'planet:水星' }),
+    fact({ id: 'mercury-scorpio', factor: 'planet:水星:蠍座', axis: 'cognition', signal: 'depth', canonicalSourceId: 'planet:水星:scorpio' }),
+    fact({ id: 'venus-saturn', factor: 'structuredAspect:土星:トライン:金星:orb2', axis: 'domain-love', signal: 'responsibility', canonicalSourceId: 'aspect:土星-金星' }),
+    fact({ id: 'house7-saturn', factor: 'house:7:土星', axis: 'domain-love', signal: 'responsibility', canonicalSourceId: 'house:7:saturn' }),
+    fact({ id: 'moon-taurus', factor: 'planet:月:牡牛座', axis: 'relation', signal: 'stability', canonicalSourceId: 'planet:月:taurus' }),
+    fact({ id: 'house7-mercury', factor: 'house:7:水星', axis: 'domain-love', signal: 'communication', canonicalSourceId: 'house:7:mercury' }),
+    fact({ id: 'house11-mercury', factor: 'house:11:水星', axis: 'relation', signal: 'communication', canonicalSourceId: 'house:11:mercury' }),
+  ]
+  const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  for (const key of [
+    'emotional_expression', 'playfulness', 'compatibility_playfulness', 'conversation_entertainment',
+    'intellectual_attraction', 'attraction_intellectual', 'gossip_curiosity', 'taboo_curiosity',
+    'age_gap_attraction', 'attraction_age_gap', 'authority_attraction', 'attraction_authority',
+    'stability_preference', 'compatibility_emotional_safety', 'attraction_friendship',
+    'compatibility_friendship', 'friendship_binding', 'long_term_binding',
   ] as const) assert.ok(scores[key].raw > 0, key)
 })

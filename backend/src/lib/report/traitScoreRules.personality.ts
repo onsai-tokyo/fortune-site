@@ -106,4 +106,44 @@ export const CONFIRMED_PERSONALITY_SCORE_RULES: readonly TraitScoreRule[] = [
   { score: 'effort_respect', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.9 },
   { score: 'respect_attraction', source: '性格§22', match: { factorPrefix: ['house:10:土星', 'house:10:火星'] }, weight: 0.8 },
   { score: 'group_coordination', source: '性格§23', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:太陽', 'house:10:太陽', 'house:10:土星'] }, weight: 0.8 },
+
+  // §25: 感情の振れ幅とは別に、涙・言葉・身体反応として外へ出る傾向を保持する。
+  { score: 'emotional_expression', source: '性格§25', match: { factorPrefix: ['planet:月:蟹座', 'planet:月:魚座', 'elementDominant:water:'] }, weight: 0.8 },
+  { score: 'emotional_expression', source: '性格§25', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '火星'] }, weight: 0.8 },
+
+  // §26: 射手座・木星・5室による経験の面白がり方。外惑星は使わない。
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['planet:太陽:射手座', 'planet:水星:射手座', 'planet:木星:射手座', 'ascendant:射手座'] }, weight: 0.8 },
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['house:5:太陽', 'house:5:水星', 'house:5:木星'] }, weight: 0.8 },
+  { score: 'playfulness', source: '性格§26', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '木星'] }, weight: 0.7 },
+  { score: 'compatibility_playfulness', source: '性格§26', match: { factorPrefix: ['planet:太陽:射手座', 'planet:水星:射手座', 'house:5:木星'] }, weight: 0.7 },
+
+  // §27: 話量・展開力・濃い話題への知的関心を、知的な引力と会話力へ分ける。
+  { score: 'conversation_entertainment', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星', 'house:5:水星'] }, weight: 0.9 },
+  { score: 'conversation_entertainment', source: '性格§27', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '木星'] }, weight: 0.8 },
+  { score: 'intellectual_attraction', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星'] }, weight: 0.8 },
+  { score: 'attraction_intellectual', source: '性格§27', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:3:水星'] }, weight: 0.8 },
+
+  // §28–29: 人の本音への関心とタブー領域への関心。本文では断定語を避ける。
+  { score: 'gossip_curiosity', source: '性格§28', match: { factorPrefix: ['planet:水星:蠍座', 'house:8:水星'] }, weight: 0.9 },
+  { score: 'gossip_curiosity', source: '性格§28', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '冥王星'] }, weight: 0.8 },
+  { score: 'taboo_curiosity', source: '性格§29', match: { factorPrefix: ['planet:水星:蠍座', 'house:8:水星'] }, weight: 0.9 },
+  { score: 'taboo_curiosity', source: '性格§29', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['水星', '天王星'] }, weight: 0.7 },
+
+  // §30: 年齢差と立場差への引力。尊敬スコアとは出力を分離する。
+  { score: 'age_gap_attraction', source: '性格§30', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.9 },
+  { score: 'age_gap_attraction', source: '性格§30', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['月', '土星'] }, weight: 0.8 },
+  { score: 'attraction_age_gap', source: '性格§30', match: { factorPrefix: ['house:7:土星', 'house:10:金星', 'house:10:月'] }, weight: 0.8 },
+  { score: 'authority_attraction', source: '性格§30', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'house:7:土星'] }, weight: 0.8 },
+  { score: 'attraction_authority', source: '性格§30', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'house:7:土星'] }, weight: 0.8 },
+
+  // §31: 華やかさとは独立した、相手に求める安心と堅実さ。
+  { score: 'stability_preference', source: '性格§31', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:乙女座', 'planet:月:山羊座', 'house:7:土星'] }, weight: 0.8 },
+  { score: 'compatibility_emotional_safety', source: '性格§31', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:蟹座', 'house:4:月', 'house:7:土星'] }, weight: 0.8 },
+
+  // §32: 恋人を親友としても選ぶ配置。7室・11室・会話/遊びのFactを使う。
+  { score: 'friendship_orientation', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:水星', 'house:11:金星'] }, weight: 0.8 },
+  { score: 'attraction_friendship', source: '性格§32', match: { factorPrefix: ['planet:水星:双子座', 'planet:水星:射手座', 'house:7:水星'] }, weight: 0.7 },
+  { score: 'compatibility_friendship', source: '性格§32', match: { factorPrefix: ['house:11:水星', 'house:11:金星', 'house:5:水星'] }, weight: 0.8 },
+  { score: 'friendship_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.8 },
+  { score: 'long_term_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.7 },
 ]
