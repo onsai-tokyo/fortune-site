@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -391,6 +391,29 @@ test('相性§19は個人傾向の根拠が欠ける場合に力関係を推測�
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.deepEqual(result.contributingFacts, [])
+})
+
+test('相性§11・§30は透明性を自分から相手と相手から自分の2方向で保持する', () => {
+  const trait = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const result = computeTransparencyProfile(
+    { compatibility_transparency: trait(0.8, 'self-open') },
+    { compatibility_transparency: trait(0.3, 'partner-open') },
+  )
+  assert.equal(result.key, 'transparency')
+  assert.equal(result.value, 0.55)
+  assert.equal(result.confidence, 0.65)
+  assert.deepEqual(result.directions, { selfToPartner: 0.8, partnerToSelf: 0.3 })
+  assert.deepEqual(result.contributingFacts.sort(), ['partner-open', 'self-open'])
+})
+
+test('相性§30は片方向の根拠が欠ける場合に透明性を対称値として推測しない', () => {
+  const result = computeTransparencyProfile(
+    { compatibility_transparency: { value: 0.8, confidence: 0.8, contributingFacts: ['self'] } },
+    { compatibility_transparency: { value: 0.5, confidence: 0, contributingFacts: [] } },
+  )
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.equal(result.directions, undefined)
 })
 
 test('相性§4は共同作業か目標志向の片方が根拠不足ならチーム感を推測しない', () => {

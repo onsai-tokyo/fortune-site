@@ -42,6 +42,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'relationship_boredom_risk',
   'trust_stability',
   'long_term_binding',
+  'transparency',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -51,7 +52,14 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'value_alignment',
 ] as const
 export type CompatibilityProfileKey = typeof COMPATIBILITY_PROFILE_KEYS[number]
-export interface CompatibilityProfileScore { key: CompatibilityProfileKey; value: number; confidence: number; contributingFacts: string[] }
+export interface CompatibilityProfileScore {
+  key: CompatibilityProfileKey
+  value: number
+  confidence: number
+  contributingFacts: string[]
+  /** 非対称項目は平均値だけで潰さず、誰から誰への値かを保持する。 */
+  directions?: { selfToPartner: number; partnerToSelf: number }
+}
 interface TraitScoreInput { value: number; confidence: number; contributingFacts: string[] }
 export type UnderstandingComponentKey = 'cognitive' | 'emotional' | 'deep'
 export interface UnderstandingComponentScore {
@@ -418,6 +426,28 @@ export function computePowerBalanceProfile(
     ) / 2).toFixed(3)) : 0.5,
     confidence: hasEvidence ? Number(Math.min(...inputs.map(score => score.confidence)).toFixed(3)) : 0,
     contributingFacts: hasEvidence ? [...new Set(inputs.flatMap(score => score.contributingFacts))] : [],
+  }
+}
+
+/** 相性§11・§30。各自の開示傾向を方向別に保持し、同じ値だと仮定しない。 */
+export function computeTransparencyProfile(
+  self: { compatibility_transparency: TraitScoreInput },
+  partner: { compatibility_transparency: TraitScoreInput },
+): CompatibilityProfileScore {
+  const inputs = [self.compatibility_transparency, partner.compatibility_transparency]
+  const hasEvidence = inputs.every(score => score.confidence > 0)
+  if (!hasEvidence) return { key: 'transparency', value: 0.5, confidence: 0, contributingFacts: [] }
+  const directions = {
+    selfToPartner: Number(self.compatibility_transparency.value.toFixed(3)),
+    partnerToSelf: Number(partner.compatibility_transparency.value.toFixed(3)),
+  }
+  return {
+    key: 'transparency',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // 関係開始時の秘密・相互性は別入力なので、出生傾向だけの上限を設ける。
+    confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
+    contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
   }
 }
 

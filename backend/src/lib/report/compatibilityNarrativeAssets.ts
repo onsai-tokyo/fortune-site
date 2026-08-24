@@ -185,6 +185,12 @@ const longTermBindingText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、長く続ける条件を自然には共有しにくい二人です。別れを予測する値ではなく、安心・生活・修復の不足を話す手がかりにしてください。`,
 }
 
+const transparencyText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、内側にある考えや気持ちを相手へ見せやすい傾向があります。ただし、開示のしやすさは二方向で異なるため、同じ深さとは決めません。`,
+  middle: cue => `${cue}では、話せることと伏せておきたいことが人ごとに分かれます。互いに同じ量を求めず、今伝えられる範囲を確かめてください。`,
+  low: cue => `${cue}では、気持ちを言葉にするまでの時間が二方向で違いやすい関係です。沈黙を秘密や拒絶と決めず、待てる期限を伝えてください。`,
+}
+
 const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
   middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
@@ -218,6 +224,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   relationship_boredom_risk: relationshipBoredomRiskText,
   trust_stability: trustStabilityText,
   long_term_binding: longTermBindingText,
+  transparency: transparencyText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -250,6 +257,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   relationship_boredom_risk: '相性§3・§26・§28・§50',
   trust_stability: '相性§31・§34・§41・§57',
   long_term_binding: '相性§21・§28・§40・§41・§57',
+  transparency: '相性§11・§29・§30・§31・§34',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',
