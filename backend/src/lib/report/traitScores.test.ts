@@ -19,7 +19,7 @@ const fact = (overrides: Partial<ReportFactV2> = {}): ReportFactV2 => ({
 test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
-  assert.equal(TRAIT_SCORE_RULES.length, 90)
+  assert.equal(TRAIT_SCORE_RULES.length, 104)
 })
 
 test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
@@ -232,5 +232,22 @@ test('R-4第4弾は感情表現・会話・好奇心・友達型恋愛を分離�
     'age_gap_attraction', 'attraction_age_gap', 'authority_attraction', 'attraction_authority',
     'stability_preference', 'compatibility_emotional_safety', 'attraction_friendship',
     'compatibility_friendship', 'friendship_binding', 'long_term_binding',
+  ] as const) assert.ok(scores[key].raw > 0, key)
+})
+
+test('R-4第5弾は家族・生活上の愛情と責任による結びつきを保持する', () => {
+  const facts = [
+    fact({ id: 'venus-jupiter', factor: 'structuredAspect:木星:トライン:金星:orb2', axis: 'domain-love', signal: 'harmony', canonicalSourceId: 'aspect:木星-金星' }),
+    fact({ id: 'moon-earth', factor: 'planet:月:牡牛座', axis: 'relation', signal: 'stability', canonicalSourceId: 'planet:月' }),
+    fact({ id: 'moon-cancer', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月:cancer' }),
+    fact({ id: 'house4-venus', factor: 'house:4:金星', axis: 'relation', signal: 'care', canonicalSourceId: 'house:4' }),
+    fact({ id: 'house6-venus', factor: 'house:6:金星', axis: 'relation', signal: 'care', canonicalSourceId: 'house:6' }),
+    fact({ id: 'wealth', system: '四柱推命', lineage: 'stems', factor: 'pillar:2:tenGod:0:正財', axis: 'domain-work', signal: 'practicality', canonicalSourceId: 'day-stem' }),
+    fact({ id: 'house7-saturn', factor: 'house:7:土星', axis: 'domain-love', signal: 'responsibility', canonicalSourceId: 'house:7' }),
+  ]
+  const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  for (const key of [
+    'status_attraction', 'reliability_preference', 'family_orientation', 'compatibility_family_orientation',
+    'domestic_binding', 'domestic_affection', 'practical_generosity', 'responsibility_binding',
   ] as const) assert.ok(scores[key].raw > 0, key)
 })

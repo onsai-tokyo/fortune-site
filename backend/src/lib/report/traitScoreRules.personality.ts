@@ -146,4 +146,28 @@ export const CONFIRMED_PERSONALITY_SCORE_RULES: readonly TraitScoreRule[] = [
   { score: 'compatibility_friendship', source: '性格§32', match: { factorPrefix: ['house:11:水星', 'house:11:金星', 'house:5:水星'] }, weight: 0.8 },
   { score: 'friendship_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.8 },
   { score: 'long_term_binding', source: '性格§32', match: { factorPrefix: ['house:7:水星', 'house:11:金星'] }, weight: 0.7 },
+
+  // §6–8: 相手の能力・実績・社会的位置を魅力として受け取る本人側の傾向。
+  { score: 'status_attraction', source: '性格§7', match: { factorPrefix: ['house:10:金星', 'house:10:月', 'midheaven:獅子座', 'midheaven:山羊座'] }, weight: 0.8 },
+  { score: 'status_attraction', source: '性格§7', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '木星'] }, weight: 0.7 },
+
+  // §10・§13: 刺激性とは分離した、安定・責任・継続を相手へ求める傾向。
+  { score: 'reliability_preference', source: '性格§10', match: { factorPrefix: ['planet:月:牡牛座', 'planet:月:乙女座', 'planet:月:山羊座', 'elementDominant:earth:'] }, weight: 0.7 },
+  { score: 'reliability_preference', source: '性格§13', match: { factorPrefix: ['house:4:土星', 'house:7:土星'] }, weight: 0.9 },
+
+  // §34–35: 家族への志向と、食事・世話・生活を通じた愛情表現を分離する。
+  { score: 'family_orientation', source: '性格§34', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:金星', 'house:5:月'] }, weight: 0.9 },
+  { score: 'compatibility_family_orientation', source: '性格§34', match: { factorPrefix: ['planet:月:蟹座', 'house:4:月', 'house:4:金星'] }, weight: 0.8 },
+  { score: 'domestic_binding', source: '性格§34', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:5:月'] }, weight: 0.8 },
+  { score: 'domestic_affection', source: '性格§35', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:5:月', 'house:5:金星', 'house:7:月'] }, weight: 0.9 },
+  { score: 'domestic_affection', source: '性格§35', match: { factorPrefix: ['planet:月:蟹座', 'planet:金星:蟹座'] }, weight: 0.7 },
+  { score: 'domestic_binding', source: '性格§35', match: { factorPrefix: ['house:4:月', 'house:4:金星', 'house:7:月'] }, weight: 0.8 },
+
+  // §36: 言葉ではなく、資源・時間・移動・世話を使って好意を示す傾向。
+  { score: 'practical_generosity', source: '性格§36', match: { factorPrefix: ['house:2:月', 'house:2:金星', 'house:4:月', 'house:4:金星', 'house:6:月', 'house:6:金星', 'house:6:土星'] }, weight: 0.8 },
+  { score: 'practical_generosity', source: '性格§36', match: { system: ['四柱推命', '算命学'], signal: ['practicality', 'care'] }, weight: 0.7 },
+
+  // §13: 土星がパートナー領域へ入る時の、責任・契約・義務による結びつき。
+  { score: 'responsibility_binding', source: '性格§13', match: { factorPrefix: ['house:7:土星'] }, weight: 0.9 },
+  { score: 'responsibility_binding', source: '性格§13', match: { factorPrefix: ['structuredAspect:'], factorIncludesAll: ['金星', '土星'] }, weight: 0.7 },
 ]

@@ -14,8 +14,8 @@ test('原典が揃っても根拠付きスコア不足を決定論の本番切�
   assert.equal(readiness.ready, false)
   assert.equal(readiness.personalitySections, 58)
   assert.equal(readiness.eventSections, 53)
-  assert.equal(readiness.coveredScores, 57)
-  assert.ok(readiness.reasons.some(reason => reason.includes('57/70種')))
+  assert.equal(readiness.coveredScores, 65)
+  assert.ok(readiness.reasons.some(reason => reason.includes('65/70種')))
 })
 
 test('相性原典は全58節に欠番・重複がない', () => {
