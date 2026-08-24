@@ -89,3 +89,18 @@ test('同じ衝突強度でも修復力によって扱い方を変える', () =>
   assert.doesNotMatch(`${supported?.text}${unsupported?.text}`, /破局|別れる|相性が悪い/)
   assert.equal(relationshipTensionBlock(profile('conflict_intensity', 0.8, 0.24), undefined, undefined, '衝突の扱い'), null)
 })
+
+test('共同成長を関係の継続保証とせず行動へ変換する', () => {
+  const profile = (value: number, confidence = 0.6): CompatibilityProfileScore => ({
+    key: 'growth_compatibility', value, confidence, contributingFacts: ['cross-aspect:jupiter-sun'],
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '関係が育つ力')
+  const middle = compatibilityProfileBlock(profile(0.5), '関係が育つ力')
+  const high = compatibilityProfileBlock(profile(0.8), '関係が育つ力')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /新しい目標/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /必ず続く|成功する|運命/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+  assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '関係が育つ力'), null)
+})

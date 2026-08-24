@@ -34,6 +34,12 @@ const emotionalSafetyText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、気持ちを見せた時の反応に敏感になりやすい二人です。正しさより先に、否定せず最後まで聞く約束を作ってください。`,
 }
 
+const growthCompatibilityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、一緒に新しい目標へ向かう時ほど関係が生き生きしやすい二人です。挑戦の大きさより、互いの前進を認めてください。`,
+  middle: cue => `${cue}では、同じ目標が力になる時と、別々に進む方がよい時があります。応援と同行のどちらが必要か確かめてください。`,
+  low: cue => `${cue}では、成長したい方向や速度が違いやすい二人です。同じ歩幅を求めず、相手の変化を関係への拒絶と決めないでください。`,
+}
+
 function band(value: number): ScoreBand {
   if (value >= 0.6) return 'high'
   if (value <= 0.4) return 'low'
@@ -77,11 +83,13 @@ export function compatibilityProfileBlock(score: CompatibilityProfileScore | und
   const texts = score.key === 'conversational_flow' ? conversationalFlowText
     : score.key === 'emotional_intimacy' ? emotionalIntimacyText
     : score.key === 'repair_capacity' ? repairCapacityText
-    : emotionalSafetyText
+    : score.key === 'emotional_safety' ? emotionalSafetyText
+    : growthCompatibilityText
   const source = score.key === 'conversational_flow' ? '相性§44・§53'
     : score.key === 'emotional_intimacy' ? '相性§43・§53・§54'
     : score.key === 'repair_capacity' ? '相性§7・§42・§53'
-    : '相性§7・§34・§42・§54'
+    : score.key === 'emotional_safety' ? '相性§7・§34・§42・§54'
+    : '相性§45・§53・§54'
   return { scoreKey: score.key, band: scoreBand, text: texts[scoreBand](cue), source }
 }
 
