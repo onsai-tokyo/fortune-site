@@ -191,6 +191,12 @@ const transparencyText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、気持ちを言葉にするまでの時間が二方向で違いやすい関係です。沈黙を秘密や拒絶と決めず、待てる期限を伝えてください。`,
 }
 
+const predictabilityText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、普段の選び方や伝え方に一定の型があり、次の反応を読みやすい二人です。退屈さや将来の行動を示す値ではありません。`,
+  middle: cue => `${cue}では、見通しが立つ場面と、言葉にしないと読めない場面が混ざります。大切な予定だけは事前に確認してください。`,
+  low: cue => `${cue}では、互いの次の動きを自然には読み取りにくい傾向があります。不誠実さと決めず、予定・返事・変更の伝え方を決めてください。`,
+}
+
 const romanticAttractionText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、相手の存在や表現を恋愛的な心地よさとして受け取りやすい二人です。ただし、身体的な引力や長期相性は別に確かめます。`,
   middle: cue => `${cue}では、自然に惹かれる部分と、関係の中で育つ魅力が混ざります。ときめきの強さだけで続き方を決めないでください。`,
@@ -257,6 +263,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   trust_stability: trustStabilityText,
   long_term_binding: longTermBindingText,
   transparency: transparencyText,
+  predictability: predictabilityText,
   mystery_distance: mysteryDistanceText,
   social_display_affection: socialDisplayAffectionText,
   private_affection: privateAffectionText,
@@ -295,6 +302,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   trust_stability: '相性§31・§34・§41・§57',
   long_term_binding: '相性§21・§28・§40・§41・§57',
   transparency: '相性§11・§29・§30・§31・§34',
+  predictability: '相性§1・§34',
   mystery_distance: '相性§11・§30',
   social_display_affection: '相性§29',
   private_affection: '相性§16・性格§35・§36',

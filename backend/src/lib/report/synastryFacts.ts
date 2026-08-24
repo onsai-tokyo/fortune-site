@@ -45,6 +45,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'trust_stability',
   'long_term_binding',
   'transparency',
+  'predictability',
   'mystery_distance',
   'social_display_affection',
   'private_affection',
@@ -473,6 +474,31 @@ export function computeTransparencyProfile(
     confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
     contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
     directions,
+  }
+}
+
+/**
+ * 相性§1・§34。双方の安定志向と、関係内で見える形にしやすい度合いから部分算出する。
+ * 実際の予定遵守・連絡頻度・行動履歴は未入力なので、未来の行動予測には使わない。
+ */
+export function computePredictabilityProfile(
+  profiles: readonly CompatibilityProfileScore[],
+  self: { compatibility_stability: TraitScoreInput },
+  partner: { compatibility_stability: TraitScoreInput },
+): CompatibilityProfileScore {
+  const transparency = profiles.find(score => score.key === 'transparency')
+  const personal = [self.compatibility_stability, partner.compatibility_stability]
+  const hasEvidence = Boolean(transparency && transparency.confidence > 0
+    && personal.every(score => score.confidence > 0))
+  const sharedRegularity = self.compatibility_stability.value * partner.compatibility_stability.value
+  return {
+    key: 'predictability',
+    value: hasEvidence ? Number(((sharedRegularity + transparency!.value) / 2).toFixed(3)) : 0.5,
+    // 行動履歴・生活環境・合意済みルールを未入力のため、関係傾向として上限を設ける。
+    confidence: hasEvidence ? Number(Math.min(0.55, transparency!.confidence, ...personal.map(score => score.confidence)).toFixed(3)) : 0,
+    contributingFacts: hasEvidence
+      ? [...new Set([...transparency!.contributingFacts, ...personal.flatMap(score => score.contributingFacts)])]
+      : [],
   }
 }
 

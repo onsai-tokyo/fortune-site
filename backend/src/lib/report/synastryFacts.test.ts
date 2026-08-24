@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePredictabilityProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -616,6 +616,26 @@ test('相性§31・§34は双方の信頼維持傾向と安心・修復から基
   assert.equal(result.value, 0.74)
   assert.equal(result.confidence, 0.55)
   assert.deepEqual(result.contributingFacts.sort(), ['partner', 'repair', 'safety', 'self'])
+})
+
+test('相性§1・§34は双方の安定志向と透明性から予測しやすさを部分算出する', () => {
+  const stability = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
+  const result = computePredictabilityProfile([
+    { key: 'transparency', value: 0.7, confidence: 0.65, contributingFacts: ['transparency'] },
+  ], { compatibility_stability: stability(0.9, 'self') }, { compatibility_stability: stability(0.8, 'partner') })
+  assert.equal(result.key, 'predictability')
+  assert.equal(result.value, 0.71)
+  assert.equal(result.confidence, 0.55)
+  assert.deepEqual(result.contributingFacts.sort(), ['partner', 'self', 'transparency'])
+})
+
+test('透明性または片方の安定志向が不明なら予測しやすさを捏造しない', () => {
+  const known = { value: 0.8, confidence: 0.8, contributingFacts: ['known'] }
+  const unknown = { value: 0.5, confidence: 0, contributingFacts: [] }
+  const result = computePredictabilityProfile([], { compatibility_stability: known }, { compatibility_stability: unknown })
+  assert.equal(result.value, 0.5)
+  assert.equal(result.confidence, 0)
+  assert.deepEqual(result.contributingFacts, [])
 })
 
 test('相性§31は安心・修復・個人信頼のいずれかが欠ければ信頼安定を推測しない', () => {
