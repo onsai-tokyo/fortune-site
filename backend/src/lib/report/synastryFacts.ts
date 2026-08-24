@@ -43,6 +43,7 @@ export const COMPATIBILITY_PROFILE_KEYS = [
   'trust_stability',
   'long_term_binding',
   'transparency',
+  'mystery_distance',
   'emotional_intimacy',
   'repair_capacity',
   'forgiveness_capacity',
@@ -127,6 +128,7 @@ const COGNITIVE_UNDERSTANDING_PAIRS = new Set(['水星:水星', '太陽:水星']
 const EMOTIONAL_UNDERSTANDING_PAIRS = new Set(['月:水星', '月:月', '月:金星'].map(value => value.split(':').sort().join(':')))
 const DEEP_UNDERSTANDING_PAIRS = new Set(['月:冥王星', '冥王星:水星'].map(value => value.split(':').sort().join(':')))
 const DEPENDENCY_INTENSITY_PAIRS = new Set(['月:冥王星'].map(value => value.split(':').sort().join(':')))
+const MYSTERY_DISTANCE_PERSONAL_PLANETS = new Set(['月', '水星', '金星'])
 
 function add(result: SynastryFact[], value: Omit<SynastryFact, 'id'>) { result.push({ id: id([value.kind, value.selfFactId, value.partnerFactId, value.axis, value.signal, value.detail]), ...value }) }
 
@@ -186,7 +188,7 @@ export function buildSynastryFacts(selfValue: unknown, partnerValue: unknown): S
     requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: `${selfSukuyo}:${partnerSukuyo}`,
   })
   const selfPlanets = planetMap(self); const partnerPlanets = planetMap(partner)
-  const relevant = new Set(['太陽', '月', '水星', '金星', '火星', '木星', '土星', '天王星', '冥王星'])
+  const relevant = new Set(['太陽', '月', '水星', '金星', '火星', '木星', '土星', '天王星', '海王星', '冥王星'])
   for (const [selfName, selfLongitude] of selfPlanets) for (const [partnerName, partnerLongitude] of partnerPlanets) {
     if (!relevant.has(canonicalPlanet(selfName)) || !relevant.has(canonicalPlanet(partnerName))) continue
     const found = aspect(selfLongitude, partnerLongitude)
@@ -447,6 +449,51 @@ export function computeTransparencyProfile(
     // 関係開始時の秘密・相互性は別入力なので、出生傾向だけの上限を設ける。
     confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
     contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
+    directions,
+  }
+}
+
+/**
+ * 相性§11・§30。
+ * 海王星と個人天体の接触、および相手から自分への開示傾向を方向別に合成する。
+ * 海王星単独は世代要因なので採用せず、嘘・秘密・好意の有無も推定しない。
+ */
+export function computeMysteryDistanceProfile(
+  facts: readonly SynastryFact[],
+  transparency: CompatibilityProfileScore,
+): CompatibilityProfileScore {
+  if (!transparency.directions || transparency.confidence <= 0) {
+    return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
+  }
+  const mysteryFacts = facts.filter(fact => {
+    if (fact.kind !== 'cross-aspect') return false
+    const selfPlanet = fact.selfFactId?.replace(/^planet:/, '') ?? ''
+    const partnerPlanet = fact.partnerFactId?.replace(/^planet:/, '') ?? ''
+    return (selfPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(partnerPlanet))
+      || (partnerPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(selfPlanet))
+  })
+  if (mysteryFacts.length === 0) {
+    return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
+  }
+  const directionalIntensity = (neptuneOwner: 'self' | 'partner') => {
+    const strength = mysteryFacts
+      .filter(fact => neptuneOwner === 'self'
+        ? fact.selfFactId === 'planet:海王星'
+        : fact.partnerFactId === 'planet:海王星')
+      .reduce((sum, fact) => sum + fact.strength, 0)
+    return 1 - Math.exp(-strength)
+  }
+  // selfToPartner は「自分から見て相手が読み取りにくい」方向。
+  const directions = {
+    selfToPartner: Number(((directionalIntensity('partner') + (1 - transparency.directions.partnerToSelf)) / 2).toFixed(3)),
+    partnerToSelf: Number(((directionalIntensity('self') + (1 - transparency.directions.selfToPartner)) / 2).toFixed(3)),
+  }
+  return {
+    key: 'mystery_distance',
+    value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
+    // DESC・12室オーバーレイを未計算のため、部分算出の上限を設ける。
+    confidence: Number(Math.min(0.55, transparency.confidence).toFixed(3)),
+    contributingFacts: [...new Set([...transparency.contributingFacts, ...mysteryFacts.map(fact => fact.id)])],
     directions,
   }
 }

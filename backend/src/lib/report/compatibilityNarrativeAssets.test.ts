@@ -351,6 +351,21 @@ test('透明性を対称な開示量や秘密の有無へ変換しない', () =>
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
 })
 
+test('読み取りにくさを嘘・秘密・好意の欠如と断定しない', () => {
+  const profile = (value: number, confidence = 0.55): CompatibilityProfileScore => ({
+    key: 'mystery_distance', value, confidence, contributingFacts: ['neptune-personal', 'transparency'],
+    directions: { selfToPartner: 0.8, partnerToSelf: 0.3 },
+  })
+  const low = compatibilityProfileBlock(profile(0.2), '見落としやすい違い')
+  const middle = compatibilityProfileBlock(profile(0.5), '見落としやすい違い')
+  const high = compatibilityProfileBlock(profile(0.8), '見落としやすい違い')
+  assert.deepEqual([low?.band, middle?.band, high?.band], ['low', 'middle', 'high'])
+  assert.equal(new Set([low?.text, middle?.text, high?.text]).size, 3)
+  assert.match(high?.text ?? '', /推測が増えやすい/)
+  assert.doesNotMatch([low?.text, middle?.text, high?.text].join(''), /嘘をつく|隠し事がある|好意がない/)
+  assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
+})
+
 test('感情の深さを安心感と混同しない文章へ変換する', () => {
   const profile = (value: number, confidence = 0.8): CompatibilityProfileScore => ({
     key: 'emotional_intimacy', value, confidence, contributingFacts: ['cross-aspect:moon'],

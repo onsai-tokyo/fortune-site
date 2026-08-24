@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
+import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
 
 const self = { shichuDay: '壬午', lifePathNumber: 1, sukuyo: '心', astrology: { western: { planets: { 月: { sign: '蟹座', degree: 10 }, 金星: { sign: '牡羊座', degree: 5 } } } } }
 const partner = { shichuDay: '乙亥', lifePathNumber: 5, sukuyo: '婁', astrology: { western: { planets: { 月: { sign: '蠍座', degree: 11 }, 火星: { sign: '天秤座', degree: 6 } } } } }
@@ -414,6 +414,27 @@ test('相性§30は片方向の根拠が欠ける場合に透明性を対称値�
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.equal(result.directions, undefined)
+})
+
+test('相性§11・§30は海王星と個人天体の接触を方向別の読み取りにくさへ変換する', () => {
+  const facts = [
+    { id: 'partner-neptune-self-moon', kind: 'cross-aspect', selfFactId: 'planet:月', partnerFactId: 'planet:海王星', axis: 'depth', signal: '月-海王星-conjunction', polarity: 1, strength: 0.8, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: '月:海王星:conjunction' },
+    { id: 'self-neptune-partner-mercury', kind: 'cross-aspect', selfFactId: 'planet:海王星', partnerFactId: 'planet:水星', axis: 'communication', signal: '水星-海王星-square', polarity: -1, strength: 0.3, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: '水星:海王星:square' },
+  ] as const
+  const result = computeMysteryDistanceProfile(facts, {
+    key: 'transparency', value: 0.6, confidence: 0.65, contributingFacts: ['open-self', 'open-partner'],
+    directions: { selfToPartner: 0.8, partnerToSelf: 0.4 },
+  })
+  assert.equal(result.key, 'mystery_distance')
+  assert.equal(result.confidence, 0.55)
+  assert.ok(result.directions!.selfToPartner > result.directions!.partnerToSelf)
+  assert.deepEqual(result.contributingFacts.sort(), ['open-partner', 'open-self', 'partner-neptune-self-moon', 'self-neptune-partner-mercury'])
+})
+
+test('海王星接触または方向別透明性がなければ読み取りにくさを推測しない', () => {
+  const transparent = { key: 'transparency' as const, value: 0.5, confidence: 0.65, contributingFacts: ['known'], directions: { selfToPartner: 0.5, partnerToSelf: 0.5 } }
+  assert.equal(computeMysteryDistanceProfile([], transparent).confidence, 0)
+  assert.equal(computeMysteryDistanceProfile([], { ...transparent, confidence: 0, directions: undefined }).confidence, 0)
 })
 
 test('相性§4は共同作業か目標志向の片方が根拠不足ならチーム感を推測しない', () => {

@@ -191,6 +191,12 @@ const transparencyText: Record<ScoreBand, (cue: string) => string> = {
   low: cue => `${cue}では、気持ちを言葉にするまでの時間が二方向で違いやすい関係です。沈黙を秘密や拒絶と決めず、待てる期限を伝えてください。`,
 }
 
+const mysteryDistanceText: Record<ScoreBand, (cue: string) => string> = {
+  high: cue => `${cue}では、相手の本音を読み取ろうとして推測が増えやすい方向があります。わからなさを嘘や拒絶と決めず、確認できる事実へ戻ってください。`,
+  middle: cue => `${cue}では、自然にわかる場面と、言葉で確かめる場面が方向ごとに分かれます。察した内容を結論にせず、一度問い直してください。`,
+  low: cue => `${cue}では、相手の意図を必要以上に推測せず、言葉と行動から関係を捉えやすい傾向があります。それでも確認は省かないでください。`,
+}
+
 const valueAlignmentText: Record<ScoreBand, (cue: string) => string> = {
   high: cue => `${cue}では、大切にしたい基準を共有しやすい二人です。似ているからこそ、変わった考えを言い直す時間を持ってください。`,
   middle: cue => `${cue}では、自然に重なる基準と、話して決める必要がある基準が混ざります。揃える項目を少数に絞ってください。`,
@@ -225,6 +231,7 @@ const profileTextByScore: Record<StandaloneProfileKey, Record<ScoreBand, (cue: s
   trust_stability: trustStabilityText,
   long_term_binding: longTermBindingText,
   transparency: transparencyText,
+  mystery_distance: mysteryDistanceText,
   emotional_intimacy: emotionalIntimacyText,
   repair_capacity: repairCapacityText,
   forgiveness_capacity: forgivenessCapacityText,
@@ -258,6 +265,7 @@ const profileSourceByScore: Record<StandaloneProfileKey, string> = {
   trust_stability: '相性§31・§34・§41・§57',
   long_term_binding: '相性§21・§28・§40・§41・§57',
   transparency: '相性§11・§29・§30・§31・§34',
+  mystery_distance: '相性§11・§30',
   emotional_intimacy: '相性§43・§53・§54',
   repair_capacity: '相性§7・§42・§53',
   forgiveness_capacity: '相性§7・§53・§54',
