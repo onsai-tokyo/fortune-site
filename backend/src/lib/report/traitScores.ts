@@ -70,6 +70,11 @@ export const ALL_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = [
   ...PERSONALITY_SCORE_KEYS, ...ATTRACTION_SCORE_KEYS, ...COMPATIBILITY_SCORE_KEYS, ...BINDING_SCORE_KEYS,
 ]
 
+/** 原典に判定根拠がなく、推測でルールを作らない保留キー。常に confidence: 0 のまま保持する。 */
+export const RESERVED_TRAIT_SCORE_KEYS = ['attraction_physical'] as const satisfies readonly TraitScoreKey[]
+export const REQUIRED_TRAIT_SCORE_KEYS: readonly TraitScoreKey[] = ALL_TRAIT_SCORE_KEYS
+  .filter(key => !RESERVED_TRAIT_SCORE_KEYS.includes(key as typeof RESERVED_TRAIT_SCORE_KEYS[number]))
+
 export interface TraitScore {
   key: TraitScoreKey
   value: number

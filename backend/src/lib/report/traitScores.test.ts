@@ -5,7 +5,7 @@ import { buildCalibrationFixtures } from './fixtures.js'
 import type { ReportFactV2 } from './factsV2.js'
 import { bootstrapTraitScoreScale, calibrateTraitScoreScale } from './traitScoreScale.js'
 import {
-  ALL_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact,
+  ALL_TRAIT_SCORE_KEYS, RESERVED_TRAIT_SCORE_KEYS, REQUIRED_TRAIT_SCORE_KEYS, TRAIT_SCORE_RULES, computeTraitScores, matchesTraitFact,
   normalizeTraitScore, traitScoreConfidence, type TraitScoreRule,
 } from './traitScores.js'
 import { auditRuleSourceDocument, extractRuleSourceSections, parseTraitScoreRuleSource, validateTraitScoreRules } from './traitScoreRuleValidation.js'
@@ -20,6 +20,14 @@ test('PR-2bは45+10+11+5の71スコアを一意に定義する', () => {
   assert.equal(ALL_TRAIT_SCORE_KEYS.length, 71)
   assert.equal(new Set(ALL_TRAIT_SCORE_KEYS).size, 71)
   assert.equal(TRAIT_SCORE_RULES.length, 11)
+})
+
+test('原典に根拠がない保留キーは推測ルールを要求せずconfidence 0を返す', () => {
+  assert.deepEqual(RESERVED_TRAIT_SCORE_KEYS, ['attraction_physical'])
+  assert.equal(REQUIRED_TRAIT_SCORE_KEYS.length, 70)
+  const scores = computeTraitScores([], TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
+  assert.equal(scores.attraction_physical.confidence, 0)
+  assert.deepEqual(scores.attraction_physical.contributingFacts, [])
 })
 
 test('校正用1000件は固定回帰fixtureと分離され再現可能である', () => {
@@ -121,7 +129,7 @@ test('PR-2cルールの空matcher・ゼロweight・完全重複・不足スコ�
 test('PR-2c確認済みルールは実在する根拠節を参照し許可された重みだけを使う', () => {
   const sourceDocument = readFileSync(new URL('./rules/PERSONALITY_RULES.md', import.meta.url), 'utf8')
   const availableSections = extractRuleSourceSections(sourceDocument)
-  assert.deepEqual([...availableSections], [1, 2, 7, 8])
+  assert.deepEqual([...availableSections], Array.from({ length: 58 }, (_, index) => index + 1))
   const result = validateTraitScoreRules(TRAIT_SCORE_RULES, {
     availableSections: { 性格: availableSections },
     requiredScores: ['social_extraversion', 'private_introversion', 'attraction_respect', 'attraction_status'],
