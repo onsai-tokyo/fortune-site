@@ -6,6 +6,7 @@ import Supabase
 
 @MainActor
 final class AuthStore: ObservableObject {
+    var onSessionCleared: (() -> Void)?
     @Published private(set) var session: Session?
     @Published var isWorking = false
     @Published var errorMessage: String?
@@ -240,6 +241,20 @@ final class AuthStore: ObservableObject {
     func signOut() {
         session = nil
         KeychainStore.delete(account: account)
+        clearLocalUserState()
+        onSessionCleared?()
+    }
+
+    private func clearLocalUserState() {
+        let defaults = UserDefaults.standard
+        for key in [
+            "fatelab.onboarding.step",
+            "fatelab.onboarding.draft",
+            "fatelab.onboarding.completedUserID",
+            "fatelab.landing.lastConversationID",
+        ] {
+            defaults.removeObject(forKey: key)
+        }
     }
 
     func deleteAccount() async -> Bool {

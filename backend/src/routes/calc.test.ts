@@ -343,7 +343,7 @@ test('恋愛年運は吉凶ではなく関係の出来事類型を組み合わ�
 test('1995-06-30 女性の関係転換から結婚までの流れを出生時刻なしでも再現する', () => {
   const timing = calcTimingCycles(1995, 6, 30, undefined, 0, 'female')
   const decade = timing.decades.find(item => item.startYear <= 2024 && item.endYear >= 2026)
-  assert.ok(decade?.themes.includes('縁がまとまりやすい'))
+  assert.ok(decade?.themes.includes('縁がまとまること'))
 
   const year2024 = timing.annual.find(item => item.year === 2024)
   assert.ok(year2024?.relationshipSignals.some(signal => signal.includes('配偶者星')))

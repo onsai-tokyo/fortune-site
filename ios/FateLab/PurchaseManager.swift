@@ -16,6 +16,17 @@ final class PurchaseManager: ObservableObject {
     private var updates: Task<Void, Never>?
     var isPremium: Bool { accessState == .premium }
 
+    /// Do not carry purchase UI state from one FATE LAB account to another.
+    func resetForAccountChange() {
+        authStore = nil
+        accessState = .unknown
+        hasStoreKitEntitlement = false
+        attemptedStoreSyncThisSession = false
+        consecutiveSyncFailures = 0
+        errorMessage = nil
+        isWorking = false
+    }
+
     init() {
         updates = Task { await listenForTransactions() }
         Task { await load() }

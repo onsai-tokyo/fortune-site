@@ -33,14 +33,15 @@ test('StoreKitは同期検知だけに使いプレミアム表示はサーバー
   assert.match(purchases, /accessState = status\.isPremium \? \.premium : \.standard/)
   assert.match(settings, /purchases\.accessState == \.unknown/)
   assert.doesNotMatch(settings, /purchases\.isPremium \|\|/)
-  assert.match(root, /let status = try await APIClient\.shared\.status\(auth: auth\)[\s\S]{0,500}Task \{ await purchases\.sync\(auth: auth\) \}/)
+  assert.match(root, /let status = try await APIClient\.shared\.status\(auth: auth\)/)
+  assert.match(root, /Task \{ await purchases\.sync\(auth: auth\) \}/)
   assert.doesNotMatch(root, /landingState = \.loading\s+await purchases\.sync/)
   assert.match(reading, /isPremium: premium/)
 })
 
 test('ログイン後の初期表示は非表示エラーやStoreKit同期でloadingに固定されない', () => {
   const root = read('ios/FateLab/RootView.swift')
-  assert.match(root, /catch \{\s+guard !Task\.isCancelled else \{ return \}\s+landingState = \.failed/)
+  assert.match(root, /catch \{\s+guard !Task\.isCancelled else \{ return \}\s+if case \.returning = landingState \{ return \}\s+landingState = \.failed/)
   assert.doesNotMatch(root, /guard userFacingMessage\(error\) != nil else \{ return \}/)
 })
 
@@ -277,17 +278,18 @@ test('相手の出生日時はUTC変換せず端末カレンダーの成分か�
   assert.match(partners, /dateComponents\(\[\.hour, \.minute\], from: value\)/)
 })
 
-test('ログイン後の初期表示は端末フラグでなく最新の保存済み鑑定から決める', () => {
+test('ログイン後は保存済み鑑定を優先し未鑑定ユーザーだけ本人別オンボーディングを出す', () => {
   const root = read('ios/FateLab/RootView.swift')
   const reading = read('backend/src/routes/reading.ts')
-  assert.doesNotMatch(root, /fatelab\.onboarding\.completed/)
+  assert.match(root, /fatelab\.onboarding\.completedUserID/)
+  assert.match(root, /onboardedUserID != \(auth\.session\?\.user\.id\.uuidString/)
   assert.match(root, /APIClient\.shared\.status\(auth: auth\)/)
   assert.match(root, /status\.latestConversationID/)
   assert.match(root, /SavedReadingView\(conversationID: initialConversationID\)/)
   assert.match(reading, /latestConversationId/)
   assert.match(reading, /reading_conversations.*order\('updated_at'/s)
   assert.match(reading, /\.or\('kind\.is\.null,kind\.eq\.personal,kind\.eq\.self'\)/)
-  assert.match(root, /ReadingListView\(chatsOnly: true\)/)
+  assert.match(root, /ChatHistoryRootView\(\)/)
 })
 
 test('基本鑑定は一種類だけ表示し質問は独立したチャット履歴へ保存する', () => {
@@ -298,6 +300,10 @@ test('基本鑑定は一種類だけ表示し質問は独立したチャット�
   assert.match(reading, /: 'personal'/)
   assert.match(reading, /readingRouter\.post\('\/conversations\/:id\/chat'/)
   assert.match(reading, /kind: 'chat'/)
+  assert.match(reading, /_sourceKind: source\.kind \?\? 'self'/)
+  assert.match(reading, /code === '23514'/)
+  assert.match(reading, /対話の保存設定が未反映です/)
+  assert.match(chat, /message\.contains\("対話"\)/)
   assert.match(list, /Section\("チャット履歴"\)/)
   assert.match(chat, /createChatConversation\(sourceID:/)
 })

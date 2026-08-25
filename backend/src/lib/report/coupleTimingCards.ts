@@ -57,6 +57,16 @@ function themeText(themes: string[]) {
   return themes.slice(0, 2).join('、') || '足元を整えること'
 }
 
+function primaryTheme(themes: string[]): string {
+  return themes[0] ?? '足元を整えること'
+}
+
+function secondaryThemeSentence(themes: string[], subject: 'あなた' | '相手'): string {
+  const second = themes[1]
+  if (!second) return ''
+  return `${subject}にはあわせて、${second}というテーマも重なります。`
+}
+
 function laterTitle(occurrence: number, selfTheme: string, partnerTheme: string) {
   const titles = [
     `${selfTheme}を先に言葉にし、${partnerTheme}の余白を守る年`,
@@ -131,12 +141,12 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear
     usedTitles.push(title)
     const pages: ReportCard['pages'] = [
       { role: 'opening', label: 'この年の二人', text: `${yearLead(point.year)}${copy.summary}` },
-      { role: 'core', label: 'あなたに起きること', text: `${point.year}年のあなたは「${selfTheme}」へ意識が向きます。変えたいことを小さく共有すると、相手も置いていかれません。` },
-      { role: 'core', label: '相手に起きること', text: `${point.year}年の相手は「${partnerTheme}」を大切にします。結論を急がず、何を守りたいかを聞く時間が二人を整えます。` },
+      { role: 'core', label: 'あなたに起きること', text: `${point.year}年のあなたは「${primaryTheme(point.selfThemes)}」へ意識が向きます。${secondaryThemeSentence(point.selfThemes, 'あなた')}変えたいことを小さく共有すると、相手も置いていかれません。` },
+      { role: 'core', label: '相手に起きること', text: `${point.year}年の相手は「${primaryTheme(point.partnerThemes)}」を大切にします。${secondaryThemeSentence(point.partnerThemes, '相手')}結論を急がず、何を守りたいかを聞く時間が二人を整えます。` },
       { role: 'scene', label: '関係が動く場面', text: point.kind === 'aligned' ? `${selfTheme}と${partnerTheme}が重なる場面で、二人は同じ話題へ自然と目を向けます。一緒に決めるほど、${point.year}年の信頼が形になります。` : `${selfTheme}と${partnerTheme}の優先順位が違う場面で、二人の歩幅が表に出ます。${point.year}年は別々の時間も約束に含めてください。` },
-      { role: 'shadow', label: 'すれ違いやすいとき', text: point.kind === 'self-heavy' ? `${selfTheme}を急ぐあなたの説明が後になると、${partnerTheme}を守りたい相手は不安になります。${point.year}年は途中の迷いも伝えてください。` : point.kind === 'partner-heavy' ? `${partnerTheme}へ向かう相手を待つ間、${selfTheme}を後回しにすると距離が広がります。${point.year}年はできることと難しいことを分けてください。` : `${selfTheme}と${partnerTheme}を分かっているはずという期待が、短い返事や沈黙を誤解へ変えます。${point.year}年は大切なことほど言葉を省かないでください。` },
+      { role: 'shadow', label: 'すれ違いやすいとき', text: point.kind === 'self-heavy' ? `${selfTheme}を急ぐあなたの説明が後になると、${partnerTheme}を守りたい相手は不安になります。${point.year}年は途中の迷いも伝えてください。` : point.kind === 'partner-heavy' ? `${partnerTheme}へ向かう相手を待つ間、${selfTheme}を後回しにすると距離が広がります。${point.year}年はできることと難しいことを分けてください。` : `${selfTheme}と${partnerTheme}を分かっているはずという期待があります。短い返事や沈黙を誤解へ変えないよう、${point.year}年は大切なことほど言葉を省かないでください。` },
       { role: 'exception', label: '見落としたくないこと', text: `${point.year}年は、${selfTheme}と${partnerTheme}が同じ速さで進まなくても構いません。互いの変化を知り、戻れる場所を保つことも二人の強さです。` },
-      { role: 'question', label: '二人で確かめること', text: `${point.year}年に向けて、${selfTheme}と${partnerTheme}のうち守りたいもの、変えてよいものを一つずつ話してください。違いが次の約束を具体的にします。` },
+      { role: 'question', label: '二人で確かめること', text: `${point.year}年に向けて、守りたいものと変えてよいものを話してください。${selfTheme}と${partnerTheme}を一つずつ確かめると、違いが次の約束を具体的にします。` },
       { role: 'closing', label: 'この年の鍵', text: point.kind === 'aligned' ? `${point.year}年は、${selfTheme}と${partnerTheme}を一緒に選ぶ回数を増やすこと。二人の意思が次の節目を支えます。` : `${point.year}年は、${selfTheme}と${partnerTheme}の違いをなくさず、扱い方を決めること。その約束が二人らしい距離をつくります。` },
     ]
     return withCardProvenance({
@@ -145,7 +155,11 @@ export function buildCoupleTimingCards(points: CoupleTurningPoint[], currentYear
       scope: 'couple',
       tab: 'timing',
       title,
-      summary: `${point.year}年、あなたは${selfTheme}へ、相手は${partnerTheme}へ意識が向きます。${copy.summary}`,
+      summary: [
+        `${point.year}年、あなたは${primaryTheme(point.selfThemes)}へ意識が向きます。`,
+        `相手は${primaryTheme(point.partnerThemes)}へ向かいます。`,
+        copy.summary,
+      ].join(''),
       tags: ['二人の節目', point.kind],
       period: { label: `${point.year === firstFutureYear ? 'これから　' : ''}${point.year}年（あなた${point.selfAge}歳・相手${point.partnerAge}歳）` },
       pages,

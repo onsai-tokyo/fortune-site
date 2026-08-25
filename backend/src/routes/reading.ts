@@ -247,7 +247,7 @@ readingRouter.post('/conversations/:id/chat', requireAuth, async (req: AuthReque
     if (source.kind === 'chat') { res.json({ id: source.id, reused: true }); return }
     const question = String(req.body?.question ?? '').trim()
     if (!question) { res.status(400).json({ error: '質問を入力してください' }); return }
-    const birthData = { ...(source.birth_data as Record<string, unknown>), _sourceConversationId: source.id, _sourceKind: source.kind ?? 'personal' }
+    const birthData = { ...(source.birth_data as Record<string, unknown>), _sourceConversationId: source.id, _sourceKind: source.kind ?? 'self' }
     const { data, error } = await db.from('reading_conversations').insert({
       user_id: req.userId,
       title: chatReadingTitle(question),
@@ -263,14 +263,26 @@ readingRouter.post('/conversations/:id/chat', requireAuth, async (req: AuthReque
     if (error) throw error
     res.status(201).json({ id: data.id })
   } catch (error) {
-    console.error('Create chat conversation failed:', error)
+    const code = (error as { code?: string } | null)?.code
+    console.error('Create chat conversation failed:', {
+      correlationId: correlationId(req),
+      userId: req.userId,
+      sourceId: req.params.id,
+      code,
+      message: error instanceof Error ? error.message : String(error),
+    })
+    if (code === '23514') {
+      res.status(500).json({ error: '対話の保存設定が未反映です。時間をおいてお試しください。' })
+      return
+    }
     res.status(500).json({ error: '新しい対話を作成できませんでした' })
   }
 })
 
 readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
-  const { data: conversation } = await db.from('reading_conversations').select('*')
+  const { data: conversation } = await db.from('reading_conversations')
+    .select('id,secret_token,title,kind,is_saved,partner_profile_id,birth_data,report_text,source_section,source_year,created_at,updated_at')
     .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
@@ -282,9 +294,13 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('report_text,calculated_data,birth_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    .select('report_text,calculated_data,birth_data,kind,updated_at').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  const etag = `W/"${req.params.id}-${data.updated_at}"`
+  res.setHeader('ETag', etag)
+  res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate')
+  if (req.headers['if-none-match'] === etag) { res.status(304).end(); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
   const birth = data.birth_data as { _sourceKind?: string } | null
   const expectedScope = data.kind === 'compatibility' || birth?._sourceKind === 'compatibility' ? 'couple' : 'self'

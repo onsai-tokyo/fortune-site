@@ -167,6 +167,29 @@ func errorStateKind(_ error: Error) -> FLErrorState.Kind {
 }
 extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
 
+/// Fixed brand header shared by the five tab roots.
+struct FateAppHeader: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            FateMark(size: 24)
+            Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(3)
+            Spacer()
+        }
+        .padding(.horizontal, FateSpacing.screenH)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .background(FateTheme.canvas)
+        .overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .bottom)
+    }
+}
+
+extension View {
+    func fateAppHeader() -> some View {
+        toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) { FateAppHeader() }
+    }
+}
+
 struct DateMenuPicker: View {
     @Binding var date: Date
     private let calendar = Calendar(identifier: .gregorian)

@@ -12,6 +12,7 @@ struct SavedReadingView: View {
     @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var cards: [ReadingCard] = []
     @State private var chartSections: [ChartSection] = []
+    @State private var elapsed = 0
 
     var body: some View {
         ScrollView {
@@ -21,9 +22,15 @@ struct SavedReadingView: View {
                         ProgressView().tint(FateTheme.ink)
                         Text("鑑定書を開いています")
                             .font(.system(size: 18, weight: .medium))
-                        Text("保存した内容を読み込んでいます。")
+                        Text(elapsed < 3 ? "保存した内容を読み込んでいます。"
+                             : elapsed < 8 ? "内容を整えています。もう少しお待ちください。"
+                             : "通信に時間がかかっています。")
                             .font(.caption)
                             .foregroundStyle(FateTheme.muted)
+                        if elapsed >= 8 {
+                            Button("もう一度読み込む") { Task { await load() } }
+                                .buttonStyle(FLSecondaryButtonStyle())
+                        }
                     }
                     .frame(maxWidth: .infinity, minHeight: 520)
                 } else if let detail {
@@ -57,6 +64,15 @@ struct SavedReadingView: View {
         .background(FateTheme.canvas)
         .fateScreenTitle(detail?.conversation.title ?? (readingKind == "compatibility" ? "二人の関係鑑定" : "あなたの鑑定"))
         .task { await load() }
+        .task(id: isLoading) {
+            guard isLoading else { return }
+            elapsed = 0
+            while isLoading && !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                elapsed += 1
+            }
+        }
         .refreshable { await load() }
     }
 

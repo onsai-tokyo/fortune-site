@@ -26,6 +26,7 @@
 		DDB2D7B49387DFF5E346A98B /* FateLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C6F120A970A549A5C1422D /* FateLabApp.swift */; };
 		DEF47B746CFA130762CDB271 /* ScreenshotGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E044EBDE938EC447F94016 /* ScreenshotGalleryView.swift */; };
 		E3E37AC74D00375A8F15D4D0 /* ReadingChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107DD9115ABC222F720551D8 /* ReadingChatView.swift */; };
+		B55C7A710000000000000001 /* ChatHistoryRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C7A710000000000000002 /* ChatHistoryRootView.swift */; };
 		E62334A3D3DBFC25A5549F2D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A6215BD9CC8E89991688F6 /* ProfileView.swift */; };
 		E788BA2BE4650ACA834E75ED /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4074C929BE92C04BAD98AA2A /* AuthView.swift */; };
 		E8F0E89F77689CD561F075A7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067B14D891149931612DB9F3 /* Theme.swift */; };
@@ -38,6 +39,7 @@
 		0809C54FA65C68BB48231A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerProfilesView.swift; sourceTree = "<group>"; };
 		107DD9115ABC222F720551D8 /* ReadingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingChatView.swift; sourceTree = "<group>"; };
+		B55C7A710000000000000002 /* ChatHistoryRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistoryRootView.swift; sourceTree = "<group>"; };
 		132963A65C3787E06DD392A5 /* InsightHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightHubView.swift; sourceTree = "<group>"; };
 		1CD011C8691551175BE93F6B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDocumentView.swift; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 				96A6215BD9CC8E89991688F6 /* ProfileView.swift */,
 				2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */,
 				107DD9115ABC222F720551D8 /* ReadingChatView.swift */,
+				B55C7A710000000000000002 /* ChatHistoryRootView.swift */,
 				73347D48ADC44E658905805A /* ReadingListView.swift */,
 				214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */,
 				F165C70345759947694F4DD8 /* RootView.swift */,
@@ -212,6 +215,7 @@
 				E62334A3D3DBFC25A5549F2D /* ProfileView.swift in Sources */,
 				9CD8CB80D084C6FABE7C4C4A /* PurchaseManager.swift in Sources */,
 				E3E37AC74D00375A8F15D4D0 /* ReadingChatView.swift in Sources */,
+				B55C7A710000000000000001 /* ChatHistoryRootView.swift in Sources */,
 				01B53CBEFD02CF022C660DB3 /* ReadingListView.swift in Sources */,
 				686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */,
 				50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */,

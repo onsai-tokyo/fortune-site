@@ -29,6 +29,19 @@ interface PairContext {
   mutualUnderstanding?: MutualUnderstandingProfile
 }
 
+type SummaryShape = (params: { relationshipLabel: string; axisLead: string; title: string; difference: string }) => string
+
+const summaryShapes: SummaryShape[] = [
+  ({ title, difference }) => `${title}。この章は、${difference}をどの順序で扱うかから読み解きます。`,
+  ({ axisLead, title }) => `${axisLead}場面が来たとき、二人の間で何が起きているのか。「${title}」を手がかりに見ていきます。`,
+  ({ axisLead, difference }) => `${axisLead}とき、あなたが先に気づくのは${difference}のほうです。その理由をここで扱います。`,
+  ({ axisLead, title }) => `相手の側から見ると、${axisLead}状況は少し違って映ります。「${title}」という形で現れる部分です。`,
+  ({ relationshipLabel, difference }) => `${relationshipLabel}として時間が積み重なるほど、${difference}の扱い方が関係の質を決めていきます。`,
+  ({ title }) => `「${title}」。この一文が当てはまるかどうかを、二人の実際の場面で確かめていきます。`,
+  ({ axisLead, difference }) => `${axisLead}ときに起きることと、${difference}が原因で起きることは違います。この章はその線引きを扱います。`,
+  ({ relationshipLabel, title }) => `${relationshipLabel}の二人にとって、「${title}」は日常のどこに現れるのか。ここから読み進めてください。`,
+]
+
 export interface CompatibilityTraitScoreBundle {
   self: TraitScoreSet
   partner: TraitScoreSet
@@ -380,7 +393,7 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
   const context = pairContext(self, partner, relationshipType, relationshipLabel, scoreBundle)
   const selected = relationshipType === 'romantic' ? specs : specs.filter(([id]) => id !== 'compat-marriage')
   const axisPlan = chapterAxisPlan(selected.map(([id]) => id), context)
-  const cards = selected.map(([id, title]) => {
+  const cards = selected.map(([id, title], index) => {
     const chapterAxis = axisPlan.get(id) ?? axisForChapter(id, context)
     const chapterScores = pairScoresForChapter(id, context)
     const chapterProfileKeys: CompatibilityProfileScore['key'][] = id === 'compat-repair'
@@ -394,9 +407,15 @@ export function buildDeterministicCompatibilityReport(self: unknown, partner: un
       : id === 'compat-beginning' ? ['conversational_flow', 'humor_compatibility', 'friendship_compatibility'] : []
     const chapterProfiles = context.compatibilityProfile.filter(score => chapterProfileKeys.includes(score.key))
     const chapterUnderstanding = id === 'compat-caution' ? context.mutualUnderstanding : undefined
-    const resolvedTitle = `${axisLead[chapterAxis]}とき、${title}`
+    const resolvedTitle = title
+    const summary = summaryShapes[index % summaryShapes.length]({
+      relationshipLabel,
+      axisLead: axisLead[chapterAxis],
+      title,
+      difference: context.difference,
+    })
     return withCardProvenance({ id, kind: 'essence', scope: 'couple', tab: 'essence', title: resolvedTitle,
-    summary: `${relationshipLabel}の二人には、${axisLead[chapterAxis]}という特徴があります。この章では「${title}」を手がかりに、${context.difference}を扱う順序を読み解きます。`, tags: ['相性', relationshipLabel], period: null,
+    summary, tags: ['相性', relationshipLabel], period: null,
     pages: pagesFor(id, context, chapterAxis),
     evidence: [
       ...context.evidence,

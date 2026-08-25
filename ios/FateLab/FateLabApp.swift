@@ -32,5 +32,8 @@ struct FateLabApp: App {
             .tint(FateTheme.ink)
             .preferredColorScheme(.light)
             .onOpenURL { url in Task { await auth.handleAuthCallback(url) } }
+            .onAppear {
+                auth.onSessionCleared = { purchases.resetForAccountChange() }
+            }
     }
 }

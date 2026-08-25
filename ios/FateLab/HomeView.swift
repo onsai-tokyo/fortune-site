@@ -72,9 +72,7 @@ struct HomeView: View {
 
     private var inputForm: some View {
         VStack(alignment: .center, spacing: 0) {
-            HStack { FateMark(size: 24); Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(3); Spacer(); Image(systemName: "person.crop.circle").font(.title2).accessibilityLabel("プロフィール") }
-            .padding(.bottom, 48)
-            Text("鑑定する").font(.system(size: 30, weight: .bold))
+            Text("鑑定する").font(.system(size: 30, weight: .bold)).padding(.top, 8)
             Text("生まれたときの情報から、最初の鑑定を作ります。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 18)
             BirthProfileFields(date: $input.date, birthTime: $input.birthTime, birthplace: $input.birthplace, gender: $input.gender)
             .padding(.top, 32).frame(maxWidth: 520)

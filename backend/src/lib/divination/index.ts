@@ -303,9 +303,9 @@ function timingThemes(tenGod: string, branchRelation?: string): string[] {
     正印: '学びや支援を受け取り、次の土台を固めること',
   }
   const themes = [themeByTenGod[tenGod] ?? '自分の基準を確かめ、活動の形を整えること']
-  if (branchRelation === '六合') themes.push('縁がまとまりやすい')
-  if (branchRelation === '冲') themes.push('移動・配置転換・関係の組み替え')
-  if (branchRelation === '破') themes.push('隠れていたずれや前提の見直し')
+  if (branchRelation === '六合') themes.push('縁がまとまること')
+  if (branchRelation === '冲') themes.push('移動や配置転換で関係を組み替えること')
+  if (branchRelation === '破') themes.push('隠れていたずれや前提を見直すこと')
   return themes
 }
 

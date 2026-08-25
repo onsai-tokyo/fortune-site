@@ -5,6 +5,7 @@ struct ReadingChatView: View {
     @EnvironmentObject private var purchases: PurchaseManager
     @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
+    let contextTitle: String?
     @State private var activeConversationID: UUID
     @State private var detail: ConversationDetail?
     @State private var messages: [ReadingMessage] = []
@@ -25,9 +26,11 @@ struct ReadingChatView: View {
     @State private var isSaved = false
     @State private var isSaving = false
     @State private var saveMessage: String?
+    @FocusState private var isInputFocused: Bool
 
-    init(conversationID: UUID) {
+    init(conversationID: UUID, contextTitle: String? = nil) {
         self.conversationID = conversationID
+        self.contextTitle = contextTitle
         _activeConversationID = State(initialValue: conversationID)
     }
 
@@ -36,6 +39,11 @@ struct ReadingChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 18) {
+                        if let contextTitle, !contextTitle.isEmpty {
+                            Text("「\(contextTitle)」について質問できます")
+                                .font(.caption)
+                                .foregroundStyle(FateTheme.muted)
+                        }
                         if let status, !status.premium {
                             freeUsageStatus(status)
                         }
@@ -68,6 +76,7 @@ struct ReadingChatView: View {
                     }.padding(18)
                 }
                 .defaultScrollAnchor(.bottom)
+                .scrollDismissesKeyboard(.interactively)
                 .simultaneousGesture(DragGesture().onChanged { _ in shouldFollowLatest = false })
                 .onChange(of: forceScrollRevision) { _, _ in withAnimation { proxy.scrollTo("bottom") } }
                 .onChange(of: streamRevision) { _, _ in
@@ -98,6 +107,7 @@ struct ReadingChatView: View {
                 }
                 HStack(alignment: .bottom, spacing: 6) {
                     TextField("鑑定について聞く…", text: $input, axis: .vertical)
+                        .focused($isInputFocused)
                         .lineLimit(1...5).padding(.leading, 12).padding(.vertical, 12)
                     Button {
                         if isWorking { streamTask?.cancel(); return }
@@ -125,6 +135,7 @@ struct ReadingChatView: View {
             didLoad = true
             Task { await load() }
         }
+        .onDisappear { isInputFocused = false }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showSourceReport = true } label: { Image(systemName: "doc.text") }
@@ -230,7 +241,6 @@ struct ReadingChatView: View {
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty else { return }
         let needsNewThread = detail?.conversation.kind != "chat" && messages.isEmpty
-        var createdNewThread = false
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true
         messages.append(ReadingMessage(id: nil, role: "user", content: question, createdAt: nil))
@@ -243,7 +253,6 @@ struct ReadingChatView: View {
                 activeConversationID = try await APIClient.shared.createChatConversation(sourceID: activeConversationID, question: question, auth: auth)
                 detail = try await APIClient.shared.conversation(id: activeConversationID, auth: auth)
                 isSaved = true
-                createdNewThread = true
             }
             var didFinish = false
             for try await event in APIClient.shared.askStream(conversationID: activeConversationID, question: question, auth: auth) {
@@ -256,10 +265,6 @@ struct ReadingChatView: View {
                 }
             }
             if !didFinish { throw CancellationError() }
-            if createdNewThread {
-                tabRouter.chatConversationID = activeConversationID
-                tabRouter.chatContextTitle = question
-            }
             await loadStatus()
         } catch {
             messages.removeSubrange(firstNewIndex..<messages.count)
@@ -276,6 +281,10 @@ struct ReadingChatView: View {
         if isMissingConversation(error) {
             conversationMissing = true
             errorMessage = "この鑑定を開き直してください。"
+        } else if case APIError.http(status: 500, message: let message) = error,
+                  message.contains("対話") {
+            conversationMissing = false
+            errorMessage = message
         } else {
             conversationMissing = false
             errorMessage = userFacingMessage(error)

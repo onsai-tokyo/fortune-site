@@ -7,6 +7,9 @@ struct RootView: View {
     @StateObject private var tabRouter = AppTabRouter()
     @State private var showingSplash = true
     @State private var landingState: LandingState = .loading
+    @State private var pendingInput: BirthInput?
+    @AppStorage("fatelab.landing.lastConversationID") private var cachedConversationID = ""
+    @AppStorage("fatelab.onboarding.completedUserID") private var onboardedUserID = ""
 
     var body: some View {
         Group {
@@ -20,9 +23,16 @@ struct RootView: View {
                     ProgressView("鑑定書を確認しています…").tint(FateTheme.ink)
                         .frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
                 case .newUser:
-                    mainTabs(latestConversationID: nil)
+                    if onboardedUserID != (auth.session?.user.id.uuidString ?? "") {
+                        OnboardingView { input in
+                            onboardedUserID = auth.session?.user.id.uuidString ?? ""
+                            pendingInput = input
+                        }
+                    } else {
+                        mainTabs(latestConversationID: nil, initialInput: pendingInput)
+                    }
                 case .returning(let conversationID):
-                    mainTabs(latestConversationID: conversationID)
+                    mainTabs(latestConversationID: conversationID, initialInput: nil)
                 case .failed(let kind):
                     FLErrorState(kind: kind) { Task { await loadLandingState() } }
                         .padding(24).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas)
@@ -34,16 +44,16 @@ struct RootView: View {
             AuthView()
         }
         .environmentObject(tabRouter)
-        .task { try? await Task.sleep(for: .seconds(1)); withAnimation(.easeOut(duration: 0.22)) { showingSplash = false } }
+        .task { try? await Task.sleep(for: .milliseconds(400)); withAnimation(.easeOut(duration: 0.22)) { showingSplash = false } }
         .task(id: auth.session?.user.id) { await loadLandingState() }
     }
 
-    private func mainTabs(latestConversationID: UUID?) -> some View {
+    private func mainTabs(latestConversationID: UUID?, initialInput: BirthInput?) -> some View {
         TabView(selection: Binding(
             get: { tabRouter.selectedTab },
             set: { tabRouter.selectTab($0) }
         )) {
-            ResettableTabStack(tab: .you) { YourReadingRootView(initialConversationID: latestConversationID) }
+            ResettableTabStack(tab: .you) { YourReadingRootView(initialConversationID: latestConversationID, initialInput: initialInput) }
                 .tabItem { Label { Text("あなた") } icon: { Image(systemName: "person").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.you)
             ResettableTabStack(tab: .couple) { PartnerProfilesView() }
                 .tabItem { Label { Text("ふたり") } icon: { Image(systemName: "person.2").symbolVariant(.none).symbolRenderingMode(.monochrome) } }.tag(AppTab.couple)
@@ -60,18 +70,28 @@ struct RootView: View {
 
     private func loadLandingState() async {
         guard auth.session != nil else { landingState = .loading; return }
-        landingState = .loading
+        if case .loading = landingState, let cached = UUID(uuidString: cachedConversationID) {
+            landingState = .returning(cached)
+        } else {
+            landingState = .loading
+        }
         do {
             let status = try await APIClient.shared.status(auth: auth)
             guard !Task.isCancelled else { return }
-            if let conversationID = status.latestConversationID { landingState = .returning(conversationID) }
-            else { landingState = .newUser }
+            if let conversationID = status.latestConversationID {
+                cachedConversationID = conversationID.uuidString
+                landingState = .returning(conversationID)
+            } else {
+                cachedConversationID = ""
+                landingState = .newUser
+            }
 
             // StoreKit/App Store sync can wait on the App Store independently of the
             // reading status request. It must never block the post-login landing UI.
             Task { await purchases.sync(auth: auth) }
         } catch {
             guard !Task.isCancelled else { return }
+            if case .returning = landingState { return }
             landingState = .failed(errorStateKind(error))
         }
     }
@@ -90,7 +110,7 @@ private struct ResettableTabStack<Content: View>: View {
     @EnvironmentObject private var tabRouter: AppTabRouter
     let tab: AppTab
     @ViewBuilder let content: Content
-    var body: some View { NavigationStack { content }.id(tabRouter.resetToken(for: tab)) }
+    var body: some View { NavigationStack { content.fateAppHeader() }.id(tabRouter.resetToken(for: tab)) }
 }
 
 private struct ReadingLibraryRootView: View {
@@ -104,18 +124,20 @@ private struct ReadingLibraryRootView: View {
 private struct YourReadingRootView: View {
     @EnvironmentObject private var tabRouter: AppTabRouter
     let initialConversationID: UUID?
+    let initialInput: BirthInput?
     @State private var showsInput: Bool
     @State private var showsList = false
 
-    init(initialConversationID: UUID?) {
+    init(initialConversationID: UUID?, initialInput: BirthInput?) {
         self.initialConversationID = initialConversationID
+        self.initialInput = initialInput
         _showsInput = State(initialValue: initialConversationID == nil)
     }
 
     var body: some View {
         Group {
             if showsInput {
-                HomeView()
+                HomeView(initialInput: initialInput, autoGenerate: initialInput != nil)
             } else if showsList {
                 ReadingListView { showsInput = true; showsList = false }
             } else if let initialConversationID {
@@ -179,40 +201,25 @@ final class AppTabRouter: ObservableObject {
 }
 
 private struct AIChatTabView: View {
-    @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var tabRouter: AppTabRouter
 
     var body: some View {
-        Group {
-            if let conversationID = tabRouter.chatConversationID {
-                VStack(spacing: 0) {
-                    Text(tabRouter.chatContextTitle.map { "「\($0)」について質問できます" } ?? "")
-                        .font(.caption).foregroundStyle(FateTheme.muted)
-                        .padding(.horizontal, 14).padding(.vertical, tabRouter.chatContextTitle == nil ? 0 : 8)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: tabRouter.chatContextTitle == nil ? 0 : nil)
-                        .opacity(tabRouter.chatContextTitle == nil ? 0 : 1)
-                    ReadingChatView(conversationID: conversationID)
-                        .id(conversationID)
-                }
-            } else if auth.session == nil {
-                ContentUnavailableView {
-                    Label("対話", systemImage: "bubble.left.and.bubble.right")
-                } description: {
-                    Text("ログインすると、鑑定結果について質問できます。")
-                } actions: {
-                    Button("ログインする") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
-                }
-            } else {
-                ReadingListView(chatsOnly: true)
-            }
-        }
+        ChatHistoryRootView()
         .background(FateTheme.canvas)
-        .toolbar {
-            if tabRouter.chatConversationID != nil {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("履歴") { tabRouter.showChatHistory() }
+        .navigationDestination(
+            isPresented: Binding(
+                get: { tabRouter.chatConversationID != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        tabRouter.chatConversationID = nil
+                        tabRouter.chatContextTitle = nil
+                    }
                 }
+            )
+        ) {
+            if let conversationID = tabRouter.chatConversationID {
+                ReadingChatView(conversationID: conversationID, contextTitle: tabRouter.chatContextTitle)
+                    .id(conversationID)
             }
         }
     }

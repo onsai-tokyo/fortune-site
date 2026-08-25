@@ -77,6 +77,10 @@ struct APIClient {
                 currentRequest.timeoutInterval = min(40, max(0.1, remainingSeconds))
                 let (data, response) = try await URLSession.shared.data(for: currentRequest)
                 guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+                if http.statusCode == 304,
+                   let cached = URLCache.shared.cachedResponse(for: currentRequest)?.data {
+                    return cached
+                }
                 if 200..<300 ~= http.statusCode { return data }
 
                 if http.statusCode == 401, let auth, !retriedAfterRefresh {
