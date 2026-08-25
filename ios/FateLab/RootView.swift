@@ -61,13 +61,17 @@ struct RootView: View {
     private func loadLandingState() async {
         guard auth.session != nil else { landingState = .loading; return }
         landingState = .loading
-        await purchases.sync(auth: auth)
         do {
             let status = try await APIClient.shared.status(auth: auth)
+            guard !Task.isCancelled else { return }
             if let conversationID = status.latestConversationID { landingState = .returning(conversationID) }
             else { landingState = .newUser }
+
+            // StoreKit/App Store sync can wait on the App Store independently of the
+            // reading status request. It must never block the post-login landing UI.
+            Task { await purchases.sync(auth: auth) }
         } catch {
-            guard userFacingMessage(error) != nil else { return }
+            guard !Task.isCancelled else { return }
             landingState = .failed(errorStateKind(error))
         }
     }

@@ -33,8 +33,15 @@ test('StoreKitは同期検知だけに使いプレミアム表示はサーバー
   assert.match(purchases, /accessState = status\.isPremium \? \.premium : \.standard/)
   assert.match(settings, /purchases\.accessState == \.unknown/)
   assert.doesNotMatch(settings, /purchases\.isPremium \|\|/)
-  assert.match(root, /await purchases\.sync\(auth: auth\)/)
+  assert.match(root, /let status = try await APIClient\.shared\.status\(auth: auth\)[\s\S]{0,500}Task \{ await purchases\.sync\(auth: auth\) \}/)
+  assert.doesNotMatch(root, /landingState = \.loading\s+await purchases\.sync/)
   assert.match(reading, /isPremium: premium/)
+})
+
+test('ログイン後の初期表示は非表示エラーやStoreKit同期でloadingに固定されない', () => {
+  const root = read('ios/FateLab/RootView.swift')
+  assert.match(root, /catch \{\s+guard !Task\.isCancelled else \{ return \}\s+landingState = \.failed/)
+  assert.doesNotMatch(root, /guard userFacingMessage\(error\) != nil else \{ return \}/)
 })
 
 test('本人の鑑定操作はservice role clientを使用しない', () => {
