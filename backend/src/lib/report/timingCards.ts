@@ -4,7 +4,7 @@ import { titlesAreSimilar } from './aiWriter.js'
 import { japanDateParts } from '../japanDate.js'
 import { periodLabel } from '../age.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
-import { badgeLabel, lifeEvent, pickDeterministic, type LifeEventKey } from './lifeEventLabels.js'
+import { badgeLabel, lifeEvent, type LifeEventKey } from './lifeEventLabels.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
@@ -147,44 +147,34 @@ function summaryFor(badge: string, lead: string) {
   return `${badge}。${lead}`
 }
 
-function pagesFor(
-  input: ReportInput,
-  item: Annual,
-  primary: LifeEventKey,
-  secondary: LifeEventKey | null,
-  badge: string,
-  usedOutcomes: Set<string>,
-): ReportCardPage[] {
-  const main = lifeEvent(primary)
-  const sub = secondary ? lifeEvent(secondary) : null
-  const seed = `${input.birthDate}:${item.year}`
-  const outcomes = pickDeterministic(main.outcomes, seed, 3, usedOutcomes)
-  const subOutcome = sub ? pickDeterministic(sub.outcomes, `${seed}:sub`, 1, usedOutcomes)[0] : null
-  const supportingOutcome = subOutcome ?? pickDeterministic(main.outcomes, `${seed}:support`, 1, usedOutcomes)[0]
-  const action = pickDeterministic(main.actions, `${seed}:action`, 1)[0]
-  const mood = pickDeterministic(main.moods, `${seed}:mood`, 1)[0]
-  const caution = pickDeterministic(main.cautions, `${seed}:caution`, 1)[0]
-  const exception = pickDeterministic(main.exceptions, `${seed}:exception`, 1)[0]
-  const closing = pickDeterministic(main.closings, `${seed}:closing`, 1)[0]
-
+function pagesFor(input: ReportInput, item: Annual, decade?: Decade): ReportCardPage[] {
+  const themes = unique(item.themes)
+  const relationships = eventValuesFor(item)
+  const core = themes.join('・') || '優先順位の切り替え'
+  const events = relationships.join('・') || `${core}に選択が生まれる`
+  const longTerm = decade ? `${decade.startYear}〜${decade.endYear}年の${decade.themes.join('・') || '長期テーマ'}` : '前後の年から続く流れ'
+  const flags = eventFlags([...themes, ...relationships])
+  const scene = flags.work ? '依頼、担当範囲、働く場所を決める場面' : flags.meeting || flags.marriage ? '出会い方、約束、暮らし方を話す場面' : flags.move ? '住む場所や日々の時間配分を変える場面' : '今まで通り続けるか、方法を変えるか選ぶ場面'
+  const caution = flags.marriage ? '気持ちだけで決めず、住居・お金・仕事の条件を分けて確認すること' : flags.work ? '期待に全部応えず、引き受ける範囲と期限を先に決めること' : flags.separation ? '一度の感情で結論を急がず、続ける条件と離れる条件を言葉にすること' : '変える項目を一度に増やさず、生活を守る条件から決めること'
+  const action = flags.move ? '候補地、費用、移動時間を並べ、日常が続く案を一つ選ぶ' : flags.meeting || flags.marriage || flags.separation ? '相手に求める約束と、自分が守れる約束を三つずつ書く' : flags.work ? '引き受ける仕事、断る仕事、学ぶ仕事を一つずつ決める' : '続けること、やめること、試すことを一つずつ決める'
+  const lens = personalLens(input.shichuDay)
   return [
-    { role: 'opening', label: 'この年をひとことで', text: `${item.year}年は「${badge}」。${main.lead}` },
-    { role: 'core', label: '起こりやすいこと', text: `${item.year}年\n${outcomes.map(line => `・${line}`).join('\n')}` },
-    { role: 'scene', label: subOutcome ? 'あわせて動きやすいこと' : '日常に現れやすいこと', text: `${item.year}年。・${supportingOutcome}` },
-    { role: 'scene', label: '気持ちの動き', text: `${item.year}年。${mood}` },
-    { role: 'shadow', label: '気をつけたいこと', text: `${item.year}年。${caution}` },
-    { role: 'exception', label: '同じ年でも分かれること', text: `${item.year}年。${exception}` },
-    { role: 'action', label: 'この年にやること', text: `${item.year}年。${action}こと。それだけで十分です。` },
-    { role: 'closing', label: '来年へつながること', text: `${item.year}年。${closing}` },
+    { role: 'opening', label: 'この年の焦点', text: `${item.year}年は、${events}が動きやすい年です。` },
+    { role: 'core', label: '起こりやすいこと', text: `${item.year}年は${events}という動きが日常の決断に表れ、${lens}が選び方の支えになります。` },
+    { role: 'scene', label: '現れやすい場面', text: `${item.year}年は${scene}で、${core}のうち何を優先するかがはっきりします。` },
+    { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、${item.year}年の${core}が具体的な出来事になります。` },
+    { role: 'shadow', label: '急がないこと', text: `${item.year}年の${core}では、${caution}` },
+    { role: 'exception', label: '同じ年でも分かれること', text: `${item.year}年は、同じ出来事が来ても引き受け方で結果が変わります。急いで決めず、自分が続けられる形かを確かめてください。` },
+    { role: 'action', label: 'この年に決めること', text: `${item.year}年は、${action}ことから始めてください。` },
+    { role: 'closing', label: '次の年へ残すもの', text: `${item.year}年の${core}で得た基準を一つ言葉にすると、翌年の判断がぶれにくくなります。` },
   ]
 }
 
-function card(input: ReportInput, item: Annual, badge: string, secondary: LifeEventKey | null, usedOutcomes: Set<string>, decade?: Decade): ReportCard {
+function card(input: ReportInput, item: Annual, badge: string, secondary: LifeEventKey | null, decade?: Decade): ReportCard {
   const values = unique([...item.themes, ...eventValuesFor(item)])
-  const primary = primaryEventKey(values)
-  const pages = pagesFor(input, item, primary, secondary, badge, usedOutcomes)
+  const pages = pagesFor(input, item, decade)
   const details = unique([item.kanshi, item.tenGod, ...(item.relationshipSignals ?? []), ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
-  const lead = lifeEvent(primary).lead
+  const lead = lifeEvent(primaryEventKey(values)).lead
   const title = secondary ? `${badge}｜${lifeEvent(secondary).label}が重なる年` : badge
   return {
     id: `turning-year-${item.year}`, kind: 'timing', scope: 'self', tab: 'timing', title, summary: summaryFor(badge, lead),
@@ -213,7 +203,6 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
   const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
   const results: ReportCard[] = []
   const occurrences = new Map<LifeEventKey, number>()
-  const usedOutcomes = new Set<string>()
   for (const item of selected) {
     const values = unique([...item.themes, ...eventValuesFor(item)])
     const primary = primaryEventKey(values)
@@ -221,7 +210,7 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
     occurrences.set(primary, occurrence + 1)
     const badge = badgeLabel(primary, occurrence)
     const secondary = secondaryEventKey(values, primary)
-    const result = card(input, item, badge, secondary, usedOutcomes, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
+    const result = card(input, item, badge, secondary, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
     const previousTitles = results.map(previous => previous.title)
     const title = previousTitles.every(previous => !titlesAreSimilar(previous, result.title))
       ? result.title
