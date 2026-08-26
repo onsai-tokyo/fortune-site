@@ -45,6 +45,13 @@ test('ログイン後の初期表示は非表示エラーやStoreKit同期でloa
   assert.doesNotMatch(root, /guard userFacingMessage\(error\) != nil else \{ return \}/)
 })
 
+test('新規ユーザーは出生情報の入力後にあなたタブで鑑定を自動開始する', () => {
+  const root = read('ios/FateLab/RootView.swift')
+  assert.match(root, /OnboardingView \{ input in\s+pendingInput = input\s+tabRouter\.openYourReading\(\)\s+onboardedUserID =/)
+  assert.match(root, /func openYourReading\(\) \{\s+selectedTab = \.you/)
+  assert.match(root, /HomeView\(initialInput: initialInput, autoGenerate: initialInput != nil\)/)
+})
+
 test('本人の鑑定操作はservice role clientを使用しない', () => {
   const reading = read('backend/src/routes/reading.ts')
   const adminUsages = [...reading.matchAll(/getSupabaseAdmin\(\)/g)]
