@@ -53,16 +53,17 @@ const transactionStatus = (transaction: JWSTransactionDecodedPayload) => {
 
 type MirroredSubscription = { status: string; expiresAt: string | null; skipped?: false } | { skipped: true }
 
-async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expectedUserId?: string): Promise<MirroredSubscription> {
+async function mirrorTransaction(
+  transaction: JWSTransactionDecodedPayload,
+  expectedUserId?: string,
+  allowOwnerTransfer = false,
+): Promise<MirroredSubscription> {
   if (transaction.productId !== required('APPLE_SUBSCRIPTION_PRODUCT_ID')) throw new Error('App Store product ID が一致しません')
   if (!transaction.originalTransactionId || !transaction.transactionId) throw new Error('App Store transaction ID が不足しています')
   const tokenUserId = normalizedUuid(transaction.appAccountToken)
   const requestUserId = normalizedUuid(expectedUserId)
   const isSandbox = transaction.environment === 'Sandbox'
-  // TestFlight purchases can outlive an app login and retain the appAccountToken
-  // of an older test user. Possession of the current StoreKit entitlement is the
-  // recovery proof in Sandbox; production purchases remain fail-closed.
-  if (requestUserId && tokenUserId && tokenUserId !== requestUserId && !isSandbox) return { skipped: true }
+  if (requestUserId && tokenUserId && tokenUserId !== requestUserId && !(isSandbox && allowOwnerTransfer)) return { skipped: true }
   const userId = requestUserId || tokenUserId
   if (!userId) throw new Error('appAccountToken がありません')
   const db = getSupabaseAdmin()
@@ -72,7 +73,7 @@ async function mirrorTransaction(transaction: JWSTransactionDecodedPayload, expe
     .maybeSingle()
   if (lookupError) throw lookupError
   if (existing?.user_id && normalizedUuid(existing.user_id) !== userId) {
-    if (!isSandbox) {
+    if (!isSandbox || !allowOwnerTransfer) {
       throw new Error('この購入は別のアカウントに登録済みです')
     }
     // One sandbox entitlement must have exactly one current app owner. Remove a
@@ -142,7 +143,7 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     const signedTransaction = typeof req.body?.signedTransaction === 'string' ? req.body.signedTransaction : ''
     if (!signedTransaction || signedTransaction.length > 20000) { res.status(400).json({ error: '購入情報が不足しています' }); return }
     const transaction = await verifyTransaction(signedTransaction)
-    const subscription = await mirrorTransaction(transaction, req.userId)
+    const subscription = await mirrorTransaction(transaction, req.userId, req.body?.allowOwnerTransfer === true)
     if (subscription.skipped) {
       console.info('App Store transaction belongs to another account', { correlationId: requestId })
       res.json({ verified: true, skipped: true, correlationId: requestId })

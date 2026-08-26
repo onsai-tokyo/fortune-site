@@ -2,7 +2,9 @@ import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportCardPage, StructuredReport } from '../reportCards.js'
 import { titlesAreSimilar } from './aiWriter.js'
 import { japanDateParts } from '../japanDate.js'
+import { periodLabel } from '../age.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
+import { badgeLabel, lifeEvent, type LifeEventKey } from './lifeEventLabels.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
@@ -19,6 +21,44 @@ function eventFlags(values: string[]) {
     move: has(/引越|転居|移動|配置転換|環境.*変|住む場所/), study: has(/学|資格|探究|知識|訓練|専門/),
     money: has(/収入|財|お金|資産|現実/), reset: has(/休|整理|内省|見直|手放|刷新|立て直/),
   }
+}
+
+/** 保存済みの旧データに relationshipEvents が無い場合も、内部signal自体は表示せず安全な出来事名へ変換する。 */
+function eventValuesFor(item: Annual): string[] {
+  if ((item.relationshipEvents?.length ?? 0) > 0) return unique(item.relationshipEvents ?? [])
+  const flags = eventFlags(item.relationshipSignals ?? [])
+  return unique([
+    flags.marriage ? '結婚' : '', flags.meeting ? '出会い' : '', flags.separation ? '関係の見直し' : '',
+    flags.work ? '仕事' : '', flags.move ? '環境の変化' : '', flags.money ? 'お金' : '',
+    flags.study ? '学び' : '', flags.reset ? '整理' : '',
+  ])
+}
+
+function primaryEventKey(values: string[]): LifeEventKey {
+  const flags = eventFlags(values)
+  if (flags.marriage) return 'marriage'
+  if (flags.meeting) return 'meeting'
+  if (flags.separation) return 'separation'
+  if (flags.work) return 'work'
+  if (flags.move) return 'move'
+  if (flags.money) return 'money'
+  if (flags.study) return 'study'
+  if (flags.reset) return 'reset'
+  return 'seed'
+}
+
+function secondaryEventKey(values: string[], primary: LifeEventKey): LifeEventKey | null {
+  const flags = eventFlags(values)
+  const candidates: Array<[boolean, LifeEventKey]> = [
+    [flags.work, 'work'], [flags.money, 'money'], [flags.move, 'move'],
+    [flags.study, 'study'], [flags.meeting, 'meeting'], [flags.reset, 'reset'],
+  ]
+  const primaryDomain = lifeEvent(primary).domain
+  for (const [active, key] of candidates) {
+    if (!active || key === primary || lifeEvent(key).domain === primaryDomain) continue
+    return key
+  }
+  return null
 }
 
 function stableIndex(values: string[], year: number, length: number) {
@@ -86,30 +126,32 @@ function tenGodTitle(item: Annual, values: string[]) {
 }
 
 function uniqueTimingTitle(item: Annual, values: string[], previousTitles: string[]) {
-  const candidates = [titleFor(values, item.year), collisionTitle(item, values), tenGodTitle(item, values)]
+  const definition = lifeEvent(primaryEventKey(values))
+  const candidates = [
+    titleFor(values, item.year),
+    collisionTitle(item, values),
+    `${definition.label}｜${definition.outcomes[stableIndex(values, item.year, definition.outcomes.length)]}`,
+    `${definition.label}｜${definition.actions[stableIndex(values, item.year + 1, definition.actions.length)]}`,
+  ]
   return candidates.find(candidate => previousTitles.every(previous => !titlesAreSimilar(previous, candidate)))
-    ?? `${personalLens(item.kanshi)}を使い、${item.tenGod}の選択を形にする年`
+    ?? `${personalLens(item.kanshi)}を使い、これから続ける選択を形にする年`
 }
 
 function tagsFor(values: string[]) {
   const flags = eventFlags(values)
   return unique(['時期', flags.meeting ? '出会い' : '', flags.marriage ? '結婚' : '', flags.separation ? '関係の見直し' : '',
-    flags.work ? '仕事' : '', flags.move ? '引越し・環境変化' : '', flags.study ? '学び' : '', flags.money ? 'お金' : '', flags.reset ? '整理' : '', ...values.slice(0, 2)])
+    flags.work ? '仕事' : '', flags.move ? '引越し・環境変化' : '', flags.study ? '学び' : '', flags.money ? 'お金' : '', flags.reset ? '整理' : ''])
 }
 
-function summaryFor(item: Annual) {
-  const themes = unique(item.themes)
-  const relationships = unique([...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
-  const event = relationships[0] ?? themes[0] ?? '優先順位の切り替え'
-  const second = relationships[1] ?? themes.find(theme => theme !== event) ?? '日常の選択'
-  return `${event}と${second}が重なり、${item.kanshi}・${item.tenGod}の動きが具体的な選択として現れる年です。`
+function summaryFor(badge: string, lead: string) {
+  return `${badge}。${lead}`
 }
 
 function pagesFor(input: ReportInput, item: Annual, decade?: Decade): ReportCardPage[] {
   const themes = unique(item.themes)
-  const relationships = unique([...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+  const relationships = eventValuesFor(item)
   const core = themes.join('・') || '優先順位の切り替え'
-  const events = relationships.join('・') || `${item.tenGod}の働きが強まり、${core}に選択が生まれる`
+  const events = relationships.join('・') || `${core}に選択が生まれる`
   const longTerm = decade ? `${decade.startYear}〜${decade.endYear}年の${decade.themes.join('・') || '長期テーマ'}` : '前後の年から続く流れ'
   const flags = eventFlags([...themes, ...relationships])
   const scene = flags.work ? '依頼、担当範囲、働く場所を決める場面' : flags.meeting || flags.marriage ? '出会い方、約束、暮らし方を話す場面' : flags.move ? '住む場所や日々の時間配分を変える場面' : '今まで通り続けるか、方法を変えるか選ぶ場面'
@@ -117,24 +159,28 @@ function pagesFor(input: ReportInput, item: Annual, decade?: Decade): ReportCard
   const action = flags.move ? '候補地、費用、移動時間を並べ、日常が続く案を一つ選ぶ' : flags.meeting || flags.marriage || flags.separation ? '相手に求める約束と、自分が守れる約束を三つずつ書く' : flags.work ? '引き受ける仕事、断る仕事、学ぶ仕事を一つずつ決める' : '続けること、やめること、試すことを一つずつ決める'
   const lens = personalLens(input.shichuDay)
   return [
-    { role: 'opening', label: 'この年の焦点', text: `${item.year}年は、${summaryFor(item)}` },
+    { role: 'opening', label: 'この年の焦点', text: `${item.year}年は、${events}が動きやすい年です。` },
     { role: 'core', label: '起こりやすいこと', text: `${item.year}年は${events}という動きが日常の決断に表れ、${lens}が選び方の支えになります。` },
     { role: 'scene', label: '現れやすい場面', text: `${item.year}年は${scene}で、${core}のうち何を優先するかがはっきりします。` },
     { role: 'scene', label: '長期の背景', text: `${longTerm}の中で、${item.year}年の${core}が具体的な出来事になります。` },
     { role: 'shadow', label: '急がないこと', text: `${item.year}年の${core}では、${caution}` },
-    { role: 'exception', label: '命式の手がかり', text: `${item.year}年は${item.kanshi}と${item.tenGod}が重なるため、${core}という同じ出来事でも引き受け方が結果を分けます。` },
+    { role: 'exception', label: '同じ年でも分かれること', text: `${item.year}年は、同じ出来事が来ても引き受け方で結果が変わります。急いで決めず、自分が続けられる形かを確かめてください。` },
     { role: 'action', label: 'この年に決めること', text: `${item.year}年は、${action}ことから始めてください。` },
     { role: 'closing', label: '次の年へ残すもの', text: `${item.year}年の${core}で得た基準を一つ言葉にすると、翌年の判断がぶれにくくなります。` },
   ]
 }
 
-function card(input: ReportInput, item: Annual, decade?: Decade): ReportCard {
-  const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
+function card(input: ReportInput, item: Annual, badge: string, secondary: LifeEventKey | null, decade?: Decade): ReportCard {
+  const values = unique([...item.themes, ...eventValuesFor(item)])
   const pages = pagesFor(input, item, decade)
-  const details = unique([item.kanshi, item.tenGod, ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
+  const details = unique([item.kanshi, item.tenGod, ...(item.relationshipSignals ?? []), ...values, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
+  const lead = lifeEvent(primaryEventKey(values)).lead
+  const title = secondary ? `${badge}｜${lifeEvent(secondary).label}が重なる年` : badge
   return {
-    id: `turning-year-${item.year}`, kind: 'timing', scope: 'self', tab: 'timing', title: titleFor(values, item.year), summary: summaryFor(item),
-    tags: tagsFor(values), period: { label: `${item.year}年（${item.ageRange}）` }, pages,
+    id: `turning-year-${item.year}`, kind: 'timing', scope: 'self', tab: 'timing', title, summary: summaryFor(badge, lead),
+    tags: tagsFor(values), period: { label: item.age != null && input.birthDate
+      ? periodLabel(input.birthDate, item.year)
+      : `${item.year}年（${item.ageRange ?? ''}）` }, pages,
     evidence: [{ family: '干支系', system: '四柱推命', detail: details.join('・').slice(0, 120) }], metadataRefs: ['turningPoints'],
   }
 }
@@ -156,10 +202,19 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
   })
   const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
   const results: ReportCard[] = []
+  const occurrences = new Map<LifeEventKey, number>()
   for (const item of selected) {
-    const values = unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])])
-    const result = card(input, item, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
-    const title = uniqueTimingTitle(item, values, results.map(previous => previous.title))
+    const values = unique([...item.themes, ...eventValuesFor(item)])
+    const primary = primaryEventKey(values)
+    const occurrence = occurrences.get(primary) ?? 0
+    occurrences.set(primary, occurrence + 1)
+    const badge = badgeLabel(primary, occurrence)
+    const secondary = secondaryEventKey(values, primary)
+    const result = card(input, item, badge, secondary, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear))
+    const previousTitles = results.map(previous => previous.title)
+    const title = previousTitles.every(previous => !titlesAreSimilar(previous, result.title))
+      ? result.title
+      : uniqueTimingTitle(item, values, previousTitles)
     results.push({ ...result, title })
   }
   return results

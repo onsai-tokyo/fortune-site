@@ -37,9 +37,10 @@ test('時期カードのタイトルを年だけにしない', () => {
 test('本文とタグに年ごとの出来事・命式根拠を反映する', () => {
   const cards = buildTurningPointCards(input, 2026)
   const relationship = cards.find(card => card.id === 'turning-year-2026')!
-  assert.ok(relationship.tags.includes('恋愛'))
   assert.ok(relationship.tags.includes('出会い'))
-  assert.match(relationship.pages.map(page => page.text).join('\n'), /出会い|丙午|正財/)
+  assert.match(relationship.pages.map(page => page.text).join('\n'), /出会い/)
+  assert.doesNotMatch(relationship.pages.map(page => page.text).join('\n'), /丙午|正財/)
+  assert.match(relationship.evidence[0].detail, /丙午|正財/)
   assert.ok(relationship.pages.every(page => [...page.text].length <= 120))
   assert.ok(cards.every(card => card.pages.every(page => page.text.includes(card.period!.label.match(/\d{4}年/)![0]))))
   const pageTexts = cards.flatMap(card => card.pages.map(page => page.text))
@@ -54,9 +55,8 @@ test('同じ事象が複数年に続いてもタイトルを重複させない',
   const cards = buildTurningPointCards(repeated, 2026)
   assert.equal(new Set(cards.map(card => card.title)).size, cards.length)
   assert.ok(cards.slice(1).every((card, index) => !titlesAreSimilar(cards[index].title, card.title)))
-  assert.equal(new Set(cards.map(card => card.summary)).size, cards.length)
-  assert.ok(cards.every(card => /[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/.test(card.summary)))
-  assert.ok(cards.every(card => card.summary.includes(card.evidence[0].detail.split('・')[1])))
+  assert.ok(cards.every(card => card.summary.includes('出会いの年')))
+  assert.ok(cards.every(card => !/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/.test(card.summary)))
 })
 
 test('同じタイトルが離れた年に再登場しても鑑定書全体で重複させない', () => {
@@ -101,5 +101,5 @@ test('移動を含む上流テーマから環境変化の分岐へ到達する',
   ] } }
   const [result] = buildTurningPointCards(report, 2026)
   assert.ok(result.tags.includes('引越し・環境変化'))
-  assert.match(result.title, /居場所|活動する場所/)
+  assert.match(result.title, /引っ越し|居場所|活動する場所/)
 })

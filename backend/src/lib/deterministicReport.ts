@@ -28,8 +28,8 @@ export interface ReportInput {
     direction: string
     startDate: string
     decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
-    annual: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; relationshipEvents?: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents?: string[]; themes: string[] }> }>
-    marriageCandidates: Array<{ year: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
+    annual: Array<{ year: number; age?: number; ageRange?: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; relationshipEvents?: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents?: string[]; themes: string[] }> }>
+    marriageCandidates: Array<{ year: number; age?: number; ageRange?: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
   }
   sanmeiRelations?: {
     relations: Array<{ pillars: string; branches: string; relation: string; meaning: string }>

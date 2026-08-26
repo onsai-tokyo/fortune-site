@@ -66,6 +66,7 @@ test('決定論scopeが全カードを覆う場合は古いAIキャッシュを�
 test('PR12の鑑定APIは認証トークンを送り、チャット本文と次質問を分離する', () => {
   const api = read('ios/FateLab/APIClient.swift')
   const reading = read('backend/src/routes/reading.ts')
+  const answerPrompt = read('backend/src/lib/report/answerPrompt.ts')
   assert.match(api, /calc\/divination[^\n]+token: token/)
   assert.match(api, /preview\/generate\?format=sse[^\n]+token: token/)
   assert.match(api, /URLSession\.shared\.bytes/)
@@ -74,7 +75,7 @@ test('PR12の鑑定APIは認証トークンを送り、チャット本文と次�
   assert.match(api, /advanced\(by: \.seconds\(45\)\)/)
   assert.doesNotMatch(api, /throw URLError\(\.timedOut\)/)
   assert.doesNotMatch(api, /\.timedOut, \.cannotFindHost/)
-  assert.match(reading, /---NEXT---/)
+  assert.match(answerPrompt, /---NEXT---/)
   assert.match(reading, /suggestions/)
   assert.doesNotMatch(reading, /回答本文は必ず「結論」「読み解き」「気をつけたいこと」/)
   assert.doesNotMatch(reading, /各行「次の質問：」で示してください/)
@@ -406,11 +407,11 @@ test('共通エラー画面は種別・再試行・戻るを持ちGETを自動�
   assert.doesNotMatch(root, /wifi\.exclamationmark/)
 })
 
-test('App Store同期は本番の別アカウントを除外しSandboxの旧テスト購入を復旧する', () => {
+test('App Store同期は別アカウントを除外し明示的なSandbox復元だけ移管する', () => {
   const apple = read('backend/src/routes/apple.ts')
   const purchases = read('ios/FateLab/PurchaseManager.swift')
   const settings = read('ios/FateLab/SettingsView.swift')
-  assert.match(apple, /tokenUserId && tokenUserId !== requestUserId && !isSandbox\) return \{ skipped: true \}/)
+  assert.match(apple, /tokenUserId !== requestUserId && !\(isSandbox && allowOwnerTransfer\)\) return \{ skipped: true \}/)
   assert.match(apple, /const isSandbox = transaction\.environment === 'Sandbox'/)
   assert.match(apple, /\.update\(\{ user_id: userId, app_account_token: userId/)
   assert.match(apple, /\.eq\('original_transaction_id', transaction\.originalTransactionId\)/)
@@ -419,6 +420,8 @@ test('App Store同期は本番の別アカウントを除外しSandboxの旧テ�
   assert.match(purchases, /consecutiveSyncFailures >= 3/)
   assert.match(purchases, /consecutiveSyncFailures = 0\s+errorMessage = nil/)
   assert.match(purchases, /restored == 0/)
+  assert.match(purchases, /isFirstSyncForThisAccount/)
+  assert.match(purchases, /allowOwnerTransfer: true/)
   assert.match(settings, /Button\("もう一度確認する"\)/)
   assert.match(settings, /Button\("購入を復元"\)/)
 })

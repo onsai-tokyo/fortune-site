@@ -6,6 +6,7 @@ import {
 import { calcZiwei } from '../ziwei.js'
 import { calcAstrology } from '../astrology.js'
 import type { ReportInput } from '../deterministicReport.js'
+import { calcAge } from '../age.js'
 
 /**
  * PR-0b: 固定40件の出生条件。
@@ -114,13 +115,6 @@ export function buildCalibrationFixtures(count = 1000): BirthFixture[] {
   })
 }
 
-function calcAge(birthDate: string, today: Date): number {
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDelta = today.getMonth() - birth.getMonth()
-  if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birth.getDate())) age -= 1
-  return age
-}
 
 /**
  * routes/preview.ts の reportInput 構築と同じ手順を再現する。
@@ -149,7 +143,7 @@ export function buildFixtureReportInput(fixture: BirthFixture, today = new Date(
     birthTime: fixture.birthTime ?? undefined,
     birthplace: fixture.birthplace,
     gender: fixture.gender,
-    age: calcAge(fixture.birthDate, today),
+    age: calcAge(fixture.birthDate, today) ?? 0,
     shichuDay: shichu.day.kanshi,
     nayin,
     sanmeiStar: sanmei.shukumeiStar,

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import PDFDocument from 'pdfkit'
 import { verifyPaidToken } from './payment.js'
+import { calcAge } from '../lib/age.js'
 
 export const reportRouter = Router()
 
@@ -49,15 +50,6 @@ function sanitize(str: string): string {
     .slice(0, 1000)
 }
 
-function calcAge(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
-
 reportRouter.post('/generate', async (req, res) => {
   try {
     const { fortuneData, reportToken } = req.body as {
@@ -76,7 +68,7 @@ reportRouter.post('/generate', async (req, res) => {
     }
 
     const { input, shichu, nayin, sanmei, sukuyo, partner } = fortuneData
-    const age = calcAge(input.birthDate)
+    const age = calcAge(input.birthDate) ?? 0
     const genderLabel = input.gender === 'male' ? '男性' : '女性'
     const hourLine = shichu.hour
       ? `時柱: ${shichu.hour.kanshi}（${shichu.hour.element}・${shichu.hour.yinYang}）`
@@ -177,7 +169,7 @@ reportRouter.post('/generate-pdf', async (req, res) => {
     }
 
     const { input, shichu, nayin, sanmei, sukuyo } = fortuneData
-    const age = calcAge(input.birthDate)
+    const age = calcAge(input.birthDate) ?? 0
     const [y, m, d] = input.birthDate.split('-')
     const genderLabel = input.gender === 'male' ? '男性' : '女性'
 
