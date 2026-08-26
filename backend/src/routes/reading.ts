@@ -159,11 +159,31 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     const rawIdempotencyKey = req.header('Idempotency-Key') ?? ''
     const idempotencyKey = /^[a-f0-9]{64}$/.test(rawIdempotencyKey) ? rawIdempotencyKey : null
     let hasIdempotencyColumn = true
+    const storedCalculatedData = isStructuredReport(structuredReport)
+      ? calculatedDataWithReport(calculatedData as Record<string, unknown>, structuredReport)
+      : calculatedData
+    const refreshedPayload = (storedBirthData: unknown) => ({
+      title: safeTitle,
+      birth_data: storedBirthData,
+      calculated_data: storedCalculatedData,
+      report_text: reportText,
+      source_section: typeof sourceSection === 'string' ? sourceSection.slice(0, 80) : null,
+      source_year: typeof sourceYear === 'number' ? sourceYear : null,
+      updated_at: new Date().toISOString(),
+    })
+    const refreshExisting = async (id: string, storedBirthData: unknown) => {
+      const { error } = await db.from('reading_conversations').update(refreshedPayload(storedBirthData))
+        .eq('id', id).eq('user_id', req.userId!)
+      if (error) throw error
+    }
 
     if (idempotencyKey) {
       const { data: existing, error: lookupError } = await db.from('reading_conversations')
         .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).limit(1).maybeSingle()
-      if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
+      if (existing?.id) {
+        await refreshExisting(existing.id, birthData)
+        res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true, refreshed: true }); return
+      }
       if (lookupError && ['42703', 'PGRST204'].includes(lookupError.code ?? '')) hasIdempotencyColumn = false
       else if (lookupError) throw lookupError
 
@@ -172,16 +192,16 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
         const { data: legacyExisting, error: legacyError } = await db.from('reading_conversations')
           .select('id,secret_token').eq('user_id', req.userId!).contains('birth_data', { _fateReadingKey: idempotencyKey }).limit(1).maybeSingle()
         if (legacyError) throw legacyError
-        if (legacyExisting?.id) { res.status(200).json({ id: legacyExisting.id, token: legacyExisting.secret_token, reused: true }); return }
+        if (legacyExisting?.id) {
+          await refreshExisting(legacyExisting.id, { ...(birthData as Record<string, unknown>), _fateReadingKey: idempotencyKey })
+          res.status(200).json({ id: legacyExisting.id, token: legacyExisting.secret_token, reused: true, refreshed: true }); return
+        }
       }
     }
 
     const storedBirthData = !hasIdempotencyColumn && idempotencyKey
       ? { ...(birthData as Record<string, unknown>), _fateReadingKey: idempotencyKey }
       : birthData
-    const storedCalculatedData = isStructuredReport(structuredReport)
-      ? calculatedDataWithReport(calculatedData as Record<string, unknown>, structuredReport)
-      : calculatedData
     const insertPayload: Record<string, unknown> = {
       user_id: req.userId,
       title: safeTitle,
@@ -196,7 +216,10 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
     if (error?.code === '23505' && idempotencyKey && hasIdempotencyColumn) {
       const { data: existing } = await db.from('reading_conversations')
         .select('id,secret_token').eq('user_id', req.userId!).eq('idempotency_key', idempotencyKey).limit(1).maybeSingle()
-      if (existing?.id) { res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true }); return }
+      if (existing?.id) {
+        await refreshExisting(existing.id, birthData)
+        res.status(200).json({ id: existing.id, token: existing.secret_token, reused: true, refreshed: true }); return
+      }
     }
     if (error) throw error
     res.status(201).json({ id: data.id, token: data.secret_token })

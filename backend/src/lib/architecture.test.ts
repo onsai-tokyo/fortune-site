@@ -114,6 +114,8 @@ test('鑑定書保存は出生情報の正規化キーで冪等になりサー�
   assert.match(reading, /personalReadingTitle\(\)/)
   assert.match(reading, /idempotency_key/)
   assert.match(reading, /\.limit\(1\)\.maybeSingle\(\)/)
+  assert.match(reading, /refreshExisting\(existing\.id, birthData\)/)
+  assert.match(reading, /reused: true, refreshed: true/)
 })
 
 test('認証エラーからアカウントの登録有無を推測できない', () => {
