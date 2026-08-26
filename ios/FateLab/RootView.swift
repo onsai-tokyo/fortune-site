@@ -170,6 +170,7 @@ final class AppTabRouter: ObservableObject {
     @Published private var resetTokens: [AppTab: Int] = [:]
     @Published var chatConversationID: UUID?
     @Published var chatContextTitle: String?
+    @Published var chatDraftQuestion: String?
 
     func selectTab(_ tab: AppTab) {
         if tab == selectedTab {
@@ -181,21 +182,24 @@ final class AppTabRouter: ObservableObject {
 
     func resetToken(for tab: AppTab) -> Int { resetTokens[tab, default: 0] }
 
-    func openChat(conversationID: UUID, contextTitle: String? = nil) {
+    func openChat(conversationID: UUID, contextTitle: String? = nil, draftQuestion: String? = nil) {
         chatConversationID = conversationID
         chatContextTitle = contextTitle
+        chatDraftQuestion = draftQuestion
         selectedTab = .chat
     }
 
     func closeMissingChat() {
         chatConversationID = nil
         chatContextTitle = nil
+        chatDraftQuestion = nil
         selectedTab = .you
     }
 
     func showChatHistory() {
         chatConversationID = nil
         chatContextTitle = nil
+        chatDraftQuestion = nil
         selectedTab = .chat
     }
 }
@@ -213,12 +217,13 @@ private struct AIChatTabView: View {
                     if !isPresented {
                         tabRouter.chatConversationID = nil
                         tabRouter.chatContextTitle = nil
+                        tabRouter.chatDraftQuestion = nil
                     }
                 }
             )
         ) {
             if let conversationID = tabRouter.chatConversationID {
-                ReadingChatView(conversationID: conversationID, contextTitle: tabRouter.chatContextTitle)
+                ReadingChatView(conversationID: conversationID, contextTitle: tabRouter.chatContextTitle, draftQuestion: tabRouter.chatDraftQuestion)
                     .id(conversationID)
             }
         }

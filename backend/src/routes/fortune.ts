@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import { calcAge } from '../lib/age.js'
 
 export const fortuneRouter = Router()
 
@@ -47,22 +48,13 @@ function sanitize(str: string): string {
     .slice(0, 1000)
 }
 
-function calcAge(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
-
 function personBlock(label: string, p: PersonData, gender: string, birthDate?: string): string {
   const hourLine = p.shichu.hour
     ? `時柱: ${p.shichu.hour.kanshi}（${p.shichu.hour.element}・${p.shichu.hour.yinYang}）`
     : '時柱: 不明'
   const genderLine = gender === 'male' ? '男性' : '女性'
 
-  const ageLine = birthDate ? `生年月日: ${birthDate}（${calcAge(birthDate)}歳）` : ''
+  const ageLine = birthDate ? `生年月日: ${birthDate}（${calcAge(birthDate) ?? 0}歳）` : ''
 
   return `【${label}】性別: ${genderLine}${ageLine ? ' / ' + ageLine : ''}
 四柱推命:

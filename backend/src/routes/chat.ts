@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { requirePoints } from '../middleware/points.js'
 import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
+import { calcAge } from '../lib/age.js'
 
 export const chatRouter = Router()
 
@@ -32,15 +33,6 @@ interface CalculatedData {
 
 function sanitize(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 600)
-}
-
-function calcAge(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
 }
 
 // メインチャット（2pt/メッセージ）
@@ -87,7 +79,7 @@ chatRouter.post('/', requireAuth, requirePoints(2), async (req: AuthRequest, res
     // 命式コンテキスト構築
     let meishikiContext = ''
     if (birthDate && gender && calculatedData) {
-      const age = calcAge(birthDate)
+      const age = calcAge(birthDate) ?? 0
       const genderLabel = gender === 'male' ? '男性' : '女性'
       const [y, m, d] = birthDate.split('-').map(Number)
       meishikiContext = `

@@ -14,6 +14,7 @@ import { finalizeReportProvenance } from '../lib/report/provenance.js'
 import { observeShadowFacts } from '../lib/report/shadowMetrics.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { buildSelfReport, resolveSelfReportOptions } from '../lib/report/buildSelfReport.js'
+import { calcAge } from '../lib/age.js'
 
 export const previewRouter = Router()
 
@@ -34,15 +35,6 @@ function requestCorrelationId(body: unknown): string {
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-}
-
-function calcAge(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
 }
 
 function sanitize(str: string): string {
@@ -119,7 +111,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     }
     progress(5, '入力内容を確認しています', '生年月日と出生地を確認しています')
 
-    const age = calcAge(birthDate)
+    const age = calcAge(birthDate) ?? 0
     const genderLabel = gender === 'male' ? '男性' : '女性'
     const [year, month, day] = birthDate.split('-').map(Number)
     // サーバー側で正確に計算（フロント側の計算ライブラリのバグ回避）
@@ -248,7 +240,7 @@ previewRouter.post('/question', questionLimiter, async (req, res) => {
       return
     }
 
-    const age = calcAge(birthDate)
+    const age = calcAge(birthDate) ?? 0
     const genderLabel = gender === 'male' ? '男性' : '女性'
     const [year, month, day] = birthDate.split('-').map(Number)
 

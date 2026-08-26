@@ -28,10 +28,11 @@ struct ReadingChatView: View {
     @State private var saveMessage: String?
     @FocusState private var isInputFocused: Bool
 
-    init(conversationID: UUID, contextTitle: String? = nil) {
+    init(conversationID: UUID, contextTitle: String? = nil, draftQuestion: String? = nil) {
         self.conversationID = conversationID
         self.contextTitle = contextTitle
         _activeConversationID = State(initialValue: conversationID)
+        _input = State(initialValue: draftQuestion ?? "")
     }
 
     var body: some View {

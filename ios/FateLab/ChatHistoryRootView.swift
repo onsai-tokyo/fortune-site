@@ -41,10 +41,13 @@ struct ChatHistoryRootView: View {
                         FLErrorState(kind: errorKind) { Task { await load() } }
                             .listRowBackground(FateTheme.canvas)
                     } else {
-                        Section("この鑑定書について聞く") {
+                        Section("相談する鑑定書") {
                             if sourceReadings.isEmpty {
-                                Text(scope == .single ? "先に「あなた」で鑑定書を作成してください。" : "先に「ふたり」で相性鑑定を作成してください。")
+                                Text(scope == .single ? "先に「あなた」で鑑定書を作成してください。" : "先に「ふたり」タブでお相手を登録し、相性鑑定を作成してください。")
                                     .foregroundStyle(FateTheme.muted)
+                                if scope == .couple {
+                                    Button("ふたりタブへ") { tabRouter.selectTab(.couple) }
+                                }
                             }
                             ForEach(sourceReadings) { reading in
                                 Button {
@@ -56,14 +59,15 @@ struct ChatHistoryRootView: View {
                             }
                         }
 
-                        if !chatReadings.isEmpty {
-                            Section("チャット履歴") {
-                                ForEach(chatReadings) { reading in
-                                    NavigationLink {
-                                        ReadingChatView(conversationID: reading.id, contextTitle: reading.title)
+                        if let reading = sourceReadings.first {
+                            Section("よくある質問から始める") {
+                                ForEach(questionExamples, id: \.self) { question in
+                                    Button {
+                                        tabRouter.openChat(conversationID: reading.id, contextTitle: reading.title, draftQuestion: question)
                                     } label: {
-                                        FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件", showsChevron: false)
+                                        FLListRow(title: question, showsChevron: true)
                                     }
+                                    .buttonStyle(.plain)
                                 }
                             }
                         }
@@ -76,6 +80,16 @@ struct ChatHistoryRootView: View {
         }
         .background(FateTheme.canvas)
         .fateScreenTitle("対話")
+        .toolbar {
+            if auth.session != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { ReadingListView(chatsOnly: true) } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                    }
+                    .accessibilityLabel("チャット履歴")
+                }
+            }
+        }
     }
 
     private var sourceReadings: [ReadingSummary] {
@@ -85,8 +99,13 @@ struct ChatHistoryRootView: View {
         }
     }
 
-    private var chatReadings: [ReadingSummary] {
-        readings.filter(\.isChat)
+    private var questionExamples: [String] {
+        switch scope {
+        case .single:
+            ["これから3年の流れを知りたい", "恋愛の転機を詳しく知りたい", "仕事で次に動くタイミングを知りたい", "自分の弱点をどう活かせばいい？"]
+        case .couple:
+            ["この人との関係はこれからどうなる？", "相手は私をどう感じやすい？", "二人がすれ違いやすいポイントは？", "復縁や結婚につながりやすい時期は？"]
+        }
     }
 
     private func load() async {

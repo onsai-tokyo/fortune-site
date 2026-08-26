@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
 import { requirePoints } from '../middleware/points.js'
+import { calcAge } from '../lib/age.js'
 
 export const analyzeRouter = Router()
 
@@ -35,15 +36,6 @@ function parseJSON(text: string) {
   return JSON.parse(cleaned)
 }
 
-function calcAge(birthDate: string): number {
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
-
 interface Pillar { kanshi: string; element: string; yinYang: string }
 interface PersonBlock {
   shichu: { year: Pillar; month: Pillar; day: Pillar; hour: Pillar | null }
@@ -61,7 +53,7 @@ interface PersonBlock {
 }
 
 function buildPersonCtx(p: PersonBlock, meta: { birthDate: string; gender: string }, label: string): string {
-  const age = calcAge(meta.birthDate)
+  const age = calcAge(meta.birthDate) ?? 0
   const gender = meta.gender === 'male' ? '男性' : meta.gender === 'female' ? '女性' : '不明'
   const hourPart = p.shichu.hour ? `/時柱${p.shichu.hour.kanshi}(${p.shichu.hour.element}${p.shichu.hour.yinYang})` : ''
   const base = `【${label}】生年月日:${meta.birthDate}(${age}歳) 性別:${gender}`
@@ -94,7 +86,7 @@ analyzeRouter.post('/self', requireAuth, requirePoints(3), async (req: AuthReque
       throw new Error('input.birthDate is missing')
     }
 
-    const age = calcAge(input.birthDate)
+    const age = calcAge(input.birthDate) ?? 0
     const currentYear = new Date().getFullYear()
 
     const cacheKey = `self_${input.birthDate}_${input.gender}`

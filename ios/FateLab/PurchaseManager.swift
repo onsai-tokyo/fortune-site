@@ -11,6 +11,7 @@ final class PurchaseManager: ObservableObject {
     @Published var errorMessage: String?
     private var hasStoreKitEntitlement = false
     private var attemptedStoreSyncThisSession = false
+    private var isFirstSyncForThisAccount = true
     private weak var authStore: AuthStore?
     private var consecutiveSyncFailures = 0
     private var updates: Task<Void, Never>?
@@ -22,6 +23,7 @@ final class PurchaseManager: ObservableObject {
         accessState = .unknown
         hasStoreKitEntitlement = false
         attemptedStoreSyncThisSession = false
+        isFirstSyncForThisAccount = true
         consecutiveSyncFailures = 0
         errorMessage = nil
         isWorking = false
@@ -56,7 +58,7 @@ final class PurchaseManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try verified(verification)
-                _ = try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, auth: auth)
+                _ = try await APIClient.shared.verifyApplePurchase(signedTransaction: verification.jwsRepresentation, allowOwnerTransfer: true, auth: auth)
                 await transaction.finish()
                 await sync(auth: auth)
             case .userCancelled, .pending: break
@@ -73,7 +75,7 @@ final class PurchaseManager: ObservableObject {
             var restored = 0
             for await result in Transaction.currentEntitlements {
                 guard let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID else { continue }
-                if try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, auth: auth) {
+                if try await APIClient.shared.verifyApplePurchase(signedTransaction: result.jwsRepresentation, allowOwnerTransfer: true, auth: auth) {
                     restored += 1
                 }
             }
@@ -113,7 +115,7 @@ final class PurchaseManager: ObservableObject {
                 try await AppStore.sync()
                 await refreshLocalEntitlements()
             }
-            if hasStoreKitEntitlement && !status.isPremium {
+            if hasStoreKitEntitlement && !status.isPremium && !isFirstSyncForThisAccount {
                 for await result in Transaction.currentEntitlements {
                     guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }
                     _ = try await APIClient.shared.verifyApplePurchase(
@@ -125,7 +127,9 @@ final class PurchaseManager: ObservableObject {
             }
             accessState = status.isPremium ? .premium : .standard
             consecutiveSyncFailures = 0
-            errorMessage = nil
+            errorMessage = hasStoreKitEntitlement && accessState == .standard
+                ? "このApple Accountには継続鑑定の購入履歴があります。引き継ぐ場合は「購入を復元」を押してください。"
+                : nil
         } catch {
             accessState = .unknown
             consecutiveSyncFailures += 1
@@ -133,6 +137,7 @@ final class PurchaseManager: ObservableObject {
                 errorMessage = "購入内容を確認できませんでした。購入を復元してください。"
             }
         }
+        isFirstSyncForThisAccount = false
     }
 
     private func refreshLocalEntitlements() async {
