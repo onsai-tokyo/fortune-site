@@ -25,8 +25,9 @@ struct RootView: View {
                 case .newUser:
                     if onboardedUserID != (auth.session?.user.id.uuidString ?? "") {
                         OnboardingView { input in
-                            onboardedUserID = auth.session?.user.id.uuidString ?? ""
                             pendingInput = input
+                            tabRouter.openYourReading()
+                            onboardedUserID = auth.session?.user.id.uuidString ?? ""
                         }
                     } else {
                         mainTabs(latestConversationID: nil, initialInput: pendingInput)
@@ -181,6 +182,12 @@ final class AppTabRouter: ObservableObject {
     }
 
     func resetToken(for tab: AppTab) -> Int { resetTokens[tab, default: 0] }
+
+    func openYourReading() {
+        selectedTab = .you
+        resetTokens[.you, default: 0] += 1
+        yourRootResetToken += 1
+    }
 
     func openChat(conversationID: UUID, contextTitle: String? = nil, draftQuestion: String? = nil) {
         chatConversationID = conversationID
