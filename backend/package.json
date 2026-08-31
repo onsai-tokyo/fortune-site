@@ -16,6 +16,7 @@
     "scores:timing-stem-branch": "tsx src/scripts/measureTimingStemBranch.ts 100",
     "scores:timing-western": "tsx src/scripts/measureTimingWestern.ts 100",
     "scores:timing-integrated": "tsx src/scripts/measureTimingIntegrated.ts 100",
+    "scores:timing-shadow": "tsx src/scripts/measureTimingShadowCoverage.ts",
     "scores:timing-reachability": "tsx src/scripts/measureTimingReachability.ts 100",
     "scores:timing-readiness": "tsx src/scripts/checkTimingRuleReadiness.ts",
     "report:readiness": "tsx src/scripts/checkDeterministicCutover.ts",

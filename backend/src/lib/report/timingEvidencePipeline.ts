@@ -82,7 +82,7 @@ export function buildTimingEvidenceTimeline(input: TimingEvidenceBirthInput): Ti
     annual: timing.annual, decades: timing.decades,
   })
   const westernBase = calcTimeIndependentWesternAnnualAspects(input.birthYear, input.birthMonth, input.birthDay)
-  const fixedWestern = buildWesternTimingEvidence(westernBase)
+  const fixedWestern = buildWesternTimingEvidence(westernBase, { personalPlanetsAvailable: true })
   const vedic = buildVedicTimingEvidence(hasBirthTime
     ? calcVedicAnnualDasha(input.birthYear, input.birthMonth, input.birthDay, input.birthHour!, input.birthMinute ?? 0, input.birthplace)
     : calcTimeIndependentVedicAnnualDasha(input.birthYear, input.birthMonth, input.birthDay))

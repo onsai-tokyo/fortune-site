@@ -91,14 +91,26 @@ function westernAnnualAspects(date: Date, planets: readonly { name: string; long
 
 /** 出生時刻を使わず、個人天体への年運トランジットだけを算出する。 */
 export function calcTimeIndependentWesternAnnualAspects(year: number, month: number, day: number): Array<{ year: number; aspects: WesternAnnualAspect[] }> {
-  const natalDate = new Date(Date.UTC(year, month - 1, day, 3, 0))
-  const natalPlanets = PLANETS.filter(([name]) => ['太陽', '月', '水星', '金星', '火星'].includes(name)).map(([name, body]) => ({
-    name, longitude: Astronomy.Ecliptic(Astronomy.GeoVector(body, natalDate, true)).elon,
-  }))
+  // 日本時間の出生日全体で同じ判定になるものだけを採る。正午1点を代表値にすると、
+  // 月や境界付近の個人天体が時刻不明でも確定したように見えるため使用しない。
+  const natalDates = [
+    new Date(Date.UTC(year, month - 1, day - 1, 15, 0)),
+    new Date(Date.UTC(year, month - 1, day, 14, 59, 59, 999)),
+  ]
+  const natalPlanetSets = natalDates.map(natalDate => PLANETS
+    .filter(([name]) => ['太陽', '月', '水星', '金星', '火星'].includes(name))
+    .map(([name, body]) => ({ name, longitude: Astronomy.Ecliptic(Astronomy.GeoVector(body, natalDate, true)).elon })))
+  const aspectKey = (item: WesternAnnualAspect) => `${item.transit}\u0000${item.natal}\u0000${item.aspect}`
   return Array.from({ length: 43 }, (_, offset) => {
     const targetYear = year + 18 + offset
     const date = new Date(Date.UTC(targetYear, month - 1, day, 3, 0))
-    return { year: targetYear, aspects: westernAnnualAspects(date, natalPlanets) }
+    const endpointAspects = natalPlanetSets.map(planets => westernAnnualAspects(date, planets))
+    const endByKey = new Map(endpointAspects[1]!.map(item => [aspectKey(item), item]))
+    const aspects = endpointAspects[0]!.flatMap(start => {
+      const end = endByKey.get(aspectKey(start))
+      return end ? [{ ...start, orb: Math.max(start.orb, end.orb) }] : []
+    })
+    return { year: targetYear, aspects }
   })
 }
 

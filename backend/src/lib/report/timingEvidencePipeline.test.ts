@@ -22,8 +22,9 @@ test('時刻なしでは角度・紫微斗数を成立させず、時刻非依�
   const untimedAll = [...untimed.byYear.values()].flat()
   const timedAll = [...timed.byYear.values()].flat()
   assert.equal(untimed.hasBirthTime, false)
-  // 正午1点の代表値は日内不変の証明にならないため、時刻なしWesternは安全側で未利用。
-  assert.ok(untimedAll.filter(item => item.sourceFamily === 'western').every(item => !item.available && !item.matched))
+  // 出生日の始端・終端で同じ個人天体アスペクトだけを利用し、角度は利用しない。
+  assert.ok(untimedAll.some(item => item.sourceFamily === 'western' && item.available))
+  assert.ok(untimedAll.filter(item => item.sourceFamily === 'western' && /(?:^|-)(?:asc|desc|mc|ic|angle)(?:-|:)/.test(item.id)).every(item => !item.available && !item.matched))
   // この日は出生当日に月宿が切り替わるためvedicは安全側に未確定となる。
   // 時刻入力だけを理由に定義を消したりavailableへ昇格させないことを確認する。
   assert.ok(untimedAll.some(item => item.sourceFamily === 'vedic'))
@@ -43,7 +44,7 @@ test('時刻なしでは角度・紫微斗数を成立させず、時刻非依�
       `時刻非依存Evidenceが時刻入力で変化: ${item.id}`,
     )
   }
-  // 西洋の個人天体は時刻あり経路で正午固定値を再利用せず、実出生時刻から再計算する。
+  // 日内で判定が変わる個人天体は時刻なし経路から除外され、時刻ありでは利用できる。
   assert.ok(untimedAll.some(item => {
     const timedItem = timedById.get(item.id)
     return item.sourceFamily === 'western' && timedItem
