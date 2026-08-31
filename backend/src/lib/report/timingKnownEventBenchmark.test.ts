@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildTimingScoreTimeline } from './timingEvidencePipeline.js'
-import { CASE_A_TIMING_BENCHMARK, evaluateKnownTimingCase, measureUnlabelledTimingActivation } from './timingKnownEventBenchmark.js'
+import { buildMonthlyTimingScoreTimeline, buildTimingScoreTimeline } from './timingEvidencePipeline.js'
+import { CASE_A_TIMING_BENCHMARK, evaluateKnownTimingCase, evaluateKnownTimingMonths, measureUnlabelledTimingActivation } from './timingKnownEventBenchmark.js'
 
 test('Aさんの既知イベントを本番文章ではなくshadow検証ラベルとして保持する', () => {
   assert.equal(CASE_A_TIMING_BENCHMARK.events.length, 13)
@@ -21,6 +21,8 @@ test('18スコアのshadow定義を計測し、検出結果を期待テーマの
       [...item.event.expectedScores].sort(),
     )
     assert.ok(item.detectedScores.every(key => item.measurableScores.includes(key)))
+    assert.ok(item.claimEligibleScores.every(key => item.measurableScores.includes(key)))
+    assert.ok(item.claimEligibleScores.every(key => item.detectedScores.includes(key)))
     assert.deepEqual(item.diagnostics.map(entry => entry.key), item.measurableScores)
     assert.ok(item.diagnostics.every(entry => Number.isFinite(entry.rawSupport) && Number.isFinite(entry.relativeStrength) && Number.isFinite(entry.confidence)))
     assert.ok(item.diagnostics.every(entry => entry.status === 'detected' ? item.detectedScores.includes(entry.key) : !item.detectedScores.includes(entry.key)))
@@ -35,6 +37,15 @@ test('未記録年は誤りと断定せずshadow発火量として分離して�
   assert.ok(result.every(item => !labelledYears.has(item.year)))
   assert.ok(result.every((item, index) => index === 0 || result[index - 1]!.year < item.year))
   assert.ok(result.every(item => new Set(item.activatedScores).size === item.activatedScores.length))
+})
+
+test('月指定イベントは年次と流月を合算した月別Claim安全条件で測る', () => {
+  const result = evaluateKnownTimingMonths(CASE_A_TIMING_BENCHMARK, buildMonthlyTimingScoreTimeline(CASE_A_TIMING_BENCHMARK.input))
+  assert.equal(result.length, CASE_A_TIMING_BENCHMARK.events.filter(item => item.months?.length).length)
+  for (const item of result) {
+    assert.deepEqual(Object.keys(item.claimEligibleScoresByMonth).map(Number), item.event.months)
+    assert.ok(Object.values(item.claimEligibleScoresByMonth).flat().every(key => item.event.expectedScores.includes(key)))
+  }
 })
 
 test('同一入力のshadow評価は再現する', () => {

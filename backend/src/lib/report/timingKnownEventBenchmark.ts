@@ -1,6 +1,7 @@
-import type { TimingEvidenceBirthInput, TimingScoreTimeline } from './timingEvidencePipeline.js'
+import type { MonthlyTimingScoreTimeline, TimingEvidenceBirthInput, TimingScoreTimeline } from './timingEvidencePipeline.js'
 import type { TimingScoreKey } from './timingClaim.js'
 import type { TimingScoreResult } from './timingScoreEngine.js'
+import { passesTimingScoreGate } from './timingClaimSelector.js'
 
 /**
  * 既知の人生イベントは「正解文」ではなく、時期ロジックの検証ラベルとしてだけ扱う。
@@ -48,6 +49,7 @@ export interface KnownTimingEventResult {
   measurableScores: readonly TimingScoreKey[]
   unsupportedScores: readonly TimingScoreKey[]
   detectedScores: readonly TimingScoreKey[]
+  claimEligibleScores: readonly TimingScoreKey[]
   diagnostics: readonly KnownTimingScoreDiagnostic[]
 }
 
@@ -67,6 +69,11 @@ export interface KnownTimingScoreDiagnostic {
 export interface UnlabelledTimingActivation {
   year: number
   activatedScores: readonly TimingScoreKey[]
+}
+
+export interface KnownTimingMonthlyResult {
+  event: KnownTimingEvent
+  claimEligibleScoresByMonth: Readonly<Record<number, readonly TimingScoreKey[]>>
 }
 
 const isDetected = (
@@ -114,7 +121,10 @@ export function evaluateKnownTimingCase(
       }
     })
     const detectedScores = diagnostics.filter(item => item.status === 'detected').map(item => item.key)
-    return { event, measurableScores, unsupportedScores, detectedScores, diagnostics }
+    const claimEligibleScores = measurableScores.filter(key => passesTimingScoreGate(
+      { key, op: 'gte', value: 0.33, level: 'medium_or_high' }, scores[key],
+    ))
+    return { event, measurableScores, unsupportedScores, detectedScores, claimEligibleScores, diagnostics }
   })
 }
 
@@ -137,4 +147,22 @@ export function measureUnlabelledTimingActivation(
         .filter(key => isDetected(scores[key], minimumRelativeStrength))
         .sort(),
     }))
+}
+
+/** 月指定の既知イベントだけを、年次＋流月EvidenceのClaim安全条件で測る。 */
+export function evaluateKnownTimingMonths(
+  fixture: KnownTimingCase,
+  timeline: MonthlyTimingScoreTimeline,
+): readonly KnownTimingMonthlyResult[] {
+  return fixture.events.filter(event => event.months?.length).map(event => ({
+    event,
+    claimEligibleScoresByMonth: Object.fromEntries(event.months!.map(month => {
+      const monthKey = `${event.year}-${String(month).padStart(2, '0')}`
+      const scores = timeline.byMonth.get(monthKey)
+      if (!scores) throw new RangeError(`Missing timing score month: ${monthKey}`)
+      return [month, event.expectedScores.filter(key => passesTimingScoreGate(
+        { key, op: 'gte', value: 0.33, level: 'medium_or_high' }, scores[key],
+      ))]
+    })),
+  }))
 }

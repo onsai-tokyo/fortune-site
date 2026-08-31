@@ -9,6 +9,7 @@ import { buildAdditionalStemBranchEvidence } from './timingAdditionalStemBranchE
 import { buildVedicTimingEvidence } from './timingVedicEvidence.js'
 import { buildWesternTimingEvidence } from './timingWesternEvidence.js'
 import { buildZiweiTimingEvidence, type ZiweiAnnualTimingInput } from './timingZiweiEvidence.js'
+import { buildMonthlyStemBranchEvidence } from './timingMonthlyStemBranchEvidence.js'
 
 export interface TimingEvidenceBirthInput {
   birthYear: number
@@ -28,6 +29,11 @@ export interface TimingEvidenceTimeline {
 
 export interface TimingScoreTimeline extends TimingEvidenceTimeline {
   scoresByYear: ReadonlyMap<number, Readonly<Record<TimingScoreKey, TimingScoreResult>>>
+}
+
+export interface MonthlyTimingScoreTimeline {
+  hasBirthTime: boolean
+  byMonth: ReadonlyMap<string, Readonly<Record<TimingScoreKey, TimingScoreResult>>>
 }
 
 const merge = (...groups: Array<readonly TimingEvidenceDefinition[] | undefined>) => groups.flatMap(group => group ?? [])
@@ -125,5 +131,19 @@ export function buildTimingScoreTimeline(
   return {
     ...evidence,
     scoresByYear: new Map(evidence.years.map(year => [year, computeTimingScores(evidence.byYear.get(year) ?? [], quality)])),
+  }
+}
+
+/** 年次Evidenceに流月Evidenceを加えたshadow月次スコア。本番カードには未接続。 */
+export function buildMonthlyTimingScoreTimeline(input: TimingEvidenceBirthInput, quality: TimingScoreQuality = {}): MonthlyTimingScoreTimeline {
+  const annualEvidence = buildTimingEvidenceTimeline(input)
+  const timing = calcTimingCycles(input.birthYear, input.birthMonth, input.birthDay, input.birthHour, input.birthMinute ?? 0, input.gender)
+  const monthly = buildMonthlyStemBranchEvidence({ ...input, annual: timing.annual })
+  return {
+    hasBirthTime: annualEvidence.hasBirthTime,
+    byMonth: new Map([...monthly.entries()].map(([monthKey, definitions]) => {
+      const year = Number(monthKey.slice(0, 4))
+      return [monthKey, computeTimingScores(merge(annualEvidence.byYear.get(year), definitions), quality)]
+    })),
   }
 }
