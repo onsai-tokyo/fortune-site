@@ -9,7 +9,7 @@
     "test:phase3": "tsx --test src/lib/report/timingClaimSelector.test.ts",
     "test:timing-scores": "tsx --test src/lib/report/timingScoreEngine.test.ts src/lib/report/timingEvidencePipeline.test.ts src/lib/report/timingStemBranchEvidence.test.ts src/lib/report/timingWesternEvidence.test.ts src/lib/report/timingVedicEvidence.test.ts src/lib/report/timingZiweiEvidence.test.ts src/lib/report/timingLineageContract.test.ts src/lib/report/timingScoreDesignContract.test.ts src/lib/report/timingExactManifest.test.ts src/lib/report/timingRuleReadiness.test.ts src/lib/report/timingProductionIsolation.test.ts src/scripts/timingMeasurementSamples.test.ts",
     "test:production-safety": "tsx --test src/lib/report/timingExactManifest.test.ts src/lib/report/timingRuleReadiness.test.ts src/lib/report/timingProductionIsolation.test.ts",
-    "test:selfreport": "tsx --test src/lib/report/selfReportSnapshot.test.ts src/lib/report/factPipelineContract.test.ts src/lib/report/narrativeBlocksDistribution.test.ts src/lib/report/synastryDistribution.test.ts",
+    "test:selfreport": "tsx --test src/lib/report/claimComposer.test.ts src/lib/report/selfReportSnapshot.test.ts src/lib/report/factPipelineContract.test.ts src/lib/report/narrativeBlocksDistribution.test.ts src/lib/report/synastryDistribution.test.ts",
     "snapshot:write": "tsx src/scripts/snapshotSelfReports.ts",
     "snapshot:metrics": "tsx src/scripts/snapshotSelfReports.ts --metrics-only",
     "scores:calibrate": "tsx src/scripts/calibrateTraitScores.ts 1000",

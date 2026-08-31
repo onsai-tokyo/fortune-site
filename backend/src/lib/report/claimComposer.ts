@@ -22,15 +22,24 @@ function seedInt(value: string): number {
   return createHash('sha256').update(value).digest().readUInt32BE(0)
 }
 
-function findingMatches(asset: ClaimAsset, finding: ReportFindingV2): boolean {
+export function claimTriggerMatchesFinding(asset: ClaimAsset, finding: ReportFindingV2): boolean {
   switch (asset.trigger.kind) {
     case 'signal': return finding.key === asset.trigger.signal
     case 'axis': return finding.axis === asset.trigger.axis
     case 'gap': return finding.key === asset.trigger.gapKey || finding.key === `${asset.trigger.gapKey}:aligned`
     case 'missing': return finding.key === `missing-${asset.trigger.element}`
-    case 'mutagen': return finding.key.includes(`mutagen-${asset.trigger.star}`)
+    case 'mutagen': return finding.key.startsWith('mutagen-') && finding.key.split('-').includes(asset.trigger.star)
     case 'score': return finding.key === asset.trigger.scoreKey
   }
+}
+
+type ClaimSelectionTier = 'direct' | 'score' | 'axis'
+type SelectableClaim = Claim & { selectionTier: ClaimSelectionTier }
+
+function selectionTier(asset: ClaimAsset): ClaimSelectionTier {
+  if (asset.trigger.kind === 'axis') return 'axis'
+  if (asset.trigger.kind === 'score') return 'score'
+  return 'direct'
 }
 
 function scoreFinding(asset: ClaimAsset, facts: ReportFactV2[], scores: TraitScoreSet): ReportFindingV2 | null {
@@ -77,7 +86,7 @@ function confidenceFor(finding: ReportFindingV2, requiresBirthTime: boolean, bir
   return finding.confidence >= 0.65 ? 'likely' : 'conditional'
 }
 
-function buildClaim(asset: ClaimAsset, finding: ReportFindingV2, facts: ReportFactV2[], scores: TraitScoreSet, birthTimeAvailable: boolean): Claim | null {
+function buildClaim(asset: ClaimAsset, finding: ReportFindingV2, facts: ReportFactV2[], scores: TraitScoreSet, birthTimeAvailable: boolean): SelectableClaim | null {
   const factById = new Map(facts.map(fact => [fact.id, fact]))
   const scoreKey = asset.scoreKey === 'private_affection' ? 'domestic_affection' : asset.scoreKey
   const score = scores[scoreKey]
@@ -95,6 +104,7 @@ function buildClaim(asset: ClaimAsset, finding: ReportFindingV2, facts: ReportFa
     evidence,
     termGloss: evidence.flatMap(item => glossesForEvidence(item.detail)),
     confidence: confidenceFor(finding, requiresBirthTime, birthTimeAvailable), requiresBirthTime, salience,
+    selectionTier: selectionTier(asset),
   }
 }
 
@@ -121,28 +131,36 @@ function paragraph(claim: Claim, index: number): string {
   return parts.filter(Boolean).join('')
 }
 
-function pickClaims(chapter: ChapterId, claims: Claim[], seed: string): Claim[] {
+function rotateClaims(claims: SelectableClaim[], seed: string, tier: ClaimSelectionTier): SelectableClaim[] {
+  if (claims.length === 0) return []
+  const offset = seedInt(`${seed}|${tier}`) % claims.length
+  return Array.from({ length: claims.length }, (_, index) => claims[(offset + index) % claims.length])
+}
+
+function pickClaims(chapter: ChapterId, claims: SelectableClaim[], seed: string): SelectableClaim[] {
   const forbidden = CHAPTER_SCORES[chapter].forbidden
   const pool = claims.filter(claim => claim.chapter === chapter && claim.salience >= SALIENCE_FLOOR)
     .filter(claim => !forbidden?.test([claim.typeLabel, claim.subject, claim.proposition, claim.counterpart, claim.condition, claim.behavior, claim.cost].filter(Boolean).join('')))
     .sort((left, right) => right.salience - left.salience || left.id.localeCompare(right.id))
   if (pool.length === 0) return []
   const desired = Math.min(MAX_SECTIONS, Math.max(MIN_SECTIONS, pool.length))
-  // floor を通った候補はすべて同じ「掲載可能」プール。上位12件へ再び絞ると、
-  // 221件の人手資産が使われずタイトルが固定化するため、seed で全候補を巡回する。
-  const offset = seedInt(`${seed}|${chapter}`) % pool.length
-  return Array.from({ length: pool.length }, (_, index) => pool[(offset + index) % pool.length]).slice(0, desired)
+  // 具体的な trigger を最優先する。axis は ClaimTrigger の契約どおり、
+  // 具体的な候補だけでは章の最低件数を満たせない場合に限るフォールバック。
+  // score はスコア自体を根拠に執筆された資産なので、その次に採る。
+  const ordered = (['direct', 'score', 'axis'] as const).flatMap(tier =>
+    rotateClaims(pool.filter(claim => claim.selectionTier === tier), `${seed}|${chapter}`, tier))
+  return ordered.slice(0, desired)
 }
 
 export function buildClaimStructuredReport(facts: ReportFactV2[], findings: ReportFindingV2[], input: ReportInput): StructuredReport {
   const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
   const seed = JSON.stringify([input.birthDate, input.birthTime ?? null, input.birthplace, input.gender])
   const claims = CLAIM_ASSETS.flatMap(asset => {
-    const triggered = findings.filter(item => findingMatches(asset, item))
+    const triggered = findings.filter(item => claimTriggerMatchesFinding(asset, item))
       .sort((left, right) => right.confidence - left.confidence || left.id.localeCompare(right.id))[0]
-    // trigger は第一根拠。対応する決定論スコアに十分な Fact がある場合は、
-    // trigger の表記差だけで人手資産を捨てずスコア側の provenance を使う。
-    const finding = triggered ?? scoreFinding(asset, facts, scores)
+    // 非 score 資産は固有 trigger が成立したときだけ採用する。
+    // 広い Trait Score だけで具体的な生活場面を補うと、根拠のない断定になる。
+    const finding = triggered ?? (asset.trigger.kind === 'score' ? scoreFinding(asset, facts, scores) : null)
     if (!finding) return []
     const claim = buildClaim(asset, finding, facts, scores, Boolean(input.birthTime))
     return claim ? [claim] : []
@@ -168,7 +186,11 @@ export function buildClaimStructuredReport(facts: ReportFactV2[], findings: Repo
     return [withCardProvenance({
       id: chapter, kind: 'essence', scope: 'self', tab: 'essence', title: realizeTitle(first),
       summary: realizeSummary(first, 'scene-first'), tags: [CHAPTER_SCORES[chapter].heading], period: null,
-      pages, sections, evidence, metadataRefs: picked.flatMap(claim => [`claim:${claim.id}`, ...claim.evidence.flatMap(item => item.factIds.map(id => `fact:${id}`))]),
+      pages, sections, evidence, metadataRefs: picked.flatMap(claim => [
+        `claim:${claim.id}`,
+        `claim-source:${claim.selectionTier}`,
+        ...claim.evidence.flatMap(item => item.factIds.map(id => `fact:${id}`)),
+      ]),
     }, 'deterministic', 'finding', 0)]
   })
   return finalizeReportProvenance({
