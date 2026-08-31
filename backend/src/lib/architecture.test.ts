@@ -230,7 +230,8 @@ test('相性結果は選択画面と分離し本人鑑定と同じカード導�
   assert.match(api, /report\["conversationId"\] = object\["conversationId"\]/)
   assert.doesNotMatch(partners, /if let compatibilityReport \{[\s\S]{0,300}ForEach/)
   assert.match(insightHub, /struct ReadingCardList/)
-  assert.match(insightHub, /InsightDetailView\(item: item\)/)
+  assert.match(insightHub, /NavigationLink \{ FocusReadingView\(item: item\)/)
+  assert.doesNotMatch(insightHub, /NavigationLink \{ InsightDetailView\(item: item\)/)
 })
 
 test('存在しない鑑定のチャットは404を再送せず一覧へ戻せる', () => {

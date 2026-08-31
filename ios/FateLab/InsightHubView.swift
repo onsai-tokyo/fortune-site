@@ -163,7 +163,7 @@ struct ReadingCardList: View {
 
     var body: some View {
         ForEach(cards) { item in
-            NavigationLink { InsightDetailView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
+            NavigationLink { FocusReadingView(item: item) { onQuestion(item) } } label: { InsightCard(item: item) }
                 .buttonStyle(.plain)
         }
     }
@@ -218,7 +218,7 @@ struct InsightDetailView: View {
     }
 }
 
-private struct FocusReadingView: View {
+struct FocusReadingView: View {
     @Environment(\.dismiss) private var dismiss
     let item: ReadingCard
     let onQuestion: () -> Void
