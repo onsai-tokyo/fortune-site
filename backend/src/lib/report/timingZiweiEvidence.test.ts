@@ -19,7 +19,7 @@ test('流年命宮が官禄・遷移・財帛ならcareer_activationへ独立加
   const chart = calcZiwei(1995, 2, 20, 3, 'female', '愛知県')
   if (!chart.available) throw new Error('紫微斗数が利用不可')
   const byYear = buildZiweiTimingEvidence(chart.annual)
-  const matched = [...byYear.entries()].find(([, items]) => items.some(item => item.factLineageId.includes('annual_life_palace') && item.matched))
+  const matched = [...byYear.entries()].find(([, items]) => items.some(item => item.scoreKey === 'career_activation' && item.factLineageId.includes('annual_life_palace') && item.matched))
   assert.ok(matched)
   assert.equal(computeTimingScore('career_activation', matched![1]).familyContributions.ziwei, 0.23)
 })

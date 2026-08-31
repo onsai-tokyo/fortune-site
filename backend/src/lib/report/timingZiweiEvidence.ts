@@ -21,6 +21,9 @@ export function buildZiweiTimingEvidence(annual: readonly ZiweiAnnualTimingInput
     const selfOrWellbeingChanged = placements.some(entry => entry.palace === '命' || entry.palace === '福徳')
     const homeActivated = active.has('田宅') || placements.some(entry => entry.palace === '田宅' && entry.mutagen !== '化忌')
     const careerPositiveMutagen = placements.some(entry => entry.palace === '官禄' && entry.mutagen !== '化忌')
+    const positiveAt = (palace: string) => placements.some(entry => entry.palace === palace && entry.mutagen !== '化忌')
+    const mutagenAt = (palace: string, mutagen: ZiweiAnnualTimingInput['mutagenPlacements'][number]['mutagen']) =>
+      placements.some(entry => entry.palace === palace && entry.mutagen === mutagen)
     const expectedMutagens: ReadonlySet<ZiweiAnnualTimingInput['mutagenPlacements'][number]['mutagen']> = new Set(['化禄', '化権', '化科', '化忌'])
     const resolvedMutagens = new Set(placements.filter(entry => entry.star.trim() && entry.palace.trim()).map(entry => entry.mutagen))
     const resolvedStars = new Set(placements.filter(entry => entry.star.trim()).map(entry => entry.star.trim()))
@@ -31,7 +34,7 @@ export function buildZiweiTimingEvidence(annual: readonly ZiweiAnnualTimingInput
       && resolvedStars.size === expectedMutagens.size
       && placements.every(entry => VALID_PALACES.has(entry.palace))
     const make = (
-      id: string, scoreKey: 'relationship_disruption' | 'career_activation', factLineageId: string,
+      id: string, scoreKey: TimingEvidenceDefinition['scoreKey'], factLineageId: string,
       technique: 'annual_life_palace' | 'annual_four_transformations', maximumContribution: number, matched: boolean, detail: string,
       evidenceAvailable = available,
     ): TimingEvidenceDefinition => ({
@@ -45,6 +48,42 @@ export function buildZiweiTimingEvidence(annual: readonly ZiweiAnnualTimingInput
         ['官禄', '遷移', '財帛'].some(palace => active.has(palace)), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
       make('career-mutagen', 'career_activation', 'ziwei:annual_four_transformations:career', 'annual_four_transformations', 0.18,
         careerPositiveMutagen, `官禄宮の吉四化=${careerPositiveMutagen}`, fourTransformationsAvailable),
+      make('spouse-life-activation', 'relationship_activation', 'ziwei:annual_life_palace:natal_spouse_palace', 'annual_life_palace', 0.20,
+        active.has('夫妻'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('spouse-positive-activation', 'relationship_activation', 'ziwei:annual_four_transformations:spouse:positive', 'annual_four_transformations', 0.18,
+        positiveAt('夫妻'), `夫妻宮吉四化=${positiveAt('夫妻')}`, fourTransformationsAvailable),
+      make('spouse-binding', 'relationship_binding', 'ziwei:annual_four_transformations:spouse:lu_quan_ke', 'annual_four_transformations', 0.20,
+        positiveAt('夫妻'), `夫妻宮吉四化=${positiveAt('夫妻')}`, fourTransformationsAvailable),
+      make('spouse-secrecy', 'relationship_secrecy', 'ziwei:annual_four_transformations:spouse:ji', 'annual_four_transformations', 0.18,
+        spouseJi, `shadow provisional / 夫妻宮化忌=${spouseJi}`, fourTransformationsAvailable),
+      make('marriage-home', 'marriage_legalization', 'ziwei:annual_four_transformations:spouse_property:activation', 'annual_four_transformations', 0.20,
+        (positiveAt('夫妻') && homeActivated) || (spouseJi && homeActivated), `夫妻変化=${positiveAt('夫妻') || spouseJi} / 田宅活性=${homeActivated}`, fourTransformationsAvailable),
+      make('career-change-life', 'career_change', 'ziwei:annual_life_palace:career_travel', 'annual_life_palace', 0.20,
+        active.has('官禄') || active.has('遷移'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('career-expansion-mutagen', 'career_expansion', 'ziwei:annual_four_transformations:career:lu_quan_ke', 'annual_four_transformations', 0.20,
+        careerPositiveMutagen, `官禄宮吉四化=${careerPositiveMutagen}`, fourTransformationsAvailable),
+      make('money-life', 'money_status', 'ziwei:annual_life_palace:wealth', 'annual_life_palace', 0.18,
+        active.has('財帛'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('money-mutagen', 'money_status', 'ziwei:annual_four_transformations:wealth:lu_quan', 'annual_four_transformations', 0.20,
+        mutagenAt('財帛', '化禄') || mutagenAt('財帛', '化権'), `財帛宮化禄・化権=${mutagenAt('財帛', '化禄') || mutagenAt('財帛', '化権')}`, fourTransformationsAvailable),
+      make('home-life', 'home_family', 'ziwei:annual_life_palace:property', 'annual_life_palace', 0.18,
+        active.has('田宅'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('home-mutagen', 'home_family', 'ziwei:annual_four_transformations:property:activation', 'annual_four_transformations', 0.20,
+        positiveAt('田宅'), `田宅宮吉四化=${positiveAt('田宅')}`, fourTransformationsAvailable),
+      make('relocation-life', 'relocation', 'ziwei:annual_life_palace:travel_property', 'annual_life_palace', 0.20,
+        active.has('遷移') || active.has('田宅'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('education-ke', 'education_activation', 'ziwei:annual_four_transformations:career:ke', 'annual_four_transformations', 0.18,
+        mutagenAt('官禄', '化科') || mutagenAt('命', '化科'), `官禄・命宮化科=${mutagenAt('官禄', '化科') || mutagenAt('命', '化科')}`, fourTransformationsAvailable),
+      make('identity-life', 'identity_reset', 'ziwei:annual_life_palace:self_travel', 'annual_life_palace', 0.20,
+        active.has('命') || active.has('遷移'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('identity-mutagen', 'identity_reset', 'ziwei:annual_four_transformations:self:activation', 'annual_four_transformations', 0.18,
+        placements.some(entry => (entry.palace === '命' || entry.palace === '福徳')), `命・福徳四化=${selfOrWellbeingChanged}`, fourTransformationsAvailable),
+      make('network-life', 'social_network_change', 'ziwei:annual_life_palace:friends_travel', 'annual_life_palace', 0.18,
+        active.has('交友') || active.has('僕役') || active.has('遷移'), `流年命宮=${[...active].join('・')}`, annualLifePalaceAvailable),
+      make('responsibility-career', 'responsibility', 'ziwei:annual_four_transformations:career:quan_ji', 'annual_four_transformations', 0.18,
+        mutagenAt('官禄', '化権') || mutagenAt('官禄', '化忌'), `官禄宮化権・化忌=${mutagenAt('官禄', '化権') || mutagenAt('官禄', '化忌')}`, fourTransformationsAvailable),
+      make('emotional-stress-ji', 'emotional_stress', 'ziwei:annual_four_transformations:self_spouse:ji', 'annual_four_transformations', 0.18,
+        placements.some(entry => entry.mutagen === '化忌' && ['命', '福徳', '夫妻'].includes(entry.palace)), `命・福徳・夫妻宮化忌`, fourTransformationsAvailable),
     ]] as const
   }))
 }

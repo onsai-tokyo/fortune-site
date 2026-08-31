@@ -9,9 +9,9 @@ const byYear = buildWesternTimingEvidence(annual)
 
 test('出生時刻なしの正午代表値は43年分の診断定義だけを作りEvidenceへ昇格しない', () => {
   assert.equal(byYear.size, 43)
-  assert.ok([...byYear.values()].every(items => items.length === 16))
+  assert.ok([...byYear.values()].every(items => items.length === 56))
   assert.ok([...byYear.values()].flat().every(item => !item.available && !item.matched && item.support === 0))
-  assert.equal(new Set([...byYear.values()].flat().map(item => `${item.scoreKey}:${item.factLineageId}`)).size, 10)
+  assert.equal(new Set([...byYear.values()].flat().map(item => `${item.scoreKey}:${item.factLineageId}`)).size, 39)
 })
 
 test('時刻あり土星×金星ハードの成立年だけrelationship_disruptionへ加点する', () => {
@@ -32,7 +32,11 @@ test('外惑星の時刻不要対象と水星対象を各スコアへ分離す�
     'western:transit:pluto:venus_desc', 'western:transit:neptune:desc_house7lord_venus_hard',
     'western:transit:uranus:mc_ic_mercury_house10lord', 'western:transit:jupiter:mercury_mc_house10lord',
   ]) assert.ok(all.some(item => item.factLineageId === lineage && item.matched), `${lineage} が一度も成立しない`)
-  assert.ok(all.filter(item => !/\b(?:asc|desc|mc|ic)\b/i.test(item.id)).every(item => item.available))
+  for (const id of [
+    'uranus-mercury-career-change', 'jupiter-mercury-career-expansion', 'jupiter-mercury-study',
+    'saturn-mercury-study-block', 'pluto-sun-identity', 'neptune-sun-identity',
+    'pluto-personal-stress', 'uranus-personal-stress', 'neptune-personal-stress',
+  ]) assert.ok(all.filter(item => item.id.startsWith(`${id}:`)).every(item => item.available), `${id} が利用不可`)
 })
 
 test('出生時刻ありではASC・DESC・MC・IC対象だけをavailableにする', () => {

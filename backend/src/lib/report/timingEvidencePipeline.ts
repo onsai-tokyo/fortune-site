@@ -92,9 +92,12 @@ export function buildTimingEvidenceTimeline(input: TimingEvidenceBirthInput): Ti
   if (hasBirthTime) {
     const astrology = calcAstrology(input.birthYear, input.birthMonth, input.birthDay, input.birthHour!, input.birthMinute ?? 0, input.birthplace)
     if (astrology.annual) {
+      const fixedByYear = new Map(westernBase.map(item => [item.year, item.aspects]))
       western = buildWesternTimingEvidence(astrology.annual.map(item => ({
         year: item.year,
-        aspects: item.westernAspects.filter(aspect => !['ASC', 'DESC', 'MC', 'IC'].includes(aspect.natal)),
+        // 個人天体は出生時刻に依存しない完全系列（水星を含む）を利用し、
+        // 出生地・時刻が必要な角度だけ実出生時刻の系列から合流する。
+        aspects: fixedByYear.get(item.year) ?? [],
         angleAspects: item.westernAspects.filter(aspect => ['ASC', 'DESC', 'MC', 'IC'].includes(aspect.natal)),
       })), { hasBirthTime: astrology.anglesAvailable === true, personalPlanetsAvailable: true })
     }

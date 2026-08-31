@@ -119,6 +119,9 @@ export interface VedicAnnualDasha {
   house5Lord?: string
   house7Lord?: string
   house8Lord?: string
+  house2Lord?: string
+  house4Lord?: string
+  house9Lord?: string
   house10Lord?: string
 }
 
@@ -127,7 +130,7 @@ const vedicHouseLord = (ascendantSign: number, house: number) => VEDIC_SIGN_RULE
 
 function vedicAnnualDashaFromMoon(
   year: number, natalMoon: number, available: boolean,
-  houses: Pick<VedicAnnualDasha, 'house5Lord' | 'house7Lord' | 'house8Lord' | 'house10Lord'> = {},
+  houses: Pick<VedicAnnualDasha, 'house2Lord' | 'house4Lord' | 'house5Lord' | 'house7Lord' | 'house8Lord' | 'house9Lord' | 'house10Lord'> = {},
 ): VedicAnnualDasha[] {
   const nakLength = 360 / 27
   const lordStart = Math.floor(natalMoon / nakLength) % 9
@@ -177,9 +180,12 @@ export function calcVedicAnnualDasha(year: number, month: number, day: number, h
   const ascendant = normalize(tropicalAscendant(date, latitude, longitude) - lahiriAyanamsha(date))
   const ascendantSign = Math.floor(ascendant / 30)
   return vedicAnnualDashaFromMoon(year, moon, true, {
+    house2Lord: vedicHouseLord(ascendantSign, 2),
+    house4Lord: vedicHouseLord(ascendantSign, 4),
     house5Lord: vedicHouseLord(ascendantSign, 5),
     house7Lord: vedicHouseLord(ascendantSign, 7),
     house8Lord: vedicHouseLord(ascendantSign, 8),
+    house9Lord: vedicHouseLord(ascendantSign, 9),
     house10Lord: vedicHouseLord(ascendantSign, 10),
   })
 }

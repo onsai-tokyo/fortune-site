@@ -13,9 +13,19 @@ test('月宿が同じでも43年系列が時刻候補で変わる日は利用不
 
 test('金星期のケートゥ／ラーフだけを恋愛領域Evidenceとして発火する', () => {
   const definitions = buildVedicTimingEvidence(calcVedicAnnualDasha(1995, 3, 13, 12, 0, '東京都'))
-  const matched = [...definitions.values()].flat().filter(item => item.matched && item.scoreKey !== 'career_activation' && item.factLineageId.includes('antardasha'))
+  const target = new Set([
+    'vedic:antardasha:ketu:romance_period', 'vedic:antardasha:rahu:romance_period',
+    'vedic:antardasha:ketu:venus_active', 'vedic:antardasha:rahu:romance_house_involvement',
+  ])
+  const matched = [...definitions.values()].flat().filter(item => item.matched && target.has(item.factLineageId))
   assert.ok(matched.length > 0)
   assert.ok(matched.every(item => /ketu|rahu/.test(item.factLineageId)))
+})
+
+test('追加ダシャー定義は18スコアすべてをshadow計測可能にする', () => {
+  const definitions = buildVedicTimingEvidence(calcVedicAnnualDasha(1995, 2, 20, 3, 2, '愛知県名古屋市'))
+  const keys = new Set([...definitions.values()].flat().map(item => item.scoreKey))
+  assert.equal(keys.size, 18)
 })
 
 test('時刻ありではマハーダシャー切替と10室アンタルを別根拠として扱う', () => {

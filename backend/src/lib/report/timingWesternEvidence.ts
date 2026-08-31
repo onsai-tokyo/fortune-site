@@ -16,7 +16,7 @@ export function buildWesternTimingEvidence(
 ): ReadonlyMap<number, readonly TimingEvidenceDefinition[]> {
   return new Map(annual.map((item, index) => {
     const make = (
-      id: string, scoreKey: 'relationship_disruption' | 'relationship_idealization' | 'career_activation',
+      id: string, scoreKey: TimingEvidenceDefinition['scoreKey'],
       factLineageId: string, maximumContribution: number, transit: WesternAnnualAspect['transit'], natal: readonly string[],
       allowedAngles: readonly number[], orbLimit: number, requiresBirthTime = false,
     ): TimingEvidenceDefinition => {
@@ -69,6 +69,52 @@ export function buildWesternTimingEvidence(
       make('jupiter-mercury', 'career_activation', 'western:transit:jupiter:mercury_mc_house10lord', 0.14, '木星', ['水星'], [0, 60, 120], 5),
       make('jupiter-mc', 'career_activation', 'western:transit:jupiter:mercury_mc_house10lord', 0.14, '木星', ['MC'], [0, 60, 120], 5, true),
       make('saturn-mc', 'career_activation', 'western:transit:saturn:mc_house10lord', 0.12, '土星', ['MC'], [0, 90, 180], 4, true),
+
+      // 追加ルール§1-5: 出会い・固定化・婚姻
+      make('jupiter-venus-moon-activation', 'relationship_activation', 'western:transit:jupiter:venus_moon_harmony', 0.14, '木星', ['金星', '月'], [0, 60, 120], 5),
+      make('uranus-desc-activation', 'relationship_activation', 'western:transit:uranus:descendant', 0.16, '天王星', ['DESC'], [0, 60, 90, 120, 180], 3, true),
+      make('saturn-desc-binding', 'relationship_binding', 'western:transit:saturn:descendant', 0.18, '土星', ['DESC'], [0, 90, 180], 4, true),
+      make('neptune-love-secrecy', 'relationship_secrecy', 'western:transit:neptune:venus_descendant', 0.18, '海王星', ['金星'], [0, 90, 180], 3),
+      make('neptune-desc-secrecy', 'relationship_secrecy', 'western:transit:neptune:venus_descendant', 0.18, '海王星', ['DESC'], [0, 90, 180], 3, true),
+      make('uranus-secret-reveal', 'relationship_secrecy', 'western:transit:uranus:mars_descendant', 0.12, '天王星', ['火星'], [0, 90, 180], 3),
+      make('uranus-desc-secret-reveal', 'relationship_secrecy', 'western:transit:uranus:mars_descendant', 0.12, '天王星', ['DESC'], [0, 90, 180], 3, true),
+      make('saturn-desc-marriage', 'marriage_legalization', 'western:transit:saturn:descendant_commitment', 0.18, '土星', ['DESC'], [0, 90, 180], 4, true),
+      make('jupiter-venus-marriage', 'marriage_legalization', 'western:transit:jupiter:venus_descendant_harmony', 0.14, '木星', ['金星'], [0, 60, 120], 5),
+      make('jupiter-desc-marriage', 'marriage_legalization', 'western:transit:jupiter:venus_descendant_harmony', 0.14, '木星', ['DESC'], [0, 60, 120], 5, true),
+
+      // 追加ルール§12-17: 転職・拡大・収入・責任
+      make('uranus-mercury-career-change', 'career_change', 'western:transit:uranus:mc_ic_mercury', 0.20, '天王星', ['水星'], [0, 60, 90, 120, 180], 3),
+      make('uranus-mc-ic-career-change', 'career_change', 'western:transit:uranus:mc_ic_mercury', 0.20, '天王星', ['MC', 'IC'], [0, 60, 90, 120, 180], 3, true),
+      make('pluto-mc-asc-career-change', 'career_change', 'western:transit:pluto:mc_asc', 0.18, '冥王星', ['MC', 'ASC'], [0, 60, 90, 120, 180], 3, true),
+      make('jupiter-mercury-career-expansion', 'career_expansion', 'western:transit:jupiter:mercury_mc', 0.18, '木星', ['水星'], [0, 60, 120], 5),
+      make('jupiter-mc-career-expansion', 'career_expansion', 'western:transit:jupiter:mercury_mc', 0.18, '木星', ['MC'], [0, 60, 120], 5, true),
+      make('pluto-mc-career-expansion', 'career_expansion', 'western:transit:pluto:midheaven', 0.14, '冥王星', ['MC'], [0, 60, 90, 120, 180], 3, true),
+      make('jupiter-mc-money', 'money_status', 'western:transit:jupiter:midheaven', 0.14, '木星', ['MC'], [0, 60, 120], 5, true),
+      make('saturn-mc-responsibility', 'responsibility', 'western:transit:saturn:midheaven_sun', 0.20, '土星', ['MC'], [0, 90, 180], 4, true),
+      make('saturn-sun-responsibility', 'responsibility', 'western:transit:saturn:midheaven_sun', 0.20, '土星', ['太陽'], [0, 90, 180], 4),
+
+      // 追加ルール§18-24: 教育・移動・人生フェーズ・心理負荷
+      make('uranus-ic-home', 'home_family', 'western:transit:uranus:imum_coeli', 0.18, '天王星', ['IC'], [0, 60, 90, 120, 180], 3, true),
+      make('pluto-ic-home', 'home_family', 'western:transit:pluto:imum_coeli', 0.18, '冥王星', ['IC'], [0, 60, 90, 120, 180], 3, true),
+      make('jupiter-ic-home', 'home_family', 'western:transit:jupiter:imum_coeli', 0.14, '木星', ['IC'], [0, 60, 120], 5, true),
+      make('uranus-ic-relocation', 'relocation', 'western:transit:uranus:imum_coeli', 0.18, '天王星', ['IC'], [0, 60, 90, 120, 180], 3, true),
+      make('pluto-ic-relocation', 'relocation', 'western:transit:pluto:imum_coeli', 0.18, '冥王星', ['IC'], [0, 60, 90, 120, 180], 3, true),
+      make('jupiter-ic-relocation', 'relocation', 'western:transit:jupiter:imum_coeli', 0.14, '木星', ['IC'], [0, 60, 120], 5, true),
+      make('jupiter-mercury-study', 'education_activation', 'western:transit:jupiter:mercury_sun_harmony', 0.16, '木星', ['水星', '太陽'], [0, 60, 120], 5),
+      make('saturn-mercury-study-block', 'education_disruption', 'western:transit:saturn:mercury_sun_hard', 0.12, '土星', ['水星', '太陽'], [0, 90, 180], 4),
+      make('jupiter-mercury-study-tension', 'education_disruption', 'western:transit:jupiter:mercury_sun_hard', 0.12, '木星', ['水星', '太陽'], [90, 180], 5),
+      make('uranus-network', 'social_network_change', 'western:transit:uranus:asc_mc_mercury', 0.18, '天王星', ['水星'], [0, 60, 90, 120, 180], 3),
+      make('uranus-angle-network', 'social_network_change', 'western:transit:uranus:asc_mc_mercury', 0.18, '天王星', ['ASC', 'MC'], [0, 60, 90, 120, 180], 3, true),
+      make('pluto-sun-identity', 'identity_reset', 'western:transit:pluto:ascendant_sun', 0.20, '冥王星', ['太陽'], [0, 60, 90, 120, 180], 3),
+      make('pluto-asc-identity', 'identity_reset', 'western:transit:pluto:ascendant_sun', 0.20, '冥王星', ['ASC'], [0, 60, 90, 120, 180], 3, true),
+      make('uranus-asc-identity', 'identity_reset', 'western:transit:uranus:ascendant', 0.16, '天王星', ['ASC'], [0, 60, 90, 120, 180], 3, true),
+      make('neptune-sun-identity', 'identity_reset', 'western:transit:neptune:sun', 0.12, '海王星', ['太陽'], [0, 90, 180], 3),
+      make('pluto-personal-stress', 'emotional_stress', 'western:transit:pluto:sun_moon_angles', 0.18, '冥王星', ['太陽', '月'], [0, 90, 180], 3),
+      make('pluto-angle-stress', 'emotional_stress', 'western:transit:pluto:sun_moon_angles', 0.18, '冥王星', ['ASC', 'DESC'], [0, 90, 180], 3, true),
+      make('uranus-personal-stress', 'emotional_stress', 'western:transit:uranus:moon_mars_descendant', 0.16, '天王星', ['月', '火星'], [0, 90, 180], 3),
+      make('uranus-desc-stress', 'emotional_stress', 'western:transit:uranus:moon_mars_descendant', 0.16, '天王星', ['DESC'], [0, 90, 180], 3, true),
+      make('neptune-personal-stress', 'emotional_stress', 'western:transit:neptune:moon_venus_descendant', 0.14, '海王星', ['月', '金星'], [0, 90, 180], 3),
+      make('neptune-desc-stress', 'emotional_stress', 'western:transit:neptune:moon_venus_descendant', 0.14, '海王星', ['DESC'], [0, 90, 180], 3, true),
     ]
     return [item.year, definitions] as const
   }))

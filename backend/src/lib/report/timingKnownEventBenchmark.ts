@@ -1,5 +1,6 @@
 import type { TimingEvidenceBirthInput, TimingScoreTimeline } from './timingEvidencePipeline.js'
 import type { TimingScoreKey } from './timingClaim.js'
+import type { TimingScoreResult } from './timingScoreEngine.js'
 
 /**
  * 既知の人生イベントは「正解文」ではなく、時期ロジックの検証ラベルとしてだけ扱う。
@@ -47,6 +48,41 @@ export interface KnownTimingEventResult {
   measurableScores: readonly TimingScoreKey[]
   unsupportedScores: readonly TimingScoreKey[]
   detectedScores: readonly TimingScoreKey[]
+  diagnostics: readonly KnownTimingScoreDiagnostic[]
+}
+
+export type KnownTimingDiagnosticStatus = 'detected' | 'no_support' | 'below_relative_strength' | 'no_confidence' | 'no_source_family'
+
+export interface KnownTimingScoreDiagnostic {
+  key: TimingScoreKey
+  status: KnownTimingDiagnosticStatus
+  rawSupport: number
+  relativeStrength: number
+  confidence: number
+  sourceFamilyCount: number
+  correlationGroupCount: number
+  evidenceCount: number
+}
+
+export interface UnlabelledTimingActivation {
+  year: number
+  activatedScores: readonly TimingScoreKey[]
+}
+
+const isDetected = (
+  score: TimingScoreResult,
+  minimumRelativeStrength: number,
+) => score.relativeStrength >= minimumRelativeStrength && score.confidence > 0 && score.sourceFamilyCount > 0
+
+function diagnosticStatus(
+  score: TimingScoreResult,
+  minimumRelativeStrength: number,
+): KnownTimingDiagnosticStatus {
+  if (isDetected(score, minimumRelativeStrength)) return 'detected'
+  if (score.rawSupport <= 0) return 'no_support'
+  if (score.relativeStrength < minimumRelativeStrength) return 'below_relative_strength'
+  if (score.confidence <= 0) return 'no_confidence'
+  return 'no_source_family'
 }
 
 /** 現在接続済みのEvidenceだけを測り、未実装を「不一致」と誤記録しない。 */
@@ -64,10 +100,41 @@ export function evaluateKnownTimingCase(
     // evidence.lengthだけを見ると非発火を未実装と誤分類するため、正本契約で判定する。
     const measurableScores = event.expectedScores.filter(key => implementedScores.has(key))
     const unsupportedScores = event.expectedScores.filter(key => !implementedScores.has(key))
-    const detectedScores = measurableScores.filter(key => {
+    const diagnostics = measurableScores.map(key => {
       const score = scores[key]
-      return score.relativeStrength >= minimumRelativeStrength && score.confidence > 0 && score.sourceFamilyCount > 0
+      return {
+        key,
+        status: diagnosticStatus(score, minimumRelativeStrength),
+        rawSupport: score.rawSupport,
+        relativeStrength: score.relativeStrength,
+        confidence: score.confidence,
+        sourceFamilyCount: score.sourceFamilyCount,
+        correlationGroupCount: score.correlationGroupCount,
+        evidenceCount: score.evidence.length,
+      }
     })
-    return { event, measurableScores, unsupportedScores, detectedScores }
+    const detectedScores = diagnostics.filter(item => item.status === 'detected').map(item => item.key)
+    return { event, measurableScores, unsupportedScores, detectedScores, diagnostics }
   })
+}
+
+/**
+ * 出来事が記録されていない年を「外れ」とは断定せず、高スコアの発火量だけを測る。
+ * ルール追加で全ての年が強くなる退行を検知するための shadow 診断。
+ */
+export function measureUnlabelledTimingActivation(
+  fixture: KnownTimingCase,
+  timeline: TimingScoreTimeline,
+  minimumRelativeStrength = 0.33,
+): readonly UnlabelledTimingActivation[] {
+  const labelledYears = new Set(fixture.events.map(item => item.year))
+  return [...timeline.scoresByYear.entries()]
+    .filter(([year]) => !labelledYears.has(year))
+    .sort(([left], [right]) => left - right)
+    .map(([year, scores]) => ({
+      year,
+      activatedScores: (Object.keys(scores) as TimingScoreKey[])
+        .filter(key => isDetected(scores[key], minimumRelativeStrength))
+        .sort(),
+    }))
 }

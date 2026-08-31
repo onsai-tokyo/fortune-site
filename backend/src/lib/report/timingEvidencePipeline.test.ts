@@ -56,7 +56,7 @@ test('同一入力はEvidence順序・内容まで再現する', () => {
   assert.deepEqual(buildTimingEvidenceTimeline(input), buildTimingEvidenceTimeline(input))
 })
 
-test('43年すべてで18スコアを返し、追加shadowスコアを計算しつつ未実装は安全なゼロに留める', () => {
+test('43年すべてで18スコアを返し、追加shadowスコアを有限値で計算する', () => {
   const timeline = buildTimingScoreTimeline({ ...base, birthHour: 3, birthMinute: 2 })
   assert.equal(timeline.scoresByYear.size, 43)
   for (const year of timeline.years) {
@@ -69,8 +69,9 @@ test('43年すべてで18スコアを返し、追加shadowスコアを計算し�
       assert.ok(Number.isFinite(result.confidence))
     }
     assert.ok(scores.relationship_activation.rawSupport >= 0)
-    assert.equal(scores.career_expansion.rawSupport, 0)
+    assert.ok(scores.career_expansion.rawSupport >= 0)
   }
+  assert.ok([...timeline.scoresByYear.values()].some(scores => scores.career_expansion.rawSupport > 0))
 })
 
 test('品質係数はスコア値を変えずconfidenceだけへ反映する', () => {
