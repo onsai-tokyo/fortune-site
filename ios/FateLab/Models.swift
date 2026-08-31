@@ -203,11 +203,12 @@ struct ReadingCard: Codable, Identifiable {
     let tags: [String]
     let period: ReadingCardPeriod?
     let pages: [ReadingCardPage]
+    let sections: [ReadingCardSection]?
     let evidence: [ReadingCardEvidence]
 
     var isTiming: Bool { kind == "timing" }
     var resolvedTab: String { tab ?? (kind == "timing" ? "timing" : kind == "chart" ? "chart" : "essence") }
-    var body: String { pages.map(\.text).joined(separator: "\n\n") }
+    var body: String { sections?.map(\.body).joined(separator: "\n\n") ?? pages.map(\.text).joined(separator: "\n\n") }
 }
 
 struct ReadingCardPeriod: Codable { let label: String }
@@ -223,6 +224,22 @@ struct ReadingCardEvidence: Codable {
     let family: String
     let system: String
     let detail: String
+}
+
+struct ReadingCardSection: Codable, Identifiable {
+    let heading: String
+    let body: String
+    let evidence: [ReadingCardEvidence]
+    let termGloss: [ReadingTermGloss]
+    let claimId: String?
+    var id: String { claimId ?? "\(heading)|\(body)" }
+}
+
+struct ReadingTermGloss: Codable, Identifiable {
+    let term: String
+    let plain: String
+    let system: String
+    var id: String { "\(system)|\(term)" }
 }
 
 struct ReadingMessage: Codable, Identifiable {

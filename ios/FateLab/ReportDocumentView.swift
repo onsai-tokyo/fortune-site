@@ -41,10 +41,20 @@ private struct StructuredReportCardView: View {
         VStack(alignment: .leading, spacing: FateSpacing.cardPadding) {
             Text(card.title).font(FateType.sectionTitle).lineSpacing(6)
             Text(card.summary).font(FateType.body).foregroundStyle(FateTheme.muted).lineSpacing(7)
-            ForEach(Array(card.pages.enumerated()), id: \.offset) { _, page in
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
-                    Text(page.text).font(FateType.body).lineSpacing(8)
+            if let sections = card.sections, !sections.isEmpty {
+                ForEach(sections) { section in
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(section.heading).font(.headline).foregroundStyle(FateTheme.ink)
+                        Text(section.body).font(FateType.body).lineSpacing(8)
+                        SectionEvidenceView(section: section)
+                    }
+                }
+            } else {
+                ForEach(Array(card.pages.enumerated()), id: \.offset) { _, page in
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
+                        Text(page.text).font(FateType.body).lineSpacing(8)
+                    }
                 }
             }
             if !card.evidence.isEmpty {
@@ -60,5 +70,23 @@ private struct StructuredReportCardView: View {
         .padding(FateSpacing.cardPadding).background(FateTheme.canvas)
         .clipShape(RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(FateTheme.line))
+    }
+}
+
+struct SectionEvidenceView: View {
+    let section: ReadingCardSection
+    var body: some View {
+        if !section.evidence.isEmpty || !section.termGloss.isEmpty {
+            DisclosureGroup("根拠を見る") {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(section.evidence.enumerated()), id: \.offset) { _, evidence in
+                        Text("\(evidence.system) — \(evidence.detail)").font(.footnote).foregroundStyle(FateTheme.muted)
+                    }
+                    ForEach(section.termGloss) { gloss in
+                        Text("\(gloss.term)：\(gloss.plain)").font(.footnote).foregroundStyle(FateTheme.muted)
+                    }
+                }.padding(.top, 8)
+            }.font(.footnote)
+        }
     }
 }

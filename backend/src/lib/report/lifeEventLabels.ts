@@ -38,7 +38,7 @@ export interface LifeEventDefinition {
   actions: readonly string[]
 }
 
-const ORDINAL_PREFIX = ['', '第二の', '第三の', '第四の', '第五の'] as const
+const ORDINAL_PREFIX = ['第一回目の', '第二回目の', '第三回目の', '第四回目の', '第五回目の'] as const
 
 export const LIFE_EVENTS: readonly LifeEventDefinition[] = [
   {
@@ -247,7 +247,7 @@ export function lifeEvent(key: LifeEventKey): LifeEventDefinition {
  */
 export function badgeLabel(key: LifeEventKey, occurrence: number): string {
   const definition = lifeEvent(key)
-  if (!definition.ordinal || occurrence === 0) return definition.label
+  if (!definition.ordinal) return definition.label
   const prefix = ORDINAL_PREFIX[Math.min(occurrence, ORDINAL_PREFIX.length - 1)]
   return `${prefix}${definition.label}`
 }

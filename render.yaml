@@ -3,7 +3,7 @@ services:
     name: fortune-site-backend
     root: backend
     runtime: node
-    buildCommand: npm run build
+    buildCommand: npm run test:production-safety && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV

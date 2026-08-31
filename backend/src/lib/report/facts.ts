@@ -3,7 +3,8 @@ import type { ReportInput } from '../deterministicReport.js'
 import type { ReportMetadata } from './metadata.js'
 
 export type FactAxis = 'drive' | 'cognition' | 'relation' | 'expression' | 'shadow' | 'deficit' | 'tension' | 'domain-work' | 'domain-love' | 'timing'
-export type FactLineage = 'stems' | 'ephemeris' | 'number' | 'lunar'
+/** Legacy values remain accepted so factPipeline=v1 stays a byte-compatible rollback path. */
+export type FactLineage = 'stems' | 'shichu' | 'sanmei' | 'ziwei' | 'ephemeris' | 'number' | 'lunar'
 
 export interface ReportFact {
   id: string

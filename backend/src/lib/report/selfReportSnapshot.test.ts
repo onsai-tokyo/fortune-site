@@ -11,6 +11,7 @@ import { extractReportMetadata } from './metadata.js'
 import { buildSelfReport, DEFAULT_SELF_REPORT_OPTIONS, resolveSelfReportOptions, selfReportPipelineTag } from './buildSelfReport.js'
 import { measureCorpusQuality, measureReportQuality, type CorpusSample } from './qualityMetrics.js'
 import { BIRTH_FIXTURES, buildFixtureReportInput } from './fixtures.js'
+import { reportContractViolations, warnReportContract } from './contract.js'
 
 const backendRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const snapshotPath = resolve(backendRoot, 'src/lib/report/__snapshots__/selfReports.json')
@@ -27,7 +28,7 @@ const samples: CorpusSample[] = BIRTH_FIXTURES.map(fixture => {
 // PR-0a: 抽出が挙動を変えていないことの証明
 // ────────────────────────────────────────────────
 
-test('PR-0a: buildSelfReport は preview.ts の旧経路と同一の StructuredReport を返す', () => {
+test('ロールバック用の v1 / legacy 経路は旧 StructuredReport と同一', () => {
   for (const fixture of BIRTH_FIXTURES.slice(0, 8)) {
     const input = buildFixtureReportInput(fixture)
     const metadata = extractReportMetadata(input)
@@ -37,13 +38,13 @@ test('PR-0a: buildSelfReport は preview.ts の旧経路と同一の StructuredR
     const findings = buildReportFindings(facts)
     const legacy = replaceTimingCards(buildEditorialStructuredReport(facts, findings), input)
 
-    const extracted = buildSelfReport(input, metadata)
+    const extracted = buildSelfReport(input, metadata, { factPipeline: 'v1', narrativeEngine: 'legacy' })
     assert.deepEqual(extracted.report, legacy, `${fixture.id}: 抽出後の出力が旧経路と一致しません`)
   }
 })
 
-test('PR-0a: 既定オプションは v1 / legacy であり、環境変数の不正値は既定へ落ちる', () => {
-  assert.deepEqual(DEFAULT_SELF_REPORT_OPTIONS, { factPipeline: 'v1', narrativeEngine: 'legacy' })
+test('既定オプションは v2 / blocks であり、環境変数の不正値は既定へ落ちる', () => {
+  assert.deepEqual(DEFAULT_SELF_REPORT_OPTIONS, { factPipeline: 'v2', narrativeEngine: 'blocks' })
   assert.deepEqual(resolveSelfReportOptions({}), DEFAULT_SELF_REPORT_OPTIONS)
   assert.deepEqual(resolveSelfReportOptions({ FACT_PIPELINE: 'v3', NARRATIVE_ENGINE: 'wat' }), DEFAULT_SELF_REPORT_OPTIONS)
   assert.deepEqual(resolveSelfReportOptions({ FACT_PIPELINE: 'v2' }).factPipeline, 'v2')
@@ -144,6 +145,30 @@ test('PR-0b: 本文へ占術用語を出さない方針が守られている', (
   }
 })
 
+test('T4: 40サンプルは表示契約違反ゼロ', () => {
+  for (const [index, sample] of samples.entries()) {
+    const input = buildFixtureReportInput(BIRTH_FIXTURES[index])
+    assert.deepEqual(reportContractViolations(sample.report, input), [], `${sample.id}: 表示契約違反があります`)
+  }
+})
+
+test('T4: Validator は fail-open で違反を返し、鑑定生成を例外終了させない', () => {
+  const input = buildFixtureReportInput(BIRTH_FIXTURES[0])
+  const broken = structuredClone(samples[0].report)
+  broken.cards[0].sections = [{ heading: '命宮', body: 'あなたは天中殺です。', evidence: [], termGloss: [] }]
+  const originalWarn = console.warn
+  let warned = false
+  console.warn = () => { warned = true }
+  try {
+    const violations = warnReportContract(broken, input, 'validator-test')
+    assert.ok(violations.length > 0)
+    assert.ok(violations.some(item => item.code === 'JARGON_IN_BODY'))
+    assert.equal(warned, true)
+  } finally {
+    console.warn = originalWarn
+  }
+})
+
 /**
  * ゴールデンスナップショット。
  * __snapshots__/selfReports.json が無ければスキップし、あれば完全一致を要求する。
@@ -170,4 +195,14 @@ test('PR-0b: コーパス指標を記録する', () => {
   // 最低限の健全性のみ検査する。数値の締め付けはPR-1以降。
   assert.equal(corpus.sampleCount, BIRTH_FIXTURES.length)
   assert.ok(corpus.distinctEssenceTitles > 0)
+  assert.equal(corpus.meanSupplementChapterRate, 0)
+  assert.equal(corpus.emptyEvidenceCardCount, 0)
+  assert.equal(corpus.multiSystemEvidenceCardCount, 304)
+  assert.equal(corpus.youSubjectRate, 0)
+  assert.equal(corpus.distinctEssenceTitles, 147)
+  assert.equal(corpus.distinctDisplayedClaimHeadings, 203)
+  assert.equal(corpus.maxTitleRepeat, 6)
+  assert.equal(corpus.labelSequenceVariety, 314)
+  assert.equal(corpus.pairwisePageJaccardMedian, 0.1204)
+  assert.equal(corpus.totalLoveWorkLeakage, 0)
 })

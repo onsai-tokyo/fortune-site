@@ -5,7 +5,7 @@ import { buildReportFindingsV2, factsShareSource, weightedDerivationOverlap } fr
 
 function fact(id: string, overrides: Partial<ReportFactV2> = {}): ReportFactV2 {
   return {
-    id, system: '四柱推命', lineage: 'stems', factor: id, axis: 'drive', signal: 'independence', polarity: 1,
+    id, system: '四柱推命', lineage: 'shichu', factor: id, axis: 'drive', signal: 'independence', polarity: 1,
     strength: 0.8, requiresBirthTime: false, signature: false, votesInConsensus: true,
     derivations: [{ key: 'day-stem', weight: 1 }], canonicalSourceId: 'day-stem',
     ...overrides,
@@ -37,7 +37,7 @@ test('由来の独立票へ統合後、2系統以上のみ合議を作る', () =
     fact('western', { system: '西洋占星術', lineage: 'ephemeris', derivations: [{ key: 'solar-longitude', weight: 1 }], canonicalSourceId: 'solar-longitude', strength: 0.7 }),
   ])
   assert.equal(findings.length, 1)
-  assert.deepEqual(findings[0].lineages.sort(), ['ephemeris', 'stems'])
+  assert.deepEqual(findings[0].lineages.sort(), ['ephemeris', 'shichu'])
   assert.deepEqual(findings[0].systems, ['四柱推命', '西洋占星術', '算命学'].sort())
   assert.equal(findings[0].primaryFacts.length, 2)
   assert.equal(findings[0].supportingFacts.length, 1)

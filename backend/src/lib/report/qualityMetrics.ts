@@ -39,6 +39,18 @@ export interface CorpusQualityMetrics {
   identicalTitleSetRate: number
   /** コーパス全体で観測されたユニークな本質章タイトル数 */
   distinctEssenceTitles: number
+  /** スクロール本文でユーザーが見る Claim 見出しのユニーク数 */
+  distinctDisplayedClaimHeadings: number
+  /** evidence が1件もない本質カード数 */
+  emptyEvidenceCardCount: number
+  /** 2占術以上の evidence を持つ本質カード数 */
+  multiSystemEvidenceCardCount: number
+  /** summary が「あなたは」で始まる本質カードの割合 */
+  youSubjectRate: number
+  /** 同一の本質タイトルが出た最大回数 */
+  maxTitleRepeat: number
+  /** 本質カードのページラベル列の種類数 */
+  labelSequenceVariety: number
   /** コーパス全体で観測されたユニークな年カードタイトル数 */
   distinctTimingTitles: number
   /** コーパス全体で観測されたユニークなページ本文数 */
@@ -144,6 +156,7 @@ export function measureCorpusQuality(samples: CorpusSample[]): CorpusQualityMetr
     titles: sample.report.cards.filter(isEssenceCard).map(card => card.title).sort().join('|'),
     metrics: measureReportQuality(sample.report, sample.findings),
     essenceTitles: sample.report.cards.filter(isEssenceCard).map(card => card.title),
+    essenceCards: sample.report.cards.filter(isEssenceCard),
     timingTitles: sample.report.cards.filter(isTimingCard).map(card => card.title),
   }))
 
@@ -160,12 +173,25 @@ export function measureCorpusQuality(samples: CorpusSample[]): CorpusQualityMetr
     }
   }
 
+  const essenceCards = prepared.flatMap(item => item.essenceCards)
+  const titleCounts = essenceCards.reduce<Map<string, number>>((counts, card) => {
+    counts.set(card.title, (counts.get(card.title) ?? 0) + 1)
+    return counts
+  }, new Map())
   return {
     sampleCount: prepared.length,
     pairwisePageJaccardMedian: Number(median(pageJaccard).toFixed(4)),
     pairwiseFindingJaccardMedian: Number(median(findingJaccard).toFixed(4)),
     identicalTitleSetRate: pairs === 0 ? 0 : Number((identicalTitleSets / pairs).toFixed(4)),
     distinctEssenceTitles: new Set(prepared.flatMap(item => item.essenceTitles)).size,
+    distinctDisplayedClaimHeadings: new Set(essenceCards.flatMap(card =>
+      (card.sections?.length ? card.sections.map(section => section.heading) : [card.title])
+    )).size,
+    emptyEvidenceCardCount: essenceCards.filter(card => card.evidence.length === 0).length,
+    multiSystemEvidenceCardCount: essenceCards.filter(card => new Set(card.evidence.map(item => item.system)).size >= 2).length,
+    youSubjectRate: essenceCards.length === 0 ? 0 : Number((essenceCards.filter(card => /^あなたは/u.test(card.summary)).length / essenceCards.length).toFixed(4)),
+    maxTitleRepeat: Math.max(0, ...titleCounts.values()),
+    labelSequenceVariety: new Set(essenceCards.map(card => card.pages.map(page => page.label).join('|'))).size,
     distinctTimingTitles: new Set(prepared.flatMap(item => item.timingTitles)).size,
     distinctPageTexts: new Set(prepared.flatMap(item => [...item.pages])).size,
     meanSupplementChapterRate: prepared.length === 0 ? 0

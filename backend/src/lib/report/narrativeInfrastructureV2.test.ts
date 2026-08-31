@@ -9,7 +9,7 @@ import { validateNarrativeBlocks } from './narrativeValidatorV2.js'
 import { NARRATIVE_BLOCKS_V2 } from './narrativeAssetsV2.js'
 
 function finding(id: string, axis: ReportFindingV2['axis'], key = id, confidence = 0.8): ReportFindingV2 {
-  return { id, key, kind: 'consensus', axis, confidence, lineages: ['stems', 'number'], systems: ['四柱推命', '数秘術'], independence: 1, primaryFacts: [`fact-${id}`], supportingFacts: [] }
+  return { id, key, kind: 'consensus', axis, confidence, lineages: ['shichu', 'number'], systems: ['四柱推命', '数秘術'], independence: 1, primaryFacts: [`fact-${id}`], supportingFacts: [] }
 }
 
 test('Findingの補強・矛盾・補完関係を強度付きで生成する', () => {
