@@ -14,6 +14,7 @@ import { finalizeReportProvenance } from '../lib/report/provenance.js'
 import { observeShadowFacts } from '../lib/report/shadowMetrics.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { buildSelfReport, resolveSelfReportOptions } from '../lib/report/buildSelfReport.js'
+import { warnReportContract } from '../lib/report/contract.js'
 import { calcAge } from '../lib/age.js'
 
 export const previewRouter = Router()
@@ -188,6 +189,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       cards: orderedReport.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'),
       chartSections: buildChartSections(reportInput),
     }
+    warnReportContract(reportWithChart, reportInput, requestId)
     const response = req.query.debug === '1'
       ? { ...reportWithChart, metadata }
       : reportWithChart

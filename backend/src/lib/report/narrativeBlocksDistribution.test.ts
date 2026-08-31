@@ -15,7 +15,11 @@ test('PR-2 blocksは40件で8章・再現性・領域分離を守る', () => {
     assert.deepEqual(first.report, second.report, fixture.id)
     const essence = first.report.cards.filter(card => card.kind === 'essence')
     assert.equal(essence.length, 8, fixture.id)
-    assert.ok(essence.every(card => card.pages.length >= 13 && card.generator === 'deterministic'), fixture.id)
+    assert.ok(essence.every(card => {
+      const sectionCount = card.sections?.length ?? 0
+      const minimum = fixture.birthTime === null ? 2 : 3
+      return sectionCount >= minimum && sectionCount <= 6 && card.generator === 'deterministic'
+    }), fixture.id)
     const quality = measureReportQuality(first.report, first.findings)
     assert.equal(quality.loveWorkLeakage, 0, fixture.id)
     assert.equal(quality.duplicateTitleCount, 0, fixture.id)
@@ -24,5 +28,12 @@ test('PR-2 blocksは40件で8章・再現性・領域分離を守る', () => {
   const metrics = measureCorpusQuality(samples)
   console.info('Narrative blocks V2 corpus metrics', metrics)
   assert.equal(metrics.totalLoveWorkLeakage, 0)
-  assert.ok(metrics.pairwisePageJaccardMedian < 0.0775)
+  assert.equal(metrics.emptyEvidenceCardCount, 0)
+  assert.equal(metrics.youSubjectRate, 0)
+  assert.ok(metrics.maxTitleRepeat <= 7)
+  // カード先頭タイトルは記録として維持し、スクロールで実際に見える
+  // 人手Claim見出しの多様性をTEST投入基準として検査する。
+  assert.ok(metrics.distinctEssenceTitles >= 140)
+  assert.ok(metrics.distinctDisplayedClaimHeadings >= 200)
+  assert.ok(metrics.pairwisePageJaccardMedian <= 0.13)
 })

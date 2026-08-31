@@ -252,6 +252,7 @@ export interface TimingPeriod {
 export interface AnnualTiming {
   year: number
   age: number
+  ageRange: string
   kanshi: string
   tenGod: string
   score: number
@@ -379,6 +380,7 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
       })
       return {
         year: item.getYear(), age: item.getYear() - year,
+        ageRange: `${item.getYear() - year - 1}〜${item.getYear() - year}歳`,
         kanshi: item.getGanZhi(), tenGod, score, relationshipSignals, relationshipEvents: relationshipEventLabels(relationshipSignals), sanmeiSignals, themes: timingThemes(tenGod, relation), monthly,
       }
     })

@@ -1,5 +1,5 @@
-import type { FactAxis, FactLineage } from './facts.js'
-import type { ReportFactV2 } from './factsV2.js'
+import type { FactAxis } from './facts.js'
+import type { FactLineageV2, ReportFactV2 } from './factsV2.js'
 import { CONFIRMED_PERSONALITY_SCORE_RULES } from './traitScoreRules.personality.js'
 import { applyDerivedPersonalTraitScores, DERIVED_TRAIT_SCORE_KEYS } from './derivedTraitScores.js'
 
@@ -83,7 +83,7 @@ export interface TraitScore {
   value: number
   raw: number
   contributingFacts: string[]
-  lineages: FactLineage[]
+  lineages: FactLineageV2[]
   confidence: number
 }
 
@@ -92,7 +92,7 @@ export interface TraitScoreScale { center: number; spread: number }
 
 export interface FactMatcher {
   system?: string[]
-  lineage?: FactLineage[]
+  lineage?: FactLineageV2[]
   axis?: FactAxis[]
   signal?: string[]
   factorPrefix?: string[]

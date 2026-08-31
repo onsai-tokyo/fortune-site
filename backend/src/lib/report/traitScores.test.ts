@@ -246,7 +246,7 @@ test('R-4第5弾は家族・生活上の愛情と責任による結びつきを�
     fact({ id: 'moon-cancer', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月:cancer' }),
     fact({ id: 'house4-venus', factor: 'house:4:金星', axis: 'relation', signal: 'care', canonicalSourceId: 'house:4' }),
     fact({ id: 'house6-venus', factor: 'house:6:金星', axis: 'relation', signal: 'care', canonicalSourceId: 'house:6' }),
-    fact({ id: 'wealth', system: '四柱推命', lineage: 'stems', factor: 'pillar:2:tenGod:0:正財', axis: 'domain-work', signal: 'practicality', canonicalSourceId: 'day-stem' }),
+    fact({ id: 'wealth', system: '四柱推命', lineage: 'shichu', factor: 'pillar:2:tenGod:0:正財', axis: 'domain-work', signal: 'practicality', canonicalSourceId: 'day-stem' }),
     fact({ id: 'house7-saturn', factor: 'house:7:土星', axis: 'domain-love', signal: 'responsibility', canonicalSourceId: 'house:7' }),
   ]
   const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))

@@ -28,8 +28,8 @@ export interface ReportInput {
     direction: string
     startDate: string
     decades: Array<{ startYear: number; endYear: number; startAge: number; endAge: number; kanshi: string; tenGod: string; themes: string[] }>
-    annual: Array<{ year: number; age?: number; ageRange?: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; relationshipEvents?: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents?: string[]; themes: string[] }> }>
-    marriageCandidates: Array<{ year: number; age?: number; ageRange?: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
+    annual: Array<{ year: number; age?: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; relationshipEvents?: string[]; sanmeiSignals?: string[]; themes: string[]; monthly?: Array<{ month: number; monthLabel: string; kanshi: string; tenGod: string; relationshipSignals: string[]; relationshipEvents?: string[]; themes: string[] }> }>
+    marriageCandidates: Array<{ year: number; age?: number; ageRange: string; kanshi: string; tenGod: string; score: number; relationshipSignals: string[]; sanmeiSignals?: string[]; themes: string[] }>
   }
   sanmeiRelations?: {
     relations: Array<{ pillars: string; branches: string; relation: string; meaning: string }>
@@ -59,17 +59,18 @@ export interface ReportInput {
   }
   astrology?: {
     available: boolean
+    anglesAvailable?: boolean
     reason?: string
     method: string
     western?: {
-      ascendant: { sign: string; degree: number }
+      ascendant?: { sign: string; degree: number }
       midheaven?: { sign: string; degree: number }
       planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
       aspects: string[]
     }
     vedic?: {
       ayanamsha: number
-      ascendant: { sign: string; degree: number }
+      ascendant?: { sign: string; degree: number }
       midheaven?: { sign: string; degree: number }
       planets: Array<{ name: string; longitude: number; sign: string; degree: number; retrograde: boolean }>
       moonNakshatra: string
@@ -482,7 +483,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   const vedicJupiter = vedicPlanet('木星')
   const vedicSaturn = vedicPlanet('土星')
   const wholeSignHouse = (sign: string | undefined) => {
-    if (!sign || !western?.ascendant.sign) return null
+    if (!sign || !western?.ascendant?.sign) return null
     const ascIndex = ZODIAC_SIGNS.indexOf(western.ascendant.sign)
     const signIndex = ZODIAC_SIGNS.indexOf(sign)
     return ascIndex < 0 || signIndex < 0 ? null : ((signIndex - ascIndex + 12) % 12) + 1
@@ -567,7 +568,7 @@ export function buildDeterministicReport(input: ReportInput): string {
   addSignals('数秘術', numberSignals[input.lifePathNumber] ?? [])
   if (westernSun) addSignals('西洋占星術', signSignals[westernSun.sign] ?? [])
   if (westernMoon) addSignals('西洋占星術', signSignals[westernMoon.sign] ?? [])
-  if (vedic) addSignals('インド占星術', signSignals[vedic.ascendant.sign] ?? [])
+  if (vedic?.ascendant) addSignals('インド占星術', signSignals[vedic.ascendant.sign] ?? [])
   if (vedicMoon) addSignals('インド占星術', signSignals[vedicMoon.sign] ?? [])
   if (/五黄|八白|六白/.test(input.honmeiName)) addSignals('九星気学', ['responsibility', 'practicality'])
   if (/一白|四緑/.test(input.honmeiName)) addSignals('九星気学', ['communication', 'harmony'])
@@ -950,7 +951,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     5: '恋愛・創作・自己表現', 6: '働き方・習慣・健康管理', 7: '結婚・契約・対等な関係', 8: '深い共有・喪失と再生',
     9: '専門学習・思想・遠方との縁', 10: '仕事・肩書・社会的達成', 11: '仲間・将来計画・社会との接点', 12: '内省・休息・見えない負担',
   }
-  const identityAndDirectionPattern = western
+  const identityAndDirectionPattern = western?.ascendant
     ? `初対面では、${SIGN_BEHAVIOR[western.ascendant.sign]?.lagna ?? '周囲の様子を見てから動きます'}。仕事では、${ASTRO_SIGN[western.midheaven?.sign ?? ''] ?? '任された役割を成果にすること'}が評価されやすい人です。${sunHouse ? `${houseArea[sunHouse]}に関わる経験が、自信につながりやすくなります。` : ''}`
     : ''
   const emotionalAreaPattern = moonHouse
@@ -1046,7 +1047,7 @@ export function buildDeterministicReport(input: ReportInput): string {
     `集団では${SANMEI[eastStar] ?? '場に応じた役割'}を担い、少人数では${SANMEI[westStar] ?? '身近な人への関わり方'}を大切にします。`,
     `人との距離は、本音を安全に扱えるかどうかで決めます。役割を持つと${SANMEI[northStar] ?? '責任感'}が強まります。`,
   ], 'relation-scene')
-  const vedicDetailBlock = vedic
+  const vedicDetailBlock = vedic?.ascendant
     ? `ラヒリ・アヤナーンシャ**${vedic.ayanamsha.toFixed(3)}°**を使ったサイデリアル方式です。出生地と出生時刻から算出したラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**です。
 
 **ラグナ（生き方・外への現れ方）：** ${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°（インド／サイデリアル）。${astroPhrase(vedic.ascendant.sign, 'lagna')}。
@@ -1140,7 +1141,7 @@ ${timingBlocks}
 四柱推命の日主${input.shichuDay[0]}は「${day.core}」、算命学の中心星${input.sanmeiStar}は「${sanmei}」、紫微斗数の命宮は「${soulPalaceStars}」、宿曜は${sukuyoName}宿、九星は${input.kyuseiProfile?.yearStar ?? input.honmeiName}、数秘は運命数${input.lifePathNumber}です。
 これらすべてを重ねると、**あなたは「${day.strength}を使いながら、${mission}を人生テーマにする人」**です。宿曜の「${sukuyoDetail}」が対人感覚を、九星気学の「${honmeiDetail}」が社会での動き方を補強します。
 **最大の強みは${day.strength}。注意点は${day.caution}です。** 外から期待される役割と自分が守りたい感覚を分け、判断の理由を短く言葉にすると、持ち味が安定して発揮されます。
-${western && vedic ? `西洋占星術では太陽${westernSun?.sign}・月${westernMoon?.sign}・ASC${western.ascendant.sign}、インド占星術では太陽${vedicSun?.sign}・月${vedicMoon?.sign}・ラグナ${vedic.ascendant.sign}です。**東洋の命式が示す資質に、太陽の目的意識、月の感情反応、ASC／ラグナの外への見せ方を重ねて総合判断しています。**` : ''}
+${western?.ascendant && vedic?.ascendant ? `西洋占星術では太陽${westernSun?.sign}・月${westernMoon?.sign}・ASC${western.ascendant.sign}、インド占星術では太陽${vedicSun?.sign}・月${vedicMoon?.sign}・ラグナ${vedic.ascendant.sign}です。**東洋の命式が示す資質に、太陽の目的意識、月の感情反応、ASC／ラグナの外への見せ方を重ねて総合判断しています。**` : ''}
 
 【全占術統合鑑定 — 思考・感情・行動・対人】
 **思考：** 算命学の北方${northStar}は「${SANMEI[northStar] ?? '自分なりの視点'}」を示し、日主${input.shichuDay[0]}の${day.core}と重なります。情報を広く集めてから本質を選び取る一方、選択肢が増えるほど結論が遅れやすいため、判断期限と基準を先に決めると力を活かせます。
@@ -1215,13 +1216,13 @@ ${ziweiPalaceDetail}
 紫微斗数は一つの星だけで吉凶を断定せず、本宮・対宮・三方四正、四化、大限を重ねて読みます。ここでは命盤を固定計算し、各宮の主要テーマを表示しています。
 
 【鑑定根拠 — 西洋占星術（トロピカル）】
-${western ? `計算条件は${input.astrology?.method}。ASCは**${western.ascendant.sign}${western.ascendant.degree.toFixed(1)}°**で、第一印象と物事の始め方には「${ASTRO_SIGN[western.ascendant.sign]}」が表れます。
+${western?.ascendant ? `計算条件は${input.astrology?.method}。ASCは**${western.ascendant.sign}${western.ascendant.degree.toFixed(1)}°**で、第一印象と物事の始め方には「${ASTRO_SIGN[western.ascendant.sign]}」が表れます。
 太陽${westernSun?.sign}は人生で育てる中心意識、月${westernMoon?.sign}は安心を感じる条件です。**太陽は「${ASTRO_SIGN[westernSun?.sign ?? ''] ?? '目的意識'}」、月は「${ASTRO_SIGN[westernMoon?.sign ?? ''] ?? '感情の反応'}」として働きます。**
 ${planetLine(western.planets, '西洋／トロピカル')}
 主要アスペクト：${western.aspects.join('／') || '設定オーブ内に主要アスペクトなし'}。アスペクトは天体同士の力の使い方を示し、ソフト・ハードだけで吉凶を固定しません。` : input.astrology?.reason ?? '出生条件から算出できません。'}
 
 【鑑定根拠 — インド占星術（ラヒリ・サイデリアル）】
-${vedic ? `ラヒリ・アヤナーンシャ${vedic.ayanamsha.toFixed(3)}°を使用。ラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**、月は**${vedicMoon?.sign}**、太陽は**${vedicSun?.sign}**です。
+${vedic?.ascendant ? `ラヒリ・アヤナーンシャ${vedic.ayanamsha.toFixed(3)}°を使用。ラグナは**${vedic.ascendant.sign}${vedic.ascendant.degree.toFixed(1)}°**、月は**${vedicMoon?.sign}**、太陽は**${vedicSun?.sign}**です。
 **ラグナ（生き方の入口）：** ${ASTRO_SIGN[vedic.ascendant.sign]}。第一印象だけでなく、人生の課題へどう取り組むかを表します。
 **太陽（目的意識）：** ${vedicSun?.sign}の「${ASTRO_SIGN[vedicSun?.sign ?? ''] ?? '自分の軸を育てる力'}」。社会の中で自分らしい責任を引き受ける方向です。
 **月（心と習慣）：** ${vedicMoon?.sign}の「${ASTRO_SIGN[vedicMoon?.sign ?? ''] ?? '安心を作る力'}」。感情を落ち着かせ、日常を安定させる条件を示します。

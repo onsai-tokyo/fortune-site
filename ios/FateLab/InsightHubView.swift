@@ -230,30 +230,34 @@ private struct FocusReadingView: View {
             VStack(spacing: 0) {
                 Text(item.title).font(.system(size: 20, weight: .medium))
                     .multilineTextAlignment(.center).padding(.top, 22).padding(.horizontal, 72)
-                TabView(selection: $selection) {
-                    ForEach(Array(item.pages.enumerated()), id: \.offset) { index, page in
-                        VStack(spacing: 28) {
-                            Spacer(minLength: 70)
-                            Text(page.label).font(.caption).tracking(3).foregroundStyle(FateTheme.muted)
-                            Text(page.text).font(.system(size: 23, weight: .medium)).lineSpacing(14)
-                                .multilineTextAlignment(.center).frame(maxWidth: 330)
-                            if let note = page.note {
-                                Text(note).font(.system(size: 14)).foregroundStyle(FateTheme.muted).lineSpacing(6)
-                                    .multilineTextAlignment(.center).frame(maxWidth: 310)
+                if let sections = item.sections, !sections.isEmpty {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 32) {
+                            Text(item.summary).font(.system(size: 18)).foregroundStyle(FateTheme.body).lineSpacing(8)
+                            ForEach(sections) { section in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text(section.heading).font(.system(size: 21, weight: .semibold)).lineSpacing(6)
+                                    Text(section.body).font(.system(size: 17)).foregroundStyle(FateTheme.body).lineSpacing(9)
+                                    SectionEvidenceView(section: section)
+                                }
                             }
-                            Spacer(minLength: 90)
-                        }.padding(.horizontal, 26).tag(index).accessibilityElement(children: .combine)
-                            .accessibilityLabel("\(item.pages.count)枚中\(index + 1)枚目。\(page.label)。\(page.text)")
+                            Button("このことを聞いてみる") { dismiss(); onQuestion() }.buttonStyle(FLPrimaryButtonStyle())
+                        }.padding(.horizontal, 26).padding(.top, 36).padding(.bottom, 48)
                     }
-                }.tabViewStyle(.page(indexDisplayMode: .never))
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(FateTheme.line)
-                        Capsule().fill(FateTheme.ink).frame(width: geometry.size.width * progress)
-                    }
-                }.frame(height: 4).padding(.horizontal, 70).padding(.bottom, 28)
-                Text("\(selection + 1) / \(item.pages.count)")
-                    .font(.caption).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center).padding(.bottom, 24)
+                } else {
+                    TabView(selection: $selection) {
+                        ForEach(Array(item.pages.enumerated()), id: \.offset) { index, page in
+                            VStack(spacing: 28) {
+                                Spacer(minLength: 70)
+                                Text(page.label).font(.caption).tracking(3).foregroundStyle(FateTheme.muted)
+                                Text(page.text).font(.system(size: 23, weight: .medium)).lineSpacing(14)
+                                    .multilineTextAlignment(.center).frame(maxWidth: 330)
+                                Spacer(minLength: 90)
+                            }.padding(.horizontal, 26).tag(index)
+                        }
+                    }.tabViewStyle(.page(indexDisplayMode: .never))
+                    Text("\(selection + 1) / \(item.pages.count)").font(.caption).foregroundStyle(FateTheme.muted).padding(.bottom, 24)
+                }
             }
             VStack {
                 HStack {
@@ -269,15 +273,11 @@ private struct FocusReadingView: View {
                     Spacer()
                 }
                 Spacer()
-                if selection == item.pages.count - 1 { Button("このことを聞いてみる") { dismiss(); onQuestion() }.buttonStyle(FLPrimaryButtonStyle()) }
+                if (item.sections?.isEmpty ?? true) && selection == item.pages.count - 1 { Button("このことを聞いてみる") { dismiss(); onQuestion() }.buttonStyle(FLPrimaryButtonStyle()) }
             }.padding(18)
         }.preferredColorScheme(.light)
     }
 
-    private var progress: CGFloat {
-        guard !item.pages.isEmpty else { return 1 }
-        return CGFloat(selection + 1) / CGFloat(item.pages.count)
-    }
 }
 
 struct FlowTags: View {

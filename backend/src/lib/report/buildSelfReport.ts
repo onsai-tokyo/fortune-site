@@ -9,6 +9,7 @@ import { buildEditorialStructuredReport } from './editorial.js'
 import { replaceTimingCards } from './timingCards.js'
 import { buildBlockStructuredReport } from './narrativeComposerV2.js'
 import { augmentFindingsWithScoresV2 } from './scoreFindingsV2.js'
+import { buildClaimStructuredReport } from './claimComposer.js'
 
 /**
  * PR-0a: 自己鑑定の生成経路をHTTPから切り離す。
@@ -34,8 +35,8 @@ export interface SelfReportOptions {
 }
 
 export const DEFAULT_SELF_REPORT_OPTIONS: SelfReportOptions = {
-  factPipeline: 'v1',
-  narrativeEngine: 'legacy',
+  factPipeline: 'v2',
+  narrativeEngine: 'blocks',
 }
 
 /**
@@ -96,7 +97,7 @@ export function buildSelfReport(
     ? augmentFindingsWithScoresV2(facts as ReturnType<typeof buildReportFactsV2>, generated.findings as ReturnType<typeof buildReportFindingsV2>)
     : generated.findings
   const report = replaceTimingCards(options.narrativeEngine === 'blocks'
-    ? buildBlockStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input, metadata)
+    ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
     : buildEditorialStructuredReport(facts, findings), input)
 
   return { report, facts, findings, options, pipelineTag: selfReportPipelineTag(options) }

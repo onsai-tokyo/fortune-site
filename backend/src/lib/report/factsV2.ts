@@ -1,7 +1,7 @@
 import { createHash } from 'crypto'
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportMetadata } from './metadata.js'
-import { buildReportFacts, type FactLineage, type ReportFact } from './facts.js'
+import { buildReportFacts, type ReportFact } from './facts.js'
 import { extractAstrologyFacts, SIGN_SPEC } from './astrologyFacts.js'
 import { logUnmatched, resolveNakshatra, resolveNayin, resolveSukuyo, resolveZiweiStar } from './keywordSignalMappings.js'
 
@@ -12,7 +12,10 @@ export type DerivationKey =
 
 export interface Derivation { key: DerivationKey; weight: number }
 
-export interface ReportFactV2 extends ReportFact {
+export type FactLineageV2 = 'shichu' | 'sanmei' | 'ziwei' | 'lunar' | 'ephemeris' | 'number'
+
+export interface ReportFactV2 extends Omit<ReportFact, 'lineage'> {
+  lineage: FactLineageV2
   derivations: Derivation[]
   canonicalSourceId: string
   votesInConsensus: boolean
@@ -68,6 +71,15 @@ function provenanceForLegacy(fact: ReportFact): Pick<ReportFactV2, 'derivations'
   return { derivations: [{ key: pillar, weight: 1 }, { key: 'day-stem', weight: pillar === 'day-pillar' ? 1 : 0.5 }], canonicalSourceId: pillar === 'day-pillar' ? 'day-stem' : pillar, votesInConsensus: true }
 }
 
+function lineageForLegacy(fact: ReportFact): FactLineageV2 {
+  if (fact.system === '四柱推命') return 'shichu'
+  if (fact.system === '算命学') return 'sanmei'
+  if (fact.system === '紫微斗数') return 'ziwei'
+  if (fact.system === '西洋占星術' || fact.system === 'インド占星術') return 'ephemeris'
+  if (fact.system === '宿曜' || fact.system === '納音') return 'lunar'
+  return 'number'
+}
+
 const subordinateStrength: Record<string, number> = { 天馳星: 0.55, 天極星: 0.55, 天報星: 0.6, 天胡星: 0.6, 天庫星: 0.65, 天印星: 0.65, 天恍星: 0.7, 天堂星: 0.75, 天貴星: 0.8, 天南星: 0.85, 天禄星: 0.9, 天将星: 1 }
 
 export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata): ReportFactV2[] {
@@ -79,13 +91,13 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
       id: signal === fact.signal ? fact.id : factId([fact.system, fact.factor, fact.axis, signal, provenance.canonicalSourceId]),
       signal,
       ...provenance,
-      lineage: fact.system === '紫微斗数' ? 'lunar' as const : fact.lineage,
+      lineage: lineageForLegacy(fact),
     }
   })
   const add = (value: Omit<ReportFactV2, 'id'>) => facts.push(makeFact(value))
 
   const nayin = resolveNayin(input.nayin)
-  if (nayin) add({ system: '納音', lineage: 'stems', factor: `nayin:${input.nayin}`, ...nayin, polarity: 1, requiresBirthTime: false, signature: false,
+  if (nayin) add({ system: '納音', lineage: 'lunar', factor: `nayin:${input.nayin}`, ...nayin, polarity: 1, requiresBirthTime: false, signature: false,
     derivations: [{ key: 'year-pillar', weight: 1 }], canonicalSourceId: 'year-pillar', votesInConsensus: false })
   else logUnmatched('nayin', input.nayin)
 
@@ -103,7 +115,7 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
   }
 
   for (const [position, star] of Object.entries(input.sanmeiChart?.subordinateStars ?? {})) {
-    add({ system: '算命学', lineage: 'stems', factor: `subordinate:${position}:${star.star}`, axis: 'drive', signal: 'energy-capacity', polarity: 0,
+    add({ system: '算命学', lineage: 'sanmei', factor: `subordinate:${position}:${star.star}`, axis: 'drive', signal: 'energy-capacity', polarity: 0,
       strength: subordinateStrength[star.star] ?? 0.65, requiresBirthTime: false, signature: false,
       derivations: [{ key: 'day-stem', weight: 1 }, { key: 'month-pillar', weight: 0.4 }], canonicalSourceId: `subordinate:${position}`, votesInConsensus: true })
   }
@@ -111,7 +123,7 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
   for (const palace of input.ziwei?.palaces ?? []) {
     for (const [index, star] of (palace.minorStars ?? []).entries()) {
       const mapped = resolveZiweiStar(star)
-      if (mapped) add({ system: '紫微斗数', lineage: 'lunar', factor: `minorStar:${palace.name}:${index}:${star}`, ...mapped,
+      if (mapped) add({ system: '紫微斗数', lineage: 'ziwei', factor: `minorStar:${palace.name}:${index}:${star}`, ...mapped,
         axis: /官禄|財帛/.test(palace.name) ? 'domain-work' : /夫妻/.test(palace.name) ? 'domain-love' : mapped.axis,
         polarity: 0, requiresBirthTime: true, signature: false,
         derivations: [{ key: 'lunar-date', weight: 1 }, { key: 'birth-time', weight: 1 }, { key: 'year-stem', weight: 0.4 }], canonicalSourceId: 'lunar-date+birth-time', votesInConsensus: true })
@@ -137,6 +149,6 @@ export function buildReportFactsV2(input: ReportInput, metadata: ReportMetadata)
 }
 
 export function factV2Metrics(facts: ReportFactV2[]) {
-  const lineageDistribution = facts.reduce<Record<FactLineage, number>>((result, fact) => { result[fact.lineage] += 1; return result }, { stems: 0, lunar: 0, ephemeris: 0, number: 0 })
+  const lineageDistribution = facts.reduce<Record<FactLineageV2, number>>((result, fact) => { result[fact.lineage] += 1; return result }, { shichu: 0, sanmei: 0, ziwei: 0, lunar: 0, ephemeris: 0, number: 0 })
   return { factCount: facts.length, lineageDistribution, nonVotingFactCount: facts.filter(fact => !fact.votesInConsensus).length, systemCount: new Set(facts.map(fact => fact.system)).size }
 }

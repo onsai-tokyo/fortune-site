@@ -4,7 +4,7 @@ import type { ReportFindingV2 } from './findingsV2.js'
 import { assignableChapterCount, median } from './shadowEvaluation.js'
 
 function finding(id: string, axis: ReportFindingV2['axis'], confidence = 0.8): ReportFindingV2 {
-  return { id, key: id, kind: 'consensus', axis, confidence, lineages: ['stems', 'number'], systems: ['四柱推命', '数秘術'], independence: 1, primaryFacts: [`fact-${id}`], supportingFacts: [] }
+  return { id, key: id, kind: 'consensus', axis, confidence, lineages: ['shichu', 'number'], systems: ['四柱推命', '数秘術'], independence: 1, primaryFacts: [`fact-${id}`], supportingFacts: [] }
 }
 
 test('中央値は奇数・偶数・空配列を扱える', () => {

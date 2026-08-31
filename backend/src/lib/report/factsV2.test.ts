@@ -44,11 +44,11 @@ test('Fact V2は由来と投票可否を全件に持つ', () => {
   }
 })
 
-test('紫微斗数はlunarに属し、旧暦・時刻・年干の由来を持つ', () => {
+test('紫微斗数は独立したziwei系統に属し、旧暦・時刻・年干の由来を持つ', () => {
   const source = input()
   const ziwei = buildReportFactsV2(source, extractReportMetadata(source)).filter(fact => fact.system === '紫微斗数')
   assert.ok(ziwei.length > 0)
-  assert.ok(ziwei.every(fact => fact.lineage === 'lunar'))
+  assert.ok(ziwei.every(fact => fact.lineage === 'ziwei'))
   assert.ok(ziwei.every(fact => ['lunar-date', 'birth-time', 'year-stem'].every(key => fact.derivations.some(item => item.key === key))))
 })
 
@@ -57,7 +57,7 @@ test('納音はFactとして保持するが独立票に数えない', () => {
   const nayin = buildReportFactsV2(source, extractReportMetadata(source)).find(fact => fact.system === '納音')
   assert.ok(nayin)
   assert.equal(nayin.votesInConsensus, false)
-  assert.equal(nayin.lineage, 'stems')
+  assert.equal(nayin.lineage, 'lunar')
 })
 
 test('出生時刻なしでは時刻依存Factを返さない', () => {

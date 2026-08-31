@@ -14,6 +14,14 @@ export interface ReportCardEvidence {
   detail: string
 }
 
+export interface ReportSection {
+  heading: string
+  body: string
+  evidence: ReportCardEvidence[]
+  termGloss: Array<{ term: string; plain: string; system: string }>
+  claimId?: string
+}
+
 export interface ReportCard {
   id: string
   kind: ReportCardKind
@@ -24,6 +32,8 @@ export interface ReportCard {
   tags: string[]
   period: { label: string } | null
   pages: ReportCardPage[]
+  /** T2/T3 scroll format. pages remains during the compatibility window. */
+  sections?: ReportSection[]
   evidence: ReportCardEvidence[]
   metadataRefs?: string[]
   /** Optional while reading reports saved before PR-0b-metadata; always written for newly generated reports. */

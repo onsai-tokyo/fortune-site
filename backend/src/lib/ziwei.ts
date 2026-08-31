@@ -1,5 +1,33 @@
 import { astro } from 'iztro'
 
+export const FATE_LAB_ZIWEI_CONFIG = Object.freeze({
+  yearDivide: 'normal' as const,
+  horoscopeDivide: 'normal' as const,
+  ageDivide: 'normal' as const,
+  dayDivide: 'forward' as const,
+  algorithm: 'default' as const,
+})
+
+export function configureFateLabZiwei(): void {
+  astro.config({ ...FATE_LAB_ZIWEI_CONFIG, mutagens: {}, brightness: {} })
+}
+
+export function assertFateLabZiweiConfig(): void {
+  const actual = astro.getConfig()
+  for (const [key, expected] of Object.entries(FATE_LAB_ZIWEI_CONFIG)) {
+    if (actual[key as keyof typeof FATE_LAB_ZIWEI_CONFIG] !== expected) {
+      throw new Error(`iztro config drift: ${key}=${String(actual[key as keyof typeof FATE_LAB_ZIWEI_CONFIG])}; expected=${expected}`)
+    }
+  }
+  if (Object.keys(actual.mutagens).length || Object.keys(actual.brightness).length) {
+    throw new Error('iztro config drift: custom mutagens/brightness are not approved')
+  }
+}
+
+// iztro 2.5.8の現行既定値を、FATE LABの明示設定として固定する。
+configureFateLabZiwei()
+assertFateLabZiweiConfig()
+
 const STAR_DETAIL: Record<string, string> = {
   紫微: '統率、尊厳、全体をまとめる力', 天機: '思考、企画、変化への対応力', 太陽: '発信、行動力、社会への貢献', 武曲: '実務、決断、財務感覚',
   天同: '調和、受容、生活を楽しむ力', 廉貞: '情熱、規律、複雑な状況を扱う力', 天府: '安定、管理、資源を蓄える力', 太陰: '感受性、内面、蓄積と配慮',
@@ -19,6 +47,7 @@ export function timeIndex(hour: number): number {
 }
 
 export function calcZiwei(year: number, month: number, day: number, hour: number | undefined, gender: 'male' | 'female', birthplace?: string) {
+  assertFateLabZiweiConfig()
   if (hour === undefined) {
     return { available: false as const, birthplace: birthplace || '未選択', reason: '紫微斗数は出生時刻が必要なため算出できません。' }
   }
@@ -54,7 +83,13 @@ export function calcZiwei(year: number, month: number, day: number, hour: number
     if (palace === '命') signals.push('initiative', 'transformation')
     if (palace === '遷移') signals.push('transformation', 'exploration')
     if (palace === '田宅') signals.push('stability', 'transformation')
-    return { year: targetYear, heavenlyStem: yearly.heavenlyStem, earthlyBranch: yearly.earthlyBranch, activePalaces, mutagenStars: yearly.mutagen, signals: [...new Set(signals)] }
+    const mutagenNames = ['化禄', '化権', '化科', '化忌'] as const
+    const mutagenPlacements = yearly.mutagen.map((starName, index) => {
+      const owners = chart.palaces.filter(candidate => [...candidate.majorStars, ...candidate.minorStars].some(star => star.name === starName))
+      const owner = owners.length === 1 ? owners[0] : undefined
+      return { mutagen: mutagenNames[index]!, star: starName, palace: String(owner?.name ?? '').replace('祿', '禄').replace(/宮$/, '') }
+    })
+    return { year: targetYear, heavenlyStem: yearly.heavenlyStem, earthlyBranch: yearly.earthlyBranch, activePalaces, mutagenStars: yearly.mutagen, mutagenPlacements, signals: [...new Set(signals)] }
   })
 
   return {

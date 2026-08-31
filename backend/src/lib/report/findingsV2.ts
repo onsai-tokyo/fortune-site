@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
-import type { FactAxis, FactLineage } from './facts.js'
-import type { Derivation, ReportFactV2 } from './factsV2.js'
+import type { FactAxis } from './facts.js'
+import type { Derivation, FactLineageV2, ReportFactV2 } from './factsV2.js'
 
 export interface ReportFindingV2 {
   id: string
@@ -8,7 +8,7 @@ export interface ReportFindingV2 {
   kind: 'consensus' | 'signature'
   axis: FactAxis
   confidence: number
-  lineages: FactLineage[]
+  lineages: FactLineageV2[]
   systems: string[]
   independence: number
   primaryFacts: string[]
