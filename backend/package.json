@@ -18,6 +18,7 @@
     "scores:timing-integrated": "tsx src/scripts/measureTimingIntegrated.ts 100",
     "scores:timing-shadow": "tsx src/scripts/measureTimingShadowCoverage.ts",
     "scores:timing-known-case": "tsx src/scripts/measureKnownTimingCase.ts",
+    "scores:timing-known-cases": "tsx src/scripts/measureKnownTimingCases.ts",
     "scores:timing-reachability": "tsx src/scripts/measureTimingReachability.ts 100",
     "scores:timing-readiness": "tsx src/scripts/checkTimingRuleReadiness.ts",
     "report:readiness": "tsx src/scripts/checkDeterministicCutover.ts",

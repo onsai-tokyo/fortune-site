@@ -44,6 +44,48 @@ export const CASE_A_TIMING_BENCHMARK: KnownTimingCase = {
   ],
 }
 
+export const CASE_B_TIMING_BENCHMARK: KnownTimingCase = {
+  id: 'case-b-1995-06-30-unknown-time-place',
+  input: { birthYear: 1995, birthMonth: 6, birthDay: 30, gender: 'female', birthplace: '' },
+  events: [
+    { id: 'b-2016-crisis', year: 2016, months: [11], expectedScores: ['relationship_disruption', 'emotional_stress', 'responsibility'], note: '妊娠・中絶・交際終了という重大な転換' },
+    { id: 'b-2017-relationship', year: 2017, expectedScores: ['relationship_activation', 'relationship_binding'], note: '長期交際相手との出会い' },
+    { id: 'b-2024-transition', year: 2024, months: [2, 3, 4], expectedScores: ['relationship_disruption', 'relationship_activation', 'identity_reset'], note: '長期交際終了と将来の配偶者との出会い' },
+    { id: 'b-2024-engagement', year: 2024, months: [12], expectedScores: ['relationship_binding', 'marriage_legalization', 'responsibility'], note: 'プロポーズから翌年入籍へ進む' },
+  ],
+}
+
+export const CASE_C_TIMING_BENCHMARK: KnownTimingCase = {
+  id: 'case-c-1995-03-16-0052-aichi',
+  input: { birthYear: 1995, birthMonth: 3, birthDay: 16, birthHour: 0, birthMinute: 52, gender: 'female', birthplace: '愛知県' },
+  events: [
+    { id: 'c-2017-career-love', year: 2017, expectedScores: ['career_activation', 'social_network_change', 'relationship_activation'], note: '新卒入社と将来の配偶者との出会い' },
+    { id: 'c-2018-breakup', year: 2018, months: [3], expectedScores: ['relationship_disruption', 'emotional_stress'], note: '結婚を考えた相手との喧嘩別れ' },
+    { id: 'c-2019-distance', year: 2019, months: [3, 4, 5], expectedScores: ['relationship_disruption', 'identity_reset'], note: '将来の配偶者と一度決別し距離を置く' },
+    { id: 'c-2022-reunion', year: 2022, months: [10], expectedScores: ['relationship_activation', 'relationship_binding'], note: '再会して交際を再開する' },
+    { id: 'c-2025-marriage-decision', year: 2025, months: [8], expectedScores: ['relationship_binding', 'marriage_legalization', 'responsibility'], note: '結婚を決意する' },
+  ],
+}
+
+export const CASE_D_TIMING_BENCHMARK: KnownTimingCase = {
+  id: 'case-d-1997-07-30-1830-saga',
+  input: { birthYear: 1997, birthMonth: 7, birthDay: 30, birthHour: 18, birthMinute: 30, gender: 'female', birthplace: '佐賀県' },
+  events: [
+    { id: 'd-2016-university-meeting', year: 2016, expectedScores: ['education_activation', 'relocation', 'social_network_change', 'relationship_activation'], note: '大学入学と将来の交際相手との出会い' },
+    { id: 'd-2018-relationship', year: 2018, expectedScores: ['relationship_activation', 'relationship_binding'], note: '2016年に出会った相手との交際開始' },
+    { id: 'd-2020-career-transition', year: 2020, months: [4], expectedScores: ['career_activation', 'career_change', 'relationship_disruption', 'relationship_activation'], note: '新卒入社・別れ・新しい相手との出会い' },
+    { id: 'd-2021-relationship', year: 2021, expectedScores: ['relationship_activation', 'relationship_binding'], note: '現在の相手との交際開始' },
+    { id: 'd-2025-role-change', year: 2025, expectedScores: ['career_change', 'career_activation', 'identity_reset'], note: '営業から総務へ異動し仕事が好転' },
+  ],
+}
+
+export const KNOWN_TIMING_BENCHMARKS: readonly KnownTimingCase[] = [
+  CASE_A_TIMING_BENCHMARK,
+  CASE_B_TIMING_BENCHMARK,
+  CASE_C_TIMING_BENCHMARK,
+  CASE_D_TIMING_BENCHMARK,
+]
+
 export interface KnownTimingEventResult {
   event: KnownTimingEvent
   measurableScores: readonly TimingScoreKey[]
@@ -69,6 +111,7 @@ export interface KnownTimingScoreDiagnostic {
 export interface UnlabelledTimingActivation {
   year: number
   activatedScores: readonly TimingScoreKey[]
+  claimEligibleScores: readonly TimingScoreKey[]
 }
 
 export interface KnownTimingMonthlyResult {
@@ -145,6 +188,11 @@ export function measureUnlabelledTimingActivation(
       year,
       activatedScores: (Object.keys(scores) as TimingScoreKey[])
         .filter(key => isDetected(scores[key], minimumRelativeStrength))
+        .sort(),
+      claimEligibleScores: (Object.keys(scores) as TimingScoreKey[])
+        .filter(key => passesTimingScoreGate(
+          { key, op: 'gte', value: minimumRelativeStrength, level: 'medium_or_high' }, scores[key],
+        ))
         .sort(),
     }))
 }

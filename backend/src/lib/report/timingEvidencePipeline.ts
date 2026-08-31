@@ -33,6 +33,7 @@ export interface TimingScoreTimeline extends TimingEvidenceTimeline {
 
 export interface MonthlyTimingScoreTimeline {
   hasBirthTime: boolean
+  evidenceByMonth: ReadonlyMap<string, readonly TimingEvidenceDefinition[]>
   byMonth: ReadonlyMap<string, Readonly<Record<TimingScoreKey, TimingScoreResult>>>
 }
 
@@ -139,11 +140,14 @@ export function buildMonthlyTimingScoreTimeline(input: TimingEvidenceBirthInput,
   const annualEvidence = buildTimingEvidenceTimeline(input)
   const timing = calcTimingCycles(input.birthYear, input.birthMonth, input.birthDay, input.birthHour, input.birthMinute ?? 0, input.gender)
   const monthly = buildMonthlyStemBranchEvidence({ ...input, annual: timing.annual })
+  const evidenceByMonth = new Map([...monthly.entries()].map(([monthKey, definitions]) => {
+    const year = Number(monthKey.slice(0, 4))
+    return [monthKey, merge(annualEvidence.byYear.get(year), definitions)] as const
+  }))
   return {
     hasBirthTime: annualEvidence.hasBirthTime,
-    byMonth: new Map([...monthly.entries()].map(([monthKey, definitions]) => {
-      const year = Number(monthKey.slice(0, 4))
-      return [monthKey, computeTimingScores(merge(annualEvidence.byYear.get(year), definitions), quality)]
-    })),
+    evidenceByMonth,
+    byMonth: new Map([...evidenceByMonth.entries()].map(([monthKey, definitions]) =>
+      [monthKey, computeTimingScores(definitions, quality)])),
   }
 }
