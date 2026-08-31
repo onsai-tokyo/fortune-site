@@ -1,6 +1,10 @@
 import { TIMING_SCORE_KEYS, type TimingScoreKey } from '../lib/report/timingClaim.js'
+import { TIMING_CLAIM_ASSETS } from '../lib/report/timingClaimAssets.js'
+import { hardGateReason, type AnnualTimingProfile } from '../lib/report/timingClaimSelector.js'
+import { timingAnnualValues, timingEventKeys } from '../lib/report/timingCards.js'
 import { buildTimingScoreTimeline, type TimingEvidenceBirthInput } from '../lib/report/timingEvidencePipeline.js'
 import type { TimingScoreResult } from '../lib/report/timingScoreEngine.js'
+import { calcTimingCycles } from '../lib/divination/index.js'
 import { timingMeasurementProfiles } from './timingMeasurementSamples.js'
 
 const requested = Number(process.argv[2] ?? 100)
@@ -41,6 +45,8 @@ const annualLooseCounts: Record<Mode, number[]> = { timed: [], untimed: [] }
 const annualConsensusCounts: Record<Mode, number[]> = { timed: [], untimed: [] }
 const personLooseRates: Record<Mode, number[]> = { timed: [], untimed: [] }
 const personConsensusRates: Record<Mode, number[]> = { timed: [], untimed: [] }
+const lineageHits: Record<Mode, Map<string, number>> = { timed: new Map(), untimed: new Map() }
+const eligibleSpecificClaims: Record<Mode, number[]> = { timed: [], untimed: [] }
 
 for (const profile of timingMeasurementProfiles(requested)) {
   const { id: _id, birthHour, birthMinute, ...common } = profile
@@ -50,6 +56,14 @@ for (const profile of timingMeasurementProfiles(requested)) {
   }
   for (const mode of ['timed', 'untimed'] as const) {
     const timeline = buildTimingScoreTimeline(inputs[mode])
+    const timing = calcTimingCycles(common.birthYear, common.birthMonth, common.birthDay,
+      mode === 'timed' ? birthHour : undefined, mode === 'timed' ? birthMinute : 0, common.gender)
+    const eventYears = new Map<string, number[]>()
+    for (const annual of timing.annual) for (const event of timingEventKeys(timingAnnualValues(annual))) {
+      const years = eventYears.get(event) ?? []
+      years.push(annual.year)
+      eventYears.set(event, years)
+    }
     let loosePersonYears = 0
     let consensusPersonYears = 0
     for (const scores of timeline.scoresByYear.values()) {
@@ -60,6 +74,32 @@ for (const profile of timingMeasurementProfiles(requested)) {
       if (looseCount > 0) loosePersonYears += 1
       if (consensusCount > 0) consensusPersonYears += 1
       for (const key of TIMING_SCORE_KEYS) samples[mode][key].push(scores[key])
+    }
+    for (const annual of timing.annual) {
+      const scores = timeline.scoresByYear.get(annual.year)!
+      const domains = timingEventKeys(timingAnnualValues(annual))
+      const profile: AnnualTimingProfile = {
+        year: annual.year,
+        activeDomains: new Set(domains),
+        displayEvents: domains.map(event => {
+          const years = eventYears.get(event) ?? []
+          return { event, occurrenceIndex: years.indexOf(annual.year), clusterCount: years.length, strength: annual.score >= 6 ? 'strong' : 'possible' }
+        }),
+        scores,
+        relationshipStatus: 'unknown', workStatus: 'unknown', history: new Set(), context: {},
+      }
+      eligibleSpecificClaims[mode].push(TIMING_CLAIM_ASSETS.filter(asset =>
+        asset.specificity !== 'fallback' && hardGateReason(asset, profile) === null).length)
+    }
+    for (const definitions of timeline.byYear.values()) {
+      const seen = new Set<string>()
+      for (const item of definitions) {
+        if (!item.available || !item.matched || item.support <= 0 || (item.polarity ?? 1) < 0) continue
+        const identity = `${item.scoreKey}\u0000${item.factLineageId}`
+        if (seen.has(identity)) continue
+        seen.add(identity)
+        lineageHits[mode].set(identity, (lineageHits[mode].get(identity) ?? 0) + 1)
+      }
     }
     personLooseRates[mode].push(loosePersonYears / timeline.years.length)
     personConsensusRates[mode].push(consensusPersonYears / timeline.years.length)
@@ -92,6 +132,17 @@ const summarizeMode = (mode: Mode) => ({
       singleFamilyLooseActivationRatio: values.filter(item => looselyDetected(item) && item.sourceFamilyCount === 1).length / values.length,
     }]
   })),
+  lineageHitRates: [...lineageHits[mode].entries()]
+    .map(([identity, count]) => {
+      const [scoreKey, factLineageId] = identity.split('\u0000') as [TimingScoreKey, string]
+      return { scoreKey, factLineageId, ratio: count / (requested * 43) }
+    })
+    .sort((left, right) => right.ratio - left.ratio || left.scoreKey.localeCompare(right.scoreKey) || left.factLineageId.localeCompare(right.factLineageId)),
+  claimEligibility: {
+    note: 'traits/history/runtime context are intentionally absent; counts only currently resolvable score/event claims',
+    eligibleSpecificClaimCount: distribution(eligibleSpecificClaims[mode]),
+    anyEligibleSpecificClaimRatio: eligibleSpecificClaims[mode].filter(count => count > 0).length / eligibleSpecificClaims[mode].length,
+  },
 })
 
 process.stdout.write(`${JSON.stringify({

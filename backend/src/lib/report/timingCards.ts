@@ -19,7 +19,7 @@ function stableIndex(value: string, length: number) {
   return length === 0 ? 0 : hash % length
 }
 
-function eventKeys(values: string[]): LifeEventKey[] {
+export function timingEventKeys(values: string[]): LifeEventKey[] {
   const has = (pattern: RegExp) => values.some(value => pattern.test(value))
   const keys: LifeEventKey[] = []
   if (has(/結婚|婚約|入籍|同居/)) keys.push('marriage')
@@ -33,7 +33,7 @@ function eventKeys(values: string[]): LifeEventKey[] {
   return keys.length ? keys : ['seed']
 }
 
-function valuesFor(item: Annual) { return unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]) }
+export function timingAnnualValues(item: Annual) { return unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]) }
 function primaryEvent(keys: LifeEventKey[]) {
   return [...keys].sort((left, right) => lifeEvent(left).priority - lifeEvent(right).priority || left.localeCompare(right))[0]
 }
@@ -54,7 +54,7 @@ function paragraph(asset: TimingClaimAsset, index: number) {
 }
 
 function clustersFor(allAnnual: Annual[], key: LifeEventKey): number[][] {
-  const years = allAnnual.filter(item => eventKeys(valuesFor(item)).includes(key)).map(item => item.year).sort((a, b) => a - b)
+  const years = allAnnual.filter(item => timingEventKeys(timingAnnualValues(item)).includes(key)).map(item => item.year).sort((a, b) => a - b)
   const clusters: number[][] = []
   for (const year of years) {
     const last = clusters.at(-1)
@@ -85,8 +85,8 @@ function assetsFor(key: LifeEventKey, item: Annual) {
 }
 
 function card(input: ReportInput, item: Annual, allAnnual: Annual[], decade?: Decade): ReportCard {
-  const rawValues = valuesFor(item)
-  const key = primaryEvent(eventKeys(rawValues))
+  const rawValues = timingAnnualValues(item)
+  const key = primaryEvent(timingEventKeys(rawValues))
   const assets = assetsFor(key, item)
   const headline = assets[0]
   const badges = badgesFor(input, item, key, allAnnual)
@@ -109,7 +109,7 @@ function card(input: ReportInput, item: Annual, allAnnual: Annual[], decade?: De
   }
 }
 
-function signature(item: Annual) { return valuesFor(item).sort().join('|') }
+function signature(item: Annual) { return timingAnnualValues(item).sort().join('|') }
 
 /** 年の選抜条件は従来どおり。T3は表示と文章資産だけを差し替える。 */
 export function buildTurningPointCards(input: ReportInput, nowYear = japanDateParts().year): ReportCard[] {

@@ -26,6 +26,12 @@ test('activeDomains 3件なら displayEvents 2件でも cp-14 を選べる', () 
   assert.ok(result.selected.some(item => item.asset.id === 'cp-14'))
 })
 test('領域が違う3件では rs-09 を出さない', () => assert.equal(hardGateReason(TIMING_CLAIM_ASSETS.find(item => item.id === 'rs-09')!, profile(2030, ['reset', 'study'], ['reset', 'study', 'money'])), 'activeDomains'))
+
+test('Evidence不足でrelativeStrengthだけが高いスコアを具体Claimへ通さない', () => {
+  const incomplete = score('career_activation', 1, { confidence: 0.3, sourceFamilyCount: 1 })
+  assert.equal(passesTimingScoreGate({ key: 'career_activation', op: 'gte', value: 0.66, level: 'high' }, incomplete), false)
+  assert.equal(passesTimingScoreGate({ key: 'career_activation', op: 'gte', value: 0.33, level: 'medium_or_high' }, incomplete), false)
+})
 test('全資産のlevelとop/value/min/maxはSCORE_BOUNDSに完全一致する', () => {
   const gates = TIMING_CLAIM_ASSETS.flatMap(item => [
     ...(item.match.allScores ?? []), ...(item.match.anyScores ?? []),
@@ -81,7 +87,7 @@ test('付帯条件なしの明確な成立が、付帯条件つきの閾値ぎ�
 test('fallback はfitが高くても score_specific より後の別プールで評価する', () => {
   const fallback = asset({ id: 'high-fallback', events: ['reset'], specificity: 'fallback', salienceBase: 1, match: {} })
   const specific = asset({ id: 'lower-specific', events: ['reset'], salienceBase: 0.5 })
-  const p = profile(2030, ['reset']); p.scores = { ...p.scores, identity_reset: score('identity_reset', 0.67, { confidence: 0.5, sourceFamilyCount: 1 }) }
+  const p = profile(2030, ['reset']); p.scores = { ...p.scores, identity_reset: score('identity_reset', 0.67, { confidence: 0.5, sourceFamilyCount: 2 }) }
   const result = selectTimingClaims([fallback, specific], p, createTimingReportSelectionState(), 'fallback-pool', 1)
   assert.ok(claimFit(fallback, p).total > claimFit(specific, p).total)
   assert.equal(result.selected[0].asset.id, 'lower-specific')

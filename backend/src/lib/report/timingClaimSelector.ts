@@ -55,10 +55,12 @@ export interface LevelPolicy {
 
 const DEFAULT_LEVEL_POLICIES: Record<ScoreLevel, LevelPolicy> = {
   low: { relativeStrengthMax: SCORE_BOUNDS.low.value },
-  medium: { relativeStrengthMin: SCORE_BOUNDS.medium.min, relativeStrengthMax: SCORE_BOUNDS.medium.max },
-  medium_or_high: { relativeStrengthMin: SCORE_BOUNDS.medium_or_high.value },
-  high: { relativeStrengthMin: SCORE_BOUNDS.high.value },
-  very_high: { relativeStrengthMin: SCORE_BOUNDS.very_high.value },
+  // relativeStrengthは利用可能Evidenceが少ないほど上がり得る。具体Claimでは単独利用せず、
+  // 最低限の確信度と独立Source Family数を同時に要求する（shadow provisional）。
+  medium: { relativeStrengthMin: SCORE_BOUNDS.medium.min, relativeStrengthMax: SCORE_BOUNDS.medium.max, minConfidence: 0.5, minSourceFamilies: 2 },
+  medium_or_high: { relativeStrengthMin: SCORE_BOUNDS.medium_or_high.value, minConfidence: 0.5, minSourceFamilies: 2 },
+  high: { relativeStrengthMin: SCORE_BOUNDS.high.value, minConfidence: 0.5, minSourceFamilies: 2 },
+  very_high: { relativeStrengthMin: SCORE_BOUNDS.very_high.value, minConfidence: 0.65, minSourceFamilies: 2 },
 }
 
 function policiesFor(overrides: Partial<Record<ScoreLevel, LevelPolicy>> = {}): Record<ScoreLevel, LevelPolicy> {
