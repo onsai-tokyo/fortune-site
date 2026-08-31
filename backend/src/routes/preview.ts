@@ -16,6 +16,7 @@ import { buildChartSections } from '../lib/report/chartSections.js'
 import { buildSelfReport, resolveSelfReportOptions } from '../lib/report/buildSelfReport.js'
 import { warnReportContract } from '../lib/report/contract.js'
 import { calcAge } from '../lib/age.js'
+import { reportDiagnostics, runtimeIdentity } from '../lib/runtimeDiagnostics.js'
 
 export const previewRouter = Router()
 
@@ -81,6 +82,9 @@ interface CalculatedData {
 previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
   const useSse = req.query.format === 'sse'
   const requestId = correlationId(req)
+  const runtime = runtimeIdentity()
+  res.setHeader('X-FateLab-Request-Id', requestId)
+  res.setHeader('X-FateLab-Backend-Commit', runtime.commitSha)
   let keepAlive: ReturnType<typeof setInterval> | undefined
   const progress = (percent: number, title: string, detail: string) => {
     if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
@@ -190,8 +194,15 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       chartSections: buildChartSections(reportInput),
     }
     warnReportContract(reportWithChart, reportInput, requestId)
+    const generationDiagnostics = reportDiagnostics(reportWithChart)
+    console.info('Self-report response diagnostic', {
+      correlationId: requestId,
+      runtime,
+      pipelineTag,
+      ...generationDiagnostics,
+    })
     const response = req.query.debug === '1'
-      ? { ...reportWithChart, metadata }
+      ? { ...reportWithChart, metadata, _diagnostics: { correlationId: requestId, runtime, pipelineTag, report: generationDiagnostics } }
       : reportWithChart
 
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')

@@ -15,6 +15,7 @@ import { stripeRouter, stripeWebhook } from './routes/stripe.js'
 import { appleRouter, appStoreNotification } from './routes/apple.js'
 import { verifiedUserIdFromAuthorization } from './lib/rateLimitIdentity.js'
 import { partnersRouter } from './routes/partners.js'
+import { runtimeIdentity } from './lib/runtimeDiagnostics.js'
 
 const dependencyStatus = {
   supabaseUrl: Boolean(process.env.SUPABASE_URL),
@@ -128,6 +129,7 @@ app.get('/health', (_req, res) => {
     status: 'ok',
     version: '1.1.1',
     hasApiKey: key.length > 0 && key !== 'your_api_key_here',
+    runtime: runtimeIdentity(),
   })
 })
 
