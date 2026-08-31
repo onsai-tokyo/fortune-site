@@ -34,11 +34,14 @@ test('接続対象25件は実Evidence定義と系統・寄与・極性が一致�
   }
 })
 
-test('同じIDを別スコアへ誤接続しない', () => {
-  const ids = new Map(TIMING_LINEAGE_CONTRACT.map(item => [item.factLineageId, item.scoreKey]))
+test('既存契約ペアを維持し、同一事実の別スコア共有は明示的なshadowだけに限定する', () => {
+  const pairs = new Set(TIMING_LINEAGE_CONTRACT.map(item => `${item.scoreKey}\u0000${item.factLineageId}`))
+  const contractedIds = new Set(TIMING_LINEAGE_CONTRACT.map(item => item.factLineageId))
   const timeline = buildTimingEvidenceTimeline({ birthYear: 1990, birthMonth: 7, birthDay: 12, birthHour: 12, gender: 'male', birthplace: '東京都' })
   for (const item of [...timeline.byYear.values()].flat()) {
-    const expected = ids.get(item.factLineageId)
-    if (expected) assert.equal(item.scoreKey, expected, `${item.factLineageId} の接続先が違う`)
+    if (!contractedIds.has(item.factLineageId)) continue
+    if (!pairs.has(`${item.scoreKey}\u0000${item.factLineageId}`)) {
+      assert.match(item.detail ?? '', /^shadow provisional \/ /, `${item.factLineageId} の別スコア共有が未承認`)
+    }
   }
 })

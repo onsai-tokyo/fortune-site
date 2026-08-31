@@ -1,6 +1,5 @@
 import type { TimingEvidenceBirthInput, TimingScoreTimeline } from './timingEvidencePipeline.js'
 import type { TimingScoreKey } from './timingClaim.js'
-import { TIMING_LINEAGE_CONTRACT } from './timingLineageContract.js'
 
 /**
  * 既知の人生イベントは「正解文」ではなく、時期ロジックの検証ラベルとしてだけ扱う。
@@ -56,9 +55,8 @@ export function evaluateKnownTimingCase(
   timeline: TimingScoreTimeline,
   minimumRelativeStrength = 0.33,
 ): readonly KnownTimingEventResult[] {
-  const implementedScores = new Set<TimingScoreKey>(TIMING_LINEAGE_CONTRACT
-    .filter(item => item.status === 'connected')
-    .map(item => item.scoreKey))
+  const implementedScores = new Set<TimingScoreKey>([...timeline.byYear.values()]
+    .flatMap(items => items.map(item => item.scoreKey)))
   return fixture.events.map(event => {
     const scores = timeline.scoresByYear.get(event.year)
     if (!scores) throw new RangeError(`Missing timing score year: ${event.year}`)

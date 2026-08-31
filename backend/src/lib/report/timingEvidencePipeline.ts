@@ -5,6 +5,7 @@ import type { TimingEvidenceDefinition } from './timingScoreEngine.js'
 import { computeTimingScores, type TimingScoreQuality, type TimingScoreResult } from './timingScoreEngine.js'
 import type { TimingScoreKey } from './timingClaim.js'
 import { buildStemBranchTimingEvidence } from './timingStemBranchEvidence.js'
+import { buildAdditionalStemBranchEvidence } from './timingAdditionalStemBranchEvidence.js'
 import { buildVedicTimingEvidence } from './timingVedicEvidence.js'
 import { buildWesternTimingEvidence } from './timingWesternEvidence.js'
 import { buildZiweiTimingEvidence, type ZiweiAnnualTimingInput } from './timingZiweiEvidence.js'
@@ -75,6 +76,11 @@ export function buildTimingEvidenceTimeline(input: TimingEvidenceBirthInput): Ti
     birthHour: input.birthHour, birthMinute: input.birthMinute,
     annual: timing.annual, decades: timing.decades,
   })
+  const additionalStem = buildAdditionalStemBranchEvidence({
+    birthYear: input.birthYear, birthMonth: input.birthMonth, birthDay: input.birthDay,
+    birthHour: input.birthHour, birthMinute: input.birthMinute, gender: input.gender,
+    annual: timing.annual, decades: timing.decades,
+  })
   const westernBase = calcTimeIndependentWesternAnnualAspects(input.birthYear, input.birthMonth, input.birthDay)
   const fixedWestern = buildWesternTimingEvidence(westernBase)
   const vedic = buildVedicTimingEvidence(hasBirthTime
@@ -103,7 +109,7 @@ export function buildTimingEvidenceTimeline(input: TimingEvidenceBirthInput): Ti
   return {
     hasBirthTime,
     years: timing.annual.map(item => item.year),
-    byYear: new Map(timing.annual.map(item => [item.year, merge(stem.get(item.year), western.get(item.year), vedic.get(item.year), ziwei.get(item.year))])),
+    byYear: new Map(timing.annual.map(item => [item.year, merge(stem.get(item.year), additionalStem.get(item.year), western.get(item.year), vedic.get(item.year), ziwei.get(item.year))])),
   }
 }
 
