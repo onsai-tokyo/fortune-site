@@ -16,6 +16,7 @@ const productionEntrypoints = [
 ]
 const experimentalModules = [
   'timingCompositionRoot', 'timingEvidencePipeline', 'timingScoreEngine', 'timingClaimSelector', 'timingRuleReadiness',
+  'timingKnownEventBenchmark',
   'timingExactManifest', 'timingLineageContract', 'timingScoreDesignContract', 'timingStemBranchEvidence',
   'timingWesternEvidence', 'timingVedicEvidence', 'timingZiweiEvidence',
 ]
