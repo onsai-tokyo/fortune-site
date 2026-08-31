@@ -4,6 +4,7 @@ import { buildSelfReport } from './buildSelfReport.js'
 import { CLAIM_ASSETS } from './claimAssets.js'
 import { claimTriggerMatchesFinding } from './claimComposer.js'
 import { buildFixtureReportInput, type BirthFixture } from './fixtures.js'
+import type { ReportFindingV2 } from './findingsV2.js'
 import { extractReportMetadata } from './metadata.js'
 
 const CASE_A: BirthFixture = {
@@ -37,7 +38,7 @@ test('Aケースの具体Claimは固有triggerなしの汎用スコア補完へ�
       assert.ok(asset, `${card.id}/${section.claimId}: ClaimAsset がありません`)
       if (asset.trigger.kind === 'axis' || asset.trigger.kind === 'score') continue
       assert.ok(
-        output.findings.some(finding => claimTriggerMatchesFinding(asset, finding)),
+        output.findings.some(finding => claimTriggerMatchesFinding(asset, finding as ReportFindingV2)),
         `${card.id}/${asset.id}: ${asset.trigger.kind} trigger が成立していないのに掲載されています`,
       )
     }
@@ -48,4 +49,3 @@ test('Aケースの具体Claimは固有triggerなしの汎用スコア補完へ�
   assert.ok(sourceRefs.length > 0)
   assert.ok(sourceRefs.includes('claim-source:direct'))
 })
-
