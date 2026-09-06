@@ -5,13 +5,27 @@ import { periodLabel } from '../age.js'
 import { badgeLabel, lifeEvent, type LifeEventKey } from './lifeEventLabels.js'
 import { glossesForEvidence } from './jargon.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
-import { annualNarrative } from './timingAnnualNarrative.js'
+import { annualNarrative, type AnnualPhrase } from './timingAnnualNarrative.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
 const STRONG_THRESHOLD = 6
 
 function unique(values: string[]) { return [...new Set(values.map(value => value.trim()).filter(Boolean))] }
+
+function annualSectionBody(phrases: AnnualPhrase[]): string {
+  // Keep all source meanings first. Add complete explanatory sentences only
+  // within the existing 220-character section contract.
+  let body = phrases.map(phrase => phrase.body).join('')
+  for (const phrase of phrases) {
+    for (const sentence of phrase.detail?.match(/[^。]+。/g) ?? []) {
+      const candidate = `${body}\n\n${sentence}`
+      if (candidate.length > 220) break
+      body = candidate
+    }
+  }
+  return body
+}
 
 export function timingEventKeys(values: string[]): LifeEventKey[] {
   const has = (pattern: RegExp) => values.some(value => pattern.test(value))
@@ -50,16 +64,20 @@ function clustersFor(allAnnual: Annual[], key: LifeEventKey): number[][] {
   return clusters
 }
 
-function badgesFor(input: ReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[]) {
+function badgesFor(input: ReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[], visibleAnnual: Annual[]) {
   const definition = lifeEvent(key)
   if (!definition.ordinal) return [definition.label]
   const clusters = clustersFor(allAnnual, key)
   const clusterIndex = clusters.findIndex(cluster => cluster.includes(item.year))
   const strong = Boolean(input.birthTime) && item.score >= STRONG_THRESHOLD
-  return clusters.length >= 2 && clusterIndex >= 0 && strong ? [badgeLabel(key, clusterIndex)] : [definition.label]
+  // Never display an ordinal whose earlier clusters are absent from the reader's list.
+  const earlierVisible = clusters.slice(0, clusterIndex + 1).every(cluster => visibleAnnual.some(value =>
+    cluster.includes(value.year) && value.score >= STRONG_THRESHOLD
+      && primaryEvent(timingEventKeys(timingAnnualValues(value))) === key))
+  return clusters.length >= 2 && clusterIndex >= 0 && strong && earlierVisible ? [badgeLabel(key, clusterIndex)] : [definition.label]
 }
 
-function card(input: ReportInput, item: Annual, allAnnual: Annual[], decade?: Decade): ReportCard | null {
+function card(input: ReportInput, item: Annual, allAnnual: Annual[], visibleAnnual: Annual[], decade?: Decade): ReportCard | null {
   const themes = annualNarrative(item.themes)
   const relationships = annualNarrative(item.relationshipEvents ?? [])
   const phrases = [...themes, ...relationships]
@@ -68,14 +86,14 @@ function card(input: ReportInput, item: Annual, allAnnual: Annual[], decade?: De
   const rawValues = timingAnnualValues(item)
   const keys = timingEventKeys(rawValues)
   const key = primaryEvent(keys)
-  const badges = badgesFor(input, item, key, allAnnual)
+  const badges = badgesFor(input, item, key, allAnnual, visibleAnnual)
   const rawDetails = unique([item.kanshi, item.tenGod, ...rawValues, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
   const evidence = [{ family: '干支系', system: '四柱推命', detail: `${item.year}年・${rawDetails.join('・')}` }]
   const sections: ReportSection[] = [
     { heading: 'この年のテーマ', values: themes, source: 'themes' },
     { heading: '人との関係', values: relationships, source: 'relationships' },
   ].filter(section => section.values.length > 0).map(section => ({
-    heading: section.heading, body: section.values.map(phrase => phrase.body).join(''), evidence,
+    heading: section.heading, body: annualSectionBody(section.values), evidence,
     termGloss: evidence.flatMap(value => glossesForEvidence(value.detail)), claimId: `timing-annual-${item.year}-${section.source}`,
   }))
   // Preserve every calculated theme/event even when the primary tag is "work".
@@ -111,7 +129,8 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
     return relationshipEvent || item.score >= 8 || (changedTheme && item.score >= 6)
   })
   const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
-  return selected.map(item => card(input, item, allAnnual, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
+  const visible = selected.filter(item => annualNarrative([...item.themes, ...(item.relationshipEvents ?? [])]).length > 0)
+  return visible.map(item => card(input, item, allAnnual, visible, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
     .filter((item): item is ReportCard => item !== null)
 }
 
