@@ -23,7 +23,14 @@ export function assertPartnerCapacity(currentCount: number) {
 export function validatePartnerProfile(value: Record<string, unknown>) {
   const displayName = typeof value.displayName === 'string' ? value.displayName.trim().slice(0, 40) : ''
   const birthDate = typeof value.birthDate === 'string' ? value.birthDate : ''
-  const birthTime = typeof value.birthTime === 'string' && /^\d{2}:\d{2}$/.test(value.birthTime) ? value.birthTime : null
+  const birthTime = value.birthTime == null || value.birthTime === '' ? null : value.birthTime
+  const [year, month, day] = birthDate.split('-').map(Number)
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1]
+  if (!validDate || (birthTime !== null && (typeof birthTime !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(birthTime)))) {
+    throw Object.assign(new Error('実在する生年月日と正しい出生時刻を入力してください'), { statusCode: 400 })
+  }
   const birthplace = typeof value.birthplace === 'string' ? value.birthplace.trim().slice(0, 80) : ''
   const gender = value.gender === 'male' || value.gender === 'female' ? value.gender : null
   const { relationshipLabel, relationshipType } = normalizeRelationship(value.relationshipLabel, value.relationshipType)

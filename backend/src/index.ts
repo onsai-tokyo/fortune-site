@@ -17,6 +17,10 @@ import { verifiedUserIdFromAuthorization } from './lib/rateLimitIdentity.js'
 import { partnersRouter } from './routes/partners.js'
 import { runtimeIdentity } from './lib/runtimeDiagnostics.js'
 
+import { assertAuthConfiguration } from './lib/authConfiguration.js'
+import { apiMaintenanceEnabled, apiMaintenanceGate } from './lib/apiMaintenance.js'
+assertAuthConfiguration(process.env)
+
 const dependencyStatus = {
   supabaseUrl: Boolean(process.env.SUPABASE_URL),
   supabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
@@ -61,6 +65,8 @@ app.use(cors({
   },
   credentials: true,
 }))
+// Operator-approved cutover only: stop API writes, including callbacks, before body parsing.
+app.use('/api', apiMaintenanceGate())
 // Stripe署名検証では加工前のbodyが必要。express.jsonより先に登録する。
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook)
 app.post('/api/apple/notifications', express.json({ limit: '256kb' }), appStoreNotification)
@@ -127,6 +133,7 @@ app.get('/health', (_req, res) => {
   const key = process.env.ANTHROPIC_API_KEY ?? ''
   res.json({
     status: 'ok',
+    apiMaintenance: apiMaintenanceEnabled(),
     version: '1.1.1',
     hasApiKey: key.length > 0 && key !== 'your_api_key_here',
     runtime: runtimeIdentity(),

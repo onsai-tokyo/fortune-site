@@ -1,12 +1,13 @@
 import { Router } from 'express'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import rateLimit from 'express-rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPaidToken } from './payment.js'
 import { calcShichu, calcNayin, calcSanmei, calcExpandedDivination, calcSanmeiRelations, calcTimingCycles, calcNumerologyProfile, calcKyuseiProfile, getSukuyo, calcHonmeiStar, calcLifePathNumber, KYUSEI_NAMES } from './calc.js'
 import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
-import { requireReadingAuth } from '../middleware/auth.js'
+import { requireReadingAuth, requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { generationRPC, GenerationDependencyError } from '../lib/selfGeneration.js'
 import { extractReportMetadata, prioritizeCardsForConcern, type CurrentConcern, type CurrentRole } from '../lib/report/metadata.js'
 import { deterministicCardIds, writeReportWithAi } from '../lib/report/aiWriter.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
@@ -79,15 +80,24 @@ interface CalculatedData {
 
 // LP用：命式鑑定書 全章ストリーミング生成
 // POST /api/preview/generate
-previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
+previewRouter.get('/generations/:opId', requireAuth, async (req: AuthRequest, res) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) {res.status(400).json({error:'操作IDが正しくありません'});return}
+  res.setHeader('Cache-Control','private, no-store')
+  try {res.json(await generationRPC('get_self_generation',{p_user:req.userId,p_op:req.params.opId}))}
+  catch {res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を確認できませんでした'})}
+})
+
+previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res) => {
   const useSse = req.query.format === 'sse'
-  const requestId = correlationId(req)
+  const requestId = req.header('Idempotency-Key') ?? randomUUID()
+  const workerId = randomUUID()
+  let started = false, completionAttempted = false
   const runtime = runtimeIdentity()
   res.setHeader('X-FateLab-Request-Id', requestId)
   res.setHeader('X-FateLab-Backend-Commit', runtime.commitSha)
   let keepAlive: ReturnType<typeof setInterval> | undefined
   const progress = (percent: number, title: string, detail: string) => {
-    if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
+    if (useSse && !res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
   }
   try {
     const { birthDate, birthTime, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
@@ -109,9 +119,24 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       res.status(400).json({ error: '生年月日の形式が正しくありません' })
       return
     }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+      res.status(400).json({error:'操作IDが正しくありません'});return
+    }
+    if (req.userId) {
+      const state=await generationRPC('begin_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,
+        p_payload:{body:req.body,debug:req.query.debug==='1'},p_context:{...runtime,startedAt:new Date().toISOString()}})
+      if(state.state==='completed') {
+        res.setHeader('Cache-Control','private, no-store')
+        if(useSse) {res.setHeader('Content-Type','text/event-stream');res.end(`data: ${JSON.stringify({type:'complete',report:state.result})}\n\ndata: [DONE]\n\n`)}
+        else res.json(state.result)
+        return
+      }
+      if(state.state!=='started') {res.status(409).json({code:state.state==='conflict'?'OPERATION_PAYLOAD_CONFLICT':state.state==='pending'?'GENERATION_PENDING':'GENERATION_FAILED',state:state.state,error:'前の生成状況を確認してから再試行してください'});return}
+      started=true
+    }
     if (useSse) {
       res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders()
-      keepAlive = setInterval(() => res.write(': keep-alive\n\n'), 10_000)
+      keepAlive = setInterval(() => {if(!res.destroyed && !res.writableEnded) res.write(': keep-alive\n\n')}, 10_000)
       res.once('close', () => { if (keepAlive) clearInterval(keepAlive) })
     }
     progress(5, '入力内容を確認しています', '生年月日と出生地を確認しています')
@@ -205,6 +230,12 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
       ? { ...reportWithChart, metadata, _diagnostics: { correlationId: requestId, runtime, pipelineTag, report: generationDiagnostics } }
       : reportWithChart
 
+    if (started) {
+      completionAttempted=true
+      const saved=await generationRPC('settle_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,p_result:response})
+      if(saved.state!=='completed') throw new GenerationDependencyError('Generation completion unconfirmed')
+    }
+    if (res.destroyed || res.writableEnded) {if(keepAlive) clearInterval(keepAlive);return}
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
     if (useSse) {
       res.write(`data: ${JSON.stringify({ type: 'complete', report: response })}\n\n`)
@@ -213,6 +244,11 @@ previewRouter.post('/generate', requireReadingAuth, async (req, res) => {
     return
   } catch (err) {
     if (keepAlive) clearInterval(keepAlive)
+    if(started && !completionAttempted) {
+      try {await generationRPC('settle_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,p_result:null})} catch { /* Keep uncertain operation for status reconciliation. */ }
+    }
+    if(res.destroyed || res.writableEnded) return
+    if(err instanceof GenerationDependencyError && !res.headersSent) {res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を保存・確認できませんでした'});return}
     console.error('Preview generate error', {
       correlationId: requestId,
       inputHash: requestCorrelationId(req.body),

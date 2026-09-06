@@ -106,3 +106,31 @@ test('requireAuth rejects an invalid signature without a Supabase request', asyn
     else process.env.SUPABASE_URL = originalUrl
   }
 })
+
+test('real ES256 middleware distinguishes rotation, upstream outage and invalid signature', async () => {
+  const { generateKeyPairSync } = await import('node:crypto')
+  const { clearSupabaseJwksCache } = await import('../lib/rateLimitIdentity.js')
+  const before = process.env.SUPABASE_URL, fetchBefore = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'
+  const pair = generateKeyPairSync('ec', { namedCurve: 'P-256' })
+  const token = jwt.sign({ sub: 'user-123', aud: 'authenticated' }, pair.privateKey, {
+    algorithm: 'ES256', keyid: 'new', issuer: 'https://example.supabase.co/auth/v1', expiresIn: '1h',
+  })
+  try {
+    clearSupabaseJwksCache()
+    globalThis.fetch = async () => new Response('', { status: 500 })
+    const failed = responseRecorder()
+    await requireAuth({ headers: { authorization: `Bearer ${token}` } } as AuthRequest, failed.response, () => assert.fail('unavailable cannot authenticate'))
+    assert.equal(failed.result().statusCode, 503)
+    assert.equal((failed.result().body as any).retryable, true)
+    clearSupabaseJwksCache()
+    globalThis.fetch = async () => Response.json({ keys: [{ ...pair.publicKey.export({ format: 'jwk' }), kid: 'new' }] })
+    let called = false
+    await requireAuth({ headers: { authorization: `Bearer ${token}` } } as AuthRequest, responseRecorder().response, () => { called = true })
+    assert.equal(called, true)
+  } finally {
+    globalThis.fetch = fetchBefore; clearSupabaseJwksCache()
+    if (before === undefined) delete process.env.SUPABASE_URL
+    else process.env.SUPABASE_URL = before
+  }
+})

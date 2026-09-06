@@ -4,7 +4,10 @@ import { PayjpModal } from '../components/PayjpModal'
 import { Toast } from '../components/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import { getArchetype, getSukuyoDetail } from '../lib/archetype'
-import { saveAnalysis } from '../lib/history'
+import { saveWebReading } from '../lib/selfReadingSave'
+import { verifySavedWebReading } from '../lib/readingCacheSync'
+import { supabase } from '../lib/supabase'
+import { generationKey, loadWebGeneration, recoverWebGeneration, WebGenerationError, type GenerationRequest } from '../lib/selfGenerationRecovery'
 
 interface FortuneCalcData {
   shichuYear: string
@@ -67,10 +70,68 @@ const PREFECTURES = [
   '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県',
 ]
 
+async function calculatePreview(birthDate:string,birthTime:string,birthplace:string,gender:string,request:GenerationRequest):Promise<FortuneCalcData> {
+    const backendCalcData = await request('/api/calc/divination', {birthDate,birthTime,birthplace,gender}) as unknown as {
+      shichuYear: string
+      shichuMonth: string
+      shichuDay: string
+      shichuHour: string | null
+      nayin: string
+      sanmeiStar: string
+      chusatsu: string
+      sukuyo: string
+      lifePathNumber: number
+      honmeiName: string
+      timing: {
+        decades: Array<{ kanshi: string; startAge: number; endAge: number }>
+        annual: Array<{ year: number; kanshi: string }>
+      }
+    }
+
+    // バックエンド側の値を優先使用
+    const y = Number(birthDate.slice(0,4))
+    const currentYear = new Date().getFullYear()
+    const age = currentYear - y
+    const currentDaiyun = backendCalcData.timing.decades.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? backendCalcData.timing.decades[0]
+    const ryunen = backendCalcData.timing.annual.find(item => item.year === currentYear)?.kanshi ?? ''
+    const archetype = getArchetype(backendCalcData.shichuDay)
+    const sukuyoDetail = getSukuyoDetail(backendCalcData.sukuyo)
+
+    const newCalcData: FortuneCalcData = {
+      shichuYear: backendCalcData.shichuYear,
+      shichuMonth: backendCalcData.shichuMonth,
+      shichuDay: backendCalcData.shichuDay,
+      shichuHour: backendCalcData.shichuHour,
+      nayin: backendCalcData.nayin,
+      sanmeiStar: backendCalcData.sanmeiStar,
+      chusatsu: backendCalcData.chusatsu,
+      sukuyo: backendCalcData.sukuyo,
+      lifePathNumber: backendCalcData.lifePathNumber,
+      honmeiName: backendCalcData.honmeiName,
+      tsukimeiName: '', // 不要なので空
+      archetype,
+      sukuyoDetail,
+      daiyun: currentDaiyun.kanshi,
+      daiyunAge: `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`,
+      ryunen,
+    }
+    return newCalcData
+}
+
 export function TopPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, session, isPremium, points, signOut, refreshPoints } = useAuth()
+  const generationOwner = useRef({id:user?.id??null,epoch:0})
+  if(generationOwner.current.id!==(user?.id??null)) generationOwner.current={id:user?.id??null,epoch:generationOwner.current.epoch+1}
+  const generating = useRef(false)
+  const [authEpoch,setAuthEpoch]=useState(0)
+  useEffect(()=>{
+    const {data}=supabase.auth.onAuthStateChange((event,next)=>{
+      if(event==='SIGNED_OUT'||generationOwner.current.id!==(next?.user.id??null)){generationOwner.current={id:next?.user.id??null,epoch:generationOwner.current.epoch+1};setAuthEpoch(value=>value+1)}
+    })
+    return ()=>{generationOwner.current.epoch++;data.subscription.unsubscribe()}
+  },[])
   const inputRef    = useRef<HTMLDivElement>(null)
   const previewRef  = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
@@ -109,8 +170,54 @@ export function TopPage() {
   }, [isStreaming])
   const [previewContent, setPreviewContent] = useState('')
   const [previewError, setPreviewError] = useState('')
+  const [savedReadingID,setSavedReadingID]=useState<string|null>(null)
   const [submittedLabel, setSubmittedLabel] = useState('')
   const [calcData, setCalcData] = useState<FortuneCalcData | null>(null)
+
+  useEffect(()=>{
+    let active=true,revision=0
+    const owner=user?.id,epoch=generationOwner.current.epoch
+    setForm(previous=>({...previous,year:'',month:'',day:'',hour:'',minute:'',birthplace:'',gender:'female',showPartner:false,partnerYear:'',partnerMonth:'',partnerDay:'',partnerHour:'',partnerMinute:'',partnerGender:'male',question:''}))
+    setSubmittedQuestion('');setQuestionAnswer('');setIsStreaming(false);generating.current=false
+    const restore=async(resetInput=false)=>{
+      const run=++revision
+      const current=()=>active&&revision===run&&generationOwner.current.id===(owner??null)&&generationOwner.current.epoch===epoch
+      const check=()=>{if(!current())throw new Error('アカウントまたは保存状況が変更されました')}
+      if(!current())return
+      setPreviewContent('');setPreviewError('');setSavedReadingID(null);setCalcData(null);setSubmittedLabel('')
+      if(!owner)return
+    try {
+      let saved=loadWebGeneration(localStorage,owner)
+      if(!saved)return
+      const input=saved.input
+      const [year,month,day]=String(input.birthDate??'').split('-')
+      const [hour='',minute='']=String(input.birthTime??'').split(':')
+      const [partnerYear='',partnerMonth='',partnerDay='']=String(input.partnerBirthDate??'').split('-')
+      const [partnerHour='',partnerMinute='']=String(input.partnerBirthTime??'').split(':')
+      const field=(value:string)=>value===''?'':String(Number(value))
+      if(resetInput)setForm(previous=>({...previous,year,month:field(month),day:field(day),hour:field(hour),minute:field(minute),birthplace:String(input.birthplace??''),gender:input.gender==='male'?'male':'female',showPartner:!!input.partnerBirthDate,partnerYear,partnerMonth:field(partnerMonth),partnerDay:field(partnerDay),partnerHour:field(partnerHour),partnerMinute:field(partnerMinute),partnerGender:input.partnerGender==='female'?'female':'male'}))
+      setSubmittedLabel(`${year}年${month}月${day}日　${String(input.birthplace??'')}`)
+      if(saved.save?.conversationId){
+        if(!navigator.locks)throw new Error('保存済み鑑定の状態を確認できませんでした')
+        saved=await navigator.locks.request(generationKey(owner),()=>verifySavedWebReading({owner,storage:localStorage,check,fetcher:fetch,authorize:async(refresh)=>{
+          const response=refresh?await supabase.auth.refreshSession():await supabase.auth.getSession()
+          check()
+          if(response.error||response.data.session?.user.id!==owner||!response.data.session.access_token)throw new Error('ログイン状態を確認してください')
+          return response.data.session.access_token
+        }}))
+        check();if(!saved)return
+      }
+      if(saved.save?.deleted)setPreviewError('前の鑑定は削除済みです。次の操作で新しく生成します')
+      else if(saved.result){setPreviewContent(String(saved.result.reportText));setCalcData(saved.payload.calculatedData as unknown as FortuneCalcData);setSavedReadingID(saved.save?.conversationId??null);if(!saved.save?.conversationId)setPreviewError('鑑定の保存が未完了です。同じ入力で保存を再試行してください')}
+      else setPreviewError('前の生成状況を確認できます。同じ入力で鑑定ボタンを押してください')
+    }catch(error){if(current())setPreviewError(error instanceof Error?error.message:'生成状況を読み込めませんでした')}
+    }
+    void restore(true)
+    const onStorage=(event:StorageEvent)=>{if(owner&&(event.key===generationKey(owner)||event.key===null))void restore()}
+    const onFocus=()=>{if(owner&&!generating.current)void restore()}
+    window.addEventListener('storage',onStorage);window.addEventListener('focus',onFocus)
+    return ()=>{active=false;revision++;window.removeEventListener('storage',onStorage);window.removeEventListener('focus',onFocus)}
+  },[user?.id,authEpoch])
 
   // 質問課金フロー
   const [showQuestionModal, setShowQuestionModal] = useState(false)
@@ -197,6 +304,8 @@ export function TopPage() {
 
   async function handleGeneratePreview(e: React.FormEvent) {
     e.preventDefault()
+    const viewEpoch=generationOwner.current.epoch
+    const viewCurrent=()=>generationOwner.current.epoch===viewEpoch
     if (!form.year || !form.month || !form.day || !form.birthplace) return
 
     const birthDate = `${form.year}-${String(form.month).padStart(2, '0')}-${String(form.day).padStart(2, '0')}`
@@ -215,68 +324,50 @@ export function TopPage() {
     setSubmittedLabel(label)
     setSubmittedQuestion('')
     setQuestionAnswer('')
+    if(user) {
+      if(generating.current)return
+      generating.current=true
+      const owner=user.id,epoch=generationOwner.current.epoch
+      const current=()=>generationOwner.current.id===owner&&generationOwner.current.epoch===epoch
+      const check=()=>{if(!current())throw new Error('アカウントが変更されました')}
+      const input={birthDate,birthTime,birthplace:form.birthplace,gender:form.gender,partnerBirthDate,partnerBirthTime,partnerGender:form.partnerGender}
+      setIsStreaming(true);setPreviewError('');setPreviewContent('');setSavedReadingID(null)
+      try {
+        if(!navigator.locks)throw new Error('このブラウザでは生成状況を安全に保存できません')
+        const saved=await navigator.locks.request(generationKey(owner),async()=>{
+          check()
+          const authorize=async(refresh:boolean)=>{
+            const response=refresh?await supabase.auth.refreshSession():await supabase.auth.getSession()
+            check()
+            if(response.error||response.data.session?.user.id!==owner||!response.data.session.access_token)throw new Error('ログイン状態を確認してください')
+            return response.data.session.access_token
+          }
+          const value=await recoverWebGeneration({owner,input,storage:localStorage,check,fetcher:fetch,newID:()=>crypto.randomUUID(),authorize,
+            prepare:async(request)=>({...input,question:'',calculatedData:await calculatePreview(birthDate,birthTime,form.birthplace,form.gender,request)}),
+          })
+          check()
+          return saveWebReading({owner,generation:value,storage:localStorage,check,authorize,fetcher:fetch})
+        })
+        check();setSavedReadingID(saved.save?.conversationId??null);setCalcData(saved.payload.calculatedData as unknown as FortuneCalcData)
+        setPreviewContent(String(saved.result!.reportText).replace(/^#{1,3}\s*/gm,'').replace(/^---+$/gm,'').replace(/^===+$/gm,''))
+      }catch(error){if(current()){if(error instanceof WebGenerationError&&error.status===429)setShowLimitModal(true);setPreviewError(error instanceof Error?error.message:'生成に失敗しました')}}
+      finally{if(current()){setIsStreaming(false);generating.current=false}}
+      return
+    }
     const readingHeaders = {
       'Content-Type': 'application/json',
       ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
     }
 
-    // バックエンド側で計算した値を取得（フロント側の計算ライブラリのバグ回避）
-    const calcRes = await fetch('/api/calc/divination', {
-      method: 'POST',
-      headers: readingHeaders,
-      body: JSON.stringify({ birthDate, birthTime, birthplace: form.birthplace, gender: form.gender }),
-    })
-
-    if (!calcRes.ok) {
-      setPreviewError('占術データの計算に失敗しました')
-      setIsStreaming(false)
-      return
-    }
-
-    const backendCalcData = await calcRes.json() as {
-      shichuYear: string
-      shichuMonth: string
-      shichuDay: string
-      shichuHour: string | null
-      nayin: string
-      sanmeiStar: string
-      chusatsu: string
-      sukuyo: string
-      lifePathNumber: number
-      honmeiName: string
-      timing: {
-        decades: Array<{ kanshi: string; startAge: number; endAge: number }>
-        annual: Array<{ year: number; kanshi: string }>
-      }
-    }
-
-    // バックエンド側の値を優先使用
-    const y = Number(form.year)
-    const currentYear = new Date().getFullYear()
-    const age = currentYear - y
-    const currentDaiyun = backendCalcData.timing.decades.find(dyn => age >= dyn.startAge && age <= dyn.endAge) ?? backendCalcData.timing.decades[0]
-    const ryunen = backendCalcData.timing.annual.find(item => item.year === currentYear)?.kanshi ?? ''
-    const archetype = getArchetype(backendCalcData.shichuDay)
-    const sukuyoDetail = getSukuyoDetail(backendCalcData.sukuyo)
-
-    const newCalcData: FortuneCalcData = {
-      shichuYear: backendCalcData.shichuYear,
-      shichuMonth: backendCalcData.shichuMonth,
-      shichuDay: backendCalcData.shichuDay,
-      shichuHour: backendCalcData.shichuHour,
-      nayin: backendCalcData.nayin,
-      sanmeiStar: backendCalcData.sanmeiStar,
-      chusatsu: backendCalcData.chusatsu,
-      sukuyo: backendCalcData.sukuyo,
-      lifePathNumber: backendCalcData.lifePathNumber,
-      honmeiName: backendCalcData.honmeiName,
-      tsukimeiName: '', // 不要なので空
-      archetype,
-      sukuyoDetail,
-      daiyun: currentDaiyun.kanshi,
-      daiyunAge: `${currentDaiyun.startAge}〜${currentDaiyun.endAge}歳`,
-      ryunen,
-    }
+    let newCalcData: FortuneCalcData
+    try {
+      newCalcData = await calculatePreview(birthDate,birthTime,form.birthplace,form.gender,async(path,body)=>{
+        const response=await fetch(path,{method:'POST',headers:readingHeaders,body:JSON.stringify(body)})
+        if(!response.ok)throw new Error('占術データの計算に失敗しました')
+        return response.json()
+      })
+    } catch(error) { if(viewCurrent()){setPreviewError(error instanceof Error?error.message:'計算に失敗しました');setIsStreaming(false)};return }
+    if(!viewCurrent())return
     setCalcData(newCalcData)
 
     // 固定鑑定版のキャッシュ。旧AI生成結果とは混在させない。
@@ -321,6 +412,7 @@ export function TopPage() {
         }),
       })
 
+      if(!viewCurrent())return
       if (!res.ok) {
         const err = await res.json() as { error?: string; code?: string }
         if (res.status === 429 || err.code === 'DAILY_LIMIT_EXCEEDED') {
@@ -332,6 +424,7 @@ export function TopPage() {
       }
 
       const payload = await res.json() as { reportText?: string }
+      if(!viewCurrent())return
       let fullContent = payload.reportText ?? ''
       fullContent = fullContent
         .replace(/^#{1,3}\s*/gm, '')
@@ -344,14 +437,12 @@ export function TopPage() {
       // 生成完了 → キャッシュ保存 + 履歴保存（ログイン中のみ）
       if (fullContent) {
         try { localStorage.setItem(cacheKey, fullContent) } catch { /* localStorage 容量超過時は無視 */ }
-        if (user) {
-          saveAnalysis(user.id, 'preview', birthDate, submittedLabel).catch(() => {/* 履歴保存失敗は無視 */})
-        }
+
       }
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : '生成に失敗しました')
+      if(viewCurrent())setPreviewError(err instanceof Error ? err.message : '生成に失敗しました')
     } finally {
-      setIsStreaming(false)
+      if(viewCurrent())setIsStreaming(false)
     }
   }
 
@@ -773,6 +864,7 @@ export function TopPage() {
               )}
 
               {previewError && <p className="text-red-400 text-xs">{previewError}</p>}
+              {savedReadingID && <button type="button" className="text-accent text-xs underline" onClick={()=>navigate(`/reading/${savedReadingID}`)}>保存した鑑定を開く</button>}
 
               <button id="submit-btn" type="submit" disabled={!form.year || !form.month || !form.day || !form.birthplace || isStreaming}
                 className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2">

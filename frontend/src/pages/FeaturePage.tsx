@@ -453,7 +453,7 @@ export function FeaturePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
-        {!fortuneData ? (
+        {featureId === 'compat' ? <CompatibilityTab /> : !fortuneData ? (
           <>
             <div className={`glass-card border ${meta.border} p-6`}>
               <div className="flex items-center gap-3 mb-3">
@@ -503,7 +503,6 @@ export function FeaturePage() {
             </div>
 
             {featureId === 'self'        && <SelfAnalysisTab  fortuneData={fortuneData} onSaved={setAnalysisId} />}
-            {featureId === 'compat'      && <CompatibilityTab fortuneData={fortuneData} onSaved={setAnalysisId} />}
             {featureId === 'marriage'    && <MarriageTab      fortuneData={fortuneData} onSaved={setAnalysisId} />}
             {featureId === 'org'         && <OrganizationTab  fortuneData={fortuneData} onSaved={setAnalysisId} />}
             {featureId === 'recruit'     && <RecruitTab       fortuneData={fortuneData} onSaved={setAnalysisId} />}

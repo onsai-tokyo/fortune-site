@@ -109,7 +109,7 @@ async function handleSubscribe(req: AuthRequest, res: import('express').Response
     if (subscription.error) throw new Error(subscription.error.message ?? '決済に失敗しました')
 
     // 初回ポイント付与
-    const newBalance = await addPoints(req.userId!, req.accessToken!, plan.pts)
+    const newBalance = await addPoints(req.userId!, plan.pts)
 
     // Supabase にサブスク情報を保存
     const supabase = getUserSupabase(req.accessToken!)
@@ -153,7 +153,7 @@ paymentRouter.post('/webhook', async (req, res) => {
           const planInfo = PLANS[plan]
           if (planInfo) {
             // ポイント付与（service role で直接 RPC 呼び出し）
-            await supabase.rpc('add_points', { target_user_id: user_id, amount: planInfo.pts })
+            await addPoints(user_id, planInfo.pts)
             // expires_at を更新
             await supabase
               .from('subscriptions')

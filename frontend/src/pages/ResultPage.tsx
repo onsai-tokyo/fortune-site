@@ -253,7 +253,7 @@ export function ResultPage() {
             {activeTab === 'sanmei' && <SelfAnalysisTab fortuneData={fortuneData} />}
 
             {/* 宿曜 */}
-            {activeTab === 'sukuyo' && <CompatibilityTab fortuneData={fortuneData} />}
+            {activeTab === 'sukuyo' && <CompatibilityTab />}
 
             {/* 数秘術 */}
             {activeTab === 'numerology' && (

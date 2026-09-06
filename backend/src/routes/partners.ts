@@ -1,14 +1,19 @@
-import { Router, type NextFunction, type Response } from 'express'
+import { Router } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
-import { assertPartnerCapacity, MAX_PARTNER_PROFILES, normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
-import { createHash } from 'crypto'
+import { MAX_PARTNER_PROFILES, normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
+import { createHash, randomUUID } from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
-import { addPoints, requirePoints } from '../middleware/points.js'
-import { calculatedDataWithReport } from '../lib/report/storedReport.js'
+import { hasPremiumAccess } from '../lib/premium.js'
+import { partnerRegistrationRPC, registrationID } from '../lib/partnerRegistration.js'
+import { compatibilityRPC } from '../lib/compatibilityOperation.js'
+import { getSupabaseUser } from '../lib/supabaseUser.js'
+import { runtimeIdentity } from '../lib/runtimeDiagnostics.js'
+import { GenerationDependencyError } from '../lib/selfGeneration.js'
+import { readingSnapshot } from '../lib/readingRevision.js'
 import { appendCoupleTimingCards, buildCoupleTimingCards, findCoupleTurningPoints } from '../lib/report/coupleTimingCards.js'
 import { buildCoupleChartSections } from '../lib/report/chartSections.js'
 import { calcZiwei } from '../lib/ziwei.js'
@@ -26,31 +31,47 @@ export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
 
 partnersRouter.get('/', async (req: AuthRequest, res) => {
+  res.setHeader('Cache-Control','private, no-store')
   const { data, error } = await getSupabaseAdmin().from('partner_profiles').select('*').eq('user_id', req.userId!).order('created_at')
   if (error) { res.status(500).json({ error: '相手一覧を取得できませんでした' }); return }
   res.json({ partners: data ?? [], limit: MAX_PARTNER_PROFILES, remaining: Math.max(0, MAX_PARTNER_PROFILES - (data?.length ?? 0)) })
 })
 
+partnersRouter.get('/registration/operations/:opId', async (req: AuthRequest, res) => {
+  if (!registrationID(req.params.opId)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
+  try { res.json(await partnerRegistrationRPC('get_partner_registration_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  catch { res.status(503).json({error:'相手の登録状況を確認できませんでした'}) }
+})
+
+partnersRouter.post('/registration/operations/:opId/cancel', async (req: AuthRequest, res) => {
+  if (!registrationID(req.params.opId)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
+  try { res.json(await partnerRegistrationRPC('cancel_partner_registration_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  catch { res.status(503).json({error:'登録の取消結果を確認できませんでした。同じ操作で再確認してください'}) }
+})
+
 partnersRouter.post('/', async (req: AuthRequest, res) => {
+  const operationId = req.header('Idempotency-Key') ?? randomUUID()
+  if (!registrationID(operationId)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
   try {
-    const db = getSupabaseAdmin()
-    const { count, error: countError } = await db.from('partner_profiles').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!)
-    if (countError) throw countError
-    assertPartnerCapacity(count ?? 0)
-    const profile = validatePartnerProfile(req.body as Record<string, unknown>)
-    const { data, error } = await db.from('partner_profiles').insert({ user_id: req.userId, ...profile }).select('*').single()
-    if (error) {
-      if (error.message.includes('partner_profile_limit')) { res.status(409).json({ error: `登録できる相手は${MAX_PARTNER_PROFILES}人までです` }); return }
-      throw error
-    }
-    res.status(201).json({ partner: data, remaining: Math.max(0, MAX_PARTNER_PROFILES - (count ?? 0) - 1) })
+    const profile = validatePartnerProfile((req.body ?? {}) as Record<string, unknown>)
+    const state = await partnerRegistrationRPC('register_partner_operation',{p_user:req.userId,p_op:operationId,p_profile:profile})
+    if (state.state === 'completed') { res.status(201).json({partner:state.partner,remaining:state.remaining}); return }
+    if (state.state === 'cancelled') { res.status(410).json({error:'この登録操作は取消済みです'}); return }
+    if (state.state === 'deleted') { res.status(410).json({error:'この操作で登録した相手は削除済みです'}); return }
+    if (state.state === 'limit' || state.state === 'conflict') { res.status(409).json({code:state.state,error:state.state==='limit'?`登録できる相手は${MAX_PARTNER_PROFILES}人までです`:'同じ操作IDで入力を変更できません'}); return }
+    throw new Error('Unexpected registration state')
   } catch (error) {
-    const status = typeof error === 'object' && error && 'statusCode' in error ? Number(error.statusCode) : 500
-    res.status(status).json({ error: error instanceof Error ? error.message : '相手を登録できませんでした' })
+    const invalid = typeof error === 'object' && error && 'statusCode' in error && error.statusCode === 400
+    res.status(invalid ? 400 : 503).json({error:invalid && error instanceof Error ? error.message : '相手の登録結果を確認できませんでした。同じ操作で再確認してください'})
   }
 })
 
 partnersRouter.delete('/:id', async (req: AuthRequest, res) => {
+  if (!registrationID(req.params.id)) { res.status(400).json({error:'相手IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
   const { error } = await getSupabaseAdmin().from('partner_profiles').delete().eq('id', req.params.id).eq('user_id', req.userId!)
   if (error) { res.status(500).json({ error: '相手を削除できませんでした' }); return }
   res.status(204).end()
@@ -213,35 +234,49 @@ export async function generateCompatibilityCards(
   return assembleCompatibilityReport(cards)
 }
 
-async function loadCompatibilityContext(req: AuthRequest, res: Response, next: NextFunction) {
-  try {
-    const conversationId = typeof req.body?.conversationId === 'string' ? req.body.conversationId : ''
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-      sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
-    }
-    const db = getSupabaseAdmin()
-    const [{ data: partner }, { data: self }] = await Promise.all([
-      db.from('partner_profiles').select('*').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle(),
-      db.from('reading_conversations').select('id,birth_data,calculated_data').eq('id', conversationId).eq('user_id', req.userId!).maybeSingle(),
-    ])
-    if (!partner) { res.status(404).json({ error: '相手が見つかりません' }); return }
-    if (!self?.birth_data || !self?.calculated_data) {
-      sendApiError(res, 409, 'SELF_READING_REQUIRED', 'まず「あなたについて」の鑑定を作成してください。', false, correlationId(req)); return
-    }
-    res.locals.compatibility = { db, partner, self }
-    next()
-  } catch (error) {
-    next(error)
-  }
-}
+partnersRouter.get('/compatibility/operations/:opId', async (req: AuthRequest, res) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
+  try { res.json(await compatibilityRPC('get_compatibility_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  catch { res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を確認できませんでした'}) }
+})
 
-partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoints(3), async (req: AuthRequest, res) => {
+partnersRouter.post('/compatibility/operations/:opId/cancel', async (req: AuthRequest, res) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+  res.setHeader('Cache-Control','private, no-store')
+  try { res.json(await compatibilityRPC('cancel_unstarted_compatibility_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  catch { res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'前の操作を終了できませんでした。同じ操作で再確認してください'}) }
+})
+
+partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
   const useSse = req.query.format === 'sse'
-  const requestId = correlationId(req)
-  const progress = (percent: number, title: string, detail: string) => { if (useSse) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
-  const complete = (report: StructuredReport, conversationId: string) => { if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
+  const requestId = req.header('Idempotency-Key') ?? randomUUID()
+  const workerId = randomUUID()
+  let started = false, completionAttempted = false
+  let keepAlive: ReturnType<typeof setInterval> | undefined
+  res.setHeader('X-FateLab-Request-Id',requestId)
+  const progress = (percent: number, title: string, detail: string) => { if (useSse && !res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
+  const complete = (report: StructuredReport, conversationId: string) => { if (res.destroyed || res.writableEnded) return; if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
   try {
-    const { db, partner, self } = res.locals.compatibility
+    const validID = (value: unknown) => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    if (!validID(requestId) || !validID(req.params.id)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
+    if (!validID(req.body?.conversationId)) { sendApiError(res,409,'SELF_READING_REQUIRED','まず「あなたについて」の鑑定を作成してください。',false,requestId);return }
+    const previous = await compatibilityRPC('get_compatibility_operation',{p_user:req.userId,p_op:requestId})
+    // Existing reservations retain their original entitlement, including during an entitlement outage.
+    const premium = previous.state==='not_found' ? await hasPremiumAccess(req.userId!) : false
+    const state = await compatibilityRPC('begin_compatibility_operation',{p_user:req.userId,p_op:requestId,p_worker:workerId,p_source:req.body.conversationId,p_partner:req.params.id,p_request:req.body,p_context:runtimeIdentity(),p_premium:premium})
+    if (state.state==='completed') {
+      res.setHeader('Cache-Control','private, no-store')
+      if (useSse) { res.setHeader('Content-Type','text/event-stream'); res.flushHeaders() }
+      complete(state.result!,state.conversationId!); return
+    }
+    if (state.state!=='started') {
+      const status = state.state==='insufficient_points'?402:state.state==='deleted'?410:(state.state==='partner_not_found'||state.state==='source_not_found')?404:409
+      res.status(status).json({code:state.state==='insufficient_points'?'INSUFFICIENT_POINTS':state.state.toUpperCase(),error:'前の生成状況と入力を確認してから再試行してください。',retryable:false,correlationId:requestId}); return
+    }
+    started=true
+    const {partner,self}=state.input!
+    const db = getSupabaseAdmin()
     if (useSse) { res.setHeader('Content-Type', 'text/event-stream'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Accel-Buffering', 'no'); res.flushHeaders() }
     progress(5, '二人の情報を確認しています', '鑑定に使うプロフィールを準備しています')
     const normalizedRelationship = normalizeRelationship(req.body?.relationshipLabel, req.body?.relationshipType)
@@ -280,8 +315,8 @@ partnersRouter.post('/:id/compatibility', loadCompatibilityContext, requirePoint
     const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
     const compactContext = compactCompatibilityContext(self.calculated_data, partnerCalculated, relationshipType)
     const currentYear = japanDateParts().year
-    const cardInputIdentity = createHash('sha256').update(`compat-card-v2|${currentYear}|${JSON.stringify(compactContext)}`).digest('hex')
-    const compatibilityIdentity = createHash('sha256').update(`compat-v7|${currentYear}|${self.id}|${selfHash}|${partner.id}|${partner.updated_at ?? partner.created_at ?? ''}|${relationshipType}|${relationshipLabel}`).digest('hex')
+    const cardInputIdentity = createHash('sha256').update(`compat-card-v3-numeric-input|${currentYear}|${JSON.stringify(compactContext)}`).digest('hex')
+
     progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
     const prompt = `現在日は${japanDateContext()}です。過去と未来をこの日付を基準に区別してください。
 本人と相手の命式事実を照合し、「${relationshipLabel}」という${relationshipType === 'romantic' ? '恋愛' : relationshipType === 'family' ? '家族' : '友人・知人'}関係のカードを作成してください。
@@ -297,7 +332,10 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
     const compatibilityStartedAt = Date.now()
     let generationAttempt = 0
     const compatibilityCardObservations = new Map<string, CompatibilityCardObservation>()
-    const keepAlive = useSse ? setInterval(() => res.write(': keep-alive\n\n'), 10_000) : null
+    if (useSse) {
+      keepAlive = setInterval(() => { if (!res.destroyed && !res.writableEnded) res.write(': keep-alive\n\n') }, 10_000)
+      res.once('close', () => { if (keepAlive) clearInterval(keepAlive) })
+    }
     const deterministicScopes = new Set((process.env.DETERMINISTIC_SCOPE ?? '').split(',').map(value => value.trim()).filter(Boolean))
     const useDeterministicCompatibility = deterministicScopes.has('all') || deterministicScopes.has('compatibility')
     const selfReportInput = { ...(self.calculated_data as Record<string, unknown>), ...(self.birth_data as Record<string, unknown>) }
@@ -380,62 +418,26 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       durationMs: Date.now() - compatibilityStartedAt,
     })
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
-    const { data: existingConversation, error: conversationLookupError } = await db.from('reading_conversations')
-      .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
-    if (conversationLookupError) throw conversationLookupError
-    let compatibilityConversationId = existingConversation?.id as string | undefined
-    if (!compatibilityConversationId) {
-      const partnerBirth = {
-        birthDate: partner.birth_date,
-        birthTime: partner.birth_time ?? '',
-        birthplace: partner.birthplace,
-        gender: partner.gender,
-        displayName: partner.display_name,
-      }
-      const insertPayload = {
-        user_id: req.userId,
-        title: compatibilityReadingTitle(selfBirth.nickname, partner.display_name),
-        kind: 'compatibility',
-        partner_profile_id: partner.id,
-        idempotency_key: compatibilityIdentity,
-        birth_data: { self: self.birth_data, partner: partnerBirth, relationshipType },
-        calculated_data: calculatedDataWithReport(compactContext, report),
-        report_text: report.reportText,
-        source_section: '二人の関係',
-      }
-      const { data: createdConversation, error: conversationCreateError } = await db.from('reading_conversations')
-        .insert(insertPayload).select('id').single()
-      if (conversationCreateError?.code === '23505') {
-        const { data: racedConversation, error: racedLookupError } = await db.from('reading_conversations')
-          .select('id').eq('user_id', req.userId!).eq('idempotency_key', compatibilityIdentity).limit(1).maybeSingle()
-        if (racedLookupError) throw racedLookupError
-        compatibilityConversationId = racedConversation?.id
-      } else if (conversationCreateError) throw conversationCreateError
-      else compatibilityConversationId = createdConversation?.id
-    }
-    if (!compatibilityConversationId) throw new Error('相性鑑定の会話を保存できませんでした')
-    await db.from('reading_conversations').update({
-      title: compatibilityReadingTitle(selfBirth.nickname, partner.display_name),
-    }).eq('id', compatibilityConversationId).eq('user_id', req.userId!)
-    console.info('Compatibility conversation persistence metric', {
-      conversationPersisted: true,
-      conversationReused: Boolean(existingConversation?.id),
-      sourceConversationPresent: true,
-    })
-    complete(report, compatibilityConversationId)
+    const partnerBirth = { birthDate:partner.birth_date,birthTime:partner.birth_time??'',birthplace:partner.birthplace,
+      gender:partner.gender,displayName:partner.display_name }
+    const snapshot = readingSnapshot({birthData:{self:self.birth_data,partner:partnerBirth,relationshipType},
+      calculatedData:compactContext,reportText:report.reportText,structuredReport:report,sourceSection:'二人の関係'}, 'compatibility', partner.id)
+    completionAttempted=true
+    const saved = await compatibilityRPC('complete_compatibility_operation',{p_op:requestId,p_worker:workerId,p_payload:snapshot,p_title:compatibilityReadingTitle(selfBirth.nickname,partner.display_name)},getSupabaseUser(req.accessToken!))
+    if (saved.state!=='completed') throw new GenerationDependencyError('Compatibility completion not acknowledged')
+    console.info('Compatibility conversation persistence metric', {conversationPersisted: true,sourceConversationPresent:true})
+    complete(saved.result!, saved.conversationId!)
   } catch (error) {
     console.error('Partner compatibility failed', error)
-    // Generation starts after the usage cost is deducted. Do not charge the user
-    // when generation, validation, or persistence fails before a result is returned.
-    if (req.isPremium === false && req.userId && req.accessToken && req.pointsAfter !== undefined) {
-      try {
-        await addPoints(req.userId, req.accessToken, 3)
-        console.info('Compatibility points refunded', { correlationId: requestId, cost: 3 })
-      } catch (refundError) {
-        console.error('Compatibility points refund failed', { correlationId: requestId, refundError })
-      }
+    if (started && !completionAttempted) {
+      try { await compatibilityRPC('fail_compatibility_operation',{p_user:req.userId,p_op:requestId,p_worker:workerId}) }
+      catch { /* Preserve an uncertain reservation for lease reconciliation. */ }
+    }
+    if (res.destroyed || res.writableEnded) return
+    if (!res.headersSent && (!started || error instanceof GenerationDependencyError)) {
+      sendApiError(res,503,'DEPENDENCY_NOT_READY','生成状況を確認できませんでした。',true,requestId); return
     }
     if (res.headersSent) { res.write(`data: ${JSON.stringify({ type: 'error', code: 'GENERATION_FAILED', error: '相性鑑定を作成できませんでした', retryable: true })}\n\n`); res.write('data: [DONE]\n\n'); res.end() }
     else sendApiError(res, 500, 'GENERATION_FAILED', '相性鑑定を作成できませんでした', true, requestId)
-  }
+  } finally { if (keepAlive) clearInterval(keepAlive) }
 })
