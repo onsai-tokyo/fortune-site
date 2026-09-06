@@ -5,6 +5,8 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { correlationId } from '../lib/apiError.js'
 import { exchangeAppleAuthorizationCode } from '../lib/appleSignIn.js'
 
+import { confirmPurchaseMirror, PurchaseMirrorUnconfirmed } from '../lib/applePurchaseAcknowledgement.js'
+
 export const appleRouter = Router()
 
 function required(name: string) {
@@ -146,7 +148,7 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     const subscription = await mirrorTransaction(transaction, req.userId, req.body?.allowOwnerTransfer === true)
     if (subscription.skipped) {
       console.info('App Store transaction belongs to another account', { correlationId: requestId })
-      res.json({ verified: true, skipped: true, correlationId: requestId })
+      res.json({ verified: true, skipped: true, delivery: 'owner_mismatch', transactionId: transaction.transactionId, ownerId: null, correlationId: requestId })
       return
     }
     console.info('App Store purchase synchronized', {
@@ -154,8 +156,16 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
       environment: transaction.environment ?? 'Unknown',
       status: subscription.status,
     })
-    res.json({ verified: true, subscription, correlationId: requestId })
+    const acknowledgement = await confirmPurchaseMirror(getSupabaseAdmin(), {
+      userId: req.userId!, transactionId: transaction.transactionId!,
+      originalTransactionId: transaction.originalTransactionId!, productId: transaction.productId!,
+      environment: transaction.environment ?? 'Unknown',
+    })
+    res.json({ ...acknowledgement, subscription, correlationId: requestId })
   } catch (error) {
+    if (error instanceof PurchaseMirrorUnconfirmed) {
+      res.status(503).json({ code: 'DEPENDENCY_NOT_READY', retryable: true, error: '購入の反映を確認できませんでした。再購入せず再試行してください。', correlationId: requestId }); return
+    }
     console.error('App Store purchase verification failed', {
       correlationId: requestId,
       errorName: error instanceof Error ? error.name : 'UnknownError',
