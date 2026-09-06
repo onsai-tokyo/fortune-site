@@ -7,6 +7,8 @@ export interface CoupleAnnualTiming {
   year: number
   score: number
   themes: string[]
+  relationshipEvents?: string[]
+  relationshipSignals?: string[]
 }
 
 export interface CoupleTurningPoint {
@@ -179,4 +181,27 @@ export function appendCoupleTimingCards(report: StructuredReport, cards: ReportC
     cards: combined,
     reportText: combined.flatMap(card => [`【${card.title}】`, ...card.pages.map(page => page.text)]).join('\n\n'),
   }, 'compat-card-v1+couple-timing-v1')
+}
+
+/** Additional, explicitly requested history. Does not replace the saved report,
+ * change its selected turning points, or raise/lower any scoring threshold. */
+export function buildCoupleTimingHistory(selfAnnual: CoupleAnnualTiming[], partnerAnnual: CoupleAnnualTiming[], selfBirthYear: number, partnerBirthYear: number, currentYear = japanDateParts().year) {
+  const partnerByYear = new Map(partnerAnnual.map(item => [item.year, item]))
+  const points: CoupleTurningPoint[] = selfAnnual.flatMap(self => {
+    const partner = partnerByYear.get(self.year)
+    if (!partner || self.year < Math.max(selfBirthYear, partnerBirthYear) || self.year > currentYear) return []
+    const kind = classify(self, partner)
+    return [{ year: self.year, selfAge: self.year - selfBirthYear, partnerAge: self.year - partnerBirthYear,
+      kind, selfThemes: self.themes, partnerThemes: partner.themes,
+      score: self.score + partner.score + sharedThemes(self.themes, partner.themes).length * 2 + (kind === 'divergent' ? 1 : 0) }]
+  }).sort((a, b) => a.year - b.year)
+  const meetingPattern = /出会|縁.*始|交際.*始|関係.*始|恋愛.*始/
+  const meetingPoint = points.find(point => [selfAnnual.find(item => item.year === point.year)!, partnerByYear.get(point.year)!]
+    .some(item => [...item.themes, ...(item.relationshipEvents ?? [])].some(text => meetingPattern.test(text))))
+  return {
+    cards: buildCoupleTimingCards(points, currentYear),
+    initialYear: meetingPoint?.year ?? currentYear,
+    hasMeetingSignal: Boolean(meetingPoint),
+    referenceYear: currentYear,
+  }
 }

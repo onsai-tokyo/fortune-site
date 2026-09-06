@@ -14,6 +14,7 @@ import { buildAnswerSystemPrompt } from '../lib/report/answerPrompt.js'
 import { randomUUID } from 'node:crypto'
 import { questionRPC, QuestionDependencyError } from '../lib/questionOperation.js'
 import { storedReportFromCalculatedData } from '../lib/report/storedReport.js'
+import { timingHistoryFromBirthSnapshot } from '../lib/report/coupleTimingHistory.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { correlationId } from '../lib/apiError.js'
 import { chatReadingTitle, compatibilityReadingTitle, personalReadingTitle } from '../lib/conversationTitle.js'
@@ -214,6 +215,20 @@ readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, re
   const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
   res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
+})
+
+readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, res) => {
+  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
+    .select('birth_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+  res.setHeader('Cache-Control', 'private, no-store')
+  if (error) { res.status(503).json({ error: '過去の年を取得できませんでした' }); return }
+  if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
+  if (data.kind !== 'compatibility') { res.status(422).json({ error: '二人の鑑定書から開いてください' }); return }
+  try {
+    res.json(timingHistoryFromBirthSnapshot(data.birth_data))
+  } catch {
+    res.status(422).json({ error: 'この鑑定書には過去年の算出に必要な出生情報が保存されていません' })
+  }
 })
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
