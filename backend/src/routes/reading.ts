@@ -75,11 +75,21 @@ readingRouter.get('/profile/traits', requireAuth, async (req: AuthRequest, res) 
   res.json({ traits: data ?? [] })
 })
 
+function isMissingAuthUser(error: unknown): boolean {
+  return typeof error === 'object' && error !== null &&
+    'status' in error && error.status === 404 && 'code' in error && error.code === 'user_not_found'
+}
+
 readingRouter.delete('/account', requireAuth, async (req: AuthRequest, res) => {
   try {
     const admin = getSupabaseAdmin()
     const { data: userResult, error: userError } = await admin.auth.admin.getUserById(req.userId!)
-    if (userError) throw userError
+    // A previous deletion may have committed before its response reached the app.
+    // Only Supabase's explicit missing-user result acknowledges that retry.
+    if (userError) {
+      if (isMissingAuthUser(userError)) { res.status(204).end(); return }
+      throw userError
+    }
     const usesApple = userResult.user?.identities?.some(identity => identity.provider === 'apple') ?? false
     if (usesApple) {
       try {
@@ -98,7 +108,7 @@ readingRouter.delete('/account', requireAuth, async (req: AuthRequest, res) => {
       }
     }
     const { error } = await admin.auth.admin.deleteUser(req.userId!)
-    if (error) throw error
+    if (error && !isMissingAuthUser(error)) throw error
     res.status(204).end()
   } catch (error) {
     console.error('Delete account failed:', error)
