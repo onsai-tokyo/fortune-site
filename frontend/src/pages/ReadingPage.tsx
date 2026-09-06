@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { generationKey } from '../lib/selfGenerationRecovery'
+import { invalidateDeletedReading } from '../lib/readingCacheSync'
 
 type ProfileTrait = { id: string; source_message_id?: string; category: string; text: string; status: 'pending' | 'approved' | 'rejected' }
 type Message = { id?: string; role: 'user' | 'assistant'; content: string; referenced_systems?: string[]; traits?: ProfileTrait[] }
@@ -17,8 +19,9 @@ async function fetchReadingApi(path: string, init?: RequestInit) {
   let primary: Response | null = null
   try {
     primary = await fetch(path, init)
-    if (primary.status < 500) return primary
+    if (primary.status < 500 || (init?.method ?? 'GET') !== 'GET') return primary
   } catch { /* API中継に失敗した場合は直接接続へ切り替える */ }
+  if ((init?.method ?? 'GET') !== 'GET') throw new Error('送信結果を確認できませんでした。保存状況を確認してから再試行してください')
   try { return await fetch(`${READING_API_FALLBACK}${path}`, init) }
   catch { if (primary) return primary; throw new Error('鑑定サーバーへ接続できませんでした') }
 }
@@ -88,6 +91,14 @@ type ReadingMode = 'start' | 'history' | 'chat'
 
 export default function ReadingPage({ mode = 'start', identifier = 'token' }: { mode?: ReadingMode; identifier?: 'token' | 'id' }) {
   const { user, session, isLoading, signOut } = useAuth()
+  const questionOwner = useRef({id:user?.id,epoch:0})
+  if(questionOwner.current.id!==user?.id) questionOwner.current={id:user?.id,epoch:questionOwner.current.epoch+1}
+  useEffect(()=>{
+    const {data}=supabase.auth.onAuthStateChange((event,next)=>{
+      if(event==='SIGNED_OUT'||questionOwner.current.id!==next?.user.id)questionOwner.current={id:next?.user.id,epoch:questionOwner.current.epoch+1}
+    })
+    return ()=>{questionOwner.current.epoch++;data.subscription.unsubscribe()}
+  },[])
   const navigate = useNavigate()
   const routeParams = useParams<{ secretToken?: string; conversationId?: string }>()
   const [params] = useSearchParams()
@@ -299,7 +310,11 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
 
   async function send(question = input) {
     const text = question.trim()
-    if (!text || !conversationId || sending || !session?.access_token) return
+    if (!text || !conversationId || sending || !session?.access_token || !user?.id) return
+    if(text.length>1200 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) {setError('質問は1200文字以内で入力してください');return}
+    const ownerEpoch=questionOwner.current.epoch
+    const current=()=>questionOwner.current.epoch===ownerEpoch
+    const pendingKey=`fatelab.question.${user.id}.${conversationId}`
     if (status?.remaining === 0 && !status.premium) {
       localStorage.setItem('fate_pending_question', text)
       setShowPaywall(true)
@@ -311,34 +326,58 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
     track('question_sent', { conversation_id: conversationId })
     if (messages.filter(item => item.role === 'user').length === 1) track('second_question_sent', { conversation_id: conversationId })
     try {
-      const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ question: text }) })
+      let operation = JSON.parse(localStorage.getItem(pendingKey) ?? 'null') as {id:string;question:string}|null
+      if(operation) {
+        const lookup=await fetchReadingApi(`/api/reading/conversations/${conversationId}/questions/${operation.id}`,{headers:authHeaders()})
+        if(!current()) return
+        if(!lookup.ok) throw new Error('質問の保存状況を確認できませんでした')
+        const saved=await lookup.json()
+        if(!current()) return
+        if(saved.state==='completed' && operation.question===text && typeof saved.result?.answer==='string') {
+          setMessages(prev=>[...prev.slice(0,-1),{role:'assistant',content:saved.result.answer}])
+          localStorage.removeItem(pendingKey);return
+        }
+        if(['completed','failed','deleted'].includes(saved.state)) {
+          localStorage.removeItem(pendingKey);operation=null
+          if(saved.state!=='completed') throw new Error('前の質問は保存されませんでした。もう一度送信してください')
+        } else if(saved.state!=='not_found' || operation.question!==text) {
+          throw new Error('前の質問を処理中です。少し待ってから再試行してください')
+        }
+      }
+      operation ??= {id:crypto.randomUUID(),question:text}
+      localStorage.setItem(pendingKey,JSON.stringify(operation))
+      const response = await fetchReadingApi(`/api/reading/conversations/${conversationId}/questions`, { method: 'POST', headers: {...authHeaders(),'Idempotency-Key':operation.id}, body: JSON.stringify({ question: text }) })
+      if(!current()) return
       if (response.status === 402) {
         setMessages(prev => prev.slice(0, -2)); setInput(text); localStorage.setItem('fate_pending_question', text); setShowPaywall(true); setStatus(prev => prev ? { ...prev, remaining: 0 } : prev)
         track('free_limit_reached'); track('paywall_viewed'); return
       }
       if (!response.ok || !response.body) throw new Error((await response.json().catch(() => ({}))).error ?? '回答を取得できませんでした')
-      const reader = response.body.getReader(); const decoder = new TextDecoder(); let answer = ''; let buffer = ''
+      const reader = response.body.getReader(); const decoder = new TextDecoder(); let answer = ''; let buffer = ''; let complete=false; let metadata=false
       while (true) {
-        const { done, value } = await reader.read(); if (done) break
+        const { done, value } = await reader.read(); if(!current()){await reader.cancel();return}; if (done) break
         buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
-          const raw = line.slice(6); if (raw === '[DONE]') continue
+          const raw = line.slice(6).replace(/\r$/, ''); if (raw === '[DONE]') {complete=true;continue}
           const part = JSON.parse(raw)
           if (part.error) throw new Error(part.error)
+          if (part.meta) metadata=true
           if (Array.isArray(part.meta?.traits) && part.meta.traits.length) {
             setMessages(prev => [...prev.slice(0, -1), { ...prev[prev.length - 1], traits: part.meta.traits }])
           }
           if (part.delta?.text) { answer += part.delta.text; setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: answer }]) }
         }
       }
-      if (!answer.trim()) throw new Error('回答を取得できませんでした')
+      if (!complete || !metadata || !answer.trim()) throw new Error('通信が途中で終了しました。保存状況を確認してから再試行してください')
+      localStorage.removeItem(pendingKey)
       localStorage.removeItem('fate_pending_question')
-      const state = await fetchReadingApi('/api/reading/status', { headers: authHeaders() }).then(r => r.json()); setStatus(state)
+      try { const state = await fetchReadingApi('/api/reading/status', { headers: authHeaders() }).then(r => r.json()); if(current()) setStatus(state) } catch { /* Saved answer remains successful. */ }
     } catch (e) {
-      setMessages(prev => prev.slice(0, -1)); setError(e instanceof Error ? e.message : '回答を取得できませんでした')
-    } finally { setSending(false) }
+      if(!current()) return
+      setMessages(prev => prev.slice(0, -2)); setInput(text); setError(e instanceof Error ? e.message : '回答を取得できませんでした')
+    } finally { if(current()) setSending(false) }
   }
 
   async function openConversation(id: string) {
@@ -358,10 +397,23 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
 
   async function deleteConversation(item: HistoryItem) {
     if (!window.confirm(`「${item.title}」を削除しますか？質問と回答も削除され、元に戻せません。`)) return
-    const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'DELETE', headers: authHeaders() })
-    if (!response.ok) { const body = await response.json().catch(() => ({})); setError(body.error ?? '削除できませんでした'); return }
-    setHistory(prev => prev.filter(entry => entry.id !== item.id))
-    if (conversationId === item.id) navigate('/reading/history', { replace: true })
+    if(!user)return
+    const owner=user.id,epoch=questionOwner.current.epoch
+    const current=()=>questionOwner.current.id===owner&&questionOwner.current.epoch===epoch
+    try {
+      if(!navigator.locks)throw new Error('このブラウザでは削除状態を安全に同期できません')
+      await navigator.locks.request(generationKey(owner),async()=>{
+        if(!current())return
+        const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'DELETE', headers: authHeaders() })
+        if(!current())return
+        if (!response.ok && response.status!==404) { const body = await response.json().catch(() => ({})); throw new Error(body.error ?? '削除できませんでした') }
+        invalidateDeletedReading(localStorage,owner,item.id)
+        if(!current())return
+        setHistory(prev => prev.filter(entry => entry.id !== item.id))
+        if (conversationId === item.id) navigate('/reading/history', { replace: true })
+      })
+    }catch(error){if(current())setError(error instanceof Error?error.message:'削除状態を確認できませんでした')}
+
   }
 
   async function checkout() {
