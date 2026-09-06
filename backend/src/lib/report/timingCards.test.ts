@@ -61,6 +61,27 @@ test('出生時刻なしではstrong扱いの通し番号を表示しない', ()
   assert.ok(buildTurningPointCards(report, 2025).every(card => !/回目/.test(card.title)))
 })
 
+test('非表示の先行年を数えた番号だけが表示されない', () => {
+  const annual = [1990, 2000, 2010, 2032].map(year => ({
+    year, ageRange: '36歳', kanshi: '壬子', tenGod: '偏官', score: 8,
+    relationshipSignals: [], themes: ['変化へすばやく対応し、難しい役割へ踏み出すこと'],
+  }))
+  const cards = buildTurningPointCards({ ...input, timing: { ...input.timing!, annual } }, 2026)
+  assert.deepEqual(cards.map(card => card.id), ['turning-year-2032'])
+  assert.doesNotMatch(cards[0].title, /回目/)
+  assert.ok(cards[0].tags.every(tag => !/回目/.test(tag)))
+})
+
+test('先行クラスタが別の主要分類で表示される場合も番号を飛ばさない', () => {
+  const annual = [2020, 2032].map(year => ({
+    year, ageRange: '36歳', kanshi: '壬子', tenGod: '偏官', score: 8,
+    relationshipSignals: year === 2020 ? ['結婚'] : [],
+    themes: ['変化へすばやく対応し、難しい役割へ踏み出すこと'],
+  }))
+  const cards = buildTurningPointCards({ ...input, timing: { ...input.timing!, annual } }, 2026)
+  assert.doesNotMatch(cards[1].title, /回目/)
+})
+
 test('移動テーマを生活語の環境変化へ配線する', () => {
   const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [
     { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: [], themes: ['移動や配置転換で関係を組み替えること'] },
@@ -124,7 +145,20 @@ test('年テーマ・関係イベントの各根拠に文章が対応し、未�
     const timing = calcTimingCycles(1995, 2, 20, 3, 2, gender)
     for (const year of timing.annual) for (const value of [...year.themes, ...year.relationshipEvents]) {
       assert.equal(annualNarrative([value]).length, 1, `未対応の計算済み根拠: ${value}`)
+      const phrase = annualNarrative([value])[0]
+      assert.ok(phrase.detail && phrase.detail !== phrase.body, `本文解説がない: ${value}`)
     }
   }
   assert.deepEqual(annualNarrative(['仕事', '恋愛', '未知の計算結果', '__proto__']), [])
+})
+
+test('短い年テーマの要約を本文だけの繰り返しにしない', () => {
+  const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [{
+    year: 2026, age: 30, ageRange: '30歳', kanshi: '丙午', tenGod: '正印', score: 8,
+    relationshipSignals: [], themes: ['学びや支援を受け取り、次の土台を固めること'],
+  }] } }
+  const [card] = buildTurningPointCards(report, 2026)
+  assert.notEqual(card.summary, card.sections![0].body)
+  assert.match(card.sections![0].body, /何が分からないのか/)
+  assert.ok(card.evidence.some(item => item.detail.includes('学びや支援を受け取り、次の土台を固めること')))
 })
