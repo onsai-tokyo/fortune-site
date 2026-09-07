@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ReportInput } from '../deterministicReport.js'
 import { containsJargon } from './jargon.js'
-import { buildTurningPointCards, replaceTimingCards } from './timingCards.js'
+import { buildAnnualHistoryCards, buildTurningPointCards, replaceTimingCards } from './timingCards.js'
 import { buildStructuredReport } from '../reportCards.js'
 import { calcTimingCycles } from '../divination/index.js'
 import { annualNarrative } from './timingAnnualNarrative.js'
@@ -14,6 +14,23 @@ const input: ReportInput = {
     { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: ['出会い'], themes: ['人との接点を広げ、機会や成果を動かすこと'] },
   ] },
 }
+
+test('全年度表示は選抜されなかった年を既存本文で読め、選抜とスコアを変更しない', () => {
+  const value = structuredClone(input)
+  value.timing!.annual.unshift({ year: 2023, ageRange: '25歳', kanshi: '癸卯', tenGod: '食神', score: 0,
+    relationshipSignals: [], relationshipEvents: [], themes: ['楽しみや得意なことを、無理なく外へ表すこと'] })
+  const before = structuredClone(value)
+  const selected = buildTurningPointCards(value, 2026)
+  assert.ok(!selected.some(card => card.id === 'turning-year-2023'))
+  const all = buildAnnualHistoryCards(value, 2026)
+  const added = all.find(card => card.id === 'turning-year-2023')!
+  assert.ok(added)
+  assert.doesNotMatch(added.summary, /交際|結婚|彼氏/)
+  assert.equal(added.summary, annualNarrative(value.timing!.annual[0].themes).map(p => p.body).join(''))
+  assert.deepEqual(value, before)
+  assert.deepEqual(buildTurningPointCards(value, 2026), selected)
+  assert.ok(buildAnnualHistoryCards(value, 2024).every(card => Number(card.id.slice(-4)) <= 2024))
+})
 
 test('年の選抜は従来条件を保ち、スクロール節を返す', () => {
   const cards = buildTurningPointCards(input, 2026)

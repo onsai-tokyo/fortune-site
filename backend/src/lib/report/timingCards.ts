@@ -9,6 +9,7 @@ import { annualNarrative, type AnnualPhrase } from './timingAnnualNarrative.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
+type AnnualReportInput = Pick<ReportInput, 'birthDate' | 'birthTime' | 'timing'>
 const STRONG_THRESHOLD = 6
 
 function unique(values: string[]) { return [...new Set(values.map(value => value.trim()).filter(Boolean))] }
@@ -64,7 +65,7 @@ function clustersFor(allAnnual: Annual[], key: LifeEventKey): number[][] {
   return clusters
 }
 
-function badgesFor(input: ReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[], visibleAnnual: Annual[]) {
+function badgesFor(input: AnnualReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[], visibleAnnual: Annual[]) {
   const definition = lifeEvent(key)
   if (!definition.ordinal) return [definition.label]
   const clusters = clustersFor(allAnnual, key)
@@ -77,7 +78,7 @@ function badgesFor(input: ReportInput, item: Annual, key: LifeEventKey, allAnnua
   return clusters.length >= 2 && clusterIndex >= 0 && strong && earlierVisible ? [badgeLabel(key, clusterIndex)] : [definition.label]
 }
 
-function card(input: ReportInput, item: Annual, allAnnual: Annual[], visibleAnnual: Annual[], decade?: Decade): ReportCard | null {
+function card(input: AnnualReportInput, item: Annual, allAnnual: Annual[], visibleAnnual: Annual[], decade?: Decade): ReportCard | null {
   const themes = annualNarrative(item.themes)
   const relationships = annualNarrative(item.relationshipEvents ?? [])
   const phrases = [...themes, ...relationships]
@@ -115,6 +116,17 @@ function card(input: ReportInput, item: Annual, allAnnual: Annual[], visibleAnnu
 }
 
 function signature(item: Annual) { return timingAnnualValues(item).sort().join('|') }
+
+/** Reader-requested history, including years not selected as turning points.
+ * Uses the same calculated meanings; does not change selection or scores. */
+export function buildAnnualHistoryCards(input: AnnualReportInput, referenceYear = japanDateParts().year): ReportCard[] {
+  const all = [...(input.timing?.annual ?? [])].sort((a, b) => a.year - b.year)
+  const past = all.filter(item => item.year <= referenceYear)
+  return past.map(item => card(input, item, all, past,
+    input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
+    .filter((value): value is ReportCard => value !== null)
+    .map(value => withCardProvenance(value, 'deterministic'))
+}
 
 /** 年の選抜条件は従来どおり。本文は既存の年計算が持つ生活語を欠落なく表示する。 */
 export function buildTurningPointCards(input: ReportInput, nowYear = japanDateParts().year): ReportCard[] {
