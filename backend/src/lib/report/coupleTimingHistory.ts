@@ -1,5 +1,7 @@
 import { calcTimingCycles } from '../divination/index.js'
 import { buildCoupleTimingHistory } from './coupleTimingCards.js'
+import { buildAnnualHistoryCards } from './timingCards.js'
+import { japanDateParts } from '../japanDate.js'
 
 function birth(value: unknown) {
   if (!value || typeof value !== 'object') throw new Error('BIRTH_UNAVAILABLE')
@@ -13,7 +15,16 @@ function birth(value: unknown) {
   if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error('BIRTH_UNAVAILABLE')
   if (data.gender !== 'male' && data.gender !== 'female') throw new Error('BIRTH_UNAVAILABLE')
   const [hour, minute] = time ? time.split(':').map(Number) : [undefined, 0]
-  return { year, annual: calcTimingCycles(year, month, day, hour, minute, data.gender).annual }
+  const timing = calcTimingCycles(year, month, day, hour, minute, data.gender)
+  return { year, date, time: time || undefined, timing, annual: timing.annual }
+}
+
+export function selfTimingHistoryFromBirthSnapshot(snapshot: unknown, referenceYear = japanDateParts().year) {
+  const value = birth(snapshot)
+  // Rendering only reads birthDate, birthTime and timing; no missing astrology,
+  // personality or relationship facts are synthesized here.
+  const input = { birthDate: value.date, birthTime: value.time, timing: value.timing }
+  return { cards: buildAnnualHistoryCards(input, referenceYear), referenceYear }
 }
 
 export function timingHistoryFromBirthSnapshot(snapshot: unknown, referenceYear?: number) {

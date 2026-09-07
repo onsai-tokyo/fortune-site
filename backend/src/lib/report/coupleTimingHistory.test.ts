@@ -1,9 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildCoupleTimingHistory, findCoupleTurningPoints } from './coupleTimingCards.js'
-import { timingHistoryFromBirthSnapshot } from './coupleTimingHistory.js'
+import { selfTimingHistoryFromBirthSnapshot, timingHistoryFromBirthSnapshot } from './coupleTimingHistory.js'
 
 const annual = Array.from({ length: 25 }, (_, i) => ({ year: 2005 + i, score: i % 8, themes: ['仕事'], relationshipEvents: i === 7 ? ['出会い・交際開始'] : [] }))
+test('本人の全年度表示は保存出生入力の18歳以降を返し、欠損情報を補完しない', () => {
+  const snapshot = { birthDate: '1990-08-14', birthTime: '', gender: 'female' }
+  const result = selfTimingHistoryFromBirthSnapshot(snapshot, 2026)
+  assert.equal(result.cards[0].id, 'turning-year-2008')
+  assert.equal(result.cards.at(-1)?.id, 'turning-year-2026')
+  assert.equal(result.cards.length, 19)
+  assert.ok(result.cards.every(card => card.scope === 'self'))
+  for (const input of [null, {}, { ...snapshot, gender: null }, { ...snapshot, birthTime: '24:00' }, { ...snapshot, birthDate: '1990-02-30' }]) {
+    assert.throws(() => selfTimingHistoryFromBirthSnapshot(input), /BIRTH_UNAVAILABLE/)
+  }
+})
 test('別フィールドの出会いの根拠を起点に使い、2023年より前にも遡れる', () => {
   const before = JSON.stringify(annual)
   const canonical = findCoupleTurningPoints(annual, annual, 1995, 1992, 2026)

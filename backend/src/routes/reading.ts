@@ -14,7 +14,7 @@ import { buildAnswerSystemPrompt } from '../lib/report/answerPrompt.js'
 import { randomUUID } from 'node:crypto'
 import { questionRPC, QuestionDependencyError } from '../lib/questionOperation.js'
 import { storedReportFromCalculatedData } from '../lib/report/storedReport.js'
-import { timingHistoryFromBirthSnapshot } from '../lib/report/coupleTimingHistory.js'
+import { selfTimingHistoryFromBirthSnapshot, timingHistoryFromBirthSnapshot } from '../lib/report/coupleTimingHistory.js'
 import { buildChartSections } from '../lib/report/chartSections.js'
 import { correlationId } from '../lib/apiError.js'
 import { chatReadingTitle, compatibilityReadingTitle, personalReadingTitle } from '../lib/conversationTitle.js'
@@ -152,6 +152,25 @@ readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) 
 
 readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
+  if (req.query.compatibilityHistory === '1') {
+    const { partnerId, cursor } = req.query
+    const validID = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    if (!validID(partnerId) || (cursor !== undefined && !validID(cursor))) {
+      res.status(400).json({ error: '鑑定履歴の指定が正しくありません' }); return
+    }
+    res.setHeader('Cache-Control', 'private, no-store')
+    let query = db.from('reading_conversations')
+      .select('id,title,kind,partner_profile_id,birth_data,created_at,updated_at')
+      .eq('user_id', req.userId!).eq('kind', 'compatibility').eq('partner_profile_id', partnerId)
+      // UUID keyset pagination remains stable when a report is renamed/opened.
+      .order('id', { ascending: false }).limit(101)
+    if (cursor !== undefined) query = query.lt('id', cursor)
+    const { data, error } = await query
+    if (error) { res.status(503).json({ error: '保存した相性鑑定を確認できませんでした' }); return }
+    const conversations = (data ?? []).slice(0, 100)
+    const complete = (data ?? []).length <= 100
+    res.json({ conversations, compatibilityHistory: { complete, nextCursor: complete ? null : conversations.at(-1)!.id } }); return
+  }
   const primary = await db.from('reading_conversations')
     .select('id,secret_token,title,kind,is_saved,partner_profile_id,birth_data,source_section,source_year,created_at,updated_at,reading_revision_id,reading_revisions(reading_id),reading_messages(count)')
     .eq('user_id', req.userId!).order('updated_at', { ascending: false }).order('is_saved', { ascending: false }).limit(100)
@@ -223,9 +242,9 @@ readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, r
   res.setHeader('Cache-Control', 'private, no-store')
   if (error) { res.status(503).json({ error: '過去の年を取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
-  if (data.kind !== 'compatibility') { res.status(422).json({ error: '二人の鑑定書から開いてください' }); return }
+  if (data.kind !== 'compatibility' && data.kind !== 'self') { res.status(422).json({ error: '鑑定書から開いてください' }); return }
   try {
-    res.json(timingHistoryFromBirthSnapshot(data.birth_data))
+    res.json(data.kind === 'self' ? selfTimingHistoryFromBirthSnapshot(data.birth_data) : timingHistoryFromBirthSnapshot(data.birth_data))
   } catch {
     res.status(422).json({ error: 'この鑑定書には過去年の算出に必要な出生情報が保存されていません' })
   }

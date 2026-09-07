@@ -272,7 +272,10 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     }
     if (state.state!=='started') {
       const status = state.state==='insufficient_points'?402:state.state==='deleted'?410:(state.state==='partner_not_found'||state.state==='source_not_found')?404:409
-      res.status(status).json({code:state.state==='insufficient_points'?'INSUFFICIENT_POINTS':state.state.toUpperCase(),error:'前の生成状況と入力を確認してから再試行してください。',retryable:false,correlationId:requestId}); return
+      const message = state.state === 'insufficient_points'
+        ? '新しい相性鑑定を作成できる残り回数がありません。継続鑑定をご利用中の場合は、購入を復元してください。'
+        : '前の生成状況と入力を確認してから再試行してください。'
+      res.status(status).json({code:state.state==='insufficient_points'?'INSUFFICIENT_POINTS':state.state.toUpperCase(),error:message,retryable:false,correlationId:requestId}); return
     }
     started=true
     const {partner,self}=state.input!

@@ -221,6 +221,17 @@ const axisLead: Record<RelationAxis, string> = {
   repair: 'すれ違った後の戻り方を覚える', binding: '節目を越えるほど結びつきが深まる',
 }
 
+const chapterPageLabels: Record<string, string[]> = {
+  'compat-overview': ['関係の全体像', '重なる性質と違う性質', '二人らしさが出る場面', '違いを感じるとき', '計算から見える特徴', '今の関係を振り返る', '違いを伝え合う', '関係を続ける工夫', 'これからの変化', '全体像を日常に生かす'],
+  'compat-beginning': ['距離が縮まる入口', '親しさが育つきっかけ', '会話が始まる場面', '返事を待つとき', '会話と楽しさの傾向', '心地よかったやり取り', '話す機会を作る', '急がず近づくために', '次の一歩を考える', '二人のペースを知る'],
+  'compat-attraction': ['惹かれる理由', '魅力に映る違い', '相手が気になる場面', '期待が大きくなるとき', '親密さにつながる特徴', '何に惹かれたのか', '魅力を言葉にする', '好意を育てる工夫', '印象から理解へ', '魅力との付き合い方'],
+  'compat-caution': ['見落としやすい違い', '理解に必要な手がかり', '思い込みが生まれる場面', '説明が足りないとき', '分かり合い方の特徴', '確かめずにいたこと', '前提を話し直す', '確認を続ける工夫', '状況が変わったら', '違いに気づくために'],
+  'compat-friction': ['衝突のきっかけ', 'ぶつかりやすい反応', '意見が分かれる場面', '話がこじれるとき', '衝突と修復の特徴', 'どこで食い違ったのか', '答えを急ぐ前に', '話し合える条件', '次の衝突に備える', '違いの扱い方'],
+  'compat-repair': ['すれ違った後に', '話し直すための手がかり', '再び話し始める場面', '気持ちが届かないとき', '修復と安心の傾向', '伝えきれなかったこと', '事実と気持ちを分ける', '話し合いを続ける条件', '次に決めたい約束', '修復の手がかりを持つ'],
+  'compat-growth': ['関係が育つきっかけ', '互いから受ける刺激', '一緒に挑戦する場面', '目指す方向が違うとき', '成長と新しさの傾向', '一緒に変わったこと', '違いを残して決める', '挑戦を続ける工夫', '次に試したいこと', '二人の変化を振り返る'],
+  'compat-marriage': ['暮らしを考える入口', '日常で大切にすること', '生活を共にする場面', '分担が偏るとき', '暮らしの相性の特徴', '続けたい生活の形', '時間とお金を話し合う', '無理なく暮らす条件', '生活が変わる節目', '二人らしい暮らしへ'],
+}
+
 function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis): ReportCardPage[] {
   const frame = relationshipFrame(context.relationshipLabel)
   const relation = context.relationshipLabel
@@ -228,7 +239,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
   const chapterAxis = resolvedAxis ?? axisForChapter(id, context)
   const core = axisCore[chapterAxis] ?? (context.kind === 'aligned' ? '似た反応を安心に変えやすい二人' : context.kind === 'complementary' ? '違う得意を自然に補い合う二人' : '違う速さを言葉でつなぐほど育つ二人')
   const chapter: Record<string, { cue: string; focus: string; action: string }> = {
-    'compat-overview': { cue: '二人の輪郭', focus: core, action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
+    'compat-overview': { cue: '二人の輪郭', focus: '二人の性質の重なりと違い', action: '二人が自然にできることと、意識しないと抜けることを一つずつ話す' },
     'compat-beginning': { cue: '距離の始まり', focus: `${relation}として距離が縮まる入口`, action: '短い会話の回数を増やし、相手の返事を急いで意味づけない' },
     'compat-attraction': { cue: '魅力の正体', focus: `自分にない動きが、相手の魅力として見える理由`, action: '惹かれた場面を具体的に伝え、期待だけを膨らませない' },
     'compat-caution': { cue: '見落としやすい違い', focus: `親しさが増えたあとに、見落としやすい違い`, action: '分かっているはずをやめ、変わった条件を一つずつ言い直す' },
@@ -367,7 +378,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     .find((block): block is NonNullable<typeof block> => Boolean(block))
   const scoreBlock = conversationBlock ?? humorBlock ?? friendshipBlock ?? domesticBlock ?? lifestyleBlock ?? longTermBlock ?? physicalAttractionBlock ?? romanticAttractionBlock ?? admirationBlock ?? emotionalBlock ?? repairBlock ?? forgivenessBlock ?? mysteryDistanceBlock ?? privateAffectionBlock ?? socialDisplayAffectionBlock ?? betrayalRiskPatternBlock ?? predictabilityBlock ?? transparencyBlock ?? trustBlock ?? dependencyBlock ?? safetyBlock ?? conversationalDepthBlock ?? understandingBlock ?? powerBalanceBlock ?? egoCompetitionBlock ?? prideBlock ?? conflictFrequencyBlock ?? tensionBlock ?? boredomBlock ?? stimulationBlock ?? teamFeelingBlock ?? ambitionBlock ?? adventureBlock ?? sharedProjectBlock ?? noveltyBlock ?? growthBlock ?? fateCompanionBlock ?? sharedIdentityBlock ?? valueBlock ?? pairScoreBlock
   return [
-    { role: 'opening', label: 'この関係の入口', text: `${relation}の二人には、${item.focus}という流れがあります。${context.shared}が、最初の安心になります。` },
+    { role: 'opening', label: 'この関係の入口', text: `この章では、${item.focus}を手がかりに、二人の関わり方を読みます。` },
     { role: 'core', label: '二人の核', text: `${item.cue}には、${core}という特徴と、あなたの${context.selfStyle}、あの人の${context.partnerStyle}が表れます。` },
     { role: 'scene', label: '日常に現れる場面', text: `${item.cue}は、予定を決める時や返事を待つ時に現れます。${context.difference}を拒絶と受け取らないことが大切です。` },
     { role: 'shadow', label: 'すれ違うとき', text: `${item.cue}を見失う時ほど、${frame}。言葉を省くと、互いに別の物語を想像しやすくなります。` },
@@ -379,7 +390,7 @@ function pagesFor(id: string, context: PairContext, resolvedAxis?: RelationAxis)
     { role: 'core', label: '長く続く条件', text: `${item.cue}を長く育てる鍵は、${frame}です。${relation}の親しさが増えても、確認することを手放さないでください。` },
     { role: 'scene', label: '次の節目', text: `${item.cue}の次の節目では、${context.shared}を思い出してください。${context.difference}を勝ち負けでなく調整として扱えます。` },
     { role: 'closing', label: 'この章の余韻', text: `この章で見えてきたのは、${item.cue}に宿る${core}という二人の形です。違いを知ったあとも戻れる場所を作ることで育ちます。` },
-  ]
+  ].map((page, index) => ({ ...page, role: page.role as ReportCardPage['role'], label: chapterPageLabels[id]?.[index] ?? page.label }))
 }
 
 const specs = [
