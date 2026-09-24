@@ -100,9 +100,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     if (useSse && !res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
   }
   try {
-    const { birthDate, birthTime, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
+    const { birthDate, birthTime, birthTimeZone, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
       birthDate?: string
       birthTime?: string
+      birthTimeZone?: string
       birthplace?: string
       gender?: string
       nickname?: string
@@ -175,6 +176,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     const reportInput = {
       birthDate,
       birthTime,
+      birthTimeZone,
       birthplace,
       gender,
       age,
@@ -196,21 +198,22 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       astrology,
       ...expanded,
     }
-    progress(58, 'あなたらしさを整理しています', '重複しない8つの視点を選んでいます')
+    const selfReportOptions = resolveSelfReportOptions()
+    const personalityReport = selfReportOptions.narrativeEngine === 'personality'
+    progress(58, 'あなたらしさを整理しています', personalityReport ? '15項目の特徴と詳しい説明を整理しています' : '重複しない8つの視点を選んでいます')
     const metadata = extractReportMetadata(reportInput, { nickname, currentRole, currentConcern })
     observeShadowFacts(requestId, reportInput, metadata)
-    const selfReportOptions = resolveSelfReportOptions()
     const { report: deterministicReport, pipelineTag } = buildSelfReport(reportInput, metadata, selfReportOptions)
     console.info('Self-report pipeline metric', { correlationId: requestId, pipelineTag })
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
-    const writtenReport = process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
-      ? finalizeReportProvenance(deterministicReport, 'self-report-v3', 'deterministic')
+    const writtenReport = personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
+      ? finalizeReportProvenance(deterministicReport, personalityReport ? deterministicReport.generatorVersion! : 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
         kind: 'self',
       }, pipelineTag)
-    const orderedReport = currentConcern
+    const orderedReport = currentConcern && !personalityReport
       ? { ...writtenReport, cards: prioritizeCardsForConcern(writtenReport.cards, currentConcern) }
       : writtenReport
     const reportWithChart = {

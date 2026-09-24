@@ -10,6 +10,8 @@ import { replaceTimingCards } from './timingCards.js'
 import { buildBlockStructuredReport } from './narrativeComposerV2.js'
 import { augmentFindingsWithScoresV2 } from './scoreFindingsV2.js'
 import { buildClaimStructuredReport } from './claimComposer.js'
+import { buildPersonalityStructuredReport, PERSONALITY_VERSION, PERSONALITY_LAYOUT_VERSION, PERSONALITY_SPOUSE_VERSION } from './personalityReport.js'
+import { finalizeReportProvenance } from './provenance.js'
 
 /**
  * PR-0a: 自己鑑定の生成経路をHTTPから切り離す。
@@ -27,7 +29,7 @@ import { buildClaimStructuredReport } from './claimComposer.js'
 export type FactPipeline = 'v1' | 'v2'
 
 /** 本文の組み立て方式。'blocks' は PR-2 で有効化する。 */
-export type NarrativeEngine = 'legacy' | 'blocks'
+export type NarrativeEngine = 'legacy' | 'blocks' | 'personality'
 
 export interface SelfReportOptions {
   factPipeline: FactPipeline
@@ -44,7 +46,7 @@ export const DEFAULT_SELF_REPORT_OPTIONS: SelfReportOptions = {
  * 新旧経路が同じキャッシュキーを共有すると、片方の変更がもう片方の保存済み鑑定書を汚染する。
  */
 export function selfReportPipelineTag(options: SelfReportOptions): string {
-  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}`
+  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}`
 }
 
 export interface SelfReportResult {
@@ -60,7 +62,7 @@ function isFactPipeline(value: string): value is FactPipeline {
 }
 
 function isNarrativeEngine(value: string): value is NarrativeEngine {
-  return value === 'legacy' || value === 'blocks'
+  return value === 'legacy' || value === 'blocks' || value === 'personality'
 }
 
 /**
@@ -96,9 +98,16 @@ export function buildSelfReport(
   const findings = options.factPipeline === 'v2' && options.narrativeEngine === 'blocks'
     ? augmentFindingsWithScoresV2(facts as ReturnType<typeof buildReportFactsV2>, generated.findings as ReturnType<typeof buildReportFindingsV2>)
     : generated.findings
-  const report = replaceTimingCards(options.narrativeEngine === 'blocks'
-    ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
-    : buildEditorialStructuredReport(facts, findings), input)
+  const generatedReport = options.narrativeEngine === 'personality'
+    ? buildPersonalityStructuredReport(input)
+    : options.narrativeEngine === 'blocks'
+      ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
+      : buildEditorialStructuredReport(facts, findings)
+  const withTiming = replaceTimingCards(generatedReport, input)
+  const pipelineTag = selfReportPipelineTag(options)
+  const report = options.narrativeEngine === 'personality'
+    ? finalizeReportProvenance(withTiming, `self-report-v3|${pipelineTag}`)
+    : withTiming
 
-  return { report, facts, findings, options, pipelineTag: selfReportPipelineTag(options) }
+  return { report, facts, findings, options, pipelineTag }
 }

@@ -26,7 +26,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "compatibility:reconcile": "tsx src/scripts/reconcileCompatibilityOperations.ts",
-    "questions:reconcile": "tsx src/scripts/reconcileReadingQuestions.ts"
+    "questions:reconcile": "tsx src/scripts/reconcileReadingQuestions.ts",
+    "test:personality": "node --import tsx --test src/lib/report/personality/composer.test.ts src/lib/report/personalityReport.test.ts src/lib/report/personality/spouseCalculation.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
