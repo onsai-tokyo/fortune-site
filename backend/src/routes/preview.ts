@@ -100,10 +100,13 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     if (useSse && !res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`)
   }
   try {
-    const { birthDate, birthTime, birthTimeZone, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
+    const { birthDate, birthTime, birthTimeZone, spouseConvention, annualYunConvention, workContext, birthplace, gender, nickname, currentRole, currentConcern } = req.body as {
       birthDate?: string
       birthTime?: string
       birthTimeZone?: string
+      spouseConvention?: string
+      annualYunConvention?: string
+      workContext?: string
       birthplace?: string
       gender?: string
       nickname?: string
@@ -177,6 +180,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       birthDate,
       birthTime,
       birthTimeZone,
+      spouseConvention, annualYunConvention, workContext,
       birthplace,
       gender,
       age,
@@ -207,8 +211,8 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     console.info('Self-report pipeline metric', { correlationId: requestId, pipelineTag })
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
-    const writtenReport = personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
-      ? finalizeReportProvenance(deterministicReport, personalityReport ? deterministicReport.generatorVersion! : 'self-report-v3', 'deterministic')
+    const writtenReport = selfReportOptions.annualEngine === 'catalog3600' || personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
+      ? finalizeReportProvenance(deterministicReport, (personalityReport || selfReportOptions.annualEngine === 'catalog3600') ? deterministicReport.generatorVersion! : 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
         kind: 'self',

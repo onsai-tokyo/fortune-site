@@ -1,3 +1,6 @@
+import { replaceAnnual3600 } from './annual3600/cards.js'
+import { ANNUAL3600_VERSION } from './annual3600/version.js'
+import { japanDateParts } from '../japanDate.js'
 import type { ReportInput } from '../deterministicReport.js'
 import type { StructuredReport } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
@@ -32,6 +35,7 @@ export type FactPipeline = 'v1' | 'v2'
 export type NarrativeEngine = 'legacy' | 'blocks' | 'personality'
 
 export interface SelfReportOptions {
+  annualEngine?: 'legacy' | 'catalog3600'
   factPipeline: FactPipeline
   narrativeEngine: NarrativeEngine
 }
@@ -46,7 +50,7 @@ export const DEFAULT_SELF_REPORT_OPTIONS: SelfReportOptions = {
  * 新旧経路が同じキャッシュキーを共有すると、片方の変更がもう片方の保存済み鑑定書を汚染する。
  */
 export function selfReportPipelineTag(options: SelfReportOptions): string {
-  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}`
+  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}${options.annualEngine === 'catalog3600' ? `|${ANNUAL3600_VERSION}` : ''}`
 }
 
 export interface SelfReportResult {
@@ -73,6 +77,7 @@ export function resolveSelfReportOptions(env: NodeJS.ProcessEnv = process.env): 
   const factPipeline = (env.FACT_PIPELINE ?? '').trim()
   const narrativeEngine = (env.NARRATIVE_ENGINE ?? '').trim()
   return {
+    ...(env.ANNUAL_READING_ENGINE?.trim() === 'catalog3600' ? {annualEngine:'catalog3600' as const} : {}),
     factPipeline: isFactPipeline(factPipeline) ? factPipeline : DEFAULT_SELF_REPORT_OPTIONS.factPipeline,
     narrativeEngine: isNarrativeEngine(narrativeEngine) ? narrativeEngine : DEFAULT_SELF_REPORT_OPTIONS.narrativeEngine,
   }
@@ -103,7 +108,9 @@ export function buildSelfReport(
     : options.narrativeEngine === 'blocks'
       ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
       : buildEditorialStructuredReport(facts, findings)
-  const withTiming = replaceTimingCards(generatedReport, input)
+  const withTiming = options.annualEngine === 'catalog3600'
+    ? replaceAnnual3600(generatedReport, input, japanDateParts().year)
+    : replaceTimingCards(generatedReport, input)
   const pipelineTag = selfReportPipelineTag(options)
   const report = options.narrativeEngine === 'personality'
     ? finalizeReportProvenance(withTiming, `self-report-v3|${pipelineTag}`)

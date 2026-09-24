@@ -1,3 +1,5 @@
+import { ANNUAL3600_VERSION } from './annual3600/version.js'
+import { annualText } from './annual3600/catalog.js'
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportSection, StructuredReport } from '../reportCards.js'
 import { containsJargon } from './jargon.js'
@@ -35,6 +37,12 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
       && (card.sections?.[0] as PersonalitySection | undefined)?.personality.status === 'pending'
     if (card.kind === 'essence' && card.evidence.length === 0 && !validPendingPersonality) violations.push({ code: 'EMPTY_EVIDENCE', path: card.id, message: 'essence evidence is empty' })
     const sections: ReportSection[] = card.sections ?? card.pages.map(page => ({ heading: page.label, body: page.text, evidence: card.evidence, termGloss: [] }))
+    const annual3600 = card.annualCalculation?.version === ANNUAL3600_VERSION
+    if (annual3600) {
+      const match = /^P(\d{2})-Y(\d{2})$/.exec(card.annualCalculation!.patternId)
+      const source = match && Number(match[1]) >= 1 && Number(match[1]) <= 60 && Number(match[2]) >= 1 && Number(match[2]) <= 60 ? annualText(Number(match[1])-1,1983+Number(match[2])) : null
+      if (!source || card.title !== source.title || card.summary !== source.description || sections.length !== 4 || sections.slice(0,3).some((s,i)=>s.body !== [source.relationship,source.career,source.life][i])) violations.push({code:'SCHEMA',path:card.id,message:'annual approved text mismatch'})
+    }
     const personalityLayout = isPersonalityLayoutCard(card)
     if (personalityLayout && !personalityCardShapeIsValid(card)) {
       violations.push({ code: 'SCHEMA', path: card.id, message: 'invalid personality items, paragraph trace or page parity' })
@@ -52,12 +60,12 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
     for (const [index, section] of sections.entries()) {
       const headingLength = [...section.heading.trim()].length
       const bodyLength = [...section.body.trim()].length
-      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
+      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : annual3600 && index === 3 ? 2000 : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
       const key = normalized(section.body)
       if (seen.has(key)) violations.push({ code: 'SEMANTIC_DUPLICATE', path: `${card.id}.sections[${index}]`, message: 'duplicate section body' })
       seen.add(key)
     }
-    const expected = personalityLayout ? [1, 1] : card.kind === 'essence' ? [input && !input.birthTime ? 2 : 3, 6] : card.kind === 'timing' ? [1, 2] : null
+    const expected = annual3600 ? [4,4] : personalityLayout ? [1, 1] : card.kind === 'essence' ? [input && !input.birthTime ? 2 : 3, 6] : card.kind === 'timing' ? [1, 2] : null
     if (expected && (sections.length < expected[0] || sections.length > expected[1])) violations.push({ code: 'SECTION_LENGTH', path: card.id, message: `section count ${sections.length}` })
     if (!input?.birthTime && /第.+回目/u.test(body)) violations.push({ code: 'BIRTH_TIME_OVERREACH', path: card.id, message: 'ordinal strong claim without birth time' })
   }

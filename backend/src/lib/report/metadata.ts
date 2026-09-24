@@ -127,6 +127,9 @@ export function extractReportMetadata(input: ReportInput, optionalProfile: Optio
     birthTime: normalizeBirthTime(input.birthTime),
     birthplace: input.birthplace ?? null,
     gender: input.gender ?? null,
+    ...(input.spouseConvention !== undefined || input.annualYunConvention !== undefined || input.workContext !== undefined ? {
+      annualContext: {spouseConvention:input.spouseConvention ?? null,annualYunConvention:input.annualYunConvention ?? null,workContext:input.workContext ?? null,birthTimeZone:input.birthTimeZone ?? null},
+    } : {}),
     profileDigest,
     combinationSignature,
   })).digest('hex').slice(0, 32)
