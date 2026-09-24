@@ -23,11 +23,12 @@
     "test:pr15": "tsx --test src/lib/report/pr15Structural.test.ts",
     "test:pr15:e2e": "tsx --test src/lib/report/pr15E2E.test.ts",
     "test:shadow-distribution": "tsx --test src/lib/report/shadowDistribution.test.ts",
-    "build": "tsc",
+    "build": "tsc && node scripts/copyAnnualData.mjs",
     "start": "node dist/index.js",
     "compatibility:reconcile": "tsx src/scripts/reconcileCompatibilityOperations.ts",
     "questions:reconcile": "tsx src/scripts/reconcileReadingQuestions.ts",
-    "test:personality": "node --import tsx --test src/lib/report/personality/composer.test.ts src/lib/report/personalityReport.test.ts src/lib/report/personality/spouseCalculation.test.ts"
+    "test:personality": "node --import tsx --test src/lib/report/personality/composer.test.ts src/lib/report/personalityReport.test.ts src/lib/report/personality/spouseCalculation.test.ts",
+    "test:annual3600": "node --import tsx --test src/lib/report/annual3600/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

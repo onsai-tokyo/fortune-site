@@ -36,6 +36,8 @@ export interface ReportCard {
   sections?: ReportSection[]
   evidence: ReportCardEvidence[]
   metadataRefs?: string[]
+  /** Internal audit trail; clients must not display calculation identifiers. */
+  annualCalculation?: { version: string; patternId: string; sourcePatternId: string; segments: Array<{start: string; endExclusive: string; decade: string | null; labels: Array<{kind: string; state: string; text: string}>; rules: Record<string, boolean | 'unknown'>}> }
   /** Optional while reading reports saved before PR-0b-metadata; always written for newly generated reports. */
   generator?: 'ai' | 'deterministic'
   compositionMode?: 'finding' | 'supplement' | 'mixed'
