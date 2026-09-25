@@ -9,6 +9,9 @@ canonical=json.loads((src/'approved_content/readings_3600.json').read_text())['r
 assert len(canonical)==3600
 byid={r['pattern_id']:r for r in canonical}; assert len(byid)==3600
 fields=['pattern_id','day_index','year_cycle_index','title','description','relationship','career','life','source_pattern_id']
+editorial_path=pathlib.Path(__file__).with_name('annual3600Editorial.json')
+editorial=json.loads(editorial_path.read_text())
+counts=[0]*len(editorial['replacements'])
 dest.mkdir(parents=True,exist_ok=True)
 for d in range(60):
     shard=json.loads((src/f'integration/readings_by_day/{d+1:02}.json').read_text())
@@ -16,7 +19,16 @@ for d in range(60):
     for y,r in enumerate(shard['records']):
         assert r['pattern_id']==f'P{d+1:02}-Y{y+1:02}' and r['day_index']==d and r['year_cycle_index']==y
         assert all(r[k]==byid[r['pattern_id']][k] for k in fields)
-    (dest/f'{d+1:02}.json').write_text(json.dumps({'records':[{k:r[k] for k in fields} for r in shard['records']]},ensure_ascii=False,separators=(',',':'))+'\n')
+    records=[{k:r[k] for k in fields} for r in shard['records']]
+    for record in records:
+        for i,edit in enumerate(editorial['replacements']):
+            field=edit['field']
+            assert field in ['description','relationship','career','life']
+            counts[i]+=record[field].count(edit['before'])
+            record[field]=record[field].replace(edit['before'],edit['after'])
+    (dest/f'{d+1:02}.json').write_text(json.dumps({'records':records},ensure_ascii=False,separators=(',',':'))+'\n')
+assert counts==[e['count'] for e in editorial['replacements']], counts
 hash=hashlib.sha256((src/'approved_content/readings_3600.json').read_bytes()).hexdigest()
-(dest.parent/'version.ts').write_text(f"export const ANNUAL3600_VERSION = 'annual3600-v1-{hash[:12]}-rules1'\n")
-print(json.dumps({'verified_files':len(manifest['files']),'records':len(canonical),'canonical_sha256':hash}))
+wording_hash=hashlib.sha256(editorial_path.read_bytes()).hexdigest()
+(dest.parent/'version.ts').write_text(f"export const ANNUAL3600_VERSION = 'annual3600-v1-{hash[:12]}-rules1-{editorial['revision']}-{wording_hash[:12]}'\n")
+print(json.dumps({'verified_files':len(manifest['files']),'records':len(canonical),'canonical_sha256':hash,'editorial_sha256':wording_hash,'replacements':counts}))
