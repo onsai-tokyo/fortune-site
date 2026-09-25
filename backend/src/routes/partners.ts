@@ -1,9 +1,10 @@
+import { buildCompatibilityV24 } from '../lib/report/compatibilityV24/cards.js'
+import { COMPATIBILITY_V24_IDENTITY } from '../lib/report/compatibilityV24/version.js'
 import { Router } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { MAX_PARTNER_PROFILES, normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
-import { createHash, randomUUID } from 'crypto'
-import Anthropic from '@anthropic-ai/sdk'
+import { randomUUID } from 'crypto'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
 import { correlationId, sendApiError } from '../lib/apiError.js'
@@ -20,12 +21,9 @@ import { calcZiwei } from '../lib/ziwei.js'
 import { calcAstrology } from '../lib/astrology.js'
 import { compactCompatibilityContext } from '../lib/compatibilityContext.js'
 import { compatibilityReadingTitle } from '../lib/conversationTitle.js'
-import { japanDateContext, japanDateParts } from '../lib/japanDate.js'
 import { stripMarkdown } from '../lib/markdown.js'
 import { aggregateGenerator, logCardGeneration, logReportGeneration } from '../lib/report/generationMetrics.js'
 import { finalizeReportProvenance, withCardProvenance } from '../lib/report/provenance.js'
-import { buildCompatibilityTraitScoreBundle, buildDeterministicCompatibilityReport } from '../lib/report/deterministicCompatibility.js'
-import type { ReportInput } from '../lib/deterministicReport.js'
 
 export const partnersRouter = Router()
 partnersRouter.use(requireAuth)
@@ -315,76 +313,11 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
       astrology: calcAstrology(year, month, day, hour, minute, partner.birthplace),
       ...partnerExpanded,
     }
-    const selfHash = createHash('sha256').update(JSON.stringify(self.calculated_data)).digest('hex')
     const compactContext = compactCompatibilityContext(self.calculated_data, partnerCalculated, relationshipType)
-    const currentYear = japanDateParts().year
-    const cardInputIdentity = createHash('sha256').update(`compat-card-v3-numeric-input|${currentYear}|${JSON.stringify(compactContext)}`).digest('hex')
-
-    progress(42, '関係の共通点を探しています', '引き合う力とすれ違う条件を整理しています')
-    const prompt = `現在日は${japanDateContext()}です。過去と未来をこの日付を基準に区別してください。
-本人と相手の命式事実を照合し、「${relationshipLabel}」という${relationshipType === 'romantic' ? '恋愛' : relationshipType === 'family' ? '家族' : '友人・知人'}関係のカードを作成してください。
-具体的な関係名を文章の前提にしてください。元恋人は「もし関係が戻り共に暮らすなら」、片思いは「関係が始まり続いた先に」、夫婦は現在進行形で結婚章を書いてください。
-本人: ${JSON.stringify(compactContext.self)}
-相手: ${JSON.stringify({ name: partner.display_name, ...compactContext.partner })}
-カード形式: {"card":{"id":"指定されたID","kind":"essence","title":"裸のカテゴリ名ではない断定文","summary":"120字以内","tags":["相性"],"period":null,"evidence":[{"family":"内部の占術系統","system":"内部の占術名","detail":"判断に使った計算上の根拠"}],"metadataRefs":["self.day","partner.day"],"pages":[{"role":"opening","label":"物語上の短い見出し","text":"120字以内"}]}}
-opening/core/scene/shadow/exception/question/action/closingを含める。一文60字以内。断定調。弱点も書く。
-出力にMarkdown記法を使わない。**、*、#、-、バッククォート、>などの記号で装飾しない。強調も文章として書く。
-本文に天中殺、日柱、日主、干支、五行、通変星、宿曜、納音、命宮、夫妻宮、星名、干支名などの占術用語を一切書かない。根拠は evidence にのみ保存し、本文では二人に起きる場面や行動へ翻訳する。`
-    progress(66, '二人の関係を書いています', '読み進められる関係性の物語に整えています')
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    progress(66, '二人の関係を読み解いています', '二人の情報に対応する7項目の鑑定を組み立てています')
     const compatibilityStartedAt = Date.now()
-    let generationAttempt = 0
     const compatibilityCardObservations = new Map<string, CompatibilityCardObservation>()
-    if (useSse) {
-      keepAlive = setInterval(() => { if (!res.destroyed && !res.writableEnded) res.write(': keep-alive\n\n') }, 10_000)
-      res.once('close', () => { if (keepAlive) clearInterval(keepAlive) })
-    }
-    const deterministicScopes = new Set((process.env.DETERMINISTIC_SCOPE ?? '').split(',').map(value => value.trim()).filter(Boolean))
-    const useDeterministicCompatibility = deterministicScopes.has('all') || deterministicScopes.has('compatibility')
-    const selfReportInput = { ...(self.calculated_data as Record<string, unknown>), ...(self.birth_data as Record<string, unknown>) }
-    const compatibilityScores = useDeterministicCompatibility
-      ? buildCompatibilityTraitScoreBundle(selfReportInput as unknown as ReportInput, partnerCalculated as ReportInput)
-      : undefined
-    const relationshipReport = useDeterministicCompatibility
-      ? buildDeterministicCompatibilityReport(compactContext.self, compactContext.partner, relationshipType, relationshipLabel, compatibilityScores)
-      : await generateCompatibilityCards(prompt, async (generationPrompt, spec, cardAttempt) => {
-      generationAttempt += 1
-      const attemptStartedAt = Date.now()
-      const message = await client.beta.promptCaching.messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 8000, temperature: 0,
-        system: [{ type: 'text', text: prompt, cache_control: { type: 'ephemeral' } }],
-        messages: [{ role: 'user', content: generationPrompt }],
-      })
-      const block = message.content.find(item => item.type === 'text')
-      if (!block || block.type !== 'text') throw new Error('AI応答がありません')
-      console.info('Compatibility generation metric', {
-        attempt: generationAttempt,
-        cardId: spec.id,
-        cardAttempt,
-        phase: cardAttempt === 1 ? 'initial' : 'regenerate',
-        stopReason: message.stop_reason,
-        outputTokens: message.usage.output_tokens,
-        cacheCreationInputTokens: message.usage.cache_creation_input_tokens,
-        cacheReadInputTokens: message.usage.cache_read_input_tokens,
-        outputChars: block.text.length,
-        attemptDurationMs: Date.now() - attemptStartedAt,
-        totalDurationMs: Date.now() - compatibilityStartedAt,
-      })
-      return { text: block.text, stopReason: message.stop_reason }
-    }, (completed, total) => progress(66 + Math.floor(completed / total * 24), '二人の関係を書いています', `${completed}/${total}の関係性カードを整えました`), {
-      read: async spec => {
-        const cardCacheKey = createHash('sha256').update(`${cardInputIdentity}|${spec.id}`).digest('hex')
-        const { data, error } = await db.from('ai_report_cache').select('payload').eq('cache_key', cardCacheKey).maybeSingle()
-        if (error) throw error
-        return (data?.payload as ReportCard | undefined) ?? null
-      },
-      write: async (spec, card) => {
-        const cardCacheKey = createHash('sha256').update(`${cardInputIdentity}|${spec.id}`).digest('hex')
-        const { error } = await db.from('ai_report_cache').upsert({ cache_key: cardCacheKey, generator_version: 'compat-card-v1', payload: card })
-        if (error) throw error
-      },
-    }, relationshipType, observation => compatibilityCardObservations.set(observation.cardId, observation))
-      .finally(() => { if (keepAlive) clearInterval(keepAlive) })
+    const relationshipReport = buildCompatibilityV24(compactContext.self, compactContext.partner, relationshipLabel)
     const selfBirth = self.birth_data as Record<string, unknown>
     const selfBirthDate = String(selfBirth.birthDate ?? selfBirth.birth_date ?? '')
     const selfBirthYear = Number(selfBirthDate.slice(0, 4))
@@ -395,7 +328,7 @@ opening/core/scene/shadow/exception/question/action/closingを含める。一文
       ...timingReport,
       cards: timingReport.cards.map(card => ({ ...card, scope: 'couple' as const })),
       chartSections: buildCoupleChartSections(self.calculated_data, partnerCalculated),
-    }, 'compat-card-v1+couple-timing-v1')
+    }, `${COMPATIBILITY_V24_IDENTITY}|couple-timing-v1`)
     report.cards.forEach(card => {
       const observation = compatibilityCardObservations.get(card.id)
       const isAi = Boolean(observation)
