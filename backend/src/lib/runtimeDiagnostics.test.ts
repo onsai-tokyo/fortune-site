@@ -14,7 +14,8 @@ test('runtime identity exposes only normalized non-secret generation settings', 
     ANTHROPIC_API_KEY: 'must-not-leak',
   })
   assert.equal(result.commitSha, 'abcdef1234567')
-  assert.equal(result.selfReport.pipelineTag, 'fact:v2|narrative:blocks')
+  assert.match(result.selfReport.pipelineTag, /^fact:v2\|narrative:blocks(?:\||$)/)
+  assert.match(result.compatibilityVersion, /^editorial-v2\.4-claude-structural\|/)
   assert.equal(result.aiReportEnabled, false)
   assert.deepEqual(result.deterministicScope, ['all', 'core-mind-1'])
   assert.equal(result.timingEngineMode, 'shadow')

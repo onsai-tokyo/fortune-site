@@ -23,7 +23,7 @@ test('compatibility route uses one reservation and atomic completion, including 
   if(path.endsWith('/get_compatibility_operation')){assert.equal(body.p_user,owner);return response(mode==='replay'?done:{state:'not_found'})}
   if(path.endsWith('/stripe_subscriptions')||path.endsWith('/app_store_subscriptions'))return response(mode==='premium_unknown'?{message:'unavailable'}:null,mode==='premium_unknown'?503:200)
   if(path.endsWith('/begin_compatibility_operation')){assert.equal(body.p_user,owner);assert.equal(body.p_partner,partnerID);return response(mode==='replay'?done:mode==='pending'?{state:'pending'}:mode==='insufficient'?{state:'insufficient_points'}:{state:'started',input:mode==='failure'?{...input,partner:{...input.partner,birth_date:'invalid'}}:input})}
-  if(path.endsWith('/complete_compatibility_operation')){assert.ok(body.p_payload.calculatedData._structuredReport.cards.length);assert.equal(body.p_op,op);return response({...done,result:body.p_payload.calculatedData._structuredReport},mode==='uncertain'?503:200)}
+  if(path.endsWith('/complete_compatibility_operation')){const report=body.p_payload.calculatedData._structuredReport;assert.match(report.generatorVersion,/^editorial-v2\.4-claude-structural/);assert.equal(report.cards.filter((c:any)=>c.id.startsWith('compat-v24-')).length,7);assert.equal(report.aiCardCount,0);assert.equal(body.p_op,op);return response({...done,result:body.p_payload.calculatedData._structuredReport},mode==='uncertain'?503:200)}
   if(path.endsWith('/fail_compatibility_operation'))return response({state:'failed'})
   throw Error('Unexpected network/points operation '+path)
  }
