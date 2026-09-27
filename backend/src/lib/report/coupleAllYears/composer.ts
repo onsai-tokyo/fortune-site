@@ -1,3 +1,5 @@
+import {coupleEventEditorial,meetingEditorial,type YearEditorialContext} from './eventEditorial.js'
+import {TIMELINE_TAG_VERSION,type TimelineTag} from '../timelineTags.js'
 import { makeTitle, type Signal, type TitleRules } from './title.js'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
@@ -55,7 +57,7 @@ export function calendarLabel(year:number) {
   const phase = mod(7 + year - 2009,28)
   return { year_label:year, bazi_year_pillar:PILLARS[mod(year-1984,60)], sukuyo_phase_index:phase, sukuyo_year_mansion:PHASES[phase], calendar_method:'koseido_28_phase_candidate', date_boundary_resolved:false }
 }
-export function identity() { const d=data(); return `all-years-composer-0.3-age|grounded-title-age-1.0|${d.hash}|koseido_28_phase_candidate|boundaries-unresolved` }
+export function identity() { const d=data(); return `all-years-composer-0.4-tags|grounded-title-reorganization-1.1|${d.hash}|${TIMELINE_TAG_VERSION}|koseido_28_phase_candidate|boundaries-unresolved` }
 
 export function ageContext(year:number,birthYear:unknown) {
   if(!Number.isInteger(year)||typeof birthYear!=='number'||!Number.isInteger(birthYear)||birthYear<1||birthYear>year||year>9999) throw new Error('BIRTH_YEAR_REQUIRED_OR_INVALID')
@@ -71,7 +73,7 @@ export function sukuyoPart(aInput:unknown,bInput:unknown,yearInput:unknown) {
   const [a,b,year]=[aInput,bInput,yearInput].map(mansion),[ia,ib,iy]=[a,b,year].map(v=>MANSIONS.indexOf(v)),d=data(),rel=d.relations[mod(ib-ia,27)]
   return {schema_version:'materials-2.0',id:`PY-S-${num(ia+1)}-${num(ib+1)}-${num(iy+1)}`,pair_ref:rel.id,pair_family:rel.family,actors:[a,b].map((m,i)=>({actor:['A','B'][i],mansion:m,year_role:d.relations[mod([ia,ib][i]-iy,27)].a_sees_b,profile_ref:`SYR${num(HOST_ORDER.indexOf(m)+1)}-07`}))}
 }
-export function composeYear(a:unknown,b:unknown,sa:unknown,sb:unknown,year:number,birthYearA?:number,birthYearB?:number) {
+export function composeYear(a:unknown,b:unknown,sa:unknown,sb:unknown,year:number,birthYearA?:number,birthYearB?:number, editorialContext:YearEditorialContext={}) {
   const ages=[ageContext(year,birthYearA),ageContext(year,birthYearB)],calendar=calendarLabel(year),d=data(),ctx=d.context
   const bp=baziPart(a,b,calendar.bazi_year_pillar),sp=sukuyoPart(sa,sb,calendar.sukuyo_year_mansion)
   const facts=bp.actors.map(r=>d.annual[r.annual_reference].facts),bands=ages.map(v=>v.band)
@@ -95,16 +97,23 @@ export function composeYear(a:unknown,b:unknown,sa:unknown,sb:unknown,year:numbe
   }
   let p2=effects.join('')+'一方、あなたは'+fmt(bz[0].difficulty,0)+'ことがあり、相手は'+fmt(bz[1].difficulty,1)+'ことがあります。'+ctx.bazi_hints[pairBand][d.bt[gods[0]].group]
   let p3=syOpen+'あなたが'+fmt(sy[0].action,0)+'可能性があります。また、相手が'+fmt(sy[1].action,1)+'可能性もあります。'
-  for(let i=0;i<2;i++){const name=i===0?'あなた':'相手',trait=ctx.profiles[bands[i]][sp.actors[i].mansion];p3+=bands[i]==='adult'?name+'は、'+trait:name+'の関わり方では、'+trait+'が手がかりになります。'}
+  const profileSentences=bands.map((band,i)=>{const name=i===0?'あなた':'相手',trait=ctx.profiles[band][sp.actors[i].mansion];return band==='adult'?name+'は、'+trait:name+'の関わり方では、'+trait+'が手がかりになります。'})
   const difficulties=sy.map((cell,i)=>['teen','adult'].includes(bands[i])&&roles[i]==='親'&&['infant','preschool'].includes(bands[1-i])?'自分の働きかけに、同じ強さの反応が返ることを期待する':fmt(cell.difficulty,i))
   const p4='あなたは'+difficulties[0]+'ことがあり、相手は'+difficulties[1]+'ことがあります。'+ctx.sukuyo_hints[pairBand][d.sy[roles[0]].group]+ctx.pair_sukuyo[pairBand][sp.pair_family]
-  const paragraphs=[p1,p2,p3,p4],optional=secondary.map(s=>s.text).join(''),pairText=ctx.pair_bazi[pairBand][d.pairs[bp.pair_ref].facts.primary_branch]??''
+  const event=coupleEventEditorial(year,signals,facts,editorialContext)
+  const meeting=editorialContext.meeting?meetingEditorial(signals):null
+  const paragraphs=[p1+(meeting?.text??''),p2+event.sentence,p3,p4],optional=secondary.map(s=>s.text).join(''),pairText=ctx.pair_bazi[pairBand][d.pairs[bp.pair_ref].facts.primary_branch]??''
+  const profiles=profileSentences.join('')
+  if(chars(paragraphs)+[...profiles].length<=1000)paragraphs[2]+=profiles
   if(chars(paragraphs)+[...optional].length<=1000){paragraphs[1]=optional+paragraphs[1];signals.push(...secondary.map(s=>s.signal))}
   if(chars(paragraphs)+[...pairText].length<=1000)paragraphs[1]+=pairText
   const n=chars(paragraphs)
   if(n<500||n>1000||signals.some(s=>!paragraphs[s.paragraph_index].includes(s.evidence_text)))throw new Error('BODY_CONTRACT_FAILED')
-  const title=makeTitle(signals,{A:[bp.actors[0].day_pillar,sp.actors[0].mansion,String(birthYearA)],B:[bp.actors[1].day_pillar,sp.actors[1].mansion,String(birthYearB)]},d.title)
-  const cachePayload={composer:'all-years-composer-0.3-age',age_policy:d.age.version,title_version:title.version,year,bazi_key:bp.id,sukuyo_key:sp.id,birth_years:[birthYearA,birthYearB]}
+  const baseTitle=makeTitle(signals,{A:[bp.actors[0].day_pillar,sp.actors[0].mansion,String(birthYearA)],B:[bp.actors[1].day_pillar,sp.actors[1].mansion,String(birthYearB)]},d.title)
+  const title=meeting?{...baseTitle,text:meeting.title,mode:'meeting',character_count:[...meeting.title].length,selected:meeting.basis,selection_note:'出会い年は入力事実。接点の場面は本文に採用された主要テーマから選ぶ。'}:baseTitle
+  const timelineTags:TimelineTag[]=[...event.tags]
+  if(meeting)timelineTags.unshift({id:'met-year',label:'#出会った年',source:'user_reported',actor:'pair',targetYear:year,ruleIds:['MEETING-INPUT-1'],evidenceIds:['user:meeting-year'],evidenceText:meeting.text,state:'reported'})
+  const cachePayload={composer:'all-years-composer-0.4-tags',age_policy:d.age.version,title_version:title.version,year,bazi_key:bp.id,sukuyo_key:sp.id,birth_years:[birthYearA,birthYearB],data_hash:d.hash,tag_version:TIMELINE_TAG_VERSION,editorial_context:editorialContext}
   const sorted=Object.fromEntries(Object.entries(cachePayload).sort(([a],[b])=>a<b?-1:a>b?1:0))
-  return {title:title.text,title_basis:title,paragraphs,character_count:n,year,bazi_key:bp.id,sukuyo_key:sp.id,version:cachePayload.composer,ages:{A:ages[0],B:ages[1]},cache_identity:cachePayload,cache_key:createHash('sha256').update(JSON.stringify(sorted)).digest('hex'),audit:{bazi:bp,sukuyo:sp},probability:null,calendar}
+  return {title:title.text,title_basis:title,timelineTags,tagEvaluation:{marriage:event.marriageStatus,children:event.childrenStatus},paragraphs,character_count:n,year,bazi_key:bp.id,sukuyo_key:sp.id,version:cachePayload.composer,ages:{A:ages[0],B:ages[1]},cache_identity:cachePayload,cache_key:createHash('sha256').update(JSON.stringify(sorted)).digest('hex'),audit:{bazi:bp,sukuyo:sp},probability:null,calendar}
 }

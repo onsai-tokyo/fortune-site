@@ -32,5 +32,5 @@ export function makeTitle(signals:Signal[],identities:Record<'A'|'B',string[]>,t
     selected=[a,b];mode='actor_contrast'
   }
   if([...text].length>t.max_characters)throw new Error('TITLE_TOO_LONG')
-  return {text,version:'grounded-title-age-1.0',mode,character_count:[...text].length,selected,considered:signals,selection_note:'本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。'}
+  return {text,version:'grounded-title-reorganization-1.1',mode,character_count:[...text].length,selected,considered:signals,selection_note:'本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。'}
 }

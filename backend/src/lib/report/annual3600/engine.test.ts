@@ -1,9 +1,10 @@
+import {selfTagEditorial} from './tagEditorial.js'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { annualText, cycleIndex } from './catalog.js'
 import { annualReading, evaluateLabels, natalContext, lichun, solarYearAt, and, or, jst, type AnnualContext } from './engine.js'
 import { annual3600Cards } from './cards.js'
-import { resolveSelfReportOptions, selfReportPipelineTag } from '../buildSelfReport.js'
+import { resolveSelfReportOptions, selfReportPipelineTag } from '../selfReportOptions.js'
 const input: AnnualContext = {birthDate:'2000-06-15',birthTime:'12:15',birthplace:'東京都',annualYunConvention:'female',spouseConvention:'female_officer',workContext:'employed'}
 test('all 3600 selectors are unique, zero-based, and preserve nonempty text',()=>{
   const ids = new Set<string>()
@@ -67,13 +68,13 @@ test('all decade switches split contiguous exclusive intervals and coverage exte
     for(const l of r.labels) assert.ok(r.segments.every(s=>s.labels.some(v=>v.kind===l.kind&&v.state==='candidate')))
   }
 })
-test('cards retain exact approved paragraphs, all years including no badges, and no legacy or technical evidence',()=>{
+test('cards retain exact versioned editorial paragraphs, all years including no badges, and no legacy or technical evidence',()=>{
   const cards=annual3600Cards(input,2026,2045)
   assert.equal(cards.length,20)
   for(const c of cards) {
     const year=Number(c.id.slice(-4)),r=annualReading(input,year)!
-    assert.equal(c.title,r.text.title);assert.equal(c.summary,r.text.description)
-    assert.deepEqual(c.sections!.slice(0,3).map(s=>s.body),[r.text.relationship,r.text.career,r.text.life])
+    const expected=selfTagEditorial(r,natalContext(input)!,input).text;assert.equal(c.title,expected.title);assert.equal(c.summary,expected.description)
+    assert.deepEqual(c.sections!.slice(0,3).map(s=>s.body),[expected.relationship,expected.career,expected.life])
     assert.deepEqual(c.evidence,[])
     assert.ok(c.period!.label.includes('立春'))
     assert.equal(c.generator,'deterministic')

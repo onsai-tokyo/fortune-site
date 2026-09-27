@@ -13,7 +13,7 @@
       "title": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 26,
         "selected": [
@@ -152,17 +152,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りの支えを受けながら、いつもと違う音や人の気配に触れる可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りに反応を受け止めてもらい、やり取りのリズムに触れる可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの気配に応じる柔らかさが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ反応を期待されると、そのときのペースとずれることがあり、相手は判断や参加を急がされると負担を感じることがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 822,
+      "character_count": 897,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2026,
@@ -180,18 +218,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2026,
           2001
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "40580d31e14c9f146c59509084edb3709318a4eabb644671dbdbf2a5aac79bdd",
+      "cache_key": "d6263d45985c164fccba9b1b1bad467873560fb2e30f5ebeec84e646a3711df2",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -258,7 +299,7 @@
       "title": "あなたは楽しさを分かち合い、相手は流れの変化を支えてもらう年",
       "title_basis": {
         "text": "あなたは楽しさを分かち合い、相手は流れの変化を支えてもらう年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 30,
         "selected": [
@@ -397,17 +438,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい遊びとの接点、相手は好きなことを選ぶ気持ちがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が身近な遊びや関わりの中で、好きなことを言葉やしぐさで示す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な繰り返しも大切な観点です。相手には、一緒に関わる順番も大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、遊びや過ごす場所が変わる場面で、周りの支えを受けることがテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は自分の好きなやり方から切り替えにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、一緒に関わる順番も大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、遊びや過ごす場所が変わる場面で、周りの支えを受けることがテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は自分の好きなやり方から切り替えにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手は自分のペースで知ることがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が身近なものに触れ、自分のペースで確かめたり繰り返したりする可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手の関わり方では、違う考えや話へ関心を向けることが手がかりになります。",
         "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は次のことを急がされると、戸惑いが表れることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 833,
+      "character_count": 908,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2022,
@@ -425,18 +504,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2022,
           2021
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "83df675d41098444bf7025f7cfb2a87f9b110b62460d99cf8cd94ceab6d74238",
+      "cache_key": "112f7e700fbefea8444957dd7fb1764af85db90d658f49ffddb8358f47e1edbc",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -503,7 +585,7 @@
       "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -642,17 +724,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 827,
+      "character_count": 902,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2017,
@@ -670,18 +790,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2017,
           1991
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "7ec29792cbe1bad84e13f9dc2f08a80b8fe05d9191ddcc7eeec67fcbec649e0d",
+      "cache_key": "b27e18d28256fd594ee1ead9b5c1154370a357e69192ef13aa113585bd84e75a",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -748,7 +871,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -887,17 +1010,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい関心と接点、相手は自分の希望と対等な関わりがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい活動と一人で続けたいことを選び、関わり方への希望を示す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間との役割分担も大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は自分の決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間との役割分担も大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は自分の決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手は自分に合う学びのペースがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを知り、自分に合う速さや進め方を考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手の関わり方では、違う考えや話へ関心を向けることが手がかりになります。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると、負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 817,
+      "character_count": 892,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2010,
@@ -915,18 +1076,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2010,
           2009
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "bddf35f3eaef34622e2009ae43657c19f87844492702e328331a3f25a254c026",
+      "cache_key": "2ae026e8d9204693b0980f469ffc1c5e742cb5d76d3d6e673c2ea84d4982b80f",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -993,7 +1157,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -1132,17 +1296,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#出会いの時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
       ],
-      "character_count": 786,
+      "character_count": 896,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1996,
@@ -1160,18 +1362,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           1996,
           1986
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "894679b127ec3d5e6212b3db1758e9aadf47373a7822e0b839ef354670c10239",
+      "cache_key": "0accc21926b80cd0f16d26aafb1fb33578a2cee3a728dafca6fad2e124b1eb24",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -1238,7 +1443,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -1377,17 +1582,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#出会いの時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
       ],
-      "character_count": 786,
+      "character_count": 896,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1951,
@@ -1405,18 +1648,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           1951,
           1946
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "89b98e4326afba8d721ab084e9dd45024bbc29af24d33d795b84fc797593f084",
+      "cache_key": "871471804bfce0501ce8931ecc4179371266f13c867fd20acf95909f28c56871",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -1483,7 +1729,7 @@
       "title": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 26,
         "selected": [
@@ -1622,17 +1868,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りの支えを受けながら、いつもと違う音や人の気配に触れる可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りに反応を受け止めてもらい、やり取りのリズムに触れる可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの気配に応じる柔らかさが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ反応を期待されると、そのときのペースとずれることがあり、相手は判断や参加を急がされると負担を感じることがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 822,
+      "character_count": 897,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2024,
@@ -1650,18 +1934,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2024,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "4039514f8e5810f198211dcc952349f6cff121492e79c4eb63ba19410d59e6ba",
+      "cache_key": "df89bdd0b645be2005d8ea0793c83b0d73d41befc53366fa19ea15d044412a56",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -1728,7 +2015,7 @@
       "title": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 25,
         "selected": [
@@ -1867,17 +2154,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は判断や参加を急がされると負担を感じることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 816,
+      "character_count": 891,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2023,
@@ -1895,18 +2220,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2023,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "b5b410a5e009a2183087918f3a5432e4eeb6f4c66f96a8a8a85a98fc82d449e0",
+      "cache_key": "49daf5e6caa3be21dc565f104a83640b6c85407d4ad42e0301607e412d62469c",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -1973,7 +2301,7 @@
       "title": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 25,
         "selected": [
@@ -2112,17 +2440,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は判断や参加を急がされると負担を感じることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 816,
+      "character_count": 891,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2021,
@@ -2140,18 +2506,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2021,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "d3f53a903ca41aa37120e77d2687f95257a8b2ac1bd867e4804a1d48e9d03425",
+      "cache_key": "700063a731327b96d933fb86594ef429f257b796852aa765c32c6aa1863b5900",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -2218,7 +2587,7 @@
       "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -2357,17 +2726,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 827,
+      "character_count": 902,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2020,
@@ -2385,18 +2792,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2020,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "9365ea8ff17e16dfbcb58db99959ed0346d7fa6e0196bbc1d23c226e6e2cdd82",
+      "cache_key": "1c546535d5a69a0e430695ee82afe9aa6ba690a7bcecfc69dac6ab2fd9fb7f45",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -2463,7 +2873,7 @@
       "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -2602,17 +3012,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 827,
+      "character_count": 902,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2014,
@@ -2630,18 +3078,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2014,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "5d88a08e3e6d6118ade0e7d3dd936b556840297467876a68370bab1946d771be",
+      "cache_key": "49fb762e81930e9cf9571c7a4da1241358fb3d20fa64016beea6c8f87d3c4509",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -2708,7 +3159,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -2847,17 +3298,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 813,
+      "character_count": 888,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2013,
@@ -2875,18 +3364,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2013,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "68cc8b106f697e697ed084b9c639c3e092f9991a9d7d87e24c3e770e5cd12ee9",
+      "cache_key": "1b3ede13aa25301afe5f7b46611aa0605e9fe79ae37aa285251715cb6015be1d",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -2953,7 +3445,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -3092,17 +3584,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#関わり方を整える時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#交流が広がる時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "身近な活動を通じて、関わる機会が広がる可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。関わり方の変化に戸惑う場面では、一人ずつの反応と必要な支えを確かめることが手がかりになります。身近な活動を通じて、関わる機会が広がる可能性があります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
       ],
-      "character_count": 813,
+      "character_count": 888,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2009,
@@ -3120,18 +3650,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2009,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "03c8d475093386e5362346910177c285a4556428726407e25bf23c332929ab36",
+      "cache_key": "cf9b0bd85bd52294473ad6f2d55b6537522859ce402c88ffb3bd171a4c56fe0d",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -3198,7 +3731,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -3337,17 +3870,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#出会いの時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
       ],
-      "character_count": 786,
+      "character_count": 896,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2008,
@@ -3365,18 +3936,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           2008,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "bf8348b4c1c22cfcc57b61bcf25100a625355e258f86657aced30ff5d824f420",
+      "cache_key": "987f7e8a1d46f11febf3e5497e54d81476e99fafa713977d2a14c4b9b3eafb09",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -3443,7 +4017,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -3582,17 +4156,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#出会いの時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
       ],
-      "character_count": 786,
+      "character_count": 896,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1962,
@@ -3610,18 +4222,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           1962,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "a76cff513973fae7c8e7cdc48b38a493e5dd99a1a1f60809c64ac140513eeb16",
+      "cache_key": "e94cc417b253289cdb9cf561560e5e60048365afebbb6a3ab6225dd7a6b47b81",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -3688,7 +4303,7 @@
       "title": "あなたは協力を深め、相手は予定を選び直す年",
       "title_basis": {
         "text": "あなたは協力を深め、相手は予定を選び直す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 21,
         "selected": [
@@ -3827,17 +4442,55 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:self_punishment",
+            "P13-Y43:clash"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        },
+        {
+          "id": "encounter",
+          "label": "#出会いの時期",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2026,
+          "ruleIds": [
+            "PAIR-ENCOUNTER-1"
+          ],
+          "evidenceIds": [
+            "P19-Y43:偏財",
+            "P13-Y43:比肩"
+          ],
+          "evidenceText": "紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。紹介や共通の活動から接点が広がり、互いを知る機会が増える可能性があります。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
         "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
       ],
-      "character_count": 786,
+      "character_count": 896,
       "year": 2026,
       "bazi_key": "PY-B-19-13-43",
       "sukuyo_key": "PY-S-05-08-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1961,
@@ -3855,18 +4508,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-19-13-43",
         "sukuyo_key": "PY-S-05-08-24",
         "birth_years": [
           1961,
           1996
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "c87d99b776744019c4a31eed2389e1b1af7116a8777fe0b6118184edbb20533e",
+      "cache_key": "9507ff89f97db2a084dac8e1af1e66103f4afbabca8672d0dd6b0f20608c5327",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -3933,7 +4589,7 @@
       "title": "二人とも新しい見方を探り、慎重に試す年",
       "title_basis": {
         "text": "二人とも新しい見方を探り、慎重に試す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "shared",
         "character_count": 19,
         "selected": [
@@ -4072,6 +4728,11 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、二人とも新しい見方を試すことや探究することがテーマです。あなたが関心のある分野を調べ、新しい方法を試す可能性があります。また、相手が関心のある分野を調べ、新しい方法を試す形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
         "あなたには、学ぶことや支えを受け取ることも大切な観点です。相手には、学ぶことや支えを受け取ることも大切な観点です。一方、あなたは一人で考える時間と、人に関わる時間の配分に迷うことがあり、相手は一人で考える時間と、人に関わる時間の配分に迷うことがあります。情報が欲しいのか、意見を聞きたいのかを最初に示すと、必要なやり取りを選びやすくなります。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
@@ -4082,7 +4743,7 @@
       "year": 2026,
       "bazi_key": "PY-B-05-05-43",
       "sukuyo_key": "PY-S-01-01-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1991,
@@ -4100,18 +4761,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-05-05-43",
         "sukuyo_key": "PY-S-01-01-24",
         "birth_years": [
           1991,
           1991
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "5325f1b5007ba2c8893985d1c0becf555337dad94c5e9fd8a3fa88dff6ac9b5e",
+      "cache_key": "deda9368bfc755551e79467312c06f9e833ed73a95ae4c3af71ffa0ef8fafb38",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -4178,7 +4842,7 @@
       "title": "あなたは新しい刺激を受け止め、相手は新しい見方を試す年",
       "title_basis": {
         "text": "あなたは新しい刺激を受け止め、相手は新しい見方を試す年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -4291,6 +4955,11 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは身近なものへの関心、相手は新しい見方を試すことや探究することがテーマです。あなたが周りに見守られながら、気になる音や動きへ反応を向ける可能性があります。また、相手が関心のある分野を調べ、新しい方法を試す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
         "あなたには、身近な刺激からの学びと支えも大切な観点です。相手には、学ぶことや支えを受け取ることも大切な観点です。一方、あなたは一つの刺激への反応が続き、周りの変化へ移りにくくなることがあり、相手は一人で考える時間と、人に関わる時間の配分に迷うことがあります。声や触れ合いの後に反応を待つことで、受け取れる量に合わせた支えを考えやすくなります。似ている反応があっても、そのときの希望や心地よさには違いが表れる場合があります。",
@@ -4301,7 +4970,7 @@
       "year": 2026,
       "bazi_key": "PY-B-05-05-43",
       "sukuyo_key": "PY-S-01-01-24",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 2026,
@@ -4319,18 +4988,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2026,
         "bazi_key": "PY-B-05-05-43",
         "sukuyo_key": "PY-S-01-01-24",
         "birth_years": [
           2026,
           1991
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "9de44091a98db08a992908bd01e06242346000768012cc0df64d36919f883369",
+      "cache_key": "28a631f90c140fa79cb7fdafb0dfbc3f553158186e9c9bfa742fc05d52b28afb",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -4397,7 +5069,7 @@
       "title": "あなたは交流から接点を広げ、相手は接し方の違いを確かめる年",
       "title_basis": {
         "text": "あなたは交流から接点を広げ、相手は接し方の違いを確かめる年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 29,
         "selected": [
@@ -4536,17 +5208,39 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [
+        {
+          "id": "relationship-wall",
+          "label": "#乗り越えるべき壁の到来",
+          "source": "rule_candidate",
+          "actor": "pair",
+          "targetYear": 2023,
+          "ruleIds": [
+            "PAIR-WALL-1"
+          ],
+          "evidenceIds": [
+            "P01-Y40:zi_mao_punishment",
+            "P01-Y40:zi_mao_punishment"
+          ],
+          "evidenceText": "二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。",
+          "state": "candidate"
+        }
+      ],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、二人とも学ぶことや支えを受け取ることがテーマです。あなたが学んだことや役立つ情報を相手へ伝える可能性があります。また、相手が学んだことや役立つ情報をあなたへ伝える形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
-        "あなたには、仲間と動くことや分担を決めることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。相手側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。一方、あなたは助言を期待しすぎたり、説明が多くなったりすることがあり、相手は助言を期待しすぎたり、説明が多くなったりすることがあります。情報が欲しいのか、意見を聞きたいのかを最初に示すと、必要なやり取りを選びやすくなります。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
+        "あなたには、仲間と動くことや分担を決めることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。相手側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。一方、あなたは助言を期待しすぎたり、説明が多くなったりすることがあり、相手は助言を期待しすぎたり、説明が多くなったりすることがあります。情報が欲しいのか、意見を聞きたいのかを最初に示すと、必要なやり取りを選びやすくなります。二人の関わり方の変化が、二人で向き合う壁になる可能性があります。交流の範囲や関わる頻度を変え、無理の少ない関係へ組み直すことが手がかりになります。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは交流から可能性を広げること、相手は人との協力を深めることがテーマです。あなたが知人や関心のある話題を通じて、情報交換を広げる可能性があります。また、相手が同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性もあります。あなたは、思いやりがあり、苦手な人の話も笑顔で聞けます。相手は、人との距離を測り、公平に調整しようとします。",
-        "あなたは広く応じすぎ、個々の約束が手薄になることがあり、相手はあなたにも同じ参加の熱量を期待することがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
+        "あなたは交流が広がり、一人ひとりと関わる時間が少なくなることがあり、相手はあなたにも同じ参加の熱量を期待することがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
       ],
-      "character_count": 767,
+      "character_count": 846,
       "year": 2023,
       "bazi_key": "PY-B-01-01-40",
       "sukuyo_key": "PY-S-01-02-21",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1990,
@@ -4564,18 +5258,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2023,
         "bazi_key": "PY-B-01-01-40",
         "sukuyo_key": "PY-S-01-02-21",
         "birth_years": [
           1990,
           1985
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "41a7b3e15a870e8c32ee7418678964aa84423b23573bd123e94daafbf780f3f8",
+      "cache_key": "934fea7ad1de57cd2f24567b661e4f4f3f1528e4d8372b32324a8111612360bc",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -4642,7 +5339,7 @@
       "title": "あなたは自分の希望を選び、相手は交流から接点を広げる年",
       "title_basis": {
         "text": "あなたは自分の希望を選び、相手は交流から接点を広げる年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -4755,17 +5452,22 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、二人とも自分で選ぶことや対等に関わることがテーマです。あなたが参加したい予定と、一人で続けたい活動を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
         "あなたには、接点を広げることや機会を選ぶことも大切な観点です。相手には、接点を広げることや機会を選ぶことも大切な観点です。一方、あなたは決め方を譲りにくくなることがあり、相手は決め方を譲りにくくなることがあります。自分で選びたい部分と相手に任せたい部分を、具体的に伝えてみましょう。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは無理のある形を組み直すこと、相手は交流から可能性を広げることがテーマです。あなたが負担の大きい習慣を整理し、変える部分を選ぶ可能性があります。また、相手が知人や関心のある話題を通じて、情報交換を広げる可能性もあります。あなたは、思いやりがあり、苦手な人の話も笑顔で聞けます。相手は、人との距離を測り、公平に調整しようとします。",
-        "あなたは今まで通りに進まないことに落胆することがあり、相手は広く応じすぎ、個々の約束が手薄になることがあります。今変えたいことと残したいことを分けると、負担を減らす方法を考えやすくなります。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
+        "あなたは今まで通りに進まないことに落胆することがあり、相手は交流が広がり、一人ひとりと関わる時間が少なくなることがあります。今変えたいことと残したいことを分けると、負担を減らす方法を考えやすくなります。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
       ],
-      "character_count": 659,
+      "character_count": 665,
       "year": 2024,
       "bazi_key": "PY-B-01-01-41",
       "sukuyo_key": "PY-S-01-02-22",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1990,
@@ -4783,18 +5485,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 2024,
         "bazi_key": "PY-B-01-01-41",
         "sukuyo_key": "PY-S-01-02-22",
         "birth_years": [
           1990,
           1985
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "1b24c0f5be8fb7bf82c421c989a6204798fbb394fada0ad3b4899a7f433cce1b",
+      "cache_key": "6721b4f5f605b03539ad521d46b577af184ff503e2cdac859aad32044bc6ec85",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",
@@ -4861,7 +5566,7 @@
       "title": "あなたは身近な交流に触れ、相手は仲間との役割を分ける年",
       "title_basis": {
         "text": "あなたは身近な交流に触れ、相手は仲間との役割を分ける年",
-        "version": "grounded-title-age-1.0",
+        "version": "grounded-title-reorganization-1.1",
         "mode": "actor_contrast",
         "character_count": 27,
         "selected": [
@@ -4974,17 +5679,22 @@
         ],
         "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
       },
+      "timelineTags": [],
+      "tagEvaluation": {
+        "marriage": "not_applicable",
+        "children": "not_implemented"
+      },
       "paragraphs": [
         "この年、あなたは周りと関わるリズム、相手は仲間と動くことや分担を決めることがテーマです。あなたが周りの働きかけを受けながら、関わりのリズムに触れる可能性があります。また、相手が仲間との用事で、担当や費用の分け方を考える形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
-        "あなたには、身近なものへの関心も大切な観点です。相手には、新しい見方を試すことや探究することも大切な観点です。一方、あなたは働きかけが重なると、自分のペースが乱れることがあり、相手は人付き合いが広がり、個別の約束に使う余力が少なくなることがあります。自分なりの反応が出るまで間を取り、関わる量を周りが合わせることが支えになります。似ている反応があっても、そのときの希望や心地よさには違いが表れる場合があります。",
+        "あなたには、身近なものへの関心も大切な観点です。相手には、新しい見方を試すことや探究することも大切な観点です。一方、あなたは働きかけが重なると、自分のペースが乱れることがあり、相手は人付き合いが広がり、二人に使う余力が少なくなることがあります。自分なりの反応が出るまで間を取り、関わる量を周りが合わせることが支えになります。似ている反応があっても、そのときの希望や心地よさには違いが表れる場合があります。",
         "こうした動きを気持ちの面から見ると、あなたは身近な交流の広がり、相手は人との協力を深めることがテーマです。あなたが声や表情による働きかけを受け、関わりの違いに触れる可能性があります。また、相手が同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性もあります。あなたの関わり方では、周りの働きかけを柔らかく受け止める反応が手がかりになります。相手は、人との距離を測り、公平に調整しようとします。",
         "あなたは多くの働きかけが重なると、一つずつ受け取りにくくなることがあり、相手は自分の働きかけに、同じ強さの反応が返ることを期待することがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。支えが届いたときの反応を受け止めると、無理なく応じ合う関わりを育てやすくなります。"
       ],
-      "character_count": 745,
+      "character_count": 742,
       "year": 1995,
       "bazi_key": "PY-B-01-01-12",
       "sukuyo_key": "PY-S-01-02-21",
-      "version": "all-years-composer-0.3-age",
+      "version": "all-years-composer-0.4-tags",
       "ages": {
         "A": {
           "birth_year": 1995,
@@ -5002,18 +5712,21 @@
         }
       },
       "cache_identity": {
-        "composer": "all-years-composer-0.3-age",
-        "age_policy": "age-editorial-1.0",
-        "title_version": "grounded-title-age-1.0",
+        "composer": "all-years-composer-0.4-tags",
+        "age_policy": "age-fragments-reorganization-1.1",
+        "title_version": "grounded-title-reorganization-1.1",
         "year": 1995,
         "bazi_key": "PY-B-01-01-12",
         "sukuyo_key": "PY-S-01-02-21",
         "birth_years": [
           1995,
           1970
-        ]
+        ],
+        "data_hash": "a258eff67a3c46de",
+        "tag_version": "timeline-tags-reorganization-2.0",
+        "editorial_context": {}
       },
-      "cache_key": "d383b92a5f4f20160ada4043b314fb9d38b05bede3f6fcb62475f6e186b50c77",
+      "cache_key": "cd41f26cfebb875e46aca2c536018f34a56319dbe00f7e7540e60e91c0f5a7d2",
       "audit": {
         "bazi": {
           "schema_version": "materials-2.0",

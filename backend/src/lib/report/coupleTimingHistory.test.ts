@@ -1,3 +1,4 @@
+import { annual3600Cards } from './annual3600/cards.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildCoupleTimingHistory, findCoupleTurningPoints } from './coupleTimingCards.js'
@@ -40,5 +41,29 @@ test('保存された出生情報だけで既存計算を再利用し、無効�
   assert.deepEqual(first, timingHistoryFromBirthSnapshot(snapshot, 2026))
   for (const input of [null, {}, { self: snapshot.self }, { ...snapshot, self: { ...snapshot.self, birthDate: '1995-02-30' } }, { ...snapshot, self: { ...snapshot.self, gender: null } }]) {
     assert.throws(() => timingHistoryFromBirthSnapshot(input, 2026), /BIRTH_UNAVAILABLE/)
+  }
+})
+
+// Regression: the saved gender must reach the shared annual input policy.
+test('通常入力の男女で過去年と通常生成の2013〜2032年カード全体が一致する', () => {
+  const previous=process.env.ANNUAL_READING_ENGINE
+  process.env.ANNUAL_READING_ENGINE='catalog3600'
+  try {
+    for(const gender of ['female','male']) {
+      const input={birthDate:'1995-02-20',birthTime:'03:02',birthplace:'愛知県',gender}
+      const normal=annual3600Cards(input,2013,2032)
+      const history=selfTimingHistoryFromBirthSnapshot(input,2032)
+      assert.equal(history.cards.length,20)
+      assert.deepEqual(history.cards,normal)
+      const aliases={birth_date:input.birthDate,birth_time:input.birthTime,birthplace:input.birthplace,gender}
+      assert.deepEqual(selfTimingHistoryFromBirthSnapshot(aliases,2032).cards,normal)
+      assert.ok(history.cards.every(c=>!c.tags.includes('#仕事の転機')))
+      if(gender==='female')assert.deepEqual(history.cards.find(c=>c.id==='turning-year-2018')!.tags,['時期','#婚期','#活動の転機'])
+      const explicit={...input,spouseConvention:'male_wealth',annualYunConvention:'male',workContext:'employed'}
+      assert.deepEqual(selfTimingHistoryFromBirthSnapshot(explicit,2032).cards,annual3600Cards(explicit,2013,2032))
+    }
+  } finally {
+    if(previous===undefined)delete process.env.ANNUAL_READING_ENGINE
+    else process.env.ANNUAL_READING_ENGINE=previous
   }
 })

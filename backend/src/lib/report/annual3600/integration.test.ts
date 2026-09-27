@@ -1,7 +1,8 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {previewRouter} from '../../../routes/preview.js'
-import {annualReading} from './engine.js'
+import {annualReading,natalContext} from './engine.js'
+import {selfTagEditorial} from './tagEditorial.js'
 import {reportContractViolations} from '../contract.js'
 import {EventEmitter} from 'node:events'
 import {selfTimingHistoryFromBirthSnapshot} from '../coupleTimingHistory.js'
@@ -20,11 +21,11 @@ test('real preview route preserves annual body, profile changes, personality, an
    const generate=async(body:object)=>{const res=new ResponseStub();await handler({header:()=>undefined,query:{},body,headers:{}},res);assert.equal(res.statusCode,200);return res.body}
    const report=await generate(birth)
    const c=report.cards.find((c:any)=>c.id==='turning-year-2031')
-   assert.equal(c.summary,annualReading(birth,2031)!.text.description)
+   assert.equal(c.summary,selfTagEditorial(annualReading(birth,2031)!,natalContext(birth)!,birth).text.description)
    assert.equal(c.annualCalculation.patternId,annualReading(birth,2031)!.text.pattern_id)
    assert.deepEqual(reportContractViolations({...report,cards:report.cards.filter((c:any)=>c.kind==='timing')}),[])
    const student=await generate({...birth,workContext:'student'})
-   assert.ok(student.cards.find((c:any)=>c.id==='turning-year-2031').tags.includes('学び・進路の節目'))
+   assert.ok(student.cards.find((c:any)=>c.id==='turning-year-2031').tags.includes('#進路の転機'))
    const changed=await generate({...birth,birthDate:'2000-06-02'})
    assert.notEqual(changed.cards.find((c:any)=>c.id==='turning-year-2031').summary,c.summary)
    const history=selfTimingHistoryFromBirthSnapshot(birth,2031)

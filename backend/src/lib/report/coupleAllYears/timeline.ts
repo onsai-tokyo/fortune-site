@@ -1,3 +1,7 @@
+import {resolveAnnualInput} from '../annual3600/inputPolicy.js'
+import {annualReading,natalContext,type AnnualContext} from '../annual3600/engine.js'
+import {tagLabels,TIMELINE_TAG_VERSION} from '../timelineTags.js'
+import type {YearEditorialContext,IndividualCandidates} from './eventEditorial.js'
 import { createHash } from 'node:crypto'
 import { calcShichu, getSukuyo } from '../../divination/index.js'
 import { japanDateParts } from '../../japanDate.js'
@@ -18,7 +22,7 @@ export function timelineLayout({ meetingYear,birthYearA,birthYearB,referenceYear
   for(let i=0;i<collapsedYears.length;i+=5) { const group=collapsedYears.slice(i,i+5); groups.push({from:group[0],to:group.at(-1)!,years:group}) }
   return {status:'ready',years,collapsedYears,groups,referenceYear,endYear,meetingYear,version:LAYOUT_VERSION}
 }
-export type BirthInput = {birthDate:string;birthTime?:string|null}
+export type BirthInput = Omit<AnnualContext,'birthTime'> & {birthDate:string;birthTime?:string|null;gender?:string}
 export function birthMaterials(input:BirthInput) {
   if(!input || typeof input.birthDate!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.birthDate)) throw new Error('生年月日を入力してください。')
   const [y,m,d]=input.birthDate.split('-').map(Number), date=new Date(Date.UTC(y,m-1,d))
@@ -30,7 +34,7 @@ export function birthMaterials(input:BirthInput) {
 }
 export function yearCard(reading:ReturnType<typeof composeYear>):ReportCard {
   const body=reading.paragraphs.join('\n\n')
-  return {id:`couple-all-years-${reading.year}`,kind:'timing',scope:'couple',tab:'timing',title:reading.title,summary:'ふたりの時系列',tags:['ふたりの時系列'],period:{label:`${reading.year}年`},pages:[{role:'core',label:'ふたりの時系列',text:body}],sections:[{heading:'',body,evidence:[],termGloss:[]}],evidence:[],metadataRefs:[identity(),reading.bazi_key,reading.sukuyo_key],generator:'deterministic'}
+  return {id:`couple-all-years-${reading.year}`,kind:'timing',scope:'couple',tab:'timing',title:reading.title,summary:'ふたりの時系列',tags:['ふたりの時系列',...tagLabels(reading.timelineTags)],timelineTags:reading.timelineTags,period:{label:`${reading.year}年`},pages:[{role:'core',label:'ふたりの時系列',text:body}],sections:[{heading:'',body,evidence:[],termGloss:[]}],evidence:[],metadataRefs:[identity(),reading.bazi_key,reading.sukuyo_key],generator:'deterministic'}
 }
 export type YearEntry = { year:number; label:string|null; contentStatus:'ready'|'unsupported_year'|'calculation_error'; card:ReportCard|null; reading:ReturnType<typeof composeYear>|null }
 export function buildAllYears(input:TimelineInput & {dayA:string;dayB:string;mansionA:string;mansionB:string}, compose=composeYear) {
@@ -45,13 +49,25 @@ export function buildAllYears(input:TimelineInput & {dayA:string;dayB:string;man
   }
   return {...layout,status:entries.some(e=>e.contentStatus!=='ready')?'partial':layout.status,entries,engineVersion:identity()}
 }
-export function buildFromBirths(a:BirthInput,b:BirthInput,meetingYear:unknown,referenceYear=japanDateParts().year,endYear?:number) {
+export function buildFromBirths(a:BirthInput,b:BirthInput,meetingYear:unknown,referenceYear=japanDateParts().year,endYear?:number,context:Pick<YearEditorialContext,'relationshipType'|'relationshipLabel'>={}) {
   const ma=birthMaterials(a),mb=birthMaterials(b)
-  return buildAllYears({meetingYear,referenceYear,endYear,birthYearA:ma.birthYear,birthYearB:mb.birthYear,dayA:ma.dayPillar,dayB:mb.dayPillar,mansionA:ma.mansion,mansionB:mb.mansion})
+  const contexts=[a,b].map(annualContextOf),natals=contexts.map(natalContext)
+  const personal=(year:number)=>contexts.map((input,i)=>{
+    if(year<1952||year>2100||!natals[i])return {marriage:'unknown',encounter:'unknown',references:[]} as IndividualCandidates
+    const r=annualReading(input,year,natals[i])!
+    const state=(kind:string):boolean|'unknown'=>r.labels.some(l=>l.kind===kind)?true:r.segments.some(s=>s.labels.some(l=>l.kind===kind&&l.state==='needs_personal_context'))?'unknown':false
+    return {marriage:state('marriage'),encounter:state('encounter'),references:[r.text.pattern_id,'R02']}
+  }) as [IndividualCandidates,IndividualCandidates]
+  return buildAllYears({meetingYear,referenceYear,endYear,birthYearA:ma.birthYear,birthYearB:mb.birthYear,dayA:ma.dayPillar,dayB:mb.dayPillar,mansionA:ma.mansion,mansionB:mb.mansion},(aa,bb,sa,sb,year,ba,bbirth)=>composeYear(aa,bb,sa,sb,year,ba,bbirth,{...context,meeting:year===meetingYear,personalCandidates:personal(year)}))
 }
 // Direction belongs in content identity; meeting year belongs only in layout identity.
 export function cacheKeys(relationshipId:string,input:Parameters<typeof buildAllYears>[0]) {
   const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
   const content=digest([relationshipId,input.dayA,input.dayB,input.mansionA,input.mansionB,input.birthYearA,input.birthYearB,identity()])
   return {content,layout:digest([content,input.meetingYear,input.referenceYear,input.endYear??input.referenceYear+19,LAYOUT_VERSION])}
+}
+
+/** Explicit saved conventions win. The documented traditional mapping only uses a supplied gender. Missing geography remains unknown. */
+export function annualContextOf(b:BirthInput):AnnualContext {
+  return resolveAnnualInput({...b,birthTime:b.birthTime??undefined})
 }
