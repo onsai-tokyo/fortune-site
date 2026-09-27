@@ -30,9 +30,9 @@ export function snapshotTimeline(snapshot:ReturnType<typeof coupleSnapshot>,meet
   return {...result,minMeetingYear:snapshot.minMeetingYear,entries:result.entries.map(({reading,...entry})=>{
     if(entry.year!==meetingYear || !reading || !entry.card)return entry
     const intro=meetingIntroduction(reading,snapshot.relationshipType)
-    return {...entry,card:{...entry.card,
+    return {...entry,card:{...entry.card,title:`出会いの年 — ${entry.card.title}`,
       pages:[{role:'core',label:'出会いのきっかけ',text:intro},...entry.card.pages],
       sections:[{heading:'出会いのきっかけ',body:intro,evidence:[],termGloss:[]},...(entry.card.sections??[])],
-      metadataRefs:[...(entry.card.metadataRefs??[]),'meeting-editorial-1.0']}}
+      metadataRefs:[...(entry.card.metadataRefs??[]),'meeting-editorial-1.1']}}
   })}
 }

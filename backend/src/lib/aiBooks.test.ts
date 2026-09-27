@@ -4,7 +4,7 @@ import { validateBookDocument, validateBookQuestion, bookSources, grantVerifiedB
 import { publicBook } from '../routes/aiBooks.js'
 const text='相手に伝える前に、自分が大切にしていることを整理する時間が役立ちます。'
 const sources:BookSource[]=[1,2,3].map(n=>({id:String(n),title:'原稿'+n,text,version:'test-v1',evidence:[]}))
-function valid() {return {title:'ふたりの伝え方を見直す',summary:text,answer:text.repeat(4),sections:sources.map(s=>({heading:'相手への伝え方',body:text.repeat(2),sourceId:s.id,quote:text})),actions:[text,text]}}
+function valid() {return {title:'ふたりの伝え方を見直す',summary:text,answer:text.repeat(45),sections:sources.map(s=>({heading:'相手への伝え方',body:text.repeat(30),sourceId:s.id,quote:text})),actions:[text,text]}}
 test('valid source-backed report is accepted and unknown fields are stripped',()=>{
   assert.equal(validateBookDocument({...valid(),untrusted:'ignored'},sources).title,valid().title)
   assert.equal('untrusted' in validateBookDocument({...valid(),untrusted:'ignored'},sources),false)
@@ -46,4 +46,9 @@ test('consumable rejects unverified product identity and other owners before DB 
 test('legacy text and AI-generated sources are not promoted to confirmed materials',()=>{
  assert.deepEqual(bookSources({report_text:'old content'},'仕事'),[])
  assert.deepEqual(bookSources({calculated_data:{_structuredReport:{version:3,reportText:'',cards:[],generator:'ai',generatorVersion:'old'}}},'仕事'),[])
+})
+
+test('short otherwise valid documents cannot consume a delivered 5000-character book',()=>{
+ const d=valid(); d.answer=text.repeat(4); d.sections.forEach(s=>s.body=text.repeat(2));
+ assert.throws(()=>validateBookDocument(d,sources),/BOOK_DOCUMENT_LENGTH/)
 })
