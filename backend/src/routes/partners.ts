@@ -3,7 +3,7 @@ import { COMPATIBILITY_V24_IDENTITY } from '../lib/report/compatibilityV24/versi
 import { Router } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
-import { MAX_PARTNER_PROFILES, normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
+import { normalizeRelationship, validatePartnerProfile } from '../lib/partnerProfiles.js'
 import { randomUUID } from 'crypto'
 import { calcShichu, calcNayin, calcSanmei, getSukuyo, calcLifePathNumber, calcTimingCycles, calcExpandedDivination, calcSanmeiRelations, calcNumerologyProfile, calcKyuseiProfile, calcHonmeiStar, KYUSEI_NAMES } from './calc.js'
 import type { ReportCard, StructuredReport } from '../lib/reportCards.js'
@@ -32,7 +32,9 @@ partnersRouter.get('/', async (req: AuthRequest, res) => {
   res.setHeader('Cache-Control','private, no-store')
   const { data, error } = await getSupabaseAdmin().from('partner_profiles').select('*').eq('user_id', req.userId!).order('created_at')
   if (error) { res.status(500).json({ error: '相手一覧を取得できませんでした' }); return }
-  res.json({ partners: data ?? [], limit: MAX_PARTNER_PROFILES, remaining: Math.max(0, MAX_PARTNER_PROFILES - (data?.length ?? 0)) })
+  const capacity = await getSupabaseAdmin().rpc('partner_profile_capacity', {p_user: req.userId!})
+  if (capacity.error || ![1,10].includes(capacity.data)) { res.status(503).json({error:'登録枠を確認できませんでした'}); return }
+  res.json({ partners: data ?? [], limit: capacity.data, remaining: Math.max(0, capacity.data - (data?.length ?? 0)) })
 })
 
 partnersRouter.get('/registration/operations/:opId', async (req: AuthRequest, res) => {
@@ -59,7 +61,7 @@ partnersRouter.post('/', async (req: AuthRequest, res) => {
     if (state.state === 'completed') { res.status(201).json({partner:state.partner,remaining:state.remaining}); return }
     if (state.state === 'cancelled') { res.status(410).json({error:'この登録操作は取消済みです'}); return }
     if (state.state === 'deleted') { res.status(410).json({error:'この操作で登録した相手は削除済みです'}); return }
-    if (state.state === 'limit' || state.state === 'conflict') { res.status(409).json({code:state.state,error:state.state==='limit'?`登録できる相手は${MAX_PARTNER_PROFILES}人までです`:'同じ操作IDで入力を変更できません'}); return }
+    if (state.state === 'limit' || state.state === 'conflict') { res.status(409).json({code:state.state,error:state.state==='limit'?'相手の登録上限に達しています。無料は1人、月額会員は10人まで登録できます':'同じ操作IDで入力を変更できません'}); return }
     throw new Error('Unexpected registration state')
   } catch (error) {
     const invalid = typeof error === 'object' && error && 'statusCode' in error && error.statusCode === 400

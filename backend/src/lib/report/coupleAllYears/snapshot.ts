@@ -1,3 +1,4 @@
+import {meetingIntroduction} from './meeting.js'
 import {createHash} from 'node:crypto'
 import {birthMaterials,buildFromBirths,type BirthInput} from './timeline.js'
 import {japanDateParts} from '../../japanDate.js'
@@ -17,7 +18,7 @@ export function coupleSnapshot(value:unknown,partnerId:string|null) {
   // Stored births identify the pair; display direction and meeting year do not.
   const births=[a,b].map(x=>[x.birthDate,x.birthTime||''].join('|')).sort()
   const relationshipKey=createHash('sha256').update(JSON.stringify([partnerId,births])).digest('hex')
-  return {a,b,relationshipKey,minMeetingYear:Math.max(Number(a.birthDate.slice(0,4)),Number(b.birthDate.slice(0,4)))}
+  return {a,b,relationshipType:v.relationshipType,relationshipKey,minMeetingYear:Math.max(Number(a.birthDate.slice(0,4)),Number(b.birthDate.slice(0,4)))}
 }
 export function validateMeetingYear(value:unknown,minYear:number,referenceYear=japanDateParts().year):number|null {
   if(value===null)return null
@@ -26,5 +27,12 @@ export function validateMeetingYear(value:unknown,minYear:number,referenceYear=j
 }
 export function snapshotTimeline(snapshot:ReturnType<typeof coupleSnapshot>,meetingYear:number|null) {
   const result=buildFromBirths(snapshot.a,snapshot.b,meetingYear)
-  return {...result,minMeetingYear:snapshot.minMeetingYear,entries:result.entries.map(({reading,...entry})=>entry)}
+  return {...result,minMeetingYear:snapshot.minMeetingYear,entries:result.entries.map(({reading,...entry})=>{
+    if(entry.year!==meetingYear || !reading || !entry.card)return entry
+    const intro=meetingIntroduction(reading,snapshot.relationshipType)
+    return {...entry,card:{...entry.card,
+      pages:[{role:'core',label:'出会いのきっかけ',text:intro},...entry.card.pages],
+      sections:[{heading:'出会いのきっかけ',body:intro,evidence:[],termGloss:[]},...(entry.card.sections??[])],
+      metadataRefs:[...(entry.card.metadataRefs??[]),'meeting-editorial-1.0']}}
+  })}
 }

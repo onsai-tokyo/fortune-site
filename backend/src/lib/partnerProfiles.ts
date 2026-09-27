@@ -1,5 +1,3 @@
-export const MAX_PARTNER_PROFILES = 2
-
 export const relationshipGroups: Record<string, 'romantic' | 'friend' | 'family'> = {
   '片思い': 'romantic', 'お付き合い中': 'romantic', '婚約中': 'romantic', '夫婦': 'romantic', '復縁希望': 'romantic', '元恋人': 'romantic',
   '友人': 'friend', '親友': 'friend', '会社の同僚': 'friend', '上司': 'friend', '部下': 'friend', '取引先': 'friend', 'その他': 'friend',
@@ -10,14 +8,6 @@ export function normalizeRelationship(label: unknown, legacyType?: unknown) {
   const relationshipLabel = typeof label === 'string' && relationshipGroups[label]
     ? label : legacyType === 'friend' ? '友人' : legacyType === 'family' ? '親' : 'お付き合い中'
   return { relationshipLabel, relationshipType: relationshipGroups[relationshipLabel] }
-}
-
-export function assertPartnerCapacity(currentCount: number) {
-  if (currentCount >= MAX_PARTNER_PROFILES) {
-    const error = new Error(`登録できる相手は${MAX_PARTNER_PROFILES}人までです。既存の相手を削除してから登録してください。`)
-    Object.assign(error, { statusCode: 409 })
-    throw error
-  }
 }
 
 export function validatePartnerProfile(value: Record<string, unknown>) {
