@@ -1,3 +1,4 @@
+import { aiBooksRouter } from './routes/aiBooks.js'
 import { coupleTimelineRouter } from './routes/coupleTimeline.js'
 import { config } from 'dotenv'
 config({ override: true })
@@ -125,6 +126,7 @@ app.use('/api/report', reportRouter)
 app.use('/api/analyze', analyzeRouter)
 app.use('/api/preview', previewRouter)
 app.use('/api/calc', calcRouter)
+app.use('/api/books', aiBooksRouter)
 app.use('/api/reading', coupleTimelineRouter)
 app.use('/api/reading', readingRouter)
 app.use('/api/stripe', stripeRouter)

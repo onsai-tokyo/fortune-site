@@ -28,7 +28,12 @@
     "compatibility:reconcile": "tsx src/scripts/reconcileCompatibilityOperations.ts",
     "questions:reconcile": "tsx src/scripts/reconcileReadingQuestions.ts",
     "test:personality": "node --import tsx --test src/lib/report/personality/composer.test.ts src/lib/report/personalityReport.test.ts src/lib/report/personality/spouseCalculation.test.ts",
-    "test:annual3600": "node --import tsx --test src/lib/report/annual3600/*.test.ts"
+    "test:annual3600": "node --import tsx --test src/lib/report/annual3600/*.test.ts",
+    "apple:reconcile": "node --import tsx src/scripts/reconcileAppleEvents.ts",
+    "books:worker": "tsx src/scripts/aiBookWorker.ts",
+    "books:review": "tsx src/scripts/reviewAiBook.ts",
+    "test:books": "tsx --test src/lib/aiBooks.test.ts",
+    "test:books:db": "python3 supabase/tests/ai_books.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
