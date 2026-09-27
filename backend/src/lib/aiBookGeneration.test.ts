@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import type Anthropic from '@anthropic-ai/sdk'
-import {appendBookExpansion, documentLength, generateBookDocument} from './aiBookGeneration.js'
+import {appendBookExpansion, documentLength, generateBookDocument, normalizeBookOutput} from './aiBookGeneration.js'
 const text='相手に伝える前に、自分が大切にしていることを整理する時間が役立ちます。'
 const sources=[1,2,3].map(n=>({id:String(n),title:'原稿'+n,text,version:'test',evidence:[]}))
 const draft=()=>({title:'働き方と伝え方を整える',summary:text,answer:text.repeat(20),sections:sources.map(s=>({heading:'話し合いの進め方',body:text.repeat(15),sourceId:s.id,quote:text})),actions:[text,text]})
@@ -32,4 +32,12 @@ test('invalid quote fails without expansion; truncation never delivers',async()=
 })
 test('insufficient expansions are bounded to three model calls',async()=>{
  const f=fake([draft(),{answerAddition:'',sectionAdditions:[]},{answerAddition:'',sectionAdditions:[]}]);await assert.rejects(generateBookDocument(f.client,'test',{question:text,theme:'仕事',sources}),/BOOK_DOCUMENT_LENGTH/);assert.equal(f.count(),3)
+})
+
+test('JSON-encoded nested arrays normalize without changing content or bypassing validation',async()=>{
+ const d=draft(), encoded={...d,sections:JSON.stringify(d.sections),actions:JSON.stringify(d.actions)}
+ assert.deepEqual(normalizeBookOutput(encoded),d)
+ assert.throws(()=>normalizeBookOutput({...encoded,sections:'{"unexpected":true}'}),/BOOK_OUTPUT_SCHEMA/)
+ const f=fake([encoded,{...extra(),sectionAdditions:JSON.stringify(extra().sectionAdditions)}])
+ assert.ok(documentLength((await generateBookDocument(f.client,'test',{question:text,theme:'仕事',sources})).document)>=4500)
 })
