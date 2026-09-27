@@ -12,11 +12,25 @@ const BOOK_SCHEMA: Anthropic.Tool.InputSchema = {type:'object',properties:{
   refused:{type:'boolean'},title:string,summary:string,answer:string,
   sections:{type:'array',items:{type:'object',properties:{heading:string,body:string,sourceId:string,quote:string},required:['heading','body','sourceId','quote']}},
   actions:{type:'array',items:string}
-}}
+},required:['title','summary','answer','sections','actions']}
 const EXPANSION_SCHEMA: Anthropic.Tool.InputSchema = {type:'object',properties:{answerAddition:string,
   sectionAdditions:{type:'array',items:{type:'object',properties:{sourceId:string,body:string},required:['sourceId','body']}}},required:['answerAddition','sectionAdditions']}
 
 
+// Some model responses encode nested arrays as JSON strings even with a tool schema.
+// Decode only the two declared array fields; the full document validator still runs.
+export function normalizeBookOutput(value:any) {
+  if(!value || typeof value!=='object' || Array.isArray(value))throw new Error('BOOK_OUTPUT_SCHEMA')
+  const result={...value}
+  for(const key of ['sections','actions','sectionAdditions']) {
+    if(typeof result[key]==='string') {
+      const parsed=JSON.parse(result[key])
+      if(!Array.isArray(parsed))throw new Error('BOOK_OUTPUT_SCHEMA')
+      result[key]=parsed
+    }
+  }
+  return result
+}
 export function documentLength(d:any):number {
   return [d.summary,d.answer,...(d.sections??[]).map((s:any)=>s.body),...(d.actions??[])].filter(x=>typeof x==='string').reduce((n,x)=>n+[...x].length,0)
 }
@@ -37,7 +51,7 @@ export async function generateBookDocument(client: Anthropic, model: string, inp
     if(response.stop_reason!=='tool_use')throw new Error('BOOK_TRUNCATED')
     const blocks=response.content.filter(c=>c.type==='tool_use')
     if(blocks.length!==1 || blocks[0].type!=='tool_use' || blocks[0].name!=='submit_book')throw new Error('BOOK_OUTPUT_SCHEMA')
-    return blocks[0].input as any
+    return normalizeBookOutput(blocks[0].input)
   }
   let draft=await request([{role:'user',content:JSON.stringify(input)}])
   for(let attempt=0;attempt<3;attempt++) {
