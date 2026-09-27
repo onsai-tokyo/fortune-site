@@ -1,3 +1,4 @@
+import { refreshSavedTimelineCards, SAVED_TIMELINE_REVISION } from '../lib/report/savedTimelineCards.js'
 import { handlePartnerReading } from './partnerReading.js'
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
@@ -258,14 +259,14 @@ readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
     .select('report_text,calculated_data,birth_data,kind,updated_at').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
-  const etag = `W/"${req.params.id}-${data.updated_at}"`
+  const etag = `W/"${req.params.id}-${data.updated_at}-${SAVED_TIMELINE_REVISION}-${process.env.ANNUAL_READING_ENGINE ?? "legacy"}"`
   res.setHeader('ETag', etag)
   res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate')
   if (req.headers['if-none-match'] === etag) { res.status(304).end(); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
   const birth = data.birth_data as { _sourceKind?: string } | null
   const expectedScope = data.kind === 'compatibility' || birth?._sourceKind === 'compatibility' ? 'couple' : 'self'
-  const cards = report.cards
+  const cards = refreshSavedTimelineCards(report.cards, data.birth_data, expectedScope)
     .filter(card => card.tab !== 'chart' && card.kind !== 'chart')
     .filter(card => !card.scope || card.scope === expectedScope)
     .map(card => ({ ...card, scope: card.scope ?? expectedScope }))
