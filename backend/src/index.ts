@@ -1,3 +1,4 @@
+import { coupleTimelineRouter } from './routes/coupleTimeline.js'
 import { config } from 'dotenv'
 config({ override: true })
 import express, { NextFunction, Request, Response } from 'express'
@@ -124,6 +125,7 @@ app.use('/api/report', reportRouter)
 app.use('/api/analyze', analyzeRouter)
 app.use('/api/preview', previewRouter)
 app.use('/api/calc', calcRouter)
+app.use('/api/reading', coupleTimelineRouter)
 app.use('/api/reading', readingRouter)
 app.use('/api/stripe', stripeRouter)
 app.use('/api/apple', appleRouter)
