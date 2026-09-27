@@ -41,3 +41,10 @@ test('JSON-encoded nested arrays normalize without changing content or bypassing
  const f=fake([encoded,{...extra(),sectionAdditions:JSON.stringify(extra().sectionAdditions)}])
  assert.ok(documentLength((await generateBookDocument(f.client,'test',{question:text,theme:'仕事',sources})).document)>=4500)
 })
+
+test('display text decodes literal newlines without touching source quotations',()=>{
+ const d=draft();d.answer+='\\n\\n段落の続き';d.sections[0].body+='\\n次の段落';
+ const normalized=normalizeBookOutput(d)
+ assert.ok(normalized.answer.endsWith('\n\n段落の続き'));assert.ok(normalized.sections[0].body.endsWith('\n次の段落'))
+ assert.equal(normalized.sections[0].quote,d.sections[0].quote)
+})
