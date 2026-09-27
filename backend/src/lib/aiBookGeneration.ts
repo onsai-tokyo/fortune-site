@@ -29,6 +29,12 @@ export function normalizeBookOutput(value:any) {
       result[key]=parsed
     }
   }
+  const displayText=(text:unknown)=>typeof text==='string'?text.replace(/\\n/g,'\n'):text
+  for(const key of ['title','summary','answer','answerAddition']) if(key in result) result[key]=displayText(result[key])
+  if(Array.isArray(result.actions)) result.actions=result.actions.map(displayText)
+  for(const key of ['sections','sectionAdditions']) if(Array.isArray(result[key])) {
+    result[key]=result[key].map((s:any)=>s && typeof s==='object'?{...s,body:displayText(s.body)}:s)
+  }
   return result
 }
 export function documentLength(d:any):number {
