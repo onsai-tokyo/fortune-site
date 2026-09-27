@@ -31,8 +31,8 @@ bridge.post('/v1/messages',(req,res)=>{
   aiCalls++
   const {sources}=JSON.parse(req.body.messages[0].content)
   const line='資料に書かれた傾向を踏まえて、考えを整理し、無理のない範囲で相手と相談することが助けになります。'
-  const doc={title:'相談の整理と伝え方を考える',summary:line,answer:line.repeat(3),sections:sources.slice(0,3).map((s:any)=>({heading:s.title,body:line.repeat(2),sourceId:s.id,quote:aiMode==='bad-quote'?'原稿に存在しない架空の引用文です。':s.text.split('\n')[0]})),actions:[line,line]}
-  res.json({id:'msg_synthetic',type:'message',role:'assistant',model:'synthetic-local-test',content:[{type:'text',text:JSON.stringify(doc)}],stop_reason:'end_turn',stop_sequence:null,usage:{input_tokens:100,output_tokens:100}})
+  const doc={title:'相談の整理と伝え方を考える',summary:line,answer:line.repeat(34),sections:sources.slice(0,3).map((s:any)=>({heading:s.title,body:line.repeat(20),sourceId:s.id,quote:aiMode==='bad-quote'?'原稿に存在しない架空の引用文です。':s.text.split('\n')[0]})),actions:[line,line]}
+  res.json({id:'msg_synthetic',type:'message',role:'assistant',model:'synthetic-local-test',content:[{type:'tool_use',id:'tool_synthetic',name:'submit_book',input:doc}],stop_reason:'tool_use',stop_sequence:null,usage:{input_tokens:100,output_tokens:100}})
 })
 const bridgeServer=bridge.listen(0,'127.0.0.1');await new Promise<void>(r=>bridgeServer.once('listening',r))
 const bridgeAddress=bridgeServer.address();assert.ok(bridgeAddress&&typeof bridgeAddress!=='string')
@@ -114,6 +114,17 @@ try{
   assert.equal((await call('/status','GET',undefined,200,other)).memberRemaining,0,'earlier purchase must not resurrect a period refunded while disabled')
   assert.deepEqual((await call('/'+recovered.id)).book.document,delivered.document)
   pass('refund during feature pause is honored, including unseen periods and older replay; delivered book remains readable')
-  assert.equal(aiCalls,4)
+  await db('ai_book_settings?id=eq.true','PATCH',{review_mode:false},204)
+  await grantVerifiedBookPurchase({...single,transactionId:'synthetic-automatic-single'} as never,owner)
+  aiMode='valid'
+  const automatic=(await call('','POST',order(),201)).book
+  assert.match(await worker(),/book_generation_saved/)
+  const ready=(await call('/'+automatic.id)).book
+  assert.equal(ready.state,'delivered')
+  assert.ok(ready.document.answer.length > 1000)
+  assert.equal((await call('/status')).remaining,0)
+  assert.ok((await call()).books.some((b:any)=>b.id===automatic.id))
+  pass('validated automatic delivery appears in bookshelf without manual approval and consumes exactly one credit')
+  assert.equal(aiCalls,5)
   console.log('ALL BOOK HTTP/DB/WORKER CHECKS PASSED')
 }finally{api.closeAllConnections();bridgeServer.closeAllConnections();api.close();bridgeServer.close()}

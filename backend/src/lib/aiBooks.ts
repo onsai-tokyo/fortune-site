@@ -4,7 +4,7 @@ import { storedReportFromCalculatedData } from './report/storedReport.js'
 import { type ReportCard } from './reportCards.js'
 
 export const BOOK_PRODUCT = 'com.onsai.fatelab.report.single'
-export const BOOK_PROMPT_VERSION = 'consultation-book-20260927.2'
+export const BOOK_PROMPT_VERSION = 'consultation-book-20260927.3'
 export const BOOK_THEMES = ['恋愛・関係', '仕事', '人間関係', '時期の判断', 'その他']
 export const uuidPattern = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
 export class BookError extends Error {
