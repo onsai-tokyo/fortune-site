@@ -1,3 +1,4 @@
+import { handlePartnerReading } from './partnerReading.js'
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import rateLimit from 'express-rate-limit'
@@ -249,6 +250,8 @@ readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, r
     res.status(422).json({ error: 'この鑑定書には過去年の算出に必要な出生情報が保存されていません' })
   }
 })
+
+readingRouter.get('/:id/partner-reading', requireAuth, (req:AuthRequest,res)=>handlePartnerReading(req,res))
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')

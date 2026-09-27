@@ -4,7 +4,7 @@ import { storedReportFromCalculatedData } from './report/storedReport.js'
 import { type ReportCard } from './reportCards.js'
 
 export const BOOK_PRODUCT = 'com.onsai.fatelab.report.single'
-export const BOOK_PROMPT_VERSION = 'consultation-book-20260927.3'
+export const BOOK_PROMPT_VERSION = 'consultation-book-20260928.4'
 export const BOOK_THEMES = ['恋愛・関係', '仕事', '人間関係', '時期の判断', 'その他']
 export const uuidPattern = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
 export class BookError extends Error {
@@ -12,7 +12,7 @@ export class BookError extends Error {
 }
 export interface BookSource { id: string; title: string; text: string; version: string; evidence: unknown[] }
 export interface BookDocument {
-  title: string; summary: string; answer: string;
+  title: string; summary: string; answer: string; conclusion?: string; highlights?: string[];
   sections: Array<{ heading: string; body: string; sourceId: string; quote: string }>;
   actions: string[];
 }
@@ -62,8 +62,11 @@ export function validateBookDocument(value: unknown, sources: BookSource[]): Boo
   if (length < 4500 || length > 6000) throw new Error('BOOK_DOCUMENT_LENGTH')
   const text = JSON.stringify(d)
   if (/必ず.{0,20}(なる|する|できる|起きる)|絶対に|確実に.{0,20}(なる|する|起きる)|寿命|余命|妊娠して|癌|病気が治|株価が|死ぬ/.test(text)) throw new Error('BOOK_DOCUMENT_POLICY')
+  if(d.conclusion!==undefined && !bounded(d.conclusion,40,300)) throw new Error('BOOK_DOCUMENT_CONCLUSION')
+  const bodies=[d.answer,...d.sections.map(s=>s.body),...d.actions]
+  if(d.highlights!==undefined && (!Array.isArray(d.highlights) || d.highlights.length>8 || !d.highlights.every(h=>bounded(h,8,100) && bodies.some(t=>t.includes(h))))) throw new Error('BOOK_DOCUMENT_HIGHLIGHTS')
   // Strip unrecognized model fields before persistence or UI delivery.
-  return { title:d.title, summary:d.summary, answer:d.answer, actions:d.actions, sections:d.sections.map(s=>({heading:s.heading,body:s.body,sourceId:s.sourceId,quote:s.quote})) }
+  return { title:d.title, summary:d.summary, answer:d.answer, ...(d.conclusion?{conclusion:d.conclusion}:{}), ...(d.highlights?{highlights:d.highlights}:{}), actions:d.actions, sections:d.sections.map(s=>({heading:s.heading,body:s.body,sourceId:s.sourceId,quote:s.quote})) }
 }
 export async function bookRPC(name: string, args: Record<string, unknown> = {}) {
   const {data,error} = await getSupabaseAdmin().rpc(name,args)

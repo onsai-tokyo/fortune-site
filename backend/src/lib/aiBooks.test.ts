@@ -52,3 +52,11 @@ test('short otherwise valid documents cannot consume a delivered 5000-character 
  const d=valid(); d.answer=text.repeat(4); d.sections.forEach(s=>s.body=text.repeat(2));
  assert.throws(()=>validateBookDocument(d,sources),/BOOK_DOCUMENT_LENGTH/)
 })
+
+test('short conclusion and exact highlights survive; invented highlights are rejected',()=>{
+ const d=valid();const conclusion=text.repeat(3);const highlights=[d.answer.slice(0,24)];
+ const result=validateBookDocument({...d,conclusion,highlights},sources)
+ assert.equal(result.conclusion,conclusion);assert.deepEqual(result.highlights,highlights)
+ assert.throws(()=>validateBookDocument({...d,conclusion:'短い'},sources),/CONCLUSION/)
+ assert.throws(()=>validateBookDocument({...d,highlights:['本文に存在しない重要ポイントです']},sources),/HIGHLIGHTS/)
+})
