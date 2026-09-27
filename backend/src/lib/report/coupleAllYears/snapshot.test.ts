@@ -20,6 +20,7 @@ test('API presentation returns all cards without private audit material',()=>{
   const snap=coupleSnapshot({self:a,partner:b},'p1'),out=snapshotTimeline(snap,1995)
   assert.equal(out.entries[0].year,1995)
   assert.equal(out.entries.length,out.endYear-1995+1)
-  assert.ok(out.entries.every(e=>!('reading' in e)&&e.card?.sections?.length===(e.year===out.meetingYear?2:1)))
+  assert.ok(out.entries.every(e=>!('reading' in e)&&e.card?.sections?.length===1))
+  for(const e of out.entries){const body=e.card!.sections![0].body;assert.equal(body.split('\n\n').length,4);assert.ok([...body.replaceAll('\n','')].length>=500&&[...body.replaceAll('\n','')].length<=1000);for(const tag of e.card!.timelineTags??[])assert.ok(body.includes(tag.evidenceText))}
   assert.equal(snapshotTimeline(snap,null).status,'needs_meeting_year')
 })

@@ -1,5 +1,7 @@
 import { ANNUAL3600_VERSION } from './annual3600/version.js'
-import { annualText } from './annual3600/catalog.js'
+import { annual3600Cards } from './annual3600/cards.js'
+import { TIMELINE_TAG_VERSION } from './timelineTags.js'
+import { ANNUAL_INPUT_POLICY_VERSION } from './annual3600/inputPolicy.js'
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportSection, StructuredReport } from '../reportCards.js'
 import { containsJargon } from './jargon.js'
@@ -39,9 +41,18 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
     const sections: ReportSection[] = card.sections ?? card.pages.map(page => ({ heading: page.label, body: page.text, evidence: card.evidence, termGloss: [] }))
     const annual3600 = card.annualCalculation?.version === ANNUAL3600_VERSION
     if (annual3600) {
-      const match = /^P(\d{2})-Y(\d{2})$/.exec(card.annualCalculation!.patternId)
-      const source = match && Number(match[1]) >= 1 && Number(match[1]) <= 60 && Number(match[2]) >= 1 && Number(match[2]) <= 60 ? annualText(Number(match[1])-1,1983+Number(match[2])) : null
-      if (!source || card.title !== source.title || card.summary !== source.description || sections.length !== 4 || sections.slice(0,3).some((s,i)=>s.body !== [source.relationship,source.career,source.life][i])) violations.push({code:'SCHEMA',path:card.id,message:'annual approved text mismatch'})
+      const meta=card.annualCalculation!.editorial
+      const yearMatch=/^turning-year-(\d{4})$/.exec(card.id)
+      let valid=false
+      if(meta?.version===TIMELINE_TAG_VERSION && meta.inputPolicy===ANNUAL_INPUT_POLICY_VERSION && yearMatch) {
+        try {
+          const year=Number(yearMatch[1])
+          const expected=annual3600Cards(input ?? meta.input,year,year)[0]
+          const fields=['id','title','summary','tags','timelineTags','sections','pages','period','annualCalculation','metadataRefs'] as const
+          valid=!!expected && fields.every(key=>JSON.stringify(card[key])===JSON.stringify(expected[key]))
+        } catch { valid=false }
+      }
+      if(!valid)violations.push({code:'SCHEMA',path:card.id,message:'annual versioned editorial, input, evidence or page parity mismatch'})
     }
     const personalityLayout = isPersonalityLayoutCard(card)
     if (personalityLayout && !personalityCardShapeIsValid(card)) {
@@ -60,7 +71,7 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
     for (const [index, section] of sections.entries()) {
       const headingLength = [...section.heading.trim()].length
       const bodyLength = [...section.body.trim()].length
-      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : annual3600 && index === 3 ? 2000 : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
+      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : annual3600 ? (index === 3 ? 2000 : 500) : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
       const key = normalized(section.body)
       if (seen.has(key)) violations.push({ code: 'SEMANTIC_DUPLICATE', path: `${card.id}.sections[${index}]`, message: 'duplicate section body' })
       seen.add(key)

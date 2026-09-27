@@ -5,11 +5,11 @@ import {gunzipSync} from 'node:zlib'
 import { composeYear, calendarLabel, baziPart, sukuyoPart, ageContext } from './composer.js'
 import { buildAllYears, timelineLayout, birthMaterials, buildFromBirths, cacheKeys } from './timeline.js'
 
-test('Python reference samples match every paragraph, audit field and calendar field',()=>{
+test('regenerated tag-version samples match every paragraph, audit field and calendar field',()=>{
   const rows=JSON.parse(readFileSync(new URL('./fixtures/generated_samples.json',import.meta.url),'utf8'))
   for(const row of rows) assert.deepEqual(composeYear(...row.input as [string,string,string,string,number,number,number]),row.output)
 })
-test('v4 matches Python for 338 age combinations and reverses selected title subjects',()=>{
+test('tag version matches regenerated 338 age combinations and reverses selected title subjects',()=>{
   const rows=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/age338.json.gz',import.meta.url))).toString())
   for(const row of rows){
     const [a,b,sa,sb,y,ba,bb]=row.input as [string,string,string,string,number,number,number]

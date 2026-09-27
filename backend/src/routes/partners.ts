@@ -358,7 +358,7 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     progress(90, '最後の確認をしています', 'ページの長さと重複を確認しています')
     const partnerBirth = { birthDate:partner.birth_date,birthTime:partner.birth_time??'',birthplace:partner.birthplace,
       gender:partner.gender,displayName:partner.display_name }
-    const snapshot = readingSnapshot({birthData:{self:self.birth_data,partner:partnerBirth,relationshipType},
+    const snapshot = readingSnapshot({birthData:{self:self.birth_data,partner:partnerBirth,relationshipType,relationshipLabel},
       calculatedData:compactContext,reportText:report.reportText,structuredReport:report,sourceSection:'二人の関係'}, 'compatibility', partner.id)
     completionAttempted=true
     const saved = await compatibilityRPC('complete_compatibility_operation',{p_op:requestId,p_worker:workerId,p_payload:snapshot,p_title:compatibilityReadingTitle(selfBirth.nickname,partner.display_name)},getSupabaseUser(req.accessToken!))

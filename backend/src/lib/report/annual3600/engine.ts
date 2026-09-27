@@ -1,9 +1,10 @@
+import {resolveAnnualInput} from './inputPolicy.js'
 import { Solar } from 'lunar-javascript'
 import { calcShichu, calcTenGod } from '../../divination/index.js'
 import { resolveSpouseTimeZone } from '../personality/birthContext.js'
 import { annualText, cycleIndex } from './catalog.js'
 export interface AnnualContext {
-  birthDate?: string; birthTime?: string; birthplace?: string; birthTimeZone?: string
+  gender?: string; birthDate?: string; birthTime?: string; birthplace?: string; birthTimeZone?: string
   spouseConvention?: string; workContext?: string; annualYunConvention?: string
 }
 export type Truth = boolean | 'unknown'
@@ -35,6 +36,7 @@ export interface NatalContext { natal: Record<'year'|'month'|'day'|'hour', strin
 /** JST midnight day boundary; CST solar terms; Yun sect 2. Missing time only
  * supplies invariant pillars across the civil day, never a precise decade start. */
 export function natalContext(input: AnnualContext): NatalContext | null {
+  input=resolveAnnualInput(input)
   if (resolveSpouseTimeZone(input) !== 'Asia/Tokyo' || !/^\d{4}-\d{2}-\d{2}$/.test(input.birthDate ?? '')) return null
   const [y,m,d] = input.birthDate!.split('-').map(Number), date = new Date(Date.UTC(y,m-1,d))
   if (y < 1952 || y > 2100 || date.getUTCFullYear() !== y || date.getUTCMonth() !== m-1 || date.getUTCDate() !== d) return null
@@ -58,6 +60,7 @@ export function natalContext(input: AnnualContext): NatalContext | null {
 }
 export interface AnnualLabel { kind: 'marriage'|'encounter'|'career'; state: LabelState; text: string }
 export function evaluateLabels(n: NatalContext['natal'], annual: string, decade: string | null, input: AnnualContext) {
+  input=resolveAnnualInput(input)
   const day = n.day
   if (!day) throw new Error('A day pillar is required')
   const layers = [...Object.values(n),decade]

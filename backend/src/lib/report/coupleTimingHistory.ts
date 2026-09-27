@@ -27,7 +27,7 @@ export function selfTimingHistoryFromBirthSnapshot(snapshot: unknown, referenceY
   const input = { birthDate: value.date, birthTime: value.time, timing: value.timing }
   const data = snapshot as Record<string, unknown>
   const text = (key: string) => typeof data[key] === 'string' ? data[key] as string : undefined
-  const annualInput = {...input,birthplace:text('birthplace'),birthTimeZone:text('birthTimeZone'),spouseConvention:text('spouseConvention'),annualYunConvention:text('annualYunConvention'),workContext:text('workContext')}
+  const annualInput = {...input,gender:text('gender'),birthplace:text('birthplace'),birthTimeZone:text('birthTimeZone'),spouseConvention:text('spouseConvention'),annualYunConvention:text('annualYunConvention'),workContext:text('workContext')}
   return { cards: process.env.ANNUAL_READING_ENGINE?.trim() === 'catalog3600' ? annual3600Cards(annualInput,Math.max(value.year+18,1952),referenceYear) : buildAnnualHistoryCards(input, referenceYear), referenceYear }
 }
 

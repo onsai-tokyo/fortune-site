@@ -1,4 +1,3 @@
-import {meetingIntroduction} from './meeting.js'
 import {createHash} from 'node:crypto'
 import {birthMaterials,buildFromBirths,type BirthInput} from './timeline.js'
 import {japanDateParts} from '../../japanDate.js'
@@ -10,7 +9,8 @@ function birth(value:unknown):BirthInput {
   if(typeof birthDate!=='string'||(birthTime!=null&&typeof birthTime!=='string'))throw new Error('BIRTH_UNAVAILABLE')
   // PostgreSQL TIME serializes minute-precision inputs with trailing :00.
   const normalizedTime=typeof birthTime==='string'&&/^\d{2}:\d{2}:00$/.test(birthTime)?birthTime.slice(0,5):birthTime
-  const input={birthDate,birthTime:normalizedTime as string|null|undefined};birthMaterials(input);return input
+  const string=(key:string,legacy?:string)=>typeof(v[key]??(legacy?v[legacy]:undefined))==='string'?(v[key]??(legacy?v[legacy]:undefined)) as string:undefined
+  const input={birthDate,birthTime:normalizedTime as string|null|undefined,birthplace:string('birthplace'),birthTimeZone:string('birthTimeZone','birth_time_zone'),gender:string('gender'),spouseConvention:string('spouseConvention'),annualYunConvention:string('annualYunConvention')};birthMaterials(input);return input
 }
 export function coupleSnapshot(value:unknown,partnerId:string|null) {
   if(!value||typeof value!=='object')throw new Error('BIRTH_UNAVAILABLE')
@@ -18,7 +18,7 @@ export function coupleSnapshot(value:unknown,partnerId:string|null) {
   // Stored births identify the pair; display direction and meeting year do not.
   const births=[a,b].map(x=>[x.birthDate,x.birthTime||''].join('|')).sort()
   const relationshipKey=createHash('sha256').update(JSON.stringify([partnerId,births])).digest('hex')
-  return {a,b,relationshipType:v.relationshipType,relationshipKey,minMeetingYear:Math.max(Number(a.birthDate.slice(0,4)),Number(b.birthDate.slice(0,4)))}
+  return {a,b,relationshipType:v.relationshipType,relationshipLabel:v.relationshipLabel,relationshipKey,minMeetingYear:Math.max(Number(a.birthDate.slice(0,4)),Number(b.birthDate.slice(0,4)))}
 }
 export function validateMeetingYear(value:unknown,minYear:number,referenceYear=japanDateParts().year):number|null {
   if(value===null)return null
@@ -26,13 +26,12 @@ export function validateMeetingYear(value:unknown,minYear:number,referenceYear=j
   return value
 }
 export function snapshotTimeline(snapshot:ReturnType<typeof coupleSnapshot>,meetingYear:number|null) {
-  const result=buildFromBirths(snapshot.a,snapshot.b,meetingYear)
-  return {...result,minMeetingYear:snapshot.minMeetingYear,entries:result.entries.map(({reading,...entry})=>{
-    if(entry.year!==meetingYear || !reading || !entry.card)return entry
-    const intro=meetingIntroduction(reading,snapshot.relationshipType)
-    return {...entry,card:{...entry.card,title:`出会いの年 — ${entry.card.title}`,
-      pages:[{role:'core',label:'出会いのきっかけ',text:intro},...entry.card.pages],
-      sections:[{heading:'出会いのきっかけ',body:intro,evidence:[],termGloss:[]},...(entry.card.sections??[])],
-      metadataRefs:[...(entry.card.metadataRefs??[]),'meeting-editorial-1.1']}}
-  })}
+  const relationshipType=typeof snapshot.relationshipType==='string'?snapshot.relationshipType:undefined
+  const relationshipLabel=typeof snapshot.relationshipLabel==='string'?snapshot.relationshipLabel:undefined
+  const result=buildFromBirths(snapshot.a,snapshot.b,meetingYear,undefined,undefined,{relationshipType,relationshipLabel})
+  const isFormer=relationshipLabel==='復縁希望'||relationshipLabel==='元恋人'
+  return {...result,minMeetingYear:snapshot.minMeetingYear,
+    relationshipContext:{label:relationshipLabel??null,source:'saved_reading_input',breakupYear:null,
+      note:isFormer?'この鑑定に入力された関係は、別れた状態です。過去の壁タグは年ごとの材料から表示しています。別れた年や原因は入力されていません。':null},
+    entries:result.entries.map(({reading,...entry})=>entry)}
 }
