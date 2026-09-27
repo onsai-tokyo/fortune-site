@@ -7,8 +7,9 @@ test('meeting framing preserves original yearly text and applies only to meeting
  const snapshot=coupleSnapshot({self:{birthDate:'1995-02-20'},partner:{birthDate:'1985-06-06'},relationshipType:'romantic'},null)
  const timeline=snapshotTimeline(snapshot,2023)
  assert.equal(timeline.entries[0].card?.sections?.[0].heading,'出会いのきっかけ')
- assert.ok(timeline.entries.slice(1).every(e=>!e.card?.metadataRefs?.includes('meeting-editorial-1.0')))
+ assert.ok(timeline.entries.slice(1).every(e=>!e.card?.metadataRefs?.includes('meeting-editorial-1.1')))
  const original=snapshotTimeline(snapshot,2022).entries.find(e=>e.year===2023)!.card!
+ assert.equal(timeline.entries[0].card?.title, `出会いの年 — ${original.title}`)
  assert.deepEqual(timeline.entries[0].card?.sections?.slice(1),original.sections)
 })
 test('family, friend, unspecified and child contexts never receive a romance introduction',()=>{

@@ -4,7 +4,7 @@ import { japanDateParts } from '../../japanDate.js'
 import type { ReportCard } from '../../reportCards.js'
 import { composeYear, identity } from './composer.js'
 
-export const LAYOUT_VERSION = 'all-years-since-meeting-1.0'
+export const LAYOUT_VERSION = 'all-years-since-meeting-1.1'
 export type TimelineInput = { meetingYear: unknown; birthYearA:number; birthYearB:number; referenceYear:number; endYear?:number }
 export function timelineLayout({ meetingYear,birthYearA,birthYearB,referenceYear,endYear=referenceYear+19 }:TimelineInput) {
   const empty=(status:string)=>({status,years:[] as number[],collapsedYears:[] as number[],groups:[] as Array<{from:number;to:number;years:number[]}>,referenceYear,endYear,meetingYear:null as number|null,version:LAYOUT_VERSION})
@@ -13,7 +13,7 @@ export function timelineLayout({ meetingYear,birthYearA,birthYearB,referenceYear
   if(typeof meetingYear!=='number'||!Number.isInteger(meetingYear)||meetingYear<Math.max(1000,birthYearA,birthYearB)||meetingYear>referenceYear) return empty('invalid_meeting_year')
   if(!Number.isInteger(endYear)||endYear<referenceYear||endYear>9999) return empty('invalid_end_year')
   const years=Array.from({length:endYear-meetingYear+1},(_,i)=>meetingYear+i)
-  const collapsedYears=referenceYear-meetingYear>=10 ? years.filter(y=>y>meetingYear&&y<referenceYear-2) : []
+  const collapsedYears=years.filter(y=>y<referenceYear-5)
   const groups=[]
   for(let i=0;i<collapsedYears.length;i+=5) { const group=collapsedYears.slice(i,i+5); groups.push({from:group[0],to:group.at(-1)!,years:group}) }
   return {status:'ready',years,collapsedYears,groups,referenceYear,endYear,meetingYear,version:LAYOUT_VERSION}

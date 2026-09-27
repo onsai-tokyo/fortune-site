@@ -35,8 +35,8 @@ const input={meetingYear:2006,birthYearA:1995,birthYearB:1990,referenceYear:2026
 test('all years and five-year groups preserve chronology without gaps',()=>{
   const out=buildAllYears(input)
   assert.equal(out.entries.length,40)
-  assert.equal(out.collapsedYears.length,17)
-  assert.deepEqual(out.groups.map(g=>[g.from,g.to]),[[2007,2011],[2012,2016],[2017,2021],[2022,2023]])
+  assert.equal(out.collapsedYears.length,15)
+  assert.deepEqual(out.groups.map(g=>[g.from,g.to]),[[2006,2010],[2011,2015],[2016,2020]])
   assert.deepEqual(out.entries.map(e=>e.year),Array.from({length:40},(_,i)=>2006+i))
   assert.ok(out.entries.every(e=>e.card&&e.reading&&e.reading.character_count>=500&&e.reading.character_count<=1000))
   const recent=buildAllYears({...input,meetingYear:2023})
@@ -52,8 +52,8 @@ test('meeting input never guesses, accepts birth year, rejects booleans/fraction
   for(const meetingYear of [true,2006.5,'2006',1994,2027,NaN]) assert.equal(timelineLayout({...input,meetingYear}).status,'invalid_meeting_year')
   assert.equal(timelineLayout({...input,endYear:2025}).status,'invalid_end_year')
   assert.equal(timelineLayout({...input,endYear:2050}).years.at(-1),2050)
-  assert.equal(timelineLayout({...input,meetingYear:2017}).collapsedYears.length,0)
-  assert.equal(timelineLayout({...input,meetingYear:2016}).collapsedYears.length,7)
+  assert.equal(timelineLayout({...input,meetingYear:2017}).collapsedYears.length,4)
+  assert.equal(timelineLayout({...input,meetingYear:2016}).collapsedYears.length,5)
 })
 test('missing content and unsupported years remain explicit entries',()=>{
   const out=buildAllYears({...input,meetingYear:2099,birthYearA:2000,birthYearB:2000,referenceYear:2100,endYear:2102})
