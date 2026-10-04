@@ -1,4 +1,4 @@
-TestFlight 96 feedback — Build 97 (2026-10-04)
+TestFlight 96 feedback — Build 98 (2026-10-04)
 
 Implemented six feedback items:
 1. Larger, semibold category labels on a contrasting capsule over the nature artwork.
@@ -24,7 +24,8 @@ Validation:
   year, and hiding only the evidence chapter without mutating the original text.
 - Simulator visual check: category label, concise annual list, personality reader,
   annual reader without the evidence chapter. Synthetic preview data only.
-- Release archive succeeded. TestFlight upload tracked in ../upload97.log outside repo.
+- Build 97 archived and uploaded. Build 98 adds clearing the visible snapshot when
+  the conversation or logged-in account changes. Final release tracked in upload98.log.
 
 Limit: cache accelerates reopening within the current login session. The first open
 after restarting the app still requires a server fetch. Actual iPhone timings have

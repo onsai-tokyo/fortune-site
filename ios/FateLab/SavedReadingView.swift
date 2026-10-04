@@ -73,12 +73,13 @@ struct SavedReadingView: View {
 
     private func load() async {
         guard auth.session != nil else {
+            detail = nil; cards = []; chartSections = []; loadedID = nil; loadedOwner = nil
             isLoading = false
             errorMessage = "ログイン情報を確認できませんでした。"
             return
         }
         let owner = AccountScope(auth)
-        if loadedOwner != owner {
+        if loadedOwner != owner || loadedID != conversationID {
             detail = nil; cards = []; chartSections = []; loadedID = nil
         }
         if let cached = SavedReadingMemoryCache.shared.value(id: conversationID, owner: owner) {
