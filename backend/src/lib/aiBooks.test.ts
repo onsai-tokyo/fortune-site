@@ -60,3 +60,36 @@ test('short conclusion and exact highlights survive; invented highlights are rej
  assert.throws(()=>validateBookDocument({...d,conclusion:'短い'},sources),/CONCLUSION/)
  assert.throws(()=>validateBookDocument({...d,highlights:['本文に存在しない重要ポイントです']},sources),/HIGHLIGHTS/)
 })
+
+test('selected card wins theme ranking and retains calculation provenance',()=>{
+ const cards=Array.from({length:15},(_,i)=>({id:`card-${i}`,scope:'self' as const,kind:'essence' as const,title:'仕事',summary:text,tags:[],period:null,pages:[{role:'core' as const,label:'本文',text}],evidence:[],metadataRefs:['rule-a']}))
+ const focus={...cards[14],title:'選択した鑑定',timelineV3Calculation:{version:'v3-test',partsVersion:'parts',input:{},nowYear:2026,decision:{year:2029}}}
+ const result=bookSources({kind:'self',calculated_data:{_structuredReport:{version:3,reportText:'',generator:'deterministic',generatorVersion:'confirmed',cards}}},'仕事',focus)
+ assert.equal(result.length,12);assert.equal(result[0].id,'card-14');assert.equal(result[0].focused,true)
+ assert.equal(result[0].version,'v3-test');assert.deepEqual(result[0].metadataRefs,['rule-a'])
+ assert.deepEqual(result[0].calculation,focus.timelineV3Calculation)
+ assert.equal(result.filter(s=>s.id==='card-14').length,1)
+})
+test('focused reading cannot be silently dropped from the answer',()=>{
+ const extra={id:'focus',title:'主題',text,version:'test',evidence:[],focused:true}
+ assert.throws(()=>validateBookDocument(valid(),[...sources,extra]),/BOOK_DOCUMENT_FOCUS/)
+ const d=valid();d.sections[0].sourceId='focus'
+ assert.equal(validateBookDocument(d,[...sources,extra]).sections[0].sourceId,'focus')
+})
+
+test('focus resolver rejects untrusted IDs and returns only the saved scoped manuscript',async()=>{
+ const {resolveBookFocus}=await import('./aiBookFocus.js')
+ assert.equal(await resolveBookFocus({},undefined,'unused','unused'),undefined)
+ for(const id of ['',{},'x'.repeat(201)])await assert.rejects(resolveBookFocus({},id,'unused','unused'))
+ const card={id:'verified',kind:'essence',scope:'self',title:'確認済み',summary:text,tags:[],pages:[{text}],evidence:[]}
+ const row={kind:'self',calculated_data:{_structuredReport:{version:3,reportText:'',generator:'deterministic',generatorVersion:'test',cards:[card]}}}
+ assert.equal((await resolveBookFocus(row,'verified','unused','unused'))?.title,'確認済み')
+ await assert.rejects(resolveBookFocus({calculated_data:{_structuredReport:{version:3,reportText:'',generator:'ai',cards:[card]}}},'verified','unused','unused'))
+})
+test('compatibility follow-up includes day-pillar and directional sukuyo grounding',()=>{
+ const focus={id:'compat-v24-7',kind:'essence' as const,scope:'couple' as const,title:'復縁',summary:text,tags:[],period:null,pages:[{role:'core' as const,label:'復縁',text}],evidence:[]}
+ const result=bookSources({kind:'compatibility',calculated_data:{self:{shichuDay:'甲子',sukuyo:'角'},partner:{shichuDay:'乙丑',sukuyo:'亢'},_structuredReport:{version:3,reportText:'',generator:'deterministic',generatorVersion:'v24',cards:[focus]}}},'恋愛・関係',focus)
+ const facts=result[0].calculation as any
+ assert.equal(facts.dayA,'甲子');assert.equal(facts.dayB,'乙丑')
+ assert.ok(facts.sukuyo.aSeesB);assert.ok(facts.dayPillarFacts.a_to_b_god)
+})

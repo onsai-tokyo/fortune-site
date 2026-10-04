@@ -39,11 +39,11 @@ struct SavedReadingView: View {
                     )
                     VStack(alignment: .leading, spacing: 18) {
                         InsightHubView(report: report, scope: isCompatibility ? .couple : .self, onQuestion: { card in
-                            tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
+                            tabRouter.openBook(conversationID: conversationID, card: card)
                         }, onReload: { Task { await load() } })
 
                         Button("この鑑定書について質問する") {
-                            tabRouter.openChat(conversationID: conversationID)
+                            tabRouter.openBook(conversationID: conversationID)
                         }
                             .buttonStyle(FLPrimaryButtonStyle())
 

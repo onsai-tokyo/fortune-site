@@ -61,5 +61,10 @@ struct PendingAIBook: Codable {
     let sourceID: UUID
     let theme: String
     let question: String
-    var body: [String: String] { ["operationId": operationID.uuidString, "sourceId": sourceID.uuidString, "theme": theme, "question": question] }
+    var focusCardID: String? = nil
+    var body: [String: String] {
+        var value = ["operationId": operationID.uuidString, "sourceId": sourceID.uuidString, "theme": theme, "question": question]
+        if let focusCardID { value["focusCardId"] = focusCardID }
+        return value
+    }
 }

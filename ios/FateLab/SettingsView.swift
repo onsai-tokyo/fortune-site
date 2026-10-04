@@ -12,7 +12,7 @@ struct SettingsView: View {
                 FateEditorialHero(eyebrow: "YOUR SPACE", title: "あなたの設定", subtitle: "プロフィールと、大切な言葉の記録を。")
                 SettingsGroup(title: "あなたのデータ") {
                     NavigationLink { ProfileView() } label: { SettingsNavigationRow(title: "プロフィール") }
-                    NavigationLink { TimelineConsentView() } label: { SettingsNavigationRow(title: "読み解きの精度向上への協力") }
+                    TimelineConsentWithdrawalView()
                 }
 
                 membershipCard

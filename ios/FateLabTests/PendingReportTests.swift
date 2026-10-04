@@ -371,3 +371,33 @@ final class ReadingFeedback96Tests: XCTestCase {
         XCTAssertEqual(card.sections?.map(\.body), ["この年の本文", "計算の説明"])
     }
 }
+
+@MainActor
+final class Feedback99Tests: XCTestCase {
+    private func card(summary: String, body: String) -> ReadingCard {
+        ReadingCard(id: "focus-card", kind: "essence", tab: "essence", scope: "self", title: "相談のタイトル", summary: summary, tags: [], period: nil,
+                    pages: [ReadingCardPage(role: "core", label: "本文", text: body, note: nil)], sections: nil, evidence: [])
+    }
+    func testSummaryExcerptAppearsOnlyInBodyAndKeepsOriginalText() {
+        let item = card(summary: "同じ文章です。", body: "冒頭です。\n\n同じ文章です。")
+        XCTAssertNil(item.readerSummary)
+        XCTAssertEqual(item.pages[0].text, "冒頭です。\n\n同じ文章です。")
+        XCTAssertEqual(card(summary: "別の要約です。", body: "本文です。").readerSummary, "別の要約です。")
+        XCTAssertEqual(ReadingCard.readerDisplayText("一段落。\n\n\n二段落。"), "一段落。\n二段落。")
+    }
+    func testQuestionRoutesToBookComposerWithSelectedSource() {
+        let router = AppTabRouter(), id = UUID()
+        router.openBook(conversationID: id, card: card(summary: "概要", body: "本文"))
+        XCTAssertEqual(router.selectedTab, .compose)
+        XCTAssertEqual(router.bookDraft?.sourceID, id)
+        XCTAssertEqual(router.bookDraft?.cardID, "focus-card")
+        XCTAssertNil(router.chatConversationID)
+    }
+    func testPendingBookRetainsFocusAcrossRetryAndDecodesOldOrders() throws {
+        let order = PendingAIBook(operationID: UUID(), sourceID: UUID(), theme: "その他", question: "相談", focusCardID: "focus-card")
+        let roundTrip = try JSONDecoder().decode(PendingAIBook.self, from: JSONEncoder().encode(order))
+        XCTAssertEqual(roundTrip.body["focusCardId"], "focus-card")
+        var old = try JSONSerialization.jsonObject(with: JSONEncoder().encode(order)) as! [String: Any]; old.removeValue(forKey: "focusCardID")
+        XCTAssertNil(try JSONDecoder().decode(PendingAIBook.self, from: JSONSerialization.data(withJSONObject: old)).focusCardID)
+    }
+}

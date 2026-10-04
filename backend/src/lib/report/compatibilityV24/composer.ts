@@ -54,3 +54,16 @@ export function composeCompatibility(a:unknown,b:unknown,relation:unknown) {
 export function compatibilityKey(a:string,b:string,relation:string):string {
   return `${COMPATIBILITY_V24_IDENTITY}|${a}|${b}|${relation}`
 }
+
+// Read-only grounding for a follow-up book; does not change compatibility prose.
+export function compatibilityGrounding(a:unknown,b:unknown,mansionA:unknown,mansionB:unknown) {
+  if(typeof a!=='string'||typeof b!=='string')return undefined
+  const pair=pairs.get(`${a}|${b}`)
+  if(!pair)return undefined
+  let relation:Sukuyo|undefined
+  try { relation=relations.get(relationForMansions(mansionA,mansionB)) } catch { return undefined }
+  if(!relation)return undefined
+  return {version:COMPATIBILITY_V24_IDENTITY,dayA:a,dayB:b,dayPillarFacts:pair.facts,
+    sukuyo:{id:relation.id,family:relation.family,distance:relation.distance,aSeesB:relation.a_sees_b,bSeesA:relation.b_sees_a},
+    scope:'日柱と宿曜に基づく相性の解釈。相手の現在の意思や実測された復縁確率を示すものではない。'}
+}
