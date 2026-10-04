@@ -176,3 +176,33 @@ struct EventReadingView: View {
         }.tint(FateTheme.ink).padding(18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16))
     }
 }
+
+// Enrollment is retired; existing participants retain withdrawal access.
+struct TimelineConsentWithdrawalView: View {
+    @EnvironmentObject private var auth: AuthStore
+    @State private var consented = false
+    @State private var working = false
+    @State private var error: String?
+    var body: some View {
+        Group {
+            if consented {
+                Button("検証へのデータ利用を停止する") { Task { await update(withdraw: true) } }.disabled(working)
+            }
+            if let error {
+                Text(error).font(.footnote).foregroundStyle(FateTheme.muted)
+                Button("データ利用設定を再確認") { Task { await update() } }.disabled(working)
+            }
+        }.task(id: AccountScope(auth)) { consented = false; await update() }
+    }
+    private func update(withdraw: Bool = false) async {
+        let owner = AccountScope(auth)
+        guard owner.userID != nil else { return }
+        working = true
+        defer { if owner.isCurrent(auth) { working = false } }
+        do {
+            let result = try await APIClient.shared.timelineCall(TimelineConsentResponse.self, path: "/consent", method: withdraw ? "PUT" : "GET", json: withdraw ? ["consented": false] : nil, auth: auth)
+            try owner.check(auth)
+            consented = result.consented; error = nil
+        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
+    }
+}

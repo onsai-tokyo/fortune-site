@@ -181,7 +181,7 @@ struct PartnerProfilesView: View {
                         showCompatibilityResult = false
                         return
                     }
-                    tabRouter.openChat(conversationID: conversationID, contextTitle: card.title)
+                    tabRouter.openBook(conversationID: conversationID, card: card)
                 }
             }
         }

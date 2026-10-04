@@ -1,3 +1,4 @@
+import {resolveBookFocus} from '../lib/aiBookFocus.js'
 import { Router, type Response } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
@@ -80,10 +81,11 @@ aiBooksRouter.get('/:id',async(req:AuthRequest,res)=>{
 async function prepare(req:AuthRequest) {
   const question=validateBookQuestion(req.body?.question,req.body?.theme)
   if(!uuidPattern.test(req.body?.sourceId??'')) throw new BookError('BOOK_INPUT',422,'もとになる鑑定書を選んでください。')
-  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
+  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data,birth_data,partner_profile_id').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
   if(error) throw error
   if(!data || data.kind==='chat') throw new BookError('BOOK_SOURCE',422,'保存済みの自己鑑定または相性鑑定を選んでください。')
-  const sources=bookSources(data,req.body.theme)
+  const focus=await resolveBookFocus(data,req.body?.focusCardId,req.accessToken!,req.userId!)
+  const sources=bookSources(data,req.body.theme,focus)
   if(sources.length<3) throw new BookError('BOOK_SOURCE',422,'この鑑定書には必要な原稿が揃っていません。別の鑑定書を選んでください。')
   return {question,sources,row:data}
 }
@@ -97,7 +99,8 @@ aiBooksRouter.post('/',async(req:AuthRequest,res)=>{
     const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
     if(error) throw error
     if(old) {
-      if(old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
+      const oldFocus=Array.isArray(old.source_snapshot)?old.source_snapshot.find((s:any)=>s.focused===true)?.id:undefined
+      if(oldFocus!==req.body?.focusCardId || old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
       res.json({book:publicBook(old)}); return
     }
     const {question,sources,row}=await prepare(req)
@@ -105,6 +108,8 @@ aiBooksRouter.post('/',async(req:AuthRequest,res)=>{
     const id=await bookRPC('ai_book_order',{p_user:req.userId!,p_operation:req.body.operationId,p_source:row.id,p_target:row.title,p_theme:req.body.theme,p_question:question,p_snapshot:sources})
     const result=await getSupabaseAdmin().from('ai_books').select(projection).eq('user_id',req.userId!).eq('id',id).single()
     if(result.error) throw result.error
+    const resultFocus=Array.isArray(result.data.source_snapshot)?result.data.source_snapshot.find((s:any)=>s.focused===true)?.id:undefined
+    if(resultFocus!==req.body?.focusCardId)throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
     res.status(201).json({book:publicBook(result.data)})
   } catch(e) {fail(res,e)}
 })

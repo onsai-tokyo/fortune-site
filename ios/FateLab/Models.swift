@@ -345,6 +345,23 @@ struct ReadingCard: Codable, Identifiable {
         }
     }
 
+    /// Layout-only cleanup; saved manuscript and API data remain untouched.
+    static func readerDisplayText(_ text: String) -> String {
+        text.replacingOccurrences(of: "\r\n", with: "\n")
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+    var readerSummary: String? {
+        let value = Self.readerDisplayText(summary)
+        let compact: (String) -> String = { $0.filter { !$0.isWhitespace } }
+        let key = compact(value)
+        guard !key.isEmpty, key != compact(title), !tags.contains(where: { compact($0) == key }) else { return nil }
+        let bodies = displaySections?.map(\.body) ?? displayPages.map(\.text)
+        guard !bodies.contains(where: { compact($0).contains(key) }) else { return nil }
+        return value
+    }
+
     struct DomainSummary { let label: String; let text: String }
     var domainSummaries: [DomainSummary] {
         guard isTiming else { return [] }

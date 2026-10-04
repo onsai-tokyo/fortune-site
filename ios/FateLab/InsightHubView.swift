@@ -338,7 +338,7 @@ struct FocusReadingView: View {
                                 chapterView(chapter, proxy: proxy).id(chapter.anchor)
                             }
                         }
-                        .padding(.horizontal, 28).padding(.top, 32).padding(.bottom, 116)
+                        .padding(.horizontal, 20).padding(.top, 28).padding(.bottom, 110)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background {
                             ZStack(alignment: .bottom) {
@@ -397,7 +397,7 @@ struct FocusReadingView: View {
                 .lineSpacing(5).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             TimelineTagList(tags: item.timelineDisplayTags)
-            if !item.tags.contains(item.summary.trimmingCharacters(in: .whitespacesAndNewlines)) { readerText(item.summary) }
+            if let summary = item.readerSummary { readerText(summary) }
             if let period = item.displayPeriodLabel {
                 Text(period).font(.caption).foregroundStyle(ReaderStyle.body)
             }
@@ -492,7 +492,7 @@ struct FocusReadingView: View {
     }
 
     private func readerText(_ text: String) -> some View {
-        Text(text).font(.system(size: bodySize)).foregroundStyle(ReaderStyle.body)
+        Text(ReadingCard.readerDisplayText(text)).font(.system(size: bodySize)).foregroundStyle(ReaderStyle.body)
             .lineSpacing(7).fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }

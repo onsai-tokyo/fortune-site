@@ -256,6 +256,23 @@ final class AppTabRouter: ObservableObject {
     @Published var chatConversationID: UUID?
     @Published var chatContextTitle: String?
     @Published var chatDraftQuestion: String?
+    struct BookDraft: Identifiable {
+        let id = UUID()
+        let sourceID: UUID
+        let cardID: String?
+        let title: String?
+        let theme: String
+    }
+    @Published var bookDraft: BookDraft?
+
+    func openBook(conversationID: UUID, card: ReadingCard? = nil) {
+        bookDraft = BookDraft(sourceID: conversationID, cardID: card?.id, title: card?.title,
+                              theme: card?.isTiming == true ? "時期の判断" : card?.scope == "couple" ? "恋愛・関係" : "その他")
+        chatConversationID = nil; chatContextTitle = nil; chatDraftQuestion = nil
+        resetTokens[.compose, default: 0] += 1
+        selectedTab = .compose
+    }
+
 
     func selectInitialTabIfNeeded() {
         guard !hasPresentedTabs else { return }

@@ -181,7 +181,7 @@ struct ReportView: View {
     let report: GeneratedReport
     @State private var isSaving = false
     @State private var pendingAfterAuth = false
-    @State private var pendingContextTitle: String?
+    @State private var pendingCard: ReadingCard?
     @State private var errorMessage: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -189,25 +189,31 @@ struct ReportView: View {
             InsightHubView(report: report) { card in
                 if auth.session == nil {
                     pendingAfterAuth = true
-                    pendingContextTitle = card.title
+                    pendingCard = card
                     AuthPresentation.shared.isPresented = true
-                } else { Task { await saveAndOpen(contextTitle: card.title) } }
+                } else { Task { await saveAndOpen(card: card) } }
             }
             if let errorMessage { Text(errorMessage).font(.footnote).foregroundStyle(.red) }
             Text("結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。")
                 .font(.caption).foregroundStyle(FateTheme.muted)
         }
-
+        .onChange(of: auth.session?.user.id) { _, userID in
+            if userID != nil && pendingAfterAuth {
+                pendingAfterAuth = false
+                let card = pendingCard; pendingCard = nil
+                Task { await saveAndOpen(card: card) }
+            }
+        }
     }
 
-    private func saveAndOpen(contextTitle: String? = nil) async {
+    private func saveAndOpen(card: ReadingCard? = nil) async {
         let owner = AccountScope(auth)
         guard auth.session != nil, !isSaving else { return }
         isSaving = true; errorMessage = nil
         do {
             let conversationID = if let existing = report.conversationID { existing } else { try await APIClient.shared.createConversation(report: report, auth: auth) }
             try owner.check(auth)
-            tabRouter.openChat(conversationID: conversationID, contextTitle: contextTitle)
+            tabRouter.openBook(conversationID: conversationID, card: card)
         }
         catch { guard owner.isCurrent(auth) else { return }; errorMessage = userFacingMessage(error) }
         isSaving = false

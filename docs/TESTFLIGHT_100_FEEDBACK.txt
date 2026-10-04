@@ -1,0 +1,19 @@
+Build 100 — non-editorial feedback from build 99
+
+- Hide detail summaries that duplicate the title or excerpt the body; keep stored manuscripts unchanged.
+- Compact blank lines and widen the reading body within the existing mountain sheet.
+- Retire the research-consent enrollment screen. Existing participants retain an inline withdrawal action.
+- Route reading questions to the book composer with the originating conversation and card, a visible context label, and an editable draft. Merely opening the composer does not place an order.
+- Preserve focus through persisted retry payloads. Resolve focused cards server-side from the authenticated owner's stored report or current timeline generated from their saved input and current context.
+- Prioritize the selected source, retain its text and provenance, include v2.4 day-pillar/sukuyo facts, and require generated books to cite the focused source. Reject mismatched retry focus.
+
+Original personality, compatibility, and timeline manuscripts/scoring are unchanged. Claude's editorial work is separate.
+No database migration. Deploy web and AI book worker before TestFlight 100.
+
+Validation:
+- iOS: 126 tests, 2 existing skips, 0 failures.
+- Book generation + compatibility regression: 25 passed.
+- Production safety: 27 passed.
+- Backend TypeScript build passed.
+- Simulator reading-layout visual review.
+- Live paid generation not performed; no user credit consumed by verification.

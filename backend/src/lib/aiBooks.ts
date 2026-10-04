@@ -1,16 +1,17 @@
+import {compatibilityGrounding} from './report/compatibilityV24/composer.js'
 import type { JWSTransactionDecodedPayload } from '@apple/app-store-server-library'
 import { getSupabaseAdmin } from './supabaseAdmin.js'
 import { storedReportFromCalculatedData } from './report/storedReport.js'
 import { type ReportCard } from './reportCards.js'
 
 export const BOOK_PRODUCT = 'com.onsai.fatelab.report.single'
-export const BOOK_PROMPT_VERSION = 'consultation-book-20260928.4'
+export const BOOK_PROMPT_VERSION = 'consultation-book-20261005.1'
 export const BOOK_THEMES = ['恋愛・関係', '仕事', '人間関係', '時期の判断', 'その他']
 export const uuidPattern = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
 export class BookError extends Error {
   constructor(public code: string, public status: number, message: string) { super(message) }
 }
-export interface BookSource { id: string; title: string; text: string; version: string; evidence: unknown[] }
+export interface BookSource { id: string; title: string; text: string; version: string; evidence: unknown[]; focused?: boolean; metadataRefs?: string[]; calculation?: unknown }
 export interface BookDocument {
   title: string; summary: string; answer: string; conclusion?: string; highlights?: string[];
   sections: Array<{ heading: string; body: string; sourceId: string; quote: string }>;
@@ -27,20 +28,26 @@ export function validateBookQuestion(question: unknown, theme: unknown): string 
     throw new BookError('BOOK_POLICY', 422, '健康・妊娠・生死、法律や投資の判断、他者への加害や監視は扱えません。気持ちの整理や人との接し方について相談してください。')
   return question.trim()
 }
-export function bookSources(row: { kind?: string; report_text?: string; calculated_data?: unknown }, theme: string): BookSource[] {
+export function bookSources(row: { kind?: string; report_text?: string; calculated_data?: unknown }, theme: string, focus?: ReportCard): BookSource[] {
   const report = storedReportFromCalculatedData(row.calculated_data)
   if (!report || report.generator !== 'deterministic' || !report.generatorVersion) return []
+  const data=row.calculated_data as {self?:Record<string,unknown>;partner?:Record<string,unknown>}|undefined
+  const grounding=row.kind==='compatibility' && focus?.id.startsWith('compat-v24-')
+    ? compatibilityGrounding(data?.self?.shichuDay,data?.partner?.shichuDay,data?.self?.sukuyo,data?.partner?.sukuyo):undefined
   const scope = row.kind === 'compatibility' ? 'couple' : 'self'
-  const cards = report.cards.filter(c => c.generator !== 'ai' && c.kind !== 'chart' && c.tab !== 'chart' && (!c.scope || c.scope === scope))
+  const cards = (focus ? [focus, ...report.cards.filter(c=>c.id!==focus.id)] : report.cards).filter(c => c.generator !== 'ai' && c.kind !== 'chart' && c.tab !== 'chart' && (!c.scope || c.scope === scope))
   const relevance = (c: ReportCard) => {
     const text = c.title + c.summary + c.tags.join(' ')
     const pattern = theme === '仕事' ? /仕事|職|働|役割/ : theme === '恋愛・関係' ? /恋|愛|関係|ふたり|結婚/ : theme === '時期の判断' ? /年|時期|流れ/ : /性格|軸|人|関係/
+    if(c.id===focus?.id)return 100
     return (pattern.test(text) ? 2 : 0) + (c.kind === 'essence' ? 1 : 0)
   }
   const seen = new Set<string>()
   return cards.sort((a,b) => relevance(b)-relevance(a)).filter(c => !seen.has(c.id) && !!seen.add(c.id)).slice(0,12).map(c => ({
-    id: c.id, title: c.title, text: [c.summary, ...(c.sections?.map(s => s.heading+'\n'+s.body) ?? c.pages.map(p => p.text))].join('\n').slice(0,6500),
-    version: report.generatorVersion ?? `structured-v${report.version}`, evidence: c.evidence,
+    id: c.id, title: c.title, text: [c.summary, ...(c.sections?.map(s => s.heading+'\n'+s.body) ?? c.pages.map(p => p.text))].join('\n').slice(0,c.id===focus?.id?undefined:6500),
+    version: c.timelineV3Calculation?.version ?? c.annualCalculation?.version ?? c.metadataRefs?.find(ref=>ref.startsWith("timeline-v")) ?? report.generatorVersion ?? `structured-v${report.version}`, evidence: c.evidence,
+    ...(c.id===focus?.id?{focused:true}:{}), metadataRefs:c.metadataRefs,
+    calculation:c.timelineV3Calculation ?? c.annualCalculation ?? (c.id===focus?.id?grounding:undefined),
   }))
 }
 function bounded(value: unknown, min: number, max: number): value is string {
@@ -58,6 +65,8 @@ export function validateBookDocument(value: unknown, sources: BookSource[]): Boo
         || !bounded(s.quote,10,300) || !source.text.includes(s.quote)) throw new Error('BOOK_DOCUMENT_EVIDENCE')
     ids.add(s.sourceId)
   }
+  const focus=sources.find(s=>s.focused)
+  if(focus && !ids.has(focus.id))throw new Error('BOOK_DOCUMENT_FOCUS')
   const length = [...[d.summary, d.answer, ...d.sections.map(s=>s.body), ...d.actions].join('')].length
   if (length < 4500 || length > 6000) throw new Error('BOOK_DOCUMENT_LENGTH')
   const text = JSON.stringify(d)

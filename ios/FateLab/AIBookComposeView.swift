@@ -14,6 +14,8 @@ struct AIBookComposeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var sourceID: UUID?
+    @State private var focusCardID: String?
+    @State private var focusTitle: String?
     @State private var theme = "恋愛・関係"
     @State private var question = ""
     @State private var status: AIBookStatus?
@@ -25,7 +27,11 @@ struct AIBookComposeView: View {
     private let themes = ["恋愛・関係", "仕事", "人間関係", "時期の判断", "その他"]
     private var valid: Bool { !recoveryBlocked && sourceID != nil && (20...400).contains(question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count) }
     private var pendingKey: String { AccountStorage.key("book.pending.v1", userID: auth.userID) }
-    private var bodyJSON: [String: String] { ["sourceId": sourceID?.uuidString ?? "", "theme": theme, "question": question.trimmingCharacters(in: .whitespacesAndNewlines)] }
+    private var bodyJSON: [String: String] {
+        var value = ["sourceId": sourceID?.uuidString ?? "", "theme": theme, "question": question.trimmingCharacters(in: .whitespacesAndNewlines)]
+        if let focusCardID { value["focusCardId"] = focusCardID }
+        return value
+    }
 
     @State private var loadedOwner: AccountScope?
     @State private var showPlans = false
@@ -52,10 +58,22 @@ struct AIBookComposeView: View {
                     FateEditorialHero(eyebrow: "PERSONAL READING", title: "いまの想いを、\n一冊の鑑定書に。", subtitle: "あなたの相談と保存した鑑定から、約5,000文字で読み解きます。")
                     VStack(alignment: .leading, spacing: 16) {
                         composerLabel("01", "誰について相談しますか")
-                        Picker("もとにする鑑定", selection: $sourceID) {
+                        Picker("もとにする鑑定", selection: Binding(get: { sourceID }, set: { value in
+                            if sourceID != value { focusCardID = nil; focusTitle = nil }; sourceID = value
+                        })) {
                             Text("鑑定を選ぶ").tag(Optional<UUID>.none)
+                            if let sourceID, !readings.contains(where: { $0.id == sourceID }) {
+                                Text("選択した鑑定").tag(Optional(sourceID))
+                            }
                             ForEach(readings) { Text($0.title.replacingOccurrences(of: "の相性", with: "について")).tag(Optional($0.id)) }
                         }.tint(FateTheme.ink).frame(maxWidth: .infinity, alignment: .leading)
+                        if let focusTitle {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("この鑑定をもとに相談").font(.caption).foregroundStyle(FateTheme.muted)
+                                Text(focusTitle).font(.subheadline)
+                                Text("元の鑑定文と判定の根拠を踏まえて、相談に回答します。").font(.footnote).foregroundStyle(FateTheme.muted)
+                            }.accessibilityIdentifier("book.focus")
+                        }
                         if sourcesLoading && readings.isEmpty {
                             HStack(spacing: 8) { ProgressView(); Text("鑑定を確認しています") }.font(.caption).foregroundStyle(FateTheme.muted)
                         } else if let sourcesError {
@@ -177,12 +195,19 @@ struct AIBookComposeView: View {
             let owner = AccountScope(auth)
             if loadedOwner != owner {
                 accepted = nil; pending = nil; recoveryBlocked = false; status = nil; error = nil; sourceID = readings.first?.id
+                focusCardID = nil; focusTitle = nil; question = ""; theme = "恋愛・関係"
                 do {
                     if let data = try KeychainStore.readChecked(account: pendingKey) {
                         let saved = try JSONDecoder().decode(PendingAIBook.self, from: data)
-                        pending = saved; sourceID = saved.sourceID; theme = saved.theme; question = saved.question
+                        pending = saved; sourceID = saved.sourceID; theme = saved.theme; question = saved.question; focusCardID = saved.focusCardID
                     }
                 } catch { recoveryBlocked = true; self.error = "受付情報を読み込めませんでした。再購入せず、本棚をご確認ください。" }
+                if pending == nil, !recoveryBlocked, isTab, let draft = tabRouter.bookDraft {
+                    sourceID = draft.sourceID; theme = draft.theme
+                    focusCardID = draft.cardID; focusTitle = draft.title
+                    question = draft.title.map { "「\($0.prefix(120))」について、私の状況に合わせて詳しく知りたいです。" } ?? ""
+                    tabRouter.bookDraft = nil
+                }
                 loadedOwner = owner
             }
             await refresh()
@@ -301,7 +326,7 @@ struct AIBookComposeView: View {
             else {
                 try await validate(); try owner.check(auth)
                 guard let sourceID else { throw APIError.invalidResponse }
-                order = PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines))
+                order = PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID)
                 try KeychainStore.save(JSONEncoder().encode(order), account: key)
                 pending = order
             }
