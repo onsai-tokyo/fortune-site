@@ -233,13 +233,6 @@ struct InsightCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                     TimelineTagList(tags: item.timelineDisplayTags)
                     Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5).lineLimit(3)
-                    ForEach(item.domainSummaries, id: \.label) { domain in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(domain.label).font(.caption.weight(.semibold)).foregroundStyle(FateTheme.muted)
-                            Text(domain.text).font(.subheadline).lineSpacing(4)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }
                     HStack { Spacer(); Label("この年を読む", systemImage: "arrow.right").font(.caption) }
                         .foregroundStyle(FateTheme.muted)
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
@@ -249,7 +242,10 @@ struct InsightCard: View {
         } else {
             VStack(alignment: .leading, spacing: 14) {
                 Text(item.tags.first(where: { $0 != "本質" }) ?? "あなたについて")
-                    .font(.caption.weight(.medium)).tracking(1)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(.black.opacity(0.38), in: Capsule())
+                    .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 12)
                 Text(item.title).font(.system(.headline, weight: .medium)).lineSpacing(6)
                     .fixedSize(horizontal: false, vertical: true)
@@ -315,7 +311,7 @@ struct FocusReadingView: View {
     }
 
     private var chapters: [Chapter] {
-        if let sections = item.timelineV3Calculation != nil ? item.sections : item.displaySections, !sections.isEmpty {
+        if let sections = item.displaySections, !sections.isEmpty {
             return sections.enumerated().map { index, section in
                 Chapter(id: index, title: section.heading, body: section.body, role: "section", section: section)
             }
@@ -446,7 +442,7 @@ struct FocusReadingView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.white, in: RoundedRectangle(cornerRadius: 16))
             }
-            if let section = chapter.section {
+            if !item.isTiming, let section = chapter.section {
                 SectionEvidenceView(section: section)
                     .tint(ReaderStyle.body)
             }
@@ -457,7 +453,15 @@ struct FocusReadingView: View {
             }
             if hasMultipleChapters { chapterNavigation(chapter, proxy: proxy) }
         }
-        .padding(.horizontal, 4).padding(.top, 8)
+        .padding(20)
+        .background {
+            ZStack {
+                FateArtwork(name: coverArtwork)
+                ReaderStyle.paper.opacity(0.91)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(ReaderStyle.line, lineWidth: 0.5))
     }
 
     private func chapterNavigation(_ chapter: Chapter, proxy: ScrollViewProxy) -> some View {
@@ -587,7 +591,7 @@ struct SelfTimingList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Button { showsEvents = true } label: { Label("あなたの年表", systemImage: "calendar") }.buttonStyle(FLSecondaryButtonStyle())
-            if let eventError { Text(eventError).font(.footnote).foregroundStyle(FateTheme.muted); Button("年表を再読み込み") { Task { await refreshTimeline() } } }
+            if let eventError { Text(eventError).font(.footnote).foregroundStyle(FateTheme.muted); Button("年表を再読み込み") { Task { await refreshTimeline(forceCards: true) } } }
 
             if conversationID != nil || cards.contains(where: { ($0.calendarYear ?? Int.max) < Calendar(identifier: .gregorian).component(.year, from: Date()) - 5 }) {
                 Button(showAll ? "以前の年を折りたたむ" : "6年以上前の年も見る（18歳以降）") {
@@ -605,21 +609,24 @@ struct SelfTimingList: View {
                 ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
             }
         }.sheet(isPresented: $showsEvents) {
-            NavigationStack { LifeEventsEditorView { Task { await refreshTimeline() } } }
+            NavigationStack { LifeEventsEditorView { Task { await refreshTimeline(forceCards: true) } } }
         }.task(id: AccountScope(auth)) { await refreshTimeline() }
     }
 
-    private func refreshTimeline() async {
+    private func refreshTimeline(forceCards: Bool = false) async {
         guard let conversationID else { return }
         let owner = AccountScope(auth)
         do {
-            async let latest = APIClient.shared.cards(id: conversationID, auth: auth)
             async let readings = APIClient.shared.timelineCall(EventReadingsResponse.self, path: "/events/for-reading/" + conversationID.uuidString, auth: auth)
-            let result = try await latest
-            try owner.check(auth)
-            refreshedCards = result.cards.filter { $0.isTiming && $0.scope == "self" }
-            history = nil
-            if showAll { history = try await APIClient.shared.selfTimingHistory(id: conversationID, auth: auth) }
+            // The parent already fetched the current cards. Refresh calculations
+            // only after an edit, instead of requesting the same report twice.
+            if forceCards {
+                let result = try await APIClient.shared.cards(id: conversationID, auth: auth)
+                try owner.check(auth)
+                refreshedCards = result.cards.filter { $0.isTiming && $0.scope == "self" }
+                history = nil
+                if showAll { history = try await APIClient.shared.selfTimingHistory(id: conversationID, auth: auth) }
+            }
             let events = try await readings
             try owner.check(auth); eventReadings = events.readings; eventError = nil
         } catch is CancellationError { }
@@ -676,11 +683,12 @@ struct CoupleTimingList: View {
                 } else {
                     Text("\(history.meetingYear.map(String.init) ?? "")〜\(String(history.endYear))年・全\(history.entries.count)年")
                         .font(.caption).foregroundStyle(FateTheme.muted)
-                    let hidden = Set(history.collapsedYears)
+                    let collapsed = history.collapsibleYears
+                    let hidden = Set(collapsed)
                     if hidden.isEmpty {
                         entries(history.entries)
                     } else {
-                        entries(history.entries.filter { $0.year < (history.collapsedYears.first ?? 0) })
+                        entries(history.entries.filter { $0.year < (collapsed.first ?? 0) })
                         HStack {
                             Button("すべての年を開く") { showPast = true; openGroups = Set(history.groups.map(\.from)) }
                             Spacer()
@@ -688,15 +696,15 @@ struct CoupleTimingList: View {
                         }.font(.caption).frame(minHeight: 44)
                         DisclosureGroup(isExpanded: $showPast) {
                             VStack(alignment: .leading, spacing: 12) {
-                                ForEach(history.groups, id: \.from) { group in
+                                ForEach(history.groups.filter { !$0.years.filter { hidden.contains($0) }.isEmpty }, id: \.from) { group in
                                     DisclosureGroup(isExpanded: Binding(get: { openGroups.contains(group.from) }, set: { if $0 { openGroups.insert(group.from) } else { openGroups.remove(group.from) } })) {
-                                        entries(history.entries.filter { group.years.contains($0.year) })
-                                    } label: { Text("\(String(group.from))〜\(String(group.to))年").font(.subheadline) }
+                                        entries(history.entries.filter { group.years.contains($0.year) && hidden.contains($0.year) })
+                                    } label: { Text("\(String(group.years.first(where: { hidden.contains($0) }) ?? group.from))〜\(String(group.to))年").font(.subheadline) }
                                 }
                             }.padding(.top, 12)
-                        } label: { Text("過去の鑑定を見る（\(history.collapsedYears.count)年分）").font(.subheadline) }
+                        } label: { Text("過去の鑑定を見る（\(collapsed.count)年分）").font(.subheadline) }
                         .tint(FateTheme.ink)
-                        entries(history.entries.filter { $0.year > (history.collapsedYears.last ?? 0) })
+                        entries(history.entries.filter { $0.year > (collapsed.last ?? 0) })
                     }
                 }
             }

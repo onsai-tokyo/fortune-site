@@ -14,6 +14,8 @@ struct SavedReadingView: View {
     @State private var chartSections: [ChartSection] = []
     @State private var elapsed = 0
     @State private var loadedID: UUID?
+    @State private var loadedOwner: AccountScope?
+    private struct LoadIdentity: Hashable { let conversationID: UUID; let owner: AccountScope }
 
     var body: some View {
         ScrollView {
@@ -56,7 +58,7 @@ struct SavedReadingView: View {
         }
         .background(FateTheme.canvas)
         .fateScreenTitle(detail?.conversation.title ?? (readingKind == "compatibility" ? "二人の関係鑑定" : "あなたの鑑定"))
-        .task(id: conversationID) { if loadedID != conversationID { await load() } }
+        .task(id: LoadIdentity(conversationID: conversationID, owner: AccountScope(auth))) { if loadedID != conversationID || loadedOwner != AccountScope(auth) { await load() } }
         .task(id: isLoading) {
             guard isLoading else { return }
             elapsed = 0
@@ -71,12 +73,21 @@ struct SavedReadingView: View {
 
     private func load() async {
         guard auth.session != nil else {
+            detail = nil; cards = []; chartSections = []; loadedID = nil; loadedOwner = nil
             isLoading = false
             errorMessage = "ログイン情報を確認できませんでした。"
             return
         }
         let owner = AccountScope(auth)
-        isLoading = loadedID != conversationID
+        if loadedOwner != owner || loadedID != conversationID {
+            detail = nil; cards = []; chartSections = []; loadedID = nil
+        }
+        if let cached = SavedReadingMemoryCache.shared.value(id: conversationID, owner: owner) {
+            detail = cached.detail; cards = cached.report.cards
+            chartSections = cached.report.chartSections ?? []
+            loadedID = conversationID; loadedOwner = owner
+        }
+        isLoading = detail == nil
         errorMessage = nil
         defer { isLoading = false }
         do {
@@ -87,12 +98,62 @@ struct SavedReadingView: View {
             try owner.check(auth)
             guard !Task.isCancelled else { return }
             detail = nextDetail
-            loadedID = conversationID
+            loadedID = conversationID; loadedOwner = owner
+            SavedReadingMemoryCache.shared.store(.init(detail: nextDetail, report: report), id: conversationID, owner: owner)
             cards = report.cards
             chartSections = report.chartSections ?? []
-        } catch {
+        } catch is CancellationError { }
+        catch {
+            guard owner.isCurrent(auth) else { return }
+            if case APIError.http(status: 404, message: _) = error {
+                SavedReadingMemoryCache.shared.remove(id: conversationID, owner: owner)
+                detail = nil; cards = []; chartSections = []; loadedID = nil
+            }
             errorMessage = userFacingMessage(error)
             errorKind = errorStateKind(error)
         }
+    }
+}
+
+
+/// Keeps only the current login session's recently opened readings in memory.
+/// Restoring a snapshot never skips the background server refresh.
+@MainActor
+final class SavedReadingMemoryCache {
+    static let shared = SavedReadingMemoryCache()
+    struct Snapshot {
+        let detail: ConversationDetail
+        let report: StructuredReportResponse
+    }
+    private var owner: AccountScope?
+    private var values: [UUID: Snapshot] = [:]
+    private var order: [UUID] = []
+    private func select(_ requested: AccountScope) {
+        if owner != requested { values.removeAll(); order.removeAll(); owner = requested }
+    }
+    func value(id: UUID, owner: AccountScope) -> Snapshot? {
+        select(owner)
+        guard owner.userID != nil else { return nil }
+        return values[id]
+    }
+    func store(_ value: Snapshot, id: UUID, owner: AccountScope) {
+        select(owner)
+        guard owner.userID != nil else { return }
+        values[id] = value; order.removeAll { $0 == id }; order.append(id)
+        while order.count > 12 { values.removeValue(forKey: order.removeFirst()) }
+    }
+    func remove(id: UUID, owner: AccountScope) {
+        select(owner); values.removeValue(forKey: id); order.removeAll { $0 == id }
+    }
+    func seed(_ report: GeneratedReport, id: UUID, owner: AccountScope) {
+        seedResponse(.init(version: 3, reportText: report.text, cards: report.cards,
+            chartSections: report.chartSections, conversationID: id), id: id, owner: owner)
+    }
+    func seedResponse(_ report: StructuredReportResponse, id: UUID, owner: AccountScope) {
+        let couple = report.cards.contains { $0.scope == "couple" }
+        let detail = value(id: id, owner: owner)?.detail ?? ConversationDetail(conversation: ConversationRecord(id: id,
+            title: couple ? "二人の関係鑑定" : "あなたの鑑定", reportText: report.reportText, isSaved: true,
+            kind: couple ? "compatibility" : "self"), messages: [])
+        store(.init(detail: detail, report: report), id: id, owner: owner)
     }
 }

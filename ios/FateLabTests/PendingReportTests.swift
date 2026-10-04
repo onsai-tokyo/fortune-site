@@ -333,3 +333,40 @@ final class BookshelfCacheTests: XCTestCase {
         XCTAssertNil(cache.value(for: AccountScope(userID: user, epoch: 2)))
     }
 }
+
+@MainActor
+final class ReadingFeedback96Tests: XCTestCase {
+    func testRecentReadingCacheIsIsolatedAcrossOwnersAndLoginEpochs() throws {
+        let cache = SavedReadingMemoryCache(), id = UUID(), user = UUID()
+        let owner = AccountScope(userID: user, epoch: 1)
+        let report = GeneratedReport(birthData: [:], calculatedData: [:], text: "保存した本文")
+        cache.seed(report, id: id, owner: owner)
+        XCTAssertEqual(cache.value(id: id, owner: owner)?.report.reportText, "保存した本文")
+        XCTAssertNil(cache.value(id: UUID(), owner: owner))
+        XCTAssertNil(cache.value(id: id, owner: AccountScope(userID: user, epoch: 2)))
+        XCTAssertNil(cache.value(id: id, owner: owner), "An old login cannot restore an evicted snapshot")
+        cache.seed(report, id: id, owner: owner)
+        XCTAssertNil(cache.value(id: id, owner: AccountScope(userID: UUID(), epoch: 1)))
+        let guest = AccountScope(userID: nil, epoch: 0)
+        cache.seed(report, id: id, owner: guest)
+        XCTAssertNil(cache.value(id: id, owner: guest))
+    }
+
+    func testMeetingYearRemainsVisibleWhenOldServerIncludesItInCollapsedYears() throws {
+        let value = CoupleAllYearsHistory(status: "ready", meetingYear: 2014, referenceYear: 2026,
+            endYear: 2045, minMeetingYear: 1995, collapsedYears: Array(2014...2020),
+            groups: [], entries: [])
+        XCTAssertEqual(value.collapsibleYears, Array(2015...2020))
+        XCTAssertFalse(value.collapsibleYears.contains(2014))
+    }
+
+    func testTimingEvidenceIsHiddenWithoutChangingOriginalManuscript() throws {
+        let body = ReadingCardSection(heading: "この年の鑑定", body: "この年の本文", evidence: [], termGloss: [], claimId: nil)
+        let explanation = ReadingCardSection(heading: "根拠と期間", body: "計算の説明", evidence: [], termGloss: [], claimId: nil)
+        let card = ReadingCard(id: "timeline-v3-2026", kind: "timing", tab: "timing", scope: "self",
+            title: "今年のテーマ", summary: "要約", tags: [], period: nil, pages: [],
+            sections: [body, explanation], evidence: [])
+        XCTAssertEqual(card.displaySections?.map(\.body), ["この年の本文"])
+        XCTAssertEqual(card.sections?.map(\.body), ["この年の本文", "計算の説明"])
+    }
+}

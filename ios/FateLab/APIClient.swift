@@ -490,6 +490,7 @@ struct APIClient {
               let revision = object["revisionId"] as? String, UUID(uuidString: revision) != nil else { throw APIError.invalidResponse }
         try generationStore.clear(operationID: snapshot.operationID, owner: userID)
         try reportStore.clear(operationID: snapshot.operationID, owner: userID)
+        SavedReadingMemoryCache.shared.seed(report, id: uuid, owner: owner)
         return uuid
     }
 
@@ -627,7 +628,10 @@ struct APIClient {
         let token = try await auth.validAccessToken()
         try owner.check(auth)
         let raw = try await data(for: request(path: "/api/reading/\(id.uuidString)/cards", token: token), retryTransient: true, auth: auth)
-        return try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+        try owner.check(auth)
+        let report = try JSONDecoder().decode(StructuredReportResponse.self, from: raw)
+        SavedReadingMemoryCache.shared.seedResponse(report, id: id, owner: owner)
+        return report
     }
 
     func ask(conversationID: UUID, question: String, auth: AuthStore) async throws -> ChatAnswer {
