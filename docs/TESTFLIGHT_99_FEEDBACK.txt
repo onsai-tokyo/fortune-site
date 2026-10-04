@@ -1,0 +1,13 @@
+TestFlight 99 — feedback from builds 98 and 96
+
+Changes
+- Keep the meeting year and the following two calendar years visible in the couple timeline. For a 2014 meeting, 2014–2016 are never collapsed.
+- Remove the “あなたの年表” button from the self timeline.
+- Replace the heavy category capsule on photo cards with a fine divider and quieter typography.
+- Enclose reading titles and chapter bodies in a single mountain-backed sheet, shared by personality and timeline details.
+
+Reading text, tags, scoring and backend calculations are unchanged.
+
+Validation
+- 11 targeted XCTest cases passed (ReadingFeedback96Tests, TimingPresentationRegressionTests, TabNavigationTests).
+- Simulator visual review of photo cards and the shared reading sheet.

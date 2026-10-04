@@ -352,11 +352,12 @@ final class ReadingFeedback96Tests: XCTestCase {
         XCTAssertNil(cache.value(id: id, owner: guest))
     }
 
-    func testMeetingYearRemainsVisibleWhenOldServerIncludesItInCollapsedYears() throws {
+    func testFirstThreeMeetingYearsRemainVisibleWhenServerCollapsesThem() throws {
         let value = CoupleAllYearsHistory(status: "ready", meetingYear: 2014, referenceYear: 2026,
             endYear: 2045, minMeetingYear: 1995, collapsedYears: Array(2014...2020),
             groups: [], entries: [])
-        XCTAssertEqual(value.collapsibleYears, Array(2015...2020))
+        XCTAssertEqual(value.collapsibleYears, Array(2017...2020))
+        XCTAssertTrue(Set(2014...2016).isDisjoint(with: value.collapsibleYears))
         XCTAssertFalse(value.collapsibleYears.contains(2014))
     }
 
