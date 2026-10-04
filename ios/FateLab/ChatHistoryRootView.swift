@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ChatHistoryRootView: View {
+    var api: APIClient = .shared
     private enum Scope: String, CaseIterable, Identifiable {
         case single = "あなた"
         case couple = "ふたり"
@@ -26,7 +27,12 @@ struct ChatHistoryRootView: View {
                         .buttonStyle(FLPrimaryButtonStyle())
                 }
             } else {
-                List {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                    Text("鑑定の続きを、対話で。")
+                        .font(FateType.screenTitle).lineSpacing(6)
+                    Text("気になった一節から、もう少し深く。")
+                        .font(.subheadline).foregroundStyle(FateTheme.muted)
                     Picker("鑑定の種類", selection: $scope) {
                         ForEach(Scope.allCases) { Text($0.rawValue).tag($0) }
                     }
@@ -34,7 +40,7 @@ struct ChatHistoryRootView: View {
                     .listRowBackground(FateTheme.canvas)
 
                     if isLoading {
-                        ProgressView("読み込んでいます…")
+                        FateInlineLoading(title: "読み込んでいます")
                             .frame(maxWidth: .infinity)
                             .listRowBackground(FateTheme.canvas)
                     } else if let errorKind {
@@ -50,28 +56,47 @@ struct ChatHistoryRootView: View {
                                 }
                             }
                             ForEach(sourceReadings) { reading in
-                                Button {
-                                    tabRouter.openChat(conversationID: reading.id, contextTitle: reading.title)
+                                NavigationLink {
+                                    ReadingChatView(conversationID: reading.id, contextTitle: reading.title, api: api)
                                 } label: {
-                                    FLListRow(title: reading.title, subtitle: "この鑑定書をもとに質問する", showsChevron: true)
-                                }
-                                .buttonStyle(.plain)
+                                    HStack(spacing: 14) {
+                                        Image(systemName: "book.closed").font(.title3).foregroundStyle(FateTheme.muted)
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(reading.title).font(.body.weight(.medium))
+                                            Text("この鑑定書をもとに対話").font(.caption).foregroundStyle(FateTheme.muted)
+                                        }
+                                        Spacer(minLength: 8)
+                                        Image(systemName: "chevron.right").font(.caption)
+                                    }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(FateTheme.surface, in: RoundedRectangle(cornerRadius: 18))
+                                        .contentShape(Rectangle())
+                                }.buttonStyle(.plain)
+                                    .accessibilityIdentifier("chat.source.\(reading.id)")
                             }
                         }
 
                         if let reading = sourceReadings.first {
                             Section("よくある質問から始める") {
                                 ForEach(questionExamples, id: \.self) { question in
-                                    Button {
-                                        tabRouter.openChat(conversationID: reading.id, contextTitle: reading.title, draftQuestion: question)
+                                    NavigationLink {
+                                        ReadingChatView(conversationID: reading.id, contextTitle: reading.title, draftQuestion: question, api: api)
                                     } label: {
-                                        FLListRow(title: question, showsChevron: true)
-                                    }
-                                    .buttonStyle(.plain)
+                                        HStack(alignment: .top, spacing: 14) {
+                                            Image(systemName: "bubble.left").foregroundStyle(FateTheme.muted)
+                                            Text(question).font(.body).lineSpacing(5)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            Spacer(minLength: 0)
+                                            Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(FateTheme.muted)
+                                        }.padding(18).frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+                                            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16))
+                                            .contentShape(Rectangle())
+                                    }.buttonStyle(.plain)
+                                        .accessibilityIdentifier("chat.question.\(question)")
                                 }
                             }
                         }
                     }
+                    }.padding(.horizontal, FateSpacing.screenH).padding(.vertical, 24)
                 }
                 .scrollContentBackground(.hidden)
                 .refreshable { await load() }
@@ -114,7 +139,7 @@ struct ChatHistoryRootView: View {
         errorKind = nil
         defer { isLoading = false }
         do {
-            readings = try await APIClient.shared.readings(auth: auth)
+            readings = try await api.readings(auth: auth)
         } catch {
             errorKind = errorStateKind(error)
         }

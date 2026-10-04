@@ -13,26 +13,19 @@ struct SavedReadingView: View {
     @State private var cards: [ReadingCard] = []
     @State private var chartSections: [ChartSection] = []
     @State private var elapsed = 0
+    @State private var loadedID: UUID?
 
     var body: some View {
         ScrollView {
             Group {
                 if isLoading {
-                    VStack(spacing: 16) {
-                        ProgressView().tint(FateTheme.ink)
-                        Text("鑑定書を開いています")
-                            .font(.system(size: 18, weight: .medium))
-                        Text(elapsed < 3 ? "保存した内容を読み込んでいます。"
-                             : elapsed < 8 ? "内容を整えています。もう少しお待ちください。"
-                             : "通信に時間がかかっています。")
-                            .font(.caption)
-                            .foregroundStyle(FateTheme.muted)
+                    VStack(spacing: 8) {
+                        FateLoadingView(title: "鑑定書を開いています", detail: elapsed < 8 ? "保存したあなたの物語を、手元に。" : "接続に少し時間がかかっています。")
                         if elapsed >= 8 {
                             Button("もう一度読み込む") { Task { await load() } }
-                                .buttonStyle(FLSecondaryButtonStyle())
+                                .buttonStyle(FLSecondaryButtonStyle()).frame(maxWidth: 260)
                         }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 520)
+                    }.frame(maxWidth: .infinity, minHeight: 480)
                 } else if let detail {
                     let isCompatibility = (detail.conversation.kind ?? readingKind) == "compatibility"
                     let report = GeneratedReport(
@@ -40,7 +33,7 @@ struct SavedReadingView: View {
                         calculatedData: [:],
                         text: detail.conversation.reportText,
                         cards: cards,
-                        chartSections: chartSections
+                        chartSections: chartSections, conversationID: conversationID
                     )
                     VStack(alignment: .leading, spacing: 18) {
                         InsightHubView(report: report, scope: isCompatibility ? .couple : .self, onQuestion: { card in
@@ -63,7 +56,7 @@ struct SavedReadingView: View {
         }
         .background(FateTheme.canvas)
         .fateScreenTitle(detail?.conversation.title ?? (readingKind == "compatibility" ? "二人の関係鑑定" : "あなたの鑑定"))
-        .task { await load() }
+        .task(id: conversationID) { if loadedID != conversationID { await load() } }
         .task(id: isLoading) {
             guard isLoading else { return }
             elapsed = 0
@@ -82,14 +75,19 @@ struct SavedReadingView: View {
             errorMessage = "ログイン情報を確認できませんでした。"
             return
         }
-        isLoading = true
+        let owner = AccountScope(auth)
+        isLoading = loadedID != conversationID
         errorMessage = nil
         defer { isLoading = false }
         do {
             async let detailRequest = APIClient.shared.conversation(id: conversationID, auth: auth)
             async let cardsRequest = APIClient.shared.cards(id: conversationID, auth: auth)
-            detail = try await detailRequest
+            let nextDetail = try await detailRequest
             let report = try await cardsRequest
+            try owner.check(auth)
+            guard !Task.isCancelled else { return }
+            detail = nextDetail
+            loadedID = conversationID
             cards = report.cards
             chartSections = report.chartSections ?? []
         } catch {

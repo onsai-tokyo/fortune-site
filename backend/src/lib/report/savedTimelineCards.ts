@@ -1,3 +1,5 @@
+import { refreshSavedTimelineV3Cards,type TimelineV3Input } from './timelineV3/index.js'
+import { japanDateParts } from '../japanDate.js'
 import type { ReportCard } from '../reportCards.js'
 import { annual3600Cards } from './annual3600/cards.js'
 import type { AnnualInputFields } from './annual3600/inputPolicy.js'
@@ -5,7 +7,8 @@ import type { AnnualInputFields } from './annual3600/inputPolicy.js'
 // Saved reports predate editorial releases. Refresh the year cards on read from
 // that report's own birth snapshot; never rewrite stored reports or borrow a profile.
 export const SAVED_TIMELINE_REVISION = 'saved-timeline-tags-1'
-export function refreshSavedTimelineCards(cards: ReportCard[], snapshot: unknown, scope: string): ReportCard[] {
+export function refreshSavedTimelineCards(cards: ReportCard[], snapshot: unknown, scope: string, context: Partial<TimelineV3Input> = {}): ReportCard[] {
+  if (scope === 'self' && process.env.ANNUAL_READING_ENGINE?.trim() === 'timeline3' && snapshot && typeof snapshot === 'object') return refreshSavedTimelineV3Cards(cards,snapshot as Record<string,unknown>,japanDateParts().year,context.lifeEvents,context.partnerSince,context.partnerKind,context.partnerBirth)
   if (scope !== 'self' || process.env.ANNUAL_READING_ENGINE?.trim() !== 'catalog3600' || !snapshot || typeof snapshot !== 'object') return cards
   const raw = snapshot as Record<string, unknown>
   const text = (key: string) => typeof raw[key] === 'string' ? raw[key] as string : undefined

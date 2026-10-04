@@ -1,3 +1,5 @@
+import { timelineV3Cards } from './timelineV3/index.js'
+import { birthInput } from '../timelineContext.js'
 import { annual3600Cards } from './annual3600/cards.js'
 import { calcTimingCycles } from '../divination/index.js'
 import { buildCoupleTimingHistory } from './coupleTimingCards.js'
@@ -21,6 +23,10 @@ function birth(value: unknown) {
 }
 
 export function selfTimingHistoryFromBirthSnapshot(snapshot: unknown, referenceYear = japanDateParts().year) {
+  if(process.env.ANNUAL_READING_ENGINE?.trim()==='timeline3') {
+    const input={...snapshot as object,...birthInput(snapshot)}
+    return {cards:timelineV3Cards(input,Math.max(Number(input.birthDate?.slice(0,4))+18,1952),referenceYear,referenceYear,'simple'),referenceYear}
+  }
   const value = birth(snapshot)
   // Rendering only reads birthDate, birthTime and timing; no missing astrology,
   // personality or relationship facts are synthesized here.

@@ -1,3 +1,4 @@
+import { loadTimelineContext,timelineEnabled } from '../lib/timelineContext.js'
 import { refreshSavedTimelineCards, SAVED_TIMELINE_REVISION } from '../lib/report/savedTimelineCards.js'
 import { handlePartnerReading } from './partnerReading.js'
 import { Router } from 'express'
@@ -246,7 +247,8 @@ readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, r
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   if (data.kind !== 'compatibility' && data.kind !== 'self') { res.status(422).json({ error: '鑑定書から開いてください' }); return }
   try {
-    res.json(data.kind === 'self' ? selfTimingHistoryFromBirthSnapshot(data.birth_data) : timingHistoryFromBirthSnapshot(data.birth_data))
+    const context=timelineEnabled() && data.kind==='self' ? await loadTimelineContext(req.accessToken!,req.userId!,data.birth_data) : {}
+    res.json(data.kind === 'self' ? selfTimingHistoryFromBirthSnapshot({...data.birth_data,...context}) : timingHistoryFromBirthSnapshot(data.birth_data))
   } catch {
     res.status(422).json({ error: 'この鑑定書には過去年の算出に必要な出生情報が保存されていません' })
   }
@@ -262,11 +264,17 @@ readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
   const etag = `W/"${req.params.id}-${data.updated_at}-${SAVED_TIMELINE_REVISION}-${process.env.ANNUAL_READING_ENGINE ?? "legacy"}"`
   res.setHeader('ETag', etag)
   res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate')
-  if (req.headers['if-none-match'] === etag) { res.status(304).end(); return }
+  if (!timelineEnabled() && req.headers['if-none-match'] === etag) { res.status(304).end(); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
   const birth = data.birth_data as { _sourceKind?: string } | null
   const expectedScope = data.kind === 'compatibility' || birth?._sourceKind === 'compatibility' ? 'couple' : 'self'
-  const cards = refreshSavedTimelineCards(report.cards, data.birth_data, expectedScope)
+  let timelineContext = {}
+  if (timelineEnabled() && expectedScope === 'self') {
+    try { timelineContext=await loadTimelineContext(req.accessToken!,req.userId!,data.birth_data) }
+    catch { res.status(503).json({error:'時系列の入力を確認できませんでした'}); return }
+    res.setHeader('Cache-Control','private, no-store')
+  }
+  const cards = refreshSavedTimelineCards(report.cards, data.birth_data, expectedScope, timelineContext)
     .filter(card => card.tab !== 'chart' && card.kind !== 'chart')
     .filter(card => !card.scope || card.scope === expectedScope)
     .map(card => ({ ...card, scope: card.scope ?? expectedScope }))

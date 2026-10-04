@@ -1,0 +1,203 @@
+{
+ "input": {
+  "birthDate": "1995-03-16",
+  "birthTime": "00:52",
+  "birthplace": "愛知県",
+  "gender": "female",
+  "workContext": "employed",
+  "relationshipStatus": "married"
+ },
+ "events": [
+  {
+   "year": 2016,
+   "kind": "reunion"
+  },
+  {
+   "year": 2020,
+   "month": 6,
+   "kind": "marriage"
+  },
+  {
+   "year": 2023,
+   "kind": "other"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2016-0-reunion",
+   "year": 2016,
+   "kind": "reunion",
+   "title": "2016年の復縁を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2016年に、復縁がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱丙申・年干の十神＝比肩"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "自分の意思で選ぶことが主題の年でした。この始まりは、周りに流されず、自分の気持ちで選んだ関係として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱丙申・年干の十神＝比肩"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2016,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2020-6-marriage",
+   "year": 2020,
+   "month": 6,
+   "kind": "marriage",
+   "title": "2020年の結婚・入籍を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2020年6月に、結婚・入籍がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。一方で、この年には次のような動きもありました。四柱推命では、あなたの命式のパートナーの座が強く揺れ動く年でした。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱庚子・年干の十神＝偏財"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-R2：年支子が日支午と冲"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "人とのつながりが動く年でした。この結びつきは、広がった縁の中から大切な人を選んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱庚子・年干の十神＝偏財"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-R2：年支子が日支午と冲"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2020,
+    "hits": [
+     "TL3-R2"
+    ]
+   }
+  },
+  {
+   "id": "life-event-2023-0-other",
+   "year": 2023,
+   "kind": "other",
+   "title": "2023年の大切な出来事を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2023年に、大切な出来事がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "この年の意味は、下の読み解きにまとめています。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱癸卯・年干の十神＝正官"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "周りからの信用を得て、役割をしっかり果たすことが主題になる年でした。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱癸卯・年干の十神＝正官"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2023,
+    "hits": []
+   }
+  }
+ ]
+}

@@ -11,9 +11,16 @@ struct ReadingListView: View {
 
     var body: some View {
         Group {
-            if auth.session != nil {
+            if !chatsOnly {
+                BookshelfView(onNewReading: onNewReading)
+            } else if auth.session != nil {
                 List {
-                    if isLoading { ProgressView("読み込んでいます…").frame(maxWidth: .infinity).listRowBackground(FateTheme.canvas) }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(chatsOnly ? "対話の記録" : "あなたの本棚").font(FateType.screenTitle)
+                        Text(chatsOnly ? "読み解いてきた言葉を、もう一度。" : "自分を知る言葉を、いつでもここから。")
+                            .font(.subheadline).foregroundStyle(FateTheme.muted)
+                    }.padding(.vertical, 16).listRowBackground(FateTheme.canvas).listRowSeparator(.hidden)
+                    if isLoading { FateInlineLoading(title: "読み込んでいます").frame(maxWidth: .infinity).listRowBackground(FateTheme.canvas) }
                     if errorMessage != nil {
                         FLErrorState(kind: errorKind) { Task { await load() } }
                             .listRowBackground(FateTheme.canvas)
@@ -41,7 +48,7 @@ struct ReadingListView: View {
                 ContentUnavailableView("鑑定履歴を保存", systemImage: "books.vertical",
                                        description: Text("無料登録すると、鑑定書と質問を続きから開けます。"))
             }
-        }.background(FateTheme.canvas).fateScreenTitle(chatsOnly ? "チャット履歴" : "鑑定書一覧")
+        }.background(FateTheme.canvas).fateScreenTitle(chatsOnly ? "チャット履歴" : "本棚")
             .toolbar { if auth.session == nil { Button("ログイン") { AuthPresentation.shared.isPresented = true } } }
     }
 
@@ -54,8 +61,18 @@ struct ReadingListView: View {
             if reading.isChat { ReadingChatView(conversationID: reading.id) }
             else { SavedReadingView(conversationID: reading.id, readingKind: reading.kind) }
         } label: {
-            FLListRow(title: reading.title, subtitle: "質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))", showsChevron: false)
-        }.listRowBackground(FateTheme.canvas)
+            HStack(spacing: 18) {
+                ReadingNatureArtwork(index: reading.isCompatibility ? 10 : reading.isChat ? 5 : 0)
+                    .frame(width: 64, height: 86).clipShape(RoundedRectangle(cornerRadius: 9))
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(reading.isChat ? "対話" : reading.isCompatibility ? "ふたりの鑑定" : "あなたの鑑定")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                    Text(reading.title).font(.body.weight(.medium)).lineSpacing(5)
+                    Text("質問 \(reading.questionCount)件 ・ \(shortDate(reading.updatedAt ?? reading.createdAt))").font(.caption).foregroundStyle(FateTheme.muted)
+                }
+            }.padding(.vertical, 12)
+
+        }.listRowBackground(FateTheme.card)
     }
 
     private func load() async {

@@ -1,0 +1,382 @@
+{
+ "input": {
+  "birthDate": "1995-02-20",
+  "birthTime": "03:02",
+  "birthplace": "愛知県名古屋市",
+  "gender": "female",
+  "workContext": "employed",
+  "relationshipStatus": "single"
+ },
+ "events": [
+  {
+   "year": 2015,
+   "kind": "encounter"
+  },
+  {
+   "year": 2017,
+   "month": 1,
+   "kind": "start"
+  },
+  {
+   "year": 2019,
+   "month": 2,
+   "kind": "breakup"
+  },
+  {
+   "year": 2022,
+   "kind": "job"
+  },
+  {
+   "year": 2025,
+   "kind": "move"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2015-0-encounter",
+   "year": 2015,
+   "kind": "encounter",
+   "title": "2015年の出会いを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2015年に、出会いがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱乙未・年干の十神＝傷官"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "感じたことを表すことが主題の年でした。この始まりは、本音で向き合える相手との出会いとして読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱乙未・年干の十神＝傷官"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2015,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2017-1-start",
+   "year": 2017,
+   "month": 1,
+   "kind": "start",
+   "title": "2017年の交際の始まりを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2017年1月に、交際の始まりがありました。1月の出来事のため、四柱推命では前の年（2016年）の流れとして読んでいます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "この出来事は、時系列で「関係が動きやすい」と読む年と重なっています。インド占星術では、パートナーを表す木星の期間（2016年5月〜2018年7月）の中でした。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱丙申・年干の十神＝偏財"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "インド占星術",
+       "detail": "アンタルダシャーJupiter（2016年5月〜2018年7月）"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "人とのつながりが広がる年でした。この始まりは、行動範囲が広がる中で生まれた縁として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱丙申・年干の十神＝偏財"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "インド占星術",
+     "detail": "アンタルダシャーJupiter（2016年5月〜2018年7月）"
+    }
+   ],
+   "overlap": true,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2016,
+    "hits": [
+     "TL3-R1"
+    ]
+   }
+  },
+  {
+   "id": "life-event-2019-2-breakup",
+   "year": 2019,
+   "month": 2,
+   "kind": "breakup",
+   "title": "2019年の別れを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2019年2月に、別れがありました。2月の出来事は、立春（2月4日ごろ）より前なら、前の年の流れに入ります。ここでは2019年の流れとして読んでいます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱己亥・年干の十神＝正官"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "立場や約束を見直す年でした。この区切りは、自分にとって筋の通る関係を選び直した出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱己亥・年干の十神＝正官"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2019,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2022-0-job",
+   "year": 2022,
+   "kind": "job",
+   "title": "2022年の仕事の変化を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2022年に、仕事の変化がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は仕事の転機の候補には入っていませんでした。判定に出ない年にも、仕事の変化は起こります。一方で、この年には次のような動きもありました。インド占星術では、木星と土星がそろって仕事の部屋に影響する年でした。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱壬寅・年干の十神＝比肩"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "インド占星術",
+       "detail": "TL3-C3：木星と土星のダブルトランジット：10室"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "自分の裁量が主題の年でした。この変化は、自分の力で進む場を選んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、仕事の転機の候補は2028年・2030年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱壬寅・年干の十神＝比肩"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "インド占星術",
+     "detail": "TL3-C3：木星と土星のダブルトランジット：10室"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2028,
+    2030
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2022,
+    "hits": [
+     "TL3-C3"
+    ]
+   }
+  },
+  {
+   "id": "life-event-2025-0-move",
+   "year": 2025,
+   "kind": "move",
+   "title": "2025年の引っ越しを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2025年に、引っ越しがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "この出来事は、時系列で「暮らしの場が動きやすい」と読む年と重なっています。四柱推命では、移動を表す「駅馬」がめぐる年でした。四柱推命では、この年の干支が、あなたの命式の土台と正面から向き合う年でした。インド占星術では、木星と土星がそろって住まいの部屋に影響する年でした。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱乙巳・年干の十神＝傷官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-M1：年支巳が駅馬"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-M2：年支巳が亥と冲"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "インド占星術",
+       "detail": "TL3-M3：木星と土星のダブルトランジット：4室"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "これまでを見直すことが主題の年でした。暮らしの場の変化は、生活を自分の感覚で作り直した出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、住まいの転機の候補は2037年・2040年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱乙巳・年干の十神＝傷官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-M1：年支巳が駅馬"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-M2：年支巳が亥と冲"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "インド占星術",
+     "detail": "TL3-M3：木星と土星のダブルトランジット：4室"
+    }
+   ],
+   "overlap": true,
+   "nextYears": [
+    2037,
+    2040
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2025,
+    "hits": [
+     "TL3-M1",
+     "TL3-M2",
+     "TL3-M3"
+    ]
+   }
+  }
+ ]
+}

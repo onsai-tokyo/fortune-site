@@ -1,3 +1,4 @@
+import { TIMELINE_V3_VERSION, timelineV3CardIsValid } from './timelineV3/index.js'
 import { ANNUAL3600_VERSION } from './annual3600/version.js'
 import { annual3600Cards } from './annual3600/cards.js'
 import { TIMELINE_TAG_VERSION } from './timelineTags.js'
@@ -39,6 +40,8 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
       && (card.sections?.[0] as PersonalitySection | undefined)?.personality.status === 'pending'
     if (card.kind === 'essence' && card.evidence.length === 0 && !validPendingPersonality) violations.push({ code: 'EMPTY_EVIDENCE', path: card.id, message: 'essence evidence is empty' })
     const sections: ReportSection[] = card.sections ?? card.pages.map(page => ({ heading: page.label, body: page.text, evidence: card.evidence, termGloss: [] }))
+    const timelineV3 = card.timelineV3Calculation?.version === TIMELINE_V3_VERSION
+    if (card.timelineV3Calculation && (!timelineV3 || !timelineV3CardIsValid(card))) violations.push({code:'SCHEMA',path:card.id,message:'timeline v3 parity mismatch'})
     const annual3600 = card.annualCalculation?.version === ANNUAL3600_VERSION
     if (annual3600) {
       const meta=card.annualCalculation!.editorial
@@ -71,12 +74,12 @@ export function reportContractViolations(report: StructuredReport, input?: Repor
     for (const [index, section] of sections.entries()) {
       const headingLength = [...section.heading.trim()].length
       const bodyLength = [...section.body.trim()].length
-      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : annual3600 ? (index === 3 ? 2000 : 500) : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
+      if (headingLength < 1 || headingLength > 70 || bodyLength < 1 || bodyLength > (personalityLayout ? 4000 : timelineV3 ? 600 : annual3600 ? (index === 3 ? 2000 : 500) : 220)) violations.push({ code: 'SECTION_LENGTH', path: `${card.id}.sections[${index}]`, message: `heading=${headingLength}, body=${bodyLength}` })
       const key = normalized(section.body)
       if (seen.has(key)) violations.push({ code: 'SEMANTIC_DUPLICATE', path: `${card.id}.sections[${index}]`, message: 'duplicate section body' })
       seen.add(key)
     }
-    const expected = annual3600 ? [4,4] : personalityLayout ? [1, 1] : card.kind === 'essence' ? [input && !input.birthTime ? 2 : 3, 6] : card.kind === 'timing' ? [1, 2] : null
+    const expected = timelineV3 ? (card.timelineV3Calculation?.style === 'simple' ? [2,2] : [4,12]) : annual3600 ? [4,4] : personalityLayout ? [1, 1] : card.kind === 'essence' ? [input && !input.birthTime ? 2 : 3, 6] : card.kind === 'timing' ? [1, 2] : null
     if (expected && (sections.length < expected[0] || sections.length > expected[1])) violations.push({ code: 'SECTION_LENGTH', path: card.id, message: `section count ${sections.length}` })
     if (!input?.birthTime && /第.+回目/u.test(body)) violations.push({ code: 'BIRTH_TIME_OVERREACH', path: card.id, message: 'ordinal strong claim without birth time' })
   }

@@ -1,3 +1,5 @@
+import { birthInput } from '../timelineContext.js'
+import { replaceTimelineV3 } from './timelineV3/index.js'
 import { replaceAnnual3600 } from './annual3600/cards.js'
 import { japanDateParts } from '../japanDate.js'
 import type { ReportInput } from '../deterministicReport.js'
@@ -64,7 +66,9 @@ export function buildSelfReport(
     : options.narrativeEngine === 'blocks'
       ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
       : buildEditorialStructuredReport(facts, findings)
-  const withTiming = options.annualEngine === 'catalog3600'
+  const withTiming = options.annualEngine === 'timeline3'
+    ? replaceTimelineV3(generatedReport, {...birthInput(input), lifeEvents: input.lifeEvents, partnerSince: input.partnerSince, partnerKind: input.partnerKind, partnerBirth: input.partnerBirth}, japanDateParts().year)
+    : options.annualEngine === 'catalog3600'
     ? replaceAnnual3600(generatedReport, input, japanDateParts().year)
     : replaceTimingCards(generatedReport, input)
   const pipelineTag = selfReportPipelineTag(options)
