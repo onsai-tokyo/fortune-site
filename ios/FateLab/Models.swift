@@ -509,8 +509,11 @@ struct CoupleAllYearsHistory: Decodable {
     let collapsedYears: [Int]
     let groups: [Group]
     let entries: [Entry]
-    // The first year is the anchor of the relationship, never a hidden past year.
-    var collapsibleYears: [Int] { collapsedYears.filter { $0 != meetingYear } }
+    // Keep the first three calendar years from meeting visible (2014–2016, for example).
+    var collapsibleYears: [Int] {
+        guard let meetingYear else { return collapsedYears }
+        return collapsedYears.filter { $0 < meetingYear || $0 >= meetingYear + 3 }
+    }
 }
 
 struct CoupleMeetingSettings: Decodable {

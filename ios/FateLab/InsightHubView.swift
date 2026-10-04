@@ -241,11 +241,13 @@ struct InsightCard: View {
             }.foregroundStyle(FateTheme.ink)
         } else {
             VStack(alignment: .leading, spacing: 14) {
-                Text(item.tags.first(where: { $0 != "本質" }) ?? "あなたについて")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(.black.opacity(0.38), in: Capsule())
-                    .accessibilityAddTraits(.isHeader)
+                HStack(spacing: 10) {
+                    Rectangle().fill(.white.opacity(0.65)).frame(width: 20, height: 1)
+                    Text(item.tags.first(where: { $0 != "本質" }) ?? "あなたについて")
+                        .font(.subheadline.weight(.medium)).tracking(0.8)
+                        .accessibilityAddTraits(.isHeader)
+                }
+                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
                 Spacer(minLength: 12)
                 Text(item.title).font(.system(.headline, weight: .medium)).lineSpacing(6)
                     .fixedSize(horizontal: false, vertical: true)
@@ -322,7 +324,6 @@ struct FocusReadingView: View {
         }
     }
 
-    private var coverArtwork: String { item.scope == "couple" ? "QuietDunes" : "QuietMountains" }
     private var hasMultipleChapters: Bool { chapters.count > 1 }
 
     var body: some View {
@@ -331,10 +332,26 @@ struct FocusReadingView: View {
                 readerHeader(proxy)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
-                        cover.id("reader-top")
-                        ForEach(chapters) { chapter in
-                            chapterView(chapter, proxy: proxy).id(chapter.anchor)
+                        VStack(alignment: .leading, spacing: 28) {
+                            cover.id("reader-top")
+                            ForEach(chapters) { chapter in
+                                chapterView(chapter, proxy: proxy).id(chapter.anchor)
+                            }
                         }
+                        .padding(.horizontal, 28).padding(.top, 32).padding(.bottom, 116)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background {
+                            ZStack(alignment: .bottom) {
+                                FateArtwork(name: "QuietMountains")
+                                ReaderStyle.paper.opacity(0.35)
+                                FateArtwork(name: "QuietMountains").frame(height: 180)
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(ReaderStyle.paper.opacity(0.96))
+                                    .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 94)
+                            }.accessibilityHidden(true)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .accessibilityIdentifier("reader.mountainSheet")
                         if !isPartnerReading { questionFooter }
                     }
                     .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 40)
@@ -386,20 +403,7 @@ struct FocusReadingView: View {
             }
         }
         .foregroundStyle(ReaderStyle.ink)
-        .padding(24).padding(.top, 10).padding(.bottom, 100)
         .frame(maxWidth: .infinity, alignment: .center)
-        .background {
-            FateArtwork(name: coverArtwork)
-                .overlay {
-                    VStack(spacing: 0) {
-                        ReaderStyle.paper.opacity(0.92)
-                        LinearGradient(colors: [ReaderStyle.paper.opacity(0.92), ReaderStyle.paper.opacity(0.15)], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 100)
-                    }
-                }
-                .accessibilityHidden(true)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private func chapterView(_ chapter: Chapter, proxy: ScrollViewProxy) -> some View {
@@ -424,44 +428,13 @@ struct FocusReadingView: View {
                         .accessibilityFocused($focusedAnchor, equals: chapter.anchor)
                 }
             }
-            if chapter.role == "shadow" || chapter.role == "closing" {
-                HStack(alignment: .top, spacing: 10) {
-                    Text("“").font(.system(size: 32, design: .default))
-                        .foregroundStyle(ReaderStyle.lilac).accessibilityHidden(true)
-                    readerText(chapter.body)
-                }
-                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(ReaderStyle.blush.opacity(0.8), in: RoundedRectangle(cornerRadius: 16))
-            } else if chapter.role == "core" {
-                readerText(chapter.body).padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(ReaderStyle.line, lineWidth: 0.5))
-            } else {
-                readerText(chapter.body).padding(18)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
-            }
+            readerText(chapter.body)
             if !item.isTiming, let section = chapter.section {
                 SectionEvidenceView(section: section)
                     .tint(ReaderStyle.body)
             }
-            if chapter.id % 3 == 0 {
-                FateArtwork(name: chapter.id.isMultiple(of: 2) ? "QuietMountains" : "QuietDunes")
-                    .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 14))
-                    .accessibilityHidden(true)
-            }
             if hasMultipleChapters { chapterNavigation(chapter, proxy: proxy) }
         }
-        .padding(20)
-        .background {
-            ZStack {
-                FateArtwork(name: coverArtwork)
-                ReaderStyle.paper.opacity(0.91)
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(ReaderStyle.line, lineWidth: 0.5))
     }
 
     private func chapterNavigation(_ chapter: Chapter, proxy: ScrollViewProxy) -> some View {
@@ -575,7 +548,6 @@ struct SelfTimingList: View {
     let onQuestion: (ReadingCard) -> Void
     @State private var refreshedCards: [ReadingCard]?
     @State private var eventReadings: [LifeEventReading] = []
-    @State private var showsEvents = false
     @State private var eventError: String?
     @State private var history: SelfTimingHistory?
     @State private var showAll = false
@@ -590,7 +562,6 @@ struct SelfTimingList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Button { showsEvents = true } label: { Label("あなたの年表", systemImage: "calendar") }.buttonStyle(FLSecondaryButtonStyle())
             if let eventError { Text(eventError).font(.footnote).foregroundStyle(FateTheme.muted); Button("年表を再読み込み") { Task { await refreshTimeline(forceCards: true) } } }
 
             if conversationID != nil || cards.contains(where: { ($0.calendarYear ?? Int.max) < Calendar(identifier: .gregorian).component(.year, from: Date()) - 5 }) {
@@ -608,8 +579,6 @@ struct SelfTimingList: View {
                 ReadingCardList(cards: [card], onQuestion: onQuestion)
                 ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
             }
-        }.sheet(isPresented: $showsEvents) {
-            NavigationStack { LifeEventsEditorView { Task { await refreshTimeline(forceCards: true) } } }
         }.task(id: AccountScope(auth)) { await refreshTimeline() }
     }
 
