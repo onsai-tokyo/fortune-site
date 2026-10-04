@@ -19,7 +19,10 @@ struct FateLabApp: App {
 
     @ViewBuilder private var appContent: some View {
 #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--partner-essence94-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--feedback97-preview") {
+            let cards = try! JSONDecoder().decode([ReadingCard].self, from: Data(#"[{"id":"preview-personality","kind":"essence","tab":"essence","scope":"self","title":"好きなものは、一人でじっくり比較し、探究し尽くしたい人です","summary":"消耗と回復","tags":["消耗と回復"],"pages":[{"role":"core","label":"消耗と回復","text":"これは表示確認用のサンプルです。好きなものを自分のペースで深めていく時間が、気持ちを整えるきっかけになります。\n\n予定が重なるときには、静かに過ごせる時間を確保します。"}],"evidence":[]},{"id":"preview-timing","kind":"timing","tab":"timing","scope":"self","title":"関係を組み替える年","summary":"これは表示確認用のサンプルです。人との距離や役割を見直し、心地よい関わり方を探す年です。","tags":[],"period":{"label":"2026年"},"timelineV3Calculation":{"version":"timeline-v3.31"},"pages":[],"sections":[{"heading":"この年の鑑定","body":"これは表示確認用のサンプルです。新しい関わりが始まる可能性があります。今ある関係の中で、お互いの時間や役割を確かめることもあるでしょう。","evidence":[],"termGloss":[]},{"heading":"根拠と期間","body":"この説明は画面には表示しません。","evidence":[],"termGloss":[]}],"evidence":[]}]"#.utf8))
+            NavigationStack { ScrollView { ReadingCardList(cards: cards, onQuestion: { _ in }).padding(20) }.fateAppHeader() }.environmentObject(auth)
+        } else if ProcessInfo.processInfo.arguments.contains("--partner-essence94-preview") {
             let cards = try! JSONDecoder().decode([ReadingCard].self, from: Data(#"[{"id":"preview-partner-essence","kind":"essence","tab":"essence","scope":"self","title":"自分も人も縛らず、さまざまなことへ関心を広げていく人です","summary":"表示確認用の文章です。","tags":["人生の軸"],"pages":[{"role":"core","label":"相手の本質","text":"興味を持ったことを自分のペースで深めていく人です。"}],"evidence":[]},{"id":"preview-partner-timing","kind":"timing","tab":"timing","scope":"self","title":"表示対象外の年運","summary":"年運","tags":["時期"],"pages":[],"evidence":[]}]"#.utf8))
             NavigationStack { ScrollView { PartnerEssenceContent(report: GeneratedReport(birthData: [:], calculatedData: [:], text: "", cards: cards)).padding(20) }.navigationTitle("あの人について") }.environmentObject(auth).tint(FateTheme.ink)
         } else if ProcessInfo.processInfo.arguments.contains("--timeline-self91-preview") {

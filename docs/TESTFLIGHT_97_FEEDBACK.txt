@@ -1,0 +1,31 @@
+TestFlight 96 feedback — Build 97 (2026-10-04)
+
+Implemented six feedback items:
+1. Larger, semibold category labels on a contrasting capsule over the nature artwork.
+2. Hide the timing chapter "根拠と期間" in presentation only; retain the original data.
+3. Keep the meeting year visible before the collapsed intervening years. Compatible
+   with server layouts that include the meeting year in collapsedYears.
+4. Restore recent saved reports immediately from an account/login-scoped memory
+   cache and refresh from the server in the background. Seed the cache after saving
+   a generated report and after loading cards. Keep at most twelve reports, no disk
+   persistence. Returning to the timing tab no longer fetches the same cards again.
+5. Remove duplicated domain excerpts and evidence text from timing list cards.
+6. Use the same nature-tinted reading surface around personality/timing chapter
+   bodies, keeping all reading text and calculation rules unchanged.
+
+Pending: "supabase.co" in the Google login system confirmation.
+The screenshot shows ASWebAuthenticationSession's system-owned domain label,
+not an app-authored string. Asked the user for an available branded domain.
+No authentication routing or security prompts were bypassed or altered.
+
+Validation:
+- xcodebuild test: 123 tests executed, 2 skipped, 0 failures (signed simulator).
+- New regression cases cover account/epoch cache isolation, always-visible meeting
+  year, and hiding only the evidence chapter without mutating the original text.
+- Simulator visual check: category label, concise annual list, personality reader,
+  annual reader without the evidence chapter. Synthetic preview data only.
+- Release archive succeeded. TestFlight upload tracked in ../upload97.log outside repo.
+
+Limit: cache accelerates reopening within the current login session. The first open
+after restarting the app still requires a server fetch. Actual iPhone timings have
+not been measured.

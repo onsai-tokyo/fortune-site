@@ -333,12 +333,16 @@ struct ReadingCard: Codable, Identifiable {
         return period?.label.replacingOccurrences(of: "（立春から翌年の立春まで）", with: "")
     }
     var displaySections: [ReadingCardSection]? {
-        guard isAnnualCatalogue else { return sections }
-        return sections?.filter { $0.heading != "対象期間と候補ラベル" }
+        return sections?.filter { section in
+            if isTiming && section.heading == "根拠と期間" { return false }
+            return !isAnnualCatalogue || section.heading != "対象期間と候補ラベル"
+        }
     }
     var displayPages: [ReadingCardPage] {
-        guard isAnnualCatalogue else { return pages }
-        return pages.filter { $0.label != "対象期間と候補ラベル" }
+        return pages.filter { page in
+            if isTiming && page.label == "根拠と期間" { return false }
+            return !isAnnualCatalogue || page.label != "対象期間と候補ラベル"
+        }
     }
 
     struct DomainSummary { let label: String; let text: String }
@@ -505,6 +509,8 @@ struct CoupleAllYearsHistory: Decodable {
     let collapsedYears: [Int]
     let groups: [Group]
     let entries: [Entry]
+    // The first year is the anchor of the relationship, never a hidden past year.
+    var collapsibleYears: [Int] { collapsedYears.filter { $0 != meetingYear } }
 }
 
 struct CoupleMeetingSettings: Decodable {
