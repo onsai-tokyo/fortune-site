@@ -1,0 +1,147 @@
+{
+ "input": {
+  "birthDate": "1995-02-20",
+  "birthplace": "愛知県",
+  "gender": "female",
+  "workContext": "employed"
+ },
+ "events": [
+  {
+   "year": 2016,
+   "kind": "breakup"
+  },
+  {
+   "year": 2021,
+   "kind": "job"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2016-0-breakup",
+   "year": 2016,
+   "kind": "breakup",
+   "title": "2016年の別れを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2016年に、別れがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱丙申・年干の十神＝偏財"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "世界が広がる年でした。この区切りは、新しい場へ進むために関係を整理した出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2030年・2033年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱丙申・年干の十神＝偏財"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2033
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2016,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2021-0-job",
+   "year": 2021,
+   "kind": "job",
+   "title": "2021年の仕事の変化を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2021年に、仕事の変化がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は仕事の転機の候補には入っていませんでした。判定に出ない年にも、仕事の変化は起こります。一方で、この年には次のような動きもありました。四柱推命では、この年の干が、仕事や所属、学びを表す星にあたる年でした。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱辛丑・年干の十神＝正印"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-C1：年干辛が正印"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "学びや準備が主題の年でした。この変化は、次の段階に向けて足場を整えた出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、仕事の転機の候補は2028年・2030年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱辛丑・年干の十神＝正印"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-C1：年干辛が正印"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2028,
+    2030
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2021,
+    "hits": [
+     "TL3-C1"
+    ]
+   }
+  }
+ ]
+}

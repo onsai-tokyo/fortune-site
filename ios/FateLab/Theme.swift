@@ -1,22 +1,25 @@
 import SwiftUI
 
 enum FateTheme {
-    static let canvas = Color(red: 1, green: 1, blue: 1)
-    static let ink = Color(red: 0.067, green: 0.067, blue: 0.067)
-    static let body = Color(red: 0.176, green: 0.176, blue: 0.176)
-    static let muted = Color(red: 0.463, green: 0.463, blue: 0.463)
-    static let line = Color(red: 0.910, green: 0.910, blue: 0.910)
-    static let surface = Color(red: 0.969, green: 0.969, blue: 0.969)
+    static let canvas = Color(red: 0.977, green: 0.973, blue: 0.961)
+    static let ink = Color(red: 0.078, green: 0.086, blue: 0.078)
+    static let body = Color(red: 0.239, green: 0.247, blue: 0.227)
+    static let muted = Color(red: 0.424, green: 0.439, blue: 0.408)
+    static let line = Color(red: 0.887, green: 0.884, blue: 0.862)
+    static let surface = Color(red: 0.936, green: 0.932, blue: 0.916)
+    static let card = Color.white
+    static let cream = Color(red: 0.963, green: 0.944, blue: 0.893)
     static let danger = Color(red: 0.706, green: 0.137, blue: 0.094)
 }
 
 enum FateType {
-    static let screenTitle = Font.system(size: 30, weight: .bold)
-    static let sectionTitle = Font.system(size: 22, weight: .medium)
-    static let cardTitle = Font.system(size: 17, weight: .semibold)
-    static let body = Font.system(size: 15)
-    static let caption = Font.system(size: 13)
-    static let label = Font.system(size: 12, weight: .medium)
+    static let screenTitle = Font.system(.title, design: .default, weight: .medium)
+    static let sectionTitle = Font.system(.title3, design: .default, weight: .medium)
+    static let cardTitle = Font.system(.body, weight: .medium)
+    static let body = Font.system(.subheadline)
+    static let caption = Font.system(.footnote)
+    static let label = Font.system(.caption, weight: .medium)
+    static let button = Font.system(.callout, weight: .medium)
 }
 
 enum FateSpacing {
@@ -29,34 +32,50 @@ enum FateSpacing {
 }
 
 enum FLSpacing { static let xs: CGFloat = 8; static let sm: CGFloat = 12; static let md: CGFloat = 16; static let lg: CGFloat = 24; static let xl: CGFloat = 32; static let section: CGFloat = 40 }
-enum FLRadius { static let card: CGFloat = 16; static let button: CGFloat = 16; static let chip: CGFloat = 18 }
+enum FLRadius { static let card: CGFloat = 20; static let button: CGFloat = 16; static let chip: CGFloat = 18 }
 
 struct FateMark: View {
     let size: CGFloat
+    var color: Color = FateTheme.ink
     var body: some View { ZStack {
-        Ellipse().stroke(FateTheme.ink, lineWidth: 1).frame(width: size, height: size * 0.58)
-        Ellipse().stroke(FateTheme.ink, lineWidth: 1).frame(width: size * 0.58, height: size).rotationEffect(.degrees(24))
-        Rectangle().fill(FateTheme.ink).frame(width: 1, height: size * 0.92)
-        Circle().fill(FateTheme.ink).frame(width: max(3, size * 0.07), height: max(3, size * 0.07)).offset(x: size * 0.31, y: -size * 0.12)
+        Ellipse().stroke(color, lineWidth: 1).frame(width: size, height: size * 0.58)
+        Ellipse().stroke(color, lineWidth: 1).frame(width: size * 0.58, height: size).rotationEffect(.degrees(24))
+        Rectangle().fill(color).frame(width: 1, height: size * 0.92)
+        Circle().fill(color).frame(width: max(3, size * 0.07), height: max(3, size * 0.07)).offset(x: size * 0.31, y: -size * 0.12)
     }.frame(width: size, height: size) }
 }
 
 struct FLPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View { configuration.label.font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity).frame(height: 56).foregroundStyle(FateTheme.canvas).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 16)).opacity(configuration.isPressed ? 0.72 : 1) }
+    @Environment(\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(FateType.button)
+            .multilineTextAlignment(.center).padding(.horizontal, 20).padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .foregroundStyle(FateTheme.canvas).background(FateTheme.ink, in: RoundedRectangle(cornerRadius: FLRadius.button, style: .continuous))
+            .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.72 : 1)
+    }
 }
 struct FLSecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View { configuration.label.font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity).frame(height: 56).foregroundStyle(FateTheme.ink).background(FateTheme.canvas).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line)).clipShape(RoundedRectangle(cornerRadius: 16)).opacity(configuration.isPressed ? 0.65 : 1) }
+    @Environment(\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(FateType.button)
+            .multilineTextAlignment(.center).padding(.horizontal, 16).padding(.vertical, 13)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .foregroundStyle(FateTheme.ink).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line, lineWidth: 0.7))
+            .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.65 : 1)
+    }
 }
-struct FLTextLink: View { let title: String; let action: () -> Void; var body: some View { Button(title, action: action).font(.system(size: 16, weight: .semibold)).foregroundStyle(FateTheme.ink).frame(minHeight: 44) } }
-struct FLDivider: View { var body: some View { Rectangle().fill(FateTheme.line).frame(height: 1) } }
+struct FLTextLink: View { let title: String; let action: () -> Void; var body: some View { Button(title, action: action).font(.system(.subheadline, weight: .medium)).foregroundStyle(FateTheme.ink).frame(minHeight: 44) } }
+struct FLDivider: View { var body: some View { Rectangle().fill(FateTheme.line).frame(height: 0.5) } }
 struct FLProgressIndicator: View { let current: Int; let total: Int; var body: some View { HStack(spacing: 5) { ForEach(1...total, id: \.self) { step in Capsule().fill(step <= current ? FateTheme.ink : FateTheme.line).frame(height: 3) } } } }
-struct FLChip: View { let title: String; var selected = false; let action: () -> Void; var body: some View { Button(title, action: action).font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.ink).padding(.horizontal, 14).frame(height: 36).background(selected ? FateTheme.surface : FateTheme.canvas).overlay(Capsule().stroke(FateTheme.line)).clipShape(Capsule()) } }
+struct FLChip: View { let title: String; var selected = false; let action: () -> Void; var body: some View { Button(title, action: action).font(.caption.weight(.medium)).foregroundStyle(FateTheme.ink).padding(.horizontal, 14).frame(minHeight: 44).background(selected ? FateTheme.surface : FateTheme.canvas).overlay(Capsule().stroke(FateTheme.line)).clipShape(Capsule()) } }
 struct FLCard<Content: View>: View {
     @ViewBuilder let content: Content
     var body: some View {
         content.padding(FateSpacing.cardPadding).frame(maxWidth: .infinity, alignment: .leading)
-            .background(FateTheme.canvas)
-            .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line))
+            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line, lineWidth: 0.7))
     }
 }
 
@@ -68,7 +87,7 @@ struct FLListRow: View {
         HStack(spacing: FateSpacing.regular) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(title).font(FateType.cardTitle).foregroundStyle(FateTheme.ink)
-                if let subtitle { Text(subtitle).font(FateType.caption).foregroundStyle(FateTheme.muted).lineLimit(2) }
+                if let subtitle { Text(subtitle).font(FateType.caption).foregroundStyle(FateTheme.muted).fixedSize(horizontal: false, vertical: true) }
             }
             Spacer(minLength: 8)
             if showsChevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
@@ -94,9 +113,10 @@ struct FLEmptyState: View {
     let message: String
     var body: some View {
         VStack(spacing: FateSpacing.regular) {
-            Text(title).font(FateType.sectionTitle)
+            FateMark(size: 32).padding(18).background(FateTheme.cream.opacity(0.55), in: Circle()).accessibilityHidden(true)
+            Text(title).font(FateType.sectionTitle).multilineTextAlignment(.center)
             Text(message).font(FateType.caption).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center).lineSpacing(4)
-        }.frame(maxWidth: .infinity).padding(.vertical, FateSpacing.sectionV)
+        }.frame(maxWidth: .infinity).padding(24).background(FateTheme.card.opacity(0.75), in: RoundedRectangle(cornerRadius: 22))
     }
 }
 
@@ -149,9 +169,93 @@ struct FLErrorState: View {
 
 struct FLInsightRow: View { let title: String; let subtitle: String; var body: some View { FLListRow(title: title, subtitle: subtitle) } }
 
+/// Shared loading presentation; the displayed progress always comes from the operation.
+struct FateLoadingView: View {
+    let title: String
+    let detail: String
+    var progress: Int? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var breathing = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Circle().fill(FateTheme.card.opacity(0.75)).frame(width: 104, height: 104)
+                    .scaleEffect(breathing && !reduceMotion ? 1.06 : 1)
+                Circle().stroke(FateTheme.line.opacity(0.7), lineWidth: 0.5).frame(width: 122, height: 122)
+                FateMark(size: 54).opacity(0.75)
+            }.accessibilityHidden(true)
+            Text("FATE LAB").font(.system(size: 10, weight: .medium)).tracking(4)
+                .foregroundStyle(FateTheme.muted).padding(.top, 24)
+            Text(title).font(.system(.title3, weight: .medium)).lineSpacing(5)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).padding(.top, 28)
+            Text(detail).font(FateType.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).padding(.top, 12)
+            Group {
+                if let progress {
+                    VStack(spacing: 10) {
+                        ProgressView(value: Double(min(100, max(0, progress))), total: 100)
+                            .tint(FateTheme.muted).accessibilityLabel("鑑定の進み具合")
+                        Text("\(min(100, max(0, progress)))%").font(.caption.monospacedDigit())
+                            .foregroundStyle(FateTheme.muted).accessibilityHidden(true)
+                    }
+                } else { ProgressView().tint(FateTheme.muted).accessibilityLabel("読み込み中") }
+            }.frame(maxWidth: 180).padding(.top, 28)
+        }
+        .frame(maxWidth: 340).padding(.horizontal, 28).padding(.vertical, 36)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) { breathing = true }
+        }
+        .onDisappear { breathing = false }
+    }
+}
+
+struct FateLoadingBackground: View {
+    var body: some View {
+        FateTheme.canvas.overlay {
+            FateArtwork(name: "QuietMountains").opacity(0.28)
+                .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom))
+        }.ignoresSafeArea().accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
 struct ReadingGenerationProgressView: View {
-    let kind: GenerationKind; let progress: GenerationProgress
-    var body: some View { VStack(spacing: 28) { Spacer(); FateMark(size: 76); Text(kind == .selfReading ? "あなたのパターンを読んでいます" : "ふたりのパターンを読んでいます").font(.system(size: 21, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.85); Text("\(progress.percent)%").font(.system(size: 44, weight: .bold)); ProgressView(value: Double(progress.percent), total: 100).tint(FateTheme.ink); VStack(spacing: 10) { Text(progress.title).font(.system(size: 20, weight: .semibold)); Text(progress.detail).font(.system(size: 15)).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center) }; Spacer() }.padding(.horizontal, 24).padding(.vertical, 28).frame(maxWidth: .infinity, maxHeight: .infinity).background(FateTheme.canvas.ignoresSafeArea()).accessibilityLabel("\(progress.percent)パーセント。\(progress.title)") }
+    let kind: GenerationKind
+    let progress: GenerationProgress
+    var body: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 12) {
+                    Spacer(minLength: 24)
+                    FateLoadingView(
+                        title: kind == .selfReading ? "あなたのパターンを読み解いています" : "ふたりのパターンを読み解いています",
+                        detail: progress.title + "\n" + progress.detail,
+                        progress: progress.isIndeterminate ? nil : progress.percent)
+                    SlowConnectionNotice().id(progress).padding(.horizontal, 32)
+                    Spacer(minLength: 24)
+                }.frame(maxWidth: .infinity).frame(minHeight: geometry.size.height)
+            }.scrollIndicators(.hidden)
+        }.background { FateLoadingBackground() }
+    }
+}
+
+/// Delayed explanation only: never starts a retry or clears an in-flight operation.
+struct SlowConnectionNotice: View {
+    @State private var showNotice = false
+    var body: some View {
+        Group {
+            if showNotice {
+                Text("接続や処理に時間がかかっています。通信できない場合は、再試行の案内が表示されます。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .task {
+            do { try await Task.sleep(for: .seconds(8)); showNotice = true }
+            catch { /* The stage/view changed; keep the next stage's timer independent. */ }
+        }
+    }
 }
 
 struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { FLCard { content } } }
@@ -171,12 +275,13 @@ extension View { func userFacingMessage(_ error: Error) -> String? { userFacingE
 struct FateAppHeader: View {
     var body: some View {
         HStack(spacing: 8) {
+            Spacer()
             FateMark(size: 24)
             Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(3)
             Spacer()
         }
         .padding(.horizontal, FateSpacing.screenH)
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
         .background(FateTheme.canvas)
         .overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .bottom)
@@ -199,8 +304,10 @@ struct DateMenuPicker: View {
     private var day: Binding<Int> { componentBinding(.day, fallback: 1) }
     private var daysInMonth: Int { let first = calendar.date(from: DateComponents(year: year.wrappedValue, month: month.wrappedValue, day: 1)) ?? date; return calendar.range(of: .day, in: .month, for: first)?.count ?? 31 }
 
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
-        HStack(spacing: 8) {
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 8))
+        layout {
             Picker("年", selection: year) { ForEach(Array(stride(from: calendar.component(.year, from: Date()), through: 1900, by: -1)), id: \.self) { Text(verbatim: "\($0)年").tag($0) } }
             Picker("月", selection: month) { ForEach(1...12, id: \.self) { Text(verbatim: "\($0)月").tag($0) } }
             Picker("日", selection: day) { ForEach(1...daysInMonth, id: \.self) { Text(verbatim: "\($0)日").tag($0) } }
@@ -230,8 +337,10 @@ struct TimeMenuPicker: View {
         update(hour: hour.wrappedValue ?? 12, minute: value)
     }) }
 
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
-        HStack(spacing: 8) {
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 8))
+        layout {
             Picker("時", selection: hour) {
                 Text("--時").tag(Int?.none)
                 ForEach(0..<24, id: \.self) { Text(verbatim: "\($0)時").tag(Int?.some($0)) }
@@ -262,17 +371,18 @@ struct BirthProfileFields: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("生年月日").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Text("生年月日").font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted)
             DateMenuPicker(date: $date)
             FLDivider()
-            Text("出生時刻（任意）").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Text("出生時刻（任意）").font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted)
+            Text("母子健康手帳の出産の記録に載っています。時刻があると、時期を月単位で読めます。").font(.caption).foregroundStyle(FateTheme.muted)
             TimeMenuPicker(time: $birthTime)
             Text("分からない場合は空欄のまま進めます").font(.footnote).foregroundStyle(FateTheme.muted)
             FLDivider()
-            Text("出生地").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Text("出生地").font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted)
             selectionRow(value: birthplace) { showBirthplacePicker = true }
             FLDivider()
-            Text("性別").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Text("性別").font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted)
             selectionRow(value: gender == "male" ? "男性" : "女性") { showGenderPicker = true }
         }
         .sheet(isPresented: $showBirthplacePicker) { birthplacePickerSheet }
@@ -282,7 +392,7 @@ struct BirthProfileFields: View {
     private func selectionRow(value: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack { Text(value).foregroundStyle(FateTheme.ink); Spacer(); Image(systemName: "chevron.right").foregroundStyle(FateTheme.muted) }
-                .contentShape(Rectangle()).padding(.vertical, 6)
+                .frame(minHeight: 44).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
@@ -303,5 +413,61 @@ struct BirthProfileFields: View {
                 Button("男性") { gender = "male"; showGenderPicker = false }
             }.foregroundStyle(FateTheme.ink).scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("性別")
         }.presentationDetents([.medium])
+    }
+}
+
+/// Bundled decorative art never performs a request or participates in layout sizing.
+struct FateArtwork: View {
+    let name: String
+    var alignment: Alignment = .center
+
+    var body: some View {
+        GeometryReader { geometry in
+            Image(name).resizable().scaledToFill()
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: alignment)
+                .clipped()
+        }
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+struct FateEditorialHero: View {
+    let eyebrow: String
+    let title: String
+    let subtitle: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(eyebrow).font(.caption2.weight(.medium)).tracking(2.5).foregroundStyle(FateTheme.muted)
+            Text(title).font(FateType.screenTitle).lineSpacing(5).foregroundStyle(FateTheme.ink)
+            Text(subtitle).font(.subheadline).lineSpacing(5).foregroundStyle(FateTheme.muted)
+        }.padding(24).padding(.bottom, 44).frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                FateArtwork(name: "QuietMountains")
+                    .overlay(LinearGradient(colors: [FateTheme.cream.opacity(0.97), FateTheme.cream.opacity(0.72), .clear], startPoint: .top, endPoint: .bottom))
+            }.clipShape(RoundedRectangle(cornerRadius: 22))
+    }
+}
+
+/// A single field surface shared by sign-in and profile forms.
+extension View {
+    func fateInput() -> some View {
+        font(.body).padding(.horizontal, 16).padding(.vertical, 15)
+            .frame(minHeight: 52)
+            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line, lineWidth: 0.7))
+    }
+}
+
+struct FateInlineLoading: View {
+    let title: String
+    var body: some View {
+        HStack(spacing: 12) {
+            ProgressView().tint(FateTheme.muted)
+            Text(title).font(.footnote).foregroundStyle(FateTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .background(FateTheme.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
+            .accessibilityElement(children: .combine)
     }
 }

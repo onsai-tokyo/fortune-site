@@ -1,0 +1,162 @@
+{
+ "input": {
+  "birthDate": "1997-07-30",
+  "birthTime": "18:30",
+  "birthplace": "佐賀県",
+  "gender": "female",
+  "workContext": "employed",
+  "relationshipStatus": "partnered"
+ },
+ "events": [
+  {
+   "year": 2019,
+   "kind": "study"
+  },
+  {
+   "year": 2022,
+   "month": 10,
+   "kind": "start"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2019-0-study",
+   "year": 2019,
+   "kind": "study",
+   "title": "2019年の進学・卒業を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2019年に、進学・卒業がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は仕事の転機の候補には入っていませんでした。判定に出ない年にも、仕事の変化は起こります。一方で、この年には次のような動きもありました。四柱推命では、この年の干が、仕事や所属、学びを表す星にあたる年でした。四柱推命では、この年の干支が、あなたの命式で仕事の場を表す部分と響き合う年でした。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱己亥・年干の十神＝偏官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-C1：年干己が偏官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-C2：年支亥が月支未と三合"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "責任や決断が求められる年でした。この変化は、新しい役割に挑んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、仕事の転機の候補は2030年・2031年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱己亥・年干の十神＝偏官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-C1：年干己が偏官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-C2：年支亥が月支未と三合"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2031
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2019,
+    "hits": [
+     "TL3-C1",
+     "TL3-C2"
+    ]
+   }
+  },
+  {
+   "id": "life-event-2022-10-start",
+   "year": 2022,
+   "month": 10,
+   "kind": "start",
+   "title": "2022年の交際の始まりを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2022年10月に、交際の始まりがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱壬寅・年干の十神＝劫財"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "仲間や身近な人との関わりが主題の年でした。この始まりは、人とのつながりの中から生まれた縁として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2028年・2029年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱壬寅・年干の十神＝劫財"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2028,
+    2029
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2022,
+    "hits": []
+   }
+  }
+ ]
+}

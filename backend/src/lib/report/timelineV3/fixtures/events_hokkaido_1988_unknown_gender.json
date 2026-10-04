@@ -1,0 +1,145 @@
+{
+ "input": {
+  "birthDate": "1988-08-08",
+  "birthTime": "21:00",
+  "birthplace": "北海道"
+ },
+ "events": [
+  {
+   "year": 2012,
+   "kind": "start"
+  },
+  {
+   "year": 2018,
+   "kind": "job"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2012-0-start",
+   "year": 2012,
+   "kind": "start",
+   "title": "2012年の交際の始まりを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2012年に、交際の始まりがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱壬辰・年干の十神＝正印"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "支えを受け取ることが主題の年でした。この始まりは、安心して頼れる相手との出会いとして読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2037年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱壬辰・年干の十神＝正印"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2037
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2012,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2018-0-job",
+   "year": 2018,
+   "kind": "job",
+   "title": "2018年の仕事の変化を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2018年に、仕事の変化がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は仕事の転機の候補には入っていませんでした。判定に出ない年にも、仕事の変化は起こります。一方で、この年には次のような動きもありました。インド占星術では、木星と土星がそろって仕事の部屋に影響する年でした。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱戊戌・年干の十神＝正財"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "インド占星術",
+       "detail": "TL3-C3：木星と土星のダブルトランジット：10室"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "堅実さが主題の年でした。この変化は、安定した働き方や条件を選んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、仕事の転機の候補は2030年・2031年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱戊戌・年干の十神＝正財"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "インド占星術",
+     "detail": "TL3-C3：木星と土星のダブルトランジット：10室"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2030,
+    2031
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2018,
+    "hits": [
+     "TL3-C3"
+    ]
+   }
+  }
+ ]
+}

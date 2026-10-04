@@ -6,6 +6,7 @@ struct ReadingChatView: View {
     @EnvironmentObject private var tabRouter: AppTabRouter
     let conversationID: UUID
     let contextTitle: String?
+    private let api: APIClient
     @State private var activeConversationID: UUID
     @State private var detail: ConversationDetail?
     @State private var messages: [ReadingMessage] = []
@@ -28,7 +29,8 @@ struct ReadingChatView: View {
     @State private var saveMessage: String?
     @FocusState private var isInputFocused: Bool
 
-    init(conversationID: UUID, contextTitle: String? = nil, draftQuestion: String? = nil) {
+    init(conversationID: UUID, contextTitle: String? = nil, draftQuestion: String? = nil, api: APIClient = .shared) {
+        self.api = api
         self.conversationID = conversationID
         self.contextTitle = contextTitle
         _activeConversationID = State(initialValue: conversationID)
@@ -51,7 +53,7 @@ struct ReadingChatView: View {
                         if messages.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("どこから読み解きますか？")
-                                    .font(.system(size: 22, weight: .medium))
+                                    .font(.system(.title2, weight: .medium))
                                 Text("鑑定書で気になった部分を、そのまま質問できます。")
                                     .foregroundStyle(FateTheme.muted).lineSpacing(6)
                                 ForEach(suggestions, id: \.self) { suggestion in
@@ -65,14 +67,14 @@ struct ReadingChatView: View {
                         }
                         if messages.last?.role == "assistant" && !isBlocked && !followUpSuggestions.isEmpty {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("続けて読み解く").font(.system(size: 16, weight: .medium)).padding(.bottom, 2)
+                                Text("続けて読み解く").font(.system(.body, weight: .medium)).padding(.bottom, 2)
                                 ForEach(followUpSuggestions, id: \.self) { suggestion in
                                     Button(suggestion) { input = suggestion }
                                         .buttonStyle(SuggestionButtonStyle())
                                 }
                             }.padding(.top, 4)
                         }
-                        if isWorking { Text("鑑定結果を読み解いています…").font(.system(size: 14)).foregroundStyle(FateTheme.muted) }
+                        if isWorking { FateInlineLoading(title: "鑑定結果を読み解いています") }
                         Color.clear.frame(height: 72).id("bottom")
                     }.padding(18)
                 }
@@ -108,17 +110,18 @@ struct ReadingChatView: View {
                 }
                 HStack(alignment: .bottom, spacing: 6) {
                     TextField("鑑定について聞く…", text: $input, axis: .vertical)
+                        .accessibilityIdentifier("chat.input")
                         .focused($isInputFocused)
                         .lineLimit(1...5).padding(.leading, 12).padding(.vertical, 12)
                     Button {
                         if isWorking { streamTask?.cancel(); return }
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !question.isEmpty else { return }
+                        guard !question.isEmpty, !isWorking else { return }
                         if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
-                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(.white).frame(width: 38, height: 38).background(FateTheme.ink).clipShape(Circle()) }
+                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(.subheadline, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).background(FateTheme.ink).clipShape(Circle()) }
                     .accessibilityLabel(isWorking ? "回答を停止" : "送信")
                     .padding(.trailing, 5).padding(.vertical, 5)
-                }.background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line))
+                }.background(FateTheme.card).clipShape(RoundedRectangle(cornerRadius: 26)).overlay(RoundedRectangle(cornerRadius: 26).stroke(FateTheme.line, lineWidth: 0.7))
                 Button { Task { await saveConversation() } } label: {
                     Label(isSaved ? "保存済み" : "この鑑定を保存する", systemImage: isSaved ? "bookmark.fill" : "bookmark")
                         .frame(maxWidth: .infinity)
@@ -128,15 +131,22 @@ struct ReadingChatView: View {
                 if let saveMessage {
                     Text(saveMessage).font(.caption).foregroundStyle(saveMessage == "保存しました" ? FateTheme.muted : .red)
                 }
-            }.padding(14).background(FateTheme.canvas)
+            }.padding(16).background(FateTheme.canvas)
+                .overlay(alignment: .top) { Rectangle().fill(FateTheme.line).frame(height: 0.5) }
         }
         .background(FateTheme.canvas).fateScreenTitle(detail?.conversation.title ?? "鑑定結果への質問")
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
+#if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--ui-chat89-preview") {
+                messages = [ReadingMessage(id: nil, role: "user", content: "自分のペースで働くために、何を大切にするとよいですか？", createdAt: nil), ReadingMessage(id: nil, role: "assistant", content: "これは表示確認用のサンプルです。\n\n一度にすべてを変えるより、気持ちよく続けられることを一つずつ確かめる時間をつくってみましょう。自分に合うリズムを知ることが、次の選択の手がかりになります。", createdAt: nil)]
+                return
+            }
+#endif
             Task { await load() }
         }
-        .onDisappear { isInputFocused = false }
+        .onDisappear { isInputFocused = false; streamTask?.cancel() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showSourceReport = true } label: { Image(systemName: "doc.text") }
@@ -148,7 +158,7 @@ struct ReadingChatView: View {
             NavigationStack {
                 ScrollView {
                     Text(detail?.conversation.reportText ?? "")
-                        .font(.system(size: 16)).lineSpacing(8)
+                        .font(.system(.body)).lineSpacing(8)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(20)
                 }
                 .background(FateTheme.canvas).fateScreenTitle("もとの鑑定書")
@@ -170,10 +180,10 @@ struct ReadingChatView: View {
         let remaining = status.remaining ?? 0
         VStack(alignment: .leading, spacing: 5) {
             Text(remaining > 0 ? "無料でお読みいただける残り：\(remaining)回" : "無料分をご利用いただきました")
-                .font(.system(size: 14)).foregroundStyle(FateTheme.muted)
+                .font(.system(.footnote)).foregroundStyle(FateTheme.muted)
             if remaining == 1 {
-                Button("継続鑑定では、回数の制限なくお読みいただけます") { showPaywall = true }
-                    .font(.system(size: 13)).foregroundStyle(FateTheme.ink)
+                Button("継続鑑定の利用内容を確認する") { showPaywall = true }
+                    .font(.system(.caption)).foregroundStyle(FateTheme.ink)
             }
         }
     }
@@ -183,12 +193,14 @@ struct ReadingChatView: View {
             if message.role == "user" { Spacer(minLength: 24) }
             if message.role == "assistant" {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) { FateMark(size: 18); Text("FATE LAB").font(.system(size: 11, weight: .medium)).tracking(2) }
+                    HStack(spacing: 8) { FateMark(size: 18); Text("FATE LAB").font(.system(.caption2, weight: .medium)).tracking(2) }
                     if message.content.isEmpty && isWorking { Text("•••").foregroundStyle(FateTheme.muted) }
-                    else { Text(styledAnswer(message.content)).font(.system(size: 16)).lineSpacing(7).foregroundStyle(FateTheme.body) }
+                    else { Text(styledAnswer(message.content)).font(.system(.body)).lineSpacing(7).foregroundStyle(FateTheme.body) }
                 }
+                .padding(18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(FateTheme.line, lineWidth: 0.7))
             } else {
-                Text(message.content).font(.system(size: 15)).foregroundStyle(FateTheme.canvas).padding(.horizontal, 14).padding(.vertical, 11).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 16))
+                Text(message.content).font(.system(.subheadline)).foregroundStyle(FateTheme.canvas).padding(.horizontal, 14).padding(.vertical, 11).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 16))
             }
             if message.role != "user" { Spacer(minLength: 24) }
         }
@@ -196,7 +208,7 @@ struct ReadingChatView: View {
 
     private func styledAnswer(_ content: String) -> AttributedString {
         var result = AttributedString(content)
-        if let end = result.characters.firstIndex(where: { "。！？".contains($0) }) { result[result.startIndex...end].font = .system(size: 16, weight: .bold) }
+        if let end = result.characters.firstIndex(where: { "。！？".contains($0) }) { result[result.startIndex...end].font = .system(.body, weight: .bold) }
         return result
     }
 
@@ -204,44 +216,58 @@ struct ReadingChatView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
             Text("もう少し、深く読み解きますか。")
-                .font(.system(size: 20, weight: .medium))
+                .font(.system(.title3, weight: .medium))
             Button("継続鑑定について詳しく見る") { showPaywall = true }.buttonStyle(FLSecondaryButtonStyle())
         }.padding(16).background(FateTheme.surface)
             .overlay(Rectangle().frame(height: 1).foregroundStyle(FateTheme.line), alignment: .top)
     }
 
     private func load() async {
+        let owner = AccountScope(auth)
         guard auth.session != nil else { return }
         do {
-            let value = try await APIClient.shared.conversation(id: activeConversationID, auth: auth)
+            let pendingDraft = try await api.recoverQuestionDraft(conversationID: activeConversationID, auth: auth)
+            try owner.check(auth)
+            let value = try await api.conversation(id: activeConversationID, auth: auth)
+            try owner.check(auth)
             detail = value; messages = value.messages; isSaved = value.conversation.isSaved ?? false
+            if input.isEmpty, let pendingDraft { input = pendingDraft }
             await loadStatus()
-        } catch { handleChatError(error) }
+        } catch { if owner.isCurrent(auth) { handleChatError(error) } }
     }
 
     private func saveConversation() async {
+        let owner = AccountScope(auth)
         guard !isSaved, !isSaving else { return }
         isSaving = true; saveMessage = nil
-        defer { isSaving = false }
+        defer { if owner.isCurrent(auth) { isSaving = false } }
         do {
-            try await APIClient.shared.setConversationSaved(id: activeConversationID, isSaved: true, auth: auth)
+            try await api.setConversationSaved(id: activeConversationID, isSaved: true, auth: auth)
+            try owner.check(auth)
             isSaved = true
             saveMessage = "保存しました"
         } catch {
+            guard owner.isCurrent(auth) else { return }
             saveMessage = userFacingMessage(error) ?? "鑑定を保存できませんでした。もう一度お試しください。"
         }
     }
 
     private func loadStatus() async {
+        let owner = AccountScope(auth)
         guard auth.session != nil else { return }
-        status = try? await APIClient.shared.status(auth: auth)
+        do {
+            let value = try await api.status(auth: auth)
+            try owner.check(auth)
+            status = value
+        } catch { if owner.isCurrent(auth) { status = nil; handleChatError(error) } }
     }
 
     private func send() async {
+        let owner = AccountScope(auth)
         guard auth.session != nil else { return }
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !question.isEmpty else { return }
-        let needsNewThread = detail?.conversation.kind != "chat" && messages.isEmpty
+        guard !question.isEmpty, !isWorking else { return }
+        let needsNewThread = activeConversationID == conversationID && detail?.conversation.kind != "chat" && messages.isEmpty
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true
         messages.append(ReadingMessage(id: nil, role: "user", content: question, createdAt: nil))
@@ -251,12 +277,16 @@ struct ReadingChatView: View {
         forceScrollRevision += 1
         do {
             if needsNewThread {
-                activeConversationID = try await APIClient.shared.createChatConversation(sourceID: activeConversationID, question: question, auth: auth)
-                detail = try await APIClient.shared.conversation(id: activeConversationID, auth: auth)
+                let created = try await api.createChatConversation(sourceID: activeConversationID, question: question, auth: auth)
+                try owner.check(auth)
+                activeConversationID = created
+                detail = try await api.conversation(id: activeConversationID, auth: auth)
+                try owner.check(auth)
                 isSaved = true
             }
             var didFinish = false
-            for try await event in APIClient.shared.askStream(conversationID: activeConversationID, question: question, auth: auth) {
+            for try await event in api.askStream(conversationID: activeConversationID, question: question, auth: auth) {
+                try owner.check(auth)
                 switch event {
                 case .delta(let text):
                     messages[assistantIndex].content += text
@@ -266,14 +296,26 @@ struct ReadingChatView: View {
                 }
             }
             if !didFinish { throw CancellationError() }
+            // A failed history refresh cannot undo an acknowledged saved answer or
+            // restore its input as a new question with a new operation ID.
+            do {
+                let saved = try await api.conversation(id: activeConversationID, auth: auth)
+                try owner.check(auth)
+                detail = saved; messages = saved.messages
+            } catch {
+                guard owner.isCurrent(auth) else { return }
+                handleChatError(error)
+            }
             await loadStatus()
         } catch {
+            guard owner.isCurrent(auth) else { return }
             messages.removeSubrange(firstNewIndex..<messages.count)
             if isMissingConversation(error) { input = "" } else { input = question }
             handleChatError(error)
             if case APIError.paymentRequired = error { showPaywall = true }
             await loadStatus()
         }
+        guard owner.isCurrent(auth) else { return }
         isWorking = false
         streamTask = nil
     }
@@ -313,31 +355,37 @@ struct PaywallSheet: View {
                     if !draft.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("お書きになった質問").font(.caption).foregroundStyle(FateTheme.muted)
-                            Text("「\(draft)」").lineLimit(3).font(.system(size: 15))
+                            Text("「\(draft)」").lineLimit(3).font(.system(.subheadline))
                         }
                         Divider().overlay(FateTheme.line)
                     }
-                    Text("無料でお読みいただける2回分を、ご利用いただきました。")
-                        .font(.system(size: 15)).foregroundStyle(FateTheme.muted)
-                    Text("FATE LAB 継続鑑定").font(.caption).tracking(1).foregroundStyle(FateTheme.ink)
-                    Text("この鑑定書を、\nいつでも開けるように。")
-                        .font(.system(size: 30, weight: .medium)).lineSpacing(5)
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("鑑定結果について、回数の制限なく質問できます", systemImage: "checkmark")
-                        Label("これまでの質問と回答は、いつでも読み返せます", systemImage: "checkmark")
-                    }.lineSpacing(5)
+                    if !AppConfig.storeKitEnabled {
+                        Text(AppConfig.purchasesUnavailableMessage).font(.headline)
+                        Text("この操作には利用権限の確認が必要です。入力した質問はそのまま残ります。")
+                            .foregroundStyle(FateTheme.muted)
+                    } else {
+                    Text("あなたを知る言葉を、日々の選択に。")
+                        .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
+                    FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
+                    if purchases.isPremium { MembershipActiveBanner() }
+                    MembershipDetailsView()
                     Divider().overlay(FateTheme.line)
                     VStack(alignment: .leading, spacing: 5) {
                         if let product = purchases.product {
                             Text("月額 \(product.displayPrice)")
-                                .font(.system(size: 24, weight: .semibold))
+                                .font(.system(.title2, weight: .semibold))
                             Text("1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
                         } else if purchases.errorMessage == nil {
                             ProgressView("商品情報を読み込んでいます…").tint(FateTheme.ink)
                         }
                     }
                     if let session = auth.session {
-                        if purchases.product == nil, purchases.errorMessage != nil {
+                        if purchases.isPremium {
+                            Button("会員として利用を続ける") { onRefresh(); dismiss() }.buttonStyle(FLPrimaryButtonStyle())
+                        } else if purchases.accessState == .unknown || purchases.isSyncing {
+                            Text("購入状況を確認しています。再購入せずお待ちください。").font(.callout)
+                            Button("購入状況を再確認") { Task { await purchases.sync(auth: auth) } }.disabled(purchases.isSyncing)
+                        } else if purchases.product == nil, purchases.errorMessage != nil {
                             ReportCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("商品情報を取得できませんでした。通信環境をご確認のうえ、もう一度お試しください。")
@@ -347,11 +395,11 @@ struct PaywallSheet: View {
                         } else {
                             Button("継続鑑定を始める") {
                                 Task { await purchases.purchase(userID: session.user.id, auth: auth); onRefresh() }
-                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(purchases.product == nil || purchases.isWorking)
+                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(purchases.product == nil || purchases.isWorking || purchases.isSyncing || purchases.accessState != .standard)
                         }
                         Button("購入を復元") {
                             Task { await purchases.restore(auth: auth); onRefresh() }
-                        }.frame(maxWidth: .infinity).foregroundStyle(FateTheme.ink)
+                        }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(FateTheme.ink)
                     }
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
@@ -360,6 +408,7 @@ struct PaywallSheet: View {
                         Text("・")
                         Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                     }.font(.caption).frame(maxWidth: .infinity)
+                    }
                 }.padding(24)
             }.background(FateTheme.canvas)
                 .toolbar {
@@ -369,19 +418,64 @@ struct PaywallSheet: View {
                     }
                 }
         }.presentationDetents([.large])
+            .task { await purchases.sync(auth: auth); await purchases.load() }
     }
 }
 
 private struct SuggestionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .medium))
+            .font(.system(.subheadline, weight: .medium))
             .foregroundStyle(FateTheme.ink)
-            .padding(.horizontal, 14).padding(.vertical, 11)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(FateTheme.surface)
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.line))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 16).padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .background(FateTheme.card)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line, lineWidth: 0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
             .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
+
+struct MembershipDetailsView: View {
+    @EnvironmentObject private var auth: AuthStore
+    @State private var booksEnabled = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
+            Text("無料プランは1人まで。登録済みの相手は、会員期間が終わっても残ります。")
+                .font(.footnote).foregroundStyle(FateTheme.muted)
+            Label("相談からつくる鑑定書が、初月から毎月3通", systemImage: "book.closed")
+            if !booksEnabled {
+                Text("「鑑定書をつくる」タブで相談を入力し、保存した鑑定をもとに約5,000文字の一冊を作成できます。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted)
+            }
+            Text("会員分はAppleの更新日ごとに付与され、未使用分は繰り越されません。追加の単品購入分に有効期限はありません。")
+                .font(.footnote).foregroundStyle(FateTheme.muted)
+            Label("お届けした鑑定書は、解約後も本棚に", systemImage: "books.vertical")
+            Text("月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")
+                .font(.footnote).foregroundStyle(FateTheme.muted)
+        }.lineSpacing(5)
+            .task(id: AccountScope(auth)) {
+                booksEnabled = false
+                let owner = AccountScope(auth)
+                if let status = try? await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth), owner.isCurrent(auth) {
+                    booksEnabled = status.enabled
+                }
+            }
+    }
+}
+
+struct MembershipActiveBanner: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.seal.fill").font(.title2)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("継続鑑定をご利用中です").font(.headline)
+                Text("MEMBER").font(.caption2.weight(.semibold)).tracking(2)
+            }
+            Spacer(minLength: 0)
+        }.foregroundStyle(.white).padding(18)
+            .background(FateTheme.ink, in: RoundedRectangle(cornerRadius: 16))
     }
 }

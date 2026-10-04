@@ -5,24 +5,29 @@ struct HomeView: View {
     @State private var input: BirthInput
     @State private var report: GeneratedReport?
     @State private var isWorking = false
-    @State private var progress = GenerationProgress(percent: 5, title: "入力内容を確認しています", detail: "生年月日と出生地を確認しています")
+    @State private var progress = GenerationProgress.preparing
     @State private var errorMessage: String?
     @State private var saveErrorMessage: String?
     private let autoGenerate: Bool
+    private let initialDraftNeeded: Bool
+    private var draftKey: String { AccountStorage.key("reading.draft", userID: auth.userID) }
     @State private var didAutoGenerate = false
 
     init(initialInput: BirthInput? = nil, autoGenerate: Bool = false) {
         let value = initialInput ?? BirthInput()
         _input = State(initialValue: value)
         self.autoGenerate = autoGenerate
+        self.initialDraftNeeded = initialInput == nil
     }
 
     var body: some View {
-        ScrollView {
+        Group {
+            if isWorking {
+                ReadingGenerationProgressView(kind: .selfReading, progress: progress)
+            } else {
+            ScrollView {
             Group {
-                if isWorking {
-                    ReadingGenerationProgressView(kind: .selfReading, progress: progress)
-                } else if let report {
+                if let report {
                     VStack(alignment: .leading, spacing: 18) {
                         ReportView(report: report)
                         if let saveErrorMessage {
@@ -39,12 +44,28 @@ struct HomeView: View {
                 }
             }
             .padding(20)
+            }
+            }
         }
         .background(FateTheme.canvas)
         .toolbar(isWorking ? .hidden : .visible, for: .tabBar)
         .navigationBarTitleDisplayMode(.inline)
+        .task { await APIClient.shared.warmup() }
         .task {
-            await APIClient.shared.warmup()
+            do {
+                if let pending = try APIClient.shared.pendingReport(auth: auth) {
+                    report = pending
+                    didAutoGenerate = true
+                    saveErrorMessage = "生成済みの鑑定を復旧しました。保存を再試行してください"
+                    return
+                }
+            } catch {
+                errorMessage = userFacingMessage(error)
+                didAutoGenerate = true
+                return
+            }
+            if initialDraftNeeded, let data = UserDefaults.standard.data(forKey: draftKey),
+               let draft = try? JSONDecoder().decode(BirthInput.self, from: data) { input = draft }
             if autoGenerate && !didAutoGenerate {
                 didAutoGenerate = true
                 await generateReport()
@@ -56,7 +77,7 @@ struct HomeView: View {
                     Button("あなたを読む") { Task { await generateReport() } }
                         .buttonStyle(FLPrimaryButtonStyle())
                     Text(AppConfig.requiresAuthentication ? "入力は約1分です" : "登録すると鑑定結果を保存できます・入力は約1分です")
-                        .font(.system(size: 13))
+                        .font(.system(.caption))
                         .foregroundStyle(FateTheme.muted)
                 }
                 .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 8)
@@ -64,18 +85,22 @@ struct HomeView: View {
                 .overlay(Rectangle().frame(height: 0.5).foregroundStyle(FateTheme.line), alignment: .top)
             }
         }
+        .onChange(of: report?.conversationID) { _, id in
+            if let id { UserDefaults.standard.set(id.uuidString, forKey: AccountStorage.key("landing.lastConversationID", userID: auth.userID)) }
+        }
         .onChange(of: input) { _, _ in
-            report = nil
+            if let data = try? JSONEncoder().encode(input) { UserDefaults.standard.set(data, forKey: draftKey) }
+            if report?.conversationID != nil { report = nil }
             errorMessage = nil
         }
     }
 
     private var inputForm: some View {
         VStack(alignment: .center, spacing: 0) {
-            Text("鑑定する").font(.system(size: 30, weight: .bold)).padding(.top, 8)
-            Text("生まれたときの情報から、最初の鑑定を作ります。").font(.system(size: 16)).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 18)
+            FateEditorialHero(eyebrow: "YOUR STORY", title: "あなたを読み解く", subtitle: "生まれたときの情報から、最初の鑑定を作ります。")
             BirthProfileFields(date: $input.date, birthTime: $input.birthTime, birthplace: $input.birthplace, gender: $input.gender)
-            .padding(.top, 32).frame(maxWidth: 520)
+            RelationshipStatusFields(value: $input.relationshipStatus)
+            .padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20)).padding(.top, 24).frame(maxWidth: 520)
             if let errorMessage {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.danger)
@@ -89,37 +114,58 @@ struct HomeView: View {
     }
 
     private func generateReport() async {
+        guard !isWorking else { return }
+        let owner = AccountScope(auth)
         let requestedInput = input
+        if let data = try? JSONEncoder().encode(input) { UserDefaults.standard.set(data, forKey: draftKey) }
+        progress = .preparing
         isWorking = true; errorMessage = nil
-        defer { isWorking = false }
+        defer { if owner.isCurrent(auth) { isWorking = false } }
         do {
-            var generated = try await APIClient.shared.generateReport(input: requestedInput, auth: auth) { progress = $0 }
+            var generated = try await APIClient.shared.generateReport(input: requestedInput, auth: auth) { if owner.isCurrent(auth) { progress = $0 } }
+            try owner.check(auth)
             if input == requestedInput {
                 report = generated
                 if auth.session != nil {
                     do {
                         generated.conversationID = try await APIClient.shared.createConversation(report: generated, auth: auth)
+                        try owner.check(auth)
                         report = generated
+                        UserDefaults.standard.removeObject(forKey: AccountStorage.key("onboarding.draft", userID: owner.userID))
                         saveErrorMessage = nil
                     } catch {
-                        saveErrorMessage = userFacingMessage(error) ?? ""
+                        guard owner.isCurrent(auth) else { return }
+                        handleSaveError(error)
                     }
                 }
             }
         }
-        catch { report = nil; errorMessage = userFacingMessage(error) }
+        catch { guard owner.isCurrent(auth) else { return }; report = nil; errorMessage = userFacingMessage(error) }
     }
 
     private func saveGeneratedReport() async {
+        let owner = AccountScope(auth)
         guard var current = report, current.conversationID == nil, auth.session != nil else { return }
         do {
             current.conversationID = try await APIClient.shared.createConversation(report: current, auth: auth)
+            try owner.check(auth)
             report = current
             saveErrorMessage = nil
-        } catch { saveErrorMessage = userFacingMessage(error) }
+        } catch { guard owner.isCurrent(auth) else { return }; handleSaveError(error) }
+    }
+
+    private func handleSaveError(_ error: Error) {
+        if case APIError.http(status: 410, message: _) = error {
+            report = nil; saveErrorMessage = nil
+            errorMessage = "この鑑定は削除されています。新しく鑑定する場合は入力内容を確認してください"
+        } else { saveErrorMessage = userFacingMessage(error) }
     }
 
     private func resetForAnotherPerson() {
+        if report?.conversationID == nil {
+            saveErrorMessage = "先にこの鑑定の保存を完了してください"
+            return
+        }
         input = BirthInput()
         report = nil
         errorMessage = nil
@@ -151,22 +197,19 @@ struct ReportView: View {
             Text("結果は将来を保証するものではありません。重要な意思決定はご自身で判断してください。")
                 .font(.caption).foregroundStyle(FateTheme.muted)
         }
-        .onChange(of: auth.session?.user.id) { _, userID in
-            if userID != nil && pendingAfterAuth {
-                pendingAfterAuth = false
-                Task { await saveAndOpen(contextTitle: pendingContextTitle) }
-            }
-        }
+
     }
 
     private func saveAndOpen(contextTitle: String? = nil) async {
-        guard auth.session != nil else { return }
+        let owner = AccountScope(auth)
+        guard auth.session != nil, !isSaving else { return }
         isSaving = true; errorMessage = nil
         do {
             let conversationID = if let existing = report.conversationID { existing } else { try await APIClient.shared.createConversation(report: report, auth: auth) }
+            try owner.check(auth)
             tabRouter.openChat(conversationID: conversationID, contextTitle: contextTitle)
         }
-        catch { errorMessage = userFacingMessage(error) }
+        catch { guard owner.isCurrent(auth) else { return }; errorMessage = userFacingMessage(error) }
         isSaving = false
     }
 }

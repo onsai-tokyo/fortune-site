@@ -23,6 +23,7 @@ export interface ReportSection {
 }
 
 export interface ReportCard {
+  timelineV3Calculation?: {version: string; partsVersion: string; input: import('./report/timelineV3/index.js').TimelineV3Input; nowYear: number; decision: Record<string, unknown>; style?: string}
   id: string
   kind: ReportCardKind
   scope?: 'self' | 'couple'

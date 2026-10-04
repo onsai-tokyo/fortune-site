@@ -1,3 +1,5 @@
+import { loadTimelineContext, timelineEnabled } from '../lib/timelineContext.js'
+import { parseRelationshipStatus } from '../lib/report/timelineV3/index.js'
 import { Router } from 'express'
 import { createHash, randomUUID } from 'crypto'
 import rateLimit from 'express-rate-limit'
@@ -114,6 +116,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       currentConcern?: CurrentConcern
     }
 
+    if (req.body.relationshipStatus != null && !parseRelationshipStatus(req.body.relationshipStatus)) { res.status(400).json({error:'今の状況を選択してください'}); return }
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
       return
@@ -176,7 +179,9 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       kyuseiTimeStarAvailable: Boolean(kyuseiProfile.timeStar),
     })
     progress(38, '複数の見方を重ねています', '共通する特徴を探しています')
+    const timelineContext = timelineEnabled() && req.userId ? await loadTimelineContext(req.accessToken!,req.userId,req.body) : {}
     const reportInput = {
+      ...timelineContext, relationshipStatus: parseRelationshipStatus(req.body.relationshipStatus),
       birthDate,
       birthTime,
       birthTimeZone,
@@ -291,6 +296,7 @@ previewRouter.post('/question', questionLimiter, async (req, res) => {
       res.status(400).json({ error: '質問内容が必要です' })
       return
     }
+    if (req.body.relationshipStatus != null && !parseRelationshipStatus(req.body.relationshipStatus)) { res.status(400).json({error:'今の状況を選択してください'}); return }
     if (!birthDate || !gender) {
       res.status(400).json({ error: '生年月日と性別は必須です' })
       return

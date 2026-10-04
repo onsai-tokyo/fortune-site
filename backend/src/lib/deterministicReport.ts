@@ -3,6 +3,11 @@ import { recordConsensusMetric } from './report/metrics.js'
 import { NAYIN_ALIAS, normalizeSukuyo } from './report/keywordSignalMappings.js'
 
 export interface ReportInput {
+  relationshipStatus?: import('./report/timelineV3/index.js').RelationshipStatus
+  lifeEvents?: import('./report/timelineV3/eventKinds.js').LifeEvent[]
+  partnerSince?: number
+  partnerKind?: import('./report/timelineV3/index.js').PartnerKind
+  partnerBirth?: import('./report/timelineV3/index.js').TimelineV3Input['partnerBirth']
   birthDate?: string
   birthTime?: string
   /** Explicit civil timezone for the opt-in personality spouse calculation. */

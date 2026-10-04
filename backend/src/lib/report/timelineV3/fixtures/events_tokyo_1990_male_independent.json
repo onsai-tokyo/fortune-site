@@ -1,0 +1,224 @@
+{
+ "input": {
+  "birthDate": "1990-11-05",
+  "birthTime": "14:40",
+  "birthplace": "東京都",
+  "gender": "male",
+  "workContext": "independent",
+  "relationshipStatus": "partnered"
+ },
+ "events": [
+  {
+   "year": 2014,
+   "kind": "marriage"
+  },
+  {
+   "year": 2021,
+   "kind": "divorce"
+  },
+  {
+   "year": 2024,
+   "month": 4,
+   "kind": "move"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2014-0-marriage",
+   "year": 2014,
+   "kind": "marriage",
+   "title": "2014年の結婚・入籍を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2014年に、結婚・入籍がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は関係が大きく動く年には入っていませんでした。判定に出ない年にも、出会いや区切りは起こります。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱甲午・年干の十神＝比肩"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "自分で決めることが主題の年でした。この結びつきは、自分の意思で人生の形を選んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2027年・2035年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱甲午・年干の十神＝比肩"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2027,
+    2035
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2014,
+    "hits": []
+   }
+  },
+  {
+   "id": "life-event-2021-0-divorce",
+   "year": 2021,
+   "kind": "divorce",
+   "title": "2021年の離婚を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2021年に、離婚がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "この出来事は、時系列で「関係が動きやすい」と読む年と重なっています。四柱推命では、あなたの命式のパートナーの座が強く揺れ動く年でした。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱辛丑・年干の十神＝正官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-R2：年支丑が日支戌と刑"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "立場や約束を見直す年でした。この区切りは、自分にとって筋の通る関係を選び直した出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、関係が動きやすいと読む年は2027年・2035年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱辛丑・年干の十神＝正官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-R2：年支丑が日支戌と刑"
+    }
+   ],
+   "overlap": true,
+   "nextYears": [
+    2027,
+    2035
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2021,
+    "hits": [
+     "TL3-R2"
+    ]
+   }
+  },
+  {
+   "id": "life-event-2024-4-move",
+   "year": 2024,
+   "month": 4,
+   "kind": "move",
+   "title": "2024年の引っ越しを読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2024年4月に、引っ越しがありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は住まいの転機の候補には入っていませんでした。判定に出ない年にも、暮らしの変化は起こります。一方で、この年には次のような動きもありました。四柱推命では、この年の干支が、あなたの命式の土台と正面から向き合う年でした。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱甲辰・年干の十神＝比肩"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-M2：年支辰が戌と冲"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "自分のペースを大切にする年でした。暮らしの場の変化は、自分らしく過ごせる環境を選んだ出来事として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、住まいの転機の候補は2032年・2036年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱甲辰・年干の十神＝比肩"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-M2：年支辰が戌と冲"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2032,
+    2036
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2024,
+    "hits": [
+     "TL3-M2"
+    ]
+   }
+  }
+ ]
+}

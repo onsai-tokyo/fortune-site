@@ -1,0 +1,219 @@
+diff -ru a/backend/src/lib/report/timelineV3/signals.ts b/backend/src/lib/report/timelineV3/signals.ts
+--- a/backend/src/lib/report/timelineV3/signals.ts	2026-10-04 21:12:26.626646668 +0900
++++ b/backend/src/lib/report/timelineV3/signals.ts	2026-10-04 21:12:26.628709776 +0900
+@@ -347,18 +347,11 @@
+   const ageBand = age < 13 ? 'child' : age < 18 ? 'teen' : 'adult'
+   const status = ctx.input.relationshipStatus
+   // 婚期: partnered, a relationship year, and astro points (+1 inside a dating / age window, +1 for the 7th-house double transit) >= 3
+-  let marriage = ageBand === 'adult' && status === 'partnered' && regularMarriage(ctx, year)
+-  let theme = b.theme, strength = b.strength
+-  // v2.19: inside the dating window, if no year reaches 婚期 by the signals, the window's best year becomes the candidate
+-  if (!marriage && ageBand === 'adult' && status === 'partnered' && b.stage?.kind === 'dating' && b.stage.since !== undefined && (!b.stage.via || b.stage.via === 'partnered')) {
+-    const since = b.stage.since
+-    const win = [1, 2, 3].map(k => since + k).filter(y => lifeStage(ctx, y)?.kind === 'dating' && lifeStage(ctx, y)?.since === since)
+-    if (!win.some(y => regularMarriage(ctx, y))) {
+-      const sc = (y: number) => { const x = baseDecision(ctx, y); return x.s.relationship.score + (x.theme === 'relationship' ? 1 : 0) }
+-      const best = win.filter(y => baseDecision(ctx, y).theme !== 'trust').sort((p, q) => sc(q) - sc(p) || Math.abs(p - since - 2) - Math.abs(q - since - 2) || p - q)[0]
+-      if (best === year) { marriage = true; theme = 'relationship'; strength = strength === 'major' ? 'major' : 'active' }
+-    }
+-  }
++  // v2.25: 婚期 is only the year that meets the regular condition. The v2.19 guarantee (the best year of the dating
++  // window named 婚期 when none qualified) was removed: on 362 people with a known dating start, the 婚期 year matched
++  // the marriage year no better than chance (0.98x, VALIDATION.md §1n). The dating-window tag and line stay.
++  const marriage = ageBand === 'adult' && status === 'partnered' && regularMarriage(ctx, year)
++  const theme = b.theme, strength = b.strength
+   return { signals: b.s, theme, strength, career: b.career, move: b.move, lifeTurn: lt, marriage, ageBand, stage: b.stage }
+ }
+ 
+diff -ru a/backend/src/lib/report/timelineV3/timelineV3.test.ts b/backend/src/lib/report/timelineV3/timelineV3.test.ts
+--- a/backend/src/lib/report/timelineV3/timelineV3.test.ts	2026-10-04 21:12:26.635825771 +0900
++++ b/backend/src/lib/report/timelineV3/timelineV3.test.ts	2026-10-04 21:12:26.637768743 +0900
+@@ -422,21 +422,26 @@
+   for (const e of r2.entries) if (e.card && e.year <= wed) assert.ok(!e.card.tags.includes('#揺れやすい年'), `married ${e.year}: 揺れやすい年 before the marriage`)
+ })
+ 
+-test('v2.19 partnerSince: the single timeline opens a dating window from the meeting year and names one 婚期 inside it; saved cards re-render with it', async () => {
++test('v2.19/v2.25 partnerSince: the single timeline opens a dating window from the meeting year; 婚期 only by the regular condition (no guarantee); saved cards re-render with it', async () => {
+   const { TIMELINE_V3_SAMPLES } = await import('./samples.js')
+   const { decideYear, timelineContext } = await import('./signals.js')
+   const { replaceTimelineV3, refreshSavedTimelineV3Cards } = await import('./index.js')
++  let windowsWithout = 0
+   for (const [name, base] of Object.entries(TIMELINE_V3_SAMPLES)) {
+     const since = Number(base.birthDate!.slice(0, 4)) + 26
+     const input = { ...base, relationshipStatus: 'partnered' as const, partnerSince: since }
+     const ctx = timelineContext(input)!
+     const win = [1, 2, 3].map(k => decideYear(ctx, since + k))
+     win.forEach((d, k) => assert.equal(d.stage?.kind, 'dating', `${name} ${since + k + 1} stage`))
+-    if (win[0].ageBand === 'adult') assert.ok(win.some(d => d.marriage), `${name}: no 婚期 in the dating window`)
++    // v2.25: no guaranteed 婚期 — a 婚期 year must be a relationship year that meets the regular condition
++    for (const [k, d] of win.entries()) if (d.marriage) assert.equal(d.theme, 'relationship', `${name} ${since + k + 1}: 婚期 on a non-relationship year`)
++    if (win[0].ageBand === 'adult' && !win.some(d => d.marriage)) windowsWithout++
+     const report = replaceTimelineV3({ cards: [], reportText: '' } as any, input, 2026)
+     const refreshed = refreshSavedTimelineV3Cards(report.cards, { ...input } as any, 2026, undefined, since)
+     assert.deepEqual(refreshed.map(c => c.summary), report.cards.map(c => c.summary), `${name}: refresh with partnerSince`)
+   }
++  // the samples include dating windows with no 婚期 at all (the guarantee is gone)
++  assert.ok(windowsWithout > 0, 'every dating window still has a 婚期: guarantee not removed?')
+ })
+ 
+ test('v2.21 couple dating window: 1年目 #出会いが深まる時期 (opens with the meeting line), 2〜3年目 #関係の分かれ道, 4年目 #関係の形が決まる時期; no guaranteed 婚期', async () => {
+diff -ru a/backend/src/lib/report/timelineV3/version.ts b/backend/src/lib/report/timelineV3/version.ts
+--- a/backend/src/lib/report/timelineV3/version.ts	2026-10-04 21:12:26.646842220 +0900
++++ b/backend/src/lib/report/timelineV3/version.ts	2026-10-04 21:12:26.648509480 +0900
+@@ -1 +1 @@
+-export const TIMELINE_V3_VERSION = 'timeline-v3.30'
++export const TIMELINE_V3_VERSION = 'timeline-v3.31'
+diff -ru a/docs/timeline-v3/CODEX_HANDOFF.md b/docs/timeline-v3/CODEX_HANDOFF.md
+--- a/docs/timeline-v3/CODEX_HANDOFF.md	2026-10-04 21:12:26.683974234 +0900
++++ b/docs/timeline-v3/CODEX_HANDOFF.md	2026-10-04 21:12:26.686102815 +0900
+@@ -1,6 +1,6 @@
+ # 時系列鑑定 v3 引き渡し（Codex向け・最初に読む）
+ 
+-ロジック版：**v2.24 / `timeline-v3.30`**（`backend/src/lib/report/timelineV3/version.ts`）
++ロジック版：**v2.25 / `timeline-v3.31`**（`backend/src/lib/report/timelineV3/version.ts`）
+ 
+ この一式は「あなたの時系列（ひとり）」と「ふたりの時系列」の占いロジックの参照実装です。判定・文章・原稿・テスト・期待出力はすべて完成済みで、テスト32件が通ります。Codex の作業は**組み込み（配線）と入力項目の追加**です。
+ 
+@@ -8,6 +8,7 @@
+ 
+ | 順 | ファイル | 中身 |
+ | --- | --- | --- |
++| 0 | `CHANGES_v2.25.md` | 直前の版からの変更（婚期の補完の削除）と検証結果 |
+ | 1 | `CODEX_HANDOFF.md`（これ） | 作業一覧・決まったこと・注意 |
+ | 2 | `LOGIC.md` | **今の判定ロジックの正**（ひとり・ふたり、人生の時期＋占術、当たり方） |
+ | 3 | `IMPLEMENTATION.md` | ひとりの時系列の仕様と配線手順（§8）・完了条件 |
+@@ -28,7 +29,7 @@
+    - `relationshipStatus`：プロフィールの「今の状況」（交際中／相手はいない／既婚／答えない → `partnered`／`single`／`married`／null）。DB・API・iOS。
+    - `lifeEvents`：年表（`EVENTS.md`。`life_events` テーブル・API・iOS・同意）。
+    - `partnerBirth`（v2.24）：同じ相手の出生情報（`birth_data.partner`、海外生まれなら `birthTimeZone` も）。窓の年の一文を二人の運気で選ぶのに使う。カードには保存されない（窓の年の向き `partnerTones` だけが計算メタに残る）。
+-   - `partnerSince`・`partnerKind`：ふたりの時系列に登録した相手の「出会った年」（`couple_timeline_settings`）と、その相手のラベルの種類。新しい画面は不要。使うのは恋愛のラベル（片思い・お付き合い中・婚約中・夫婦・復縁希望・元恋人）の相手（友人・親は使わない）。複数あるときは、お付き合い中・婚約中・夫婦の相手を優先し、その中で出会った年が一番新しい相手。いなければ、復縁希望・元恋人・片思いの中で出会った年が一番新しい相手。`partnerKind` はラベルから：片思い→`crush`、お付き合い中・婚約中→`partnered`、復縁希望・元恋人→`former`、夫婦→`married`（v2.23。窓とその中の判定〈1点でも動く年〉は交際中と同じで、ラベルごとに違うのは文面。婚期の保証は `partnered` だけ）。該当がなければ渡さない。
++   - `partnerSince`・`partnerKind`：ふたりの時系列に登録した相手の「出会った年」（`couple_timeline_settings`）と、その相手のラベルの種類。新しい画面は不要。使うのは恋愛のラベル（片思い・お付き合い中・婚約中・夫婦・復縁希望・元恋人）の相手（友人・親は使わない）。複数あるときは、お付き合い中・婚約中・夫婦の相手を優先し、その中で出会った年が一番新しい相手。いなければ、復縁希望・元恋人・片思いの中で出会った年が一番新しい相手。`partnerKind` はラベルから：片思い→`crush`、お付き合い中・婚約中→`partnered`、復縁希望・元恋人→`former`、夫婦→`married`（v2.23。窓とその中の判定〈1点でも動く年〉は交際中と同じで、ラベルごとに違うのは文面）。該当がなければ渡さない。
+ 5. 契約チェック（`contract.ts`）に v3 の分岐。
+ 5b. `backend/package.json` の `test` に `src/lib/report/timelineV3/timelineV3.test.ts` を追加する（今の `npm test` には入っていない）。
+ 6. iOS：`sections` をそのまま表示。新しいタグの色（下の §4）。
+@@ -47,9 +48,9 @@
+ ## 3. 決まっていること（会話で合意した内容の全体）
+ 
+ ### ひとりの時系列
+-- **判定の土台は人生の時期**（v2.16）：結婚から3〜7年／交際の始まり（年表、または `partnerSince`）から1〜3年／それ以外で26〜34歳。v2.23：登録した相手の出会った年は、片思い・復縁希望・元恋人・夫婦でも窓の起点に使う（窓の中の判定は交際中と同じ）。ラベルごとに文面を変える（片思い「思いを伝えるのか、距離を保つのか」、復縁・元恋人「近づくのか区切るのか」〈一緒にいる前提の言い方はしない〉、夫婦「一緒の暮らしの形など」〈結婚の話はしない〉、1年目はどれも「出会ってまだ間もないこの年は」）。婚期の保証は交際中（`partnered`）だけ。窓の中では関係の点1点でも「関係が動く年」、2点以上で「大きく動く年」。
++- **判定の土台は人生の時期**（v2.16）：結婚から3〜7年／交際の始まり（年表、または `partnerSince`）から1〜3年／それ以外で26〜34歳。v2.23：登録した相手の出会った年は、片思い・復縁希望・元恋人・夫婦でも窓の起点に使う（窓の中の判定は交際中と同じ）。ラベルごとに文面を変える（片思い「思いを伝えるのか、距離を保つのか」、復縁・元恋人「近づくのか区切るのか」〈一緒にいる前提の言い方はしない〉、夫婦「一緒の暮らしの形など」〈結婚の話はしない〉、1年目はどれも「出会ってまだ間もないこの年は」）。窓の中では関係の点1点でも「関係が動く年」、2点以上で「大きく動く年」。
+ - **占術**（四柱推命・インド占星術）はその年の意味と書き分けに使う：R1（木星・金星のアンタルダシャー）、R2（日支の冲刑害破、1点）、R3（パートナーの星との干合）、R5（天喜、2点）。R4は0点。
+-- **婚期**：交際中・関係が動く年で「点＋窓の加点＋7室のダブルトランジット」≥3。交際の窓の中で1年も出なければ、窓の中で一番点の高い年を婚期にする（v2.19）。
++- **婚期**：交際中・関係が動く年で「点＋窓の加点＋7室のダブルトランジット」≥3 の年だけ。v2.19 の「交際の窓の中で1年も出なければ一番点の高い年を婚期にする」補完は v2.25 で削除（362人で偶然と同じ 0.98倍だったため、VALIDATION.md §1n）。交際年数による「#関係の形が決まる時期」のタグと文は残す。
+ - **大きく動く年は両方向で書く**（v2.18）：婚期として示す年を除き「始まり・深まり」と「区切り」が重なる書き方（大きな年が始まりか終わりかを見分ける目印はデータで見つからなかったため）。
+ - **文章**：本人の性質（v2.11、`personalParts.json`）、年表の言い直し（v2.13）、人生の時期の一文（v2.16。長いときも削らない）、1年1段落（約190〜300字）が標準。
+ - 出生時刻なしは10年の流れを正午で近似し、文章だけに使う（v2.10）。
+diff -ru a/docs/timeline-v3/COUPLE.md b/docs/timeline-v3/COUPLE.md
+--- a/docs/timeline-v3/COUPLE.md	2026-10-04 21:12:26.675702439 +0900
++++ b/docs/timeline-v3/COUPLE.md	2026-10-04 21:12:26.677210064 +0900
+@@ -131,7 +131,7 @@
+   - 夫婦：「一緒の暮らしの形や役割など」「これからの暮らし方」。結婚するかどうかの話はしない。
+ - 夫婦の出会いの窓では、静かな年の「動く年」への昇格をしない。「揺れやすい年」も出さない（結婚前の年が多く、離婚夫婦の根拠は結婚期間の中のものなので）。離婚夫婦75組の 1.77倍は変わらない。
+ - 婚期は今までどおり、お付き合い中・婚約中だけ。
+-- ひとりの時系列も同じ：`partnerKind` があれば状況に関係なく `partnerSince` から1〜3年が交際の窓になり、文面は `stage.toned.body.{crush|former|married}`（§3j）。婚期の保証は `partnered` だけ。
++- ひとりの時系列も同じ：`partnerKind` があれば状況に関係なく `partnerSince` から1〜3年が交際の窓になり、文面は `stage.toned.body.{crush|former|married}`（§3j）。婚期は通常の判定条件を満たした年だけ（v2.25 で補完を削除）。
+ 
+ ### 3j. 時期の窓の文は二人の運気に合わせる（v2.24）
+ - 交際・出会いの窓（出会いから1〜4年）の一文を、その年の二人の運気の向き（`pairTone()`：進む・見直す・両方・穏やか）で選ぶ。条件と文の例は `LOGIC.md` 1-2 の表。
+diff -ru a/docs/timeline-v3/IMPLEMENTATION.md b/docs/timeline-v3/IMPLEMENTATION.md
+--- a/docs/timeline-v3/IMPLEMENTATION.md	2026-10-04 21:12:26.667114079 +0900
++++ b/docs/timeline-v3/IMPLEMENTATION.md	2026-10-04 21:12:26.668907440 +0900
+@@ -74,11 +74,11 @@
+ | workContext | 既存（`employed`/`independent`/`student`/その他） | 仕事の転機の語彙 | 「活動」語彙 |
+ | **relationshipStatus** | **新規** | 関係が動く年の現れ方、婚期タグ | 「未入力」用の文 |
+ | **lifeEvents**（v2.13） | **新規**（年表、`EVENTS.md`） | 出来事の言い直し、交際・結婚の時期の窓 | 年齢の窓だけ |
+-| **partnerSince**（v2.19） | **新規**（整数の年） | 交際中のとき、交際の窓（1〜3年）の起点。窓の中で婚期を1年保証する（ひとりの時系列だけ。ふたりの時系列の保証は v2.21 で廃止） | 年表の交際の始まり、なければ年齢の窓 |
+-| **partnerKind**（v2.23） | **新規**（相手のラベルの種類） | `partnerSince` を片思い・復縁希望・元恋人・夫婦でも窓の起点にし、文面をその種類に合わせる（`depthParts.stage.toned`）。婚期の保証は `partnered` だけ | なし＝`partnerSince` は交際中の人だけに効く |
++| **partnerSince**（v2.19） | **新規**（整数の年） | 交際中のとき、交際の窓（1〜3年）の起点（「#関係の形が決まる時期」のタグと文、窓の中の判定）。婚期を必ず付ける補完はない（v2.25 で削除。ふたりの時系列は v2.21 で削除済み） | 年表の交際の始まり、なければ年齢の窓 |
++| **partnerKind**（v2.23） | **新規**（相手のラベルの種類） | `partnerSince` を片思い・復縁希望・元恋人・夫婦でも窓の起点にし、文面をその種類に合わせる（`depthParts.stage.toned`） | なし＝`partnerSince` は交際中の人だけに効く |
+ | **partnerBirth**（v2.24） | **新規**（登録した相手の出生情報。ふたりの時系列と同じ `birth_data.partner`） | `partnerSince` とあわせて、窓の年の一文を二人の運気で選ぶ（`pairTone()`、LOGIC.md 1-2）。**相手の生年月日はカードに保存されない**：`timelineContext()` が窓の年の向き（`partnerTones`）に変えて、計算メタにはそれだけが残る（契約チェックはそれで同じ文を作り直せる） | 本人の運気で選ぶ |
+ 
+-**partnerSince の配線（v2.19）**：ふたりの時系列で登録した相手の「出会った年」を、本人のひとりの時系列にも `partnerSince`・`partnerKind` として渡し、その相手の出生情報を `partnerBirth` として渡す（v2.24）。使うのは恋愛のラベル（片思い・お付き合い中・婚約中・夫婦・復縁希望・元恋人）の相手（友人・親は使わない）。複数あるときは、お付き合い中・婚約中・夫婦の相手を優先し、その中で出会った年が一番新しい相手。いなければ、復縁希望・元恋人・片思いの中で出会った年が一番新しい相手。`partnerKind` はラベルから：片思い→`crush`、お付き合い中・婚約中→`partnered`、復縁希望・元恋人→`former`、夫婦→`married`（v2.23。窓とその中の判定〈1点でも動く年〉は交際中と同じで、ラベルごとに違うのは文面。婚期の保証は `partnered` だけ）。該当がなければ渡さない。保存済み鑑定書の再表示（`refreshSavedTimelineV3Cards(cards, snapshot, 今の年, lifeEvents, partnerSince, partnerKind, partnerBirth)`）にも、今の設定の出会った年と種類を渡す（年表と同じく「今のデータ」で再表示する）。
++**partnerSince の配線（v2.19）**：ふたりの時系列で登録した相手の「出会った年」を、本人のひとりの時系列にも `partnerSince`・`partnerKind` として渡し、その相手の出生情報を `partnerBirth` として渡す（v2.24）。使うのは恋愛のラベル（片思い・お付き合い中・婚約中・夫婦・復縁希望・元恋人）の相手（友人・親は使わない）。複数あるときは、お付き合い中・婚約中・夫婦の相手を優先し、その中で出会った年が一番新しい相手。いなければ、復縁希望・元恋人・片思いの中で出会った年が一番新しい相手。`partnerKind` はラベルから：片思い→`crush`、お付き合い中・婚約中→`partnered`、復縁希望・元恋人→`former`、夫婦→`married`（v2.23。窓とその中の判定〈1点でも動く年〉は交際中と同じで、ラベルごとに違うのは文面）。該当がなければ渡さない。保存済み鑑定書の再表示（`refreshSavedTimelineV3Cards(cards, snapshot, 今の年, lifeEvents, partnerSince, partnerKind, partnerBirth)`）にも、今の設定の出会った年と種類を渡す（年表と同じく「今のデータ」で再表示する）。
+ 
+ **新規入力の追加（§8-6）**：プロフィールに「今の状況」＝「交際中 / 相手はいない / 既婚 / 答えない」。保存値は `partnered` / `single` / `married` / null。
+ 
+@@ -140,13 +140,13 @@
+ 
+ ## 6. 判定
+ 
+-0. **人生の時期（v2.16、`lifeStage()`）**：年表の結婚から3〜7年は `married`、交際の始まりから1〜3年は `dating`、それ以外で26〜34歳は `age`。年表はその年より前の出来事だけを使う。窓の中では、関係点1点でも「関係が動く年」。関係の年は、関係点2点以上なら `major`、それ以外は `active`。婚期の判定では `dating`・`age` の窓を+1点として数える。v2.19：交際中で `dating` の窓（`partnerSince` または年表の交際の始まりから1〜3年）のどの年も婚期にならないときは、窓の中で関係点が一番高い年（信頼の年を除く）を婚期にする（`decideYear()`）。
++0. **人生の時期（v2.16、`lifeStage()`）**：年表の結婚から3〜7年は `married`、交際の始まりから1〜3年は `dating`、それ以外で26〜34歳は `age`。年表はその年より前の出来事だけを使う。窓の中では、関係点1点でも「関係が動く年」。関係の年は、関係点2点以上なら `major`、それ以外は `active`。婚期の判定では `dating`・`age` の窓を+1点として数える。（v2.19〜2.24 にあった「交際の窓で婚期が出なければ一番点の高い年を婚期にする」補完は、v2.25 で削除。）
+ 1. **関係点** `rel = R1+R2+R3+R5`（R4は0点）。
+ 2. **主題**（上から最初に当てはまるもの）：R2とR3が両方 → `trust`／rel≥2 → `relationship`／仕事候補に選ばれた → `career`／住まい候補に選ばれた → `move`／rel=1 → `hint`／それ以外 → `quiet`。
+ 3. **強さ**：rel≥4 `major`、2〜3 `active`、1 `hint`、0 `quiet`。仕事か住まいの候補に選ばれた年は最低 `active`。
+ 4. **上限つきの候補**：仕事は点2以上、住まいは点2以上。**窓**＝その年の7月1日を含む大運の10年（大運がなければ年齢の10年区切り）。窓の中で点の高い順→窓の開始に近い順→早い年の順に、仕事は3年まで、住まいは2年まで選ぶ。窓は表示範囲に関係なく固定なので、1年だけ作っても結果は同じ。
+ 5. **人生の転機**：章の開始がある年は必ず。加えて、`major` かつ仕事か住まいの候補の年を、窓の中の人生の転機が2年になるまで選ぶ（章の年を優先）。
+-6. **婚期**：18歳以上、`relationshipStatus = partnered`、主題が `relationship`、`rel + DT7 + 窓の加点（dating・age の窓で+1）` ≥ 3。交際の窓（`partnerSince` か年表の交際の始まりから1〜3年）で1年も婚期にならないときは、窓の中で一番点の高い年を婚期にする（§6-0）。
++6. **婚期**：18歳以上、`relationshipStatus = partnered`、主題が `relationship`、`rel + DT7 + 窓の加点（dating・age の窓で+1）` ≥ 3。この条件を満たした年だけが婚期（v2.19〜2.24 の補完は v2.25 で削除）。
+ 7. **年齢帯**：13歳未満 `child`、18歳未満 `teen`、それ以上 `adult`。18歳未満は恋愛の語彙・婚期・恋愛タグを使わず、友人関係の語彙（`youth`）に置き換える。表示範囲は現行と同じく18歳以上から始まるため、通常は出ない。
+ 
+ ---
+@@ -222,7 +222,7 @@
+ - [ ] 保存済み鑑定書を開くと v3 で再表示され、DBは変わらない
+ - [ ] 契約チェックで違反が出ない（`warnReportContract` のログ）
+ - [ ] プロフィールで「今の状況」を保存でき、文章が書き分けられる
+-- [ ] 交際中で相手の出会った年がある人は、ひとりの時系列で出会いから1〜3年に「#関係の形が決まる時期」が付き、その中に婚期が1年出る（保存済み鑑定書の再表示でも同じ）
++- [ ] 交際中で相手の出会った年がある人は、ひとりの時系列で出会いから1〜3年に「#関係の形が決まる時期」が付き（保存済み鑑定書の再表示でも同じ）。婚期は通常の判定条件を満たした年だけに出て、窓の中に婚期がない人もいる（v2.25）
+ - [ ] 年表に出来事がある人は、その年の文に出来事が入り、判定は人生の時期の窓が変わる年以外で変わらない
+ - [ ] 時刻不明のプロフィールで、期間表示・章・木星の期間の文が出ない
+ - [ ] iOS で最大12セクションの年と新しいタグが正しく表示される
+diff -ru a/docs/timeline-v3/LOGIC.md b/docs/timeline-v3/LOGIC.md
+--- a/docs/timeline-v3/LOGIC.md	2026-10-04 21:12:26.656926472 +0900
++++ b/docs/timeline-v3/LOGIC.md	2026-10-04 21:12:26.658789337 +0900
+@@ -1,4 +1,4 @@
+-# 時系列鑑定 v3 ロジックまとめ（v2.24 / timeline-v3.30）
++# 時系列鑑定 v3 ロジックまとめ（v2.25 / timeline-v3.31）
+ 
+ 時系列の判定は「人生の時期」と「占術」の2層でできています。
+ 
+@@ -81,7 +81,7 @@
+ 
+ 重ねてつく印：
+ - **婚期**：交際中で関係が動く年、かつ「関係の点＋交際・年代の窓（+1）＋7室のダブルトランジット（+1）」が3以上。
+-- **婚期の保証（v2.19）**：交際中で交際の窓があるとき、窓の3年のどれも婚期にならなければ、窓の中で一番関係の点が高い年（信頼の年を除く。同点なら2年目に近い年、さらに早い年）を婚期にします。出会ってから数年以内に結婚が決まる人が多い（交際から結婚の中央は3年）ためです。
++- **（v2.25 で削除）婚期の補完**：v2.19〜2.24 は、交際の窓の3年のどれも婚期にならなければ一番点の高い年を婚期にしていました。交際開始の分かる著名人362人で、婚期の年と結婚の年の一致が偶然と同じ（0.98倍）で、補完があるとほぼ全員（362人中360人）に婚期の印が付くため削除しました（VALIDATION.md §1n）。婚期は通常の条件を満たした年だけです。交際年数による「#関係の形が決まる時期」のタグと文は残します。
+ - **窓の年の文**：v2.24 から、その年の運気の向きで選びます（1-2 の表）。v2.19〜2.23 の「結婚へ進むのか、距離を取り直すのか」の決まった両方向の文は使いません。
+ - **人生の転機**：10年の流れ・大周期の切り替わりの年（時刻ありのみ）と、大きく動く年に仕事・住まいが重なった年（10年の区切りの中で2年まで）。
+ - **時期のタグ**：窓の年に「#縁が動きやすい年代」「#関係の形が決まる時期」「#関係を見直す時期」のどれかをつけます。
+@@ -124,7 +124,7 @@
+ 
+ 重ねてつく印：
+ - **婚期**：交際中・婚約中で、二人とも動く年、または片方が動く年で合計5点以上（交際の窓の中なら3点以上）。出会った年は除きます。
+-- **（v2.21）婚期の保証はなし**：v2.19 の「窓の中で1年を必ず婚期にする」は、著名人カップル180組で偶然と同じ当たり（0.87〜1.01倍）だったため外しました（VALIDATION.md §1m）。
++- **（v2.21）ふたりの婚期の保証はなし**：v2.19 の「窓の中で1年を必ず婚期にする」は、著名人カップル180組で偶然と同じ当たり（0.87〜1.01倍）だったため外しました（VALIDATION.md §1m）。
+ - **（v2.21）時期の窓の段階**：出会いから1年目は「出会いが深まる時期」（出会いの勢いのまま距離が縮まり、相手を知っていく。段落は時期の文から始め、問いは出会いの印象について）、2〜3年目は「関係の分かれ道」（結婚か別れのどちらかが最も起きやすい山。180組の約4割がこの2年に集中）、4年目は「関係の形が決まる時期」。窓の年の一文と2〜3年目のヒントは、二人の運気の向き（進む・見直す・両方・穏やか）で選びます（v2.24、1-2 の表）。
+ - **関係が揺れやすい年**：夫婦の、動く年・信頼の年（v2.21 から夫婦だけ。交際中の別れには効かなかったため。§1m）。年表に出会った後の結婚があれば、結婚の年までは出しません（v2.22）。出会った年・婚期の年・年表に出来事がある年は除きます。
+ - **ラベルごとの文面（v2.23）**：片思い・復縁希望・元恋人・夫婦（年表に結婚がないとき、または年表の結婚の年まで）も、出会いから1〜4年を同じ窓・同じタグで見ます。窓の中の判定は交際中と同じで、文面をラベルに合わせます（片思い「思いを伝えるのか、距離を保つのか」、復縁・元恋人「二人の関係が進むのか、区切りを迎えるのか」、夫婦「一緒の暮らしの形や役割など」）。夫婦の出会いの窓では、動く年への昇格と揺れやすい年は使わず、2〜4年目のタグは「#暮らしの形が固まる時期」です。
+diff -ru a/docs/timeline-v3/README.md b/docs/timeline-v3/README.md
+--- a/docs/timeline-v3/README.md	2026-10-04 21:12:26.702660911 +0900
++++ b/docs/timeline-v3/README.md	2026-10-04 21:12:26.704455381 +0900
+@@ -2,6 +2,7 @@
+ 
+ | ファイル | 読む人 | 内容 |
+ | --- | --- | --- |
++| `CHANGES_v2.25.md`・`v2.25_remove_marriage_guarantee.patch` | 確認する人 | v2.24 からの変更（婚期の補完の削除）の内容・差分・検証結果 |
+ | `CODEX_HANDOFF.md` | Codex（最初に読む） | 作業一覧、会話で決まったことの全体、タグ一覧、変えてはいけないもの、確認コマンド |
+ | `LOGIC.md` | 全員 | 今の判定ロジックのまとめ（一人分・二人分、人生の時期＋占術） |
+ | `IMPLEMENTATION.md` | Codex・開発者 | 仕様、計算、判定、文章の組み立て、配線手順、完了条件 |
+diff -ru a/docs/timeline-v3/VALIDATION.md b/docs/timeline-v3/VALIDATION.md
+--- a/docs/timeline-v3/VALIDATION.md	2026-10-04 21:12:26.692827235 +0900
++++ b/docs/timeline-v3/VALIDATION.md	2026-10-04 21:12:26.695246014 +0900
+@@ -312,6 +312,17 @@
+ - 反映（v2.21）：婚期の保証を外し、2〜3年目を「関係の分かれ道」として見せる。揺れやすい年は夫婦だけにする。
+ - 結論：出会いから1〜4年という「窓」は当たるが、窓の中のどの年かを占術で選ぶ力はない。離婚の年（結婚期間の中、§1g〜1h）で効いた「動く年」も、交際中の破局では効かない。
+ 
++### 1n. ひとりの時系列の婚期の補完（v2.19、2026-10-04）
++データ：§1m と同じカップル180組の二人それぞれ（362人、結婚179人）。交際中・`partnerSince`＝交際開始、時刻なし。結婚の年が S+1〜S+3 の婚期の年に入るかを、予測の年のずれをカップル間で入れ替えた偶然と比べた。
++
++| 判定 | 婚期の印が出た人 | 結婚の年と一致 | 偶然 | 比 |
++| --- | --- | --- | --- | --- |
++| 補完あり（v2.19〜2.24） | 360/362人 | 36/179人 | 36.7人 | 0.98倍（p=0.59） |
++| 補完なし（v2.25） | 104/362人 | 10/179人 | 8.3人 | 1.20倍（p=0.31、有意ではない） |
++
++- 参考：「いつも交際2年目」と言うだけで 46/179人（26%）が一致する。
++- 反映（v2.25）：補完を削除。婚期は通常の判定条件を満たした年だけ。交際年数による「#関係の形が決まる時期」のタグと文は残す（結婚・別れの約7割が交際1〜4年目、§1m）。
++
+ ## 2. 今後の検証手順（ルールを変える前に必ず）
+ 
+ 1. **ルールを先に固定する**：条件・点数・対象（性別・時刻の有無）を文書に書き、日付を残す。

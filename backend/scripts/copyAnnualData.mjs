@@ -3,3 +3,5 @@ cpSync(new URL('../src/lib/report/annual3600/data/',import.meta.url),new URL('..
 
 cpSync(new URL('../src/lib/report/compatibilityV24/data/',import.meta.url),new URL('../dist/lib/report/compatibilityV24/data/',import.meta.url),{recursive:true});
 cpSync(new URL('../src/lib/report/coupleAllYears/data/',import.meta.url),new URL('../dist/lib/report/coupleAllYears/data/',import.meta.url),{recursive:true});
+
+cpSync(new URL('../src/lib/report/timelineV3/data/',import.meta.url),new URL('../dist/lib/report/timelineV3/data/',import.meta.url),{recursive:true});

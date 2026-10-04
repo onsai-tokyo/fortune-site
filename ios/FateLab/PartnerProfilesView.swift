@@ -11,21 +11,54 @@ private func relationshipGroup(_ label: String) -> String {
     return "friend"
 }
 
+@MainActor
+enum CompatibilityOpening {
+    enum Destination {
+        case saved(UUID)
+        case generated(StructuredReportResponse)
+    }
+
+    /// A failed history read must not turn into another paid generation.
+    static func resolve(selfReading: ReadingSummary, partner: PartnerProfile, relationshipType: String, relationshipLabel: String,
+                        readings: () async throws -> CompatibilityHistory,
+                        cards: (UUID) async throws -> StructuredReportResponse,
+                        generate: () async throws -> StructuredReportResponse) async throws -> Destination {
+        let history = try await readings()
+        for reading in history.readings where reading.matchesCompatibility(selfReading: selfReading, partner: partner, relationshipType: relationshipType) {
+            let report = try await cards(reading.id)
+            let storedLabels = Set(report.cards.flatMap(\.tags)).intersection(relationshipOptions)
+            // Older reports only persisted the broad relationship type. Open
+            // their saved text as-is instead of charging to recreate the pair.
+            if storedLabels.isEmpty || storedLabels.contains(relationshipLabel) { return .saved(reading.id) }
+        }
+        guard history.complete else {
+            throw APIError.server("保存済みの鑑定をすべて確認できませんでした。新しい鑑定は作成していません。「鑑定書」タブから確認するか、時間をおいて再試行してください。")
+        }
+        return .generated(try await generate())
+    }
+}
+
 struct PartnerProfilesView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @EnvironmentObject private var tabRouter: AppTabRouter
     @State private var partners: [PartnerProfile] = []
     @State private var selected: PartnerProfile?
-    @State private var remaining = 2
+    @State private var remaining = 0
+    @State private var partnerLimit = 1
+    private enum PickerAction { case register, paywall, edit(PartnerProfile) }
+    @State private var pickerAction: PickerAction?
     @State private var showPicker = false
     @State private var showRegistration = false
+    @State private var profileToEdit: PartnerProfile?
+    @State private var hasLoaded = false
     @State private var errorMessage: String?
     @State private var errorKind: FLErrorState.Kind = .dataFetch
     @State private var relationshipType = "romantic"
     @State private var relationshipLabel = "お付き合い中"
     @State private var compatibilityReport: StructuredReportResponse?
     @State private var compatibilityKey: String?
+    @State private var savedCompatibilityID: UUID?
     @State private var showCompatibilityResult = false
     @State private var isGenerating = false
     @State private var generationProgress = GenerationProgress(percent: 5, title: "二人の情報を確認しています", detail: "鑑定に使うプロフィールを準備しています")
@@ -37,19 +70,22 @@ struct PartnerProfilesView: View {
     var body: some View {
         ZStack { ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("ふたりのパターン").font(FateType.screenTitle)
-                    .padding(.bottom, 24)
-                Text("二人の関係に、いま何が起きているか。")
-                    .foregroundStyle(FateTheme.muted).padding(.bottom, 32)
+                FateEditorialHero(eyebrow: "TWO STORIES", title: "ふたりのパターン", subtitle: "違いを知る。重なりを見つける。")
+                    .padding(.bottom, 28)
+                HStack { Text("相手を選ぶ").font(FateType.sectionTitle); Spacer(); Text("\(partners.count) / \(partnerLimit)人").font(.caption).foregroundStyle(FateTheme.muted) }
+                    .padding(.bottom, 14)
                 HStack(spacing: 16) {
-                        profileTile(title: "あなた", subtitle: "", icon: "person", isEmpty: false)
+                        profileTile(title: ownerDisplayName, subtitle: "", icon: "person", isEmpty: false)
                         Text("&").font(.callout).foregroundStyle(FateTheme.muted)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
                                         subtitle: selected == nil ? "未設定" : relationshipLabel,
                                         icon: selected == nil ? "plus" : "person", isEmpty: selected == nil)
                         }.buttonStyle(.plain)
-                }.padding(.bottom, 28)
+                }.padding(.vertical, 24)
+                    .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 24))
+                    .overlay(RoundedRectangle(cornerRadius: 24).stroke(FateTheme.line, lineWidth: 0.5))
+                    .padding(.bottom, 20)
                 Menu {
                     ForEach(relationshipOptions, id: \.self) { label in
                         Button(label) { relationshipLabel = label; relationshipType = relationshipGroup(label) }
@@ -57,9 +93,9 @@ struct PartnerProfilesView: View {
                 } label: {
                     HStack { Text("関係性"); Spacer(); Text(relationshipLabel).foregroundStyle(FateTheme.muted); Image(systemName: "chevron.up.chevron.down") }
                         .padding(.vertical, 14)
-                }.disabled(selected == nil).padding(.bottom, 24)
+                }.font(.subheadline).padding(.horizontal, 18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16)).disabled(selected == nil).padding(.bottom, 24)
                 if selected == nil {
-                    Text("先に相手を登録または選択してください。")
+                    Text("上の＋から、鑑定したい相手を選んでください。")
                         .font(.callout).foregroundStyle(FateTheme.muted)
                 }
                 if selfReading == nil {
@@ -74,20 +110,24 @@ struct PartnerProfilesView: View {
                         .padding(.bottom, 12)
                 }
                 Button { Task { await openCompatibility() } } label: {
-                    Text("相性・関係性の鑑定結果へ進む")
+                    Text("ふたりの鑑定を開く")
                 }
-                    .buttonStyle(FLPrimaryButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating).opacity(selected == nil || selfReading == nil ? 0.45 : 1)
+                    .buttonStyle(FLPrimaryButtonStyle()).disabled(selected == nil || selfReading == nil || isGenerating)
                     .padding(.top, selected == nil ? 12 : 0).padding(.bottom, 12)
                 Text(verbatim: "残り\(remaining)人まで登録できます").font(.caption).foregroundStyle(FateTheme.muted)
                 if let errorMessage {
                     if needsPurchaseRecovery {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("購入状況を確認してください").font(.headline)
+                            Text("相性鑑定の利用回数について").font(.headline)
                             Text(errorMessage).font(.callout).foregroundStyle(FateTheme.muted)
+                            if AppConfig.storeKitEnabled {
                             Button("購入を復元") {
                                 Task { await purchases.restore(auth: auth); await openCompatibility(force: true) }
                             }.buttonStyle(FLPrimaryButtonStyle())
-                            Button("継続鑑定を始める") { showPaywall = true }.buttonStyle(FLSecondaryButtonStyle())
+                            if !purchases.isPremium { Button("継続鑑定を始める") { showPaywall = true }.buttonStyle(FLSecondaryButtonStyle()) }
+                            } else {
+                                Text(AppConfig.purchasesUnavailableMessage).font(.callout)
+                            }
                         }.padding(18).background(FateTheme.surface).clipShape(RoundedRectangle(cornerRadius: 14))
                     } else {
                         FLErrorState(
@@ -101,15 +141,40 @@ struct PartnerProfilesView: View {
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
         .toolbar(isGenerating ? .hidden : .visible, for: .tabBar)
         .task { await load() }
-        .sheet(isPresented: $showPicker) { pickerSheet }
-        .sheet(isPresented: $showRegistration) { PartnerRegistrationView { await load(selectNewest: true) } }
+        .onChange(of: purchases.isPremium) { _, _ in Task { await load() } }
+        .sheet(isPresented: $showPicker, onDismiss: {
+            switch pickerAction {
+            case .register: showRegistration = true
+            case .paywall: showPaywall = true
+            case .edit(let partner): profileToEdit = partner
+            case nil: break
+            }
+            pickerAction = nil
+        }) { pickerSheet }
+        .sheet(isPresented: $showRegistration, onDismiss: { Task { await load() } }) { PartnerRegistrationView(selfReading: selfReading) { await load(selectNewest: true) } }
+        .sheet(item: $profileToEdit) { partner in
+            NavigationStack {
+                Form {
+                    Section("相手のプロフィール") {
+                        LabeledContent("表示名", value: partner.displayName)
+                        LabeledContent("生年月日", value: partner.birthDate)
+                        LabeledContent("出生時刻", value: partner.birthTime ?? "不明")
+                        LabeledContent("出生地", value: partner.birthplace)
+                    }
+                    Section { CoupleMeetingYearEditor(partnerID: partner.id, selfReadingID: selfReading?.id) }
+                }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("相手のプロフィール")
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { profileToEdit = nil } } }
+            }
+        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(draftQuestion: "") {
-                Task { await purchases.sync(auth: auth); showPaywall = false }
+                Task { await purchases.sync(auth: auth); await load(); showPaywall = false }
             }.environmentObject(auth).environmentObject(purchases)
         }
         .navigationDestination(isPresented: $showCompatibilityResult) {
-            if let compatibilityReport, let selected {
+            if let savedCompatibilityID {
+                SavedReadingView(conversationID: savedCompatibilityID, readingKind: "compatibility")
+            } else if let compatibilityReport, let selected {
                 CompatibilityResultView(report: compatibilityReport, partnerName: selected.displayName, relationshipType: relationshipType) { card in
                     guard let conversationID = compatibilityReport.conversationID else {
                         errorMessage = "この相性鑑定を開き直してください。"
@@ -122,6 +187,11 @@ struct PartnerProfilesView: View {
         }
     }
 
+    private var ownerDisplayName: String {
+        if let name = selfReading?.ownerDisplayName { return name }
+        return AccountStorage.birthProfile(userID: auth.userID)?.nickname.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? "あなた"
+    }
+
     private func profileTile(title: String, subtitle: String, icon: String, isEmpty: Bool) -> some View {
         VStack(spacing: 8) {
             ZStack {
@@ -130,8 +200,8 @@ struct PartnerProfilesView: View {
                 Image(systemName: icon).font(.system(size: 26, weight: .light))
                     .foregroundStyle(isEmpty ? FateTheme.ink : FateTheme.muted)
             }.frame(width: 68, height: 68)
-            Text(title).font(.system(size: 15, weight: .medium)).foregroundStyle(FateTheme.ink)
-            Text(subtitle).font(.system(size: 13)).foregroundStyle(FateTheme.muted).lineLimit(1)
+            Text(title).font(.system(.subheadline, weight: .medium)).foregroundStyle(FateTheme.ink)
+            Text(subtitle).font(.system(.caption)).foregroundStyle(FateTheme.muted).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity)
     }
 
@@ -140,23 +210,44 @@ struct PartnerProfilesView: View {
             List {
                 Section {
                     Button("新しく相手を登録する") {
-                        if remaining > 0 { showPicker = false; showRegistration = true }
-                        else { errorMessage = "2人登録済みです。既存の相手を削除してから登録してください。" }
-                    }.disabled(remaining == 0)
-                } footer: { Text(remaining == 0 ? "上限に達しています。行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
+                        if remaining > 0 { pickerAction = .register; showPicker = false }
+                        else if !purchases.isPremium { pickerAction = .paywall; showPicker = false }
+                        else { Task { await load() } }
+                    }.disabled(purchases.isSyncing || purchases.accessState == .unknown || (remaining == 0 && partnerLimit >= 10))
+                    if remaining == 0 && partnerLimit < 10 && !purchases.isPremium {
+                        Text("無料プランは1人まで。月額会員は10人まで登録できます。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                        Button("月額プランを見る") { pickerAction = .paywall; showPicker = false }
+                    }
+                } footer: { Text(remaining == 0 ? "登録済みの相手はそのまま残ります。入れ替える場合は行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
+                if purchases.isPremium { Section { MembershipActiveBanner() } }
                 Section("登録済みの相手") {
                     ForEach(partners) { partner in
-                        Button { selected = partner; relationshipType = partner.relationshipType; relationshipLabel = partner.relationshipLabel ?? (partner.relationshipType == "friend" ? "友人" : "お付き合い中"); compatibilityReport = nil; compatibilityKey = nil; showPicker = false } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                        Button { selectPartner(partner); showPicker = false } label: {
                             HStack {
                                 Image(systemName: "person.crop.circle").foregroundStyle(FateTheme.ink)
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
                                 Spacer(); if selected?.id == partner.id { Image(systemName: "checkmark").foregroundStyle(FateTheme.ink) }
                             }
+                        }.contextMenu { Button("プロフィール・出会った年を編集") { pickerAction = .edit(partner); showPicker = false } }
+                        Button("プロフィール・出会った年を編集") { pickerAction = .edit(partner); showPicker = false }.font(.caption).buttonStyle(.borderless)
                         }.swipeActions { Button("削除", role: .destructive) { Task { await delete(partner) } } }
                     }
                 }
-            }.navigationTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
+            }.task { await purchases.sync(auth: auth); await load() }.navigationTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
         }
+    }
+
+    private func selectPartner(_ partner: PartnerProfile?) {
+        selected = partner
+        relationshipType = partner?.relationshipType ?? "romantic"
+        relationshipLabel = partner.map(typeLabel) ?? "お付き合い中"
+        compatibilityReport = nil
+        compatibilityKey = nil
+        savedCompatibilityID = nil
+        errorMessage = nil
+        needsPurchaseRecovery = false
     }
 
     private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipLabel ?? (partner.relationshipType == "friend" ? "友人" : "お付き合い中") }
@@ -166,12 +257,14 @@ struct PartnerProfilesView: View {
             async let profiles = APIClient.shared.partnerProfiles(auth: auth)
             async let readings = APIClient.shared.readings(auth: auth)
             let (response, availableReadings) = try await (profiles, readings)
+            hasLoaded = true
             partners = response.partners
             remaining = response.remaining
+            partnerLimit = response.limit
             // A compatibility conversation can be the most recently updated item.
             // It must never be reused as the source "self" reading.
-            selfReading = availableReadings.first(where: { !$0.isCompatibility })
-            if selectNewest { selected = partners.last } else if let selected, !partners.contains(selected) { self.selected = nil }
+            selfReading = availableReadings.first(where: { !$0.isCompatibility && !$0.isChat })
+            if selectNewest { selectPartner(partners.last) } else if let selected, !partners.contains(selected) { self.selected = nil }
         } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
     private func delete(_ partner: PartnerProfile) async {
@@ -179,19 +272,40 @@ struct PartnerProfilesView: View {
         catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
     }
     private func openCompatibility(force: Bool = false) async {
-        guard let selected, let selfReading else { return }
-        let key = "\(selected.id.uuidString)|\(selfReading.id.uuidString)|\(relationshipType)|\(relationshipLabel)"
-        if !force, compatibilityKey == key, compatibilityReport != nil {
+        guard !isGenerating, let selected, let selfReading else { return }
+        let owner = AccountScope(auth)
+        let type = relationshipType, label = relationshipLabel
+        let key = "\(owner.userID?.uuidString ?? "")|\(owner.epoch)|\(selected.id.uuidString)|\(selfReading.id.uuidString)|\(type)|\(label)"
+        if !force, compatibilityKey == key, compatibilityReport != nil || savedCompatibilityID != nil {
             showCompatibilityResult = true
             return
         }
         isGenerating = true; errorMessage = nil; compatibilityFailed = false; needsPurchaseRecovery = false; defer { isGenerating = false }
+        generationProgress = GenerationProgress(percent: 5, title: "保存した鑑定を確認しています", detail: "同じ二人の鑑定書があれば、その内容を開きます")
         do {
-            compatibilityReport = try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: relationshipType, relationshipLabel: relationshipLabel, auth: auth) { generationProgress = $0 }
+            let destination = try await CompatibilityOpening.resolve(selfReading: selfReading, partner: selected, relationshipType: type, relationshipLabel: label,
+                readings: {
+                    let values = try await APIClient.shared.compatibilityHistory(partnerID: selected.id, auth: auth)
+                    try owner.check(auth)
+                    return values
+                }, cards: { id in
+                    let value = try await APIClient.shared.cards(id: id, auth: auth)
+                    try owner.check(auth)
+                    return value
+                }, generate: {
+                    try owner.check(auth)
+                    return try await APIClient.shared.compatibility(partnerID: selected.id, conversationID: selfReading.id, relationshipType: type, relationshipLabel: label, auth: auth) { generationProgress = $0 }
+                })
+            try owner.check(auth)
+            switch destination {
+            case .saved(let id): savedCompatibilityID = id; compatibilityReport = nil
+            case .generated(let report): compatibilityReport = report; savedCompatibilityID = nil
+            }
             compatibilityKey = key
             showCompatibilityResult = true
         }
         catch {
+            guard owner.isCurrent(auth), !(error is CancellationError) else { return }
             compatibilityFailed = true
             if case APIError.paymentRequired = error { needsPurchaseRecovery = true }
             errorMessage = userFacingMessage(error) ?? "相性鑑定をうまく作れませんでした。もう一度お試しください。"
@@ -205,36 +319,11 @@ private struct CompatibilityResultView: View {
     let partnerName: String
     let relationshipType: String
     let onQuestion: (ReadingCard) -> Void
-    @State private var selectedTab = "essence"
-
-    private var availableTabs: [(id: String, title: String)] {
-        var tabs = [("essence", "二人の関係")]
-        if report.cards.contains(where: { $0.resolvedTab == "timing" }) { tabs.append(("timing", "二人の節目")) }
-        if !(report.chartSections ?? []).isEmpty { tabs.append(("chart", "二人の命式")) }
-        return tabs
-    }
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text("二人の関係性").font(FateType.screenTitle)
-                Text("あなたと\(partnerName)さんの、\(relationshipType == "friend" ? "友情" : "恋愛")の物語を読み進める")
-                    .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(4)
-                Picker("鑑定の章", selection: $selectedTab) {
-                    ForEach(availableTabs, id: \.id) { tab in Text(tab.title).tag(tab.id) }
-                }
-                .pickerStyle(.segmented)
-                if selectedTab == "chart" {
-                    CoupleChartDetailsView(sections: report.chartSections ?? [], partnerName: partnerName)
-                } else {
-                    ReadingCardList(cards: report.cards.filter { $0.resolvedTab == selectedTab }, onQuestion: onQuestion)
-                }
-            }
-            .padding(FateSpacing.screenH)
-        }
-        .background(FateTheme.canvas)
-        .navigationTitle("相性鑑定")
-        .navigationBarTitleDisplayMode(.inline)
+            InsightHubView(report: GeneratedReport(birthData: [:], calculatedData: [:], text: report.reportText, cards: report.cards, chartSections: report.chartSections ?? [], conversationID: report.conversationID), scope: .couple, onQuestion: onQuestion)
+                .padding(FateSpacing.screenH)
+        }.background(FateTheme.canvas).fateScreenTitle("ふたりの鑑定")
     }
 }
 
@@ -286,7 +375,7 @@ struct CoupleChartDetailsView: View {
     @ViewBuilder
     private func ownerColumn(name: String, section: ChartSection?) -> some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text(name).font(.system(size: 14, weight: .semibold)).foregroundStyle(FateTheme.ink)
+            Text(name).font(.system(.footnote, weight: .semibold)).foregroundStyle(FateTheme.ink)
             if let section {
                 ChartSectionView(section: section)
             } else {
@@ -297,32 +386,77 @@ struct CoupleChartDetailsView: View {
     }
 }
 
-private struct PartnerRegistrationView: View {
+struct PartnerRegistrationView: View {
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
+    let selfReading: ReadingSummary?
     let onSaved: () async -> Void
+    @State private var meetingYear = ""
+    @State private var createdPartner: PartnerProfile?
+    @State private var isWorking = false
     @State private var name = ""; @State private var date = Calendar.current.date(from: DateComponents(year: 1990, month: 1, day: 1))!; @State private var birthTime: Date?
     @State private var birthplace = "東京都"; @State private var gender = "female"; @State private var relationshipLabel = "お付き合い中"; @State private var error: String?
     var body: some View {
         NavigationStack { ScrollView { VStack(alignment: .leading, spacing: 18) {
-            Text("新しく相手を登録する").font(.system(size: 25, weight: .medium))
-            Text("表示名").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
-            TextField("呼び名", text: $name).padding(.vertical, 12); FLDivider()
-            BirthProfileFields(date: $date, birthTime: $birthTime, birthplace: $birthplace, gender: $gender)
+            Text("新しく相手を登録する").font(.system(.title2, weight: .medium))
+            Text("表示名").font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
+            TextField("呼び名", text: $name, prompt: Text("呼び名").foregroundStyle(FateTheme.muted)).disabled(createdPartner != nil).fateInput().accessibilityLabel("呼び名")
+            Text("出会った年（任意）").font(.subheadline)
+            TextField("例：2023", text: $meetingYear, prompt: Text("例：2023").foregroundStyle(FateTheme.muted)).keyboardType(.numberPad).fateInput().accessibilityLabel("出会った年")
+            Text("初めて知り合った年。この年からふたりの時系列を表示します。")
+                .font(.caption).foregroundStyle(FateTheme.muted)
             FLDivider()
-            Text("関係").font(.system(size: 13, weight: .medium)).foregroundStyle(FateTheme.muted)
-            Picker("関係", selection: $relationshipLabel) { ForEach(relationshipOptions, id: \.self) { Text($0).tag($0) } }.pickerStyle(.menu)
+            BirthProfileFields(date: $date, birthTime: $birthTime, birthplace: $birthplace, gender: $gender).disabled(createdPartner != nil).padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20))
+            Text("関係").font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
+            Picker("関係", selection: $relationshipLabel) { ForEach(relationshipOptions, id: \.self) { Text($0).tag($0) } }.pickerStyle(.menu).disabled(createdPartner != nil)
             if let error { Text(error).foregroundStyle(.red) }
+            if error != nil && createdPartner == nil {
+                DisclosureGroup("登録できない場合") {
+                    Button("受付状況を確認") { Task { await recover(cancel: false) } }.disabled(isWorking)
+                    Button("未完了の受付を取り消す") { Task { await recover(cancel: true) } }.disabled(isWorking)
+                }.font(.footnote).tint(FateTheme.ink)
+            }
         }.padding(20) }.background(FateTheme.canvas).toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } }
-            ToolbarItem(placement: .confirmationAction) { Button("登録") { Task { await save() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty) }
+            ToolbarItem(placement: .confirmationAction) { Button("登録") { Task { await save() } }.disabled(isWorking || name.trimmingCharacters(in: .whitespaces).isEmpty) }
         } }
     }
     private func save() async {
+        guard !isWorking else { return }; isWorking = true
+        defer { isWorking = false }
         let dateText = Self.localDateText(date, calendar: .current)
         let timeText = birthTime.map { Self.localTimeText($0, calendar: .current) }
-        do { _ = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationshipGroup(relationshipLabel), relationshipLabel: relationshipLabel, auth: auth); await onSaved(); dismiss() }
-        catch { self.error = userFacingMessage(error) }
+        let raw = meetingYear.trimmingCharacters(in: .whitespacesAndNewlines)
+        let minimum = max(Int(dateText.prefix(4)) ?? 1900, Int(selfReading?.birthData?.birthDate?.prefix(4) ?? "0") ?? 0)
+        let current = Calendar(identifier: .gregorian).component(.year, from: Date())
+        if !raw.isEmpty && (raw.range(of: #"^[0-9]{4}$"#, options: .regularExpression) == nil || (Int(raw) ?? 0) < minimum || (Int(raw) ?? 0) > current) {
+            error = "出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください。"; return
+        }
+        do {
+            if createdPartner == nil {
+                createdPartner = try await APIClient.shared.createPartner(displayName: name, birthDate: dateText, birthTime: timeText, birthplace: birthplace, gender: gender, relationshipType: relationshipGroup(relationshipLabel), relationshipLabel: relationshipLabel, auth: auth)
+            }
+            guard let partner = createdPartner else { return }
+            _ = try await APIClient.shared.coupleMeetingSettings(partnerID: partner.id, selfReadingID: selfReading?.id, saving: true, meetingYear: raw.isEmpty ? nil : Int(raw), auth: auth)
+            await onSaved(); dismiss()
+        }
+        catch { self.error = createdPartner == nil ? userFacingMessage(error) : "相手の登録は完了しています。出会った年を保存できませんでした。もう一度「登録」を押してください。" }
+    }
+
+    private func recover(cancel: Bool) async {
+        guard !isWorking else { return }; isWorking = true
+        defer { isWorking = false }
+        do {
+            if let partner = try await APIClient.shared.recoverPartnerRegistration(auth: auth, cancel: cancel) {
+                createdPartner = partner
+                let raw = meetingYear.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !raw.isEmpty && (raw.range(of: #"^[0-9]{4}$"#, options: .regularExpression) == nil) {
+                    error = "相手の登録は完了しています。出会った年を西暦4桁で入力してください。"; return
+                }
+                _ = try await APIClient.shared.coupleMeetingSettings(partnerID: partner.id, selfReadingID: selfReading?.id, saving: true, meetingYear: raw.isEmpty ? nil : Int(raw), auth: auth)
+                await onSaved(); dismiss()
+            } else { error = cancel ? "保留中の登録操作はありません" : "確認する登録操作はありません" }
+        } catch { self.error = userFacingMessage(error) }
     }
 
     static func localDateText(_ value: Date, calendar: Calendar) -> String {
@@ -333,5 +467,48 @@ private struct PartnerRegistrationView: View {
     static func localTimeText(_ value: Date, calendar: Calendar) -> String {
         let components = calendar.dateComponents([.hour, .minute], from: value)
         return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
+    }
+}
+
+struct CoupleMeetingYearEditor: View {
+    @EnvironmentObject private var auth: AuthStore
+    let partnerID: UUID
+    let selfReadingID: UUID?
+    @State private var value = ""
+    @State private var settings: CoupleMeetingSettings?
+    @State private var busy = false
+    @State private var message: String?
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("出会った年（任意）").font(.subheadline.weight(.medium))
+            TextField("例：2023", text: $value).keyboardType(.numberPad).textFieldStyle(.roundedBorder).accessibilityLabel("出会った年")
+            Text("初めて知り合った年を入力してください。この年から、ふたりの時系列を表示します。未入力でも相性鑑定は利用できます。")
+                .font(.caption).foregroundStyle(FateTheme.muted)
+            Button(settings == nil ? "出会った年を再確認" : "出会った年を保存") { Task { await perform(save: settings != nil) } }
+                .buttonStyle(FLSecondaryButtonStyle()).disabled(busy)
+            if busy { ProgressView() }
+            if let message { Text(message).font(.caption).foregroundStyle(FateTheme.muted) }
+        }.padding(.bottom, 20).task { await perform(save: false) }
+    }
+    private func perform(save: Bool) async {
+        guard !busy else { return }
+        let raw = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let year = Int(raw)
+        if save, let settings, !raw.isEmpty,
+           raw.range(of: #"^[0-9]{4}$"#, options: .regularExpression) == nil || year == nil || year! < settings.minMeetingYear || year! > settings.referenceYear {
+            message = "ふたりが生まれた年以降から今年までの西暦4桁で入力してください。"; return
+        }
+        let owner = AccountScope(auth)
+        busy = true; message = nil
+        defer { busy = false }
+        do {
+            let result = try await APIClient.shared.coupleMeetingSettings(partnerID: partnerID, selfReadingID: selfReadingID, saving: save, meetingYear: raw.isEmpty ? nil : year, auth: auth)
+            try owner.check(auth); guard !Task.isCancelled else { return }
+            settings = result; value = result.meetingYear.map(String.init) ?? ""
+            if save { message = "出会った年を保存しました。" }
+        } catch {
+            guard owner.isCurrent(auth), !Task.isCancelled else { return }
+            message = "出会った年を確認・保存できませんでした。もう一度お試しください。"
+        }
     }
 }

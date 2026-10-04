@@ -29,7 +29,7 @@ struct ReportDocumentView: View {
                 if let place = report.birthData["birthplace"] as? String { Text(place) }
                 if let gender = report.birthData["gender"] as? String { Text("／ " + (gender == "female" ? "女性" : "男性")) }
             }
-        }.font(.system(size: 14)).foregroundStyle(FateTheme.muted)
+        }.font(.system(.footnote)).foregroundStyle(FateTheme.muted)
     }
 
 }
@@ -41,7 +41,7 @@ private struct StructuredReportCardView: View {
         VStack(alignment: .leading, spacing: FateSpacing.cardPadding) {
             Text(card.title).font(FateType.sectionTitle).lineSpacing(6)
             Text(card.summary).font(FateType.body).foregroundStyle(FateTheme.muted).lineSpacing(7)
-            if let sections = card.sections, !sections.isEmpty {
+            if let sections = card.displaySections, !sections.isEmpty {
                 ForEach(sections) { section in
                     VStack(alignment: .leading, spacing: 7) {
                         Text(section.heading).font(.headline).foregroundStyle(FateTheme.ink)
@@ -50,7 +50,7 @@ private struct StructuredReportCardView: View {
                     }
                 }
             } else {
-                ForEach(Array(card.pages.enumerated()), id: \.offset) { _, page in
+                ForEach(Array(card.displayPages.enumerated()), id: \.offset) { _, page in
                     VStack(alignment: .leading, spacing: 7) {
                         Text(page.label).font(.caption).tracking(2).foregroundStyle(FateTheme.ink)
                         Text(page.text).font(FateType.body).lineSpacing(8)

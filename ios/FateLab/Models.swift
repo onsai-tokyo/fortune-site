@@ -52,6 +52,34 @@ struct ReadingSummary: Codable, Identifiable {
     let createdAt: String?
     let updatedAt: String?
     let readingMessages: [MessageCount]?
+    var birthData: BirthName? = nil
+    var partnerProfileID: UUID? = nil
+
+    struct BirthName: Codable {
+        let nickname: String?
+        let birthDate: String?
+        let birthTime: String?
+        let birthplace: String?
+        let gender: String?
+        let selfProfile: ReadingBirthProfile?
+        let partner: ReadingBirthProfile?
+        let relationshipType: String?
+
+        enum CodingKeys: String, CodingKey {
+            case nickname, birthDate, birthTime, birthplace, gender, partner, relationshipType
+            case selfProfile = "self"
+        }
+
+        var profile: ReadingBirthProfile {
+            .init(nickname: nickname, displayName: nil, birthDate: birthDate, birthTime: birthTime, birthplace: birthplace, gender: gender)
+        }
+    }
+
+    var ownerDisplayName: String? {
+        guard !isCompatibility, !isChat else { return nil }
+        let name = birthData?.nickname?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? nil : name
+    }
 
     struct MessageCount: Codable { let count: Int }
     var questionCount: Int { (readingMessages?.first?.count ?? 0) / 2 }
@@ -63,10 +91,89 @@ struct ReadingSummary: Codable, Identifiable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case readingMessages = "reading_messages"
+        case birthData = "birth_data"
+        case partnerProfileID = "partner_profile_id"
     }
 
     var isCompatibility: Bool { kind == "compatibility" }
     var isChat: Bool { kind == "chat" }
+
+    func matchesCompatibility(selfReading: ReadingSummary, partner: PartnerProfile, relationshipType: String) -> Bool {
+        guard isCompatibility, partnerProfileID == partner.id,
+              !selfReading.isCompatibility, !selfReading.isChat,
+              birthData?.relationshipType == relationshipType,
+              let own = selfReading.birthData?.profile,
+              let savedSelf = birthData?.selfProfile,
+              let savedPartner = birthData?.partner else { return false }
+        return savedSelf.matches(own) && savedSelf.nickname == own.nickname
+            && savedPartner.matches(.init(nickname: nil, displayName: partner.displayName,
+                birthDate: partner.birthDate, birthTime: partner.birthTime, birthplace: partner.birthplace, gender: partner.gender))
+    }
+}
+
+struct ReadingBirthProfile: Codable {
+    let nickname: String?
+    let displayName: String?
+    let birthDate: String?
+    let birthTime: String?
+    let birthplace: String?
+    let gender: String?
+
+    func matches(_ other: ReadingBirthProfile) -> Bool {
+        guard let birthDate, !birthDate.isEmpty, let birthplace, !birthplace.isEmpty, let gender, !gender.isEmpty else { return false }
+        return birthDate == other.birthDate && birthplace == other.birthplace && gender == other.gender
+            && Self.normalizedTime(birthTime) == Self.normalizedTime(other.birthTime)
+    }
+
+    private static func normalizedTime(_ value: String?) -> String {
+        guard let value, !value.isEmpty else { return "" }
+        // Postgres may return seconds while the input form stores HH:mm.
+        let parts = value.split(separator: ":", omittingEmptySubsequences: false)
+        if parts.count == 3, parts[2] == "00" { return parts.prefix(2).joined(separator: ":") }
+        return value
+    }
+}
+
+struct CompatibilityHistory {
+    let readings: [ReadingSummary]
+    let complete: Bool
+
+    struct Page: Decodable {
+        struct Pagination: Decodable {
+            let complete: Bool
+            let nextCursor: UUID?
+        }
+        let conversations: [ReadingSummary]
+        let compatibilityHistory: Pagination?
+    }
+
+    static func path(partnerID: UUID, cursor: UUID?) -> String {
+        "/api/reading/conversations?compatibilityHistory=1&partnerId=\(partnerID.uuidString)"
+            + (cursor.map { "&cursor=\($0.uuidString)" } ?? "")
+    }
+
+    @MainActor static func load(page: (UUID?) async throws -> Page) async throws -> CompatibilityHistory {
+        var cursor: UUID?
+        var records: [ReadingSummary] = []
+        var seen = Set<UUID>()
+        for _ in 0..<100 {
+            let value = try await page(cursor)
+            records.append(contentsOf: value.conversations)
+            guard let pagination = value.compatibilityHistory else {
+                // Older backends ignore the new query and return a capped list.
+                return .init(readings: records, complete: false)
+            }
+            if pagination.complete {
+                guard pagination.nextCursor == nil else { throw APIError.invalidResponse }
+                return .init(readings: records.sorted { ($0.updatedAt ?? "") > ($1.updatedAt ?? "") }, complete: true)
+            }
+            guard let next = pagination.nextCursor, next == value.conversations.last?.id,
+                  cursor.map({ next.uuidString < $0.uuidString }) ?? true,
+                  seen.insert(next).inserted else { throw APIError.invalidResponse }
+            cursor = next
+        }
+        return .init(readings: records, complete: false)
+    }
 }
 
 struct ReadingStatus: Decodable {
@@ -137,6 +244,10 @@ struct PartnerProfilesResponse: Codable {
 }
 
 struct BirthInput: Equatable, Codable {
+    var relationshipStatus: String?
+    var spouseConvention: String?
+    var annualYunConvention: String?
+    var workContext: String?
     var nickname = ""
     var date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     var birthTime: Date?
@@ -151,8 +262,12 @@ struct GeneratedReport {
     let cards: [ReadingCard]
     let chartSections: [ChartSection]
     var conversationID: UUID?
+    let saveOperationID: UUID
+    let structuredSnapshot: [String: Any]?
 
-    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = [], chartSections: [ChartSection] = [], conversationID: UUID? = nil) {
+    init(birthData: [String: Any], calculatedData: [String: Any], text: String, cards: [ReadingCard] = [], chartSections: [ChartSection] = [], conversationID: UUID? = nil, structuredSnapshot: [String: Any]? = nil, saveOperationID: UUID = UUID()) {
+        self.saveOperationID = saveOperationID
+        self.structuredSnapshot = structuredSnapshot
         self.birthData = birthData
         self.calculatedData = calculatedData
         self.text = text
@@ -201,14 +316,83 @@ struct ReadingCard: Codable, Identifiable {
     let title: String
     let summary: String
     let tags: [String]
+    var timelineV3Calculation: TimelineV3DisplayMetadata? = nil
     let period: ReadingCardPeriod?
     let pages: [ReadingCardPage]
     let sections: [ReadingCardSection]?
     let evidence: [ReadingCardEvidence]
 
+    // Presentation-only: keep original saved data and calculation periods intact.
+    var isAnnualCatalogue: Bool {
+        guard isTiming, scope != "couple", id.hasPrefix("turning-year-") else { return false }
+        return period?.label.contains("立春から翌年の立春まで") == true
+            || Array((sections ?? []).prefix(3).map(\.heading)) == ["恋愛・人との関わり", "仕事・活動", "暮らし・自分の時間"]
+    }
+    var displayPeriodLabel: String? {
+        guard isAnnualCatalogue else { return period?.label }
+        return period?.label.replacingOccurrences(of: "（立春から翌年の立春まで）", with: "")
+    }
+    var displaySections: [ReadingCardSection]? {
+        guard isAnnualCatalogue else { return sections }
+        return sections?.filter { $0.heading != "対象期間と候補ラベル" }
+    }
+    var displayPages: [ReadingCardPage] {
+        guard isAnnualCatalogue else { return pages }
+        return pages.filter { $0.label != "対象期間と候補ラベル" }
+    }
+
+    struct DomainSummary { let label: String; let text: String }
+    var domainSummaries: [DomainSummary] {
+        guard isTiming else { return [] }
+        if scope == "couple" {
+            // Excerpt the confirmed annual manuscript; do not invent a marriage score.
+            let text = (displaySections ?? []).map(\.body).joined(separator: "\n")
+            let sentences = text.components(separatedBy: "。").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            return [("関係の節目", ["結婚", "婚約", "同居", "交際"]), ("すれ違いのケア", ["すれ違", "衝突", "食い違", "距離を", "関係を見直"])].compactMap { label, words in
+                guard let sentence = sentences.first(where: { sentence in words.contains(where: sentence.contains) }) else { return nil }
+                return DomainSummary(label: label, text: sentence + "。")
+            }
+        }
+        if isAnnualCatalogue {
+            return (displaySections ?? []).prefix(2).compactMap { section in
+                guard let sentence = section.body.components(separatedBy: "。").first, !sentence.isEmpty else { return nil }
+                return DomainSummary(label: section.heading, text: sentence + "。")
+            }
+        }
+        // Quote existing complete sentences only. A broad tag alone must never
+        // become a prediction about love, marriage or a job change.
+        let sentences = summary.split(separator: "。").map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let domains = [("恋愛・結婚", ["恋愛", "結婚", "婚約", "交際", "恋人", "出会い"]),
+                       ("仕事", ["仕事", "転職", "昇進", "職場", "肩書", "専門", "役目", "役割"])]
+        return domains.compactMap { label, words in
+            // The annual renderer retains every relationship signal in this
+            // section. Its leading paragraph contains the calculated meanings;
+            // subsequent paragraphs explain how to read them. Show the meanings
+            // on the timeline and retain the complete section in the reader.
+            if label == "恋愛・結婚", let relationship = sections?.first(where: {
+                $0.claimId?.hasPrefix("timing-annual-") == true && $0.claimId?.hasSuffix("-relationships") == true
+            }), !relationship.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let paragraphs = relationship.body.components(separatedBy: "\n\n")
+                if let year = calendarYear,
+                   relationship.claimId == "timing-annual-\(year)-relationships",
+                   paragraphs.count > 1, let lead = paragraphs.first,
+                   !lead.isEmpty, lead.hasSuffix("。"), summary.contains(lead),
+                   // A saved/unknown format may put another calculated meaning
+                   // in a later paragraph. In that case keep the whole section.
+                   !sentences.contains(where: { relationship.body.contains($0 + "。") && !lead.contains($0 + "。") }) {
+                    return DomainSummary(label: label, text: lead)
+                }
+                return DomainSummary(label: label, text: relationship.body)
+            }
+            let matching = sentences.filter { value in words.contains(where: value.contains) }
+            guard !matching.isEmpty else { return nil }
+            return DomainSummary(label: label, text: matching.map { $0 + "。" }.joined())
+        }
+    }
+
     var isTiming: Bool { kind == "timing" }
     var resolvedTab: String { tab ?? (kind == "timing" ? "timing" : kind == "chart" ? "chart" : "essence") }
-    var body: String { sections?.map(\.body).joined(separator: "\n\n") ?? pages.map(\.text).joined(separator: "\n\n") }
+    var body: String { displaySections?.map(\.body).joined(separator: "\n\n") ?? displayPages.map(\.text).joined(separator: "\n\n") }
 }
 
 struct ReadingCardPeriod: Codable { let label: String }
@@ -271,4 +455,60 @@ struct ConversationRecord: Codable {
 struct ConversationDetail: Codable {
     let conversation: ConversationRecord
     let messages: [ReadingMessage]
+}
+
+struct SelfTimingHistory: Decodable {
+    let cards: [ReadingCard]
+    let referenceYear: Int
+
+    static func merging(_ history: [ReadingCard], saved: [ReadingCard]) -> [ReadingCard] {
+        var byYear: [Int: ReadingCard] = [:]
+        for card in saved + history {
+            guard card.isTiming, card.scope == "self", let year = card.calendarYear else { continue }
+            byYear[year] = card
+        }
+        return byYear.sorted { $0.key < $1.key }.map(\.value)
+    }
+}
+
+struct CoupleTimingHistory: Decodable {
+    let cards: [ReadingCard]
+    let initialYear: Int
+    let hasMeetingSignal: Bool
+    let referenceYear: Int
+}
+
+extension ReadingCard {
+    var timelineDisplayTags: [String] {
+        guard isTiming else { return [] }
+        var seen = Set<String>()
+        return tags.filter { $0.hasPrefix("#") && seen.insert($0).inserted }
+    }
+
+    var calendarYear: Int? {
+        guard let label = period?.label,
+              let range = label.range(of: #"\d{4}(?=年)"#, options: .regularExpression) else { return nil }
+        return Int(label[range])
+    }
+}
+
+struct CoupleAllYearsHistory: Decodable {
+    struct RelationshipContext: Decodable { let note: String? }
+    var relationshipContext: RelationshipContext? = nil
+    struct Entry: Decodable { let year: Int; let label: String?; let contentStatus: String; let card: ReadingCard? }
+    struct Group: Decodable { let from: Int; let to: Int; let years: [Int] }
+    let status: String
+    let meetingYear: Int?
+    let referenceYear: Int
+    let endYear: Int
+    let minMeetingYear: Int
+    let collapsedYears: [Int]
+    let groups: [Group]
+    let entries: [Entry]
+}
+
+struct CoupleMeetingSettings: Decodable {
+    let meetingYear: Int?
+    let minMeetingYear: Int
+    let referenceYear: Int
 }

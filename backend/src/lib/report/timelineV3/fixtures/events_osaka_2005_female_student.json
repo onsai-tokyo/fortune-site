@@ -1,0 +1,101 @@
+{
+ "input": {
+  "birthDate": "2005-05-05",
+  "birthTime": "07:15",
+  "birthplace": "大阪府",
+  "gender": "female",
+  "workContext": "student",
+  "relationshipStatus": "single"
+ },
+ "events": [
+  {
+   "year": 2024,
+   "month": 4,
+   "kind": "study"
+  }
+ ],
+ "nowYear": 2026,
+ "readings": [
+  {
+   "id": "life-event-2024-4-study",
+   "year": 2024,
+   "month": 4,
+   "kind": "study",
+   "title": "2024年の進学・卒業を読み解く",
+   "sections": [
+    {
+     "heading": "あなたの出来事",
+     "body": "2024年4月に、進学・卒業がありました。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "命式から見たこの年",
+     "body": "時系列の判定では、この年は仕事の転機の候補には入っていませんでした。判定に出ない年にも、仕事の変化は起こります。一方で、この年には次のような動きもありました。四柱推命では、この年の干が、仕事や所属、学びを表す星にあたる年でした。四柱推命では、この年の干支が、あなたの命式で仕事の場を表す部分と響き合う年でした。この前後は、人生の大きな流れが切り替わる時期でもありました。これは出来事の意味を考えるための読み解きで、占いが当たったかどうかを示すものではありません。",
+     "evidence": [
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "年柱甲辰・年干の十神＝正官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-C1：年干甲が正官"
+      },
+      {
+       "family": "timeline-v3-event",
+       "system": "四柱推命",
+       "detail": "TL3-C2：年支辰が月支辰と自刑"
+      }
+     ],
+     "termGloss": []
+    },
+    {
+     "heading": "この出来事の読み解き",
+     "body": "所属や役割が主題の年でした。この変化は、自分の立場を固めるための選択として読むことができます。",
+     "evidence": [],
+     "termGloss": []
+    },
+    {
+     "heading": "これから",
+     "body": "この先で、仕事の転機の候補は2027年・2028年です。",
+     "evidence": [],
+     "termGloss": []
+    }
+   ],
+   "evidence": [
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "年柱甲辰・年干の十神＝正官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-C1：年干甲が正官"
+    },
+    {
+     "family": "timeline-v3-event",
+     "system": "四柱推命",
+     "detail": "TL3-C2：年支辰が月支辰と自刑"
+    }
+   ],
+   "overlap": false,
+   "nextYears": [
+    2027,
+    2028
+   ],
+   "meta": {
+    "version": "timeline-v3.31",
+    "partsVersion": "timeline-v3-parts-1.5",
+    "eventPartsVersion": "timeline-v3-event-parts-1.1",
+    "baziYear": 2024,
+    "hits": [
+     "TL3-C1",
+     "TL3-C2"
+    ]
+   }
+  }
+ ]
+}

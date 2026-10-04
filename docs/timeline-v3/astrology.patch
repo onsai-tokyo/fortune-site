@@ -1,0 +1,26 @@
+--- a/backend/src/lib/astrology.ts
++++ b/backend/src/lib/astrology.ts
+@@ -13,7 +13,7 @@
+   福岡県: [33.59, 130.40], 佐賀県: [33.25, 130.30], 長崎県: [32.75, 129.88], 熊本県: [32.79, 130.74], 大分県: [33.24, 131.61], 宮崎県: [31.91, 131.42], 鹿児島県: [31.56, 130.56], 沖縄県: [26.21, 127.68],
+ }
+ 
+-function resolveCapital(birthplace?: string): { name: string; coordinates: [number, number] } | null {
++export function resolveCapital(birthplace?: string): { name: string; coordinates: [number, number] } | null {
+   const normalized = birthplace?.trim().replace(/[\s　]+/g, '')
+   if (!normalized) return null
+   const name = Object.keys(CAPITALS).find(candidate => {
+@@ -35,12 +35,12 @@
+ const signedDelta = (a: number, b: number) => ((a - b + 540) % 360) - 180
+ const zodiac = (longitude: number) => ({ sign: SIGNS[Math.floor(normalize(longitude) / 30)], degree: normalize(longitude) % 30 })
+ 
+-function lahiriAyanamsha(date: Date) {
++export function lahiriAyanamsha(date: Date) {
+   const years = (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 31_556_952_000
+   return 23.85675 + years * (50.290966 / 3600)
+ }
+ 
+-function tropicalAscendant(date: Date, latitude: number, longitude: number) {
++export function tropicalAscendant(date: Date, latitude: number, longitude: number) {
+   const theta = normalize(Astronomy.SiderealTime(date) * 15 + longitude) * Math.PI / 180
+   const phi = latitude * Math.PI / 180
+   const years = (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 31_556_952_000

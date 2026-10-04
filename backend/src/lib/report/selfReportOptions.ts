@@ -1,3 +1,4 @@
+import { TIMELINE_V3_VERSION } from './timelineV3/index.js'
 import { ANNUAL3600_VERSION } from './annual3600/version.js'
 import { PERSONALITY_VERSION, PERSONALITY_LAYOUT_VERSION, PERSONALITY_SPOUSE_VERSION } from './personalityReport.js'
 
@@ -8,7 +9,7 @@ export type FactPipeline = 'v1' | 'v2'
 export type NarrativeEngine = 'legacy' | 'blocks' | 'personality'
 
 export interface SelfReportOptions {
-  annualEngine?: 'legacy' | 'catalog3600'
+  annualEngine?: 'legacy' | 'catalog3600' | 'timeline3'
   factPipeline: FactPipeline
   narrativeEngine: NarrativeEngine
 }
@@ -23,7 +24,7 @@ export const DEFAULT_SELF_REPORT_OPTIONS: SelfReportOptions = {
  * 新旧経路が同じキャッシュキーを共有すると、片方の変更がもう片方の保存済み鑑定書を汚染する。
  */
 export function selfReportPipelineTag(options: SelfReportOptions): string {
-  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}${options.annualEngine === 'catalog3600' ? `|${ANNUAL3600_VERSION}` : ''}`
+  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}${options.annualEngine === 'timeline3' ? `|${TIMELINE_V3_VERSION}` : ''}${options.annualEngine === 'catalog3600' ? `|${ANNUAL3600_VERSION}` : ''}`
 }
 
 function isFactPipeline(value: string): value is FactPipeline {
@@ -42,6 +43,7 @@ export function resolveSelfReportOptions(env: NodeJS.ProcessEnv = process.env): 
   const factPipeline = (env.FACT_PIPELINE ?? '').trim()
   const narrativeEngine = (env.NARRATIVE_ENGINE ?? '').trim()
   return {
+    ...(env.ANNUAL_READING_ENGINE?.trim() === 'timeline3' ? {annualEngine:'timeline3' as const} : {}),
     ...(env.ANNUAL_READING_ENGINE?.trim() === 'catalog3600' ? {annualEngine:'catalog3600' as const} : {}),
     factPipeline: isFactPipeline(factPipeline) ? factPipeline : DEFAULT_SELF_REPORT_OPTIONS.factPipeline,
     narrativeEngine: isNarrativeEngine(narrativeEngine) ? narrativeEngine : DEFAULT_SELF_REPORT_OPTIONS.narrativeEngine,

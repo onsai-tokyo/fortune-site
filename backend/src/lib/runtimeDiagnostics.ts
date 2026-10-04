@@ -1,3 +1,4 @@
+import { TIMELINE_V3_VERSION } from './report/timelineV3/version.js'
 import { identity as coupleTimelineIdentity } from './report/coupleAllYears/composer.js'
 import { COMPATIBILITY_V24_IDENTITY } from './report/compatibilityV24/version.js'
 import type { StructuredReport } from './reportCards.js'
@@ -37,6 +38,8 @@ export function runtimeIdentity(env: NodeJS.ProcessEnv = process.env) {
     },
     compatibilityVersion: COMPATIBILITY_V24_IDENTITY,
     coupleTimelineVersion: coupleTimelineIdentity(),
+    coupleTimelineEngine: env.COUPLE_TIMELINE_ENGINE?.trim() === 'v3' ? 'v3' : 'legacy',
+    timelineV3Version: TIMELINE_V3_VERSION,
     aiReportEnabled: env.AI_REPORT_ENABLED !== 'false',
     deterministicScope: normalizedList(env.DETERMINISTIC_SCOPE),
     timingEngineMode: timingMode(env.TIMING_ENGINE_MODE),

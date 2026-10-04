@@ -1,3 +1,5 @@
+import { buildCoupleTimelineV3 } from '../timelineV3/couple.js'
+import type { LifeEvent } from '../timelineV3/eventKinds.js'
 import {createHash} from 'node:crypto'
 import {birthMaterials,buildFromBirths,type BirthInput} from './timeline.js'
 import {japanDateParts} from '../../japanDate.js'
@@ -25,9 +27,10 @@ export function validateMeetingYear(value:unknown,minYear:number,referenceYear=j
   if(typeof value!=='number'||!Number.isInteger(value)||value<Math.max(1000,minYear)||value>referenceYear)throw new Error('INVALID_MEETING_YEAR')
   return value
 }
-export function snapshotTimeline(snapshot:ReturnType<typeof coupleSnapshot>,meetingYear:number|null) {
+export function snapshotTimeline(snapshot:ReturnType<typeof coupleSnapshot>,meetingYear:number|null,lifeEvents:LifeEvent[] = []) {
   const relationshipType=typeof snapshot.relationshipType==='string'?snapshot.relationshipType:undefined
   const relationshipLabel=typeof snapshot.relationshipLabel==='string'?snapshot.relationshipLabel:undefined
+  if(process.env.COUPLE_TIMELINE_ENGINE?.trim()==='v3') return {...buildCoupleTimelineV3({self:{...snapshot.a,birthTime:snapshot.a.birthTime??undefined,lifeEvents},partner:{...snapshot.b,birthTime:snapshot.b.birthTime??undefined},relationshipLabel,meetingYear,referenceYear:japanDateParts().year}),minMeetingYear:snapshot.minMeetingYear}
   const result=buildFromBirths(snapshot.a,snapshot.b,meetingYear,undefined,undefined,{relationshipType,relationshipLabel})
   const isFormer=relationshipLabel==='復縁希望'||relationshipLabel==='元恋人'
   return {...result,minMeetingYear:snapshot.minMeetingYear,
