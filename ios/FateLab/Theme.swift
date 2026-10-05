@@ -375,6 +375,8 @@ struct BirthProfileFields: View {
             DateMenuPicker(date: $date)
             FLDivider()
             Text("出生時刻（任意）").font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted)
+            Text("出生時刻が分かると、時刻に応じた命式も含めて、より詳しく鑑定できます。")
+                .font(.footnote).foregroundStyle(FateTheme.muted).fixedSize(horizontal: false, vertical: true)
             Text("母子健康手帳の出産の記録に載っています。時刻があると、時期を月単位で読めます。").font(.caption).foregroundStyle(FateTheme.muted)
             TimeMenuPicker(time: $birthTime)
             Text("分からない場合は空欄のまま進めます").font(.footnote).foregroundStyle(FateTheme.muted)

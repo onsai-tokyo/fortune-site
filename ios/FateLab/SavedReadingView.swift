@@ -18,7 +18,7 @@ struct SavedReadingView: View {
     private struct LoadIdentity: Hashable { let conversationID: UUID; let owner: AccountScope }
 
     var body: some View {
-        ScrollView {
+        ReadingScrollView {
             Group {
                 if isLoading {
                     VStack(spacing: 8) {

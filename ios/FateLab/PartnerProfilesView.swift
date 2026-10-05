@@ -320,7 +320,7 @@ private struct CompatibilityResultView: View {
     let relationshipType: String
     let onQuestion: (ReadingCard) -> Void
     var body: some View {
-        ScrollView {
+        ReadingScrollView {
             InsightHubView(report: GeneratedReport(birthData: [:], calculatedData: [:], text: report.reportText, cards: report.cards, chartSections: report.chartSections ?? [], conversationID: report.conversationID), scope: .couple, onQuestion: onQuestion)
                 .padding(FateSpacing.screenH)
         }.background(FateTheme.canvas).fateScreenTitle("ふたりの鑑定")

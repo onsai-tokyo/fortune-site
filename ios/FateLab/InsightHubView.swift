@@ -1,5 +1,60 @@
 import SwiftUI
 
+private struct ReadingScrollKey: EnvironmentKey {
+    static let defaultValue: @MainActor @Sendable (String) -> Void = { _ in }
+}
+private extension EnvironmentValues {
+    var scrollToReading: @MainActor @Sendable (String) -> Void {
+        get { self[ReadingScrollKey.self] }
+        set { self[ReadingScrollKey.self] = newValue }
+    }
+}
+
+struct ReadingScrollView<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                content().environment(\.scrollToReading, { id in
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(id, anchor: .top)
+                    }
+                })
+            }
+        }
+    }
+}
+
+private struct ReadingJumpMenu: View {
+    @Environment(\.scrollToReading) private var scroll
+    let cards: [ReadingCard]
+    var prepare: (ReadingCard) -> Void = { _ in }
+    var body: some View {
+        if !cards.isEmpty {
+            Menu {
+                ForEach(cards) { card in
+                    Button([card.displayPeriodLabel, card.title].compactMap { $0 }.joined(separator: " · ")) {
+                        prepare(card)
+                        Task { @MainActor in
+                            await Task.yield()
+                            scroll(card.id)
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Text("鑑定を選んで移動")
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down").font(.caption)
+                }.font(.subheadline).foregroundStyle(FateTheme.ink)
+                    .padding(16).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
+            }
+        }
+    }
+}
+
 private struct ReadingConversationKey: EnvironmentKey { static let defaultValue: UUID? = nil }
 private extension EnvironmentValues {
     var readingConversationID: UUID? {
@@ -190,36 +245,50 @@ struct ReadingCardList: View {
     @EnvironmentObject private var auth: AuthStore
     @State private var selectedPaidCard: ReadingCard?
     @State private var resolvedCards: [String: ReadingCard] = [:]
+    @State private var pendingReader: ReadingCard?
+    @State private var reader: ReadingCard?
+    @State private var showReader = false
     let cards: [ReadingCard]
     let onQuestion: (ReadingCard) -> Void
+    var showsJumpMenu = true
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+        if showsJumpMenu { ReadingJumpMenu(cards: cards) }
         ForEach(Array(cards.enumerated()), id: \.element.id) { index, original in
             let item = resolvedCards[original.id] ?? original
-            if item.showsReadingLock {
-                Button { selectedPaidCard = item } label: {
-                    InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
-                }.buttonStyle(.plain)
-                    .accessibilityHint("購入方法を表示します")
-            } else {
-                NavigationLink {
-                    FocusReadingView(item: item) { onQuestion(item) }
-                        .environment(\.isPartnerReading, isPartnerReading)
-                } label: {
-                    InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
-                }.buttonStyle(.plain)
-            }
+            Button {
+                if item.showsReadingLock { selectedPaidCard = item }
+                else { reader = item; showReader = true }
+            } label: {
+                InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
+            }.buttonStyle(.plain).id(item.id)
+                .accessibilityHint(item.showsReadingLock ? "購入方法を表示します" : "鑑定の詳細を開きます")
         }
-        .sheet(item: $selectedPaidCard) { item in
+        }
+        .sheet(item: $selectedPaidCard, onDismiss: {
+            if let card = pendingReader {
+                reader = card; pendingReader = nil; showReader = true
+            }
+        }) { item in
             ReadingUnlockSheet(item: item, conversationID: conversationID) { card in
                 resolvedCards[card.id] = card
+                pendingReader = card
                 selectedPaidCard = nil
             }
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
+        .navigationDestination(isPresented: $showReader) {
+            if let reader {
+                FocusReadingView(item: reader) { onQuestion(reader) }
+                    .environment(\.isPartnerReading, isPartnerReading)
+                    .environment(\.readingConversationID, conversationID)
+            }
+        }
         .onChange(of: AccountScope(auth)) { _, _ in
-            selectedPaidCard = nil; resolvedCards.removeAll()
+            selectedPaidCard = nil; pendingReader = nil; reader = nil
+            showReader = false; resolvedCards.removeAll()
         }
     }
 }
@@ -253,7 +322,7 @@ private struct ReadingUnlockSheet: View {
                         Label("もう一歩、深く知る", systemImage: "lock")
                             .font(.caption.weight(.medium)).tracking(1)
                         Text(item.paidReadingLabel ?? item.title)
-                            .font(.system(.title2, design: .serif, weight: .medium))
+                            .font(.system(.title2, design: .default, weight: .medium))
                             .fixedSize(horizontal: false, vertical: true)
                         Text(item.title).font(.subheadline).lineSpacing(5)
                     }
@@ -270,7 +339,7 @@ private struct ReadingUnlockSheet: View {
                         option(title: "この鑑定だけを読む",
                                price: hasCredit ? "購入済みの1件分を使えます" : purchases.cardProduct?.displayPrice ?? "料金を確認中",
                                detail: item.isTiming ? "表示中の対象・1年分を購入。購入した年は、会員期間にかかわらず読み返せます。" : "この相手の、この項目を購入。会員期間にかかわらず読み返せます。") {
-                            Button(hasCredit ? "購入済みの1件分で読む" : "この鑑定を購入") { Task { await buySingle() } }
+                            Button(busy ? "購入状況を確認中…" : hasCredit ? "購入済みの1件分で読む" : "この鑑定を購入") { Task { await buySingle() } }
                                 .buttonStyle(FLPrimaryButtonStyle())
                                 .disabled(!available || busy || (approvalPending && !hasCredit) || (!hasCredit && purchases.cardProduct == nil))
                         }
@@ -278,7 +347,7 @@ private struct ReadingUnlockSheet: View {
                                price: purchases.product.map { $0.displayPrice + "／月" } ?? "月額料金を確認中",
                                detail: "会員期間中は、相性の有料項目と2027年以降の時系列が見放題。相談鑑定書は毎月3通です。") {
                             Button("月額会員になる") { Task { await buyMembership() } }
-                                .buttonStyle(FLSecondaryButtonStyle())
+                                .buttonStyle(FLPrimaryButtonStyle())
                                 .disabled(!available || busy || purchases.product == nil || purchases.accessState != .standard)
                             Text("月額会員は自動更新です。解約はApp Storeのサブスクリプション管理から行えます。")
                                 .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(4)
@@ -290,7 +359,7 @@ private struct ReadingUnlockSheet: View {
                         Button("購入状況を確認") { Task { await refresh(sync: true) } }.disabled(busy)
                         Button("承認が見送られた場合") { confirmApprovalReset = true }.font(.caption).disabled(busy)
                     }
-                    if loading { FateInlineLoading(title: "購入状況を確認しています") }
+                    if busy { FateInlineLoading(title: "購入状況を確認しています") }
                     if let error {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger).lineSpacing(5)
                         Button("購入状況を確認") { Task { await refresh(sync: true) } }
@@ -300,6 +369,7 @@ private struct ReadingUnlockSheet: View {
                             .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     }
                     if available {
+                        StoreCurrencyNote(currencyCode: purchases.cardProduct?.priceFormatStyle.currencyCode)
                         Button("購入を復元") { Task {
                             await purchases.restore(auth: auth)
                             await refresh()
@@ -321,7 +391,7 @@ private struct ReadingUnlockSheet: View {
             Button("承認を待つ", role: .cancel) {}
         } message: {
             Text("アプリ内の承認待ち表示を解除します。Appleへの申請自体は取り消されません。承認待ちが続いている場合は、再購入せずにお待ちください。")
-        }.task(id: AccountScope(auth)) { await refresh(sync: true) }
+        }.tint(FateTheme.ink).task(id: AccountScope(auth)) { await refresh(sync: true) }
     }
 
     private func finish() {
@@ -334,12 +404,16 @@ private struct ReadingUnlockSheet: View {
         loading = true; error = nil; state = nil
         defer { if owner.isCurrent(auth) { loading = false } }
         do {
-            if sync { await purchases.sync(auth: auth); await purchases.load() }
+            if sync {
+                await purchases.sync(auth: auth)
+                if purchases.cardProduct == nil || purchases.product == nil { await purchases.load() }
+            }
             try owner.check(auth)
             let result = try await APIClient.shared.readingAccess(target: target, auth: auth)
             try owner.check(auth); state = result
             if (result.credits ?? 0) > 0 { try purchases.clearCardApprovalReminder(auth: auth) }
             approvalPending = try purchases.cardApprovalIsPending(auth: auth)
+            if result.unlocked == true { finish() }
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error); approvalPending = (try? purchases.cardApprovalIsPending(auth: auth)) ?? true } }
     }
     private func buySingle() async {
@@ -390,7 +464,7 @@ private struct ReadingAccessGuard: View {
     var body: some View {
         Group {
             if let readable {
-                FocusReadingView(item: readable, onQuestion: onQuestion, verifiedReading: true)
+                ReadingDetailContent(item: readable, onQuestion: onQuestion)
             } else if locked {
                 ReadingUnlockSheet(item: item, conversationID: conversationID) { readable = $0; locked = false }
             } else if let error {
@@ -440,6 +514,21 @@ struct ReadingNatureArtwork: View {
     }
 }
 
+/// Decorative redaction; unpaid text and tags never reach the device.
+private struct LockedReadingPreview: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                ForEach([82.0, 106.0], id: \.self) { width in
+                    Capsule().fill(FateTheme.muted.opacity(0.25)).frame(width: width, height: 25)
+                }
+            }
+            RoundedRectangle(cornerRadius: 4).fill(FateTheme.muted.opacity(0.22)).frame(height: 10)
+            RoundedRectangle(cornerRadius: 4).fill(FateTheme.muted.opacity(0.22)).frame(maxWidth: 210).frame(height: 10)
+        }.blur(radius: 4).accessibilityHidden(true).allowsHitTesting(false)
+    }
+}
+
 struct InsightCard: View {
     let item: ReadingCard
     var artworkIndex = 0
@@ -458,7 +547,9 @@ struct InsightCard: View {
                     Text(item.displayPeriodLabel ?? "時期の流れ").font(.system(.title3, weight: .semibold))
                     Text(item.title).font(.body.weight(.semibold)).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
-                    if !item.showsReadingLock {
+                    if item.showsReadingLock {
+                        LockedReadingPreview()
+                    } else {
                         TimelineTagList(tags: item.timelineDisplayTags)
                         Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5).lineLimit(3)
                     }
@@ -512,6 +603,20 @@ struct InsightDetailView: View {
 }
 
 struct FocusReadingView: View {
+    let item: ReadingCard
+    let onQuestion: () -> Void
+    var body: some View {
+        if item.paidReadingLabel == nil {
+            ReadingDetailContent(item: item, onQuestion: onQuestion)
+        } else {
+            ReadingAccessGuard(item: item, onQuestion: onQuestion)
+        }
+    }
+}
+
+/// The verified reader is a separate concrete view, avoiding a recursive
+/// FocusReadingView -> ReadingAccessGuard -> FocusReadingView view hierarchy.
+private struct ReadingDetailContent: View {
     @Environment(\.isPartnerReading) private var isPartnerReading
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -522,7 +627,6 @@ struct FocusReadingView: View {
     @ScaledMetric(relativeTo: .body) private var bodySize = 17
     let item: ReadingCard
     let onQuestion: () -> Void
-    var verifiedReading = false
 
     private enum ReaderStyle {
         static let paper = Color(red: 250 / 255.0, green: 248 / 255.0, blue: 245 / 255.0)
@@ -557,11 +661,7 @@ struct FocusReadingView: View {
     private var hasMultipleChapters: Bool { chapters.count > 1 }
 
     var body: some View {
-        if verifiedReading || item.paidReadingLabel == nil {
-            readerBody
-        } else {
-            ReadingAccessGuard(item: item, onQuestion: onQuestion)
-        }
+        readerBody
     }
 
     private var readerBody: some View {
@@ -792,14 +892,19 @@ struct SelfTimingList: View {
     @State private var loading = false
     @State private var error: String?
 
+    private var allCards: [ReadingCard] {
+        history.map { SelfTimingHistory.merging($0.cards, saved: refreshedCards ?? cards) } ?? (refreshedCards ?? cards).sorted { ($0.calendarYear ?? 0) < ($1.calendarYear ?? 0) }
+    }
     private var visibleCards: [ReadingCard] {
-        let all = history.map { SelfTimingHistory.merging($0.cards, saved: refreshedCards ?? cards) } ?? (refreshedCards ?? cards).sorted { ($0.calendarYear ?? 0) < ($1.calendarYear ?? 0) }
         let start = Calendar(identifier: .gregorian).component(.year, from: Date()) - 5
-        return showAll ? all : all.filter { $0.calendarYear.map { $0 >= start } ?? true }
+        return showAll ? allCards : allCards.filter { $0.calendarYear.map { $0 >= start } ?? true }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            ReadingJumpMenu(cards: allCards) { card in
+                if !visibleCards.contains(where: { $0.id == card.id }) { showAll = true }
+            }
             if let eventError { Text(eventError).font(.footnote).foregroundStyle(FateTheme.muted); Button("年表を再読み込み") { Task { await refreshTimeline(forceCards: true) } } }
 
             if conversationID != nil || cards.contains(where: { ($0.calendarYear ?? Int.max) < Calendar(identifier: .gregorian).component(.year, from: Date()) - 5 }) {
@@ -814,7 +919,7 @@ struct SelfTimingList: View {
                 }
             }
             ForEach(visibleCards) { card in
-                ReadingCardList(cards: [card], onQuestion: onQuestion)
+                ReadingCardList(cards: [card], onQuestion: onQuestion, showsJumpMenu: false).id(card.id)
                 if !card.showsReadingLock {
                     ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
                 }
@@ -879,6 +984,12 @@ struct CoupleTimingList: View {
             Text("出会った年から、ふたりの流れを年ごとに読み解きます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5)
             if let history {
+                ReadingJumpMenu(cards: history.entries.compactMap(\.card)) { card in
+                    if let year = card.calendarYear, history.collapsibleYears.contains(year) {
+                        showPast = true
+                        if let group = history.groups.first(where: { $0.years.contains(year) }) { openGroups.insert(group.from) }
+                    }
+                }
                 if let note = history.relationshipContext?.note,
                    !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text(note).font(.footnote).foregroundStyle(FateTheme.muted)
@@ -934,7 +1045,7 @@ struct CoupleTimingList: View {
         ForEach(values, id: \.year) { entry in
             if let label = entry.label { Text(label).font(.caption.weight(.medium)).foregroundStyle(FateTheme.muted) }
             if let card = entry.card {
-                ReadingCardList(cards: [card], onQuestion: onQuestion)
+                ReadingCardList(cards: [card], onQuestion: onQuestion, showsJumpMenu: false).id(card.id)
             } else {
                 Text("\(String(entry.year))年：この年の鑑定を表示できませんでした。")
                     .font(.callout).foregroundStyle(FateTheme.muted).padding(.vertical, 12)

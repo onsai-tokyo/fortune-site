@@ -80,6 +80,8 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(.title3, weight: .semibold))
                 if purchases.isPremium { MembershipActiveBanner() }
+                Label("相性の有料項目・2027年以降の時系列が見放題", systemImage: "lock.open")
+                    .font(.subheadline).foregroundStyle(FateTheme.ink)
                 HStack(spacing: 0) {
                     membershipStat("毎月3通", detail: "相談の鑑定書")
                     Rectangle().fill(FateTheme.line).frame(width: 0.5, height: 36)
@@ -119,6 +121,7 @@ struct SettingsView: View {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
                 if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
+                StoreCurrencyNote(currencyCode: purchases.product?.priceFormatStyle.currencyCode)
                 if auth.session != nil && AppConfig.storeKitEnabled {
                     SettingsDivider(edgeInset: 0)
                     Button("購入を復元") { Task { await purchases.restore(auth: auth) } }

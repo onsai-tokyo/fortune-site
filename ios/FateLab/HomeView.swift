@@ -25,7 +25,7 @@ struct HomeView: View {
             if isWorking {
                 ReadingGenerationProgressView(kind: .selfReading, progress: progress)
             } else {
-            ScrollView {
+            ReadingScrollView {
             Group {
                 if let report {
                     VStack(alignment: .leading, spacing: 18) {
