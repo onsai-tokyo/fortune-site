@@ -1,3 +1,4 @@
+import {projectSelfGeneration} from '../lib/readingCardAccess.js'
 import { loadTimelineContext, timelineEnabled } from '../lib/timelineContext.js'
 import { parseRelationshipStatus } from '../lib/report/timelineV3/index.js'
 import { Router } from 'express'
@@ -85,7 +86,7 @@ interface CalculatedData {
 previewRouter.get('/generations/:opId', requireAuth, async (req: AuthRequest, res) => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) {res.status(400).json({error:'操作IDが正しくありません'});return}
   res.setHeader('Cache-Control','private, no-store')
-  try {res.json(await generationRPC('get_self_generation',{p_user:req.userId,p_op:req.params.opId}))}
+  try {res.json(await projectSelfGeneration(req.userId!,String(req.params.opId),await generationRPC('get_self_generation',{p_user:req.userId,p_op:req.params.opId})))}
   catch {res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を確認できませんでした'})}
 })
 
@@ -133,9 +134,10 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       const state=await generationRPC('begin_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,
         p_payload:{body:req.body,debug:req.query.debug==='1'},p_context:{...runtime,startedAt:new Date().toISOString()}})
       if(state.state==='completed') {
+        const visible=await projectSelfGeneration(req.userId!,requestId,state)
         res.setHeader('Cache-Control','private, no-store')
-        if(useSse) {res.setHeader('Content-Type','text/event-stream');res.end(`data: ${JSON.stringify({type:'complete',report:state.result})}\n\ndata: [DONE]\n\n`)}
-        else res.json(state.result)
+        if(useSse) {res.setHeader('Content-Type','text/event-stream');res.end(`data: ${JSON.stringify({type:'complete',report:visible.result})}\n\ndata: [DONE]\n\n`)}
+        else res.json(visible.result)
         return
       }
       if(state.state!=='started') {res.status(409).json({code:state.state==='conflict'?'OPERATION_PAYLOAD_CONFLICT':state.state==='pending'?'GENERATION_PENDING':'GENERATION_FAILED',state:state.state,error:'前の生成状況を確認してから再試行してください'});return}
@@ -247,12 +249,13 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       const saved=await generationRPC('settle_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,p_result:response})
       if(saved.state!=='completed') throw new GenerationDependencyError('Generation completion unconfirmed')
     }
+    const visible=req.userId ? (await projectSelfGeneration(req.userId,requestId,{result:response})).result! : response
     if (res.destroyed || res.writableEnded) {if(keepAlive) clearInterval(keepAlive);return}
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
     if (useSse) {
-      res.write(`data: ${JSON.stringify({ type: 'complete', report: response })}\n\n`)
+      res.write(`data: ${JSON.stringify({ type: 'complete', report: visible })}\n\n`)
       progress(100, '鑑定書ができました', 'あなたのパターンを読み始められます'); res.write('data: [DONE]\n\n'); if (keepAlive) clearInterval(keepAlive); res.end()
-    } else { res.setHeader('Cache-Control', 'private, no-store, max-age=0'); res.json(response) }
+    } else { res.setHeader('Cache-Control', 'private, no-store, max-age=0'); res.json(visible) }
     return
   } catch (err) {
     if (keepAlive) clearInterval(keepAlive)

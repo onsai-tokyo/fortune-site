@@ -1,3 +1,5 @@
+import {cardPurchasesEnabled,readingPurchaseIdentity} from '../lib/readingCardPurchases.js'
+import {readingCardProjector} from '../lib/readingCardAccess.js'
 import { loadTimelineContext } from '../lib/timelineContext.js'
 import {createHash} from 'node:crypto'
 import {Router} from 'express'
@@ -50,11 +52,14 @@ export async function handleCoupleTimeline(req:AuthRequest,res:import('express')
   res.setHeader('Cache-Control','private, no-store')
   if(!/^[0-9a-f-]{36}$/i.test(String(req.params.id))){res.status(400).json({error:'鑑定書IDが正しくありません'});return}
   try {
-    const {data:conversation,error}=await deps.user(req.accessToken!).from('reading_conversations').select('birth_data,kind,partner_profile_id').eq('id',req.params.id).eq('user_id',req.userId!).maybeSingle()
+    const {data:conversation,error}=await deps.user(req.accessToken!).from('reading_conversations').select('birth_data,kind,partner_profile_id,reading_revision_id').eq('id',req.params.id).eq('user_id',req.userId!).maybeSingle()
     if(error)throw new Error('READ_UNAVAILABLE')
     if(!conversation){res.status(404).json({error:'鑑定書が見つかりません'});return}
     if(conversation.kind!=='compatibility'){res.status(422).json({error:'ふたりの鑑定書から開いてください'});return}
-    const snapshot=coupleSnapshot(conversation.birth_data,conversation.partner_profile_id)
+    const project=await readingCardProjector(req.userId!,conversation)
+    const projectTimeline=(timeline:ReturnType<typeof snapshotTimeline>)=>({...timeline,entries:timeline.entries.map(entry=>({...entry,card:entry.card?project(entry.card):null}))})
+    const identity=cardPurchasesEnabled()?await readingPurchaseIdentity(req.userId!,conversation):conversation
+    const snapshot=coupleSnapshot(conversation.birth_data,identity.partner_profile_id)
     const context=process.env.COUPLE_TIMELINE_ENGINE?.trim()==='v3' ? await loadTimelineContext(req.accessToken!,req.userId!,snapshot.a) : {lifeEvents:[]}
     const db=deps.admin(),key={user_id:req.userId!,relationship_key:snapshot.relationshipKey}
     let meetingYear:number|null
@@ -63,19 +68,19 @@ export async function handleCoupleTimeline(req:AuthRequest,res:import('express')
       // Validate the entire timeline before saving. A network retry sets the same value.
       const timeline=snapshotTimeline(snapshot,meetingYear,context.lifeEvents)
       if(timeline.status!=='ready'&&timeline.status!=='partial'&&timeline.status!=='needs_meeting_year')throw new Error('BIRTH_UNAVAILABLE')
-      const {error:saveError}=await db.from('couple_timeline_settings').upsert({...key,relationship_key:conversation.partner_profile_id?profileMeetingKey(conversation.partner_profile_id):key.relationship_key,partner_profile_id:conversation.partner_profile_id,meeting_year:meetingYear,updated_at:new Date().toISOString()},{onConflict:'user_id,relationship_key'})
+      const {error:saveError}=await db.from('couple_timeline_settings').upsert({...key,relationship_key:identity.partner_profile_id?profileMeetingKey(identity.partner_profile_id):key.relationship_key,partner_profile_id:conversation.partner_profile_id,meeting_year:meetingYear,updated_at:new Date().toISOString()},{onConflict:'user_id,relationship_key'})
       if(saveError)throw new Error('SAVE_UNAVAILABLE')
-      res.json(timeline);return
+      res.json(projectTimeline(timeline));return
     }
     const {data:settings,error:settingsError}=await db.from('couple_timeline_settings').select('meeting_year').match(key).maybeSingle()
     if(settingsError)throw new Error('READ_UNAVAILABLE')
     meetingYear=settings?.meeting_year??null
-    if(conversation.partner_profile_id){
-      const profile=await db.from('couple_timeline_settings').select('meeting_year').match({user_id:req.userId!,relationship_key:profileMeetingKey(conversation.partner_profile_id)}).maybeSingle()
+    if(identity.partner_profile_id){
+      const profile=await db.from('couple_timeline_settings').select('meeting_year').match({user_id:req.userId!,relationship_key:profileMeetingKey(identity.partner_profile_id)}).maybeSingle()
       if(profile.error)throw new Error('READ_UNAVAILABLE')
       if(profile.data)meetingYear=profile.data.meeting_year??null
     }
-    res.json(snapshotTimeline(snapshot,meetingYear,context.lifeEvents))
+    res.json(projectTimeline(snapshotTimeline(snapshot,meetingYear,context.lifeEvents)))
   } catch(error) {
     const message=error instanceof Error?error.message:''
     if(message==='INVALID_MEETING_YEAR'){res.status(400).json({error:'出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください'});return}

@@ -7,6 +7,7 @@ final class PurchaseManager: ObservableObject {
     enum AccessState { case unknown, premium, standard }
     @Published private(set) var product: Product?
     @Published private(set) var bookProduct: Product?
+    @Published private(set) var cardProduct: Product?
     @Published private(set) var accessState: AccessState = .unknown
     @Published var isWorking = false
     @Published private(set) var isSyncing = false
@@ -16,6 +17,7 @@ final class PurchaseManager: ObservableObject {
     private weak var authStore: AuthStore?
     private var consecutiveSyncFailures = 0
     private let delivery = PurchaseDelivery()
+    private let pendingCardApproval = CardApprovalStore()
     private var accountRevision: UInt64 = 0
     private var boundScope: AccountScope?
     private var syncID: UUID?
@@ -67,15 +69,16 @@ final class PurchaseManager: ObservableObject {
         let revision = accountRevision
         errorMessage = nil
         do {
-            let products = try await Product.products(for: [AppConfig.subscriptionProductID, AppConfig.bookProductID])
+            let products = try await Product.products(for: [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID])
             let loaded = products.first { $0.id == AppConfig.subscriptionProductID }
             guard accountRevision == revision else { return }
             product = loaded
             bookProduct = products.first { $0.id == AppConfig.bookProductID }
+            cardProduct = products.first { $0.id == AppConfig.cardProductID }
             if product == nil { errorMessage = "商品情報を取得できませんでした" }
         } catch {
             guard accountRevision == revision else { return }
-            product = nil
+            product = nil; bookProduct = nil; cardProduct = nil
             if userFacingErrorMessage(error) != nil { errorMessage = "商品情報を取得できませんでした" }
         }
     }
@@ -86,9 +89,11 @@ final class PurchaseManager: ObservableObject {
         let existing = try delivery.pending().first { $0.transactionID == String(transaction.id) && $0.ownerID == userID }
         let value = existing ?? PendingPurchase(transactionID: String(transaction.id), ownerID: userID,
             signedTransaction: signed, allowOwnerTransfer: allowTransfer, operationID: UUID())
-        return try await delivery.deliver(value, isCurrent: { owner.isCurrent(auth) && self.boundScope == owner },
+        let delivered = try await delivery.deliver(value, isCurrent: { owner.isCurrent(auth) && self.boundScope == owner },
             mirror: { try await api.verifyApplePurchase(signedTransaction: value.signedTransaction,
                 allowOwnerTransfer: value.allowOwnerTransfer, operationID: value.operationID, auth: auth) }, finish: { await transaction.finish() })
+        if delivered && transaction.productID == AppConfig.cardProductID { try pendingCardApproval.set(userID, pending: false) }
+        return delivered
     }
 
     func purchase(userID: UUID, auth: AuthStore) async {
@@ -159,6 +164,58 @@ final class PurchaseManager: ObservableObject {
         }
     }
 
+    /// A verified single purchase grants one durable server-side reading slot.
+    /// If the app stops before selecting the target, the unused slot is shown
+    /// next time instead of prompting the customer to pay again.
+    func purchaseCard(target: ReadingPurchaseTarget, auth: AuthStore) async throws -> ReadingAccessResponse {
+        guard storeKitEnabled else { throw APIError.server(AppConfig.purchasesUnavailableMessage) }
+        let owner = bind(auth)
+        guard let userID = owner.userID, !isWorking, !isSyncing else { throw APIError.server("購入状況の確認が終わってからお試しください。") }
+        isWorking = true
+        defer { if owner.isCurrent(auth), boundScope == owner { isWorking = false } }
+        // Recover uncertain deliveries before checking the balance or charging.
+        _ = try await retryDeliveries(auth: auth, owner: owner)
+        try check(owner, auth)
+        let state = try await api.readingAccess(target: target, auth: auth)
+        try check(owner, auth)
+        guard state.enabled, state.productId == AppConfig.cardProductID else { throw APIError.server("購入機能を準備しています。") }
+        if state.unlocked == true { return state }
+        if (state.credits ?? 0) == 0 {
+            guard try !pendingCardApproval.contains(userID) else { throw APIError.server("購入の承認を待っています。承認後に購入状況を確認してください。") }
+            guard let cardProduct else { throw APIError.server("商品情報を取得できませんでした。時間をおいて再試行してください。") }
+            let result = try await cardProduct.purchase(options: [.appAccountToken(userID)])
+            try check(owner, auth)
+            switch result {
+            case .success(let verification):
+                let transaction = try verified(verification)
+                guard transaction.productID == AppConfig.cardProductID, transaction.appAccountToken == userID else { throw APIError.invalidResponse }
+                _ = try await deliver(transaction, signed: verification.jwsRepresentation, auth: auth, owner: owner)
+                try check(owner, auth)
+            case .userCancelled: throw CancellationError()
+            case .pending:
+                try pendingCardApproval.set(userID, pending: true)
+                throw APIError.server("購入の承認を待っています。再購入せず、承認後に購入状況を確認してください。")
+            @unknown default: throw APIError.invalidResponse
+            }
+        }
+        let unlocked = try await api.readingAccess(target: target, unlock: true, auth: auth)
+        try check(owner, auth)
+        guard unlocked.unlocked == true else { throw APIError.server("購入の反映を確認できませんでした。再購入せず、購入状況をご確認ください。") }
+        return unlocked
+    }
+
+    func cardApprovalIsPending(auth: AuthStore) throws -> Bool {
+        guard let id = auth.userID else { return false }
+        return try pendingCardApproval.contains(id)
+    }
+
+    /// Only after an explicit user confirmation that Apple declined the request.
+    /// This clears our reminder; it does not cancel a request with Apple.
+    func clearCardApprovalReminder(auth: AuthStore) throws {
+        guard let id = auth.userID else { return }
+        try pendingCardApproval.set(id, pending: false)
+    }
+
     func restore(auth: AuthStore) async {
         guard self.storeKitEnabled else { errorMessage = AppConfig.purchasesUnavailableMessage; return }
         let owner = bind(auth)
@@ -188,7 +245,7 @@ final class PurchaseManager: ObservableObject {
 
     private func listenForTransactions() async {
         for await result in Transaction.updates {
-            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID].contains(transaction.productID),
+            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
                   let auth = authStore, let userID = auth.userID else { continue }
             // Updates are never an implicit owner-transfer operation.
             guard transaction.appAccountToken == userID else { continue }
@@ -212,7 +269,7 @@ final class PurchaseManager: ObservableObject {
         // the Keychain enqueue. Finished-but-not-cleared entries are found in all.
         for await result in Transaction.unfinished {
             try check(owner, auth)
-            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID].contains(transaction.productID),
+            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
                   transaction.appAccountToken == owner.userID else { continue }
             if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner) { mirrored = true }
         }
@@ -220,7 +277,7 @@ final class PurchaseManager: ObservableObject {
         if !pending.isEmpty {
             for await result in Transaction.all {
                 try check(owner, auth)
-                guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID].contains(transaction.productID),
+                guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
                       pending.contains(where: { $0.transactionID == String(transaction.id) }) else { continue }
                 if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner) { mirrored = true }
             }

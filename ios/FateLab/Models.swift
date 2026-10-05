@@ -308,6 +308,11 @@ struct ChartBar: Codable, Identifiable { let label: String; let value: Double; l
 struct ChartGridItem: Codable, Identifiable { let position: String; let value: String; var id: String { position } }
 struct ChartListItem: Codable, Identifiable { let label: String; let value: String; let note: String?; var id: String { label } }
 
+struct ReadingCardAccess: Codable {
+    let locked: Bool
+    let offerKey: String?
+}
+
 struct ReadingCard: Codable, Identifiable {
     let id: String
     let kind: String
@@ -316,6 +321,7 @@ struct ReadingCard: Codable, Identifiable {
     let title: String
     let summary: String
     let tags: [String]
+    var access: ReadingCardAccess? = nil
     var timelineV3Calculation: TimelineV3DisplayMetadata? = nil
     let period: ReadingCardPeriod?
     let pages: [ReadingCardPage]
@@ -537,4 +543,50 @@ struct CoupleMeetingSettings: Decodable {
     let meetingYear: Int?
     let minMeetingYear: Int
     let referenceYear: Int
+}
+
+
+extension ReadingCard {
+    /// Domain IDs, never the card's position or narrative wording.
+    var paidReadingLabel: String? {
+        if scope == "couple" {
+            switch id {
+            case "compat-v24-5": return "良好な関係を築くコツ"
+            case "compat-v24-6": return "障害になること"
+            case "compat-v24-7": return "復縁の可能性"
+            default: break
+            }
+        }
+        guard resolvedTab == "timing", scope == "self" || scope == "couple",
+              let label = period?.label,
+              let range = label.range(of: #"(?<![0-9])[0-9]{4}(?=年)"#, options: .regularExpression),
+              let year = Int(label[range]), year >= 2027 else { return nil }
+        return "\(String(year))年・\(scope == "couple" ? "ふたり" : "あなた")の鑑定"
+    }
+
+    var showsReadingLock: Bool {
+        if access?.locked == true { return true }
+#if DEBUG
+        // Design verification only. Never grants or sells an entitlement.
+        if ProcessInfo.processInfo.arguments.contains("--preview-card-paywall") {
+            return paidReadingLabel != nil
+        }
+#endif
+        return false
+    }
+}
+
+
+struct ReadingPurchaseTarget: Codable, Equatable {
+    let conversationId: UUID
+    let cardId: String
+}
+
+struct ReadingAccessResponse: Decodable {
+    let enabled: Bool
+    let productId: String?
+    let premium: Bool?
+    let credits: Int?
+    let unlocked: Bool?
+    let card: ReadingCard?
 }

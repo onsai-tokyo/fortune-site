@@ -63,3 +63,24 @@ struct PendingPurchase: Codable, Equatable {
         return true
     }
 }
+
+/// Pending approvals have no completed transaction yet. Keep them across launches,
+/// separately for each FATE LAB account; never clear them merely on logout.
+@MainActor final class CardApprovalStore {
+    private let read: () throws -> Data?
+    private let write: (Data) throws -> Void
+    init(read: @escaping () throws -> Data? = { try KeychainStore.readChecked(account: "purchase.card-approval.v1") },
+         write: @escaping (Data) throws -> Void = { try KeychainStore.save($0, account: "purchase.card-approval.v1") }) {
+        self.read = read; self.write = write
+    }
+    private func owners() throws -> Set<UUID> {
+        guard let data = try read() else { return [] }
+        return try JSONDecoder().decode(Set<UUID>.self, from: data)
+    }
+    func contains(_ owner: UUID) throws -> Bool { try owners().contains(owner) }
+    func set(_ owner: UUID, pending: Bool) throws {
+        var values = try owners()
+        if pending { values.insert(owner) } else { values.remove(owner) }
+        try write(JSONEncoder().encode(values))
+    }
+}

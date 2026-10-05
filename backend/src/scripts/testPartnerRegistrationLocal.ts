@@ -32,6 +32,9 @@ globalThis.fetch = async (input, init) => {
   const reply = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json' } })
   if (url.pathname.startsWith('/rest/v1/rpc/')) {
     const name = url.pathname.split('/').at(-1)!
+    // This historical bridge fixture tests operation recovery, not plan limits.
+    // Capacity is covered by partner_plan_limits.py; list now requests it explicitly.
+    if (name === 'partner_profile_capacity') return reply(1)
     assert.ok(['register_partner_operation', 'get_partner_registration_operation', 'cancel_partner_registration_operation'].includes(name))
     const body = await request.json() as Record<string, unknown>
     const args = [literal(body.p_user) + '::uuid', literal(body.p_op) + '::uuid']
