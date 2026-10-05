@@ -506,6 +506,11 @@ struct CoupleTimingHistory: Decodable {
 }
 
 extension ReadingCard {
+    var navigationLabel: String {
+        if isTiming { return displayPeriodLabel ?? "時期の流れ" }
+        return tags.first(where: { !$0.isEmpty && $0 != "本質" }) ?? paidReadingLabel ?? title
+    }
+
     var timelineDisplayTags: [String] {
         guard isTiming else { return [] }
         var seen = Set<String>()

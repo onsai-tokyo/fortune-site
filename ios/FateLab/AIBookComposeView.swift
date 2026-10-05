@@ -243,7 +243,9 @@ struct AIBookComposeView: View {
             } else { Button("料金情報を読み込む") { Task { await purchases.load() } }.buttonStyle(FLPrimaryButtonStyle()) }
             if !purchases.isPremium, !purchases.hasStoreKitEntitlement, purchases.accessState == .standard, let product = purchases.product {
                 Text("初月から毎月3通つき").font(.headline)
-                Button("月額会員 · \(product.displayPrice)／月") { Task { await subscribe(); if (status?.remaining ?? 0) > 0 { showPlans = false } } }.buttonStyle(FLSecondaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
+                Text(ReadingPrices.monthly).font(.headline)
+                StorePurchasePrice(product: product)
+                Button("月額会員になる") { Task { await subscribe(); if (status?.remaining ?? 0) > 0 { showPlans = false } } }.buttonStyle(FLSecondaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
             }
             if purchases.isPremium || purchases.hasStoreKitEntitlement {
                 Text((status?.memberRemaining ?? 0) == 0 ? "会員分の利用枠がありません。購入済みの場合は、下のボタンから利用枠を再確認できます。" : "会員の利用枠を確認しました。")
