@@ -57,7 +57,7 @@ struct OnboardingView: View {
                     .frame(width: width, height: 216).clipped()
             }
         case 3:
-            question("生まれた時刻を教えてください。", detail: "分からない場合は、空欄のまま進めます。") {
+            question("生まれた時刻を教えてください。", detail: "生まれた時刻が分かると、時刻に応じた命式も含めて、より詳しく鑑定できます。分からない場合は、空欄のまま進めます。") {
                 Text("出生時刻（任意）").font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
                 DatePicker("出生時刻", selection: birthTimeBinding, displayedComponents: .hourAndMinute)
                     .datePickerStyle(.wheel).labelsHidden().environment(\.locale, Locale(identifier: "ja_JP"))
