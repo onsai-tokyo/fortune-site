@@ -38,6 +38,7 @@ enum AppConfig {
         }
     }
 
+    static let cardProductID = "com.onsai.fatelab.reading.single"
     static let bookProductID = "com.onsai.fatelab.report.single"
     static let subscriptionProductID = "com.onsai.fatelab.premium.monthly"
 

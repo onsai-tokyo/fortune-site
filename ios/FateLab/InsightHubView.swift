@@ -1,5 +1,14 @@
 import SwiftUI
 
+private struct ReadingConversationKey: EnvironmentKey { static let defaultValue: UUID? = nil }
+private extension EnvironmentValues {
+    var readingConversationID: UUID? {
+        get { self[ReadingConversationKey.self] }
+        set { self[ReadingConversationKey.self] = newValue }
+    }
+}
+
+
 struct InsightHubView: View {
     enum Scope { case `self`, couple }
     let report: GeneratedReport
@@ -48,6 +57,7 @@ struct InsightHubView: View {
             }
         }
         .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)
+        .environment(\.readingConversationID, report.conversationID)
     }
 
     private func relationshipOrb(_ color: Color) -> some View {
@@ -176,18 +186,235 @@ private struct ChartListView: View {
 
 struct ReadingCardList: View {
     @Environment(\.isPartnerReading) private var isPartnerReading
+    @Environment(\.readingConversationID) private var conversationID
+    @EnvironmentObject private var auth: AuthStore
+    @State private var selectedPaidCard: ReadingCard?
+    @State private var resolvedCards: [String: ReadingCard] = [:]
     let cards: [ReadingCard]
     let onQuestion: (ReadingCard) -> Void
 
     var body: some View {
-        ForEach(Array(cards.enumerated()), id: \.element.id) { index, item in
-            NavigationLink {
-                FocusReadingView(item: item) { onQuestion(item) }
-                    .environment(\.isPartnerReading, isPartnerReading)
-            } label: {
-                InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
-            }.buttonStyle(.plain)
+        ForEach(Array(cards.enumerated()), id: \.element.id) { index, original in
+            let item = resolvedCards[original.id] ?? original
+            if item.showsReadingLock {
+                Button { selectedPaidCard = item } label: {
+                    InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityHint("購入方法を表示します")
+            } else {
+                NavigationLink {
+                    FocusReadingView(item: item) { onQuestion(item) }
+                        .environment(\.isPartnerReading, isPartnerReading)
+                } label: {
+                    InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
         }
+        .sheet(item: $selectedPaidCard) { item in
+            ReadingUnlockSheet(item: item, conversationID: conversationID) { card in
+                resolvedCards[card.id] = card
+                selectedPaidCard = nil
+            }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .onChange(of: AccountScope(auth)) { _, _ in
+            selectedPaidCard = nil; resolvedCards.removeAll()
+        }
+    }
+}
+
+/// Prices and purchase availability come from StoreKit and the server.
+private struct ReadingUnlockSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var purchases: PurchaseManager
+    let item: ReadingCard
+    let conversationID: UUID?
+    let onUnlocked: (ReadingCard) -> Void
+    @State private var state: ReadingAccessResponse?
+    @State private var loading = false
+    @State private var approvalPending = false
+    @State private var confirmApprovalReset = false
+    @State private var error: String?
+
+    private var target: ReadingPurchaseTarget? {
+        conversationID.map { ReadingPurchaseTarget(conversationId: $0, cardId: item.id) }
+    }
+    private var available: Bool { state?.enabled == true && state?.productId == AppConfig.cardProductID }
+    private var busy: Bool { loading || purchases.isWorking || purchases.isSyncing }
+    private var hasCredit: Bool { (state?.credits ?? 0) > 0 }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Label("もう一歩、深く知る", systemImage: "lock")
+                            .font(.caption.weight(.medium)).tracking(1)
+                        Text(item.paidReadingLabel ?? item.title)
+                            .font(.system(.title2, design: .serif, weight: .medium))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(item.title).font(.subheadline).lineSpacing(5)
+                    }
+                    .foregroundStyle(.white).padding(24)
+                    .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
+                    .background {
+                        ReadingNatureArtwork(index: item.isTiming ? 8 : 3)
+                            .overlay(.black.opacity(0.55))
+                    }.clipShape(RoundedRectangle(cornerRadius: 24))
+
+                    if state?.unlocked == true {
+                        Button("鑑定を読む") { finish() }.buttonStyle(FLPrimaryButtonStyle())
+                    } else {
+                        option(title: "この鑑定だけを読む",
+                               price: hasCredit ? "購入済みの1件分を使えます" : purchases.cardProduct?.displayPrice ?? "料金を確認中",
+                               detail: item.isTiming ? "表示中の対象・1年分を購入。購入した年は、会員期間にかかわらず読み返せます。" : "この相手の、この項目を購入。会員期間にかかわらず読み返せます。") {
+                            Button(hasCredit ? "購入済みの1件分で読む" : "この鑑定を購入") { Task { await buySingle() } }
+                                .buttonStyle(FLPrimaryButtonStyle())
+                                .disabled(!available || busy || (approvalPending && !hasCredit) || (!hasCredit && purchases.cardProduct == nil))
+                        }
+                        option(title: "月額会員で、すべて読む",
+                               price: purchases.product.map { $0.displayPrice + "／月" } ?? "月額料金を確認中",
+                               detail: "会員期間中は、相性の有料項目と2027年以降の時系列が見放題。相談鑑定書は毎月3通です。") {
+                            Button("月額会員になる") { Task { await buyMembership() } }
+                                .buttonStyle(FLSecondaryButtonStyle())
+                                .disabled(!available || busy || purchases.product == nil || purchases.accessState != .standard)
+                            Text("月額会員は自動更新です。解約はApp Storeのサブスクリプション管理から行えます。")
+                                .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(4)
+                        }
+                    }
+                    if approvalPending {
+                        Text("Appleで購入の承認を待っています。承認後は「購入状況を確認」を押してください。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                        Button("購入状況を確認") { Task { await refresh(sync: true) } }.disabled(busy)
+                        Button("承認が見送られた場合") { confirmApprovalReset = true }.font(.caption).disabled(busy)
+                    }
+                    if loading { FateInlineLoading(title: "購入状況を確認しています") }
+                    if let error {
+                        Text(error).font(.footnote).foregroundStyle(FateTheme.danger).lineSpacing(5)
+                        Button("購入状況を確認") { Task { await refresh(sync: true) } }
+                            .disabled(busy)
+                    } else if state?.enabled == false {
+                        Text("購入機能を準備しています。この画面では課金されません。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5)
+                    }
+                    if available {
+                        Button("購入を復元") { Task {
+                            await purchases.restore(auth: auth)
+                            await refresh()
+                        } }.font(.footnote).disabled(busy)
+                    }
+                    HStack(spacing: 24) {
+                        Link("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
+                        Link("プライバシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
+                    }.font(.caption).foregroundStyle(FateTheme.muted)
+                }.padding(24)
+            }.background(FateTheme.canvas)
+                .navigationTitle("鑑定をひらく").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { dismiss() }.disabled(loading) } }
+        }.alert("承認が見送られたことを確認しましたか？", isPresented: $confirmApprovalReset) {
+            Button("確認したので再試行する") {
+                do { try purchases.clearCardApprovalReminder(auth: auth); approvalPending = false }
+                catch { self.error = userFacingErrorMessage(error) }
+            }
+            Button("承認を待つ", role: .cancel) {}
+        } message: {
+            Text("アプリ内の承認待ち表示を解除します。Appleへの申請自体は取り消されません。承認待ちが続いている場合は、再購入せずにお待ちください。")
+        }.task(id: AccountScope(auth)) { await refresh(sync: true) }
+    }
+
+    private func finish() {
+        guard state?.unlocked == true, let card = state?.card, card.access?.locked == false else { return }
+        onUnlocked(card)
+    }
+    private func refresh(sync: Bool = false) async {
+        guard let target else { error = "鑑定を保存してから開き直してください。"; return }
+        let owner = AccountScope(auth)
+        loading = true; error = nil; state = nil
+        defer { if owner.isCurrent(auth) { loading = false } }
+        do {
+            if sync { await purchases.sync(auth: auth); await purchases.load() }
+            try owner.check(auth)
+            let result = try await APIClient.shared.readingAccess(target: target, auth: auth)
+            try owner.check(auth); state = result
+            if (result.credits ?? 0) > 0 { try purchases.clearCardApprovalReminder(auth: auth) }
+            approvalPending = try purchases.cardApprovalIsPending(auth: auth)
+        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error); approvalPending = (try? purchases.cardApprovalIsPending(auth: auth)) ?? true } }
+    }
+    private func buySingle() async {
+        guard let target, !busy, available else { return }
+        let owner = AccountScope(auth)
+        loading = true; error = nil
+        defer { if owner.isCurrent(auth) { loading = false } }
+        do {
+            let result = try await purchases.purchaseCard(target: target, auth: auth)
+            try owner.check(auth); state = result
+            if (result.credits ?? 0) > 0 { try purchases.clearCardApprovalReminder(auth: auth) }
+            approvalPending = try purchases.cardApprovalIsPending(auth: auth); finish()
+        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error); approvalPending = (try? purchases.cardApprovalIsPending(auth: auth)) ?? true } }
+    }
+    private func buyMembership() async {
+        guard let id = auth.userID, !busy, available else { return }
+        let owner = AccountScope(auth)
+        await purchases.purchase(userID: id, auth: auth)
+        guard owner.isCurrent(auth) else { return }
+        let purchaseError = purchases.errorMessage
+        await refresh()
+        if state?.unlocked == true { finish() } else if let purchaseError { error = purchaseError }
+    }
+    private func option<Content: View>(title: String, price: String, detail: String, @ViewBuilder action: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title).font(.headline).foregroundStyle(FateTheme.ink)
+            Text(price).font(.subheadline.weight(.medium)).foregroundStyle(FateTheme.ink)
+            Text(detail).font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5)
+            action()
+        }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line))
+    }
+}
+
+/// Recheck even previously downloaded paid cards before opening their body.
+/// A membership flag or a cached unlock never authorizes this reader locally.
+private struct ReadingAccessGuard: View {
+    @EnvironmentObject private var auth: AuthStore
+    @Environment(\.readingConversationID) private var conversationID
+    @Environment(\.scenePhase) private var scenePhase
+    let item: ReadingCard
+    let onQuestion: () -> Void
+    @State private var readable: ReadingCard?
+    @State private var locked = false
+    @State private var error: String?
+
+    var body: some View {
+        Group {
+            if let readable {
+                FocusReadingView(item: readable, onQuestion: onQuestion, verifiedReading: true)
+            } else if locked {
+                ReadingUnlockSheet(item: item, conversationID: conversationID) { readable = $0; locked = false }
+            } else if let error {
+                FLErrorState(title: "購入状況を確認できませんでした", message: error) { Task { await load() } }
+            } else {
+                FateInlineLoading(title: "鑑定を確認しています")
+            }
+        }
+        .task(id: AccountScope(auth)) { await load() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { readable = nil } else { Task { await load() } }
+        }
+    }
+    private func load() async {
+        readable = nil; locked = false; error = nil
+        let owner = AccountScope(auth)
+        guard let conversationID else { error = "鑑定を保存してから、開き直してください。"; return }
+        do {
+            let result = try await APIClient.shared.readingAccess(target: .init(conversationId: conversationID, cardId: item.id), auth: auth)
+            try owner.check(auth)
+            if !result.enabled { readable = item }
+            else if result.unlocked == true, let card = result.card, card.access?.locked == false { readable = card }
+            else { locked = true }
+        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
     }
 }
 
@@ -231,9 +458,11 @@ struct InsightCard: View {
                     Text(item.displayPeriodLabel ?? "時期の流れ").font(.system(.title3, weight: .semibold))
                     Text(item.title).font(.body.weight(.semibold)).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
-                    TimelineTagList(tags: item.timelineDisplayTags)
-                    Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5).lineLimit(3)
-                    HStack { Spacer(); Label("この年を読む", systemImage: "arrow.right").font(.caption) }
+                    if !item.showsReadingLock {
+                        TimelineTagList(tags: item.timelineDisplayTags)
+                        Text(item.summary).font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5).lineLimit(3)
+                    }
+                    HStack { Spacer(); Label(item.showsReadingLock ? "単品購入／会員で読む" : "この年を読む", systemImage: item.showsReadingLock ? "lock" : "arrow.right").font(.caption) }
                         .foregroundStyle(FateTheme.muted)
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
                     .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20))
@@ -252,7 +481,7 @@ struct InsightCard: View {
                 Text(item.title).font(.system(.headline, weight: .medium)).lineSpacing(6)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 12)
-                HStack { Text("読み進める").font(.caption); Spacer(); Image(systemName: "arrow.right") }
+                HStack { Text(item.showsReadingLock ? "単品購入／会員で読む" : "読み進める").font(.caption); Spacer(); Image(systemName: item.showsReadingLock ? "lock" : "arrow.right") }
                     .padding(.top, 6)
             }.padding(24).frame(maxWidth: .infinity, minHeight: 204, alignment: .leading)
                 .foregroundStyle(.white)
@@ -293,6 +522,7 @@ struct FocusReadingView: View {
     @ScaledMetric(relativeTo: .body) private var bodySize = 17
     let item: ReadingCard
     let onQuestion: () -> Void
+    var verifiedReading = false
 
     private enum ReaderStyle {
         static let paper = Color(red: 250 / 255.0, green: 248 / 255.0, blue: 245 / 255.0)
@@ -327,6 +557,14 @@ struct FocusReadingView: View {
     private var hasMultipleChapters: Bool { chapters.count > 1 }
 
     var body: some View {
+        if verifiedReading || item.paidReadingLabel == nil {
+            readerBody
+        } else {
+            ReadingAccessGuard(item: item, onQuestion: onQuestion)
+        }
+    }
+
+    private var readerBody: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 readerHeader(proxy)
@@ -577,7 +815,9 @@ struct SelfTimingList: View {
             }
             ForEach(visibleCards) { card in
                 ReadingCardList(cards: [card], onQuestion: onQuestion)
-                ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
+                if !card.showsReadingLock {
+                    ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
+                }
             }
         }.task(id: AccountScope(auth)) { await refreshTimeline() }
     }

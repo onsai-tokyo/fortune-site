@@ -434,6 +434,16 @@ struct APIClient {
         return result
     }
 
+    func readingAccess(target: ReadingPurchaseTarget, unlock: Bool = false, auth: AuthStore) async throws -> ReadingAccessResponse {
+        let owner = AccountScope(auth)
+        let token = try await auth.validAccessToken()
+        try owner.check(auth)
+        let payload = try await data(for: request(path: "/api/reading-access/" + (unlock ? "unlock" : "status"), method: "POST", token: token,
+            json: ["conversationId": target.conversationId.uuidString, "cardId": target.cardId]), auth: auth)
+        try owner.check(auth)
+        return try JSONDecoder().decode(ReadingAccessResponse.self, from: payload)
+    }
+
     func verifyApplePurchase(signedTransaction: String, allowOwnerTransfer: Bool = false, operationID: UUID? = nil, auth: AuthStore) async throws -> ApplePurchaseVerification {
         try AppConfig.requireStoreKit()
         let owner = AccountScope(auth)

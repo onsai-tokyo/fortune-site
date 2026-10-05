@@ -1,3 +1,6 @@
+import {readingCardProjector} from '../lib/readingCardAccess.js'
+import {cardPurchasesEnabled} from '../lib/readingCardPurchases.js'
+import {storedReportFromCalculatedData as savedAccessReport} from '../lib/report/storedReport.js'
 import {resolveBookFocus} from '../lib/aiBookFocus.js'
 import { Router, type Response } from 'express'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
@@ -81,11 +84,18 @@ aiBooksRouter.get('/:id',async(req:AuthRequest,res)=>{
 async function prepare(req:AuthRequest) {
   const question=validateBookQuestion(req.body?.question,req.body?.theme)
   if(!uuidPattern.test(req.body?.sourceId??'')) throw new BookError('BOOK_INPUT',422,'もとになる鑑定書を選んでください。')
-  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data,birth_data,partner_profile_id').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
+  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data,birth_data,partner_profile_id,reading_revision_id').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
   if(error) throw error
   if(!data || data.kind==='chat') throw new BookError('BOOK_SOURCE',422,'保存済みの自己鑑定または相性鑑定を選んでください。')
   const focus=await resolveBookFocus(data,req.body?.focusCardId,req.accessToken!,req.userId!)
-  const sources=bookSources(data,req.body.theme,focus)
+  let sourceRow=data
+  if(cardPurchasesEnabled()) {
+    const project=await readingCardProjector(req.userId!,data)
+    if(focus && project(focus).access?.locked)throw new BookError('READING_CARD_LOCKED',402,'この鑑定を購入するか、月額会員として開いてから相談してください。')
+    const report=savedAccessReport(data.calculated_data)
+    if(report)sourceRow={...data,calculated_data:{...data.calculated_data,_structuredReport:{...report,cards:report.cards.filter(card=>!project(card).access?.locked)}}}
+  }
+  const sources=bookSources(sourceRow,req.body.theme,focus)
   if(sources.length<3) throw new BookError('BOOK_SOURCE',422,'この鑑定書には必要な原稿が揃っていません。別の鑑定書を選んでください。')
   return {question,sources,row:data}
 }

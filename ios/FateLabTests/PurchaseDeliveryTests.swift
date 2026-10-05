@@ -62,6 +62,24 @@ import XCTest
         let delivered = try await first.value
         XCTAssertTrue(delivered); XCTAssertEqual(mirrors, 1); XCTAssertEqual(finishes, 1)
     }
+    func testCardApprovalSurvivesRestartAndStaysWithItsOwner() throws {
+        var data: Data?
+        let a = UUID(), b = UUID()
+        let store = CardApprovalStore(read: { data }, write: { data = $0 })
+        try store.set(a, pending: true)
+        let restarted = CardApprovalStore(read: { data }, write: { data = $0 })
+        XCTAssertTrue(try restarted.contains(a))
+        XCTAssertFalse(try restarted.contains(b))
+        try restarted.set(b, pending: true)
+        try restarted.set(a, pending: false)
+        XCTAssertFalse(try store.contains(a))
+        XCTAssertTrue(try store.contains(b))
+    }
+    func testUnreadableApprovalStateCannotSilentlyEnableAnotherPurchase() throws {
+        let store = CardApprovalStore(read: { Data("invalid".utf8) }, write: { _ in XCTFail("Do not overwrite unreadable state") })
+        XCTAssertThrowsError(try store.contains(UUID()))
+        XCTAssertThrowsError(try store.set(UUID(), pending: false))
+    }
     func testDeliveryOperationIdentitySurvivesPersistence() throws {
         var data: Data?
         let queue = PurchaseDelivery(read: { data }, write: { data = $0 })
@@ -89,5 +107,25 @@ final class BookReadingPresentationTests: XCTestCase {
     func testEmphasisPreservesEveryCharacter() {
         let text = "相手と話す機会を増やすこと。小さな一歩を試してみましょう。"
         XCTAssertEqual(String(BookReadingText.styled(text, highlights: ["小さな一歩"]).characters), text)
+    }
+
+    func testReadingAccessResponseIsBackwardsCompatibleAndFailClosed() throws {
+        let paused = try JSONDecoder().decode(ReadingAccessResponse.self, from: Data(#"{"enabled":false}"#.utf8))
+        XCTAssertFalse(paused.enabled)
+        XCTAssertNil(paused.unlocked)
+        let legacy = #"{"id":"compat-v24-7","kind":"essence","scope":"couple","title":"復縁の可能性","summary":"本文","tags":[],"pages":[],"evidence":[]}"#
+        let card = try JSONDecoder().decode(ReadingCard.self, from: Data(legacy.utf8))
+        XCTAssertNil(card.access)
+        XCTAssertEqual(card.paidReadingLabel, "復縁の可能性")
+        let locked = legacy.dropLast() + #", "access":{"locked":true,"offerKey":"compatibility:compat-v24-7"}}"#
+        let projected = try JSONDecoder().decode(ReadingCard.self, from: Data(locked.utf8))
+        XCTAssertTrue(projected.showsReadingLock)
+    }
+
+    func testReadingPurchaseTargetCannotConfusePairAndYear() throws {
+        let target = ReadingPurchaseTarget(conversationId: UUID(), cardId: "turning-year-2027")
+        let restored = try JSONDecoder().decode(ReadingPurchaseTarget.self, from: JSONEncoder().encode(target))
+        XCTAssertEqual(target, restored)
+        XCTAssertNotEqual(target, ReadingPurchaseTarget(conversationId: UUID(), cardId: target.cardId))
     }
 }

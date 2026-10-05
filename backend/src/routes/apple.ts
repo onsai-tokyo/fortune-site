@@ -1,3 +1,4 @@
+import {CARD_PRODUCT,grantVerifiedCardPurchase,CardPurchaseError} from '../lib/readingCardPurchases.js'
 import { Router, Request, Response } from 'express'
 import { Environment, SignedDataVerifier } from '@apple/app-store-server-library'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
@@ -87,6 +88,9 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     const signedTransaction = typeof req.body?.signedTransaction === 'string' ? req.body.signedTransaction : ''
     if (!signedTransaction || signedTransaction.length > 20000) { res.status(400).json({ error: '購入情報が不足しています' }); return }
     const decoded = await verifyTransaction(signedTransaction)
+    if (decoded.productId === CARD_PRODUCT) {
+      res.json(await grantVerifiedCardPurchase(decoded, req.userId!)); return
+    }
     if (decoded.productId === BOOK_PRODUCT) {
       res.json(await grantVerifiedBookPurchase(decoded, req.userId!)); return
     }
@@ -104,6 +108,7 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     }
     res.json({ verified: true, ...applied, correlationId: requestId })
   } catch (error) {
+    if(error instanceof CardPurchaseError){res.status(error.status).json({code:error.code,error:error.message});return}
     console.error('App Store purchase verification failed', {
       correlationId: requestId,
       errorName: error instanceof Error ? error.name : 'UnknownError',
@@ -127,6 +132,13 @@ export async function appStoreNotification(req: Request, res: Response) {
     verified = await verifyNotification(signedPayload)
     const raw = verified.payload.data?.signedTransactionInfo
     const decoded = raw ? await verifyTransaction(raw) : null
+    if (decoded?.productId === CARD_PRODUCT) {
+      if (decoded.environment !== verified.environment) throw new ApplePayloadInvalid()
+      if (['REFUND','REVOKE'].includes(String(verified.payload.notificationType)) && !decoded.revocationDate) throw new ApplePayloadInvalid()
+      try { await grantVerifiedCardPurchase(decoded); res.json({received:true}) }
+      catch { res.status(503).json({error:'Notification pending'}) }
+      return
+    }
     if (decoded?.productId === BOOK_PRODUCT) {
       if (decoded.environment !== verified.environment) throw new ApplePayloadInvalid()
       if (['REFUND','REVOKE'].includes(String(verified.payload.notificationType)) && !decoded.revocationDate) throw new ApplePayloadInvalid()

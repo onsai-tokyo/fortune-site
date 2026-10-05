@@ -43,7 +43,7 @@ def begin(op=100,n=1,worker=90,premium=False,source=None,partner=30,request=None
 def status(op=100,n=1): return service('get_compatibility_operation',[literal(uid(n)),literal(uid(op))])
 def fail(op=100,n=1,worker=90):return service('fail_compatibility_operation',[literal(uid(n)),literal(uid(op)),literal(uid(worker))])
 def complete(op=100,n=1,worker=90,payload=None):
-    return json.loads(owner(f"select complete_compatibility_operation('{uid(op)}','{uid(worker)}',{j(payload or result)},'synthetic');",n))
+    return service('complete_compatibility_operation',[literal(uid(n)),literal(uid(op)),literal(uid(worker)),j(payload or result),literal('synthetic')])
 def balance():return int(sql(f"select balance from user_points where user_id='{uid(1)}';"))
 try:
     command([str(binpath/'initdb'),'-D',str(cluster),'--no-locale','--encoding=UTF8','-A','trust','-U','postgres'])
@@ -53,9 +53,16 @@ try:
     sql((base.parents[1]/'supabase_migration.sql').read_text())
     for name in ['partner_profiles.sql','reading_conversation_bookmarks_build44.sql','reading_conversation_kind_chat_build55.sql','reading_revisions_d01.sql','compatibility_operations_d02.sql','compatibility_cancellation_d02.sql','partner_relationship_build45.sql','partner_registration_d02.sql','partner_registration_cancellation_d02.sql','legacy_points_permissions_d02.sql']: sql((base/name).read_text())
     sql(f"insert into auth.users values('{uid(1)}'),('{uid(2)}'); grant select,insert,update,delete on reading_conversations to authenticated; insert into partner_profiles(id,user_id,display_name,birth_date,birthplace,gender,relationship_type) values('{uid(30)}','{uid(1)}','synthetic','2000-01-01','test','female','friend');")
+    sql((base/'reading_card_access_20261005.sql').read_text())
     source_id=save('source',{'kind':'self','birthData':{'birthDate':'1990-01-01'},'calculatedData':{},'reportText':'self'})['id']
     report={'version':3,'reportText':'relationship','cards':[{'id':'synthetic'}],'unknownMetadata':{'keep':True}}
     result={'kind':'compatibility','partnerProfileId':uid(30),'birthData':{'self':{'birthDate':'1990-01-01'},'partner':{'name':'synthetic'}},'calculatedData':{'_structuredReport':report},'reportText':report['reportText']}
+    rejected('select report_text from reading_conversations;','authenticated cannot fetch full report directly')
+    rejected('select calculated_data from reading_conversations;','authenticated cannot fetch embedded card bodies')
+    rejected('select payload from reading_revisions;','authenticated cannot fetch revision bodies')
+    expect(owner('select count(id) from reading_conversations;')=='1','owner can still list the library')
+    rejected(f"select complete_compatibility_operation('{uid(100)}','{uid(90)}','{{}}','test');",'old completion RPC is not publicly callable')
+    rejected(f"select complete_compatibility_operation('{uid(1)}','{uid(100)}','{uid(90)}','{{}}','test');",'new completion RPC is service-only')
     expect(status()['state']=='not_found','missing operation can be distinguished')
     sql("create function reject_compat_insert() returns trigger language plpgsql as $$ begin raise exception 'injected_reservation_failure'; end $$; create trigger reject_compat_insert before insert on compatibility_operations for each row execute function reject_compat_insert();")
     try: begin()
@@ -76,11 +83,15 @@ try:
     expect(complete(worker=91)['state']=='pending','wrong worker cannot save')
     expect(complete(n=2)['state']=='not_found','foreign owner cannot save')
     invalid=dict(result,reportText='different')
-    rejected(f"select complete_compatibility_operation('{uid(100)}','{uid(90)}',{j(invalid)},'bad');",'invalid report rejected before save')
+    try: complete(payload=invalid)
+    except subprocess.CalledProcessError: print('PASS invalid report rejected before save',flush=True)
+    else: raise AssertionError('invalid report accepted')
     expect(status()['state']=='pending' and balance()==0,'invalid result keeps reservation reconcilable')
     sql("create function inject_compat_failure() returns trigger language plpgsql as $$ begin if new.state='completed' then raise exception 'injected_after_save'; end if; return new; end $$; create trigger inject_compat_failure before update on compatibility_operations for each row execute function inject_compat_failure();")
     count=sql('select count(*) from reading_revisions;')
-    rejected(f"select complete_compatibility_operation('{uid(100)}','{uid(90)}',{j(result)},'test');",'injected completion journal failure rejects transaction')
+    try: complete()
+    except subprocess.CalledProcessError: print('PASS injected completion journal failure rejects transaction',flush=True)
+    else: raise AssertionError('injected journal failure accepted')
     expect(sql('select count(*) from reading_revisions;')==count and sql("select count(*) from reading_conversations where kind='compatibility';")=='0','journal failure rolls back saved revision and conversation')
     sql('drop trigger inject_compat_failure on compatibility_operations;')
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool: results=list(pool.map(lambda _:complete(),range(6)))

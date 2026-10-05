@@ -1,3 +1,4 @@
+import {readingCardProjector} from '../lib/readingCardAccess.js'
 import {Router,type Response,type NextFunction,type RequestHandler} from 'express'
 import {requireAuth,type AuthRequest} from '../middleware/auth.js'
 import {getSupabaseUser} from '../lib/supabaseUser.js'
@@ -47,7 +48,7 @@ async function eventRequest(req:AuthRequest,res:import('express').Response,save:
   const events=parseEvents(req.body?.events,Number(input.birthDate!.slice(0,4)))
   if(save){const {error}=await db.rpc('replace_life_events',{p_events:events});if(error)throw new Error('SAVE_UNAVAILABLE');res.json({events});return}
   const context=await loadTimelineContext(req.accessToken!,req.userId!,input)
-  res.json({readings:readLifeEvents({...input,...context},events,japanDateParts().year)})
+  res.json({readings:await visibleEventReadings(req.userId!,data.birth_data,readLifeEvents({...input,...context},events,japanDateParts().year))})
  }catch(error){const invalid=error instanceof Error&&error.message==='INVALID_EVENTS';res.status(invalid?400:503).json({error:invalid?'出来事の種類・年・月を確認してください':'年表を確認できませんでした。時間をおいて再試行してください'})}
 }
 timelineRouter.post('/events',(req,res)=>eventRequest(req,res,true))
@@ -73,6 +74,11 @@ timelineRouter.get('/events/for-reading/:id',handled(async(req:AuthRequest,res)=
   if(!data){res.status(404).json({error:'鑑定書が見つかりません'});return}
   if(data.kind!=='self'){res.status(422).json({error:'あなたの鑑定書から開いてください'});return}
   const context=await loadTimelineContext(req.accessToken!,req.userId!,data.birth_data)
-  res.json({readings:readLifeEvents({...birthInput(data.birth_data),...context},context.lifeEvents,japanDateParts().year)})
+  res.json({readings:await visibleEventReadings(req.userId!,data.birth_data,readLifeEvents({...birthInput(data.birth_data),...context},context.lifeEvents,japanDateParts().year))})
  }catch {res.status(503).json({error:'年表の読み解きを取得できませんでした'})}
 }))
+
+async function visibleEventReadings(user:string,birth:unknown,readings:ReturnType<typeof readLifeEvents>) {
+ const project=await readingCardProjector(user,{kind:'self',birth_data:birth})
+ return readings.filter(reading=>!project({id:`event-${reading.year}`,kind:'timing',tab:'timing',scope:'self',period:{label:`${reading.year}年`},title:'',summary:'',tags:[],pages:[],evidence:[]}).access?.locked)
+}

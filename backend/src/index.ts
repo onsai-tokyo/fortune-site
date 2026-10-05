@@ -1,3 +1,4 @@
+import {readingAccessRouter} from './routes/readingAccess.js'
 import { timelineRouter } from './routes/timeline.js'
 import { aiBooksRouter } from './routes/aiBooks.js'
 import { coupleTimelineRouter } from './routes/coupleTimeline.js'
@@ -129,6 +130,7 @@ app.use('/api/preview', previewRouter)
 app.use('/api/calc', calcRouter)
 app.use('/api/books', aiBooksRouter)
 app.use('/api/timeline', timelineRouter)
+app.use('/api/reading-access', readingAccessRouter)
 app.use('/api/reading', coupleTimelineRouter)
 app.use('/api/reading', readingRouter)
 app.use('/api/stripe', stripeRouter)

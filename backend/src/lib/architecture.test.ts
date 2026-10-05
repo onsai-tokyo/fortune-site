@@ -52,10 +52,11 @@ test('新規ユーザーは出生情報の入力後にあなたタブで鑑定�
   assert.match(root, /HomeView\(initialInput: initialInput, autoGenerate: initialInput != nil\)/)
 })
 
-test('本人の鑑定本文操作はuser client、質問台帳照会はowner条件付きで行う', () => {
+test('鑑定本文のservice読み取りは認証済みowner条件で制限する', () => {
   const reading = read('backend/src/routes/reading.ts')
-  const adminUsages = [...reading.matchAll(/getSupabaseAdmin\(\)/g)]
-  assert.equal(adminUsages.length, 3, '共有・削除・owner付き質問台帳照会以外にadmin clientが使われています')
+  const reads = [...reading.matchAll(/getSupabaseAdmin\(\)\.from\('reading_conversations'\)[\s\S]*?\.maybeSingle\(\)/g)]
+  assert.equal(reads.length, 5)
+  for (const [query] of reads) assert.match(query, /\.eq\('user_id', req\.userId!\)/)
   assert.match(reading, /getSupabaseUser\(req\.accessToken!\)/)
 })
 

@@ -1,3 +1,6 @@
+import {restoreGeneratedSnapshot} from '../lib/readingCardAccess.js'
+import {readingCardProjector,projectedReport,publicReadingConversation} from '../lib/readingCardAccess.js'
+import {cardPurchasesEnabled} from '../lib/readingCardPurchases.js'
 import { loadTimelineContext,timelineEnabled } from '../lib/timelineContext.js'
 import { refreshSavedTimelineCards, SAVED_TIMELINE_REVISION } from '../lib/report/savedTimelineCards.js'
 import { handlePartnerReading } from './partnerReading.js'
@@ -144,7 +147,7 @@ readingRouter.delete('/profile/traits/:id', requireAuth, async (req: AuthRequest
 
 readingRouter.post('/conversations', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const payload = readingSnapshot(req.body as Record<string,unknown>)
+    const payload = readingSnapshot(await restoreGeneratedSnapshot(req.userId!,req.header('Idempotency-Key'),req.body as Record<string,unknown>))
     const result = await saveReadingSnapshot(req.accessToken!, payload, personalReadingTitle(), req.header('Idempotency-Key'))
     res.status(result.reused ? 200 : 201).json(result)
   } catch (error) {
@@ -163,7 +166,7 @@ readingRouter.get('/conversations', requireAuth, async (req: AuthRequest, res) =
     }
     res.setHeader('Cache-Control', 'private, no-store')
     let query = db.from('reading_conversations')
-      .select('id,title,kind,partner_profile_id,birth_data,created_at,updated_at')
+      .select('id,title,kind,partner_profile_id,birth_data,created_at,updated_at,reading_revision_id')
       .eq('user_id', req.userId!).eq('kind', 'compatibility').eq('partner_profile_id', partnerId)
       // UUID keyset pagination remains stable when a report is renamed/opened.
       .order('id', { ascending: false }).limit(101)
@@ -228,27 +231,33 @@ readingRouter.post('/conversations/:id/chat', requireAuth, async (req: AuthReque
 
 readingRouter.get('/conversations/:id', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
-  const { data: conversation } = await db.from('reading_conversations')
-    .select('id,secret_token,title,kind,is_saved,partner_profile_id,birth_data,report_text,source_section,source_year,created_at,updated_at')
+  const { data: conversation } = await getSupabaseAdmin().from('reading_conversations')
+    .select('id,secret_token,title,kind,is_saved,partner_profile_id,birth_data,report_text,source_section,source_year,created_at,updated_at,calculated_data,reading_revision_id')
     .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
   const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
-  res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
+  try {
+    res.setHeader('Cache-Control','private, no-store')
+    const {calculated_data,...summary}=conversation
+    res.json({ conversation:cardPurchasesEnabled()?await publicReadingConversation(req.userId!,conversation):summary, messages:messages??[],traits:traits??[] })
+  } catch {res.status(503).json({error:'鑑定の購入状況を確認できませんでした。'})}
 })
 
 readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, res) => {
   const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('birth_data,kind').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+    .select('birth_data,kind,partner_profile_id,reading_revision_id').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   res.setHeader('Cache-Control', 'private, no-store')
   if (error) { res.status(503).json({ error: '過去の年を取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   if (data.kind !== 'compatibility' && data.kind !== 'self') { res.status(422).json({ error: '鑑定書から開いてください' }); return }
   try {
     const context=timelineEnabled() && data.kind==='self' ? await loadTimelineContext(req.accessToken!,req.userId!,data.birth_data) : {}
-    res.json(data.kind === 'self' ? selfTimingHistoryFromBirthSnapshot({...data.birth_data,...context}) : timingHistoryFromBirthSnapshot(data.birth_data))
+    const history=data.kind === 'self' ? selfTimingHistoryFromBirthSnapshot({...data.birth_data,...context}) : timingHistoryFromBirthSnapshot(data.birth_data)
+    const project=await readingCardProjector(req.userId!,data)
+    res.json({...history,cards:history.cards.map(project)})
   } catch {
     res.status(422).json({ error: 'この鑑定書には過去年の算出に必要な出生情報が保存されていません' })
   }
@@ -257,14 +266,14 @@ readingRouter.get('/:id/timing-history', requireAuth, async (req: AuthRequest, r
 readingRouter.get('/:id/partner-reading', requireAuth, (req:AuthRequest,res)=>handlePartnerReading(req,res))
 
 readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
-  const { data, error } = await getSupabaseUser(req.accessToken!).from('reading_conversations')
-    .select('report_text,calculated_data,birth_data,kind,updated_at').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
+  const { data, error } = await getSupabaseAdmin().from('reading_conversations')
+    .select('report_text,calculated_data,birth_data,kind,partner_profile_id,updated_at,reading_revision_id').eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
   if (error) { res.status(500).json({ error: 'カードを取得できませんでした' }); return }
   if (!data) { res.status(404).json({ error: '鑑定履歴が見つかりません' }); return }
   const etag = `W/"${req.params.id}-${data.updated_at}-${SAVED_TIMELINE_REVISION}-${process.env.ANNUAL_READING_ENGINE ?? "legacy"}"`
   res.setHeader('ETag', etag)
   res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate')
-  if (!timelineEnabled() && req.headers['if-none-match'] === etag) { res.status(304).end(); return }
+  if (!cardPurchasesEnabled() && !timelineEnabled() && req.headers['if-none-match'] === etag) { res.status(304).end(); return }
   const report = storedReportFromCalculatedData(data.calculated_data) ?? buildStructuredReport(data.report_text)
   const birth = data.birth_data as { _sourceKind?: string } | null
   const expectedScope = data.kind === 'compatibility' || birth?._sourceKind === 'compatibility' ? 'couple' : 'self'
@@ -278,24 +287,35 @@ readingRouter.get('/:id/cards', requireAuth, async (req: AuthRequest, res) => {
     .filter(card => card.tab !== 'chart' && card.kind !== 'chart')
     .filter(card => !card.scope || card.scope === expectedScope)
     .map(card => ({ ...card, scope: card.scope ?? expectedScope }))
+  if(cardPurchasesEnabled()) {
+    res.setHeader('Cache-Control','private, no-store')
+    try {
+      const project=await readingCardProjector(req.userId!,data)
+      res.json(projectedReport({...report,cards,chartSections:report.chartSections??buildChartSections(data.calculated_data)},project))
+    } catch {res.status(503).json({error:'購入済みの鑑定を確認できませんでした。再読み込みしてください。'})}
+    return
+  }
   res.json({ ...report, cards, chartSections: report.chartSections ?? buildChartSections(data.calculated_data) })
 })
 
 readingRouter.get('/reports/:token', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
-  const { data: conversation } = await db.from('reading_conversations').select('*')
+  const { data: conversation } = await getSupabaseAdmin().from('reading_conversations').select('*')
     .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
   const { data: messages } = await db.from('reading_messages').select('id,role,content,referenced_systems,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
   const { data: traits } = await db.from('profile_traits').select('id,source_message_id,category,text,status,created_at')
     .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at')
-  res.json({ conversation, messages: messages ?? [], traits: traits ?? [] })
+  try {
+    res.setHeader('Cache-Control','private, no-store')
+    res.json({ conversation:await publicReadingConversation(req.userId!,conversation), messages:messages??[],traits:traits??[] })
+  } catch {res.status(503).json({error:'鑑定の購入状況を確認できませんでした。'})}
 })
 
 readingRouter.post('/reports/:token/share', requireAuth, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
-  const { data: conversation } = await db.from('reading_conversations').select('*')
+  const { data: conversation } = await getSupabaseAdmin().from('reading_conversations').select('*')
     .eq('secret_token', req.params.token).eq('user_id', req.userId!).maybeSingle()
   if (!conversation) { res.status(404).json({ error: '鑑定書が見つかりません' }); return }
   const summary = buildPublicReadingShare(conversation)
@@ -371,7 +391,7 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
     const checkedQuestion = validateReadingQuestion(req.body?.question)
     if (!checkedQuestion.ok) { res.status(checkedQuestion.status).json({ error: checkedQuestion.error }); return }
     const question = checkedQuestion.value
-    const { data: conversation } = await db.from('reading_conversations').select('*')
+    const { data: conversation } = await getSupabaseAdmin().from('reading_conversations').select('*')
       .eq('id', req.params.id).eq('user_id', req.userId!).maybeSingle()
     if (!conversation) {
       console.warn('Reading conversation lookup miss', {
@@ -405,7 +425,7 @@ readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter,
     const { data: prior, error: priorError } = await db.from('reading_messages').select('role,content,created_at')
       .eq('conversation_id', conversation.id).eq('user_id', req.userId!).order('created_at', { ascending: false }).limit(20)
     if (priorError) throw priorError
-    const system = buildAnswerSystemPrompt(conversation)
+    const system = buildAnswerSystemPrompt(await publicReadingConversation(req.userId!,conversation))
 
     const history = [...(prior ?? [])].reverse().map(item => ({ role: item.role as 'user' | 'assistant', content: String(item.content).slice(0, 2500) }))
     history.push({ role: 'user', content: question })

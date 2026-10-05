@@ -1,3 +1,4 @@
+import {projectSavedReading} from '../lib/readingCardAccess.js'
 import { buildCompatibilityV24 } from '../lib/report/compatibilityV24/cards.js'
 import { COMPATIBILITY_V24_IDENTITY } from '../lib/report/compatibilityV24/version.js'
 import { Router } from 'express'
@@ -11,7 +12,6 @@ import { correlationId, sendApiError } from '../lib/apiError.js'
 import { hasPremiumAccess } from '../lib/premium.js'
 import { partnerRegistrationRPC, registrationID } from '../lib/partnerRegistration.js'
 import { compatibilityRPC } from '../lib/compatibilityOperation.js'
-import { getSupabaseUser } from '../lib/supabaseUser.js'
 import { runtimeIdentity } from '../lib/runtimeDiagnostics.js'
 import { GenerationDependencyError } from '../lib/selfGeneration.js'
 import { readingSnapshot } from '../lib/readingRevision.js'
@@ -237,14 +237,14 @@ export async function generateCompatibilityCards(
 partnersRouter.get('/compatibility/operations/:opId', async (req: AuthRequest, res) => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
   res.setHeader('Cache-Control','private, no-store')
-  try { res.json(await compatibilityRPC('get_compatibility_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  try { const state=await compatibilityRPC('get_compatibility_operation',{p_user:req.userId,p_op:req.params.opId}); res.json(state.result&&state.conversationId?{...state,result:await projectSavedReading(req.userId!,state.conversationId,state.result)}:state) }
   catch { res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を確認できませんでした'}) }
 })
 
 partnersRouter.post('/compatibility/operations/:opId/cancel', async (req: AuthRequest, res) => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.params.opId as string)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
   res.setHeader('Cache-Control','private, no-store')
-  try { res.json(await compatibilityRPC('cancel_unstarted_compatibility_operation',{p_user:req.userId,p_op:req.params.opId})) }
+  try { const state=await compatibilityRPC('cancel_unstarted_compatibility_operation',{p_user:req.userId,p_op:req.params.opId}); res.json(state.result&&state.conversationId?{...state,result:await projectSavedReading(req.userId!,state.conversationId,state.result)}:state) }
   catch { res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'前の操作を終了できませんでした。同じ操作で再確認してください'}) }
 })
 
@@ -256,7 +256,7 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
   let keepAlive: ReturnType<typeof setInterval> | undefined
   res.setHeader('X-FateLab-Request-Id',requestId)
   const progress = (percent: number, title: string, detail: string) => { if (useSse && !res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify({ type: 'progress', percent, title, detail })}\n\n`) }
-  const complete = (report: StructuredReport, conversationId: string) => { if (res.destroyed || res.writableEnded) return; if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
+  const complete = async (original: StructuredReport, conversationId: string) => { const report=await projectSavedReading(req.userId!,conversationId,original); if (res.destroyed || res.writableEnded) return; if (useSse) { progress(100, '関係性の鑑定ができました', '二人のパターンを読み始められます'); res.write(`data: ${JSON.stringify({ type: 'complete', report, conversationId })}\n\n`); res.write('data: [DONE]\n\n'); res.end() } else res.json({ ...report, conversationId }) }
   try {
     const validID = (value: unknown) => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
     if (!validID(requestId) || !validID(req.params.id)) { res.status(400).json({error:'操作IDが正しくありません'}); return }
@@ -268,7 +268,7 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     if (state.state==='completed') {
       res.setHeader('Cache-Control','private, no-store')
       if (useSse) { res.setHeader('Content-Type','text/event-stream'); res.flushHeaders() }
-      complete(state.result!,state.conversationId!); return
+      await complete(state.result!,state.conversationId!); return
     }
     if (state.state!=='started') {
       const status = state.state==='insufficient_points'?402:state.state==='deleted'?410:(state.state==='partner_not_found'||state.state==='source_not_found')?404:409
@@ -361,10 +361,10 @@ partnersRouter.post('/:id/compatibility', async (req: AuthRequest, res) => {
     const snapshot = readingSnapshot({birthData:{self:self.birth_data,partner:partnerBirth,relationshipType,relationshipLabel},
       calculatedData:compactContext,reportText:report.reportText,structuredReport:report,sourceSection:'二人の関係'}, 'compatibility', partner.id)
     completionAttempted=true
-    const saved = await compatibilityRPC('complete_compatibility_operation',{p_op:requestId,p_worker:workerId,p_payload:snapshot,p_title:compatibilityReadingTitle(selfBirth.nickname,partner.display_name)},getSupabaseUser(req.accessToken!))
+    const saved = await compatibilityRPC('complete_compatibility_operation',{p_user:req.userId!,p_op:requestId,p_worker:workerId,p_payload:snapshot,p_title:compatibilityReadingTitle(selfBirth.nickname,partner.display_name)})
     if (saved.state!=='completed') throw new GenerationDependencyError('Compatibility completion not acknowledged')
     console.info('Compatibility conversation persistence metric', {conversationPersisted: true,sourceConversationPresent:true})
-    complete(saved.result!, saved.conversationId!)
+    await complete(saved.result!, saved.conversationId!)
   } catch (error) {
     console.error('Partner compatibility failed', error)
     if (started && !completionAttempted) {

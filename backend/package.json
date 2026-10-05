@@ -35,7 +35,9 @@
     "test:books": "tsx --test src/lib/aiBooks.test.ts",
     "test:books:db": "python3 supabase/tests/ai_books.py",
     "test:timeline3": "node --import tsx --test src/lib/timelineContext.test.ts src/lib/report/timelineV3Integration.test.ts src/lib/report/timelineV3/timelineV3.test.ts src/routes/timeline.test.ts",
-    "test:timeline3:db": "python3 supabase/tests/timeline_v3.py"
+    "test:timeline3:db": "python3 supabase/tests/timeline_v3.py",
+    "test:reading-access": "tsx --test src/lib/readingAccessPolicy.test.ts src/lib/readingCardPurchases.test.ts src/lib/readingCardAccess.test.ts",
+    "test:reading-access:db": "python3 supabase/tests/reading_cards.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
