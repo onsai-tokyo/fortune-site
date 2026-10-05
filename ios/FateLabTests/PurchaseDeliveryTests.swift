@@ -128,4 +128,21 @@ final class BookReadingPresentationTests: XCTestCase {
         XCTAssertEqual(target, restored)
         XCTAssertNotEqual(target, ReadingPurchaseTarget(conversationId: UUID(), cardId: target.cardId))
     }
+
+    func testFreshReadingHandoffRejectsOtherAccountsTargetsAndExpiredResults() throws {
+        let raw = #"{"id":"compat-v24-7","kind":"essence","scope":"couple","title":"title","summary":"body","tags":[],"pages":[],"evidence":[],"access":{"locked":false}}"#
+        var card = try JSONDecoder().decode(ReadingCard.self, from: Data(raw.utf8))
+        let owner = AccountScope(userID: UUID(), epoch: 1)
+        let conversation = UUID()
+        let now = Date()
+        let grant = ReadingAccessGrant(card: card, conversationID: conversation, owner: owner, checkedAt: now)
+        XCTAssertTrue(grant.matches(cardID: card.id, conversationID: conversation, owner: owner, now: now))
+        XCTAssertFalse(grant.matches(cardID: "other", conversationID: conversation, owner: owner, now: now))
+        XCTAssertFalse(grant.matches(cardID: card.id, conversationID: UUID(), owner: owner, now: now))
+        XCTAssertFalse(grant.matches(cardID: card.id, conversationID: conversation, owner: .init(userID: owner.userID, epoch: 2), now: now))
+        XCTAssertFalse(grant.matches(cardID: card.id, conversationID: conversation, owner: .init(userID: UUID(), epoch: 1), now: now))
+        XCTAssertFalse(grant.matches(cardID: card.id, conversationID: conversation, owner: owner, now: now.addingTimeInterval(30)))
+        card.access = nil
+        XCTAssertFalse(ReadingAccessGrant(card: card, conversationID: conversation, owner: owner).matches(cardID: card.id, conversationID: conversation, owner: owner))
+    }
 }

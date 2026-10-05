@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct ReadingChatView: View {
     @EnvironmentObject private var auth: AuthStore
@@ -372,7 +373,8 @@ struct PaywallSheet: View {
                     Divider().overlay(FateTheme.line)
                     VStack(alignment: .leading, spacing: 5) {
                         if let product = purchases.product {
-                            Text("月額 \(product.displayPrice)")
+                            Text(ReadingPrices.monthly)
+                            StorePurchasePrice(product: product)
                                 .font(.system(.title2, weight: .semibold))
                             Text("1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
                         } else if purchases.errorMessage == nil {
@@ -442,6 +444,7 @@ struct MembershipDetailsView: View {
     @State private var booksEnabled = false
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            Text("月額1,980円／単品鑑定300円（日本価格）").font(.headline)
             Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
             Label("相性の有料項目と2027年以降の時系列が見放題", systemImage: "lock.open")
             Text("会員期間中は、良好な関係を築くコツ・障害になること・復縁の可能性と、あなた・ふたりの各年の鑑定を読めます。")
@@ -471,11 +474,25 @@ struct MembershipDetailsView: View {
     }
 }
 
-struct StoreCurrencyNote: View {
-    let currencyCode: String?
+enum ReadingPrices {
+    static let card = "300円（日本価格）"
+    static let monthly = "1,980円／月（日本価格）"
+}
+
+/// Keep the Japanese catalogue prominent without misrepresenting Apple's actual charge.
+struct StorePurchasePrice: View {
+    let product: Product?
     var body: some View {
-        if let currencyCode, currencyCode != "JPY" {
-            Text("現在のApple購入アカウントの通貨（\(currencyCode)）で表示しています。日本のストアでは円表示になります。購入前にAppleの確認画面で金額をご確認ください。")
+        if let product {
+            if product.priceFormatStyle.currencyCode != "JPY" {
+                Text("このAppleアカウントでの購入価格：\(product.displayPrice)。日本価格とは通貨が異なります。Appleの購入画面で金額をご確認ください。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4)
+            } else {
+                Text("購入価格：\(product.displayPrice)")
+                    .font(.footnote).foregroundStyle(FateTheme.muted)
+            }
+        } else {
+            Text("Appleの購入価格を取得しています。取得後に購入できます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4)
         }
     }

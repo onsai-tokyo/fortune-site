@@ -34,7 +34,7 @@ private struct ReadingJumpMenu: View {
         if !cards.isEmpty {
             Menu {
                 ForEach(cards) { card in
-                    Button([card.displayPeriodLabel, card.title].compactMap { $0 }.joined(separator: " · ")) {
+                    Button(card.navigationLabel) {
                         prepare(card)
                         Task { @MainActor in
                             await Task.yield()
@@ -248,6 +248,10 @@ struct ReadingCardList: View {
     @State private var pendingReader: ReadingCard?
     @State private var reader: ReadingCard?
     @State private var showReader = false
+    @State private var openingID: String?
+    @State private var accessError: String?
+    @State private var preparedAccess: ReadingAccessResponse?
+    @State private var readerGrant: ReadingAccessGrant?
     let cards: [ReadingCard]
     let onQuestion: (ReadingCard) -> Void
     var showsJumpMenu = true
@@ -258,11 +262,14 @@ struct ReadingCardList: View {
         ForEach(Array(cards.enumerated()), id: \.element.id) { index, original in
             let item = resolvedCards[original.id] ?? original
             Button {
-                if item.showsReadingLock { selectedPaidCard = item }
-                else { reader = item; showReader = true }
+                Task { await open(item) }
             } label: {
                 InsightCard(item: item, artworkIndex: index).contentShape(Rectangle())
+                    .overlay(alignment: .bottomTrailing) {
+                        if openingID == item.id { ProgressView().padding(20).background(.regularMaterial, in: Circle()).padding(12) }
+                    }
             }.buttonStyle(.plain).id(item.id)
+                .disabled(openingID != nil)
                 .accessibilityHint(item.showsReadingLock ? "購入方法を表示します" : "鑑定の詳細を開きます")
         }
         }
@@ -271,8 +278,9 @@ struct ReadingCardList: View {
                 reader = card; pendingReader = nil; showReader = true
             }
         }) { item in
-            ReadingUnlockSheet(item: item, conversationID: conversationID) { card in
+            ReadingUnlockSheet(item: item, conversationID: conversationID, initialAccess: preparedAccess) { card in
                 resolvedCards[card.id] = card
+                readerGrant = ReadingAccessGrant(card: card, conversationID: conversationID, owner: AccountScope(auth))
                 pendingReader = card
                 selectedPaidCard = nil
             }
@@ -281,7 +289,7 @@ struct ReadingCardList: View {
         }
         .navigationDestination(isPresented: $showReader) {
             if let reader {
-                FocusReadingView(item: reader) { onQuestion(reader) }
+                FocusReadingView(item: reader, onQuestion: { onQuestion(reader) }, initialGrant: readerGrant)
                     .environment(\.isPartnerReading, isPartnerReading)
                     .environment(\.readingConversationID, conversationID)
             }
@@ -289,7 +297,50 @@ struct ReadingCardList: View {
         .onChange(of: AccountScope(auth)) { _, _ in
             selectedPaidCard = nil; pendingReader = nil; reader = nil
             showReader = false; resolvedCards.removeAll()
+            openingID = nil; preparedAccess = nil; readerGrant = nil; accessError = nil
         }
+        .alert("鑑定を開けませんでした", isPresented: Binding(get: { accessError != nil }, set: { if !$0 { accessError = nil } })) {
+            Button("閉じる", role: .cancel) { accessError = nil }
+        } message: { Text(accessError ?? "") }
+    }
+
+    private func open(_ card: ReadingCard) async {
+        guard openingID == nil else { return }
+        readerGrant = nil
+        guard card.paidReadingLabel != nil || card.showsReadingLock else {
+            reader = card; showReader = true; return
+        }
+        guard let conversationID else { accessError = "鑑定を保存してから開き直してください。"; return }
+        let owner = AccountScope(auth)
+        openingID = card.id
+        defer { if owner.isCurrent(auth) { openingID = nil } }
+        do {
+            // Keep the list on screen until the authoritative result is ready.
+            // Root already syncs StoreKit; do not repeat the full history on every tap.
+            let result = try await APIClient.shared.readingAccess(target: .init(conversationId: conversationID, cardId: card.id), auth: auth)
+            try owner.check(auth)
+            if result.unlocked == true, let readable = result.card, readable.access?.locked == false {
+                readerGrant = ReadingAccessGrant(card: readable, conversationID: conversationID, owner: owner)
+                reader = readable; showReader = true
+            } else if !result.enabled {
+                reader = card; showReader = true
+            } else {
+                preparedAccess = result; selectedPaidCard = card
+            }
+        } catch { if owner.isCurrent(auth) { accessError = userFacingErrorMessage(error) } }
+    }
+}
+
+/// Short-lived, in-memory handoff of a server response, never a persisted entitlement.
+struct ReadingAccessGrant {
+    let card: ReadingCard
+    let conversationID: UUID?
+    let owner: AccountScope
+    var checkedAt = Date()
+    func matches(cardID: String, conversationID: UUID?, owner: AccountScope, now: Date = Date()) -> Bool {
+        self.owner == owner && self.conversationID == conversationID && conversationID != nil
+            && card.id == cardID && card.access?.locked == false
+            && now.timeIntervalSince(checkedAt) >= 0 && now.timeIntervalSince(checkedAt) < 30
     }
 }
 
@@ -300,6 +351,7 @@ private struct ReadingUnlockSheet: View {
     @EnvironmentObject private var purchases: PurchaseManager
     let item: ReadingCard
     let conversationID: UUID?
+    var initialAccess: ReadingAccessResponse? = nil
     let onUnlocked: (ReadingCard) -> Void
     @State private var state: ReadingAccessResponse?
     @State private var loading = false
@@ -310,9 +362,9 @@ private struct ReadingUnlockSheet: View {
     private var target: ReadingPurchaseTarget? {
         conversationID.map { ReadingPurchaseTarget(conversationId: $0, cardId: item.id) }
     }
-    private var available: Bool { state?.enabled == true && state?.productId == AppConfig.cardProductID }
+    private var available: Bool { (state ?? initialAccess)?.enabled == true && (state ?? initialAccess)?.productId == AppConfig.cardProductID }
     private var busy: Bool { loading || purchases.isWorking || purchases.isSyncing }
-    private var hasCredit: Bool { (state?.credits ?? 0) > 0 }
+    private var hasCredit: Bool { ((state ?? initialAccess)?.credits ?? 0) > 0 }
 
     var body: some View {
         NavigationStack {
@@ -337,15 +389,17 @@ private struct ReadingUnlockSheet: View {
                         Button("鑑定を読む") { finish() }.buttonStyle(FLPrimaryButtonStyle())
                     } else {
                         option(title: "この鑑定だけを読む",
-                               price: hasCredit ? "購入済みの1件分を使えます" : purchases.cardProduct?.displayPrice ?? "料金を確認中",
+                               price: hasCredit ? "購入済みの1件分を使えます" : ReadingPrices.card,
                                detail: item.isTiming ? "表示中の対象・1年分を購入。購入した年は、会員期間にかかわらず読み返せます。" : "この相手の、この項目を購入。会員期間にかかわらず読み返せます。") {
-                            Button(busy ? "購入状況を確認中…" : hasCredit ? "購入済みの1件分で読む" : "この鑑定を購入") { Task { await buySingle() } }
+                            StorePurchasePrice(product: purchases.cardProduct)
+                            Button(hasCredit ? "購入済みの1件分で読む" : "この鑑定を購入") { Task { await buySingle() } }
                                 .buttonStyle(FLPrimaryButtonStyle())
                                 .disabled(!available || busy || (approvalPending && !hasCredit) || (!hasCredit && purchases.cardProduct == nil))
                         }
                         option(title: "月額会員で、すべて読む",
-                               price: purchases.product.map { $0.displayPrice + "／月" } ?? "月額料金を確認中",
+                               price: ReadingPrices.monthly,
                                detail: "会員期間中は、相性の有料項目と2027年以降の時系列が見放題。相談鑑定書は毎月3通です。") {
+                            StorePurchasePrice(product: purchases.product)
                             Button("月額会員になる") { Task { await buyMembership() } }
                                 .buttonStyle(FLPrimaryButtonStyle())
                                 .disabled(!available || busy || purchases.product == nil || purchases.accessState != .standard)
@@ -359,7 +413,7 @@ private struct ReadingUnlockSheet: View {
                         Button("購入状況を確認") { Task { await refresh(sync: true) } }.disabled(busy)
                         Button("承認が見送られた場合") { confirmApprovalReset = true }.font(.caption).disabled(busy)
                     }
-                    if busy { FateInlineLoading(title: "購入状況を確認しています") }
+                    if busy { ProgressView().frame(maxWidth: .infinity).accessibilityLabel("購入手続き中") }
                     if let error {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger).lineSpacing(5)
                         Button("購入状況を確認") { Task { await refresh(sync: true) } }
@@ -369,7 +423,6 @@ private struct ReadingUnlockSheet: View {
                             .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     }
                     if available {
-                        StoreCurrencyNote(currencyCode: purchases.cardProduct?.priceFormatStyle.currencyCode)
                         Button("購入を復元") { Task {
                             await purchases.restore(auth: auth)
                             await refresh()
@@ -391,7 +444,14 @@ private struct ReadingUnlockSheet: View {
             Button("承認を待つ", role: .cancel) {}
         } message: {
             Text("アプリ内の承認待ち表示を解除します。Appleへの申請自体は取り消されません。承認待ちが続いている場合は、再購入せずにお待ちください。")
-        }.tint(FateTheme.ink).task(id: AccountScope(auth)) { await refresh(sync: true) }
+        }.tint(FateTheme.ink).task(id: AccountScope(auth)) {
+            if let initialAccess {
+                state = initialAccess
+                approvalPending = (try? purchases.cardApprovalIsPending(auth: auth)) ?? true
+                if purchases.cardProduct == nil || purchases.product == nil { await purchases.load() }
+                if purchases.accessState == .unknown { await purchases.sync(auth: auth) }
+            } else { await refresh(sync: true) }
+        }
     }
 
     private func finish() {
@@ -457,6 +517,8 @@ private struct ReadingAccessGuard: View {
     @Environment(\.scenePhase) private var scenePhase
     let item: ReadingCard
     let onQuestion: () -> Void
+    var initialGrant: ReadingAccessGrant? = nil
+    @State private var usedInitialGrant = false
     @State private var readable: ReadingCard?
     @State private var locked = false
     @State private var error: String?
@@ -465,6 +527,9 @@ private struct ReadingAccessGuard: View {
         Group {
             if let readable {
                 ReadingDetailContent(item: readable, onQuestion: onQuestion)
+            } else if !usedInitialGrant, let initialGrant,
+                      initialGrant.matches(cardID: item.id, conversationID: conversationID, owner: AccountScope(auth)) {
+                ReadingDetailContent(item: initialGrant.card, onQuestion: onQuestion)
             } else if locked {
                 ReadingUnlockSheet(item: item, conversationID: conversationID) { readable = $0; locked = false }
             } else if let error {
@@ -479,8 +544,14 @@ private struct ReadingAccessGuard: View {
         }
     }
     private func load() async {
-        readable = nil; locked = false; error = nil
         let owner = AccountScope(auth)
+        if !usedInitialGrant {
+            usedInitialGrant = true
+            if let initialGrant, initialGrant.matches(cardID: item.id, conversationID: conversationID, owner: owner) {
+                readable = initialGrant.card; return
+            }
+        }
+        readable = nil; locked = false; error = nil
         guard let conversationID else { error = "鑑定を保存してから、開き直してください。"; return }
         do {
             let result = try await APIClient.shared.readingAccess(target: .init(conversationId: conversationID, cardId: item.id), auth: auth)
@@ -525,7 +596,7 @@ private struct LockedReadingPreview: View {
             }
             RoundedRectangle(cornerRadius: 4).fill(FateTheme.muted.opacity(0.22)).frame(height: 10)
             RoundedRectangle(cornerRadius: 4).fill(FateTheme.muted.opacity(0.22)).frame(maxWidth: 210).frame(height: 10)
-        }.blur(radius: 4).accessibilityHidden(true).allowsHitTesting(false)
+        }.blur(radius: 9).opacity(0.8).accessibilityHidden(true).allowsHitTesting(false)
     }
 }
 
@@ -605,11 +676,12 @@ struct InsightDetailView: View {
 struct FocusReadingView: View {
     let item: ReadingCard
     let onQuestion: () -> Void
+    var initialGrant: ReadingAccessGrant? = nil
     var body: some View {
         if item.paidReadingLabel == nil {
             ReadingDetailContent(item: item, onQuestion: onQuestion)
         } else {
-            ReadingAccessGuard(item: item, onQuestion: onQuestion)
+            ReadingAccessGuard(item: item, onQuestion: onQuestion, initialGrant: initialGrant)
         }
     }
 }

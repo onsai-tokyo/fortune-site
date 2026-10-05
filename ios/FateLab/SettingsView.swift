@@ -79,6 +79,7 @@ struct SettingsView: View {
                 .font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(.title3, weight: .semibold))
+                Text(ReadingPrices.monthly).font(.title2.weight(.semibold))
                 if purchases.isPremium { MembershipActiveBanner() }
                 Label("相性の有料項目・2027年以降の時系列が見放題", systemImage: "lock.open")
                     .font(.subheadline).foregroundStyle(FateTheme.ink)
@@ -87,6 +88,10 @@ struct SettingsView: View {
                     Rectangle().fill(FateTheme.line).frame(width: 0.5, height: 36)
                     membershipStat("10人まで", detail: "相手の登録")
                 }.padding(.vertical, 10)
+                SettingsDivider(edgeInset: 0)
+                Text("必要な鑑定だけ、単品300円（日本価格）").font(.subheadline.weight(.semibold))
+                Text("相性の有料項目は相手1人・1項目ごと。2027年以降の時系列は、あなた・ふたりの各1年分ごと。購入した対象は、月額会員でなくても読み返せます。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4)
                 DisclosureGroup("プランの内容を確認") { MembershipDetailsView().padding(.top, 14) }
                     .font(.subheadline).tint(FateTheme.ink)
                 if !AppConfig.storeKitEnabled {
@@ -112,16 +117,16 @@ struct SettingsView: View {
                         Task { try? await AppStore.showManageSubscriptions(in: scene) }
                     }
                 } else if purchases.accessState == .standard, let session = auth.session {
-                    Text("保存した鑑定書をもとに、気になることをさらに相談できます。")
+                    Text("有料の相性・時系列が見放題。相談鑑定書は初月から毎月3通つきます。")
                         .font(.system(.footnote)).foregroundStyle(FateTheme.muted).lineSpacing(4)
-                    Button(purchases.product.map { "\($0.displayPrice)／月で始める" } ?? "料金を確認しています") {
+                    Button("月額会員になる") {
                         Task { await purchases.purchase(userID: session.user.id, auth: auth) }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(purchases.product == nil || purchases.isWorking || purchases.isSyncing)
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
                 if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
-                StoreCurrencyNote(currencyCode: purchases.product?.priceFormatStyle.currencyCode)
+                StorePurchasePrice(product: purchases.product)
                 if auth.session != nil && AppConfig.storeKitEnabled {
                     SettingsDivider(edgeInset: 0)
                     Button("購入を復元") { Task { await purchases.restore(auth: auth) } }
