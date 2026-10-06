@@ -19,6 +19,7 @@
     "scores:timing-reachability": "tsx src/scripts/measureTimingReachability.ts 100",
     "scores:timing-readiness": "tsx src/scripts/checkTimingRuleReadiness.ts",
     "report:readiness": "tsx src/scripts/checkDeterministicCutover.ts",
+    "test:ai-consent": "tsx --test src/middleware/aiConsent.test.ts ../frontend/src/lib/aiConsent.test.ts",
     "test:apple": "tsx --test src/lib/appleSignIn.test.ts",
     "test:pr15": "tsx --test src/lib/report/pr15Structural.test.ts",
     "test:pr15:e2e": "tsx --test src/lib/report/pr15E2E.test.ts",

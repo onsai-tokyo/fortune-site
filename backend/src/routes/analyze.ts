@@ -1,3 +1,4 @@
+import { requireAIConsent } from '../middleware/aiConsent.js'
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
@@ -5,6 +6,7 @@ import { requirePoints } from '../middleware/points.js'
 import { calcAge } from '../lib/age.js'
 
 export const analyzeRouter = Router()
+analyzeRouter.use((req, res, next) => req.method === 'POST' ? requireAIConsent(req, res, next) : next())
 
 // ─── インメモリキャッシュ（24時間TTL） ────────────────────────────────────
 interface CacheEntry { data: unknown; expiresAt: number }

@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ResultCard } from '../components/ResultCard'
@@ -90,7 +91,7 @@ export function ResultPage() {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-    fetch('/health')
+    consentFetch('/health')
       .then(r => r.json())
       .then((body: { hasApiKey?: boolean }) => {
         if (controller.signal.aborted) return
@@ -105,7 +106,7 @@ export function ResultPage() {
     setReading(''); setIsStreaming(true); setApiError(false); setRateLimitError(false)
     try {
       const { input, shichu, nayin, sanmei, sukuyo } = fd
-      const res = await fetch('/api/fortune', {
+      const res = await consentFetch('/api/fortune', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ birthDate: input.birthDate, birthTime: input.birthTime, gender: input.gender, question: input.question, fortuneData: { input, shichu, nayin, sanmei, sukuyo, partner: fd.partner } }),
         signal,
@@ -138,7 +139,7 @@ export function ResultPage() {
   async function handleSubscriptionToken(payjpToken: string) {
     setIsProcessingSub(true); setSubError('')
     try {
-      const res = await fetch('/api/payment/subscribe-monthly', {
+      const res = await consentFetch('/api/payment/subscribe-monthly', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payjpToken }),
       })

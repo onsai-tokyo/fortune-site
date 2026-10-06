@@ -1,3 +1,4 @@
+import { requireAIConsent, hasAIConsent } from '../middleware/aiConsent.js'
 import {projectSelfGeneration} from '../lib/readingCardAccess.js'
 import { loadTimelineContext, timelineEnabled } from '../lib/timelineContext.js'
 import { parseRelationshipStatus } from '../lib/report/timelineV3/index.js'
@@ -218,7 +219,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     console.info('Self-report pipeline metric', { correlationId: requestId, pipelineTag })
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
-    const writtenReport = selfReportOptions.annualEngine === 'catalog3600' || personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic
+    const writtenReport = selfReportOptions.annualEngine === 'catalog3600' || personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic || !hasAIConsent(req)
       ? finalizeReportProvenance(deterministicReport, (personalityReport || selfReportOptions.annualEngine === 'catalog3600') ? deterministicReport.generatorVersion! : 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
@@ -281,7 +282,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
 
 // 質問詳細回答（¥500 決済済みトークン必須）
 // POST /api/preview/question
-previewRouter.post('/question', questionLimiter, async (req, res) => {
+previewRouter.post('/question', requireAIConsent, questionLimiter, async (req, res) => {
   try {
     const { question, calculatedData, questionToken, birthDate, gender } = req.body as {
       question?: string

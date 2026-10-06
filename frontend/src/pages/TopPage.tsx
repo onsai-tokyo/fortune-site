@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useRef, useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PayjpModal } from '../components/PayjpModal'
@@ -281,7 +282,7 @@ export function TopPage() {
     const plan = SUBSCRIPTION_PLANS[showSubModal]
     setIsProcessingSub(true); setSubError('')
     try {
-      const res = await fetch(plan.endpoint, {
+      const res = await consentFetch(plan.endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -362,7 +363,7 @@ export function TopPage() {
     let newCalcData: FortuneCalcData
     try {
       newCalcData = await calculatePreview(birthDate,birthTime,form.birthplace,form.gender,async(path,body)=>{
-        const response=await fetch(path,{method:'POST',headers:readingHeaders,body:JSON.stringify(body)})
+        const response=await consentFetch(path,{method:'POST',headers:readingHeaders,body:JSON.stringify(body)})
         if(!response.ok)throw new Error('占術データの計算に失敗しました')
         return response.json()
       })
@@ -385,7 +386,7 @@ export function TopPage() {
     setIsStreaming(true); setPreviewError(''); setPreviewContent('')
 
     try {
-      const res = await fetch('/api/preview/generate?format=json', {
+      const res = await consentFetch('/api/preview/generate?format=json', {
         method: 'POST',
         headers: readingHeaders,
         body: JSON.stringify({
@@ -449,7 +450,7 @@ export function TopPage() {
   async function handleQuestionPayment(payjpToken: string) {
     setIsProcessingQPayment(true); setQPaymentError('')
     try {
-      const res = await fetch('/api/payment/charge-question', {
+      const res = await consentFetch('/api/payment/charge-question', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -474,7 +475,7 @@ export function TopPage() {
     setIsAnswering(true); setQuestionAnswer('')
     const birthDate = `${form.year}-${String(form.month).padStart(2, '0')}-${String(form.day).padStart(2, '0')}`
     try {
-      const res = await fetch('/api/preview/question', {
+      const res = await consentFetch('/api/preview/question', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: form.question, calculatedData: calcData,

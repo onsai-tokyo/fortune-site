@@ -17,6 +17,8 @@ struct ReadingChatView: View {
     @State private var errorMessage: String?
     @State private var conversationMissing = false
     @State private var showPaywall = false
+    @State private var showAIConsent = false
+    @State private var consentOwner: AccountScope?
     @State private var showSourceReport = false
     @State private var followUpSuggestions: [String] = []
     @State private var didLoad = false
@@ -166,6 +168,13 @@ struct ReadingChatView: View {
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { showSourceReport = false } } }
             }
         }
+        .sheet(isPresented: $showAIConsent) {
+            AISharingConsentView(isBook: false, onAgree: {
+                showAIConsent = false
+                guard consentOwner?.isCurrent(auth) == true else { return }
+                streamTask = Task { await send(consentGranted: true) }
+            }, onCancel: { showAIConsent = false })
+        }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(draftQuestion: input) {
                 Task { await loadStatus(); if status?.premium == true { showPaywall = false } }
@@ -263,11 +272,15 @@ struct ReadingChatView: View {
         } catch { if owner.isCurrent(auth) { status = nil; handleChatError(error) } }
     }
 
-    private func send() async {
+    private func send(consentGranted: Bool = false) async {
         let owner = AccountScope(auth)
         guard auth.session != nil else { return }
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty, !isWorking else { return }
+        guard consentGranted else {
+            consentOwner = owner; showAIConsent = true
+            return
+        }
         let needsNewThread = activeConversationID == conversationID && detail?.conversation.kind != "chat" && messages.isEmpty
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true
@@ -286,7 +299,7 @@ struct ReadingChatView: View {
                 isSaved = true
             }
             var didFinish = false
-            for try await event in api.askStream(conversationID: activeConversationID, question: question, auth: auth) {
+            for try await event in api.askStream(conversationID: activeConversationID, question: question, auth: auth, aiConsentVersion: AISharingConsent.version) {
                 try owner.check(auth)
                 switch event {
                 case .delta(let text):

@@ -33,6 +33,7 @@
 		9945F518620BD510C268A4FA /* PendingQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 861115843F83DE337B9C1BAA /* PendingQuestion.swift */; };
 		9CD8CB80D084C6FABE7C4C4A /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */; };
 		AAE623D67377E5FFCB1F7D9B /* PendingReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF982C58C8DAB600EF68265 /* PendingReport.swift */; };
+		B3BFAD562C193EC08A25170A /* AISharingConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A309608ECD892B34BD9A1BB0 /* AISharingConsentView.swift */; };
 		BE870009695654155BD735DB /* AIBookComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1005DB3C587E218A788A2396 /* AIBookComposeView.swift */; };
 		BFE6F24BAB3DD56D2B551BBE /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD011C8691551175BE93F6B /* HomeView.swift */; };
 		C16DA413E4EC602441255930 /* PartnerProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */; };
@@ -103,6 +104,7 @@
 		901C0851F477A5DBCDCABAA6 /* TabNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabNavigationTests.swift; sourceTree = "<group>"; };
 		96A6215BD9CC8E89991688F6 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9957667F377DC5836B675311 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		A309608ECD892B34BD9A1BB0 /* AISharingConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISharingConsentView.swift; sourceTree = "<group>"; };
 		A32F5F9FE45A2BE13FBC3AD8 /* FateLabTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FateLabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5BD8877484F57F705C1C0A0 /* AIBook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIBook.swift; sourceTree = "<group>"; };
 		B804F5ACC9F25B11BE95FAF4 /* PurchaseDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseDelivery.swift; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 				B5BD8877484F57F705C1C0A0 /* AIBook.swift */,
 				1005DB3C587E218A788A2396 /* AIBookComposeView.swift */,
 				DE9D4B7CE6915487A8835C9F /* AIBookDetailView.swift */,
+				A309608ECD892B34BD9A1BB0 /* AISharingConsentView.swift */,
 				34376F558AC94ECC52F91C17 /* APIClient.swift */,
 				9957667F377DC5836B675311 /* AppConfig.swift */,
 				7D31349E6A06DA0C0FFD9B29 /* Assets.xcassets */,
@@ -321,6 +324,7 @@
 				03BC5D97A33BECA4DFAA33BF /* AIBook.swift in Sources */,
 				BE870009695654155BD735DB /* AIBookComposeView.swift in Sources */,
 				DCD8CA104FF4FC899B1DA034 /* AIBookDetailView.swift in Sources */,
+				B3BFAD562C193EC08A25170A /* AISharingConsentView.swift in Sources */,
 				1D747F7AEBCC0FDCEC6859B5 /* APIClient.swift in Sources */,
 				5644B45B6B5421E8A2005927 /* AccountScope.swift in Sources */,
 				CB425DF427A92494AA4877FB /* AppConfig.swift in Sources */,
@@ -450,7 +454,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 106;
+				CURRENT_PROJECT_VERSION = 107;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -520,7 +524,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 106;
+				CURRENT_PROJECT_VERSION = 107;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -590,7 +594,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 106;
+				CURRENT_PROJECT_VERSION = 107;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -758,7 +762,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 106;
+				CURRENT_PROJECT_VERSION = 107;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;

@@ -1,3 +1,4 @@
+import { requireAIConsent } from '../middleware/aiConsent.js'
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import PDFDocument from 'pdfkit'
@@ -5,6 +6,7 @@ import { verifyPaidToken } from './payment.js'
 import { calcAge } from '../lib/age.js'
 
 export const reportRouter = Router()
+reportRouter.use((req, res, next) => req.method === 'POST' ? requireAIConsent(req, res, next) : next())
 
 function getAnthropicClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

@@ -1,3 +1,4 @@
+import { requireAIConsent } from '../middleware/aiConsent.js'
 import { Router } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth, AuthRequest } from '../middleware/auth.js'
@@ -6,6 +7,7 @@ import { conciseConversationInstruction } from '../lib/conversationPrompt.js'
 import { calcAge } from '../lib/age.js'
 
 export const chatRouter = Router()
+chatRouter.use((req, res, next) => req.method === 'POST' ? requireAIConsent(req, res, next) : next())
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

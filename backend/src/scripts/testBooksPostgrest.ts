@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import { AI_CONSENT_VERSION } from '../middleware/aiConsent.js'
 import { aiBooksRouter } from '../routes/aiBooks.js'
 import { grantVerifiedBookPurchase, BOOK_PRODUCT } from '../lib/aiBooks.js'
 
@@ -43,7 +44,7 @@ const userToken=(id:string)=>jwt.sign({role:'authenticated',sub:id,aud:'authenti
 const app=express();app.use(express.json());app.use('/api/books',aiBooksRouter)
 const api=app.listen(0,'127.0.0.1');await new Promise<void>(r=>api.once('listening',r))
 const address=api.address();assert.ok(address&&typeof address!=='string');const base=`http://127.0.0.1:${address.port}/api/books`
-async function call(path='',method='GET',body?:unknown,status=200,user=owner){return result(await nativeFetch(base+path,{method,headers:{authorization:'Bearer '+userToken(user),'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})}),status)}
+async function call(path='',method='GET',body?:unknown,status=200,user=owner){return result(await nativeFetch(base+path,{method,headers:{authorization:'Bearer '+userToken(user),'Content-Type':'application/json',...(method==='POST'&&path===''?{'X-FateLab-AI-Consent':AI_CONSENT_VERSION}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})}),status)}
 function pass(s:string){console.log('PASS BOOK HTTP/DB/WORKER:',s)}
 async function worker(){
   const env:NodeJS.ProcessEnv={...process.env,SUPABASE_URL:origin,SUPABASE_SERVICE_KEY:token('service_role'),ANTHROPIC_API_KEY:'synthetic-key',ANTHROPIC_BASE_URL:origin,AI_BOOK_MODEL:'synthetic-local-test',DOTENV_CONFIG_PATH:'/nonexistent-synthetic-env'}
