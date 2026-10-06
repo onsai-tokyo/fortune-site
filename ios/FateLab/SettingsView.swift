@@ -79,7 +79,7 @@ struct SettingsView: View {
                 .font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
                 Text("FATE LAB 継続鑑定").font(.system(.title3, weight: .semibold))
-                Text(ReadingPrices.monthly).font(.title2.weight(.semibold))
+                Text(ReadingPrices.monthly).font(.title2.weight(.medium))
                 if purchases.isPremium { MembershipActiveBanner() }
                 Label("相性の有料項目・2027年以降の時系列が見放題", systemImage: "lock.open")
                     .font(.subheadline).foregroundStyle(FateTheme.ink)
@@ -87,7 +87,7 @@ struct SettingsView: View {
                     membershipStat("毎月3通", detail: "相談の鑑定書")
                     Rectangle().fill(FateTheme.line).frame(width: 0.5, height: 36)
                     membershipStat("10人まで", detail: "相手の登録")
-                }.padding(.vertical, 10)
+                }.padding(.vertical, 18).background(FateTheme.canvas, in: RoundedRectangle(cornerRadius: 14))
                 SettingsDivider(edgeInset: 0)
                 Text("必要な鑑定だけ、単品300円（日本価格）").font(.subheadline.weight(.semibold))
                 Text("相性の有料項目は相手1人・1項目ごと。2027年以降の時系列は、あなた・ふたりの各1年分ごと。購入した対象は、月額会員でなくても読み返せます。")
@@ -133,7 +133,7 @@ struct SettingsView: View {
                         .frame(minHeight: 56).foregroundStyle(FateTheme.ink)
                 }
             }
-            .padding(18)
+            .padding(22)
             .background(FateTheme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5))
@@ -145,7 +145,7 @@ private struct SettingsGroup<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title).font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(spacing: 0) { content }
                 .background(FateTheme.card)

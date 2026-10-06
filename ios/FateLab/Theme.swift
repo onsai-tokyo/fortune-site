@@ -9,6 +9,11 @@ enum FateTheme {
     static let surface = Color(red: 0.936, green: 0.932, blue: 0.916)
     static let card = Color.white
     static let cream = Color(red: 0.963, green: 0.944, blue: 0.893)
+    static let rose = Color(red: 0.59, green: 0.37, blue: 0.42)
+    static let slate = Color(red: 0.35, green: 0.44, blue: 0.55)
+    static let moss = Color(red: 0.40, green: 0.49, blue: 0.39)
+    static let ochre = Color(red: 0.58, green: 0.44, blue: 0.29)
+    static let dusk = Color(red: 0.48, green: 0.41, blue: 0.57)
     static let danger = Color(red: 0.706, green: 0.137, blue: 0.094)
 }
 
@@ -23,9 +28,9 @@ enum FateType {
 }
 
 enum FateSpacing {
-    static let screenH: CGFloat = 20
+    static let screenH: CGFloat = 24
     static let sectionV: CGFloat = 28
-    static let cardPadding: CGFloat = 18
+    static let cardPadding: CGFloat = 20
     static let rowV: CGFloat = 16
     static let compact: CGFloat = 8
     static let regular: CGFloat = 12
@@ -52,7 +57,7 @@ struct FLPrimaryButtonStyle: ButtonStyle {
             .multilineTextAlignment(.center).padding(.horizontal, 20).padding(.vertical, 14)
             .frame(maxWidth: .infinity, minHeight: 52)
             .foregroundStyle(FateTheme.canvas).background(FateTheme.ink, in: RoundedRectangle(cornerRadius: FLRadius.button, style: .continuous))
-            .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.72 : 1)
+            .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.82 : 1)
     }
 }
 struct FLSecondaryButtonStyle: ButtonStyle {
@@ -61,8 +66,8 @@ struct FLSecondaryButtonStyle: ButtonStyle {
         configuration.label.font(FateType.button)
             .multilineTextAlignment(.center).padding(.horizontal, 16).padding(.vertical, 13)
             .frame(maxWidth: .infinity, minHeight: 52)
-            .foregroundStyle(FateTheme.ink).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line, lineWidth: 0.7))
+            .foregroundStyle(FateTheme.ink).background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.button))
+            .overlay(RoundedRectangle(cornerRadius: FLRadius.button).stroke(FateTheme.line, lineWidth: 0.7))
             .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.65 : 1)
     }
 }
@@ -180,7 +185,7 @@ struct FateLoadingView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Circle().fill(FateTheme.card.opacity(0.75)).frame(width: 104, height: 104)
+                Circle().fill(LinearGradient(colors: [FateTheme.card, FateTheme.cream.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 104, height: 104)
                     .scaleEffect(breathing && !reduceMotion ? 1.06 : 1)
                 Circle().stroke(FateTheme.line.opacity(0.7), lineWidth: 0.5).frame(width: 122, height: 122)
                 FateMark(size: 54).opacity(0.75)
@@ -269,7 +274,7 @@ func errorStateKind(_ error: Error) -> FLErrorState.Kind {
     if error is APIError { return .dataFetch }
     return .system
 }
-extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
+extension View { func userFacingMessage(_ error: Error) -> String? { userFacingErrorMessage(error) }; func fateScreenTitle(_ title: String) -> some View { toolbar { ToolbarItem(placement: .principal) { Text(title).font(.system(.body, weight: .medium)).lineLimit(1) } }.navigationBarTitleDisplayMode(.inline).toolbarBackground(FateTheme.canvas, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar) } }
 
 /// Fixed brand header shared by the five tab roots.
 struct FateAppHeader: View {
@@ -438,15 +443,15 @@ struct FateEditorialHero: View {
     let title: String
     let subtitle: String
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(eyebrow).font(.caption2.weight(.medium)).tracking(2.5).foregroundStyle(FateTheme.muted)
-            Text(title).font(FateType.screenTitle).lineSpacing(5).foregroundStyle(FateTheme.ink)
-            Text(subtitle).font(.subheadline).lineSpacing(5).foregroundStyle(FateTheme.muted)
-        }.padding(24).padding(.bottom, 44).frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 12) {
+            Text(eyebrow).font(.caption2.weight(.medium)).tracking(2.5).foregroundStyle(FateTheme.body)
+            Text(title).font(FateType.screenTitle).lineSpacing(6).fixedSize(horizontal: false, vertical: true).foregroundStyle(FateTheme.ink)
+            Text(subtitle).font(.subheadline).lineSpacing(6).foregroundStyle(FateTheme.body).fixedSize(horizontal: false, vertical: true)
+        }.padding(24).padding(.top, 4).padding(.bottom, 36).frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 FateArtwork(name: "QuietMountains")
-                    .overlay(LinearGradient(colors: [FateTheme.cream.opacity(0.97), FateTheme.cream.opacity(0.72), .clear], startPoint: .top, endPoint: .bottom))
-            }.clipShape(RoundedRectangle(cornerRadius: 22))
+                    .overlay(LinearGradient(colors: [FateTheme.canvas.opacity(0.98), FateTheme.cream.opacity(0.84), FateTheme.cream.opacity(0.18)], startPoint: .top, endPoint: .bottom))
+            }.clipShape(RoundedRectangle(cornerRadius: FLRadius.card, style: .continuous))
     }
 }
 

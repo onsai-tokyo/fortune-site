@@ -195,7 +195,7 @@ struct PartnerProfilesView: View {
     private func profileTile(title: String, subtitle: String, icon: String, isEmpty: Bool) -> some View {
         VStack(spacing: 8) {
             ZStack {
-                Circle().fill(Color(red: 0.937, green: 0.914, blue: 0.867))
+                Circle().fill(LinearGradient(colors: [FateTheme.cream, FateTheme.surface], startPoint: .topLeading, endPoint: .bottomTrailing))
                 Circle().stroke(FateTheme.line, lineWidth: 0.5)
                 Image(systemName: icon).font(.system(size: 26, weight: .light))
                     .foregroundStyle(isEmpty ? FateTheme.ink : FateTheme.muted)
@@ -235,7 +235,7 @@ struct PartnerProfilesView: View {
                         }.swipeActions { Button("削除", role: .destructive) { Task { await delete(partner) } } }
                     }
                 }
-            }.task { await purchases.sync(auth: auth); await load() }.navigationTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
+            }.task { await purchases.sync(auth: auth); await load() }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
         }
     }
 
