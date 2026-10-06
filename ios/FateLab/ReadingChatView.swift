@@ -387,7 +387,7 @@ struct PaywallSheet: View {
                         } else if purchases.accessState == .unknown || purchases.isSyncing {
                             Text("購入状況を確認しています。再購入せずお待ちください。").font(.callout)
                             Button("購入状況を再確認") { Task { await purchases.sync(auth: auth) } }.disabled(purchases.isSyncing)
-                        } else if purchases.product == nil, purchases.errorMessage != nil {
+                        } else if !purchases.hasStoreKitEntitlement, purchases.product == nil, purchases.errorMessage != nil {
                             ReportCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("商品情報を取得できませんでした。通信環境をご確認のうえ、もう一度お試しください。")
@@ -395,9 +395,9 @@ struct PaywallSheet: View {
                                 }
                             }
                         } else {
-                            Button("継続鑑定を始める") {
+                            Button(purchases.membershipActionTitle) {
                                 Task { await purchases.purchase(userID: session.user.id, auth: auth); onRefresh() }
-                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(purchases.product == nil || purchases.isWorking || purchases.isSyncing || purchases.accessState != .standard)
+                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership)
                         }
                         Button("購入を復元") {
                             Task { await purchases.restore(auth: auth); onRefresh() }

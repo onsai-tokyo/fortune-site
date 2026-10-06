@@ -26,6 +26,11 @@ final class PurchaseManager: ObservableObject {
     private let api: APIClient
     private let storeKitEnabled: Bool
     var isPremium: Bool { accessState == .premium }
+    var membershipActionTitle: String { hasStoreKitEntitlement ? "購入を復元して利用する" : "月額会員になる" }
+    var needsMembershipRestore: Bool { hasStoreKitEntitlement && accessState == .standard }
+    var canStartMembership: Bool {
+        accessState == .standard && !isWorking && !isSyncing && (hasStoreKitEntitlement || product != nil)
+    }
 
     /// Do not carry purchase UI state from one FATE LAB account to another.
     func resetForAccountChange() {
@@ -101,7 +106,11 @@ final class PurchaseManager: ObservableObject {
         let owner = bind(auth)
         guard owner.userID == userID, !isWorking else { return }
         guard !isSyncing else { errorMessage = "購入履歴を確認しています。確認が終わってからお試しください。"; return }
-        guard !hasStoreKitEntitlement else { errorMessage = "Appleの会員資格を確認しました。「購入を復元」で利用枠を反映してください。"; return }
+        if hasStoreKitEntitlement {
+            // Explicit membership action: reuse the verified Apple purchase instead of charging again.
+            await restore(auth: auth)
+            return
+        }
         guard accessState == .standard else { errorMessage = "購入状況を確認してからお試しください。"; return }
         guard let product else { errorMessage = "料金情報を準備中です"; return }
         isWorking = true; errorMessage = nil
@@ -228,7 +237,7 @@ final class PurchaseManager: ObservableObject {
             var restored = 0
             for await result in Transaction.currentEntitlements {
                 try check(owner, auth)
-                guard let transaction = try? verified(result), transaction.productID == AppConfig.subscriptionProductID else { continue }
+                guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }
                 if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner, allowTransfer: true) { restored += 1 }
             }
             await syncAfterDelivery(auth: auth)
@@ -361,9 +370,8 @@ final class PurchaseManager: ObservableObject {
             guard syncID == operation else { return }
             accessState = status.isPremium ? .premium : .standard
             consecutiveSyncFailures = 0
-            errorMessage = hasStoreKitEntitlement && accessState == .standard
-                ? "このApple Accountには継続鑑定の購入履歴があります。引き継ぐ場合は「購入を復元」を押してください。"
-                : nil
+            // An existing Apple entitlement is a restore option, not an error.
+            errorMessage = nil
         } catch {
             guard owner.isCurrent(auth), boundScope == owner, syncID == operation else { return }
             accessState = .unknown

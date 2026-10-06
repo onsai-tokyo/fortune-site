@@ -401,9 +401,9 @@ private struct ReadingUnlockSheet: View {
                                price: ReadingPrices.monthly,
                                detail: "会員期間中は、相性の有料項目と2027年以降の時系列が見放題。相談鑑定書は毎月3通です。") {
                             StorePurchasePrice(product: purchases.product)
-                            Button("月額会員になる") { Task { await buyMembership() } }
+                            Button(purchases.membershipActionTitle) { Task { await buyMembership() } }
                                 .buttonStyle(FLPrimaryButtonStyle())
-                                .disabled(!available || busy || purchases.product == nil || purchases.accessState != .standard)
+                                .disabled(!available || busy || !purchases.canStartMembership)
                             Text("月額会員は自動更新です。解約はApp Storeのサブスクリプション管理から行えます。")
                                 .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(4)
                         }
