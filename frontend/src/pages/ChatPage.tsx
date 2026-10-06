@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -186,7 +187,7 @@ export default function ChatPage() {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await consentFetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

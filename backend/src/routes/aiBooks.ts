@@ -1,3 +1,4 @@
+import { requireAIConsent } from '../middleware/aiConsent.js'
 import {readingCardProjector} from '../lib/readingCardAccess.js'
 import {cardPurchasesEnabled} from '../lib/readingCardPurchases.js'
 import {storedReportFromCalculatedData as savedAccessReport} from '../lib/report/storedReport.js'
@@ -102,7 +103,7 @@ async function prepare(req:AuthRequest) {
 aiBooksRouter.post('/validate',async(req:AuthRequest,res)=>{
   try { if(!(await settings()).enabled) throw new BookError('BOOK_DISABLED',503,'AI鑑定書は準備中です。'); await prepare(req); res.json({valid:true}) } catch(e) {fail(res,e)}
 })
-aiBooksRouter.post('/',async(req:AuthRequest,res)=>{
+aiBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
   try {
     if(!uuidPattern.test(req.body?.operationId??'')) throw new BookError('BOOK_INPUT',422,'受付番号が必要です。')
     // Read retries before source lookup: source deletion must not strand an accepted order.

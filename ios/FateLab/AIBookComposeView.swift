@@ -35,6 +35,9 @@ struct AIBookComposeView: View {
 
     @State private var loadedOwner: AccountScope?
     @State private var showPlans = false
+    @State private var showAIConsent = false
+    @State private var consentOwner: AccountScope?
+    @State private var consentPending: PendingAIBook?
     @FocusState private var editingQuestion: Bool
     private var characters: Int { question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count }
 
@@ -181,6 +184,14 @@ struct AIBookComposeView: View {
             if !isTab { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } }
             ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("入力を終える") { editingQuestion = false } }
         }
+        .sheet(isPresented: $showAIConsent) {
+            AISharingConsentView(isBook: true, onAgree: {
+                showAIConsent = false
+                guard consentOwner?.isCurrent(auth) == true else { return }
+                let retry = consentPending
+                Task { await submit(existing: retry, consentGranted: true) }
+            }, onCancel: { showAIConsent = false })
+        }
         .sheet(isPresented: $showPlans) { NavigationStack { purchaseOptions } }
         .task(id: accepted?.id) { await trackAccepted() }
         .task(id: AccountScope(auth)) {
@@ -318,8 +329,12 @@ struct AIBookComposeView: View {
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
     }
 
-    private func submit(existing: PendingAIBook? = nil) async {
+    private func submit(existing: PendingAIBook? = nil, consentGranted: Bool = false) async {
         guard !working else { return }
+        guard consentGranted else {
+            consentOwner = AccountScope(auth); consentPending = existing; showAIConsent = true
+            return
+        }
         let owner = AccountScope(auth), key = pendingKey
         working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
         do {
@@ -332,7 +347,7 @@ struct AIBookComposeView: View {
                 try KeychainStore.save(JSONEncoder().encode(order), account: key)
                 pending = order
             }
-            let response = try await APIClient.shared.bookCall(AIBookResponse.self, path: "", method: "POST", json: order.body, auth: auth)
+            let response = try await APIClient.shared.bookCall(AIBookResponse.self, path: "", method: "POST", json: order.body, auth: auth, aiConsentVersion: AISharingConsent.version)
             try owner.check(auth)
             guard let book = response.book else { throw APIError.invalidResponse }
             // Remove only after an authoritative server acknowledgement.

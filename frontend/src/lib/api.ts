@@ -1,3 +1,4 @@
+import { consentFetch } from './aiConsent'
 import { supabase } from './supabase'
 import type { FortuneData, FortuneInput, PartnerData, Pillar, SanmeiResult } from './types'
 import { getAnimalFortune, getArchetype, getSukuyoDetail } from './archetype'
@@ -12,7 +13,7 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`
   }
-  return fetch(url, { ...options, headers })
+  return consentFetch(url, { ...options, headers })
 }
 
 interface DivinationResponse {

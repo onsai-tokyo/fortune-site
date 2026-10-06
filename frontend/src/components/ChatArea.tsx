@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, FortuneData } from '../lib/types'
 import { PayjpModal } from './PayjpModal'
@@ -49,7 +50,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
     const paidToken = localStorage.getItem(TOKEN_KEY) ?? undefined
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await consentFetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +125,7 @@ export function ChatArea({ fortuneData, initialReading, sessionData }: Props) {
       sessionStorage.setItem('fortune_session', JSON.stringify(sessionData))
       sessionStorage.setItem('fortune_reading', initialReading)
 
-      const res = await fetch('/api/payment/subscribe', {
+      const res = await consentFetch('/api/payment/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payjpToken }),

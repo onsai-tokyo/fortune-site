@@ -247,11 +247,13 @@ struct APIClient {
         return try JSONDecoder().decode(ReadingStatus.self, from: raw)
     }
 
-    func bookCall<T: Decodable>(_ type: T.Type, path: String, method: String = "GET", json: Any? = nil, auth: AuthStore) async throws -> T {
+    func bookCall<T: Decodable>(_ type: T.Type, path: String, method: String = "GET", json: Any? = nil, auth: AuthStore, aiConsentVersion: String? = nil) async throws -> T {
         let owner = AccountScope(auth)
         let token = try await auth.validAccessToken()
         try owner.check(auth)
-        let raw = try await data(for: request(path: "/api/books" + path, method: method, token: token, json: json), auth: auth)
+        var call = try request(path: "/api/books" + path, method: method, token: token, json: json)
+        if let aiConsentVersion { call.setValue(aiConsentVersion, forHTTPHeaderField: "X-FateLab-AI-Consent") }
+        let raw = try await data(for: call, auth: auth)
         try owner.check(auth)
         return try JSONDecoder().decode(type, from: raw)
     }
@@ -698,7 +700,7 @@ struct APIClient {
         return status.state == "completed" || status.state == "deleted" ? nil : pending.question
     }
 
-    func askStream(conversationID: UUID, question: String, auth: AuthStore) -> AsyncThrowingStream<ChatEvent, Error> {
+    func askStream(conversationID: UUID, question: String, auth: AuthStore, aiConsentVersion: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
         let owner = AccountScope(auth)
         let question = question.replacingOccurrences(of: "\r\n", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return AsyncThrowingStream { continuation in
@@ -735,6 +737,7 @@ struct APIClient {
                     var call = try request(path: "/api/reading/conversations/\(conversationID.uuidString)/questions",
                                            method: "POST", token: token, json: ["question": question])
                     call.setValue(operation.operationID.uuidString, forHTTPHeaderField: "Idempotency-Key")
+                    if let aiConsentVersion { call.setValue(aiConsentVersion, forHTTPHeaderField: "X-FateLab-AI-Consent") }
                     let bytes = try await eventBytes(for: call, auth: auth)
                     var parser = ServerEventParser()
                     var hasText = false, hasMetadata = false

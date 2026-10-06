@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -18,11 +19,11 @@ const READING_API_FALLBACK = 'https://fortune-site-iuzo.onrender.com'
 async function fetchReadingApi(path: string, init?: RequestInit) {
   let primary: Response | null = null
   try {
-    primary = await fetch(path, init)
+    primary = await consentFetch(path, init)
     if (primary.status < 500 || (init?.method ?? 'GET') !== 'GET') return primary
   } catch { /* API中継に失敗した場合は直接接続へ切り替える */ }
   if ((init?.method ?? 'GET') !== 'GET') throw new Error('送信結果を確認できませんでした。保存状況を確認してから再試行してください')
-  try { return await fetch(`${READING_API_FALLBACK}${path}`, init) }
+  try { return await consentFetch(`${READING_API_FALLBACK}${path}`, init) }
   catch { if (primary) return primary; throw new Error('鑑定サーバーへ接続できませんでした') }
 }
 
@@ -154,7 +155,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
     return () => { document.body.style.overflow = '' }
   }, [mobileNavOpen])
   useEffect(() => {
-    fetch('/api/stripe/plan').then(async response => response.ok ? response.json() : null).then(plan => {
+    consentFetch('/api/stripe/plan').then(async response => response.ok ? response.json() : null).then(plan => {
       if (plan?.unitAmount != null) setMonthlyPrice(`${Number(plan.unitAmount).toLocaleString('ja-JP')}円／月`)
     }).catch(() => {})
   }, [])
@@ -389,7 +390,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
   async function renameConversation(item: HistoryItem) {
     const title = window.prompt('鑑定履歴の名前', item.title)?.trim()
     if (!title || title === item.title) return
-    const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ title }) })
+    const response = await consentFetch(`/api/reading/conversations/${item.id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ title }) })
     const body = await response.json()
     if (!response.ok) { setError(body.error ?? '名前を変更できませんでした'); return }
     setHistory(prev => prev.map(entry => entry.id === item.id ? { ...entry, title: body.conversation.title, updated_at: body.conversation.updated_at } : entry))
@@ -404,7 +405,7 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
       if(!navigator.locks)throw new Error('このブラウザでは削除状態を安全に同期できません')
       await navigator.locks.request(generationKey(owner),async()=>{
         if(!current())return
-        const response = await fetch(`/api/reading/conversations/${item.id}`, { method: 'DELETE', headers: authHeaders() })
+        const response = await consentFetch(`/api/reading/conversations/${item.id}`, { method: 'DELETE', headers: authHeaders() })
         if(!current())return
         if (!response.ok && response.status!==404) { const body = await response.json().catch(() => ({})); throw new Error(body.error ?? '削除できませんでした') }
         invalidateDeletedReading(localStorage,owner,item.id)
@@ -419,12 +420,12 @@ export default function ReadingPage({ mode = 'start', identifier = 'token' }: { 
   async function checkout() {
     if (input.trim()) localStorage.setItem('fate_pending_question', input.trim())
     track('checkout_started', { conversation_id: conversationId })
-    const response = await fetch('/api/stripe/checkout', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ conversationId }) })
+    const response = await consentFetch('/api/stripe/checkout', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ conversationId }) })
     const body = await response.json(); if (body.url) location.href = body.url; else setError(body.error ?? '決済ページを開けませんでした')
   }
 
   async function openPortal() {
-    const response = await fetch('/api/stripe/portal', { method: 'POST', headers: authHeaders(), body: '{}' })
+    const response = await consentFetch('/api/stripe/portal', { method: 'POST', headers: authHeaders(), body: '{}' })
     const body = await response.json(); if (body.url) location.href = body.url; else setError(body.error ?? '契約管理画面を開けませんでした')
   }
 

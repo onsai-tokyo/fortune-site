@@ -1,3 +1,4 @@
+import { requireAIConsent } from '../middleware/aiConsent.js'
 import {restoreGeneratedSnapshot} from '../lib/readingCardAccess.js'
 import {readingCardProjector,projectedReport,publicReadingConversation} from '../lib/readingCardAccess.js'
 import {cardPurchasesEnabled} from '../lib/readingCardPurchases.js'
@@ -377,7 +378,7 @@ readingRouter.get('/conversations/:id/questions/:opId', requireAuth, async (req:
   } catch {res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'質問の保存状況を確認できませんでした'})}
 })
 
-readingRouter.post('/conversations/:id/questions', requireAuth, questionLimiter, async (req: AuthRequest, res) => {
+readingRouter.post('/conversations/:id/questions', requireAuth, requireAIConsent, questionLimiter, async (req: AuthRequest, res) => {
   const db = getSupabaseUser(req.accessToken!)
   const operationId = req.header('Idempotency-Key')
   const workerId = randomUUID()

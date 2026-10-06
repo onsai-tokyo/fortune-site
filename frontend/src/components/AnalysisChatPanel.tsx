@@ -1,3 +1,4 @@
+import { consentFetch } from '../lib/aiConsent'
 import { useState, useRef, useEffect } from 'react'
 import type { FortuneData } from '../lib/types'
 import { useAuth } from '../contexts/AuthContext'
@@ -69,7 +70,7 @@ export function AnalysisChatPanel({ fortuneData, featureLabel, analysisId }: Pro
     const { input: fi, shichu, nayin, sanmei, sukuyo, lifePathNumber, honmeiName, archetype, sukuyoDetail } = fortuneData
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await consentFetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
