@@ -148,7 +148,7 @@ struct TimelineConsentView: View {
                 if working { ProgressView() }
                 if let error { Text(error).foregroundStyle(FateTheme.danger); Button("再読み込み") { Task { await load() } } }
             }
-        }.navigationTitle("精度向上への協力").task(id: AccountScope(auth)) { await load() }
+        }.scrollContentBackground(.hidden).background(FateTheme.canvas).tint(FateTheme.ink).fateScreenTitle("精度向上への協力").task(id: AccountScope(auth)) { await load() }
     }
     private func load() async {
         do { consented = try await APIClient.shared.timelineCall(TimelineConsentResponse.self, path: "/consent", auth: auth).consented; loaded = true; error = nil }

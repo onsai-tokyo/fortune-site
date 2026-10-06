@@ -61,7 +61,7 @@ struct AuthView: View {
         GeometryReader { geometry in
         ScrollView {
         VStack(alignment: .center, spacing: 0) {
-            Spacer(minLength: 24); FateMark(size: 72).frame(maxWidth: .infinity); Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(5).frame(maxWidth: .infinity).padding(.top, 22)
+            Spacer(minLength: 24); FateMark(size: 60).padding(26).background(FateTheme.cream.opacity(0.55), in: Circle()).frame(maxWidth: .infinity); Text("FATE LAB").font(.system(size: 12, weight: .medium)).tracking(5).frame(maxWidth: .infinity).padding(.top, 22)
             Spacer().frame(height: 32)
             Text("ログインして、\n鑑定を続きから。").font(.system(.title2, weight: .medium)).lineSpacing(7).multilineTextAlignment(.center).frame(maxWidth: .infinity)
             Text("ログインすると、鑑定結果と対話をいつでも引き継げます。").font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 14)
@@ -82,7 +82,7 @@ struct AuthView: View {
                 }
                 .signInWithAppleButtonStyle(.white).frame(maxWidth: .infinity).frame(height: 44)
                 .frame(height: 52).background(FateTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 14)).disabled(auth.isWorking)
+                .clipShape(RoundedRectangle(cornerRadius: FLRadius.button)).disabled(auth.isWorking)
             }
             VStack(spacing: 2) {
                 Text("アカウントをお持ちでない方").foregroundStyle(FateTheme.muted)
@@ -119,7 +119,7 @@ struct AuthView: View {
                 }
                 .signInWithAppleButtonStyle(.white).frame(maxWidth: .infinity).frame(height: 44)
                 .frame(height: 52).background(FateTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 14)).disabled(auth.isWorking)
+                .clipShape(RoundedRectangle(cornerRadius: FLRadius.button)).disabled(auth.isWorking)
             }
             FLTextLink(title: "ログインへ戻る") { move(to: .landing) }.frame(maxWidth: .infinity)
         }.frame(minHeight: geometry.size.height) }.scrollIndicators(.hidden)
@@ -262,8 +262,8 @@ private struct SocialSignInButtonStyle: ButtonStyle {
         configuration.label.padding(.horizontal, 16).padding(.vertical, 14)
             .frame(maxWidth: .infinity, minHeight: 52)
             .foregroundStyle(FateTheme.ink)
-            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line, lineWidth: 0.7))
+            .background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.button))
+            .overlay(RoundedRectangle(cornerRadius: FLRadius.button).stroke(FateTheme.line, lineWidth: 0.7))
             .opacity(!isEnabled ? 0.4 : configuration.isPressed ? 0.65 : 1)
     }
 }

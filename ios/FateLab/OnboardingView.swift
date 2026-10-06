@@ -4,6 +4,7 @@ struct OnboardingView: View {
     @AppStorage private var storedStep: Int
     @AppStorage private var storedDraft: String
     @AppStorage private var draftVersion: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var step = 1
     @State private var input = BirthInput()
     @State private var acceptedTerms = false
@@ -30,7 +31,7 @@ struct OnboardingView: View {
         .onAppear { restoreDraft() }
         .onChange(of: step) { _, value in storedStep = value }
         .onChange(of: input) { _, _ in saveDraft() }
-        .animation(.easeInOut(duration: 0.22), value: step)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: step)
     }
 
     private var header: some View {

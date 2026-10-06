@@ -198,8 +198,8 @@ struct ReadingChatView: View {
                     if message.content.isEmpty && isWorking { Text("•••").foregroundStyle(FateTheme.muted) }
                     else { Text(styledAnswer(message.content)).font(.system(.body)).lineSpacing(7).foregroundStyle(FateTheme.body) }
                 }
-                .padding(18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 18))
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(FateTheme.line, lineWidth: 0.7))
+                .padding(22).background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.card))
+                .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line, lineWidth: 0.5))
             } else {
                 Text(message.content).font(.system(.subheadline)).foregroundStyle(FateTheme.canvas).padding(.horizontal, 14).padding(.vertical, 11).background(FateTheme.ink).clipShape(RoundedRectangle(cornerRadius: 16))
             }
@@ -443,14 +443,17 @@ struct MembershipDetailsView: View {
     @EnvironmentObject private var auth: AuthStore
     @State private var booksEnabled = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("月額1,980円／単品鑑定300円（日本価格）").font(.headline)
+            VStack(alignment: .leading, spacing: 12) {
             Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
             Label("相性の有料項目と2027年以降の時系列が見放題", systemImage: "lock.open")
             Text("会員期間中は、良好な関係を築くコツ・障害になること・復縁の可能性と、あなた・ふたりの各年の鑑定を読めます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             Text("無料プランは1人まで。登録済みの相手は、会員期間が終わっても残ります。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
+            }.membershipFeature()
+            VStack(alignment: .leading, spacing: 12) {
             Label("相談からつくる鑑定書が、初月から毎月3通", systemImage: "book.closed")
             if !booksEnabled {
                 Text("「鑑定書をつくる」タブで相談を入力し、保存した鑑定をもとに約5,000文字の一冊を作成できます。")
@@ -458,9 +461,12 @@ struct MembershipDetailsView: View {
             }
             Text("会員分はAppleの更新日ごとに付与され、未使用分は繰り越されません。追加の単品購入分に有効期限はありません。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
+            }.membershipFeature()
+            VStack(alignment: .leading, spacing: 12) {
             Label("お届けした鑑定書は、解約後も本棚に", systemImage: "books.vertical")
             Text("鑑定カードの単品購入は、日本価格で1項目・1年分につき300円。単品購入した対象は、会員期間が終わっても読み返せます。相談鑑定書の単品購入とは別の商品です。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
+            }.membershipFeature()
             Text("月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
         }.lineSpacing(5)
@@ -509,5 +515,15 @@ struct MembershipActiveBanner: View {
             Spacer(minLength: 0)
         }.foregroundStyle(.white).padding(18)
             .background(FateTheme.ink, in: RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+private extension View {
+    func membershipFeature() -> some View {
+        font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .background(FateTheme.card.opacity(0.8), in: RoundedRectangle(cornerRadius: FLRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line, lineWidth: 0.5))
     }
 }

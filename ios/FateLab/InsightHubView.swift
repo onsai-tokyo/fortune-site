@@ -166,9 +166,9 @@ struct ChartSectionView: View {
             if let list = section.list { ChartListView(items: list) }
             if let note = section.note { Text(note).font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(4) }
         }
-        .padding(18).background(FateTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(FateTheme.line))
+        .padding(20).background(FateTheme.card)
+        .clipShape(RoundedRectangle(cornerRadius: FLRadius.card))
+        .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(FateTheme.line, lineWidth: 0.5))
     }
 }
 
@@ -208,9 +208,10 @@ private struct ChartBarsView: View {
 }
 
 private struct ChartGridView: View {
+    @Environment(\.dynamicTypeSize) private var textSize
     let items: [ChartGridItem]
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: textSize.isAccessibilitySize ? 1 : 2), spacing: 10) {
             ForEach(items) { item in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(item.position).font(.caption).foregroundStyle(FateTheme.muted)
@@ -616,7 +617,7 @@ struct InsightCard: View {
                         Text("二人の年運の比較").font(.caption).foregroundStyle(FateTheme.muted)
                     }
                     Text(item.displayPeriodLabel ?? "時期の流れ").font(.system(.title3, weight: .semibold))
-                    Text(item.title).font(.body.weight(.semibold)).lineSpacing(5)
+                    Text(item.title).font(.body.weight(.medium)).lineSpacing(6)
                         .fixedSize(horizontal: false, vertical: true)
                     if item.showsReadingLock {
                         LockedReadingPreview()
@@ -645,11 +646,11 @@ struct InsightCard: View {
                 Spacer(minLength: 12)
                 HStack { Text(item.showsReadingLock ? "単品購入／会員で読む" : "読み進める").font(.caption); Spacer(); Image(systemName: item.showsReadingLock ? "lock" : "arrow.right") }
                     .padding(.top, 6)
-            }.padding(24).frame(maxWidth: .infinity, minHeight: 204, alignment: .leading)
+            }.padding(24).frame(maxWidth: .infinity, minHeight: 220, alignment: .leading)
                 .foregroundStyle(.white)
                 .background {
                     ReadingNatureArtwork(index: artworkIndex)
-                        .overlay(LinearGradient(colors: [.black.opacity(0.60), .black.opacity(0.30), .black.opacity(0.82)], startPoint: .top, endPoint: .bottom))
+                        .overlay(LinearGradient(colors: [.black.opacity(0.48), .black.opacity(0.24), .black.opacity(0.76)], startPoint: .top, endPoint: .bottom))
                 }.clipShape(RoundedRectangle(cornerRadius: 22))
         }
     }
@@ -694,7 +695,7 @@ private struct ReadingDetailContent: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @AccessibilityFocusState private var focusedAnchor: String?
-    @ScaledMetric(relativeTo: .title) private var coverTitleSize = 26
+    @ScaledMetric(relativeTo: .title) private var coverTitleSize = 24
     @ScaledMetric(relativeTo: .title3) private var sectionTitleSize = 20
     @ScaledMetric(relativeTo: .body) private var bodySize = 17
     let item: ReadingCard
@@ -748,23 +749,20 @@ private struct ReadingDetailContent: View {
                                 chapterView(chapter, proxy: proxy).id(chapter.anchor)
                             }
                         }
-                        .padding(.horizontal, 20).padding(.top, 28).padding(.bottom, 110)
+                        .padding(.horizontal, 24).padding(.top, 32).padding(.bottom, 36)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background {
-                            ZStack(alignment: .bottom) {
-                                FateArtwork(name: "QuietMountains")
-                                ReaderStyle.paper.opacity(0.35)
-                                FateArtwork(name: "QuietMountains").frame(height: 180)
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(ReaderStyle.paper.opacity(0.96))
-                                    .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 94)
-                            }.accessibilityHidden(true)
+                        .background(alignment: .top) {
+                            FateArtwork(name: "QuietMountains").frame(height: 160)
+                                .mask(LinearGradient(colors: [.black.opacity(0.24), .clear], startPoint: .top, endPoint: .bottom))
+                                .allowsHitTesting(false)
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .background(ReaderStyle.paper)
+                        .clipShape(RoundedRectangle(cornerRadius: FLRadius.card))
+                        .overlay(RoundedRectangle(cornerRadius: FLRadius.card).stroke(ReaderStyle.line.opacity(0.7), lineWidth: 0.5))
                         .accessibilityIdentifier("reader.mountainSheet")
                         if !isPartnerReading { questionFooter }
                     }
-                    .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 40)
+                    .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 40)
                     .frame(maxWidth: 620, alignment: .leading)
                     .frame(maxWidth: .infinity)
                 }
@@ -799,12 +797,12 @@ private struct ReadingDetailContent: View {
     }
 
     private var cover: some View {
-        VStack(alignment: .center, spacing: 16) {
+        VStack(alignment: .leading, spacing: 18) {
             Text(item.isTiming ? "時期の鑑定" : item.scope == "couple" ? "ふたりの鑑定" : isPartnerReading ? "あの人の鑑定" : "あなたの鑑定")
                 .font(.caption.weight(.medium)).padding(.horizontal, 10).padding(.vertical, 6)
                 .background(.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 5))
-            Text(item.title).font(.system(size: coverTitleSize, weight: .semibold))
-                .lineSpacing(5).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            Text(item.title).font(.system(size: coverTitleSize, weight: .medium))
+                .lineSpacing(7).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             TimelineTagList(tags: item.timelineDisplayTags)
             if let summary = item.readerSummary { readerText(summary) }
@@ -813,7 +811,9 @@ private struct ReadingDetailContent: View {
             }
         }
         .foregroundStyle(ReaderStyle.ink)
-        .frame(maxWidth: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 12)
+        .overlay(FLDivider(), alignment: .bottom)
     }
 
     private func chapterView(_ chapter: Chapter, proxy: ScrollViewProxy) -> some View {
@@ -917,11 +917,11 @@ private struct ReadingDetailContent: View {
 struct TimelineTagList: View {
     let tags: [String]
     private func tagColor(_ tag: String) -> Color {
-        if tag.contains("婚期") || tag.contains("結びつき") { return .pink }
-        if tag.contains("仕事") || tag.contains("活動") || tag.contains("進路") { return .blue }
-        if tag.contains("住まい") { return .green }
-        if tag.contains("見直す") || tag.contains("揺れ") || tag.contains("分かれ道") { return .orange }
-        return .purple
+        if tag.contains("婚期") || tag.contains("結びつき") { return FateTheme.rose }
+        if tag.contains("仕事") || tag.contains("活動") || tag.contains("進路") { return FateTheme.slate }
+        if tag.contains("住まい") { return FateTheme.moss }
+        if tag.contains("見直す") || tag.contains("揺れ") || tag.contains("分かれ道") { return FateTheme.ochre }
+        return FateTheme.dusk
     }
     var body: some View {
         if !tags.isEmpty {

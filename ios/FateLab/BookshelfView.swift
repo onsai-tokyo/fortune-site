@@ -145,9 +145,9 @@ struct BookCover: View {
                     Text(subtitle).font(.caption2).foregroundStyle(.white.opacity(0.85)).lineLimit(2)
                 }.padding(20)
             }.frame(minHeight: 230).clipShape(.rect(topLeadingRadius: 3, bottomLeadingRadius: 3, bottomTrailingRadius: 12, topTrailingRadius: 12))
-                .shadow(color: .black.opacity(0.07), radius: 5, x: 2, y: 4)
+                .shadow(color: FateTheme.ink.opacity(0.10), radius: 8, x: 2, y: 5)
             VStack(alignment: .leading, spacing: 5) {
-                if let badge { Text(badge).font(.caption.weight(.medium)) }
+                if let badge { Text(badge).font(.caption.weight(.medium)).padding(.horizontal, 8).padding(.vertical, 4).background(FateTheme.surface, in: Capsule()) }
                 Text(String(date.prefix(10)).replacingOccurrences(of: "-", with: "/")).font(.caption).foregroundStyle(FateTheme.muted)
             }
         }.foregroundStyle(FateTheme.ink).accessibilityElement(children: .combine)

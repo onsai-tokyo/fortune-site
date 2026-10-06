@@ -82,7 +82,7 @@ struct AIBookComposeView: View {
                         } else if readings.isEmpty {
                             Text("「あなた」タブで基本の鑑定をつくると選べます。").font(.footnote).foregroundStyle(FateTheme.muted)
                         }
-                    }.padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 22)).disabled(working || pending != nil)
+                    }.padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.card)).disabled(working || pending != nil)
                     VStack(alignment: .leading, spacing: 16) {
                         composerLabel("02", "相談のテーマ")
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -131,7 +131,7 @@ struct AIBookComposeView: View {
                         }.font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 14)
                     }.font(.subheadline).tint(FateTheme.ink)
                 }
-            }.padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 32)
+            }.padding(.horizontal, FateSpacing.screenH).padding(.top, 12).padding(.bottom, 32)
         }.scrollDismissesKeyboard(.interactively)
         .refreshable { reloadSources(); await refresh() }
         .onChange(of: readings.map(\.id)) { _, ids in
@@ -173,7 +173,7 @@ struct AIBookComposeView: View {
                         Button("作成状況を更新") { Task { await refresh() } }.font(.footnote)
                     }
                     if characters < 20 { Text("相談を20文字以上入力すると作成できます。").font(.caption2).foregroundStyle(FateTheme.muted) }
-                }.padding(.horizontal, 20).padding(.vertical, 14).background(FateTheme.canvas)
+                }.padding(.horizontal, FateSpacing.screenH).padding(.vertical, 14).background(FateTheme.canvas)
                     .overlay(alignment: .top) { Rectangle().fill(FateTheme.line).frame(height: 0.5) }
             }
         }
