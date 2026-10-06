@@ -138,7 +138,7 @@ struct APIClient {
                 let remaining = ContinuousClock.now.duration(to: deadline).components
                 let remainingSeconds = Double(remaining.seconds) + Double(remaining.attoseconds) / 1_000_000_000_000_000_000
                 currentRequest.timeoutInterval = min(40, max(0.1, remainingSeconds))
-                let (data, response) = try await transport.data(for: currentRequest)
+                let (data, response) = try await Self.boundedData(for: currentRequest, transport: transport, timeout: .seconds(remainingSeconds))
                 try owner.check(auth)
                 guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
                 if auth == nil, http.statusCode == 304,
@@ -211,6 +211,21 @@ struct APIClient {
             }
         }
         throw lastError
+    }
+
+    /// Request timeouts measure idle time; this deadline also stops a response that
+    /// keeps sending bytes without ever finishing. URLSession cooperates with cancellation.
+    static func boundedData(for request: URLRequest, transport: URLSession, timeout: Duration) async throws -> (Data, URLResponse) {
+        try await withThrowingTaskGroup(of: (Data, URLResponse).self) { group in
+            group.addTask { try await transport.data(for: request) }
+            group.addTask {
+                try await Task.sleep(for: timeout)
+                throw APIError.timeout
+            }
+            defer { group.cancelAll() }
+            guard let result = try await group.next() else { throw CancellationError() }
+            return result
+        }
     }
 
     private func logFailure(_ request: URLRequest, status: Int? = nil, error: Error) {

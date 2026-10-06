@@ -1,4 +1,5 @@
 import SwiftUI
+import OSLog
 
 struct SavedReadingView: View {
     @EnvironmentObject private var auth: AuthStore
@@ -24,7 +25,9 @@ struct SavedReadingView: View {
                     VStack(spacing: 8) {
                         FateLoadingView(title: "鑑定書を開いています", detail: elapsed < 8 ? "保存したあなたの物語を、手元に。" : "接続に少し時間がかかっています。")
                         if elapsed >= 8 {
-                            Button("もう一度読み込む") { Task { await load() } }
+                            Text("接続を確認しています。応答がない場合は再試行の案内に切り替わります。")
+                                .font(.footnote).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center)
+                            Button("本棚を開く") { tabRouter.selectTab(.readings) }
                                 .buttonStyle(FLSecondaryButtonStyle()).frame(maxWidth: 260)
                         }
                     }.frame(maxWidth: .infinity, minHeight: 480)
@@ -109,6 +112,13 @@ struct SavedReadingView: View {
                 SavedReadingMemoryCache.shared.remove(id: conversationID, owner: owner)
                 detail = nil; cards = []; chartSections = []; loadedID = nil
             }
+            let path: String
+            switch error {
+            case DecodingError.keyNotFound(let key, let context): path = (context.codingPath + [key]).map(\.stringValue).joined(separator: ".")
+            case DecodingError.typeMismatch(_, let context), DecodingError.valueNotFound(_, let context), DecodingError.dataCorrupted(let context): path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            default: path = "none"
+            }
+            Logger(subsystem: "com.onsai.fatelab", category: "startup").error("Reading load failed type=\(String(describing: type(of: error)), privacy: .public) domain=\((error as NSError).domain, privacy: .public) code=\((error as NSError).code) field=\(path, privacy: .public)")
             errorMessage = userFacingMessage(error)
             errorKind = errorStateKind(error)
         }

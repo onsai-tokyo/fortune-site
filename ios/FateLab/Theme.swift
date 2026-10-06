@@ -266,8 +266,9 @@ struct SlowConnectionNotice: View {
 struct ReportCard<Content: View>: View { @ViewBuilder let content: Content; var body: some View { FLCard { content } } }
 func userFacingErrorMessage(_ error: Error) -> String? { if error is CancellationError { return nil }; if let urlError = error as? URLError, urlError.code == .cancelled { return nil }; return error.localizedDescription }
 func errorStateKind(_ error: Error) -> FLErrorState.Kind {
+    if case APIError.timeout = error { return .network }
     if let urlError = error as? URLError {
-        let networkCodes: Set<URLError.Code> = [.notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed]
+        let networkCodes: Set<URLError.Code> = [.timedOut, .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed]
         return networkCodes.contains(urlError.code) ? .network : .dataFetch
     }
     if case APIError.http(let status, _) = error, status >= 500 { return .dataFetch }
