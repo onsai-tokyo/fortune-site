@@ -8,6 +8,13 @@ struct AIBookStatus: Decodable {
     let purchasedRemaining: Int
     let memberExpiresAt: String?
     let productId: String
+    var reviewRemaining: Int? = nil
+    var creditBreakdown: String {
+        var parts = ["会員分 \(memberRemaining)通"]
+        if purchasedRemaining > 0 { parts.append("単品購入分 \(purchasedRemaining)通") }
+        if let reviewRemaining, reviewRemaining > 0 { parts.append("審査用追加分 \(reviewRemaining)通") }
+        return parts.joined(separator: " · ")
+    }
 }
 struct AIBook: Decodable, Identifiable {
     let id: UUID

@@ -35,9 +35,6 @@ struct AIBookComposeView: View {
 
     @State private var loadedOwner: AccountScope?
     @State private var showPlans = false
-    @State private var showAIConsent = false
-    @State private var consentOwner: AccountScope?
-    @State private var consentPending: PendingAIBook?
     @FocusState private var editingQuestion: Bool
     private var characters: Int { question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count }
 
@@ -118,7 +115,8 @@ struct AIBookComposeView: View {
                     }.disabled(working || pending != nil)
                     if let pending {
                         Text("受付状況を確認しています。重複して利用枠を消費することはありません。").font(.footnote).foregroundStyle(FateTheme.muted)
-                        Button("受付状況を確認・再送する") { Task { await submit(existing: pending) } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
+                        AISharingNoticeView(isBook: true)
+                        Button("同意して受付確認・再送する") { Task { await submit(existing: pending) } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
                         Button("受付がなければ入力に戻る") { Task { await releaseUnsubmitted() } }.disabled(working)
                     }
                     if let error {
@@ -152,9 +150,15 @@ struct AIBookComposeView: View {
                         Spacer()
                         if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
                     }.font(.caption).foregroundStyle(FateTheme.muted)
+                    if let status, status.enabled {
+                        Text(status.creditBreakdown).font(.caption2).foregroundStyle(FateTheme.muted)
+                        Text("会員分は更新日に切り替わります（繰り越しなし）。").font(.caption2).foregroundStyle(FateTheme.muted)
+                    }
+                    AISharingNoticeView(isBook: true)
                     Button {
                         if previewMode { return }
                         editingQuestion = false
+                        let agreedToCreate = (status?.remaining ?? 0) > 0
                         Task {
                             guard !working else { return }
                             let owner = AccountScope(auth)
@@ -163,12 +167,12 @@ struct AIBookComposeView: View {
                             guard owner.isCurrent(auth) else { return }
                             working = false
                             guard refreshed else { return }
-                            if (status?.remaining ?? 0) > 0 { await submit() } else { showPlans = true }
+                            if agreedToCreate && (status?.remaining ?? 0) > 0 { await submit() } else { showPlans = true }
                         }
                     } label: {
                         HStack(spacing: 10) {
                             if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
-                            Text((status?.remaining ?? 0) > 0 ? "鑑定書をつくる · 1通分を使う" : "鑑定書をつくる")
+                            Text((status?.remaining ?? 0) > 0 ? "同意して鑑定書をつくる · 1通分" : "利用プランを見る")
                         }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")
@@ -183,14 +187,6 @@ struct AIBookComposeView: View {
         .toolbar {
             if !isTab { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } }
             ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("入力を終える") { editingQuestion = false } }
-        }
-        .sheet(isPresented: $showAIConsent) {
-            AISharingConsentView(isBook: true, onAgree: {
-                showAIConsent = false
-                guard consentOwner?.isCurrent(auth) == true else { return }
-                let retry = consentPending
-                Task { await submit(existing: retry, consentGranted: true) }
-            }, onCancel: { showAIConsent = false })
         }
         .sheet(isPresented: $showPlans) { NavigationStack { purchaseOptions } }
         .task(id: accepted?.id) { await trackAccepted() }
@@ -329,12 +325,8 @@ struct AIBookComposeView: View {
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
     }
 
-    private func submit(existing: PendingAIBook? = nil, consentGranted: Bool = false) async {
+    private func submit(existing: PendingAIBook? = nil) async {
         guard !working else { return }
-        guard consentGranted else {
-            consentOwner = AccountScope(auth); consentPending = existing; showAIConsent = true
-            return
-        }
         let owner = AccountScope(auth), key = pendingKey
         working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
         do {

@@ -36,3 +36,21 @@ struct AISharingConsentView: View {
         }
     }
 }
+
+/// Shown beside the explicit send action, without interrupting the composer.
+struct AISharingNoticeView: View {
+    let isBook: Bool
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("回答の作成にはAnthropic（Claude API）を利用します。")
+                .fontWeight(.medium)
+            Text(isBook
+                 ? "相談文・テーマ・もとの鑑定文・判定の根拠と計算結果を送信します。相手の情報や、相談文に入力した個人情報も含まれます。"
+                 : "質問文・会話履歴・鑑定文と計算結果・出生情報（生年月日、時刻、場所、性別、ニックネームなど）を送信します。相手の情報や、入力した個人情報も含まれます。")
+            Link("情報の取り扱い", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy"))
+        }
+        .font(.caption).foregroundStyle(FateTheme.muted)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("aiConsent.inlineNotice")
+    }
+}
