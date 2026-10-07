@@ -1,0 +1,7 @@
+2026-10-07: Three complimentary consultation-book credits granted to appreview@fate-lab.com at user request for App Review / recording.
+Applied ai_books_review_credits_20261007.sql in Supabase SQL editor after a transaction/rollback dry-run. Existing RLS and Apple purchase verification unchanged.
+Grant source: review; environment: Sandbox; reference: admin-review:20261007:books3; signed_ms: 0 (not an Apple-signed transaction). Quantity 3; no expiry. No membership or reading-card entitlement changed.
+Post-commit query verified: 3 unused credits, quantity3, one grant. The operation script is idempotent via environment/reference and grant/slot uniqueness. Exact account id/email verified before mutation.
+The current status API counts non-member credits in the legacy purchasedRemaining bucket; iOS presents the total as available books and does not display the bucket as purchase history. This is not an Apple purchase record.
+Actual generation not run. Consumption uses the existing credit locking/order function. Apple test-purchase verification remains separate.
+App Store Connect session expired during review-note update. Its current draft may still say zero credits; replace with: "Three complimentary consultation-book credits were preloaded for review; they do not activate a subscription or unlock paid reading cards."
