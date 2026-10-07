@@ -208,7 +208,7 @@ export function composePairYear(a: TimelineContext, b: TimelineContext, status: 
   const byLabel = status === 'crush' || status === 'former' || status === 'married' ? status : null
   // v2.24: the window line and the 2〜3年目 hint follow the two people's fortune that year (進む・見直す・両方・穏やか)
   const tone = pairTone(a, b, status, year, meetingYear)
-  const pairStageLine = d.stage && adultA && adultB ? (d.stage.kind === 'dating' ? fill(STG.toned.prefix.pair[d.stage.k === 1 ? 0 : 1], { k: d.stage.k }) + STG.toned.body[byLabel ?? 'partnered'][tone][d.stage.k === 1 ? 0 : 1] : fill(STG.pairMarried[d.stage.k % 2], { k: d.stage.k })) : ''
+  const pairStageLine = d.stage && adultA && adultB ? (d.stage.kind === 'dating' ? fill(STG.toned.prefix.pair[d.stage.k === 1 ? 0 : 1], { k: d.stage.k }) + STG.toned.body[byLabel ?? 'partnered'][tone][d.stage.k === 1 ? 0 : 1] : (status === 'married' ? STG.pairMarried[d.stage.k % 2] : 'この年は、それぞれの暮らしや気持ちを見直し、関わり方を考えやすい時期です。').replace(/^結婚から\{k\}年がたつこの年は、/, 'この年は、')) : ''
   if (pairStageLine) flow.splice(sway ? 2 : 1, 0, pairStageLine)
   // v2.20: the 婚期 year inside the dating window is the year the pair decides either way (進むか、区切るか)
   // v2.21: the peak of the window (2–3 years after the meeting) is the year the pair decides either way
@@ -315,7 +315,7 @@ export function composePairYear(a: TimelineContext, b: TimelineContext, status: 
   const H = Q.headings
   const sections: ReportSection[] = [
     { heading: H.flow, body: (past ? pastizeAll(flow.join('')) : flow.join('')) + meetingReading, evidence: [], termGloss: [] },
-    { heading: H.manifest, body: manifestText + milestones.join(''), evidence: [], termGloss: [] },
+    { heading: H.manifest, body: past ? pastizeAll(manifestText + milestones.join('')) : manifestText + milestones.join(''), evidence: [], termGloss: [] },
     ...[
       { heading: eventTimeline().heading, body: lifeText },
       { heading: DP.headings.each, body: eachLines.join('\n\n') },
@@ -409,8 +409,8 @@ export function composePairYear(a: TimelineContext, b: TimelineContext, status: 
   // simple style: the title is the pair theme alone (no ten-god opening)
   // quiet years take their title from your ten-god, so calm years do not all read the same
   const godA = sa.tenGod === '印綬' ? '正印' : sa.tenGod
-  const simpleTitle = sway ? SW.titles[swaySeen % SW.titles.length] : meetingRomantic ? depthParts().pair.meeting.tails[j] : d.theme === 'quiet' && romantic(status) ? depthParts().pair.quietTitles[godA] : tailSet[j]
-  return style === 'simple' ? toSimpleCard(card, simple, simpleTitle) : card
+  const simpleTitle = sway ? SW.titles[swaySeen % SW.titles.length] : meetingRomantic ? depthParts().pair.meeting.tails[j] : d.theme === 'quiet' && apart ? tailSet[j] : d.theme === 'quiet' && romantic(status) ? depthParts().pair.quietTitles[godA] : tailSet[j]
+  return style === 'simple' ? toSimpleCard(card, past ? pastizeAll(simple) : simple, simpleTitle) : card
 }
 
 /** Same response shape as coupleAllYears/snapshot.ts#snapshotTimeline (entries without `reading`). */

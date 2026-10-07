@@ -57,7 +57,10 @@ function possibilityList(sentences: string[]): string {
 }
 const pastize = (s: string) => s.replace(/時期です。$/, '時期でした。').replace(/年です。$/, '年でした。')
 /** Past years: every sentence of a descriptive paragraph moves to the past tense (です→でした、ます→ました). */
-export const pastizeAll = (text: string) => text.split(/(?<=。)/).map(x => x.replace(/です。$/, 'でした。').replace(/ます。$/, 'ました。')).join('')
+export const pastizeAll = (text: string) => text.replace(/ことがあり(?:ます|ました)。/g, 'ことがあったかもしれません。').replace(/こともあり(?:ます|ました)。/g, 'こともあったかもしれません。').split(/(?<=。)/).map(x => x.replace(/です。$/, 'でした。').replace(/ます。$/, 'ました。')).join('')
+
+/** Self timeline speaks about the individual; pair wording is kept in relLines. */
+export const selfVoice = (text: string) => text.replaceAll('二人の将来', '自分の将来').replaceAll('二人の約束', '人との約束').replaceAll('二人の関係', '大切な人との関わり').replaceAll('二人で', '大切な人と').replaceAll('二人の', '身近な人との')
 
 function careerKey(ctx: TimelineContext): 'work' | 'study' | 'other' {
   const w = ctx.input.workContext
@@ -178,14 +181,14 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
     ? ST.age[past ? 'single' : status === 'married' ? 'married' : status === 'partnered' ? 'partnered' : 'single'][ageLineSeen % 3]
     : d.stage.kind === 'dating'
       // v2.24: the dating-window line follows the year's fortune (進む・見直す・両方・穏やか) instead of a fixed both-ways sentence
-      ? (() => { const kind = d.stage!.via ?? 'partnered', n = d.stage!.k === 1 ? 0 : 1, T = ST.toned
+      ? (() => { const n = d.stage!.k === 1 ? 0 : 1
           // with the registered partner's birth data, the two people's fortune decides the tone (same as ふたりの時系列)
           const pairT = d.stage!.via ? partnerWindowTone(ctx, year) : null
           // the person's own 婚期 year never reads as only 見直す / 穏やか
           const tone = pairT === null ? stageTone(d, past) : d.marriage && pairT === 'review' ? 'both' : d.marriage && pairT === 'steady' ? 'forward' : pairT
-          return fill(T.prefix[kind === 'partnered' ? 'singlePartnered' : 'single'][n], { k: d.stage!.k }) + T.body[kind][tone][n] })()
-      : fill(ST[d.stage.kind][d.stage.k % 2], { k: d.stage.k, since: d.stage.since ?? '' })) : ''
-  // the stage line already says how long the relationship has run
+          return ST.selfDating[tone][n] })()
+      : ST.selfMarried[d.stage.k % 2]) : ''
+  // Keep the original anchor selection; the stage now describes the individual without relationship duration.
   const anchorText = life?.anchor && !(d.stage && d.stage.kind !== 'age') ? tense(life.anchor) : null
   const lifeText = life ? [life.inYear, life.reading, anchorText].filter(Boolean).join('') : ''
   const turnSentence = (m?: number) => m ? fill(depthParts().turn[past ? 'past' : 'future'][(year + m) % 3], { month: `${m}月` }) : ''
@@ -254,7 +257,7 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   const DH = depthParts().headings
   const sections: ReportSection[] = [
     { heading: H.flow, body: flow, evidence: [], termGloss: [] },
-    { heading: H.manifest, body: manifest.join(''), evidence: [], termGloss: [] },
+    { heading: H.manifest, body: past ? pastizeAll(manifest.join('')) : manifest.join(''), evidence: [], termGloss: [] },
     ...(stageLine ? [{ heading: ST.heading, body: stageLine, evidence: [], termGloss: [] }] : []),
     ...(lifeText ? [{ heading: eventTimeline().heading, body: lifeText, evidence: [], termGloss: [] }] : []),
     ...(personal ? [{ heading: personalParts().heading, body: tense(personal.stem + (personal.structure ?? '')), evidence: [], termGloss: [] }] : []),
@@ -289,7 +292,7 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   if (marriageNow) add('tl3-marriage', T.marriage, [...relIds, ...(s.relationship.dt7 ? ['TL3-DT7'] : [])], P.milestones.marriage[j], r1Period)
   if (d.career) add('tl3-career', ck === 'work' ? T.careerWork : ck === 'study' ? T.careerStudy : T.careerOther, s.career.hits.map(h => h.id), P.milestones.career[careerMilestoneKey(ctx)][j])
   if (d.move) add('tl3-move', T.move, s.move.hits.map(h => h.id), P.milestones.move[j])
-  if (stageLine) add('tl3-stage', ST.tags[d.stage!.kind], ['TL3-STAGE'], stageLine)
+  if (stageLine) add('tl3-stage', d.stage!.kind === 'dating' ? '#関わり方を考える時期' : ST.tags[d.stage!.kind], ['TL3-STAGE'], stageLine)
   if (d.lifeTurn) add('tl3-life-turn', T.lifeTurn, d.lifeTurn === 'chapter' ? s.chapterStarts.map(c => c.label) : ['TL3-CONVERGENCE'], P.milestones.lifeTurn[d.lifeTurn])
 
   const card = withCardProvenance({
@@ -363,7 +366,13 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
     if ([...simple].length > 320 && k0 !== first && !personal) simple = plain(fixed.filter((_, k) => k !== k0 && k !== first).join(''))
   }
   const relLines = relYear && !life?.hasRelationship ? (manifest[0] ?? '').split(/(?<=。)/).filter(Boolean).slice(0, 2) : areas ? [firstOf(areas.relationship)] : []
-  return { card, decision: d, simple, simpleTitle: shortTitle(ctx, d, nowYear), relLines }
+  // Preserve the original relationship lines for pair composition; only the self-facing voice changes.
+  card.title = selfVoice(card.title)
+  card.summary = selfVoice(card.summary)
+  for (const section of card.sections ?? []) section.body = selfVoice(section.body)
+  for (const page of card.pages ?? []) page.text = selfVoice(page.text)
+  for (const tag of card.timelineTags ?? []) tag.evidenceText = selfVoice(tag.evidenceText ?? '')
+  return { card, decision: d, simple: selfVoice(past ? pastizeAll(simple) : simple), simpleTitle: selfVoice(shortTitle(ctx, d, nowYear)), relLines }
 }
 
 export type TimelineStyle = 'simple' | 'detailed'

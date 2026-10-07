@@ -80,8 +80,7 @@ export function pairLifeLines(a: TimelineContext, status: string, meetingYear: n
     out.inYear = here.length === 1 && here[0].month ? fill(T.inYearMonth, { month: here[0].month, labels }) : fill(T.inYear, { labels })
     if (year < nowYear) {
       const last = here.at(-1)!
-      const list: string[] = T.pairReflection[REL_CLOSE.includes(last.kind) ? 'close' : 'begin']
-      out.reflection = fill(list[year % list.length], { label: T.short[last.kind] })
+      out.reflection = `ご自身の年表にある${T.short[last.kind]}を、今はどう振り返りますか。`
     }
     for (const e of here) out.evidence.push({ family: 'timeline-v3-couple', system: '四柱推命', detail: `年表：${e.year}年${e.month ? `${e.month}月` : ''} ${E.kinds[e.kind].label}` })
     return out
@@ -93,7 +92,7 @@ export function pairLifeLines(a: TimelineContext, status: string, meetingYear: n
   const key = anchor.kind === 'marriage' ? 'marriage' : REL_CLOSE.includes(anchor.kind) ? 'close' : 'begin'
   if (key === 'close' ? !(pairMoving && k <= 3) : !(pairMoving || MILESTONES.has(k))) return null
   const label = anchor.kind === 'encounter' ? T.pairMeetingLabel : T.short[anchor.kind]
-  out.anchor = fill(T.since[key][MILESTONES.has(k) && k > 1 ? 'milestone' : 'plain'], { year: anchor.year, label, k })
+  out.anchor = last ? `ご自身の年表にある${anchor.year}年の${label}から、${k}年がたつ年です。` : fill(T.since[key][MILESTONES.has(k) && k > 1 ? 'milestone' : 'plain'], { year: anchor.year, label, k })
   out.evidence.push({ family: 'timeline-v3-couple', system: '四柱推命', detail: `年表：${anchor.year}年 ${anchor.kind === 'encounter' ? '出会った年（入力）' : E.kinds[anchor.kind].label}から${k}年` })
   return out
 }
