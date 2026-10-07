@@ -453,7 +453,7 @@ struct MembershipDetailsView: View {
     @State private var booksEnabled = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("月額1,980円／単品鑑定300円（日本価格）").font(.headline)
+            Text("月額1,980円（日本価格）").font(.headline)
             VStack(alignment: .leading, spacing: 12) {
             Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
             Label("相性の有料項目と2027年以降の時系列が見放題", systemImage: "lock.open")
@@ -473,7 +473,7 @@ struct MembershipDetailsView: View {
             }.membershipFeature()
             VStack(alignment: .leading, spacing: 12) {
             Label("お届けした鑑定書は、解約後も本棚に", systemImage: "books.vertical")
-            Text("鑑定カードの単品購入は、日本価格で1項目・1年分につき300円。単品購入した対象は、会員期間が終わっても読み返せます。相談鑑定書の単品購入とは別の商品です。")
+            Text("単品購入した鑑定カードは、会員期間が終わっても読み返せます。相談鑑定書の単品購入とは別の商品です。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
             Text("月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")

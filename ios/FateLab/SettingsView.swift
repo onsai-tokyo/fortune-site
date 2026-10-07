@@ -108,8 +108,6 @@ struct SettingsView: View {
                 if !purchases.isPremium && !purchases.needsMembershipRestore {
                     StorePurchasePrice(product: purchases.product)
                 }
-                Text("単品でも読めます · 1項目／1年分 300円（日本価格）")
-                    .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(3)
                 if auth.session != nil && AppConfig.storeKitEnabled && !purchases.needsMembershipRestore {
                     SettingsDivider(edgeInset: 0)
                     Button("購入を復元") { Task { await purchases.restore(auth: auth) } }
