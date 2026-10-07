@@ -1,3 +1,4 @@
+import { hasPremiumAccess, PremiumAccessUnavailable } from '../lib/premium.js'
 import { requireAIConsent } from '../middleware/aiConsent.js'
 import {readingCardProjector} from '../lib/readingCardAccess.js'
 import {cardPurchasesEnabled} from '../lib/readingCardPurchases.js'
@@ -15,7 +16,7 @@ export function publicBook(b: Record<string, unknown>) {
     document:b.state==='delivered'?(b.document??null):null,sources:b.state==='delivered'?(b.source_snapshot??[]):[]}
 }
 function fail(res: Response,error: unknown) {
-  const e = error instanceof BookError ? error : new BookError('BOOK_UNAVAILABLE',503,'本棚を取得できませんでした。時間をおいてお試しください。')
+  const e = error instanceof BookError ? error : error instanceof PremiumAccessUnavailable ? new BookError('BOOK_MEMBERSHIP_UNAVAILABLE',503,'会員資格を確認できませんでした。時間をおいて再確認してください。') : new BookError('BOOK_UNAVAILABLE',503,'本棚を取得できませんでした。時間をおいてお試しください。')
   res.status(e.status).json({code:e.code,error:e.message})
 }
 async function settings() {
@@ -24,9 +25,11 @@ async function settings() {
   return data
 }
 aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
+  res.setHeader('Cache-Control','private, no-store')
   try {
     const config = await settings()
-    if (!config.enabled) { res.json({enabled:false,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
+    const premium = await hasPremiumAccess(req.userId!)
+    if (!config.enabled) { res.json({enabled:false,premium,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
     if (error) throw error
@@ -41,7 +44,7 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
         else purchasedRemaining++
       }
     }
-    res.json({enabled:true,monthlyCredits:config.monthly_credits,remaining:memberRemaining+purchasedRemaining+reviewRemaining,memberRemaining,purchasedRemaining,reviewRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
+    res.json({enabled:true,premium,monthlyCredits:config.monthly_credits,remaining:memberRemaining+purchasedRemaining+reviewRemaining,memberRemaining,purchasedRemaining,reviewRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
   } catch(e) { fail(res,e) }
 })
 aiBooksRouter.get('/',async(req:AuthRequest,res)=>{
@@ -115,6 +118,7 @@ aiBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
       if(oldFocus!==req.body?.focusCardId || old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
       res.json({book:publicBook(old)}); return
     }
+    if (!(await hasPremiumAccess(req.userId!))) throw new BookError('BOOK_MEMBERSHIP_REQUIRED',402,'鑑定書の作成には月額会員への登録が必要です。')
     const {question,sources,row}=await prepare(req)
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     const id=await bookRPC('ai_book_order',{p_user:req.userId!,p_operation:req.body.operationId,p_source:row.id,p_target:row.title,p_theme:req.body.theme,p_question:question,p_snapshot:sources})

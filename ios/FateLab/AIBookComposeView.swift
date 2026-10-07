@@ -35,6 +35,8 @@ struct AIBookComposeView: View {
 
     @State private var loadedOwner: AccountScope?
     @State private var showPlans = false
+    @State private var showMembership = false
+    @StateObject private var membershipContinuation = BookMembershipContinuation()
     @FocusState private var editingQuestion: Bool
     private var characters: Int { question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count }
 
@@ -125,7 +127,7 @@ struct AIBookComposeView: View {
                     }
                     DisclosureGroup("鑑定書について") {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("月額会員は初月から毎月3通。単品購入もできます。作成した鑑定書は、解約後も本棚に残ります。")
+                            Text("鑑定書の作成は月額会員限定です。初月から毎月3通、必要に応じて追加購入もできます。作成した鑑定書は、解約後も本棚に残ります。")
                             Text("未使用の会員分は更新日に繰り越されません。単品購入分に期限はありません。生成に失敗した場合は利用枠をお戻しします。")
                             Text("計算結果と確認済みの原稿をもとにAIが構成します。健康・妊娠・生死、法律や投資の判断などは対象外です。")
                             HStack { Link("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); Link("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }
@@ -146,11 +148,11 @@ struct AIBookComposeView: View {
             if accepted == nil && pending == nil {
                 VStack(spacing: 10) {
                     HStack {
-                        Text(status.map { $0.enabled ? "利用できる鑑定書" : "現在、作成を休止しています" } ?? "利用枠を確認しています")
+                        Text(status.map { $0.enabled ? ($0.premium == true ? "利用できる鑑定書" : "鑑定書の作成は月額会員限定です") : "現在、作成を休止しています" } ?? "利用枠を確認しています")
                         Spacer()
-                        if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
+                        if let status, status.enabled, status.premium == true { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
                     }.font(.caption).foregroundStyle(FateTheme.muted)
-                    if let status, status.enabled {
+                    if let status, status.enabled, status.premium == true {
                         Text(status.creditBreakdown).font(.caption2).foregroundStyle(FateTheme.muted)
                         Text("会員分は更新日に切り替わります（繰り越しなし）。").font(.caption2).foregroundStyle(FateTheme.muted)
                     }
@@ -158,21 +160,11 @@ struct AIBookComposeView: View {
                     Button {
                         if previewMode { return }
                         editingQuestion = false
-                        let agreedToCreate = (status?.remaining ?? 0) > 0
-                        Task {
-                            guard !working else { return }
-                            let owner = AccountScope(auth)
-                            working = true
-                            let refreshed = await refreshMembership()
-                            guard owner.isCurrent(auth) else { return }
-                            working = false
-                            guard refreshed else { return }
-                            if agreedToCreate && (status?.remaining ?? 0) > 0 { await submit() } else { showPlans = true }
-                        }
+                        Task { await beginCreation() }
                     } label: {
                         HStack(spacing: 10) {
                             if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
-                            Text((status?.remaining ?? 0) > 0 ? "鑑定する" : "利用プランを見る")
+                            Text("鑑定する")
                         }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")
@@ -189,6 +181,25 @@ struct AIBookComposeView: View {
             ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("入力を終える") { editingQuestion = false } }
         }
         .sheet(isPresented: $showPlans) { NavigationStack { purchaseOptions } }
+        .sheet(isPresented: $showMembership, onDismiss: {
+            guard let draft = membershipContinuation.consume(owner: AccountScope(auth)) else { return }
+            Task { await submit(existing: pending?.operationID == draft.operationID ? draft : nil, draft: draft) }
+        }) {
+            PaywallSheet(draftQuestion: question, startsBookAfterPurchase: true) {
+                Task {
+                    let owner = AccountScope(auth)
+                    guard await refreshMembership(), owner.isCurrent(auth) else { return }
+                    if membershipContinuation.authorize(owner: owner, premium: status?.premium == true, remaining: status?.remaining ?? 0) {
+                        showMembership = false
+                    } else if status?.premium == true {
+                        error = "会員登録を確認しましたが、利用枠を確認できません。利用状況を再確認してください。"
+                    }
+                }
+            }.environmentObject(auth).environmentObject(purchases)
+        }
+        .onChange(of: AccountScope(auth)) { _, _ in
+            membershipContinuation.cancel(); showMembership = false; showPlans = false
+        }
         .task(id: accepted?.id) { await trackAccepted() }
         .task(id: AccountScope(auth)) {
 #if DEBUG
@@ -223,6 +234,24 @@ struct AIBookComposeView: View {
             await refresh()
         }
     }
+    private func beginCreation() async {
+        guard valid, !working, let sourceID else { return }
+        let owner = AccountScope(auth)
+        working = true; error = nil
+        do { try await validate(); try owner.check(auth) }
+        catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error); working = false }; return }
+        let refreshed = await refreshMembership()
+        guard owner.isCurrent(auth) else { return }
+        working = false
+        guard refreshed else { return }
+        if status?.premium != true {
+            membershipContinuation.prepare(PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID), owner: owner)
+            showMembership = true
+        } else if (status?.remaining ?? 0) > 0 {
+            await submit()
+        } else { showPlans = true }
+    }
+
     private func trackAccepted() async {
         guard let id = accepted?.id, !previewMode else { return }
         let owner = AccountScope(auth)
@@ -245,15 +274,9 @@ struct AIBookComposeView: View {
         ScrollView { VStack(alignment: .leading, spacing: 22) {
             Text("一冊を、あなたの本棚に。").font(FateType.screenTitle)
             Text("入力した相談はそのまま残ります。利用枠の購入後に、作成ボタンを押してください。").font(.subheadline).foregroundStyle(FateTheme.muted)
-            if let product = purchases.bookProduct {
+            if status?.premium == true, let product = purchases.bookProduct {
                 Button("鑑定書1通分 · \(product.displayPrice)") { Task { await buySingle(); if (status?.remaining ?? 0) > 0 { showPlans = false } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
             } else { Button("料金情報を読み込む") { Task { await purchases.load() } }.buttonStyle(FLPrimaryButtonStyle()) }
-            if !purchases.isPremium, !purchases.hasStoreKitEntitlement, purchases.accessState == .standard, let product = purchases.product {
-                Text("初月から毎月3通つき").font(.headline)
-                Text(ReadingPrices.monthly).font(.headline)
-                StorePurchasePrice(product: product)
-                Button("月額会員になる") { Task { await subscribe(); if (status?.remaining ?? 0) > 0 { showPlans = false } } }.buttonStyle(FLSecondaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
-            }
             if purchases.isPremium || purchases.hasStoreKitEntitlement {
                 Text((status?.memberRemaining ?? 0) == 0 ? "会員分の利用枠がありません。購入済みの場合は、下のボタンから利用枠を再確認できます。" : "会員の利用枠を確認しました。")
                     .font(.subheadline).foregroundStyle(FateTheme.muted)
@@ -289,27 +312,20 @@ struct AIBookComposeView: View {
             return true
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return false }
     }
-    private func validate() async throws {
-        let result = try await APIClient.shared.bookCall(AIBookValidation.self, path: "/validate", method: "POST", json: bodyJSON, auth: auth)
+    private func validate(_ body: [String: String]? = nil) async throws {
+        let result = try await APIClient.shared.bookCall(AIBookValidation.self, path: "/validate", method: "POST", json: body ?? bodyJSON, auth: auth)
         guard result.valid else { throw APIError.invalidResponse }
     }
     private func buySingle() async {
         let owner = AccountScope(auth)
         working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
-        do { try await validate(); try owner.check(auth); try await purchases.purchaseBook(auth: auth); try owner.check(auth); await refresh() }
-        catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
-    }
-    private func subscribe() async {
-        let owner = AccountScope(auth)
-        working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
         do {
+            guard await refreshMembership(), owner.isCurrent(auth) else { return }
+            guard status?.premium == true else { throw APIError.paymentRequired("追加購入には月額会員への登録が必要です。") }
             try await validate(); try owner.check(auth)
-            guard let id = auth.userID else { throw CancellationError() }
-            await purchases.purchase(userID: id, auth: auth)
-            try owner.check(auth)
-            error = purchases.errorMessage
-            await refresh()
-        } catch { self.error = userFacingErrorMessage(error) }
+            try await purchases.purchaseBook(auth: auth); try owner.check(auth); await refresh()
+        }
+        catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
     }
     private func releaseUnsubmitted() async {
         guard let pending else { return }
@@ -325,7 +341,7 @@ struct AIBookComposeView: View {
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
     }
 
-    private func submit(existing: PendingAIBook? = nil) async {
+    private func submit(existing: PendingAIBook? = nil, draft: PendingAIBook? = nil) async {
         guard !working else { return }
         let owner = AccountScope(auth), key = pendingKey
         working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
@@ -333,9 +349,11 @@ struct AIBookComposeView: View {
             let order: PendingAIBook
             if let existing { order = existing }
             else {
-                try await validate(); try owner.check(auth)
+                guard await refresh(), owner.isCurrent(auth) else { return }
+                guard status?.premium == true else { throw APIError.paymentRequired("鑑定書の作成には月額会員への登録が必要です。") }
                 guard let sourceID else { throw APIError.invalidResponse }
-                order = PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID)
+                order = draft ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID)
+                try await validate(order.body); try owner.check(auth)
                 try KeychainStore.save(JSONEncoder().encode(order), account: key)
                 pending = order
             }
@@ -345,6 +363,16 @@ struct AIBookComposeView: View {
             // Remove only after an authoritative server acknowledgement.
             try KeychainStore.remove(account: key)
             pending = nil; accepted = book
-        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
+        } catch {
+            guard owner.isCurrent(auth) else { return }
+            self.error = userFacingErrorMessage(error)
+            if case APIError.paymentRequired = error {
+                let refreshed = await refresh()
+                if refreshed, owner.isCurrent(auth), status?.premium == false, let order = pending ?? draft {
+                    membershipContinuation.prepare(order, owner: owner)
+                    showMembership = true
+                }
+            }
+        }
     }
 }

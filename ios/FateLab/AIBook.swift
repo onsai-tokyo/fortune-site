@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 struct AIBookStatus: Decodable {
     let enabled: Bool
@@ -8,6 +9,7 @@ struct AIBookStatus: Decodable {
     let purchasedRemaining: Int
     let memberExpiresAt: String?
     let productId: String
+    var premium: Bool? = nil
     var reviewRemaining: Int? = nil
     var creditBreakdown: String {
         var parts = ["会員分 \(memberRemaining)通"]
@@ -74,4 +76,27 @@ struct PendingAIBook: Codable {
         if let focusCardID { value["focusCardId"] = focusCardID }
         return value
     }
+}
+
+/// A purchase dismissal may resume only the exact draft and account that requested it.
+@MainActor
+final class BookMembershipContinuation: ObservableObject {
+    private var draft: PendingAIBook?
+    private var owner: AccountScope?
+    private var approved = false
+
+    func prepare(_ draft: PendingAIBook, owner: AccountScope) {
+        self.draft = draft; self.owner = owner; approved = false
+    }
+    func authorize(owner: AccountScope, premium: Bool, remaining: Int) -> Bool {
+        guard self.owner == owner, draft != nil, premium, remaining > 0 else { return false }
+        approved = true
+        return true
+    }
+    func consume(owner: AccountScope) -> PendingAIBook? {
+        defer { cancel() }
+        guard self.owner == owner, approved else { return nil }
+        return draft
+    }
+    func cancel() { draft = nil; owner = nil; approved = false }
 }
