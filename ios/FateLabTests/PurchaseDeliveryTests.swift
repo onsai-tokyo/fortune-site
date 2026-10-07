@@ -2,6 +2,19 @@ import XCTest
 @testable import FateLab
 
 @MainActor final class PurchaseDeliveryTests: XCTestCase {
+    func testReviewCreditsAreSeparateFromMonthlyAndPurchasedCredits() throws {
+        let json = #"{"enabled":true,"monthlyCredits":3,"remaining":6,"memberRemaining":3,"purchasedRemaining":0,"reviewRemaining":3,"memberExpiresAt":null,"productId":"test"}"#
+        let status = try JSONDecoder().decode(AIBookStatus.self, from: Data(json.utf8))
+        XCTAssertEqual(status.reviewRemaining, 3)
+        XCTAssertEqual(status.creditBreakdown, "会員分 3通 · 審査用追加分 3通")
+    }
+    func testBookStatusStillDecodesBeforeServerRollout() throws {
+        let json = #"{"enabled":true,"monthlyCredits":3,"remaining":3,"memberRemaining":3,"purchasedRemaining":0,"memberExpiresAt":null,"productId":"test"}"#
+        let status = try JSONDecoder().decode(AIBookStatus.self, from: Data(json.utf8))
+        XCTAssertNil(status.reviewRemaining)
+        XCTAssertEqual(status.creditBreakdown, "会員分 3通")
+    }
+
     private let owner = UUID(uuidString: "11111111-1111-4111-8111-111111111111")!
     private var purchase: PendingPurchase { PendingPurchase(transactionID: "synthetic-transaction", ownerID: owner, signedTransaction: "synthetic-jws", allowOwnerTransfer: false) }
     private func response(_ extra: String = "") throws -> ApplePurchaseVerification {

@@ -17,8 +17,6 @@ struct ReadingChatView: View {
     @State private var errorMessage: String?
     @State private var conversationMissing = false
     @State private var showPaywall = false
-    @State private var showAIConsent = false
-    @State private var consentOwner: AccountScope?
     @State private var showSourceReport = false
     @State private var followUpSuggestions: [String] = []
     @State private var didLoad = false
@@ -107,10 +105,11 @@ struct ReadingChatView: View {
                         if conversationMissing {
                             Button("鑑定一覧へ") { tabRouter.closeMissingChat() }.font(.caption.weight(.semibold))
                         } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Button("もう一度送る") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
+                            Button("同意して再送する") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
                         }
                     }
                 }
+                AISharingNoticeView(isBook: false)
                 HStack(alignment: .bottom, spacing: 6) {
                     TextField("鑑定について聞く…", text: $input, axis: .vertical)
                         .accessibilityIdentifier("chat.input")
@@ -121,8 +120,8 @@ struct ReadingChatView: View {
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !question.isEmpty, !isWorking else { return }
                         if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
-                    } label: { Image(systemName: isWorking ? "stop.fill" : "arrow.up").font(.system(.subheadline, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).background(FateTheme.ink).clipShape(Circle()) }
-                    .accessibilityLabel(isWorking ? "回答を停止" : "送信")
+                    } label: { Text(isWorking ? "停止" : (isBlocked ? "プランを見る" : "同意して送信")).font(.system(.caption, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 12).frame(minHeight: 44).background(FateTheme.ink, in: Capsule()) }
+                    .accessibilityLabel(isWorking ? "回答を停止" : (isBlocked ? "プランを見る" : "Anthropicへの情報送信に同意して質問を送信"))
                     .padding(.trailing, 5).padding(.vertical, 5)
                 }.background(FateTheme.card).clipShape(RoundedRectangle(cornerRadius: 26)).overlay(RoundedRectangle(cornerRadius: 26).stroke(FateTheme.line, lineWidth: 0.7))
                 Button { Task { await saveConversation() } } label: {
@@ -167,13 +166,6 @@ struct ReadingChatView: View {
                 .background(FateTheme.canvas).fateScreenTitle("もとの鑑定書")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { showSourceReport = false } } }
             }
-        }
-        .sheet(isPresented: $showAIConsent) {
-            AISharingConsentView(isBook: false, onAgree: {
-                showAIConsent = false
-                guard consentOwner?.isCurrent(auth) == true else { return }
-                streamTask = Task { await send(consentGranted: true) }
-            }, onCancel: { showAIConsent = false })
         }
         .sheet(isPresented: $showPaywall) {
             PaywallSheet(draftQuestion: input) {
@@ -272,15 +264,11 @@ struct ReadingChatView: View {
         } catch { if owner.isCurrent(auth) { status = nil; handleChatError(error) } }
     }
 
-    private func send(consentGranted: Bool = false) async {
+    private func send() async {
         let owner = AccountScope(auth)
         guard auth.session != nil else { return }
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty, !isWorking else { return }
-        guard consentGranted else {
-            consentOwner = owner; showAIConsent = true
-            return
-        }
         let needsNewThread = activeConversationID == conversationID && detail?.conversation.kind != "chat" && messages.isEmpty
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true

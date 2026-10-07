@@ -26,21 +26,22 @@ async function settings() {
 aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
   try {
     const config = await settings()
-    if (!config.enabled) { res.json({enabled:false,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
+    if (!config.enabled) { res.json({enabled:false,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
     if (error) throw error
-    let memberRemaining=0,purchasedRemaining=0; let expiry:string|null=null
+    let memberRemaining=0,purchasedRemaining=0,reviewRemaining=0; let expiry:string|null=null
     for(const grant of data??[]) {
       if(Date.parse(grant.starts_at)>Date.now()) continue
       for(const credit of grant.ai_book_credits) {
         const end = grant.expires_at===null ? Infinity : Math.max(Date.parse(grant.expires_at),credit.recovery_until?Date.parse(credit.recovery_until):0)
         if(credit.consumed_by || end<=Date.now()) continue
         if(grant.source==='member') { memberRemaining++; if(!expiry || Date.parse(expiry)>end) expiry=new Date(end).toISOString() }
+        else if(grant.source==='review') reviewRemaining++
         else purchasedRemaining++
       }
     }
-    res.json({enabled:true,monthlyCredits:config.monthly_credits,remaining:memberRemaining+purchasedRemaining,memberRemaining,purchasedRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
+    res.json({enabled:true,monthlyCredits:config.monthly_credits,remaining:memberRemaining+purchasedRemaining+reviewRemaining,memberRemaining,purchasedRemaining,reviewRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
   } catch(e) { fail(res,e) }
 })
 aiBooksRouter.get('/',async(req:AuthRequest,res)=>{
