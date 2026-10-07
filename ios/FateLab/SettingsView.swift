@@ -76,8 +76,6 @@ struct SettingsView: View {
                 .font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
                 if purchases.isPremium { MembershipActiveBanner() }
-                DisclosureGroup("プランの内容を確認") { MembershipDetailsView().padding(.top, 14) }
-                    .font(.subheadline).tint(FateTheme.ink)
                 if !AppConfig.storeKitEnabled {
                     Text(AppConfig.purchasesUnavailableMessage)
                         .font(.system(.footnote)).foregroundStyle(FateTheme.muted)
@@ -111,6 +109,8 @@ struct SettingsView: View {
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
+                MembershipDetailsView()
+                    .padding(.top, 8)
                 if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
                 if !purchases.isPremium && !purchases.needsMembershipRestore {
                     StorePurchasePrice(product: purchases.product)
