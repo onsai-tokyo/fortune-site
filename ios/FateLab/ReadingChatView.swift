@@ -413,7 +413,7 @@ struct PaywallSheet: View {
                             Task { await purchases.restore(auth: auth); onRefresh() }
                         }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(FateTheme.ink)
                     }
-                    if purchases.isWorking { ProgressView("購入手続き中…").tint(FateTheme.ink) }
+                    if purchases.isWorking { ProgressView(purchases.membershipProgress ?? "購入手続き中…").tint(FateTheme.ink) }
                     if let error = purchases.errorMessage {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                     }
