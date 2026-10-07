@@ -182,3 +182,41 @@ final class BookReadingPresentationTests: XCTestCase {
         XCTAssertFalse(ReadingAccessGrant(card: card, conversationID: conversation, owner: owner).matches(cardID: card.id, conversationID: conversation, owner: owner))
     }
 }
+
+@MainActor
+final class BookMembershipContinuationTests: XCTestCase {
+    private let owner = AccountScope(userID: UUID(), epoch: 1)
+    private func draft() -> PendingAIBook { PendingAIBook(operationID: UUID(), sourceID: UUID(), theme: "仕事", question: "入力済みの相談内容を保持して購入後に一度だけ作成する") }
+
+    func testPurchaseSuccessResumesTheExactDraftOnlyOnce() {
+        let continuation = BookMembershipContinuation(), value = draft()
+        continuation.prepare(value, owner: owner)
+        XCTAssertTrue(continuation.authorize(owner: owner, premium: true, remaining: 3))
+        XCTAssertTrue(continuation.authorize(owner: owner, premium: true, remaining: 3))
+        let resumed = continuation.consume(owner: owner)
+        XCTAssertEqual(resumed?.operationID, value.operationID)
+        XCTAssertEqual(resumed?.question, value.question)
+        XCTAssertEqual(resumed?.sourceID, value.sourceID)
+        XCTAssertNil(continuation.consume(owner: owner))
+    }
+    func testCancellationCreditsWithoutMembershipAndEmptyBalanceNeverResume() {
+        for (premium, remaining) in [(false, 3), (true, 0)] {
+            let continuation = BookMembershipContinuation()
+            continuation.prepare(draft(), owner: owner)
+            XCTAssertFalse(continuation.authorize(owner: owner, premium: premium, remaining: remaining))
+            XCTAssertNil(continuation.consume(owner: owner))
+        }
+        let continuation = BookMembershipContinuation()
+        continuation.prepare(draft(), owner: owner)
+        XCTAssertNil(continuation.consume(owner: owner))
+    }
+    func testAccountChangeCannotResumeAnotherAccountsDraft() {
+        let continuation = BookMembershipContinuation()
+        continuation.prepare(draft(), owner: owner)
+        let changed = AccountScope(userID: owner.userID, epoch: owner.epoch + 1)
+        XCTAssertFalse(continuation.authorize(owner: changed, premium: true, remaining: 3))
+        XCTAssertTrue(continuation.authorize(owner: owner, premium: true, remaining: 3))
+        XCTAssertNil(continuation.consume(owner: changed))
+        XCTAssertNil(continuation.consume(owner: owner))
+    }
+}

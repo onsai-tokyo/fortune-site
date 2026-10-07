@@ -347,6 +347,7 @@ struct PaywallSheet: View {
     @EnvironmentObject private var purchases: PurchaseManager
     @Environment(\.dismiss) private var dismiss
     let draftQuestion: String
+    var startsBookAfterPurchase = false
     let onRefresh: () -> Void
 
     var body: some View {
@@ -369,6 +370,12 @@ struct PaywallSheet: View {
                     Text("あなたを知る言葉を、日々の選択に。")
                         .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
                     FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
+                    if startsBookAfterPurchase {
+                        Text("月額会員になって、この相談の鑑定書をつくりますか？")
+                            .font(.headline)
+                        Text("購入の確認後、この相談内容で鑑定書の作成を開始します。会員分の利用枠を1通使用します。")
+                            .font(.subheadline).foregroundStyle(FateTheme.muted)
+                    }
                     if purchases.isPremium { MembershipActiveBanner() }
                     VStack(alignment: .leading, spacing: 5) {
                         if let product = purchases.product {
@@ -382,7 +389,7 @@ struct PaywallSheet: View {
                     }
                     if let session = auth.session {
                         if purchases.isPremium {
-                            Button("会員として利用を続ける") { onRefresh(); dismiss() }.buttonStyle(FLPrimaryButtonStyle())
+                            Button("会員として利用を続ける") { onRefresh(); if !startsBookAfterPurchase { dismiss() } }.buttonStyle(FLPrimaryButtonStyle())
                         } else if purchases.accessState == .unknown || purchases.isSyncing {
                             if purchases.isSyncing {
                                 ProgressView("購入状況を確認しています…").tint(FateTheme.ink)
@@ -398,7 +405,7 @@ struct PaywallSheet: View {
                                 }
                             }
                         } else {
-                            Button(purchases.membershipActionTitle) {
+                            Button(startsBookAfterPurchase && !purchases.hasStoreKitEntitlement ? "月額会員になって鑑定する" : purchases.membershipActionTitle) {
                                 Task { await purchases.purchase(userID: session.user.id, auth: auth); onRefresh() }
                             }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership)
                         }
