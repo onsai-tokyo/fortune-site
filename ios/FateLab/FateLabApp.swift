@@ -19,7 +19,19 @@ struct FateLabApp: App {
 
     @ViewBuilder private var appContent: some View {
 #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--ai-consent107-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--membership114-preview") {
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        SettingsMembershipButton()
+                        MembershipDetailsView()
+                    }.padding(22)
+                    .background(FateTheme.card)
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5).allowsHitTesting(false))
+                    .padding(20)
+                }.fateAppHeader()
+            }.environmentObject(auth).environmentObject(purchases)
+        } else if ProcessInfo.processInfo.arguments.contains("--ai-consent107-preview") {
             VStack(spacing: 16) { AISharingNoticeView(); Button("鑑定する") {}.buttonStyle(FLPrimaryButtonStyle()) }.padding(24)
         } else if ProcessInfo.processInfo.arguments.contains("--feedback97-preview") {
             let cards = try! JSONDecoder().decode([ReadingCard].self, from: Data(#"[{"id":"preview-personality","kind":"essence","tab":"essence","scope":"self","title":"好きなものは、一人でじっくり比較し、探究し尽くしたい人です","summary":"消耗と回復","tags":["消耗と回復"],"pages":[{"role":"core","label":"消耗と回復","text":"これは表示確認用のサンプルです。好きなものを自分のペースで深めていく時間が、気持ちを整えるきっかけになります。\n\n予定が重なるときには、静かに過ごせる時間を確保します。"}],"evidence":[]},{"id":"preview-timing","kind":"timing","tab":"timing","scope":"self","title":"関係を組み替える年","summary":"これは表示確認用のサンプルです。人との距離や役割を見直し、心地よい関わり方を探す年です。","tags":[],"period":{"label":"2026年"},"timelineV3Calculation":{"version":"timeline-v3.31"},"pages":[],"sections":[{"heading":"この年の鑑定","body":"これは表示確認用のサンプルです。新しい関わりが始まる可能性があります。今ある関係の中で、お互いの時間や役割を確かめることもあるでしょう。","evidence":[],"termGloss":[]},{"heading":"根拠と期間","body":"この説明は画面には表示しません。","evidence":[],"termGloss":[]}],"evidence":[]}]"#.utf8))
