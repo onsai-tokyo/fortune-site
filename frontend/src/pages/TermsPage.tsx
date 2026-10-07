@@ -1,7 +1,12 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export function TermsPage() {
   const navigate = useNavigate()
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash === '#ai-consultation') document.getElementById('ai-consultation')?.scrollIntoView()
+  }, [hash])
 
   return (
     <div className="min-h-screen bg-navy">
@@ -24,6 +29,20 @@ export function TermsPage() {
             <p className="text-white/70 text-sm leading-relaxed">
               本利用規約（以下「本規約」）は、Fate Lab運営事務局（以下「当社」）が提供する統合占いサービス「Fate Lab」（以下「本サービス」）の利用条件を定めるものです。ユーザーの皆様には、本規約に同意いただいた上で本サービスをご利用いただきます。
             </p>
+          </section>
+
+          <section id="ai-consultation" className="scroll-mt-6">
+            <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">AI鑑定・相談に関する利用条件</h2>
+            <div className="text-white/70 text-sm space-y-3 leading-relaxed">
+              <p>相談に沿った鑑定書や質問への回答を作成するため、以下の情報を外部AIへ送信します。</p>
+              <p>送信先：Anthropic PBC（Claude API）。</p>
+              <p>鑑定書の作成：入力した相談文、選択したテーマ、もとにする鑑定文、判定の根拠と計算結果。</p>
+              <p>鑑定結果への質問：質問文、最近の会話履歴、もとの鑑定文と計算結果、保存した出生情報（生年月日・出生時刻・出生地・性別・ニックネームなど）。</p>
+              <p>ふたりの相談には相手の情報も含まれます。本文に入力した個人情報も送信されます。共有してよい情報だけを入力してください。</p>
+              <p>アプリで本規約に同意した上で「鑑定する」または再送ボタンを押すと、今回の相談・質問の作成に必要な上記情報の送信に同意したものとして、そのリクエストを送信します。以前の会員登録時の規約同意や、月額会員であることだけを理由に自動送信することはありません。</p>
+              <p>同意しない場合は送信ボタンを押さずに戻ってください。保存済みの鑑定を読むことはできます。AIの回答は参考情報であり、結果の正確性や将来の出来事を保証しません。</p>
+              <a href="/privacy" className="underline text-white/90">プライバシーポリシー</a>
+            </div>
           </section>
 
           <section>
@@ -146,7 +165,7 @@ export function TermsPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-white/40 text-xs">最終更新日：2026年4月15日</p>
+          <p className="text-white/40 text-xs">最終更新日：2026年10月7日</p>
         </div>
 
       </div>

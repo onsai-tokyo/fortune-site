@@ -115,8 +115,8 @@ struct AIBookComposeView: View {
                     }.disabled(working || pending != nil)
                     if let pending {
                         Text("受付状況を確認しています。重複して利用枠を消費することはありません。").font(.footnote).foregroundStyle(FateTheme.muted)
-                        AISharingNoticeView(isBook: true)
-                        Button("同意して受付確認・再送する") { Task { await submit(existing: pending) } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
+                        AISharingNoticeView()
+                        Button("受付確認・再送する") { Task { await submit(existing: pending) } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
                         Button("受付がなければ入力に戻る") { Task { await releaseUnsubmitted() } }.disabled(working)
                     }
                     if let error {
@@ -154,7 +154,7 @@ struct AIBookComposeView: View {
                         Text(status.creditBreakdown).font(.caption2).foregroundStyle(FateTheme.muted)
                         Text("会員分は更新日に切り替わります（繰り越しなし）。").font(.caption2).foregroundStyle(FateTheme.muted)
                     }
-                    AISharingNoticeView(isBook: true)
+                    AISharingNoticeView()
                     Button {
                         if previewMode { return }
                         editingQuestion = false
@@ -172,7 +172,7 @@ struct AIBookComposeView: View {
                     } label: {
                         HStack(spacing: 10) {
                             if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
-                            Text((status?.remaining ?? 0) > 0 ? "同意して鑑定書をつくる · 1通分" : "利用プランを見る")
+                            Text((status?.remaining ?? 0) > 0 ? "鑑定する" : "利用プランを見る")
                         }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")

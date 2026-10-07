@@ -1,56 +1,19 @@
 import SwiftUI
 
 enum AISharingConsent {
-    static let version = "anthropic-2026-10-07-v1"
-}
-
-struct AISharingConsentView: View {
-    let isBook: Bool
-    let onAgree: () -> Void
-    let onCancel: () -> Void
-    @State private var agreed = false
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    Text("AIへの情報送信について").font(FateType.screenTitle)
-                    Text(isBook ? "相談に沿った鑑定書を作成するため、次の情報を外部AIへ送信します。" : "質問への回答を作成するため、次の情報を外部AIへ送信します。")
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("送信先").font(.headline)
-                        Text("Anthropic PBC（Claude API）")
-                        Text("送信する情報").font(.headline).padding(.top, 8)
-                        Text(isBook ? "相談文、選択したテーマ、もとにする鑑定文と判定の根拠・計算結果。" : "質問文、最近の会話履歴、もとの鑑定文・計算結果、保存した出生情報（生年月日・出生時刻・出生地・性別・ニックネームなど）。")
-                        Text("ふたりの相談では、相手に関する情報も含まれます。相談文に入力した個人情報も送信されます。共有してよい情報だけを入力してください。")
-                    }.padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20))
-                    Link("プライバシーポリシーを確認する", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy"))
-                    Text("同意は今回の送信に限ります。同意しなくても、保存済みの鑑定を読むことはできます。").font(.footnote).foregroundStyle(FateTheme.muted)
-                    Toggle("上記の情報をAnthropicへ送信することに同意します", isOn: $agreed)
-                        .accessibilityIdentifier("aiConsent.agree")
-                    Button("同意して送信する", action: onAgree)
-                        .buttonStyle(FLPrimaryButtonStyle()).disabled(!agreed)
-                        .accessibilityIdentifier("aiConsent.send")
-                    Button("送信せず戻る", action: onCancel).buttonStyle(FLSecondaryButtonStyle())
-                }.padding(24)
-            }.background(FateTheme.canvas)
-        }
+    static let version = "terms-ai-2026-10-07-v2"
+    static var termsURL: URL {
+        var url = URLComponents(url: AppConfig.websiteBaseURL.appendingPathComponent("terms"), resolvingAgainstBaseURL: false)!
+        url.fragment = "ai-consultation"
+        return url.url!
     }
 }
 
-/// Shown beside the explicit send action, without interrupting the composer.
 struct AISharingNoticeView: View {
-    let isBook: Bool
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("回答の作成にはAnthropic（Claude API）を利用します。")
-                .fontWeight(.medium)
-            Text(isBook
-                 ? "相談文・テーマ・もとの鑑定文・判定の根拠と計算結果を送信します。相手の情報や、相談文に入力した個人情報も含まれます。"
-                 : "質問文・会話履歴・鑑定文と計算結果・出生情報（生年月日、時刻、場所、性別、ニックネームなど）を送信します。相手の情報や、入力した個人情報も含まれます。")
-            Link("情報の取り扱い", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy"))
-        }
-        .font(.caption).foregroundStyle(FateTheme.muted)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier("aiConsent.inlineNotice")
+        Text(.init("[利用規約](\(AISharingConsent.termsURL.absoluteString))に同意した上での鑑定をお願いします。"))
+            .font(.caption).foregroundStyle(FateTheme.muted).tint(FateTheme.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier("aiConsent.termsNotice")
     }
 }
