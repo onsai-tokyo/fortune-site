@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @State private var showDeleteConfirmation = false
+    @State private var showMembershipSheet = false
 
     var body: some View {
         ScrollView {
@@ -67,6 +68,12 @@ struct SettingsView: View {
         } message: {
             Text("保存した鑑定書と質問の履歴がすべて削除されます。この操作は取り消せません。継続鑑定をご利用中の場合は、App Storeの設定から別途解約してください。")
         }
+        .sheet(isPresented: $showMembershipSheet) {
+            PaywallSheet(draftQuestion: "") {
+                if purchases.isPremium { showMembershipSheet = false }
+            }
+        }
+        .onChange(of: AccountScope(auth)) { _, _ in showMembershipSheet = false }
         .task { if auth.session != nil { await purchases.sync(auth: auth) } }
     }
 
@@ -79,33 +86,19 @@ struct SettingsView: View {
                 if !AppConfig.storeKitEnabled {
                     Text(AppConfig.purchasesUnavailableMessage)
                         .font(.system(.footnote)).foregroundStyle(FateTheme.muted)
-                } else if auth.session != nil && purchases.accessState == .unknown {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 10) {
-                            if purchases.isSyncing {
-                                ProgressView().tint(FateTheme.ink)
-                                Text("購入状況を確認しています").foregroundStyle(FateTheme.muted)
-                            } else {
-                                Text("購入状況を確認できていません").foregroundStyle(FateTheme.muted)
-                            }
-                        }
-                        Button("もう一度確認する") { Task { await purchases.sync(auth: auth) } }
-                            .frame(minHeight: 44)
-                            .disabled(purchases.isSyncing)
-                    }.frame(minHeight: 56)
                 } else if purchases.accessState == .premium {
                     Button("サブスクリプションを管理") {
                         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
                         Task { try? await AppStore.showManageSubscriptions(in: scene) }
                     }
-                } else if purchases.accessState == .standard, let session = auth.session {
+                } else if auth.session != nil {
                     if purchases.needsMembershipRestore {
                         Text("Appleの購入履歴を、このアカウントに復元できます。")
                             .font(.footnote).foregroundStyle(FateTheme.muted)
                     }
                     Button(purchases.membershipActionTitle) {
-                        Task { await purchases.purchase(userID: session.user.id, auth: auth) }
-                    }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership)
+                        showMembershipSheet = true
+                    }.buttonStyle(FLPrimaryButtonStyle())
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }

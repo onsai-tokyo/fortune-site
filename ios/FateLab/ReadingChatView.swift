@@ -370,8 +370,6 @@ struct PaywallSheet: View {
                         .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
                     FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
                     if purchases.isPremium { MembershipActiveBanner() }
-                    MembershipDetailsView()
-                    Divider().overlay(FateTheme.line)
                     VStack(alignment: .leading, spacing: 5) {
                         if let product = purchases.product {
                             Text(ReadingPrices.monthly)
@@ -386,7 +384,11 @@ struct PaywallSheet: View {
                         if purchases.isPremium {
                             Button("会員として利用を続ける") { onRefresh(); dismiss() }.buttonStyle(FLPrimaryButtonStyle())
                         } else if purchases.accessState == .unknown || purchases.isSyncing {
-                            Text("購入状況を確認しています。再購入せずお待ちください。").font(.callout)
+                            if purchases.isSyncing {
+                                ProgressView("購入状況を確認しています…").tint(FateTheme.ink)
+                            } else {
+                                Text("購入状況を確認できませんでした。もう一度確認してください。").font(.callout)
+                            }
                             Button("購入状況を再確認") { Task { await purchases.sync(auth: auth) } }.disabled(purchases.isSyncing)
                         } else if !purchases.hasStoreKitEntitlement, purchases.product == nil, purchases.errorMessage != nil {
                             ReportCard {
@@ -404,6 +406,12 @@ struct PaywallSheet: View {
                             Task { await purchases.restore(auth: auth); onRefresh() }
                         }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(FateTheme.ink)
                     }
+                    if purchases.isWorking { ProgressView("購入手続き中…").tint(FateTheme.ink) }
+                    if let error = purchases.errorMessage {
+                        Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
+                    }
+                    Divider().overlay(FateTheme.line)
+                    MembershipDetailsView()
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     HStack {
