@@ -5,7 +5,6 @@ struct SettingsView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @State private var showDeleteConfirmation = false
-    @State private var showMembershipSheet = false
 
     var body: some View {
         ScrollView {
@@ -68,12 +67,6 @@ struct SettingsView: View {
         } message: {
             Text("保存した鑑定書と質問の履歴がすべて削除されます。この操作は取り消せません。継続鑑定をご利用中の場合は、App Storeの設定から別途解約してください。")
         }
-        .sheet(isPresented: $showMembershipSheet) {
-            PaywallSheet(draftQuestion: "") {
-                if purchases.isPremium { showMembershipSheet = false }
-            }
-        }
-        .onChange(of: AccountScope(auth)) { _, _ in showMembershipSheet = false }
         .task { if auth.session != nil { await purchases.sync(auth: auth) } }
     }
 
@@ -96,9 +89,7 @@ struct SettingsView: View {
                         Text("Appleの購入履歴を、このアカウントに復元できます。")
                             .font(.footnote).foregroundStyle(FateTheme.muted)
                     }
-                    Button(purchases.membershipActionTitle) {
-                        showMembershipSheet = true
-                    }.buttonStyle(FLPrimaryButtonStyle())
+                    SettingsMembershipButton()
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
@@ -117,7 +108,7 @@ struct SettingsView: View {
             .padding(22)
             .background(FateTheme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5).allowsHitTesting(false))
         }
     }
 }
@@ -131,7 +122,7 @@ private struct SettingsGroup<Content: View>: View {
             VStack(spacing: 0) { content }
                 .background(FateTheme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5).allowsHitTesting(false))
         }
     }
 }
@@ -179,4 +170,32 @@ private struct SettingsLinkRow: View {
 private struct SettingsDivider: View {
     var edgeInset: CGFloat = 16
     var body: some View { Rectangle().fill(FateTheme.line).frame(height: 0.5).padding(.leading, edgeInset) }
+}
+
+/// Own the presentation at the purchase entry point, independently of Settings'
+/// deletion dialog and its asynchronous account/status updates.
+struct SettingsMembershipButton: View {
+    @EnvironmentObject private var auth: AuthStore
+    @EnvironmentObject private var purchases: PurchaseManager
+    @State private var showingMembership = false
+
+    var body: some View {
+        Button {
+            showingMembership = true
+        } label: {
+            Text(purchases.membershipActionTitle)
+                .frame(maxWidth: .infinity, minHeight: 24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(FLPrimaryButtonStyle())
+        .accessibilityIdentifier("settings.membership.open")
+        .sheet(isPresented: $showingMembership) {
+            PaywallSheet(draftQuestion: "") {
+                if purchases.isPremium { showingMembership = false }
+            }
+            .environmentObject(auth)
+            .environmentObject(purchases)
+        }
+        .onChange(of: AccountScope(auth)) { _, _ in showingMembership = false }
+    }
 }
