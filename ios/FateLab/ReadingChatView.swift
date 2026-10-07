@@ -105,11 +105,11 @@ struct ReadingChatView: View {
                         if conversationMissing {
                             Button("鑑定一覧へ") { tabRouter.closeMissingChat() }.font(.caption.weight(.semibold))
                         } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Button("同意して再送する") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
+                            Button("もう一度送る") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
                         }
                     }
                 }
-                AISharingNoticeView(isBook: false)
+                AISharingNoticeView()
                 HStack(alignment: .bottom, spacing: 6) {
                     TextField("鑑定について聞く…", text: $input, axis: .vertical)
                         .accessibilityIdentifier("chat.input")
@@ -120,8 +120,8 @@ struct ReadingChatView: View {
                         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !question.isEmpty, !isWorking else { return }
                         if isBlocked { showPaywall = true } else { streamTask = Task { await send() } }
-                    } label: { Text(isWorking ? "停止" : (isBlocked ? "プランを見る" : "同意して送信")).font(.system(.caption, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 12).frame(minHeight: 44).background(FateTheme.ink, in: Capsule()) }
-                    .accessibilityLabel(isWorking ? "回答を停止" : (isBlocked ? "プランを見る" : "Anthropicへの情報送信に同意して質問を送信"))
+                    } label: { Text(isWorking ? "停止" : (isBlocked ? "プランを見る" : "鑑定する")).font(.system(.caption, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 12).frame(minHeight: 44).background(FateTheme.ink, in: Capsule()) }
+                    .accessibilityLabel(isWorking ? "回答を停止" : (isBlocked ? "プランを見る" : "鑑定する"))
                     .padding(.trailing, 5).padding(.vertical, 5)
                 }.background(FateTheme.card).clipShape(RoundedRectangle(cornerRadius: 26)).overlay(RoundedRectangle(cornerRadius: 26).stroke(FateTheme.line, lineWidth: 0.7))
                 Button { Task { await saveConversation() } } label: {

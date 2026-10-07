@@ -70,30 +70,12 @@ struct SettingsView: View {
         .task { if auth.session != nil { await purchases.sync(auth: auth) } }
     }
 
-    private func membershipStat(_ value: String, detail: String) -> some View {
-        VStack(spacing: 7) { Text(value).font(.system(.title3, design: .default, weight: .medium)); Text(detail).font(.caption).foregroundStyle(FateTheme.muted) }.frame(maxWidth: .infinity)
-    }
     private var membershipCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("メンバーシップ")
                 .font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
             VStack(alignment: .leading, spacing: 14) {
-                Text("継続鑑定").font(.system(.title3, weight: .semibold))
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("1,980円").font(.system(.largeTitle, design: .serif, weight: .medium))
-                    Text("／月").font(.subheadline).foregroundStyle(FateTheme.muted)
-                    Spacer()
-                    Text("日本価格").font(.caption).foregroundStyle(FateTheme.muted)
-                }
                 if purchases.isPremium { MembershipActiveBanner() }
-                Label("相性の有料項目・2027年以降の時系列が見放題", systemImage: "lock.open")
-                    .font(.subheadline).foregroundStyle(FateTheme.ink)
-                HStack(spacing: 0) {
-                    membershipStat("毎月3通", detail: "相談の鑑定書")
-                    Rectangle().fill(FateTheme.line).frame(width: 0.5, height: 36)
-                    membershipStat("10人まで", detail: "相手の登録")
-                }.padding(.vertical, 18).background(FateTheme.canvas, in: RoundedRectangle(cornerRadius: 14))
-                SettingsDivider(edgeInset: 0)
                 DisclosureGroup("プランの内容を確認") { MembershipDetailsView().padding(.top, 14) }
                     .font(.subheadline).tint(FateTheme.ink)
                 if !AppConfig.storeKitEnabled {
