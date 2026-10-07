@@ -29,6 +29,13 @@ struct AIBook: Decodable, Identifiable {
     let deliveredAt: String?
     let document: Document?
     let sources: [Source]
+    var failureCode: String? = nil
+    var failureMessage: String {
+        if failureCode == "BOOK_REFUSED" || failureCode == "BOOK_DOCUMENT_POLICY" {
+            return "このご相談は鑑定で扱える範囲を超えていたため、利用枠をお戻ししました。相談内容は保存されています。"
+        }
+        return "作成を完了できなかったため、利用枠をお戻ししました。相談内容はそのままで再試行できます。"
+    }
     struct Document: Decodable {
         let title: String
         let summary: String

@@ -23,6 +23,7 @@ struct AIBookComposeView: View {
     @State private var accepted: AIBook?
     @State private var error: String?
     @State private var working = false
+    @State private var preparing = false
     @State private var recoveryBlocked = false
     private let themes = ["恋愛・関係", "仕事", "人間関係", "時期の判断", "その他"]
     private var valid: Bool { !recoveryBlocked && sourceID != nil && (20...400).contains(question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count) }
@@ -43,7 +44,10 @@ struct AIBookComposeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                if let accepted {
+                if preparing {
+                    BookGenerationStatusView(state: "preparing")
+                        .accessibilityIdentifier("book.preparing")
+                } else if let accepted {
                     if accepted.isPending {
                         BookGenerationStatusView(state: accepted.state)
                     } else if accepted.state == "delivered" {
@@ -51,10 +55,13 @@ struct AIBookComposeView: View {
                         NavigationLink { AIBookDetailView(initial: accepted) } label: { Text("完成した鑑定書を読む") }.buttonStyle(FLPrimaryButtonStyle())
                     } else {
                         Text("鑑定書を作成できませんでした").font(FateType.sectionTitle)
-                        Text("利用枠をお戻ししました。相談内容をご確認のうえ、もう一度お試しください。").font(.subheadline).foregroundStyle(FateTheme.muted)
+                        Text(accepted.failureMessage).font(.subheadline).foregroundStyle(FateTheme.muted)
                     }
                     if let error { Text(error).font(.footnote).foregroundStyle(FateTheme.danger) }
                     Button("本棚で確認する") { if isTab { tabRouter.selectTab(.readings) } else { dismiss() } }.buttonStyle(FLSecondaryButtonStyle())
+                    if accepted.state == "failed" {
+                        Button("同じ相談で再試行する") { self.accepted = nil; Task { await refresh() } }.buttonStyle(FLPrimaryButtonStyle())
+                    }
                     Button("別の相談を書く") { self.accepted = nil; question = ""; Task { await refresh() } }.buttonStyle(FLSecondaryButtonStyle())
                 } else {
                     FateEditorialHero(eyebrow: "PERSONAL READING", title: "いまの想いを、\n一冊の鑑定書に。", subtitle: "あなたの相談と保存した鑑定から、約5,000文字で読み解きます。")
@@ -145,7 +152,7 @@ struct AIBookComposeView: View {
         }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            if accepted == nil && pending == nil {
+            if !preparing && accepted == nil && pending == nil {
                 VStack(spacing: 10) {
                     HStack {
                         Text(status.map { $0.enabled ? ($0.premium == true ? "利用できる鑑定書" : "鑑定書の作成は月額会員限定です") : "現在、作成を休止しています" } ?? "利用枠を確認しています")
@@ -158,8 +165,9 @@ struct AIBookComposeView: View {
                     }
                     AISharingNoticeView()
                     Button {
-                        if previewMode { return }
+                        if previewMode { preparing = true; return }
                         editingQuestion = false
+                        preparing = true
                         Task { await beginCreation() }
                     } label: {
                         HStack(spacing: 10) {
@@ -198,7 +206,7 @@ struct AIBookComposeView: View {
             }.environmentObject(auth).environmentObject(purchases)
         }
         .onChange(of: AccountScope(auth)) { _, _ in
-            membershipContinuation.cancel(); showMembership = false; showPlans = false
+            membershipContinuation.cancel(); showMembership = false; showPlans = false; preparing = false; working = false
         }
         .task(id: accepted?.id) { await trackAccepted() }
         .task(id: AccountScope(auth)) {
@@ -235,16 +243,17 @@ struct AIBookComposeView: View {
         }
     }
     private func beginCreation() async {
-        guard valid, !working, let sourceID else { return }
+        guard valid, !working, let sourceID else { preparing = false; return }
+        defer { preparing = false }
         let owner = AccountScope(auth)
         working = true; error = nil
-        do { try await validate(); try owner.check(auth) }
-        catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error); working = false }; return }
-        let refreshed = await refreshMembership()
+        let refreshed = await refresh()
         guard owner.isCurrent(auth) else { return }
         working = false
         guard refreshed else { return }
         if status?.premium != true {
+            do { try await validate(); try owner.check(auth) }
+            catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return }
             membershipContinuation.prepare(PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID), owner: owner)
             showMembership = true
         } else if (status?.remaining ?? 0) > 0 {
@@ -344,7 +353,8 @@ struct AIBookComposeView: View {
     private func submit(existing: PendingAIBook? = nil, draft: PendingAIBook? = nil) async {
         guard !working else { return }
         let owner = AccountScope(auth), key = pendingKey
-        working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
+        working = true; preparing = true; error = nil
+        defer { if owner.isCurrent(auth) { working = false; preparing = false } }
         do {
             let order: PendingAIBook
             if let existing { order = existing }

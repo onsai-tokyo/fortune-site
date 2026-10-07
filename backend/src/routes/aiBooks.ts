@@ -10,9 +10,11 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { BookError, BOOK_PRODUCT, bookRPC, bookSources, uuidPattern, validateBookQuestion } from '../lib/aiBooks.js'
 export const aiBooksRouter = Router()
 aiBooksRouter.use(requireAuth)
-const projection = 'id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot'
+const projection = 'id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,metadata'
 export function publicBook(b: Record<string, unknown>) {
-  return {id:b.id,title:b.title,targetTitle:b.target_title,theme:b.theme,question:b.question??'',state:b.state,createdAt:b.created_at,deliveredAt:b.delivered_at,
+  const code=(b.metadata as {failure?:{code?:unknown}}|null)?.failure?.code
+  const failureCode=b.state==='failed' && typeof code==='string' && /^BOOK_[A-Z_]{1,60}$/.test(code)?code:null
+  return {failureCode,id:b.id,title:b.title,targetTitle:b.target_title,theme:b.theme,question:b.question??'',state:b.state,createdAt:b.created_at,deliveredAt:b.delivered_at,
     document:b.state==='delivered'?(b.document??null):null,sources:b.state==='delivered'?(b.source_snapshot??[]):[]}
 }
 function fail(res: Response,error: unknown) {
@@ -111,7 +113,7 @@ aiBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
   try {
     if(!uuidPattern.test(req.body?.operationId??'')) throw new BookError('BOOK_INPUT',422,'受付番号が必要です。')
     // Read retries before source lookup: source deletion must not strand an accepted order.
-    const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
+    const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id,metadata').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
     if(error) throw error
     if(old) {
       const oldFocus=Array.isArray(old.source_snapshot)?old.source_snapshot.find((s:any)=>s.focused===true)?.id:undefined

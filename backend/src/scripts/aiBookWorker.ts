@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { bookFailure, bookRetryDelay } from '../lib/aiBookFailure.js'
 import Anthropic from '@anthropic-ai/sdk'
 import { bookRPC, BOOK_PROMPT_VERSION, type BookSource } from '../lib/aiBooks.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
@@ -6,17 +7,29 @@ import { generateBookDocument } from '../lib/aiBookGeneration.js'
 import { reconcileAppleBatch } from '../lib/appleReconciliation.js'
 async function work() {
   const job=await bookRPC('ai_book_claim'); if(!job) return
+  const started=Date.now()
+  console.info(JSON.stringify({event:'book_generation_started',id:job.id,attempt:job.attempts}))
   try {
     const client=new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY,timeout:80_000,maxRetries:0})
     const generated=await generateBookDocument(client,process.env.AI_BOOK_MODEL!,{question:job.question,theme:job.theme,sources:job.source_snapshot as BookSource[]})
     const saved=await bookRPC('ai_book_finish',{p_id:job.id,p_lease:job.lease_id,p_document:generated.document,
       p_metadata:{model:generated.model,promptVersion:BOOK_PROMPT_VERSION,inputTokens:generated.inputTokens,outputTokens:generated.outputTokens}})
     console.info(JSON.stringify({event:saved?'book_generation_saved':'book_lease_superseded',id:job.id,attempt:job.attempts}))
-  } catch {
-    console.warn(JSON.stringify({event:'book_generation_retry',id:job.id,attempt:job.attempts}))
-    if(job.attempts>=3) await bookRPC('ai_book_fail',{p_id:job.id,p_lease:job.lease_id})
+  } catch (error) {
+    const failure=bookFailure(error)
+    console.warn(JSON.stringify({event:'book_generation_failed_attempt',id:job.id,attempt:job.attempts,elapsedMs:Date.now()-started,...failure}))
+    const db=getSupabaseAdmin()
+    const {error:metadataError}=await db.from('ai_books').update({metadata:{failure,attempt:job.attempts,elapsedMs:Date.now()-started}}).eq('id',job.id).eq('lease_id',job.lease_id).eq('state','generating')
+    if(metadataError) console.error('Book failure metadata unavailable')
+    // Configuration/billing errors cannot be repaired by spending more attempts.
+    // Accepted queued jobs are retained; operations can resume after re-enabling.
+    if(failure.pause) {
+      const {error:pauseError}=await db.from('ai_book_settings').update({enabled:false}).eq('id',true)
+      if(pauseError) console.error('Book provider pause unavailable')
+    }
+    if(job.attempts>=3 || !failure.retryable) await bookRPC('ai_book_fail',{p_id:job.id,p_lease:job.lease_id})
     else {
-      const {error}=await getSupabaseAdmin().from('ai_books').update({lease_until:new Date().toISOString()}).eq('id',job.id).eq('lease_id',job.lease_id).eq('state','generating')
+      const {error}=await getSupabaseAdmin().from('ai_books').update({lease_until:new Date(Date.now()+bookRetryDelay(job.attempts)*1000).toISOString()}).eq('id',job.id).eq('lease_id',job.lease_id).eq('state','generating')
       if(error) throw new Error('BOOK_RETRY_SAVE_FAILED')
     }
   }

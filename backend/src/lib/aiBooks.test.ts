@@ -93,3 +93,11 @@ test('compatibility follow-up includes day-pillar and directional sukuyo groundi
  assert.equal(facts.dayA,'甲子');assert.equal(facts.dayB,'乙丑')
  assert.ok(facts.sukuyo.aSeesB);assert.ok(facts.dayPillarFacts.a_to_b_god)
 })
+
+test('failed books expose only a sanitized failure code, never diagnostics or private metadata',()=>{
+ const out=publicBook({state:'failed',metadata:{failure:{code:'BOOK_PROVIDER_BILLING',requestId:'private'},private:'secret'}})
+ assert.equal(out.failureCode,'BOOK_PROVIDER_BILLING')
+ assert.equal('metadata' in out,false)
+ assert.equal(publicBook({state:'failed',metadata:{failure:{code:'private question'}}}).failureCode,null)
+ assert.equal(publicBook({state:'generating',metadata:{failure:{code:'BOOK_PROVIDER_LIMIT'}}}).failureCode,null)
+})

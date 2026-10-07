@@ -80,7 +80,7 @@ struct AIBookDetailView: View {
                 } else {
                     if book.isPending { BookGenerationStatusView(state: book.state) }
                     else if book.state == "delivered" { ProgressView("本を開いています") }
-                    else if book.state == "failed" { Text("利用枠をお戻ししました。返却された枠の期限は本棚で確認できます。相談内容を見直して、もう一度お試しください。") }
+                    else if book.state == "failed" { Text(book.failureMessage) }
                     DisclosureGroup("ご相談の内容") { Text(book.question).lineSpacing(7).padding(.top, 12) }.font(.subheadline)
                 }
                 if let error { Text(error).font(.footnote).foregroundStyle(FateTheme.danger) }
@@ -146,6 +146,7 @@ struct BookGenerationStatusView: View {
     let state: String
     private var detail: String {
         switch state {
+        case "preparing": "入力内容と利用枠を確認し、受付を進めています。"
         case "queued": "ご相談を受け付けました。順番に作成を始めます。"
         case "review": "文章の内容を確認しています。"
         default: "ご相談と鑑定結果を照らし合わせています。"
@@ -153,8 +154,8 @@ struct BookGenerationStatusView: View {
     }
     var body: some View {
         VStack(spacing: 8) {
-            FateLoadingView(title: "あなたへの鑑定書を\nつくっています", detail: detail)
-            Text("数分かかることがあります。\nアプリを閉じても作成は続き、完成した一冊は本棚に残ります。")
+            FateLoadingView(title: state == "preparing" ? "鑑定書の作成を\n準備しています" : "あなたへの鑑定書を\nつくっています", detail: detail)
+            Text(state == "preparing" ? "受付の確認まで、そのままお待ちください。" : "作成には数分かかる場合があります。\n他の画面をご覧いただけます。\nアプリを閉じても作成は続き、完成後は本棚から読めます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted).multilineTextAlignment(.center).lineSpacing(5)
                 .padding(.horizontal, 20).padding(.bottom, 24)
         }.frame(maxWidth: .infinity).background { FateLoadingBackground() }

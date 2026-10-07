@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import type Anthropic from '@anthropic-ai/sdk'
-import {appendBookExpansion, documentLength, generateBookDocument, normalizeBookOutput} from './aiBookGeneration.js'
+import {appendBookExpansion, documentLength, generateBookDocument, normalizeBookOutput, sanitizeBookHighlights} from './aiBookGeneration.js'
 const text='相手に伝える前に、自分が大切にしていることを整理する時間が役立ちます。'
 const sources=[1,2,3].map(n=>({id:String(n),title:'原稿'+n,text,version:'test',evidence:[]}))
 const draft=()=>({title:'働き方と伝え方を整える',summary:text,answer:text.repeat(20),sections:sources.map(s=>({heading:'話し合いの進め方',body:text.repeat(15),sourceId:s.id,quote:text})),actions:[text,text]})
@@ -47,4 +47,19 @@ test('display text decodes literal newlines without touching source quotations',
  const normalized=normalizeBookOutput(d)
  assert.ok(normalized.answer.endsWith('\n\n段落の続き'));assert.ok(normalized.sections[0].body.endsWith('\n次の段落'))
  assert.equal(normalized.sections[0].quote,d.sections[0].quote)
+})
+
+
+test('invalid highlights are dropped without changing paid reading text or evidence',()=>{
+ const d={...draft(),highlights:[text.slice(0,20),'本文にない強調用の言い換えです',42,text.slice(0,20)]}
+ const clean=sanitizeBookHighlights(d)
+ assert.deepEqual(clean.highlights,[text.slice(0,20)])
+ assert.equal(clean.answer,d.answer); assert.deepEqual(clean.sections,d.sections); assert.deepEqual(clean.actions,d.actions)
+ assert.deepEqual(sanitizeBookHighlights({...d,highlights:'invalid'}).highlights,[])
+})
+test('a long valid reading with mismatched highlights is delivered without another model call',async()=>{
+ const d=appendBookExpansion(draft(),extra()); d.highlights=['本文と一致しない要約された強調箇所です']
+ const f=fake([d]);const out=await generateBookDocument(f.client,'test',{question:text,theme:'仕事',sources})
+ assert.equal(f.count(),1);assert.deepEqual(out.document.highlights,[])
+ assert.equal(out.document.answer,d.answer);assert.deepEqual(out.document.sections,d.sections)
 })

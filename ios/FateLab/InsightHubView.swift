@@ -657,7 +657,7 @@ struct InsightCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 10) {
                     Rectangle().fill(.white.opacity(0.65)).frame(width: 20, height: 1)
-                    Text(item.tags.first(where: { $0 != "本質" }) ?? "あなたについて")
+                    Text(item.navigationLabel)
                         .font(.subheadline.weight(.medium)).tracking(0.8)
                         .accessibilityAddTraits(.isHeader)
                 }

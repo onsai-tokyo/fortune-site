@@ -287,3 +287,13 @@ final class BookMembershipContinuationTests: XCTestCase {
         } catch { XCTAssertEqual(calls, 1) }
     }
 }
+
+final class ReadingCategory117Tests: XCTestCase {
+    func testLockedCoupleCardsKeepTheirCategoryWithoutTags() throws {
+        for (id,label) in [("compat-v24-5","良好な関係を築くコツ"),("compat-v24-6","障害になること"),("compat-v24-7","復縁の可能性")] {
+            let raw = "{\"id\":\"\(id)\",\"kind\":\"essence\",\"tab\":\"essence\",\"scope\":\"couple\",\"title\":\"鑑定の見出し\",\"summary\":\"\",\"tags\":[],\"pages\":[],\"evidence\":[]}"
+            let card = try JSONDecoder().decode(ReadingCard.self, from: Data(raw.utf8))
+            XCTAssertEqual(card.navigationLabel,label)
+        }
+    }
+}

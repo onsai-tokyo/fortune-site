@@ -33,7 +33,7 @@
     "apple:reconcile": "node --import tsx src/scripts/reconcileAppleEvents.ts",
     "books:worker": "tsx src/scripts/aiBookWorker.ts",
     "books:review": "tsx src/scripts/reviewAiBook.ts",
-    "test:books": "tsx --test src/lib/aiBooks.test.ts src/routes/aiBooksMembership.test.ts",
+    "test:books": "tsx --test src/lib/aiBooks.test.ts src/routes/aiBooksMembership.test.ts src/lib/aiBookGeneration.test.ts src/lib/aiBookFailure.test.ts",
     "test:books:db": "python3 supabase/tests/ai_books.py",
     "test:timeline3": "node --import tsx --test src/lib/timelineContext.test.ts src/lib/report/timelineV3Integration.test.ts src/lib/report/timelineV3/timelineV3.test.ts src/routes/timeline.test.ts",
     "test:timeline3:db": "python3 supabase/tests/timeline_v3.py",

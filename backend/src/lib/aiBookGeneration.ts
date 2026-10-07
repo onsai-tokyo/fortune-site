@@ -9,10 +9,11 @@ sectionsは異なる資料3〜5枚、actionsは2〜3件。summary・answer・各
 
 
 const string = {type:'string'}
+const boundedString=(minLength:number,maxLength:number)=>({type:'string',minLength,maxLength})
 const BOOK_SCHEMA: Anthropic.Tool.InputSchema = {type:'object',properties:{
-  refused:{type:'boolean'},title:string,summary:string,answer:string,conclusion:string,highlights:{type:'array',items:string},
-  sections:{type:'array',items:{type:'object',properties:{heading:string,body:string,sourceId:string,quote:string},required:['heading','body','sourceId','quote']}},
-  actions:{type:'array',items:string}
+  refused:{type:'boolean'},title:boundedString(4,60),summary:boundedString(20,500),answer:boundedString(100,2000),conclusion:boundedString(40,300),highlights:{type:'array',maxItems:8,items:boundedString(8,100)},
+  sections:{type:'array',minItems:3,maxItems:5,items:{type:'object',properties:{heading:boundedString(2,60),body:boundedString(50,1200),sourceId:string,quote:boundedString(10,300)},required:['heading','body','sourceId','quote']}},
+  actions:{type:'array',minItems:2,maxItems:3,items:boundedString(15,300)}
 },required:['title','summary','conclusion','highlights','answer','sections','actions']}
 const EXPANSION_SCHEMA: Anthropic.Tool.InputSchema = {type:'object',properties:{answerAddition:string,
   sectionAdditions:{type:'array',items:{type:'object',properties:{sourceId:string,body:string},required:['sourceId','body']}}},required:['answerAddition','sectionAdditions']}
@@ -38,6 +39,13 @@ export function normalizeBookOutput(value:any) {
   }
   return result
 }
+// Highlights are optional presentation metadata, not reading content or evidence.
+// A paraphrased highlight must never discard an otherwise valid paid document.
+export function sanitizeBookHighlights(d:any) {
+  const bodies=[d.answer,...(Array.isArray(d.sections)?d.sections.map((s:any)=>s?.body):[]),...(Array.isArray(d.actions)?d.actions:[])].filter(x=>typeof x==='string')
+  const highlights=Array.isArray(d.highlights)?d.highlights.filter((h:unknown):h is string=>typeof h==='string' && [...h].length>=8 && [...h].length<=100 && bodies.some(t=>t.includes(h))):[]
+  return {...d,highlights:[...new Set(highlights)].slice(0,8)}
+}
 export function documentLength(d:any):number {
   return [d.summary,d.answer,...(d.sections??[]).map((s:any)=>s.body),...(d.actions??[])].filter(x=>typeof x==='string').reduce((n,x)=>n+[...x].length,0)
 }
@@ -58,13 +66,19 @@ export async function generateBookDocument(client: Anthropic, model: string, inp
     if(response.stop_reason!=='tool_use')throw new Error('BOOK_TRUNCATED')
     const blocks=response.content.filter(c=>c.type==='tool_use')
     if(blocks.length!==1 || blocks[0].type!=='tool_use' || blocks[0].name!=='submit_book')throw new Error('BOOK_OUTPUT_SCHEMA')
-    return normalizeBookOutput(blocks[0].input)
+    const result=normalizeBookOutput(blocks[0].input)
+    if(result.refused===true)throw new Error('BOOK_REFUSED')
+    return result
   }
   let draft=await request([{role:'user',content:JSON.stringify(input)}])
   for(let attempt=0;attempt<3;attempt++) {
+    draft=sanitizeBookHighlights(draft)
     try { return {document:validateBookDocument(draft,input.sources),model,inputTokens,outputTokens} }
     catch(error) {
       const length=documentLength(draft)
+      console.warn(JSON.stringify({event:'book_document_validation',code:error instanceof Error && /^BOOK_[A-Z_]+$/.test(error.message)?error.message:'BOOK_OUTPUT_SCHEMA',
+        characters:length,answerCharacters:typeof draft.answer==='string'?[...draft.answer].length:null,
+        sectionCharacters:Array.isArray(draft.sections)?draft.sections.map((s:any)=>typeof s?.body==='string'?[...s.body].length:null):null,repairAttempt:attempt}))
       if(attempt===2 || !(error instanceof Error) || error.message!=='BOOK_DOCUMENT_LENGTH' || length>=4500)throw error
       const room={answer:2000-[...draft.answer].length,sections:draft.sections.map((s:any)=>({sourceId:s.sourceId,remaining:1200-[...s.body].length}))}
       const extra=await request([{role:'user',content:JSON.stringify({input,draft,currentCharacters:length,targetAdditionalCharacters:5200-length,maximumAdditionalCharacters:room})}],
