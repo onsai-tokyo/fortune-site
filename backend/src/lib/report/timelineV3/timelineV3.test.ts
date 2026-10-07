@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { containsJargon, findJargon } from '../jargon.js'
 import { personalParts } from './personal.js'
-import { composeYear, parts, timelineV3Cards } from './compose.js'
+import { composeYear, parts, timelineV3Cards, selfVoice, pastizeAll } from './compose.js'
 import { timelineContext, yearSignals, decideYear } from './signals.js'
 import { TIMELINE_V3_SAMPLES, SAMPLE_RANGE } from './samples.js'
 import { depthParts } from './depth.js'
@@ -121,7 +121,7 @@ for (const [name, input] of Object.entries(TIMELINE_V3_SAMPLES)) {
     // depth and area paragraphs never repeat a sentence within 10 years (factual pointers excluded)
     const seen = new Map<string, number>()
     // (area closings by status / work context rotate through 6 lines and are allowed to come back sooner)
-    const closings = new Set(strings([areaParts().closing, areaParts().workClosing]).flatMap(t => [t, neutralActivityText(t)]))
+    const closings = new Set(strings([areaParts().closing, areaParts().workClosing]).flatMap(t => [t, neutralActivityText(t), selfVoice(t), selfVoice(neutralActivityText(t))]))
     for (const c of cards) for (const sct of c.sections!.filter(x => ['10年の流れの中で', '前後の年とのつながり', '恋愛・人との関わり', '仕事・活動', '暮らし・自分の時間'].includes(x.heading))) {
       for (const x of sct.body.split(/(?<=。)/).filter(x => x && !/動きやすいのは|動きやすくなったのは/.test(x) && !closings.has(x))) {
         const y = Number(c.id.slice(-4)), p = seen.get(x)
@@ -298,7 +298,7 @@ test('movement quality: the leading direction of the possibilities follows the s
       const list: string[] = P.manifestations.relationship[y < 2026 ? 'unknown' : input.relationshipStatus ?? 'unknown']
       const first = card.sections![1].body.split(/(?<=。)/)[0]
       const lead = P.qualities[q].order[0]
-      const allowed = [list[lead], list[lead + 3]].map(x => x.replace(/こともあります。$/, 'ことがあります。'))
+      const allowed = [list[lead], list[lead + 3]].map(x => { const text = selfVoice(x.replace(/こともあります。$/, 'ことがあります。')); return y < 2026 ? pastizeAll(text) : text })
       assert.ok(allowed.includes(first), `${card.id} ${q}: first possibility "${first}" is not in direction ${lead}`)
       assert.ok(card.sections![0].body.includes(P.qualities[q].sentence[((y % 3) + 3) % 3].slice(0, -6)))
     }
@@ -495,7 +495,8 @@ test('v2.23 meeting year for every romantic label: crush / former / married wind
     assert.equal(d.stage?.kind, 'dating'); assert.equal(d.stage?.via, 'crush'); assert.equal(d.marriage, false)
   }
   const text = (timelineV3Cards(input, since + 1, since + 3, 2026, 'simple') as any[]).map(c => c.summary).join('')
-  assert.ok(has(text, 'crush', 0) && has(text, 'crush', 1), 'crush wording in the single timeline')
+  assert.ok(!/出会って|関係が始まって|二人/.test(text), 'self timeline must not narrate the selected relationship duration')
+  assert.ok(Object.values(depthParts().stage.selfDating as Record<string, string[]>).flat().some(x => text.includes(x.replace(/です。$/, ''))))
   // without partnerKind, partnerSince still counts for partnered people only (v2.19)
   assert.notEqual(decideYear(timelineContext({ ...base, relationshipStatus: 'single', partnerSince: since })!, since + 1).stage?.kind, 'dating')
 })
@@ -517,7 +518,7 @@ test('v2.24 the window line follows the year\'s fortune: forward / review / both
         const tone = stageTone(d, since + k < 2026)
         seen.add(tone)
         const r = composeYear(ctx, since + k, 2026)
-        assert.ok(r.simple.includes(T.body.partnered[tone][k === 1 ? 0 : 1].replace(/です。$/, '')), `${name} ${since + k}: ${tone}`)
+        assert.ok(r.simple.includes(depthParts().stage.selfDating[tone][k === 1 ? 0 : 1].replace(/です。$/, '')), `${name} ${since + k}: ${tone}`)
       }
     }
   }
@@ -554,7 +555,7 @@ test('v2.24 with the partner\'s birth data, the single timeline\'s window line u
       if (r.decision.stage?.kind !== 'dating' || r.decision.ageBand !== 'adult') continue
       const pt = pairTone(a!, b!, name, y, c.meetingYear)
       const tone = r.decision.marriage && pt === 'review' ? 'both' : r.decision.marriage && pt === 'steady' ? 'forward' : pt
-      assert.ok(r.simple.includes(T.body[kind][tone][k === 1 ? 0 : 1].replace(/です。$/, '')), `${name} ${y}: expected ${tone}`)
+      assert.ok(r.simple.includes(depthParts().stage.selfDating[tone][k === 1 ? 0 : 1].replace(/です。$/, '')), `${name} ${y}: expected ${tone}`)
     }
     const report = replaceTimelineV3({ cards: [], reportText: '' } as any, input, 2026)
     // the partner's birth data is not stored in the card; only the window tones are
@@ -565,5 +566,40 @@ test('v2.24 with the partner\'s birth data, the single timeline\'s window line u
     }
     const refreshed = refreshSavedTimelineV3Cards(report.cards, { ...c.self } as any, 2026, undefined, c.meetingYear, kind, c.partner as any)
     assert.deepEqual(refreshed.map(x => x.summary), report.cards.map(x => x.summary), `${name}: refresh with partnerBirth`)
+  }
+})
+
+test('self wording keeps the original judgement without narrating a selected relationship duration', () => {
+  const base = TIMELINE_V3_SAMPLES.nagoya_1995_female
+  for (const kind of ['partnered', 'crush', 'former', 'married'] as const) {
+    const input = { ...base, partnerSince: 2023, partnerKind: kind, lifeEvents: [{ kind: 'marriage' as const, year: 2020 }] }
+    const ctx = timelineContext(input)!
+    for (let year = 2023; year <= 2030; year++) {
+      const result = composeYear(ctx, year, 2026)
+      assert.deepEqual(result.decision, decideYear(ctx, year), `${kind}/${year}: editorial changes must preserve decisions`)
+      const text = [result.simple, result.simpleTitle, result.card.summary, ...result.card.sections!.map(s => s.body)].join('\n')
+      assert.ok(!/出会って|関係が始まって|二人/.test(text), `${kind}/${year}: ${text}`)
+    }
+  }
+})
+
+test('past possibilities stay possibilities and long periods do not falsely end in the past', () => {
+  assert.equal(pastizeAll('新しい縁につながることがあります。'), '新しい縁につながることがあったかもしれません。')
+  assert.equal(pastizeAll('新しい縁につながることもあります。'), '新しい縁につながることもあったかもしれません。')
+  const card = timelineV3Cards(TIMELINE_V3_SAMPLES.aichi_1995_female_married, 2025, 2025, 2026, 'simple')[0]
+  assert.ok(!/こと(?:も|が)あります。|2年半ほど続きました/.test(card.summary))
+  assert.ok(card.summary.includes('約2年半の時期に入りました'))
+})
+
+test('couple wording does not assign a personal marriage record to the selected partner', async () => {
+  const { buildCoupleTimelineV3 } = await import('./couple.js')
+  const { COUPLE_SAMPLES } = await import('./samples.js')
+  for (const name of ['former', 'partnered'] as const) {
+    const base = COUPLE_SAMPLES[name]
+    const result = buildCoupleTimelineV3({ ...base, meetingYear: 2018, referenceYear: 2026, endYear: 2026, self: { ...base.self, lifeEvents: [{ kind: 'marriage', year: 2020 }] } })
+    const text = result.entries.flatMap(e => e.card ? [e.card.summary, ...e.card.sections!.map(s => s.body)] : []).join('\n')
+    assert.ok(text.includes('あなたの年表では、この年に結婚'))
+    assert.ok(!/結婚のあったこの年の二人|結婚から\d+年|暮らしの役割分担/.test(text))
+    assert.ok(text.includes('ご自身の年表にある結婚を、今はどう振り返りますか。'))
   }
 })
