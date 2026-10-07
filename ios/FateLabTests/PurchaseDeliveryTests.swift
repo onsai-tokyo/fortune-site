@@ -142,6 +142,29 @@ final class BookReadingPresentationTests: XCTestCase {
         XCTAssertNotEqual(target, ReadingPurchaseTarget(conversationId: UUID(), cardId: target.cardId))
     }
 
+    @MainActor func testPurchaseDismissalOpensExactlyOnceAndRejectsChangedAccountOrConversation() throws {
+        let raw = #"{"id":"compat-v24-7","kind":"essence","scope":"couple","title":"title","summary":"body","tags":[],"pages":[],"evidence":[],"access":{"locked":false}}"#
+        let card = try JSONDecoder().decode(ReadingCard.self, from: Data(raw.utf8))
+        let owner = AccountScope(userID: UUID(), epoch: 1)
+        let conversation = UUID()
+        let navigation = ReadingPurchaseNavigation()
+        // The dismissal handler is captured before the asynchronous purchase returns.
+        let dismiss = { navigation.consume(owner: owner, conversationID: conversation) }
+        XCTAssertNil(dismiss())
+        let grant = ReadingAccessGrant(card: card, conversationID: conversation, owner: owner)
+        navigation.stage(grant)
+        XCTAssertEqual(dismiss()?.card.id, card.id)
+        XCTAssertNil(dismiss())
+        navigation.stage(grant)
+        XCTAssertNil(navigation.consume(owner: .init(userID: owner.userID, epoch: 2), conversationID: conversation))
+        XCTAssertNil(dismiss())
+        navigation.stage(grant)
+        XCTAssertNil(navigation.consume(owner: owner, conversationID: UUID()))
+        navigation.stage(grant)
+        navigation.clear()
+        XCTAssertNil(dismiss())
+    }
+
     func testFreshReadingHandoffRejectsOtherAccountsTargetsAndExpiredResults() throws {
         let raw = #"{"id":"compat-v24-7","kind":"essence","scope":"couple","title":"title","summary":"body","tags":[],"pages":[],"evidence":[],"access":{"locked":false}}"#
         var card = try JSONDecoder().decode(ReadingCard.self, from: Data(raw.utf8))
