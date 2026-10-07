@@ -246,7 +246,7 @@ struct ReadingCardList: View {
     @EnvironmentObject private var auth: AuthStore
     @State private var selectedPaidCard: ReadingCard?
     @State private var resolvedCards: [String: ReadingCard] = [:]
-    @State private var pendingReader: ReadingCard?
+    @StateObject private var purchaseNavigation = ReadingPurchaseNavigation()
     @State private var reader: ReadingCard?
     @State private var showReader = false
     @State private var openingID: String?
@@ -275,14 +275,20 @@ struct ReadingCardList: View {
         }
         }
         .sheet(item: $selectedPaidCard, onDismiss: {
-            if let card = pendingReader {
-                reader = card; pendingReader = nil; showReader = true
+            // Read the current handoff from a stable reference: the sheet's
+            // dismissal closure can belong to a render before purchase completed.
+            guard let grant = purchaseNavigation.consume(owner: AccountScope(auth), conversationID: conversationID) else { return }
+            Task { @MainActor in
+                await Task.yield()
+                guard grant.owner.isCurrent(auth) else { return }
+                readerGrant = grant
+                reader = grant.card
+                showReader = true
             }
         }) { item in
             ReadingUnlockSheet(item: item, conversationID: conversationID, initialAccess: preparedAccess) { card in
                 resolvedCards[card.id] = card
-                readerGrant = ReadingAccessGrant(card: card, conversationID: conversationID, owner: AccountScope(auth))
-                pendingReader = card
+                purchaseNavigation.stage(ReadingAccessGrant(card: card, conversationID: conversationID, owner: AccountScope(auth)))
                 selectedPaidCard = nil
             }
                 .presentationDetents([.large])
@@ -296,7 +302,7 @@ struct ReadingCardList: View {
             }
         }
         .onChange(of: AccountScope(auth)) { _, _ in
-            selectedPaidCard = nil; pendingReader = nil; reader = nil
+            selectedPaidCard = nil; purchaseNavigation.clear(); reader = nil
             showReader = false; resolvedCards.removeAll()
             openingID = nil; preparedAccess = nil; readerGrant = nil; accessError = nil
         }
@@ -329,6 +335,22 @@ struct ReadingCardList: View {
                 preparedAccess = result; selectedPaidCard = card
             }
         } catch { if owner.isCurrent(auth) { accessError = userFacingErrorMessage(error) } }
+    }
+}
+
+/// Retains a completed purchase across sheet renders and consumes it exactly once.
+@MainActor
+final class ReadingPurchaseNavigation: ObservableObject {
+    private var pending: ReadingAccessGrant?
+
+    func stage(_ grant: ReadingAccessGrant) { pending = grant }
+    func clear() { pending = nil }
+    func consume(owner: AccountScope, conversationID: UUID?) -> ReadingAccessGrant? {
+        defer { pending = nil }
+        guard let pending, owner.userID != nil, pending.owner == owner,
+              conversationID != nil, pending.conversationID == conversationID,
+              pending.card.access?.locked == false else { return nil }
+        return pending
     }
 }
 
