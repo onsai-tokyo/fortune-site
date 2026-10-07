@@ -10,6 +10,7 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var cardProduct: Product?
     @Published private(set) var accessState: AccessState = .unknown
     @Published var isWorking = false
+    @Published private(set) var membershipProgress: String?
     @Published private(set) var isSyncing = false
     @Published var errorMessage: String?
     @Published private(set) var hasStoreKitEntitlement = false
@@ -44,6 +45,7 @@ final class PurchaseManager: ObservableObject {
         consecutiveSyncFailures = 0
         errorMessage = nil
         isWorking = false
+        membershipProgress = nil
         isSyncing = false
     }
 
@@ -113,23 +115,55 @@ final class PurchaseManager: ObservableObject {
         }
         guard accessState == .standard else { errorMessage = "購入状況を確認してからお試しください。"; return }
         guard let product else { errorMessage = "料金情報を準備中です"; return }
+        guard product.type == .autoRenewable else { errorMessage = "月額プランの商品情報を確認できませんでした。"; return }
         isWorking = true; errorMessage = nil
-        defer { if owner.isCurrent(auth), boundScope == owner { isWorking = false } }
+        membershipProgress = "Appleの購入画面を開いています…"
+        let startedAt = Date()
+        defer { if owner.isCurrent(auth), boundScope == owner { isWorking = false; membershipProgress = nil } }
         do {
             guard try delivery.pending().allSatisfy({ $0.ownerID != userID }) else {
                 throw APIError.server("反映待ちの購入があります。再購入せず、購入状況の確認を再試行してください。")
             }
-            let result = try await product.purchase(options: [.appAccountToken(userID)])
+            let result = try await MembershipPurchaseFlow.run {
+                try self.check(owner, auth)
+                let result = try await product.purchase(options: [.appAccountToken(userID)])
+                try self.check(owner, auth)
+                switch result {
+                case .success(let verification):
+                    let transaction = try self.verified(verification)
+                    guard transaction.productID == AppConfig.subscriptionProductID,
+                          transaction.productType == .autoRenewable else { throw APIError.invalidResponse }
+                    let delivered = try await self.deliver(transaction, signed: verification.jwsRepresentation,
+                        auth: auth, owner: owner, allowTransfer: true)
+                    try self.check(owner, auth)
+                    guard delivered else {
+                        throw APIError.server("購入を反映しています。再購入せず、購入状況を再確認してください。")
+                    }
+                    if MembershipPurchaseFlow.isHistorical(expiration: transaction.expirationDate,
+                        revoked: transaction.revocationDate != nil, upgraded: transaction.isUpgraded, startedAt: startedAt) {
+                        self.membershipProgress = "過去の購入履歴を整理しています。このあとAppleの購入画面へ進みます…"
+                        return .historical(String(transaction.id))
+                    }
+                    return .delivered
+                case .userCancelled: return .cancelled
+                case .pending: return .pending
+                @unknown default: throw APIError.invalidResponse
+                }
+            }
             try check(owner, auth)
             switch result {
-            case .success(let verification):
-                let transaction = try verified(verification)
-                _ = try await deliver(transaction, signed: verification.jwsRepresentation, auth: auth, owner: owner, allowTransfer: true)
-                try check(owner, auth)
+            case .delivered:
+                membershipProgress = "会員情報を反映しています…"
                 await syncAfterDelivery(auth: auth)
-            case .userCancelled: break
-            case .pending: errorMessage = "購入の承認を待っています。再購入せず、承認後に購入状況を確認してください。"
-            @unknown default: accessState = .unknown
+                try check(owner, auth)
+                if !isPremium {
+                    errorMessage = "購入情報は受け取りましたが、有効な月額会員資格を確認できませんでした。再購入せず、購入状況を再確認してください。"
+                }
+            case .cancelled:
+                errorMessage = "購入は完了していません。Appleの購入画面が表示されなかった場合は、時間をおいてもう一度お試しください。"
+            case .pending:
+                errorMessage = "購入の承認を待っています。再購入せず、承認後に購入状況を確認してください。"
+            case .historical: break // run consumes historical results internally.
             }
         } catch {
             if owner.isCurrent(auth), boundScope == owner {

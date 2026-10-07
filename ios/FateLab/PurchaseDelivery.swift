@@ -1,5 +1,29 @@
 import Foundation
 
+/// StoreKit can return an old unfinished renewal instead of opening checkout.
+/// Continue only after that historical transaction was verified, delivered and
+/// finished. Never retry an uncertain, pending, cancelled or current purchase.
+enum MembershipPurchaseFlow {
+    enum Attempt: Equatable { case delivered, historical(String), cancelled, pending }
+
+    static func isHistorical(expiration: Date?, revoked: Bool, upgraded: Bool, startedAt: Date) -> Bool {
+        !revoked && !upgraded && expiration.map { $0 <= startedAt } == true
+    }
+
+    @MainActor static func run(attempt: () async throws -> Attempt) async throws -> Attempt {
+        var finished = Set<String>()
+        for _ in 0..<32 {
+            try Task.checkCancellation()
+            let result = try await attempt()
+            guard case .historical(let id) = result else { return result }
+            guard finished.insert(id).inserted else {
+                throw APIError.server("Appleから同じ過去の購入情報が届いています。時間をおいて購入状況を再確認してください。")
+            }
+        }
+        throw APIError.server("過去の購入履歴を整理しました。購入状況を確認してから、もう一度お試しください。")
+    }
+}
+
 struct ApplePurchaseVerification: Decodable {
     let verified: Bool
     let delivery: String

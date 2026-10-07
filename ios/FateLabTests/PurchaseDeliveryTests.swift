@@ -220,3 +220,70 @@ final class BookMembershipContinuationTests: XCTestCase {
         XCTAssertNil(continuation.consume(owner: owner))
     }
 }
+
+@MainActor final class MembershipPurchaseFlowTests: XCTestCase {
+    func testExpiredRenewalsLeadToCheckoutInSameAction() async throws {
+        var calls = 0
+        let results: [MembershipPurchaseFlow.Attempt] = [.historical("oct2"), .historical("oct1"), .historical("sep30"), .delivered]
+        let result = try await MembershipPurchaseFlow.run {
+            defer { calls += 1 }
+            return results[calls]
+        }
+        XCTAssertEqual(result, .delivered)
+        XCTAssertEqual(calls, 4)
+    }
+
+    func testCurrentCancelledAndPendingNeverPurchaseAgain() async throws {
+        for terminal: MembershipPurchaseFlow.Attempt in [.delivered, .cancelled, .pending] {
+            var calls = 0
+            let result = try await MembershipPurchaseFlow.run { calls += 1; return terminal }
+            XCTAssertEqual(result, terminal)
+            XCTAssertEqual(calls, 1)
+        }
+    }
+
+    func testDeliveryFailureNeverRetriesCheckout() async {
+        var calls = 0
+        do {
+            _ = try await MembershipPurchaseFlow.run {
+                calls += 1
+                throw URLError(.notConnectedToInternet)
+            }
+            XCTFail("Expected delivery failure")
+        } catch { XCTAssertEqual(calls, 1) }
+    }
+
+    func testRepeatedHistoricalTransactionStops() async {
+        var calls = 0
+        do {
+            _ = try await MembershipPurchaseFlow.run { calls += 1; return .historical("same") }
+            XCTFail("Expected duplicate protection")
+        } catch { XCTAssertEqual(calls, 2) }
+    }
+
+    func testBacklogHasBoundedAttempts() async {
+        var calls = 0
+        do {
+            _ = try await MembershipPurchaseFlow.run { calls += 1; return .historical(String(calls)) }
+            XCTFail("Expected backlog limit")
+        } catch { XCTAssertEqual(calls, 32) }
+    }
+
+    func testOnlyTransactionsExpiredBeforeUserActionAreHistorical() {
+        let start = Date(timeIntervalSince1970: 1000)
+        XCTAssertTrue(MembershipPurchaseFlow.isHistorical(expiration: start.addingTimeInterval(-1), revoked: false, upgraded: false, startedAt: start))
+        // A new purchase expiring while the server responds must never trigger a second charge.
+        XCTAssertFalse(MembershipPurchaseFlow.isHistorical(expiration: start.addingTimeInterval(1), revoked: false, upgraded: false, startedAt: start))
+        XCTAssertFalse(MembershipPurchaseFlow.isHistorical(expiration: nil, revoked: false, upgraded: false, startedAt: start))
+        XCTAssertFalse(MembershipPurchaseFlow.isHistorical(expiration: start, revoked: true, upgraded: false, startedAt: start))
+        XCTAssertFalse(MembershipPurchaseFlow.isHistorical(expiration: start, revoked: false, upgraded: true, startedAt: start))
+    }
+
+    func testAccountCancellationStopsBeforeNextCheckout() async {
+        var calls = 0
+        do {
+            _ = try await MembershipPurchaseFlow.run { calls += 1; throw CancellationError() }
+            XCTFail("Expected cancellation")
+        } catch { XCTAssertEqual(calls, 1) }
+    }
+}
