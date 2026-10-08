@@ -6,10 +6,8 @@ import type {ReportCard,StructuredReport} from './reportCards.js'
 
 type Row=Parameters<typeof readingTargetKey>[0]
 export async function readingCardProjector(user:string,row:Row) {
- if(!cardPurchasesEnabled())return (card:ReportCard):ReportCard=>card
- const premium=await hasPremiumAccess(user)
- const {owned}=await readingCardBalance(user,readingTargetKey(await readingPurchaseIdentity(user,row)))
- return (card:ReportCard):ReportCard=>projectReadingCard({...card,scope:card.scope??(row.kind==='compatibility'||(row.birth_data as {_sourceKind?:string}|undefined)?._sourceKind==='compatibility'?'couple':'self')},premium,owned)
+ // Free content must not depend on StoreKit or the purchases database being available.
+ return (card:ReportCard):ReportCard=>projectReadingCard(card,false,new Set())
 }
 export function projectedReport(report:StructuredReport,project:(card:ReportCard)=>ReportCard):StructuredReport {
  const cards=report.cards.map(project)

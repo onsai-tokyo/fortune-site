@@ -11,8 +11,10 @@ struct AIBookStatus: Decodable {
     let productId: String
     var premium: Bool? = nil
     var reviewRemaining: Int? = nil
+    var trialRemaining: Int? = nil
     var creditBreakdown: String {
         var parts = ["会員分 \(memberRemaining)通"]
+        if let trialRemaining, trialRemaining > 0 { parts.insert("初回無料 \(trialRemaining)通", at: 0) }
         if purchasedRemaining > 0 { parts.append("単品購入分 \(purchasedRemaining)通") }
         if let reviewRemaining, reviewRemaining > 0 { parts.append("審査用追加分 \(reviewRemaining)通") }
         return parts.joined(separator: " · ")

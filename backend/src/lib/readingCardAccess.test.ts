@@ -9,10 +9,11 @@ const op='22222222-2222-4222-8222-222222222222'
 const birth={birthDate:'1995-03-16',gender:'female',birthplace:'名古屋'}
 const card:ReportCard={id:'year-2027',scope:'self',kind:'timing',title:'2027年',period:{label:'2027年'},summary:'PAID_BODY',tags:['PRIVATE_TAG'],pages:[{role:'core',label:'本文',text:'PAID_BODY'}],evidence:[]}
 const report:StructuredReport={version:3,generator:'deterministic',reportText:'PAID_BODY',cards:[card]}
-test('projected reports remove concatenated and unknown root copies of paid prose',()=>{
+test('free projections retain reading text and remove unknown root fields',()=>{
  const output=projectedReport({...report,secretCopy:'PAID_BODY'} as StructuredReport,c=>projectReadingCard(c,false,new Set()))
- assert.doesNotMatch(JSON.stringify(output),/PAID_BODY|PRIVATE_TAG|secretCopy/)
- assert.equal(output.cards[0].access?.locked,true)
+ assert.match(JSON.stringify(output),/PAID_BODY|PRIVATE_TAG/)
+ assert.doesNotMatch(JSON.stringify(output),/secretCopy/)
+ assert.equal(output.cards[0].access?.locked,false)
  assert.equal(report.cards[0].summary,'PAID_BODY')
 })
 test('read-time rights redact old snapshots and self saves preserve full server original',async()=>{
@@ -33,11 +34,11 @@ test('read-time rights redact old snapshots and self saves preserve full server 
   throw Error('Unexpected request '+url.pathname)
  }
  try {
-  assert.doesNotMatch(JSON.stringify(await publicReadingConversation(owner,row)),/PAID_BODY|PRIVATE_TAG|oldCopy/)
+  assert.match(JSON.stringify(await publicReadingConversation(owner,row)),/PAID_BODY|PRIVATE_TAG/)
   paid=true
   assert.match(JSON.stringify(await publicReadingConversation(owner,row)),/PAID_BODY/)
   failed=true
-  await assert.rejects(publicReadingConversation(owner,row))
+  assert.match(JSON.stringify(await publicReadingConversation(owner,row)),/PAID_BODY/)
   const original=await restoreGeneratedSnapshot(owner,op,{birthData:birth,reportText:'redacted',structuredReport:{...report,reportText:'redacted',cards:[]}})
   assert.equal(original.reportText,'PAID_BODY')
   await assert.rejects(restoreGeneratedSnapshot(owner,op,{birthData:{...birth,birthDate:'2000-01-01'}}))

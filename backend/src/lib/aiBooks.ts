@@ -80,7 +80,7 @@ export function validateBookDocument(value: unknown, sources: BookSource[]): Boo
 export async function bookRPC(name: string, args: Record<string, unknown> = {}) {
   const {data,error} = await getSupabaseAdmin().rpc(name,args)
   if (error) {
-    if (error.message?.includes('BOOK_NO_CREDITS')) throw new BookError('BOOK_NO_CREDITS',409,'鑑定書の利用枠がありません。会員特典または単品購入をご利用ください。')
+    if (error.message?.includes('BOOK_NO_CREDITS')) throw new BookError('BOOK_NO_CREDITS',402,'鑑定書の利用枠がありません。会員特典または単品購入をご利用ください。')
     if (error.message?.includes('BOOK_OPERATION_CONFLICT')) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。本棚から受付状況をご確認ください。')
     throw new BookError('BOOK_UNAVAILABLE',503,'鑑定書の処理を確認できませんでした。再購入せず、もう一度お試しください。')
   }

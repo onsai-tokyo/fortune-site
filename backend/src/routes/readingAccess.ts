@@ -22,6 +22,7 @@ async function handle(req:AuthRequest,res:Response,unlock:boolean) {
   const resolved=await resolveBookFocus(identity,cardId,req.accessToken!,req.userId!)
   if(!resolved)throw new CardPurchaseError('READING_CARD_NOT_FOUND',404,'鑑定を確認できませんでした。')
   const card={...resolved,scope:resolved.scope??(row.kind==='compatibility'?'couple':'self') as 'self'|'couple'}
+  if(!readingOffer(card)) { res.json({enabled:true,productId:CARD_PRODUCT,premium:false,credits:0,unlocked:true,card:projectReadingCard(card,false,new Set())}); return }
   const premium=await hasPremiumAccess(req.userId!)
   if(unlock && !premium && readingOffer(card))await unlockReadingCard(req.userId!,identity,card)
   const balance=await readingCardBalance(req.userId!,readingTargetKey(identity))

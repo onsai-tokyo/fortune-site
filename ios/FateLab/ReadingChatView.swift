@@ -463,8 +463,8 @@ struct MembershipDetailsView: View {
             Text("月額1,980円（日本価格）").font(.headline)
             VStack(alignment: .leading, spacing: 12) {
             Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
-            Label("相性の有料項目と2027年以降の時系列が見放題", systemImage: "lock.open")
-            Text("会員期間中は、良好な関係を築くコツ・障害になること・復縁の可能性と、あなた・ふたりの各年の鑑定を読めます。")
+            Label("性格・相性・時系列のカードは、どなたでも無料", systemImage: "lock.open")
+            Text("復縁の可能性や未来の年の鑑定も、追加料金なく読めます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             Text("無料プランは1人まで。登録済みの相手は、会員期間が終わっても残ります。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
@@ -480,7 +480,7 @@ struct MembershipDetailsView: View {
             }.membershipFeature()
             VStack(alignment: .leading, spacing: 12) {
             Label("お届けした鑑定書は、解約後も本棚に", systemImage: "books.vertical")
-            Text("単品購入した鑑定カードは、会員期間が終わっても読み返せます。相談鑑定書の単品購入とは別の商品です。")
+            Text("初回無料・単品購入・会員枠で作成した鑑定書は、解約後も読み返せます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
             Text("月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")

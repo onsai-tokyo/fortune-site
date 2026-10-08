@@ -421,7 +421,7 @@ private struct ReadingUnlockSheet: View {
                         }
                         option(title: "月額会員で、すべて読む",
                                price: ReadingPrices.monthly,
-                               detail: "会員期間中は、相性の有料項目と2027年以降の時系列が見放題。相談鑑定書は毎月3通です。") {
+                               detail: "相談からつくるAI鑑定書が毎月3通。性格・相性・時系列のカードは無料です。") {
                             StorePurchasePrice(product: purchases.product)
                             Button(purchases.membershipActionTitle) { Task { await buyMembership() } }
                                 .buttonStyle(FLPrimaryButtonStyle())

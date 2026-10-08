@@ -92,6 +92,35 @@ try:
     except RuntimeError as e:expect('permission denied' in str(e),'client cannot read other accounts directly')
     sql(f"delete from auth.users where id='{uid(3)}';")
     expect(sql(f"select count(*) from public.ai_books where user_id='{uid(3)}';")=='0','account deletion cascades to books')
+    # New trial migration: identity verification, concurrent grants, atomic spend and refunds.
+    sql("alter table auth.users add column email text, add column email_confirmed_at timestamptz;")
+    sql((base/'ai_books_trial_20261008.sql').read_text())
+    sql(f"update auth.users set email='trial@example.invalid',email_confirmed_at=now() where id='{uid(4)}';")
+    def trial(owner=4):return sql(f"select public.ai_book_sync_trial('{uid(owner)}');")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(lambda _:trial(),range(4)))
+    expect(sql(f"select count(*) from public.ai_book_grants where user_id='{uid(4)}' and source='trial';")=='1','concurrent trial requests grant exactly one credit')
+    def trial_order(n):
+        try:return order(n,owner=4)
+        except RuntimeError as e:
+            if 'BOOK_NO_CREDITS' in str(e):return None
+            raise
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(trial_order,[401,402]))
+    expect(sum(x is not None for x in results)==1,'two simultaneous orders cannot spend one trial twice')
+    trialbook=next(x for x in results if x)
+    sql(f"update ai_books set state='generating',lease_id='{uid(800)}' where id='{trialbook}'; select ai_book_fail('{trialbook}','{uid(800)}');")
+    expect(bool(order(403,owner=4)),'failed trial returns a usable credit')
+    sql(f"delete from auth.users where id='{uid(4)}'; update auth.users set email='TRIAL@example.invalid',email_confirmed_at=now() where id='{uid(5)}';")
+    trial(5)
+    expect(sql(f"select count(*) from ai_book_grants where user_id='{uid(5)}';")=='0','re-registration with same verified email cannot reclaim trial')
+    sql(f"update auth.users set email='unverified@example.invalid' where id='{uid(6)}';")
+    trial(6)
+    expect(sql(f"select count(*) from ai_book_grants where user_id='{uid(6)}';")=='0','unverified email cannot claim trial')
+    sql(f"update auth.users set email='member-trial@example.invalid',email_confirmed_at=now() where id='{uid(7)}';")
+    grant('member-trial',owner=7);trial(7);first=order(701,owner=7)
+    expect(sql(f"select g.source from ai_book_credits c join ai_book_grants g on g.id=c.grant_id where c.consumed_by='{first}';")=='trial','first free credit is spent before monthly credits')
+    for query in [f"select ai_book_sync_trial('{uid(7)}');",'select * from ai_book_trial_secret;','select * from ai_book_trial_claims;']:
+        try:sql('set role authenticated;'+query);raise AssertionError('trial authority exposed')
+        except RuntimeError as e:expect('permission denied' in str(e),'trial minting and fingerprints are not client-accessible')
     print('ALL BOOK DATABASE CHECKS PASSED',flush=True)
 finally:
     if started:command([str(binpath/'pg_ctl'),'-D',str(cluster),'-m','immediate','-w','stop'])

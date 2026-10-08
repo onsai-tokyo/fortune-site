@@ -1,17 +1,11 @@
 /** Agreed paid boundaries. IDs are domain identifiers, never list positions. */
-export const READING_ACCESS_POLICY_VERSION = 'card-unlocks-20261005-v1'
+export const READING_ACCESS_POLICY_VERSION = 'all-cards-free-20261008-v1'
 export const FIRST_PAID_YEAR = 2027
 export const PAID_COMPATIBILITY_IDS = new Set(['compat-v24-5', 'compat-v24-6', 'compat-v24-7'])
 export type ReadingOffer = { kind: 'compatibility'; item: string } | { kind: 'year'; scope: 'self' | 'couple'; year: number }
 export interface AccessCard { id: string; kind: string; tab?: string; scope?: string; period?: { label: string } | null }
 export function readingOffer(card: AccessCard): ReadingOffer | null {
-  if (card.scope === 'couple' && PAID_COMPATIBILITY_IDS.has(card.id)) return {kind:'compatibility',item:card.id}
-  if ((card.tab ?? card.kind) !== 'timing' || !['self','couple'].includes(card.scope ?? '')) return null
-  const match = card.period?.label.match(/(?:^|[^\d])(\d{4})年/)
-  if (!match) return null
-  const year = Number(match[1])
-  if (year < FIRST_PAID_YEAR) return null
-  return {kind:'year',scope:card.scope as 'self'|'couple',year}
+  return null // All existing self, couple and timeline readings are free.
 }
 export function offerKey(offer: ReadingOffer): string {
   return offer.kind === 'compatibility' ? `compatibility:${offer.item}` : `${offer.scope}:year:${offer.year}`

@@ -19,6 +19,7 @@ export function PrivacyPage() {
         </header>
 
         <div className="glass-card p-8 space-y-8">
+          <section><h2 className="text-white font-semibold text-lg mb-3">初回無料の重複取得防止</h2><p className="text-white/70 text-sm">初回無料の重複取得を防ぐため、確認済みメールアドレスから秘密値を用いて作成した照合用の値と付与日時を、無料体験を提供する期間中、退会後も保持します。この記録には元のメールアドレス、相談文、命式を保存せず、広告やAIへの送信には使用しません。</p></section>
 
           <section>
             <p className="text-white/70 text-sm leading-relaxed">
