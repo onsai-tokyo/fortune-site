@@ -18,7 +18,7 @@ struct AIBookDetailView: View {
                             .accessibilityAddTraits(.isHeader)
                         Text("\(book.targetTitle) · \(String(book.createdAt.prefix(10)))")
                             .font(.caption).foregroundStyle(FateTheme.muted)
-                        FateArtwork(name: "QuietMountains").frame(height: 104).clipped()
+                        BookArtwork(index: BookArtwork.index(for: book.id)).frame(height: 104).clipped()
                             .overlay(FateTheme.canvas.opacity(0.16))
                             .clipShape(RoundedRectangle(cornerRadius: FLRadius.card))
                             .accessibilityHidden(true)

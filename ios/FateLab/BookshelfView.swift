@@ -36,7 +36,7 @@ struct BookshelfView: View {
                                         saveCache(owner: AccountScope(auth))
                                     }
                                 } } label: {
-                                    BookCover(title: book.title, subtitle: book.targetTitle, date: book.createdAt, badge: book.stateLabel, index: 10)
+                                    BookCover(title: book.title, subtitle: book.targetTitle, date: book.createdAt, badge: book.stateLabel, index: BookArtwork.index(for: book.id))
                                 }.buttonStyle(.plain)
                             }
                         }
@@ -47,7 +47,7 @@ struct BookshelfView: View {
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 26) {
                             ForEach(readings) { reading in
                                 NavigationLink { SavedReadingView(conversationID: reading.id, readingKind: reading.kind) } label: {
-                                    BookCover(title: reading.title, subtitle: reading.isCompatibility ? "ふたりの鑑定" : "あなたの鑑定", date: reading.createdAt ?? "", badge: nil, index: reading.isCompatibility ? 10 : 0)
+                                    BookCover(title: reading.title, subtitle: reading.isCompatibility ? "ふたりの鑑定" : "あなたの鑑定", date: reading.createdAt ?? "", badge: nil, index: BookArtwork.index(for: reading.id))
                                 }.buttonStyle(.plain)
                             }
                         }
@@ -125,6 +125,25 @@ struct BookshelfView: View {
     }
 }
 
+/// Visual identity depends only on the permanent book ID, never its title, status,
+/// list position or Swift's process-randomized hashValue.
+struct BookArtwork: View {
+    let index: Int
+    static func index(for id: UUID) -> Int {
+        let hash = id.uuidString.utf8.reduce(UInt64(14695981039346656037)) {
+            ($0 ^ UInt64($1)) &* 1099511628211
+        }
+        return Int(hash % 14)
+    }
+    var body: some View {
+        switch index {
+        case 12: FateArtwork(name: "BookMoonClouds")
+        case 13: FateArtwork(name: "BookStarMountains")
+        default: ReadingNatureArtwork(index: index)
+        }
+    }
+}
+
 struct BookCover: View {
     let title: String
     let subtitle: String
@@ -134,7 +153,7 @@ struct BookCover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ZStack(alignment: .leading) {
-                ReadingNatureArtwork(index: index)
+                BookArtwork(index: index)
                 LinearGradient(colors: [.black.opacity(0.08), .black.opacity(0.65)], startPoint: .top, endPoint: .bottom)
                 Rectangle().fill(.white.opacity(0.25)).frame(width: 1).padding(.leading, 9)
                 VStack(alignment: .leading, spacing: 14) {

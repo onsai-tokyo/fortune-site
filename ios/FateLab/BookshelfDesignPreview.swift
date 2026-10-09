@@ -9,8 +9,12 @@ struct BookshelfDesignPreview: View {
                     FateEditorialHero(eyebrow: "YOUR LIBRARY", title: "あなたの本棚", subtitle: "そのときの想いと、読み返したい言葉を。")
                     Text("相談の鑑定書").font(FateType.sectionTitle)
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 26) {
-                        BookCover(title: "すれ違うふたりの、伝え方を見つめる", subtitle: "ふたりの鑑定", date: "2026-09-27", badge: "お届け済み", index: 10)
-                        BookCover(title: "これからの働き方を、自分の言葉で選ぶ", subtitle: "あなたの鑑定", date: "2026-09-26", badge: "お届け済み", index: 0)
+                        BookCover(title: "すれ違うふたりの、伝え方を見つめる", subtitle: "ふたりの鑑定", date: "2026-09-27", badge: "お届け済み", index: 12)
+                        BookCover(title: "これからの働き方を、自分の言葉で選ぶ", subtitle: "あなたの鑑定", date: "2026-09-26", badge: "お届け済み", index: 1)
+                        BookCover(title: "新しい一歩を、あなたのペースで", subtitle: "あなたの鑑定", date: "2026-09-25", badge: "お届け済み", index: 13)
+                        BookCover(title: "心地よい距離を、ふたりで育てる", subtitle: "ふたりの鑑定", date: "2026-09-24", badge: "お届け済み", index: 3)
+                        BookCover(title: "今、大切にしたい時間", subtitle: "あなたの鑑定", date: "2026-09-23", badge: "お届け済み", index: 5)
+                        BookCover(title: "迷いの先に見える、私らしい道", subtitle: "あなたの鑑定", date: "2026-09-22", badge: "お届け済み", index: 2)
                     }
                     Text("あなたと、ふたりの鑑定").font(FateType.sectionTitle)
                     BookCover(title: "あなたの特徴と人生の軸", subtitle: "あなたの鑑定", date: "2026-09-25", badge: nil, index: 0).frame(width: 166)
