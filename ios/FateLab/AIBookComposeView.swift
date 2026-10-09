@@ -136,7 +136,7 @@ struct AIBookComposeView: View {
                     }
                     DisclosureGroup("鑑定書について") {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("初回の鑑定書は1通無料です。2通目からは単品購入、または月額会員の毎月3通をご利用いただけます。作成した鑑定書は本棚に残ります。")
+                            Text("初回の鑑定書は1通無料です。会員登録後は会員分3通をご利用いただけます（無料1通の上乗せはありません）。2通目からは単品購入、または月額会員の毎月3通をご利用いただけます。作成した鑑定書は本棚に残ります。")
                             Text("未使用の会員分は更新日に繰り越されません。単品購入分に期限はありません。生成に失敗した場合は利用枠をお戻しします。")
                             Text("計算結果と確認済みの原稿をもとにAIが構成します。健康・妊娠・生死、法律や投資の判断などは対象外です。")
                             HStack { Link("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); Link("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }

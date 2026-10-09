@@ -42,6 +42,7 @@ struct PartnerProfilesView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @EnvironmentObject private var tabRouter: AppTabRouter
+    @Environment(\.scenePhase) private var scenePhase
     @State private var partners: [PartnerProfile] = []
     @State private var selected: PartnerProfile?
     @State private var remaining = 0
@@ -86,6 +87,8 @@ struct PartnerProfilesView: View {
                     .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 24))
                     .overlay(RoundedRectangle(cornerRadius: 24).stroke(FateTheme.line, lineWidth: 0.5))
                     .padding(.bottom, 20)
+                Text(selected == nil ? "右の相手ボタンを押して、鑑定したい相手を登録・選択してください。" : "相手のボタンから、相手の変更・追加ができます。")
+                    .font(.footnote).foregroundStyle(FateTheme.muted).padding(.bottom, 16)
                 Menu {
                     ForEach(relationshipOptions, id: \.self) { label in
                         Button(label) { relationshipLabel = label; relationshipType = relationshipGroup(label) }
@@ -94,10 +97,6 @@ struct PartnerProfilesView: View {
                     HStack { Text("関係性"); Spacer(); Text(relationshipLabel).foregroundStyle(FateTheme.muted); Image(systemName: "chevron.up.chevron.down") }
                         .padding(.vertical, 14)
                 }.font(.subheadline).padding(.horizontal, 18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16)).disabled(selected == nil).padding(.bottom, 24)
-                if selected == nil {
-                    Text("上の＋から、鑑定したい相手を選んでください。")
-                        .font(.callout).foregroundStyle(FateTheme.muted)
-                }
                 if selfReading == nil {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("まず「あなたについて」の鑑定を作成してください。")
@@ -140,7 +139,10 @@ struct PartnerProfilesView: View {
         }; if isGenerating { ReadingGenerationProgressView(kind: .compatibility, progress: generationProgress) } }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
         .toolbar(isGenerating ? .hidden : .visible, for: .tabBar)
-        .task { await load() }
+        .task { await refresh() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await refresh() } }
+        }
         .onChange(of: purchases.isPremium) { _, _ in Task { await load() } }
         .sheet(isPresented: $showPicker, onDismiss: {
             switch pickerAction {
@@ -219,8 +221,8 @@ struct PartnerProfilesView: View {
                             .font(.footnote).foregroundStyle(FateTheme.muted)
                         Button("月額プランを見る") { pickerAction = .paywall; showPicker = false }
                     }
-                } footer: { Text(remaining == 0 ? "登録済みの相手はそのまま残ります。入れ替える場合は行を左へスワイプして削除できます。" : "残り\(remaining)人まで登録できます") }
-                if purchases.isPremium { Section { MembershipActiveBanner() } }
+                } footer: { Text(remaining == 0 ? "登録済みの相手はそのまま残ります。右へスワイプで編集、左へスワイプで削除できます。" : "残り\(remaining)人まで登録できます") }
+
                 Section("登録済みの相手") {
                     ForEach(partners) { partner in
                         VStack(alignment: .leading, spacing: 8) {
@@ -230,12 +232,13 @@ struct PartnerProfilesView: View {
                                 VStack(alignment: .leading) { Text(partner.displayName); Text(typeLabel(partner)).font(.caption).foregroundStyle(FateTheme.muted) }
                                 Spacer(); if selected?.id == partner.id { Image(systemName: "checkmark").foregroundStyle(FateTheme.ink) }
                             }
-                        }.contextMenu { Button("プロフィール・出会った年を編集") { pickerAction = .edit(partner); showPicker = false } }
-                        Button("プロフィール・出会った年を編集") { pickerAction = .edit(partner); showPicker = false }.font(.caption).buttonStyle(.borderless)
-                        }.swipeActions { Button("削除", role: .destructive) { Task { await delete(partner) } } }
+                        }.buttonStyle(.plain)
+                        .contextMenu { Button("プロフィール・出会った年を編集") { pickerAction = .edit(partner); showPicker = false } }
+                        }.swipeActions(edge: .leading) { Button("編集") { pickerAction = .edit(partner); showPicker = false } }
+                        .swipeActions { Button("削除", role: .destructive) { Task { await delete(partner) } } }
                     }
                 }
-            }.task { await purchases.sync(auth: auth); await load() }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
+            }.task { await refresh() }.scrollContentBackground(.hidden).background(FateTheme.canvas).fateScreenTitle("相手を選ぶ").toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { showPicker = false } } }
         }
     }
 
@@ -251,12 +254,21 @@ struct PartnerProfilesView: View {
     }
 
     private func typeLabel(_ partner: PartnerProfile) -> String { partner.relationshipLabel ?? (partner.relationshipType == "friend" ? "友人" : "お付き合い中") }
+    private func refresh() async {
+        // Show saved partners without waiting for StoreKit history enumeration.
+        async let membership: Void = purchases.sync(auth: auth)
+        await load()
+        await membership
+    }
+
     private func load(selectNewest: Bool = false) async {
+        let owner = AccountScope(auth)
         errorMessage = nil
         do {
             async let profiles = APIClient.shared.partnerProfiles(auth: auth)
             async let readings = APIClient.shared.readings(auth: auth)
             let (response, availableReadings) = try await (profiles, readings)
+            try owner.check(auth)
             hasLoaded = true
             partners = response.partners
             remaining = response.remaining
@@ -265,7 +277,7 @@ struct PartnerProfilesView: View {
             // It must never be reused as the source "self" reading.
             selfReading = availableReadings.first(where: { !$0.isCompatibility && !$0.isChat })
             if selectNewest { selectPartner(partners.last) } else if let selected, !partners.contains(selected) { self.selected = nil }
-        } catch { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) }
+        } catch { if owner.isCurrent(auth) { errorMessage = userFacingMessage(error); errorKind = errorStateKind(error) } }
     }
     private func delete(_ partner: PartnerProfile) async {
         do { try await APIClient.shared.deletePartner(id: partner.id, auth: auth); if selected?.id == partner.id { selected = nil }; await load() }

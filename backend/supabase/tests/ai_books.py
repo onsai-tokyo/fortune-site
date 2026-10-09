@@ -121,6 +121,15 @@ try:
     for query in [f"select ai_book_sync_trial('{uid(7)}');",'select * from ai_book_trial_secret;','select * from ai_book_trial_claims;']:
         try:sql('set role authenticated;'+query);raise AssertionError('trial authority exposed')
         except RuntimeError as e:expect('permission denied' in str(e),'trial minting and fingerprints are not client-accessible')
+    sql((base/'ai_books_trial_member_limit_20261009.sql').read_text())
+    trial(7)
+    expect(sql(f"select count(*) from ai_book_credits c join ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(7)}' and not g.revoked and c.consumed_by is null;")=='3','member has three slots, not three plus trial')
+    expect(sql(f"select state from ai_books where id='{first}';")=='queued','existing trial order survives transition')
+    grant('extra-single',source='purchase',owner=7,end='null');trial(7)
+    expect(sql(f"select count(*) from ai_book_credits c join ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(7)}' and not g.revoked and c.consumed_by is null;")=='4','separately purchased credit remains usable')
+    sql(f"update ai_book_grants set expires_at=now()-interval '1 second' where user_id='{uid(7)}' and source='member';")
+    trial(7)
+    expect(sql(f"select count(*) from ai_book_grants where user_id='{uid(7)}' and source='trial' and not revoked;")=='0','expired member does not receive a new introductory slot')
     print('ALL BOOK DATABASE CHECKS PASSED',flush=True)
 finally:
     if started:command([str(binpath/'pg_ctl'),'-D',str(cluster),'-m','immediate','-w','stop'])
