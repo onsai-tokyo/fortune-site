@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01B53CBEFD02CF022C660DB3 /* ReadingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73347D48ADC44E658905805A /* ReadingListView.swift */; };
+		02F2A9CBA00B7CBD623CEC29 /* TimelineTextReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB19491E3DCDBC14A8711F0 /* TimelineTextReviewView.swift */; };
 		03BC5D97A33BECA4DFAA33BF /* AIBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BD8877484F57F705C1C0A0 /* AIBook.swift */; };
 		066BCC31D5E4B0BCABD376BE /* SavedReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B34350A07504940804DE477 /* SavedReadingView.swift */; };
 		1904C87890D4E6D56044CF9E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5342D58A967C8EF3F73846A /* SettingsView.swift */; };
@@ -18,6 +19,7 @@
 		3B314EE2FBCF8155EC08F905 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D475125D304F3A7D2BBCD9F4 /* Supabase */; };
 		3DD62DF78752D7DD89DE924C /* StartupDeadlineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A39CF6D41067D99AC7FAC5C /* StartupDeadlineTests.swift */; };
 		3EB22A1106E3A00DC66B003D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 55742F84A5B169F32270B1B4 /* PrivacyInfo.xcprivacy */; };
+		40102DC93EEAE32DDF2138B0 /* TimelineTextReviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020DAE0F2FE206167AFB1BA3 /* TimelineTextReviewData.swift */; };
 		50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F165C70345759947694F4DD8 /* RootView.swift */; };
 		5644B45B6B5421E8A2005927 /* AccountScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4DA83CFFB052F55FDB135D1 /* AccountScope.swift */; };
 		686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */; };
@@ -68,6 +70,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		020DAE0F2FE206167AFB1BA3 /* TimelineTextReviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineTextReviewData.swift; sourceTree = "<group>"; };
 		067B14D891149931612DB9F3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		069069797645F3D197436A70 /* ServerEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEvents.swift; sourceTree = "<group>"; };
 		0809C54FA65C68BB48231A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -81,6 +84,7 @@
 		1CD011C8691551175BE93F6B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		1D512DD5CE85B3A9666FF47A /* ChatHistoryRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistoryRootView.swift; sourceTree = "<group>"; };
 		214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDocumentView.swift; sourceTree = "<group>"; };
+		2CB19491E3DCDBC14A8711F0 /* TimelineTextReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineTextReviewView.swift; sourceTree = "<group>"; };
 		2F6837BC54FAFAE2E4BEE433 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 		34376F558AC94ECC52F91C17 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		35E5A4456A2D11C6D4C3797D /* FateLab.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FateLab.entitlements; sourceTree = "<group>"; };
@@ -203,6 +207,8 @@
 				F5342D58A967C8EF3F73846A /* SettingsView.swift */,
 				067B14D891149931612DB9F3 /* Theme.swift */,
 				EE294CA2FE73B016DA9E30BA /* TimelineProfileView.swift */,
+				020DAE0F2FE206167AFB1BA3 /* TimelineTextReviewData.swift */,
+				2CB19491E3DCDBC14A8711F0 /* TimelineTextReviewView.swift */,
 			);
 			path = FateLab;
 			sourceTree = "<group>";
@@ -359,6 +365,8 @@
 				1904C87890D4E6D56044CF9E /* SettingsView.swift in Sources */,
 				E8F0E89F77689CD561F075A7 /* Theme.swift in Sources */,
 				6E6425FC63B71F5A8B17B74C /* TimelineProfileView.swift in Sources */,
+				40102DC93EEAE32DDF2138B0 /* TimelineTextReviewData.swift in Sources */,
+				02F2A9CBA00B7CBD623CEC29 /* TimelineTextReviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -454,7 +462,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 123;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -524,7 +532,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 123;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -594,7 +602,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 123;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -666,6 +674,7 @@
 				PRODUCT_NAME = FateLab;
 				PROVISIONING_PROFILE_SPECIFIER = "Fate Lab App Store 27 Local";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) $(FATELAB_APP_COMPILATION_CONDITIONS)";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
@@ -762,7 +771,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 123;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -809,6 +818,7 @@
 				);
 				PRODUCT_NAME = FateLab;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) $(FATELAB_APP_COMPILATION_CONDITIONS)";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;

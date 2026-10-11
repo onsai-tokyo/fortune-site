@@ -1,9 +1,9 @@
 /**
- * v3.33 (proposed): the work context to word a year with.
+ * v3.33 (owner approved 2026-10-11): the work context to word a year with.
  * The registered work context describes the person now. A past year up to age 22 says nothing about whether a person
  * who works now was already working then, so for 'employed' / 'independent' those years use the neutral wording
- * (undefined → 'other' / neutral activity text). A person who is a student now was in school in those years too, so
- * 'student' is kept. Wording only: never changes a judgement (career / move / theme stay the same).
+ * (undefined → 'other' / neutral activity text). The existing 'student' wording is retained;
+ * no historical schooling or employment is inferred from this helper. Wording only: never changes a judgement (career / move / theme stay the same).
  */
 import type { TimelineContext } from './signals.js'
 export const NEUTRAL_WORK_UNTIL_AGE = 22

@@ -18,6 +18,9 @@ struct FateLabApp: App {
     }
 
     @ViewBuilder private var appContent: some View {
+#if FATELAB_TIMELINE_REVIEW
+        TimelineTextReviewView().environmentObject(auth).environmentObject(purchases)
+#else
 #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--annual121-preview") {
             NavigationStack { ScrollView { MembershipDetailsView(annual: true).padding(24) }.fateAppHeader() }.environmentObject(auth)
@@ -102,6 +105,7 @@ struct FateLabApp: App {
         }
 #else
         mainApp
+#endif
 #endif
     }
 
