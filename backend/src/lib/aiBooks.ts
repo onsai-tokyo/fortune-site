@@ -5,7 +5,10 @@ import { storedReportFromCalculatedData } from './report/storedReport.js'
 import { type ReportCard } from './reportCards.js'
 
 export const BOOK_PRODUCT = 'com.onsai.fatelab.report.single'
-export const BOOK_PROMPT_VERSION = 'consultation-book-20261008.1'
+export const BOOK_PROMPT_VERSION = 'consultation-book-20261011.1'
+export const BOOK_MIN_CHARACTERS = 2250
+export const BOOK_MAX_CHARACTERS = 3000
+export const BOOK_TARGET_CHARACTERS = 2500
 export const BOOK_THEMES = ['恋愛・関係', '仕事', '人間関係', '時期の判断', 'その他']
 export const uuidPattern = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
 export class BookError extends Error {
@@ -68,7 +71,7 @@ export function validateBookDocument(value: unknown, sources: BookSource[]): Boo
   const focus=sources.find(s=>s.focused)
   if(focus && !ids.has(focus.id))throw new Error('BOOK_DOCUMENT_FOCUS')
   const length = [...[d.summary, d.answer, ...d.sections.map(s=>s.body), ...d.actions].join('')].length
-  if (length < 4500 || length > 6000) throw new Error('BOOK_DOCUMENT_LENGTH')
+  if (length < BOOK_MIN_CHARACTERS || length > BOOK_MAX_CHARACTERS) throw new Error('BOOK_DOCUMENT_LENGTH')
   const text = JSON.stringify(d)
   if (/必ず.{0,20}(なる|する|できる|起きる)|絶対に|確実に.{0,20}(なる|する|起きる)|寿命|余命|妊娠して|癌|病気が治|株価が|死ぬ/.test(text)) throw new Error('BOOK_DOCUMENT_POLICY')
   if(d.conclusion!==undefined && !bounded(d.conclusion,40,300)) throw new Error('BOOK_DOCUMENT_CONCLUSION')

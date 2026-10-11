@@ -66,7 +66,7 @@ struct AIBookComposeView: View {
                     }
                     Button("別の相談を書く") { self.accepted = nil; question = ""; Task { await refresh() } }.buttonStyle(FLSecondaryButtonStyle())
                 } else {
-                    FateEditorialHero(eyebrow: "PERSONAL READING", title: "いまの想いを、\n一冊の鑑定書に。", subtitle: "あなたの相談と保存した鑑定から、約5,000文字で読み解きます。")
+                    FateEditorialHero(eyebrow: "PERSONAL READING", title: "いまの想いを、\n一冊の鑑定書に。", subtitle: "あなたの相談と保存した鑑定から、約2,500文字で読み解きます。")
                     VStack(alignment: .leading, spacing: 16) {
                         composerLabel("01", "誰について相談しますか")
                         Picker("もとにする鑑定", selection: Binding(get: { sourceID }, set: { value in

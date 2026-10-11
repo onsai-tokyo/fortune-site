@@ -486,7 +486,7 @@ struct MembershipDetailsView: View {
             VStack(alignment: .leading, spacing: 12) {
             Label(effectiveAnnual ? "相談からつくる鑑定書が、初月から毎月5通" : "相談からつくる鑑定書が、初月から毎月3通", systemImage: "book.closed")
             if !booksEnabled {
-                Text("「鑑定書をつくる」タブで相談を入力し、保存した鑑定をもとに約5,000文字の一冊を作成できます。")
+                Text("「鑑定書をつくる」タブで相談を入力し、保存した鑑定をもとに約2,500文字の一冊を作成できます。")
                     .font(.footnote).foregroundStyle(FateTheme.muted)
             }
             Text(effectiveAnnual ? "会員分は年間契約の開始日を基準に毎月5通付与されます。未使用分は繰り越されません。追加の単品購入分に有効期限はありません。" : "会員分はAppleの更新日ごとに付与され、未使用分は繰り越されません。追加の単品購入分に有効期限はありません。")
