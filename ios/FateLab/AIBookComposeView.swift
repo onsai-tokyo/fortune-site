@@ -175,6 +175,9 @@ struct AIBookComposeView: View {
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")
                     if status?.premium == false {
+                        Text("会員登録で、自由な質問からあなた専用の鑑定書をつくれます。")
+                            .font(.caption).foregroundStyle(FateTheme.muted)
+                            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         Button("会員プランを見る") {
                             editingQuestion = false
                             membershipContinuation.cancel()

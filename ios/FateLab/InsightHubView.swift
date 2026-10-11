@@ -861,10 +861,6 @@ private struct ReadingDetailContent: View {
                 }
             }
             readerText(chapter.body)
-            if !item.isTiming, let section = chapter.section {
-                SectionEvidenceView(section: section)
-                    .tint(ReaderStyle.body)
-            }
             if hasMultipleChapters { chapterNavigation(chapter, proxy: proxy) }
         }
     }

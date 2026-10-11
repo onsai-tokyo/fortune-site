@@ -93,8 +93,6 @@ struct SettingsView: View {
                 } else {
                     Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
                 }
-                MembershipDetailsView()
-                    .padding(.top, 8)
                 if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
                 if !purchases.isPremium && !purchases.needsMembershipRestore {
                     StorePurchasePrice(product: purchases.product)
