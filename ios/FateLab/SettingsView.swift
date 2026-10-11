@@ -81,9 +81,9 @@ struct SettingsView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "sparkle")
                             .font(.title3).foregroundStyle(FateTheme.muted)
-                        Text("継続鑑定").font(.system(.headline, weight: .medium))
+                        Text("継続鑑定").font(.system(.title3, weight: .medium))
                         Spacer()
-                        Text(purchases.cancellationNotice == nil ? "利用中" : "解約済み")
+                        Text(purchases.cancellationNotice == nil ? "会員資格あり" : "解約済み")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(FateTheme.muted)
                             .padding(.horizontal, 10).padding(.vertical, 5)
@@ -95,9 +95,18 @@ struct SettingsView: View {
                         Text("までご利用いただけます。自動更新は停止しています。")
                             .font(.caption).foregroundStyle(FateTheme.muted)
                             .fixedSize(horizontal: false, vertical: true)
+                    } else if let renewal = purchases.renewalDisplay {
+                        Text("次回更新：" + renewal.expiresAt.formatted(.dateTime.month().day()))
+                            .font(.caption).foregroundStyle(FateTheme.muted)
+                    } else {
+                        Text("会員資格は有効です。自動更新の状態はAppleの管理画面で確認できます。")
+                            .font(.caption).foregroundStyle(FateTheme.muted)
                     }
                 }
-                .padding(20)
+                .padding(24)
+                .background {
+                    FateArtwork(name: "QuietMountains").opacity(0.12).clipped()
+                }
             }
             if !AppConfig.storeKitEnabled {
                 Text(AppConfig.purchasesUnavailableMessage)

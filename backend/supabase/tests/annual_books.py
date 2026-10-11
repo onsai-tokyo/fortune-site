@@ -29,6 +29,7 @@ try:
     sql((base/'apple_event_reconciliation_b02.sql').read_text())
     sql((base/'ai_books_20260927.sql').read_text())
     sql((base/'ai_books_annual_20261011.sql').read_text())
+    sql((base/'ai_books_sandbox_transfer_20261012.sql').read_text())
     sql("insert into auth.users values ('"+uid(1)+"'); update public.ai_book_settings set enabled=true;")
     def annual(revoked=False,signed=200):
         tx={'transactionId':'annual-test','productId':'com.onsai.fatelab.premium.annual','purchaseMs':1769817600000,'expiresMs':1801353600000,'signedMs':signed,'isUpgraded':False}
@@ -54,5 +55,26 @@ try:
     sql(f"insert into public.app_store_subscriptions(user_id,original_transaction_id,latest_transaction_id,product_id,environment,subscription_status,expires_at,app_account_token) values('{uid(1)}','lineage','switchAnnual','com.onsai.fatelab.premium.annual','Production','active',now()+interval '1 year','{uid(1)}')")
     sql(f"select public.ai_book_apply_subscription('{uid(1)}','Production',{lit(json.dumps(tx))}::jsonb)")
     expect(sql("select count(*) from public.ai_book_credits c join public.ai_book_grants g on g.id=c.grant_id where not revoked and starts_at<=now() and expires_at>now()")=='5','switch to annual immediately leaves five usable member credits')
+    sql(f"insert into auth.users values ('{uid(2)}'),('{uid(3)}')")
+    tx={'environment':'Sandbox','transactionId':'transferAnnual','originalTransactionId':'sandbox-line','productId':'com.onsai.fatelab.premium.annual','appAccountToken':uid(2),'purchaseMs':now-1000,'expiresMs':now+86400000,'signedMs':now,'revokedMs':None,'isUpgraded':False}
+    def emit(key,owner):
+        payload={'environment':'Sandbox','action':'transaction','requestUserId':uid(owner),'allowOwnerTransfer':True,'transaction':tx}
+        sql(f"select public.app_store_receive_event('Sandbox',{lit(key)},{lit(json.dumps(payload))}::jsonb)")
+        return sql(f"select public.app_store_apply_event('Sandbox',{lit(key)})")
+    emit('transfer-start',2)
+    order(201,owner=2)
+    emit('transfer-move',3)
+    expect(sql(f"select count(*) from public.ai_book_grants where user_id='{uid(3)}'")=='12','sandbox transfer moves annual windows')
+    expect(sql(f"select count(*) from public.ai_book_credits c join public.ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(3)}' and consumed_by is not null")=='1','transfer preserves consumed slot')
+    expect(sql(f"select count(*) from public.ai_book_credits c join public.ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(3)}' and not revoked and starts_at<=now() and expires_at>now() and consumed_by is null")=='4','transfer leaves four unused slots')
+    sql(f"select public.ai_book_sync_member('{uid(3)}')")
+    expect(sql(f"select count(*) from public.ai_book_credits c join public.ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(3)}'")=='60','repeat sync cannot duplicate slots')
+    sql(f"update public.ai_book_grants set user_id='{uid(2)}',revoked=true where transaction_id like 'transferAnnual:%'")
+    sql(f"select public.ai_book_sync_member('{uid(3)}')")
+    expect(sql(f"select count(*) from public.ai_book_credits c join public.ai_book_grants g on g.id=c.grant_id where g.user_id='{uid(3)}' and not revoked and starts_at<=now() and expires_at>now() and consumed_by is null")=='4','legacy broken transfer is repaired without replenishment')
+    tx['revokedMs']=now+1;tx['signedMs']=now+2
+    emit('transfer-refund',3)
+    sql(f"select public.ai_book_sync_member('{uid(3)}')")
+    expect(sql("select count(*) from public.ai_book_grants where transaction_id like 'transferAnnual:%' and not revoked")=='0','refund stays revoked after sync')
 finally:
     if started: command([str(binpath/'pg_ctl'),'-D',str(cluster),'-m','immediate','-w','stop'])

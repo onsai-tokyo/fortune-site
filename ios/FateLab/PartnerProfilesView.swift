@@ -67,6 +67,7 @@ struct PartnerProfilesView: View {
     @State private var compatibilityFailed = false
     @State private var needsPurchaseRecovery = false
     @State private var showPaywall = false
+    @State private var resumeRegistrationAfterPurchase = false
 
     var body: some View {
         ZStack { ScrollView {
@@ -147,7 +148,7 @@ struct PartnerProfilesView: View {
         .sheet(isPresented: $showPicker, onDismiss: {
             switch pickerAction {
             case .register: showRegistration = true
-            case .paywall: showPaywall = true
+            case .paywall: resumeRegistrationAfterPurchase = true; showPaywall = true
             case .edit(let partner): profileToEdit = partner
             case nil: break
             }
@@ -168,7 +169,10 @@ struct PartnerProfilesView: View {
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { profileToEdit = nil } } }
             }
         }
-        .sheet(isPresented: $showPaywall) {
+        .sheet(isPresented: $showPaywall, onDismiss: {
+            if resumeRegistrationAfterPurchase && remaining > 0 { showRegistration = true }
+            resumeRegistrationAfterPurchase = false
+        }) {
             PaywallSheet(draftQuestion: "") {
                 Task { await purchases.sync(auth: auth); await load(); showPaywall = false }
             }.environmentObject(auth).environmentObject(purchases)
@@ -213,13 +217,13 @@ struct PartnerProfilesView: View {
                 Section {
                     Button("新しく相手を登録する") {
                         if remaining > 0 { pickerAction = .register; showPicker = false }
-                        else if !purchases.isPremium { pickerAction = .paywall; showPicker = false }
+                        else if partnerLimit < 10 { pickerAction = .paywall; showPicker = false }
                         else { Task { await load() } }
-                    }.disabled(purchases.isSyncing || purchases.accessState == .unknown || (remaining == 0 && partnerLimit >= 10))
-                    if remaining == 0 && partnerLimit < 10 && !purchases.isPremium {
-                        Text("無料プランは1人まで。月額会員は10人まで登録できます。")
+                    }.disabled(!hasLoaded || (remaining == 0 && partnerLimit >= 10))
+                    if remaining == 0 && partnerLimit < 10 {
+                        Text("無料プランは1人まで。会員プランでは10人まで登録できます。")
                             .font(.footnote).foregroundStyle(FateTheme.muted)
-                        Button("月額プランを見る") { pickerAction = .paywall; showPicker = false }
+                        Button("会員プランを見る") { pickerAction = .paywall; showPicker = false }
                     }
                 } footer: { Text(remaining == 0 ? "登録済みの相手はそのまま残ります。右へスワイプで編集、左へスワイプで削除できます。" : "残り\(remaining)人まで登録できます") }
 
