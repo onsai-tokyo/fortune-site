@@ -380,8 +380,10 @@ struct PaywallSheet: View {
                         Text("この操作には利用権限の確認が必要です。入力した質問はそのまま残ります。")
                             .foregroundStyle(FateTheme.muted)
                     } else {
-                    Text("あなたを知る言葉を、日々の選択に。")
-                        .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
+                    if !purchases.isPremium {
+                        Text("あなたを知る言葉を、日々の選択に。")
+                            .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
+                    }
                     FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
                     if startsBookAfterPurchase {
                         Text("会員になって、この相談の鑑定書をつくりますか？")
@@ -389,7 +391,15 @@ struct PaywallSheet: View {
                         Text("購入の確認後、この相談内容で鑑定書の作成を開始します。会員分の利用枠を1通使用します。")
                             .font(.subheadline).foregroundStyle(FateTheme.muted)
                     }
-                    if purchases.isPremium { MembershipActiveBanner() }
+                    if purchases.isPremium {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(purchases.membershipTitle, systemImage: "checkmark.seal.fill")
+                                .font(.subheadline.weight(.medium))
+                            if let notice = purchases.cancellationNotice {
+                                Text(notice).font(.caption).foregroundStyle(FateTheme.muted)
+                            }
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     if purchases.annualProduct != nil || purchases.isPremium {
                         Picker("会員プラン", selection: $annual) {
                             Text("月額・毎月3通").tag(false)
@@ -408,23 +418,8 @@ struct PaywallSheet: View {
                         }
                     }
                     }
-                    if let session = auth.session {
-                        if purchases.isPremium {
-                            if startsBookAfterPurchase {
-                                Button("会員として利用を続ける") { onRefresh() }.buttonStyle(FLPrimaryButtonStyle())
-                            } else {
-                                Text("プランの変更・再開はAppleの管理画面から行えます。適用日と料金はAppleの確認画面でご確認ください。")
-                                    .font(.footnote).foregroundStyle(FateTheme.muted)
-                                Button("Appleでプランを変更・再開") {
-                                    guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
-                                    Task {
-                                        do { try await AppStore.showManageSubscriptions(in: scene) }
-                                        catch { purchases.errorMessage = "管理画面を開けませんでした。時間をおいて再度お試しください。"; return }
-                                        await purchases.sync(auth: auth)
-                                    }
-                                }.buttonStyle(FLPrimaryButtonStyle())
-                            }
-                        } else if purchases.accessState == .unknown || purchases.isSyncing {
+                    if let session = auth.session, !purchases.isPremium {
+                        if purchases.accessState == .unknown || purchases.isSyncing {
                             if purchases.isSyncing {
                                 ProgressView("購入状況を確認しています…").tint(FateTheme.ink)
                             } else {
@@ -457,6 +452,22 @@ struct PaywallSheet: View {
                     }
                     Divider().overlay(FateTheme.line)
                     MembershipDetailsView(annual: annual, followsCurrentPlan: false)
+                    if purchases.isPremium {
+                        if startsBookAfterPurchase {
+                            Button("会員として利用を続ける") { onRefresh() }.buttonStyle(FLPrimaryButtonStyle())
+                        } else {
+                            Text("プランの変更・再開はAppleの管理画面から行えます。適用日と料金はAppleの確認画面でご確認ください。")
+                                .font(.footnote).foregroundStyle(FateTheme.muted)
+                            Button("Appleでプランを変更・再開") {
+                                guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+                                Task {
+                                    do { try await AppStore.showManageSubscriptions(in: scene) }
+                                    catch { purchases.errorMessage = "管理画面を開けませんでした。時間をおいて再度お試しください。"; return }
+                                    await purchases.sync(auth: auth)
+                                }
+                            }.buttonStyle(FLPrimaryButtonStyle())
+                        }
+                    }
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     HStack {

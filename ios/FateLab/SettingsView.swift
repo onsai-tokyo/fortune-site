@@ -79,7 +79,7 @@ struct SettingsView: View {
             if purchases.isPremium {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) {
-                        Image(systemName: "sparkle")
+                        Image(systemName: "checkmark.seal.fill")
                             .font(.title3).foregroundStyle(.white.opacity(0.75))
                         Text(purchases.membershipTitle).font(.system(.title3, weight: .medium))
                         Spacer()
@@ -112,7 +112,6 @@ struct SettingsView: View {
                     .font(.footnote).foregroundStyle(FateTheme.muted).padding(20)
             } else if purchases.isPremium {
                 SettingsMembershipButton(title: "月額・年間プランを見る")
-                    .padding(20)
                 SettingsDivider()
                 Button {
                     guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
@@ -245,14 +244,19 @@ struct SettingsMembershipButton: View {
     var title: String? = nil
 
     var body: some View {
-        Button {
-            showingMembership = true
-        } label: {
-            Text(title ?? purchases.membershipActionTitle)
-                .frame(maxWidth: .infinity, minHeight: 24)
-                .contentShape(Rectangle())
+        Group {
+            if purchases.isPremium {
+                Button { showingMembership = true } label: {
+                    SettingsUtilityRow(title: title ?? "月額・年間プランを見る", symbol: "rectangle.stack")
+                }.buttonStyle(.plain)
+            } else {
+                Button { showingMembership = true } label: {
+                    Text(title ?? purchases.membershipActionTitle)
+                        .frame(maxWidth: .infinity, minHeight: 24)
+                        .contentShape(Rectangle())
+                }.buttonStyle(FLPrimaryButtonStyle())
+            }
         }
-        .buttonStyle(FLPrimaryButtonStyle())
         .accessibilityIdentifier("settings.membership.open")
         .sheet(isPresented: $showingMembership) {
             PaywallSheet(draftQuestion: "") {

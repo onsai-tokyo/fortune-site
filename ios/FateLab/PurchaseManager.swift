@@ -80,6 +80,18 @@ final class PurchaseManager: ObservableObject {
         Task { await load() }
     }
 
+#if DEBUG
+    /// UI-only sample: no StoreKit listener, purchase, or account request.
+    static func membershipPreview(auth: AuthStore) -> PurchaseManager {
+        let value = PurchaseManager(storeKitEnabled: false)
+        value.boundScope = AccountScope(auth)
+        value.accessState = .premium
+        value.membershipTitle = "年間会員"
+        value.renewalDisplay = MembershipRenewalDisplay(willAutoRenew: false, expiresAt: Date().addingTimeInterval(86_400))
+        return value
+    }
+#endif
+
     deinit { updates?.cancel() }
 
     func load() async {
