@@ -23,5 +23,6 @@ struct AISharingNoticeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityIdentifier("aiConsent.termsNotice")
+        .inAppLegalLinks()
     }
 }

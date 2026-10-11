@@ -85,9 +85,9 @@ struct SettingsView: View {
                         Spacer()
                         Text(purchases.cancellationNotice == nil ? "会員資格あり" : "解約済み")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(FateTheme.muted)
+                            .foregroundStyle(.white)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(FateTheme.canvas, in: Capsule())
+                            .background(FateTheme.ink, in: Capsule())
                     }
                     if let renewal = purchases.renewalDisplay, !renewal.willAutoRenew {
                         Text(renewal.expiresAt, format: .dateTime.month().day().hour().minute())
@@ -224,9 +224,9 @@ private struct SettingsLinkRow: View {
     let destination: URL
     var body: some View {
         Link(destination: destination) {
-            HStack { Text(title); Spacer(); Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(FateTheme.muted) }
+            HStack { Text(title); Spacer(); Image(systemName: LegalDocument.matching(destination) == nil ? "arrow.up.right" : "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
                 .foregroundStyle(FateTheme.ink).padding(.horizontal, 18).padding(.vertical, 8).frame(minHeight: 58).contentShape(Rectangle())
-        }
+        }.inAppLegalLinks()
     }
 }
 

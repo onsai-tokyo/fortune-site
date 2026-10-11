@@ -321,7 +321,7 @@ struct AIBookComposeView: View {
             }.buttonStyle(FLSecondaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
             if let message = purchases.errorMessage { Text(message).font(.footnote).foregroundStyle(FateTheme.danger) }
             Text("月額会員は1ヶ月ごとの自動更新です。解約はApple Accountのサブスクリプション設定から行えます。").font(.footnote).foregroundStyle(FateTheme.muted)
-            HStack { Link("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); Link("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }.font(.caption)
+            HStack { LegalLink("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); LegalLink("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }.font(.caption)
             if let error { Text(error).font(.footnote).foregroundStyle(FateTheme.danger) }
         }.padding(24) }.background(FateTheme.canvas).toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { showPlans = false } } }.task { await purchases.load() }
     }

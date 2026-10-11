@@ -72,6 +72,8 @@ struct InsightHubView: View {
     var onReload: (() -> Void)? = nil
     var isPartner = false
     @State private var selectedTab = "essence"
+    @EnvironmentObject private var auth: AuthStore
+    @StateObject private var partnerReading = PartnerReadingModel()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -90,7 +92,7 @@ struct InsightHubView: View {
             }.padding(5).background(FateTheme.surface.opacity(0.75), in: RoundedRectangle(cornerRadius: 16)) }.scrollIndicators(.hidden)
 
             if selectedTab == "partner", let id = report.conversationID {
-                PartnerReadingView(conversationID: id).id(id)
+                PartnerReadingView(conversationID: id, model: partnerReading).id(id)
             } else if selectedTab == "chart" {
                 if scope == .couple {
                     CoupleChartDetailsView(sections: report.chartSections, partnerName: "相手")
@@ -113,6 +115,9 @@ struct InsightHubView: View {
         }
         .padding(.vertical, FateSpacing.screenH).background(FateTheme.canvas)
         .environment(\.readingConversationID, report.conversationID)
+        .task(id: PartnerReadingKey(owner: AccountScope(auth), conversationID: report.conversationID)) {
+            if scope == .couple, let id = report.conversationID { await partnerReading.load(id: id, auth: auth) }
+        }
     }
 
     private func relationshipOrb(_ color: Color) -> some View {
@@ -452,8 +457,8 @@ private struct ReadingUnlockSheet: View {
                         } }.font(.footnote).disabled(busy)
                     }
                     HStack(spacing: 24) {
-                        Link("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
-                        Link("プライバシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
+                        LegalLink("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
+                        LegalLink("プライバシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                     }.font(.caption).foregroundStyle(FateTheme.muted)
                 }.padding(24)
             }.background(FateTheme.canvas)
@@ -1204,31 +1209,47 @@ struct CoupleTimingList: View {
     }
 }
 
-struct PartnerReadingView: View {
-    let conversationID: UUID
-    @EnvironmentObject private var auth: AuthStore
-    @State private var report: GeneratedReport?
-    @State private var error: String?
-    @State private var loadedOwner: AccountScope?
-    var body: some View {
-        Group {
-            if let report {
-                PartnerEssenceContent(report: report)
-            } else if let error {
-                FLErrorState(title: "あの人の鑑定を読み込めませんでした", message: error) { Task { await load() } }
-            } else { FateInlineLoading(title: "あの人の鑑定を開いています") }
-        }.task(id: AccountScope(auth)) {
-            if loadedOwner != AccountScope(auth) { report = nil; await load() }
+struct PartnerReadingKey: Hashable {
+    let owner: AccountScope
+    let conversationID: UUID?
+}
+
+@MainActor final class PartnerReadingModel: ObservableObject {
+    @Published private(set) var report: GeneratedReport?
+    @Published private(set) var error: String?
+    private(set) var key: PartnerReadingKey?
+    private var loading = false
+    private let fetch: (UUID, AuthStore) async throws -> StructuredReportResponse
+    init(fetch: @escaping (UUID, AuthStore) async throws -> StructuredReportResponse = { try await APIClient.shared.partnerReading(id: $0, auth: $1) }) { self.fetch = fetch }
+    func load(id: UUID, auth: AuthStore) async {
+        let requested = PartnerReadingKey(owner: AccountScope(auth), conversationID: id)
+        if key == requested && (report != nil || loading) { return }
+        key = requested; report = nil; error = nil; loading = true
+        defer { if key == requested { loading = false } }
+        do {
+            let result = try await fetch(id, auth)
+            try requested.owner.check(auth)
+            guard key == requested else { return }
+            report = GeneratedReport(birthData: [:], calculatedData: [:], text: result.reportText, cards: result.cards, chartSections: result.chartSections ?? [])
+        } catch {
+            guard requested.owner.isCurrent(auth), key == requested, !Task.isCancelled else { return }
+            self.error = userFacingErrorMessage(error)
         }
     }
-    private func load() async {
-        let owner = AccountScope(auth)
-        do {
-            let result = try await APIClient.shared.partnerReading(id: conversationID, auth: auth)
-            try owner.check(auth)
-            report = GeneratedReport(birthData: [:], calculatedData: [:], text: result.reportText, cards: result.cards, chartSections: result.chartSections ?? [])
-            loadedOwner = owner; error = nil
-        } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) } }
+}
+
+struct PartnerReadingView: View {
+    let conversationID: UUID
+    @ObservedObject var model: PartnerReadingModel
+    @EnvironmentObject private var auth: AuthStore
+    var body: some View {
+        Group {
+            if model.key == PartnerReadingKey(owner: AccountScope(auth), conversationID: conversationID), let report = model.report {
+                PartnerEssenceContent(report: report)
+            } else if let error = model.error {
+                FLErrorState(title: "あの人の鑑定を読み込めませんでした", message: error) { Task { await model.load(id: conversationID, auth: auth) } }
+            } else { FateInlineLoading(title: "あの人の鑑定を開いています") }
+        }
     }
 }
 
