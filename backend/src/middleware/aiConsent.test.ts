@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { requireAIConsent, AI_CONSENT_VERSION, AI_TERMS_CONSENT_VERSION } from './aiConsent.js'
+import { requireAIConsent, AI_CONSENT_VERSION, AI_TERMS_CONSENT_VERSION, AI_INLINE_CONSENT_VERSION } from './aiConsent.js'
 
 for (const header of [undefined, '', 'true', 'anthropic-old', AI_CONSENT_VERSION + ',false']) {
   test(`blocks missing or invalid consent: ${String(header)}`, () => {
@@ -21,6 +21,15 @@ test('linked AI terms acknowledgement applies only to this request', () => {
   let calls = 0
   const response = {status(){return this},json(){}} as never
   for (const header of [AI_TERMS_CONSENT_VERSION, undefined, AI_TERMS_CONSENT_VERSION + ',false']) {
+    requireAIConsent({header:()=>header} as never,response,()=>{calls++})
+  }
+  assert.equal(calls,1)
+})
+
+test('inline provider and data disclosure acknowledgement is request-specific', () => {
+  let calls = 0
+  const response = {status(){return this},json(){}} as never
+  for (const header of [AI_INLINE_CONSENT_VERSION, undefined, AI_INLINE_CONSENT_VERSION + ',false']) {
     requireAIConsent({header:()=>header} as never,response,()=>{calls++})
   }
   assert.equal(calls,1)

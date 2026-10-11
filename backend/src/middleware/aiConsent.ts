@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express'
 
 export const AI_CONSENT_VERSION = 'anthropic-2026-10-07-v1'
+export const AI_INLINE_CONSENT_VERSION = 'anthropic-inline-2026-10-11-v3'
 export const AI_TERMS_CONSENT_VERSION = 'terms-ai-2026-10-07-v2'
 export function hasAIConsent(req: Request): boolean {
   const version = req.header('X-FateLab-AI-Consent')
-  return version === AI_CONSENT_VERSION || version === AI_TERMS_CONSENT_VERSION
+  return version === AI_INLINE_CONSENT_VERSION || version === AI_CONSENT_VERSION || version === AI_TERMS_CONSENT_VERSION
 }
 // Require the request-specific client acknowledgement. Never infer it from membership or prior signup terms.
 // v2 identifies the linked-AI-terms presentation separately from the explicit v1 notice.

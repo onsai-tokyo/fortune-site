@@ -1,0 +1,20 @@
+PREPARATION — target build 127. Not yet resubmitted. Additional physical-device recordings and current iOS version confirmation remain pending.
+
+1. Recording: a physical-device core-flow recording dated October 11 shows email login, personality/compatibility/year readings, AI book creation and delivery. Additional launch, registration/deletion and Apple purchase recordings will be supplied before resubmission.
+
+2. Test devices: user-reported iPhone 14 (previously reported iOS 18.7.8; current version to be confirmed). Simulator: iOS 26.5. Build 127 adds inline AI disclosure and explicit consent action; updated physical-device verification is pending.
+
+3. Purpose/audience: Japanese-speaking adults seeking personal reflection about personality, relationships and timing. The app combines calculated astrology charts with editorial interpretations and optional AI consultation books. It does not provide medical, legal or investment advice or guarantee outcomes.
+
+4. Access: choose メールアドレスでログイン and use the separate Sign-In Information fields. Login was demonstrated October 11. Do not delete this reviewer account. For deletion testing create a separate disposable account and use 設定 > アカウントを削除. Core route: あなた > あなたの本質 > 読み進める; 時期の流れ > year; ふたり > partner > ふたりの鑑定を開く > relationship/year detail. 鑑定書をつくる > saved reading/theme > question (20-400 characters) > 同意して鑑定する. Generation continues server-side; completed books appear in 本棚. No sample file is required.
+
+5. Services/data: Supabase authentication/database, Render API/background worker, Anthropic Claude API for consultation text, Apple StoreKit purchases, Apple/Google sign-in. Personality/compatibility/timeline cards use calculated data and stored editorial text. Before AI submission, build 127 displays Anthropic (Claude) and the information sent, with a Terms link and explicit 同意して鑑定する action. No additional modal or pre-enabled consent switch. Book requests send the question/theme, selected reading and calculation/evidence context. Follow-up questions also use recent conversation and stored birth data. Partner data and user-entered personal details may be included. The user can leave without sending; ordinary saved readings remain accessible.
+
+6. Regions: Japanese-language UI/content; core reading logic does not change by region. Storefront prices/availability follow Apple. The annual product is configured for Japan.
+
+7. Scope: interpretive astrology, not a regulated professional service. No public user posts, feeds or user-to-user messaging; questions/books are private. No access to contacts, camera or location is needed for the core flow; birth location is entered by the user.
+
+8. Purchases (Japan): com.onsai.fatelab.premium.monthly JPY1,980/month, 3 AI books per allocation month; com.onsai.fatelab.premium.annual JPY12,000/year paid upfront, 5 AI books per anchored month, not 60 immediately. Both allow 10 partner profiles; free accounts allow 1. Unused membership credits do not roll over. Cancellation stops renewal; access continues until expiry. All personality, compatibility and timeline cards (including future years) are free; com.onsai.fatelab.reading.single is legacy and not offered in this build. First AI book is free once per verified email, not added on top of membership credits. com.onsai.fatelab.report.single buys one additional non-expiring AI book credit at the price displayed by Apple. Delivered books remain after cancellation; failed generation returns the credit. Settings > membership plans opens monthly/annual selection; Create a report > View membership plans does likewise for nonmembers. With no book credits, creation opens purchase options. Settings > 購入を復元 restores purchases. No review payment bypass.
+
+Terms https://fate-lab.com/terms
+Privacy https://fate-lab.com/privacy
