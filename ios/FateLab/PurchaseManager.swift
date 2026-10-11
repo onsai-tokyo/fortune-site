@@ -34,6 +34,7 @@ final class PurchaseManager: ObservableObject {
     var isPremium: Bool { accessState == .premium }
     var membershipActionTitle: String { hasStoreKitEntitlement ? "購入を復元して利用する" : "月額会員になる" }
     var needsMembershipRestore: Bool { hasStoreKitEntitlement && accessState == .standard }
+    func dismissRestoreMessage() { restoreMessage = nil }
     var canStartMembership: Bool {
         accessState == .standard && !isWorking && !isSyncing && (hasStoreKitEntitlement || product != nil)
     }
@@ -309,7 +310,7 @@ final class PurchaseManager: ObservableObject {
             if isPremium && restored == 0 {
                 restoreMessage = "このApple Accountに有効な購入は見つかりませんでしたが、FATE LABには有効な会員情報が残っています。購入時のApple Accountをご確認ください。"
             } else if isPremium {
-                restoreMessage = "購入情報を確認しました。\(cancellationNotice ?? "会員資格は有効です。")"
+                restoreMessage = "購入情報を確認しました。会員資格は有効です。"
             } else if restored > 0 {
                 restoreMessage = "購入情報を復元しました。現在のプランは無料会員です。"
             } else {

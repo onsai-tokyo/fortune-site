@@ -13,11 +13,11 @@ enum AISharingConsent {
 struct AISharingNoticeView: View {
     var includesConversationHistory = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(includesConversationHistory
-                ? "回答の作成のため、質問・会話履歴・鑑定内容・出生情報をAnthropic（Claude）へ送信します。"
-                : "鑑定書の作成のため、相談文・選んだ鑑定内容・命式などの情報をAnthropic（Claude）へ送信します。")
-            Text(.init("[利用規約・AIへの送信について](\(AISharingConsent.termsURL.absoluteString))をご確認のうえ、同意してお進みください。"))
+                ? "回答作成のため、質問・会話履歴・鑑定内容・出生情報をAnthropicへ送信します。"
+                : "鑑定書作成のため、相談文・鑑定内容・命式などをAnthropicへ送信します。")
+            Text(.init("[利用規約](\(AISharingConsent.termsURL.absoluteString))をご確認のうえ、お進みください。"))
         }
         .font(.caption).foregroundStyle(FateTheme.muted).tint(FateTheme.ink)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -75,67 +75,96 @@ struct SettingsView: View {
     }
 
     private var membershipCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("メンバーシップ")
-                .font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
-            VStack(alignment: .leading, spacing: 14) {
-                if purchases.isPremium { MembershipActiveBanner() }
-                if !AppConfig.storeKitEnabled {
-                    Text(AppConfig.purchasesUnavailableMessage)
-                        .font(.system(.footnote)).foregroundStyle(FateTheme.muted)
-                } else if purchases.accessState == .premium {
-                    Button("サブスクリプションを管理") {
-                        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
-                        Task {
-                            try? await AppStore.showManageSubscriptions(in: scene)
-                            await purchases.sync(auth: auth)
-                        }
+        SettingsGroup(title: "メンバーシップ") {
+            if purchases.isPremium {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkle")
+                            .font(.title3).foregroundStyle(FateTheme.muted)
+                        Text("継続鑑定").font(.system(.headline, weight: .medium))
+                        Spacer()
+                        Text(purchases.cancellationNotice == nil ? "利用中" : "解約済み")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(FateTheme.muted)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(FateTheme.canvas, in: Capsule())
                     }
-                } else if auth.session != nil {
-                    if purchases.needsMembershipRestore {
-                        Text("Appleの購入履歴を、このアカウントに復元できます。")
-                            .font(.footnote).foregroundStyle(FateTheme.muted)
-                    }
-                    SettingsMembershipButton()
-                } else {
-                    Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }.buttonStyle(FLPrimaryButtonStyle())
-                }
-                if let message = purchases.errorMessage { Text(message).foregroundStyle(.red).font(.footnote) }
-                if !purchases.isPremium && !purchases.needsMembershipRestore {
-                    StorePurchasePrice(product: purchases.product)
-                }
-                if auth.session != nil && AppConfig.storeKitEnabled && !purchases.needsMembershipRestore {
-                    SettingsDivider(edgeInset: 0)
-                    Button { Task { await purchases.restore(auth: auth) } } label: {
-                        HStack(spacing: 10) {
-                            if purchases.isRestoring { ProgressView().tint(FateTheme.ink) }
-                            Text(purchases.isRestoring ? "購入情報を確認中…" : "購入を復元")
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 56)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(FateTheme.ink)
-                    .disabled(purchases.isWorking)
-                    .accessibilityIdentifier("settings.purchase.restore")
-                    if purchases.isRestoring {
-                        Text(purchases.membershipProgress ?? "購入情報を確認しています…")
-                            .font(.footnote).foregroundStyle(FateTheme.muted)
-                            .accessibilityIdentifier("settings.purchase.restore.progress")
-                    } else if let message = purchases.restoreMessage {
-                        Text(message)
-                            .font(.footnote).foregroundStyle(FateTheme.ink)
+                    if let renewal = purchases.renewalDisplay, !renewal.willAutoRenew {
+                        Text(renewal.expiresAt, format: .dateTime.month().day().hour().minute())
+                            .font(.subheadline).foregroundStyle(FateTheme.ink)
+                        Text("までご利用いただけます。自動更新は停止しています。")
+                            .font(.caption).foregroundStyle(FateTheme.muted)
                             .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("settings.purchase.restore.result")
                     }
                 }
+                .padding(20)
             }
-            .padding(22)
-            .background(FateTheme.card)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(FateTheme.line, lineWidth: 0.5).allowsHitTesting(false))
+            if !AppConfig.storeKitEnabled {
+                Text(AppConfig.purchasesUnavailableMessage)
+                    .font(.footnote).foregroundStyle(FateTheme.muted).padding(20)
+            } else if purchases.isPremium {
+                SettingsDivider()
+                Button {
+                    guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+                    Task {
+                        do { try await AppStore.showManageSubscriptions(in: scene) }
+                        catch { purchases.errorMessage = "管理画面を開けませんでした。時間をおいて再度お試しください。"; return }
+                        await purchases.sync(auth: auth)
+                    }
+                } label: {
+                    SettingsUtilityRow(title: "サブスクリプションを管理", symbol: "slider.horizontal.3")
+                }.buttonStyle(.plain)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    if auth.session != nil {
+                        if purchases.needsMembershipRestore {
+                            Text("Appleの購入履歴を、このアカウントに復元できます。")
+                                .font(.footnote).foregroundStyle(FateTheme.muted)
+                        }
+                        SettingsMembershipButton()
+                    } else {
+                        Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }
+                            .buttonStyle(FLPrimaryButtonStyle())
+                    }
+                    if !purchases.needsMembershipRestore { StorePurchasePrice(product: purchases.product) }
+                }.padding(20)
+            }
+            if auth.session != nil && AppConfig.storeKitEnabled && !purchases.needsMembershipRestore {
+                SettingsDivider()
+                Button { Task { await purchases.restore(auth: auth) } } label: {
+                    SettingsUtilityRow(title: purchases.isRestoring ? "購入情報を確認中…" : "購入を復元",
+                                       symbol: "arrow.clockwise", isLoading: purchases.isRestoring)
+                }
+                .buttonStyle(.plain)
+                .disabled(purchases.isWorking)
+                .accessibilityIdentifier("settings.purchase.restore")
+            }
+            if purchases.isRestoring {
+                Text(purchases.membershipProgress ?? "購入情報を確認しています…")
+                    .font(.caption).foregroundStyle(FateTheme.muted)
+                    .padding(.horizontal, 20).padding(.bottom, 16)
+                    .accessibilityIdentifier("settings.purchase.restore.progress")
+            } else if let message = purchases.restoreMessage, purchases.errorMessage == nil {
+                HStack(alignment: .top, spacing: 10) {
+                    Text(message).font(.footnote).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Button { purchases.dismissRestoreMessage() } label: {
+                        Image(systemName: "xmark").font(.caption).frame(width: 44, height: 44)
+                    }.buttonStyle(.plain).accessibilityLabel("復元結果を閉じる")
+                }
+                .foregroundStyle(FateTheme.muted)
+                .padding(.leading, 16).padding(.vertical, 8)
+                .background(FateTheme.canvas, in: RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 16).padding(.bottom, 16)
+                .accessibilityIdentifier("settings.purchase.restore.result")
+            }
+            if let message = purchases.errorMessage {
+                Text(message).font(.footnote).foregroundStyle(FateTheme.danger)
+                    .fixedSize(horizontal: false, vertical: true).padding(20)
+            }
         }
     }
+
 }
 
 private struct SettingsGroup<Content: View>: View {
@@ -222,5 +251,23 @@ struct SettingsMembershipButton: View {
             .environmentObject(purchases)
         }
         .onChange(of: AccountScope(auth)) { _, _ in showingMembership = false }
+    }
+}
+
+private struct SettingsUtilityRow: View {
+    let title: String
+    let symbol: String
+    var isLoading = false
+    var body: some View {
+        HStack(spacing: 12) {
+            if isLoading { ProgressView().tint(FateTheme.ink).frame(width: 22) }
+            else { Image(systemName: symbol).font(.body).foregroundStyle(FateTheme.muted).frame(width: 22) }
+            Text(title).font(.subheadline)
+            Spacer(minLength: 8)
+            if !isLoading { Image(systemName: "chevron.right").font(.caption).foregroundStyle(FateTheme.muted) }
+        }
+        .foregroundStyle(FateTheme.ink)
+        .padding(.horizontal, 20).padding(.vertical, 12)
+        .frame(minHeight: 56).contentShape(Rectangle())
     }
 }
