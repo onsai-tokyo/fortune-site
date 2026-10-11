@@ -106,8 +106,28 @@ struct SettingsView: View {
                 }
                 if auth.session != nil && AppConfig.storeKitEnabled && !purchases.needsMembershipRestore {
                     SettingsDivider(edgeInset: 0)
-                    Button("購入を復元") { Task { await purchases.restore(auth: auth) } }
-                        .frame(minHeight: 56).foregroundStyle(FateTheme.ink)
+                    Button { Task { await purchases.restore(auth: auth) } } label: {
+                        HStack(spacing: 10) {
+                            if purchases.isRestoring { ProgressView().tint(FateTheme.ink) }
+                            Text(purchases.isRestoring ? "購入情報を確認中…" : "購入を復元")
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 56)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(FateTheme.ink)
+                    .disabled(purchases.isWorking)
+                    .accessibilityIdentifier("settings.purchase.restore")
+                    if purchases.isRestoring {
+                        Text(purchases.membershipProgress ?? "購入情報を確認しています…")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                            .accessibilityIdentifier("settings.purchase.restore.progress")
+                    } else if let message = purchases.restoreMessage {
+                        Text(message)
+                            .font(.footnote).foregroundStyle(FateTheme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("settings.purchase.restore.result")
+                    }
                 }
             }
             .padding(22)

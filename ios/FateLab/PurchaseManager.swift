@@ -12,6 +12,8 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var accessState: AccessState = .unknown
     @Published var isWorking = false
     @Published private(set) var membershipProgress: String?
+    @Published private(set) var isRestoring = false
+    @Published private(set) var restoreMessage: String?
     @Published private(set) var isSyncing = false
     @Published var errorMessage: String?
     @Published private(set) var hasStoreKitEntitlement = false
@@ -50,6 +52,8 @@ final class PurchaseManager: ObservableObject {
         errorMessage = nil
         isWorking = false
         membershipProgress = nil
+        isRestoring = false
+        restoreMessage = nil
         isSyncing = false
     }
 
@@ -277,12 +281,19 @@ final class PurchaseManager: ObservableObject {
     func restore(auth: AuthStore) async {
         guard self.storeKitEnabled else { errorMessage = AppConfig.purchasesUnavailableMessage; return }
         let owner = bind(auth)
-        guard owner.userID != nil, !isWorking else { return }
-        isWorking = true; errorMessage = nil
-        defer { if owner.isCurrent(auth), boundScope == owner { isWorking = false } }
+        guard owner.userID != nil else { errorMessage = "ログインしてから購入を復元してください。"; return }
+        guard !isWorking else { return }
+        isWorking = true; isRestoring = true; errorMessage = nil; restoreMessage = nil
+        membershipProgress = "Appleの購入情報を確認しています…"
+        defer {
+            if owner.isCurrent(auth), boundScope == owner {
+                isWorking = false; isRestoring = false; membershipProgress = nil
+            }
+        }
         do {
             try await AppStore.sync()
             try check(owner, auth)
+            membershipProgress = "購入情報をアカウントに反映しています…"
             var restored = 0
             for await result in Transaction.currentEntitlements {
                 try check(owner, auth)
@@ -291,8 +302,18 @@ final class PurchaseManager: ObservableObject {
             }
             await syncAfterDelivery(auth: auth)
             try check(owner, auth)
-            if restored == 0 && accessState == .standard {
-                errorMessage = "このApple Accountに有効な継続鑑定が見つかりませんでした。購入時と同じApple Accountをご確認ください。"
+            guard accessState != .unknown, errorMessage == nil else {
+                if errorMessage == nil { errorMessage = "購入情報の同期を完了できませんでした。時間をおいて再試行してください。" }
+                return
+            }
+            if isPremium && restored == 0 {
+                restoreMessage = "このApple Accountに有効な購入は見つかりませんでしたが、FATE LABには有効な会員情報が残っています。購入時のApple Accountをご確認ください。"
+            } else if isPremium {
+                restoreMessage = "購入情報を確認しました。\(cancellationNotice ?? "会員資格は有効です。")"
+            } else if restored > 0 {
+                restoreMessage = "購入情報を復元しました。現在のプランは無料会員です。"
+            } else {
+                restoreMessage = "復元できる有効な購入が見つかりませんでした。現在のプランは無料会員です。購入時と同じApple Accountかご確認ください。"
             }
         } catch {
             guard owner.isCurrent(auth), boundScope == owner else { return }

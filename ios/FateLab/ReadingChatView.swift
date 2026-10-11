@@ -423,8 +423,12 @@ struct PaywallSheet: View {
                         Button("購入を復元") {
                             Task { await purchases.restore(auth: auth); onRefresh() }
                         }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(FateTheme.ink)
+                            .disabled(purchases.isWorking)
                     }
                     if purchases.isWorking { ProgressView(purchases.membershipProgress ?? "購入手続き中…").tint(FateTheme.ink) }
+                    if !purchases.isWorking, let message = purchases.restoreMessage {
+                        Text(message).font(.footnote).foregroundStyle(FateTheme.ink)
+                    }
                     if let error = purchases.errorMessage {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                     }
