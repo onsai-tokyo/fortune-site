@@ -15,6 +15,7 @@ import { continuityParagraph, decadeParagraph, depthParts, shortTitle, timingPar
 import { TIMELINE_V3_VERSION } from './version.js'
 import { personalLines, personalParts } from './personal.js'
 import { lifeLines, eventTimeline } from './lifeline.js'
+import { workContextFor } from './workContext.js'
 
 type Parts = typeof import('./data/parts.json')
 let PARTS: any
@@ -62,12 +63,12 @@ export const pastizeAll = (text: string) => text.replace(/ことがあり(?:ま�
 /** Self timeline speaks about the individual; pair wording is kept in relLines. */
 export const selfVoice = (text: string) => text.replaceAll('二人の将来', '自分の将来').replaceAll('二人の約束', '人との約束').replaceAll('二人の関係', '大切な人との関わり').replaceAll('二人で', '大切な人と').replaceAll('二人の', '身近な人との')
 
-function careerKey(ctx: TimelineContext): 'work' | 'study' | 'other' {
-  const w = ctx.input.workContext
+function careerKey(ctx: TimelineContext, year: number, past: boolean): 'work' | 'study' | 'other' {
+  const w = workContextFor(ctx, year, past)
   return w === 'employed' || w === 'independent' ? 'work' : w === 'student' ? 'study' : 'other'
 }
-function careerMilestoneKey(ctx: TimelineContext): 'employed' | 'independent' | 'student' | 'other' {
-  const w = ctx.input.workContext
+function careerMilestoneKey(ctx: TimelineContext, year: number, past: boolean): 'employed' | 'independent' | 'student' | 'other' {
+  const w = workContextFor(ctx, year, past)
   return w === 'employed' || w === 'independent' || w === 'student' ? w : 'other'
 }
 
@@ -90,8 +91,8 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   const i = pick3(year), j = tail3(year)
   const youth = d.ageBand !== 'adult' && (d.theme === 'relationship' || d.theme === 'trust')
   const status = ctx.input.relationshipStatus ?? 'unknown'
-  const ck = careerKey(ctx)
   const past = year < nowYear
+  const ck = careerKey(ctx, year, past)
   // v2.13: the person's own 年表 (wording only; never changes the judgement)
   const life = lifeLines(ctx, d, year, nowYear)
   // the current status says nothing about past years: past hint years use the neutral wording
@@ -140,7 +141,7 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   }
   const marriageNow = d.marriage && !past
   if (marriageNow) manifest.push(P.milestones.marriage[j])
-  if (d.career) manifest.push(P.milestones.career[careerMilestoneKey(ctx)][j])
+  if (d.career) manifest.push(P.milestones.career[careerMilestoneKey(ctx, year, past)][j])
   if (d.move) manifest.push(P.milestones.move[j])
   // Non-relationship years: concrete milestones first, then the ten-god's shadow side introduced with 「一方で、」.
   if (!(youth || d.theme === 'trust' || d.theme === 'relationship')) manifest.push(P.shadowLead + g.shadow[i])
@@ -290,7 +291,7 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   else if (d.theme === 'trust') add('tl3-trust', T.trust, relIds, lead, r1Period)
   else if (d.theme === 'relationship') add('tl3-relationship', T.relationship, relIds, lead, r1Period)
   if (marriageNow) add('tl3-marriage', T.marriage, [...relIds, ...(s.relationship.dt7 ? ['TL3-DT7'] : [])], P.milestones.marriage[j], r1Period)
-  if (d.career) add('tl3-career', ck === 'work' ? T.careerWork : ck === 'study' ? T.careerStudy : T.careerOther, s.career.hits.map(h => h.id), P.milestones.career[careerMilestoneKey(ctx)][j])
+  if (d.career) add('tl3-career', ck === 'work' ? T.careerWork : ck === 'study' ? T.careerStudy : T.careerOther, s.career.hits.map(h => h.id), P.milestones.career[careerMilestoneKey(ctx, year, past)][j])
   if (d.move) add('tl3-move', T.move, s.move.hits.map(h => h.id), P.milestones.move[j])
   if (stageLine) add('tl3-stage', d.stage!.kind === 'dating' ? '#関わり方を考える時期' : ST.tags[d.stage!.kind], ['TL3-STAGE'], stageLine)
   if (d.lifeTurn) add('tl3-life-turn', T.lifeTurn, d.lifeTurn === 'chapter' ? s.chapterStarts.map(c => c.label) : ['TL3-CONVERGENCE'], P.milestones.lifeTurn[d.lifeTurn])
@@ -331,7 +332,7 @@ export function composeYear(ctx: TimelineContext, year: number, nowYear: number)
   if (decade?.comboText) sp.push(tense(firstOf(decade.comboText)))
   // an entered relationship event already says what happened: no 「〜形で表れることがあります」 for that year
   if (relYear && !life?.hasRelationship) sp.push(...(manifest[0] ?? '').split(/(?<=。)/).filter(Boolean).slice(0, 2))
-  const milestone = marriageNow ? P.milestones.marriage[j] : d.career && !life?.hasCareer ? P.milestones.career[careerMilestoneKey(ctx)][j] : d.move ? P.milestones.move[j] : ''
+  const milestone = marriageNow ? P.milestones.marriage[j] : d.career && !life?.hasCareer ? P.milestones.career[careerMilestoneKey(ctx, year, past)][j] : d.move ? P.milestones.move[j] : ''
   if (milestone) sp.push(firstOf(milestone))
   if (!relYear) {
     if (!milestone) sp.push(personal?.structure ? tense(personal.structure) : palace && palace.evidence.length ? tense(firstOf(palace.text)) : P.shadowLead + g.shadow[i])

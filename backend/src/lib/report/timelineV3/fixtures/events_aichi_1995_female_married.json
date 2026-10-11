@@ -74,8 +74,8 @@
     2033
    ],
    "meta": {
-    "version": "timeline-v3.32",
-    "partsVersion": "timeline-v3-parts-1.5",
+    "version": "timeline-v3.33",
+    "partsVersion": "timeline-v3-parts-1.6",
     "eventPartsVersion": "timeline-v3-event-parts-1.1",
     "baziYear": 2016,
     "hits": []
@@ -142,8 +142,8 @@
     2033
    ],
    "meta": {
-    "version": "timeline-v3.32",
-    "partsVersion": "timeline-v3-parts-1.5",
+    "version": "timeline-v3.33",
+    "partsVersion": "timeline-v3-parts-1.6",
     "eventPartsVersion": "timeline-v3-event-parts-1.1",
     "baziYear": 2020,
     "hits": [
@@ -192,8 +192,8 @@
    "overlap": false,
    "nextYears": [],
    "meta": {
-    "version": "timeline-v3.32",
-    "partsVersion": "timeline-v3-parts-1.5",
+    "version": "timeline-v3.33",
+    "partsVersion": "timeline-v3-parts-1.6",
     "eventPartsVersion": "timeline-v3-event-parts-1.1",
     "baziYear": 2023,
     "hits": []

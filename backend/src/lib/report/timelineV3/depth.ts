@@ -12,6 +12,7 @@ import { decideYear, movementQuality, wordingQuality, tenGod, type TimelineConte
 import { siderealSign, type DashaLord } from './vedic.js'
 import { pillars as PILLARS } from '../annual3600/engine.js'
 import { cycleIndex as CYCLE } from '../annual3600/catalog.js'
+import { workContextFor } from './workContext.js'
 
 
 let DEPTH: any
@@ -263,7 +264,7 @@ function titleKey(ctx: TimelineContext, d: YearDecision, nowYear: number): { lis
   // the current relationship status says nothing about past years: past titles never assume a partner
   const past = d.signals.year < nowYear
   const T = depthParts().titles
-  const w = ctx.input.workContext
+  const w = workContextFor(ctx, d.signals.year, past)
   const ck = w === 'employed' || w === 'independent' ? 'work' : w === 'student' ? 'study' : 'other'
   const youth = d.ageBand !== 'adult' && (d.theme === 'relationship' || d.theme === 'trust')
   const partnered = !past && (ctx.input.relationshipStatus === 'partnered' || ctx.input.relationshipStatus === 'married')

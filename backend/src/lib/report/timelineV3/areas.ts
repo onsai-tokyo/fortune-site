@@ -5,6 +5,7 @@
  *   palace: how the year's branch meets the natal year / month / day / hour branches (family, work, close people, plans).
  * Past years keep only the first (descriptive) sentence of each ten-god entry and never get the forward-looking closing.
  */
+import { workContextFor } from './workContext.js'
 import { readFileSync } from 'node:fs'
 import type { ReportCardEvidence } from '../../reportCards.js'
 import { branchRelations, decideYear, type BranchRelation, type TimelineContext, type YearDecision } from './signals.js'
@@ -34,7 +35,7 @@ export interface AreaTexts { relationship: string; career: string; life: string 
 export function areaTexts(ctx: TimelineContext, d: YearDecision, variant: number, past: boolean): AreaTexts {
   const A = areaParts()
   const god = d.signals.tenGod === '印綬' ? '正印' : d.signals.tenGod
-  const w = ctx.input.workContext
+  const w = workContextFor(ctx, d.signals.year, past)
   const working = w === 'employed' || w === 'independent'
   const work = (t: string) => working ? t : neutralActivityText(t)
   const lv = (variant + 1) % 3 // life is offset from relationship/work so the three paragraphs do not share one angle
