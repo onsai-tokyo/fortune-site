@@ -28,6 +28,52 @@ struct AIBookComposeView: View {
     private let themes = ["恋愛・関係", "仕事", "人間関係", "時期の判断", "その他"]
     private var valid: Bool { !recoveryBlocked && sourceID != nil && (20...400).contains(question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count) }
     private var pendingKey: String { AccountStorage.key("book.pending.v1", userID: auth.userID) }
+    @ViewBuilder private var creationActions: some View {
+        if !preparing && accepted == nil && pending == nil {
+            VStack(spacing: 10) {
+                HStack {
+                    Text(status.map { $0.enabled ? "利用できる鑑定書" : "現在、作成を休止しています" } ?? "利用枠を確認しています")
+                    Spacer()
+                    if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
+                }.font(.caption).foregroundStyle(FateTheme.muted)
+                AISharingNoticeView()
+                Button {
+                    if previewMode { preparing = true; return }
+                    editingQuestion = false
+                    preparing = true
+                    Task { await beginCreation() }
+                } label: {
+                    HStack(spacing: 10) {
+                        if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
+                        Text(AISharingConsent.actionTitle)
+                    }
+                }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
+                    .accessibilityIdentifier("book.create")
+                if status?.premium == true, let notice = purchases.cancellationNotice {
+                    Text(notice).font(.caption).foregroundStyle(FateTheme.muted)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("book.membership.cancelled")
+                }
+                if status?.premium == false {
+                    Text("会員なら、月額プランで毎月3通、年間プランで毎月5通。あなた専用の鑑定書をつくれます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    Button("会員プランを見る") {
+                        editingQuestion = false
+                        membershipContinuation.cancel()
+                        showMembership = true
+                    }.font(.subheadline).foregroundStyle(FateTheme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .accessibilityIdentifier("book.membership")
+                }
+                if status?.enabled == false {
+                    Button("作成状況を更新") { Task { await refresh() } }.font(.footnote)
+                }
+                if characters < 20 { Text("相談を20文字以上入力すると作成できます。").font(.caption2).foregroundStyle(FateTheme.muted) }
+            }.padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: FLRadius.card))
+        }
+    }
+
     private var bodyJSON: [String: String] {
         var value = ["sourceId": sourceID?.uuidString ?? "", "theme": theme, "question": question.trimmingCharacters(in: .whitespacesAndNewlines)]
         if let focusCardID { value["focusCardId"] = focusCardID }
@@ -134,6 +180,7 @@ struct AIBookComposeView: View {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                         Button("利用状況を再確認") { Task { await refresh() } }
                     }
+                    creationActions
                     DisclosureGroup("鑑定書について") {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("初回の鑑定書は1通無料です。月額プランは毎月3通、年間プランは毎月5通をご利用いただけます（無料1通の上乗せはありません）。単品で追加購入することもできます。作成した鑑定書は本棚に残ります。")
@@ -153,52 +200,6 @@ struct AIBookComposeView: View {
             if phase == .active && !previewMode { Task { await refresh() } }
         }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            if !preparing && accepted == nil && pending == nil {
-                VStack(spacing: 10) {
-                    HStack {
-                        Text(status.map { $0.enabled ? "利用できる鑑定書" : "現在、作成を休止しています" } ?? "利用枠を確認しています")
-                        Spacer()
-                        if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
-                    }.font(.caption).foregroundStyle(FateTheme.muted)
-                    AISharingNoticeView()
-                    Button {
-                        if previewMode { preparing = true; return }
-                        editingQuestion = false
-                        preparing = true
-                        Task { await beginCreation() }
-                    } label: {
-                        HStack(spacing: 10) {
-                            if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
-                            Text(AISharingConsent.actionTitle)
-                        }
-                    }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
-                        .accessibilityIdentifier("book.create")
-                    if status?.premium == true, let notice = purchases.cancellationNotice {
-                        Text(notice).font(.caption).foregroundStyle(FateTheme.muted)
-                            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("book.membership.cancelled")
-                    }
-                    if status?.premium == false {
-                        Text("会員なら、月額プランで毎月3通、年間プランで毎月5通。あなた専用の鑑定書をつくれます。")
-                            .font(.caption).foregroundStyle(FateTheme.muted)
-                            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                        Button("会員プランを見る") {
-                            editingQuestion = false
-                            membershipContinuation.cancel()
-                            showMembership = true
-                        }.font(.subheadline).foregroundStyle(FateTheme.ink)
-                            .frame(maxWidth: .infinity, minHeight: 36)
-                            .accessibilityIdentifier("book.membership")
-                    }
-                    if status?.enabled == false {
-                        Button("作成状況を更新") { Task { await refresh() } }.font(.footnote)
-                    }
-                    if characters < 20 { Text("相談を20文字以上入力すると作成できます。").font(.caption2).foregroundStyle(FateTheme.muted) }
-                }.padding(.horizontal, FateSpacing.screenH).padding(.vertical, 14).background(FateTheme.canvas)
-                    .overlay(alignment: .top) { Rectangle().fill(FateTheme.line).frame(height: 0.5) }
-            }
-        }
         .toolbar {
             if !isTab { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } }
             ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("入力を終える") { editingQuestion = false } }

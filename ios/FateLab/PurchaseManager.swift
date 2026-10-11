@@ -32,7 +32,7 @@ final class PurchaseManager: ObservableObject {
     private let api: APIClient
     private let storeKitEnabled: Bool
     var isPremium: Bool { accessState == .premium }
-    var membershipActionTitle: String { hasStoreKitEntitlement ? "購入を復元して利用する" : "月額会員になる" }
+    var membershipActionTitle: String { hasStoreKitEntitlement ? "Appleの購入情報を確認" : "月額会員になる" }
     var needsMembershipRestore: Bool { hasStoreKitEntitlement && accessState == .standard }
     func dismissRestoreMessage() { restoreMessage = nil }
     var canStartMembership: Bool {

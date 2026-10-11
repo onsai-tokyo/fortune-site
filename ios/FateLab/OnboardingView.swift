@@ -58,13 +58,28 @@ struct OnboardingView: View {
                     .frame(width: width, height: 216).clipped()
             }
         case 3:
-            question("生まれた時刻を教えてください。", detail: "生まれた時刻が分かると、時刻に応じた命式も含めて、より詳しく鑑定できます。分からない場合は、空欄のまま進めます。") {
-                Text("出生時刻（任意）").font(.system(.caption, weight: .medium)).foregroundStyle(FateTheme.muted)
-                DatePicker("出生時刻", selection: birthTimeBinding, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel).labelsHidden().environment(\.locale, Locale(identifier: "ja_JP"))
-                    .frame(width: width, height: 216).clipped()
-                FLTextLink(title: "出生時刻は分からない・入力せず進む") { input.birthTime = nil; step += 1 }
-
+            VStack(alignment: .leading, spacing: 24) {
+                Text("生まれた時刻を\n教えてください。")
+                    .font(.system(.title2, weight: .semibold)).lineSpacing(6)
+                Text("時刻が分かると、時刻に応じた命式も含めて、より詳しく鑑定できます。")
+                    .font(.subheadline).foregroundStyle(FateTheme.muted).lineSpacing(5)
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("出生時刻").font(.subheadline.weight(.medium))
+                        Spacer()
+                        Text("任意").font(.caption).foregroundStyle(FateTheme.muted)
+                    }.padding(.horizontal, 20).padding(.top, 18)
+                    DatePicker("出生時刻", selection: birthTimeBinding, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel).labelsHidden().environment(\.locale, Locale(identifier: "ja_JP"))
+                        .frame(maxWidth: .infinity).frame(height: 200).clipped()
+                }.background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20))
+                VStack(spacing: 8) {
+                    Text("分からない場合は、空欄のまま進めます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                    Button("時刻を入力せずに進む") { input.birthTime = nil; step += 1 }
+                        .font(.subheadline).foregroundStyle(FateTheme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
             }
         case 4:
             question("生まれた場所を教えてください。", detail: "都道府県を選んでください。") {

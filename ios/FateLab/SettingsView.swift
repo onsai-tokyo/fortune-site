@@ -118,7 +118,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if auth.session != nil {
                         if purchases.needsMembershipRestore {
-                            Text("Appleの購入履歴を、このアカウントに復元できます。")
+                            Text("このFATE LABアカウントは未加入です。Apple側には有効な購入があります。購入時のFATE LABアカウントでログインするか、購入情報を確認してください。")
                                 .font(.footnote).foregroundStyle(FateTheme.muted)
                         }
                         SettingsMembershipButton()

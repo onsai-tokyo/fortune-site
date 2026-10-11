@@ -188,7 +188,7 @@ struct FateLoadingView: View {
                 Circle().fill(LinearGradient(colors: [FateTheme.card, FateTheme.cream.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 104, height: 104)
                     .scaleEffect(breathing && !reduceMotion ? 1.06 : 1)
                 Circle().stroke(FateTheme.line.opacity(0.7), lineWidth: 0.5).frame(width: 122, height: 122)
-                FateMark(size: 54).opacity(0.75)
+                FateOrbitLoadingMark(size: 64)
             }.accessibilityHidden(true)
             Text("FATE LAB").font(.system(size: 10, weight: .medium)).tracking(4)
                 .foregroundStyle(FateTheme.muted).padding(.top, 24)
@@ -204,7 +204,7 @@ struct FateLoadingView: View {
                         Text("\(min(100, max(0, progress)))%").font(.caption.monospacedDigit())
                             .foregroundStyle(FateTheme.muted).accessibilityHidden(true)
                     }
-                } else { ProgressView().tint(FateTheme.muted).accessibilityLabel("読み込み中") }
+                }
             }.frame(maxWidth: 180).padding(.top, 28)
         }
         .frame(maxWidth: 340).padding(.horizontal, 28).padding(.vertical, 36)
@@ -213,6 +213,24 @@ struct FateLoadingView: View {
             withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) { breathing = true }
         }
         .onDisappear { breathing = false }
+    }
+}
+
+/// A moving light follows the logo orbit; no fabricated percentage is shown.
+struct FateOrbitLoadingMark: View {
+    let size: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { context in
+            let phase = reduceMotion ? 0 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3.5) / 3.5
+            ZStack {
+                FateMark(size: size).opacity(0.55)
+                Circle().fill(FateTheme.ink).frame(width: 5, height: 5)
+                    .shadow(color: FateTheme.ink.opacity(0.2), radius: 4)
+                    .offset(x: cos(phase * 2 * .pi) * size / 2,
+                            y: sin(phase * 2 * .pi) * size * 0.29)
+            }.frame(width: size, height: size)
+        }.accessibilityHidden(true)
     }
 }
 
