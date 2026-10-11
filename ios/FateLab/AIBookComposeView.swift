@@ -226,7 +226,7 @@ struct AIBookComposeView: View {
             if previewMode {
                 sourceID = readings.first?.id
                 question = "仕事で頼まれごとを引き受けすぎてしまいます。自分のペースも大切にしながら、周囲と協力していくにはどうしたらよいでしょうか。"
-                status = AIBookStatus(enabled: true, monthlyCredits: 3, remaining: 3, memberRemaining: 3, purchasedRemaining: 0, memberExpiresAt: nil, productId: "preview")
+                status = AIBookStatus(enabled: true, monthlyCredits: 3, remaining: 3, memberRemaining: 3, purchasedRemaining: 0, memberExpiresAt: nil, productId: "preview", premium: false)
                 return
             }
 #endif

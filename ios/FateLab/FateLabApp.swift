@@ -19,7 +19,9 @@ struct FateLabApp: App {
 
     @ViewBuilder private var appContent: some View {
 #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--membership114-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--annual121-preview") {
+            NavigationStack { ScrollView { MembershipDetailsView(annual: true).padding(24) }.fateAppHeader() }.environmentObject(auth)
+        } else if ProcessInfo.processInfo.arguments.contains("--membership114-preview") {
             NavigationStack {
                 ScrollView {
                     VStack(spacing: 18) {
