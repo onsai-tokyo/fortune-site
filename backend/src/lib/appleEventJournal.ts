@@ -25,8 +25,8 @@ function uuid(value: unknown) {
   return value.toLowerCase()
 }
 // Call only AFTER SignedDataVerifier succeeds. This is normalization, not JWS verification.
-export function normalizeVerifiedTransaction(tx: JWSTransactionDecodedPayload, product: string): VerifiedAppleTransaction {
-  if (!product || tx.productId !== product || tx.type !== 'Auto-Renewable Subscription') throw new ApplePayloadInvalid()
+export function normalizeVerifiedTransaction(tx: JWSTransactionDecodedPayload, product: string | readonly string[]): VerifiedAppleTransaction {
+  if (!(typeof product === 'string' ? !!product && tx.productId === product : product.includes(tx.productId ?? '')) || tx.type !== 'Auto-Renewable Subscription') throw new ApplePayloadInvalid()
   if (tx.isUpgraded !== undefined && typeof tx.isUpgraded !== 'boolean') throw new ApplePayloadInvalid()
   return { environment: environment(tx.environment), originalTransactionId: text(tx.originalTransactionId),
     transactionId: text(tx.transactionId), productId: text(tx.productId), appAccountToken: tx.appAccountToken ? uuid(tx.appAccountToken) : null,

@@ -6,6 +6,7 @@ import Combine
 final class PurchaseManager: ObservableObject {
     enum AccessState { case unknown, premium, standard }
     @Published private(set) var product: Product?
+    @Published private(set) var annualProduct: Product?
     @Published private(set) var bookProduct: Product?
     @Published private(set) var cardProduct: Product?
     @Published private(set) var accessState: AccessState = .unknown
@@ -76,16 +77,27 @@ final class PurchaseManager: ObservableObject {
         let revision = accountRevision
         errorMessage = nil
         do {
-            let products = try await Product.products(for: [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID])
+            let products = try await Product.products(for: AppConfig.subscriptionProductIDs + [AppConfig.bookProductID, AppConfig.cardProductID])
             let loaded = products.first { $0.id == AppConfig.subscriptionProductID }
             guard accountRevision == revision else { return }
             product = loaded
+            annualProduct = nil
+            // Do not sell an annual product before server verification and monthly grants are enabled.
+            var request = URLRequest(url: URL(string: "/api/apple/plan", relativeTo: AppConfig.apiBaseURL)!.absoluteURL)
+            request.timeoutInterval = 8
+            if let (data, response) = try? await URLSession.shared.data(for: request),
+               (response as? HTTPURLResponse)?.statusCode == 200,
+               let plan = try? JSONDecoder().decode(MembershipPlanAvailability.self, from: data),
+               plan.annualProductId == AppConfig.annualSubscriptionProductID, accountRevision == revision {
+                annualProduct = products.first { $0.id == AppConfig.annualSubscriptionProductID }
+            }
+            guard accountRevision == revision else { return }
             bookProduct = products.first { $0.id == AppConfig.bookProductID }
             cardProduct = products.first { $0.id == AppConfig.cardProductID }
             if product == nil { errorMessage = "商品情報を取得できませんでした" }
         } catch {
             guard accountRevision == revision else { return }
-            product = nil; bookProduct = nil; cardProduct = nil
+            product = nil; annualProduct = nil; bookProduct = nil; cardProduct = nil
             if userFacingErrorMessage(error) != nil { errorMessage = "商品情報を取得できませんでした" }
         }
     }
@@ -103,7 +115,7 @@ final class PurchaseManager: ObservableObject {
         return delivered
     }
 
-    func purchase(userID: UUID, auth: AuthStore) async {
+    func purchase(userID: UUID, auth: AuthStore, annual: Bool = false) async {
         guard self.storeKitEnabled else { errorMessage = AppConfig.purchasesUnavailableMessage; return }
         let owner = bind(auth)
         guard owner.userID == userID, !isWorking else { return }
@@ -114,7 +126,7 @@ final class PurchaseManager: ObservableObject {
             return
         }
         guard accessState == .standard else { errorMessage = "購入状況を確認してからお試しください。"; return }
-        guard let product else { errorMessage = "料金情報を準備中です"; return }
+        guard let product = annual ? annualProduct : product else { errorMessage = "料金情報を準備中です"; return }
         guard product.type == .autoRenewable else { errorMessage = "月額プランの商品情報を確認できませんでした。"; return }
         isWorking = true; errorMessage = nil
         membershipProgress = "Appleの購入画面を開いています…"
@@ -131,7 +143,7 @@ final class PurchaseManager: ObservableObject {
                 switch result {
                 case .success(let verification):
                     let transaction = try self.verified(verification)
-                    guard transaction.productID == AppConfig.subscriptionProductID,
+                    guard transaction.productID == product.id,
                           transaction.productType == .autoRenewable else { throw APIError.invalidResponse }
                     let delivered = try await self.deliver(transaction, signed: verification.jwsRepresentation,
                         auth: auth, owner: owner, allowTransfer: true)
@@ -288,7 +300,7 @@ final class PurchaseManager: ObservableObject {
 
     private func listenForTransactions() async {
         for await result in Transaction.updates {
-            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
+            guard let transaction = try? verified(result), (AppConfig.subscriptionProductIDs + [AppConfig.bookProductID, AppConfig.cardProductID]).contains(transaction.productID),
                   let auth = authStore, let userID = auth.userID else { continue }
             // Updates are never an implicit owner-transfer operation.
             guard transaction.appAccountToken == userID else { continue }
@@ -312,7 +324,7 @@ final class PurchaseManager: ObservableObject {
         // the Keychain enqueue. Finished-but-not-cleared entries are found in all.
         for await result in Transaction.unfinished {
             try check(owner, auth)
-            guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
+            guard let transaction = try? verified(result), (AppConfig.subscriptionProductIDs + [AppConfig.bookProductID, AppConfig.cardProductID]).contains(transaction.productID),
                   transaction.appAccountToken == owner.userID else { continue }
             if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner) { mirrored = true }
         }
@@ -320,7 +332,7 @@ final class PurchaseManager: ObservableObject {
         if !pending.isEmpty {
             for await result in Transaction.all {
                 try check(owner, auth)
-                guard let transaction = try? verified(result), [AppConfig.subscriptionProductID, AppConfig.bookProductID, AppConfig.cardProductID].contains(transaction.productID),
+                guard let transaction = try? verified(result), (AppConfig.subscriptionProductIDs + [AppConfig.bookProductID, AppConfig.cardProductID]).contains(transaction.productID),
                       pending.contains(where: { $0.transactionID == String(transaction.id) }) else { continue }
                 if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner) { mirrored = true }
             }
@@ -429,7 +441,7 @@ final class PurchaseManager: ObservableObject {
     }
 
     private func isActiveSubscription(_ transaction: Transaction) -> Bool {
-        transaction.productID == AppConfig.subscriptionProductID
+        AppConfig.subscriptionProductIDs.contains(transaction.productID)
             && transaction.revocationDate == nil
             && (transaction.expirationDate.map { $0 > Date() } ?? true)
     }
@@ -438,3 +450,5 @@ final class PurchaseManager: ObservableObject {
         switch result { case .verified(let value): value; case .unverified: throw APIError.server("購入情報を確認できませんでした") }
     }
 }
+
+private struct MembershipPlanAvailability: Decodable { let annualProductId: String? }

@@ -350,6 +350,9 @@ struct PaywallSheet: View {
     var startsBookAfterPurchase = false
     let onRefresh: () -> Void
 
+    @State private var annual = false
+    private var selectedProduct: Product? { annual ? purchases.annualProduct : purchases.product }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -371,21 +374,29 @@ struct PaywallSheet: View {
                         .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
                     FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
                     if startsBookAfterPurchase {
-                        Text("月額会員になって、この相談の鑑定書をつくりますか？")
+                        Text("会員になって、この相談の鑑定書をつくりますか？")
                             .font(.headline)
                         Text("購入の確認後、この相談内容で鑑定書の作成を開始します。会員分の利用枠を1通使用します。")
                             .font(.subheadline).foregroundStyle(FateTheme.muted)
                     }
                     if purchases.isPremium { MembershipActiveBanner() }
+                    if purchases.annualProduct != nil && !purchases.isPremium {
+                        Picker("会員プラン", selection: $annual) {
+                            Text("月額・毎月3通").tag(false)
+                            Text("年間・毎月5通").tag(true)
+                        }.pickerStyle(.segmented)
+                    }
+                    if !purchases.isPremium {
                     VStack(alignment: .leading, spacing: 5) {
-                        if let product = purchases.product {
-                            Text(ReadingPrices.monthly)
+                        if let product = selectedProduct {
+                            Text(annual ? "12,000円／年（月あたり1,000円・日本価格）" : ReadingPrices.monthly)
                             StorePurchasePrice(product: product)
                                 .font(.system(.title2, weight: .semibold))
-                            Text("1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
+                            Text(annual ? "年額一括払い・1年ごとの自動更新" : "1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
                         } else if purchases.errorMessage == nil {
                             ProgressView("商品情報を読み込んでいます…").tint(FateTheme.ink)
                         }
+                    }
                     }
                     if let session = auth.session {
                         if purchases.isPremium {
@@ -405,8 +416,8 @@ struct PaywallSheet: View {
                                 }
                             }
                         } else {
-                            Button(startsBookAfterPurchase && !purchases.hasStoreKitEntitlement ? "月額会員になって鑑定する" : purchases.membershipActionTitle) {
-                                Task { await purchases.purchase(userID: session.user.id, auth: auth); onRefresh() }
+                            Button(startsBookAfterPurchase && !purchases.hasStoreKitEntitlement ? "会員になって鑑定する" : (annual && !purchases.hasStoreKitEntitlement ? "年間会員になる" : purchases.membershipActionTitle)) {
+                                Task { await purchases.purchase(userID: session.user.id, auth: auth, annual: annual); onRefresh() }
                             }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership)
                         }
                         Button("購入を復元") {
@@ -418,7 +429,7 @@ struct PaywallSheet: View {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                     }
                     Divider().overlay(FateTheme.line)
-                    MembershipDetailsView()
+                    MembershipDetailsView(annual: annual)
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     HStack {
@@ -456,11 +467,14 @@ private struct SuggestionButtonStyle: ButtonStyle {
 
 
 struct MembershipDetailsView: View {
+    var annual = false
     @EnvironmentObject private var auth: AuthStore
     @State private var booksEnabled = false
+    @State private var currentAnnual = false
+    private var effectiveAnnual: Bool { annual || currentAnnual }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("月額1,980円（日本価格）").font(.headline)
+            Text(effectiveAnnual ? "年額12,000円（月あたり1,000円・日本価格）" : "月額1,980円（日本価格）").font(.headline)
             VStack(alignment: .leading, spacing: 12) {
             Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
             Label("性格・相性・時系列のカードは、どなたでも無料", systemImage: "lock.open")
@@ -470,12 +484,12 @@ struct MembershipDetailsView: View {
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
             VStack(alignment: .leading, spacing: 12) {
-            Label("相談からつくる鑑定書が、初月から毎月3通", systemImage: "book.closed")
+            Label(effectiveAnnual ? "相談からつくる鑑定書が、初月から毎月5通" : "相談からつくる鑑定書が、初月から毎月3通", systemImage: "book.closed")
             if !booksEnabled {
                 Text("「鑑定書をつくる」タブで相談を入力し、保存した鑑定をもとに約5,000文字の一冊を作成できます。")
                     .font(.footnote).foregroundStyle(FateTheme.muted)
             }
-            Text("会員分はAppleの更新日ごとに付与され、未使用分は繰り越されません。追加の単品購入分に有効期限はありません。")
+            Text(effectiveAnnual ? "会員分は年間契約の開始日を基準に毎月5通付与されます。未使用分は繰り越されません。追加の単品購入分に有効期限はありません。" : "会員分はAppleの更新日ごとに付与され、未使用分は繰り越されません。追加の単品購入分に有効期限はありません。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
             VStack(alignment: .leading, spacing: 12) {
@@ -483,14 +497,15 @@ struct MembershipDetailsView: View {
             Text("初回無料・単品購入・会員枠で作成した鑑定書は、解約後も読み返せます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
-            Text("月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")
+            Text(effectiveAnnual ? "年間プランは1年ごとの自動更新・一括払いです。料金はAppleの確認画面でもご確認いただけます。" : "月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
         }.lineSpacing(5)
             .task(id: AccountScope(auth)) {
-                booksEnabled = false
+                booksEnabled = false; currentAnnual = false
                 let owner = AccountScope(auth)
                 if let status = try? await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth), owner.isCurrent(auth) {
                     booksEnabled = status.enabled
+                    currentAnnual = status.premium == true && status.monthlyCredits == 5
                 }
             }
     }

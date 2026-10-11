@@ -34,11 +34,13 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
     if (!config.enabled) { res.json({enabled:false,premium,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,trialRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     await bookRPC('ai_book_sync_trial',{p_user:req.userId!})
-    const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
+    const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,quantity,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
     if (error) throw error
+    let monthlyCredits=config.monthly_credits
     let memberRemaining=0,purchasedRemaining=0,reviewRemaining=0,trialRemaining=0; let expiry:string|null=null
     for(const grant of data??[]) {
       if(Date.parse(grant.starts_at)>Date.now()) continue
+      if(grant.source==='member' && grant.expires_at && Date.parse(grant.expires_at)>Date.now()) monthlyCredits=grant.quantity
       for(const credit of grant.ai_book_credits) {
         const end = grant.expires_at===null ? Infinity : Math.max(Date.parse(grant.expires_at),credit.recovery_until?Date.parse(credit.recovery_until):0)
         if(credit.consumed_by || end<=Date.now()) continue
@@ -48,7 +50,7 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
         else purchasedRemaining++
       }
     }
-    res.json({enabled:true,premium,monthlyCredits:config.monthly_credits,remaining:memberRemaining+purchasedRemaining+reviewRemaining+trialRemaining,memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
+    res.json({enabled:true,premium,monthlyCredits,remaining:memberRemaining+purchasedRemaining+reviewRemaining+trialRemaining,memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
   } catch(e) { fail(res,e) }
 })
 aiBooksRouter.get('/',async(req:AuthRequest,res)=>{

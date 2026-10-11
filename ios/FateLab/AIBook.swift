@@ -93,6 +93,7 @@ final class BookMembershipContinuation: ObservableObject {
     private var draft: PendingAIBook?
     private var owner: AccountScope?
     private var approved = false
+    var hasPendingDraft: Bool { draft != nil }
 
     func prepare(_ draft: PendingAIBook, owner: AccountScope) {
         self.draft = draft; self.owner = owner; approved = false

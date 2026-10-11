@@ -43,7 +43,7 @@ struct BookshelfView: View {
                         if nextCursor != nil { Button("前の鑑定書をもっと見る") { Task { await loadMore() } }.disabled(isLoading) }
                     }
                     if !readings.isEmpty {
-                        HStack { Text("あなたと、ふたり").font(FateType.sectionTitle); Spacer(); Text("\(readings.count)冊").font(.caption).foregroundStyle(FateTheme.muted) }
+                        HStack { Spacer(); Text("\(readings.count)冊").font(.caption).foregroundStyle(FateTheme.muted) }
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 26) {
                             ForEach(readings) { reading in
                                 NavigationLink { SavedReadingView(conversationID: reading.id, readingKind: reading.kind) } label: {

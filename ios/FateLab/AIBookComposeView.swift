@@ -161,10 +161,6 @@ struct AIBookComposeView: View {
                         Spacer()
                         if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
                     }.font(.caption).foregroundStyle(FateTheme.muted)
-                    if let status, status.enabled {
-                        Text(status.creditBreakdown).font(.caption2).foregroundStyle(FateTheme.muted)
-                        Text("会員分は更新日に切り替わります（繰り越しなし）。").font(.caption2).foregroundStyle(FateTheme.muted)
-                    }
                     AISharingNoticeView()
                     Button {
                         if previewMode { preparing = true; return }
@@ -178,6 +174,15 @@ struct AIBookComposeView: View {
                         }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")
+                    if status?.premium == false {
+                        Button("会員プランを見る") {
+                            editingQuestion = false
+                            membershipContinuation.cancel()
+                            showMembership = true
+                        }.font(.subheadline).foregroundStyle(FateTheme.ink)
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .accessibilityIdentifier("book.membership")
+                    }
                     if status?.enabled == false {
                         Button("作成状況を更新") { Task { await refresh() } }.font(.footnote)
                     }
@@ -198,11 +203,13 @@ struct AIBookComposeView: View {
             guard let draft = membershipContinuation.consume(owner: AccountScope(auth)) else { return }
             Task { await submit(existing: pending?.operationID == draft.operationID ? draft : nil, draft: draft) }
         }) {
-            PaywallSheet(draftQuestion: question, startsBookAfterPurchase: true) {
+            PaywallSheet(draftQuestion: question, startsBookAfterPurchase: membershipContinuation.hasPendingDraft) {
                 Task {
                     let owner = AccountScope(auth)
                     guard await refreshMembership(), owner.isCurrent(auth) else { return }
                     if membershipContinuation.authorize(owner: owner, premium: status?.premium == true, remaining: status?.remaining ?? 0) {
+                        showMembership = false
+                    } else if status?.premium == true && !membershipContinuation.hasPendingDraft {
                         showMembership = false
                     } else if status?.premium == true {
                         error = "会員登録を確認しましたが、利用枠を確認できません。利用状況を再確認してください。"

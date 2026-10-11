@@ -40,6 +40,8 @@ enum AppConfig {
 
     static let cardProductID = "com.onsai.fatelab.reading.single"
     static let bookProductID = "com.onsai.fatelab.report.single"
+    static let annualSubscriptionProductID = "com.onsai.fatelab.premium.annual"
+    static let subscriptionProductIDs = [subscriptionProductID, annualSubscriptionProductID]
     static let subscriptionProductID = "com.onsai.fatelab.premium.monthly"
 
     static var apiBaseURL: URL {

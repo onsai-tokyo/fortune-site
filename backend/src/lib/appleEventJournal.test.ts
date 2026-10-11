@@ -34,3 +34,11 @@ test('success requires typed mirror acknowledgement, not arbitrary 2xx RPC JSON'
   const reply={state:'applied',delivery:'mirrored',ownerId:owner,transactionId:'tx'}
   assert.deepEqual(await receiveAndApply(event.eventId,event.payload,db(reply)),reply)
 })
+
+test('only configured monthly and annual products are accepted',()=>{
+ const allowed=['monthly','annual']
+ for(const productId of allowed) assert.equal(normalizeVerifiedTransaction({...raw,productId},allowed).productId,productId)
+ assert.throws(()=>normalizeVerifiedTransaction({...raw,productId:'unexpected'},allowed))
+ assert.throws(()=>normalizeVerifiedTransaction({...raw,productId:'annual',type:'Consumable'},allowed))
+ assert.throws(()=>normalizeVerifiedTransaction({...raw,productId:'annual'},['monthly']))
+})

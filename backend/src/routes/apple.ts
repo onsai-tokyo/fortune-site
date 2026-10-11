@@ -50,7 +50,7 @@ async function verifyNotification(signedPayload: string) {
 appleRouter.get('/plan', (_req, res) => {
   const productId = process.env.APPLE_SUBSCRIPTION_PRODUCT_ID
   if (!productId) { res.status(503).json({ error: 'App Storeプランは現在準備中です' }); return }
-  res.json({ productId })
+  res.json({ productId, annualProductId: process.env.APPLE_ANNUAL_SUBSCRIPTION_PRODUCT_ID?.trim() || null })
 })
 
 // Apple authorization codes are short-lived and returned only during sign-in.
@@ -94,7 +94,7 @@ appleRouter.post('/transactions/verify', requireAuth, async (req: AuthRequest, r
     if (decoded.productId === BOOK_PRODUCT) {
       res.json(await grantVerifiedBookPurchase(decoded, req.userId!)); return
     }
-    const transaction = normalizeVerifiedTransaction(decoded, required('APPLE_SUBSCRIPTION_PRODUCT_ID'))
+    const transaction = normalizeVerifiedTransaction(decoded, [required('APPLE_SUBSCRIPTION_PRODUCT_ID'), process.env.APPLE_ANNUAL_SUBSCRIPTION_PRODUCT_ID?.trim()].filter((id): id is string => !!id))
     const event = purchaseEvent(transaction, req.userId!, req.body?.allowOwnerTransfer === true, req.body?.operationId)
     let applied
     try { applied = await receiveAndApply(event.eventId, event.payload) }
@@ -146,7 +146,7 @@ export async function appStoreNotification(req: Request, res: Response) {
       catch { res.status(503).json({ error: 'Notification pending' }) }
       return
     }
-    const tx = decoded ? normalizeVerifiedTransaction(decoded, required('APPLE_SUBSCRIPTION_PRODUCT_ID')) : null
+    const tx = decoded ? normalizeVerifiedTransaction(decoded, [required('APPLE_SUBSCRIPTION_PRODUCT_ID'), process.env.APPLE_ANNUAL_SUBSCRIPTION_PRODUCT_ID?.trim()].filter((id): id is string => !!id)) : null
     const event = notificationEvent(verified.payload, verified.environment, tx)
     try {
       const result = await receiveAndApply(event.eventId, event.payload)
