@@ -536,11 +536,12 @@ struct StorePurchasePrice: View {
 }
 
 struct MembershipActiveBanner: View {
+    @EnvironmentObject private var purchases: PurchaseManager
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill").font(.title2)
             VStack(alignment: .leading, spacing: 5) {
-                Text("継続鑑定をご利用中です").font(.headline)
+                Text(purchases.cancellationNotice ?? "継続鑑定をご利用中です").font(.headline)
                 Text("MEMBER").font(.caption2.weight(.semibold)).tracking(2)
             }
             Spacer(minLength: 0)

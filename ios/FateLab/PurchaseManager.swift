@@ -15,6 +15,8 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var isSyncing = false
     @Published var errorMessage: String?
     @Published private(set) var hasStoreKitEntitlement = false
+    @Published private(set) var renewalDisplay: MembershipRenewalDisplay?
+    var cancellationNotice: String? { renewalDisplay?.cancellationNotice(isPremium: isPremium) }
     private var isFirstSyncForThisAccount = true
     private weak var authStore: AuthStore?
     private var consecutiveSyncFailures = 0
@@ -42,6 +44,7 @@ final class PurchaseManager: ObservableObject {
         authStore = nil
         accessState = .unknown
         hasStoreKitEntitlement = false
+        renewalDisplay = nil
         isFirstSyncForThisAccount = true
         consecutiveSyncFailures = 0
         errorMessage = nil
@@ -415,6 +418,8 @@ final class PurchaseManager: ObservableObject {
             try check(owner, auth)
             guard syncID == operation else { return }
             accessState = status.isPremium ? .premium : .standard
+            await refreshRenewalDisplay(auth: auth, owner: owner)
+            try check(owner, auth)
             consecutiveSyncFailures = 0
             // An existing Apple entitlement is a restore option, not an error.
             errorMessage = nil
@@ -428,6 +433,35 @@ final class PurchaseManager: ObservableObject {
         }
         guard owner.isCurrent(auth), boundScope == owner, syncID == operation else { return }
         isFirstSyncForThisAccount = false
+    }
+
+    // Presentation only: server-verified access remains authoritative.
+    // Never use another FATE LAB account's Apple subscription for this notice.
+    private func refreshRenewalDisplay(auth: AuthStore, owner: AccountScope) async {
+        renewalDisplay = nil
+        guard storeKitEnabled, isPremium else { return }
+        do {
+            let products = try await Product.products(for: AppConfig.subscriptionProductIDs)
+            guard let groupID = products.first?.subscription?.subscriptionGroupID else { return }
+            let statuses = try await Product.SubscriptionInfo.status(for: groupID)
+            try check(owner, auth)
+            var latest: (transaction: Transaction, renewal: Product.SubscriptionInfo.RenewalInfo)?
+            for status in statuses {
+                guard let transaction = try? verified(status.transaction),
+                      let renewal = try? verified(status.renewalInfo),
+                      transaction.appAccountToken == owner.userID,
+                      isActiveSubscription(transaction), !transaction.isUpgraded else { continue }
+                if latest == nil || transaction.purchaseDate > latest!.transaction.purchaseDate {
+                    latest = (transaction, renewal)
+                }
+            }
+            if let latest, let expiry = latest.transaction.expirationDate {
+                renewalDisplay = MembershipRenewalDisplay(willAutoRenew: latest.renewal.willAutoRenew, expiresAt: expiry)
+            }
+        } catch {
+            // Unknown renewal state must not be presented as cancellation.
+            if owner.isCurrent(auth), boundScope == owner { renewalDisplay = nil }
+        }
     }
 
     private func refreshLocalEntitlements() async {

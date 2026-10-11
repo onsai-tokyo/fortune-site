@@ -136,7 +136,7 @@ struct AIBookComposeView: View {
                     }
                     DisclosureGroup("鑑定書について") {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("初回の鑑定書は1通無料です。会員登録後は会員分3通をご利用いただけます（無料1通の上乗せはありません）。2通目からは単品購入、または月額会員の毎月3通をご利用いただけます。作成した鑑定書は本棚に残ります。")
+                            Text("初回の鑑定書は1通無料です。月額プランは毎月3通、年間プランは毎月5通をご利用いただけます（無料1通の上乗せはありません）。単品で追加購入することもできます。作成した鑑定書は本棚に残ります。")
                             Text("未使用の会員分は更新日に繰り越されません。単品購入分に期限はありません。生成に失敗した場合は利用枠をお戻しします。")
                             Text("計算結果と確認済みの原稿をもとにAIが構成します。健康・妊娠・生死、法律や投資の判断などは対象外です。")
                             HStack { Link("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); Link("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }
@@ -174,8 +174,13 @@ struct AIBookComposeView: View {
                         }
                     }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                         .accessibilityIdentifier("book.create")
+                    if status?.premium == true, let notice = purchases.cancellationNotice {
+                        Text(notice).font(.caption).foregroundStyle(FateTheme.muted)
+                            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("book.membership.cancelled")
+                    }
                     if status?.premium == false {
-                        Text("会員登録で、自由な質問からあなた専用の鑑定書をつくれます。")
+                        Text("会員なら、月額プランで毎月3通、年間プランで毎月5通。あなた専用の鑑定書をつくれます。")
                             .font(.caption).foregroundStyle(FateTheme.muted)
                             .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         Button("会員プランを見る") {
@@ -339,6 +344,7 @@ struct AIBookComposeView: View {
             let updated = try await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth)
             try owner.check(auth)
             status = updated
+            Task { await purchases.sync(auth: auth) }
             return true
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return false }
     }

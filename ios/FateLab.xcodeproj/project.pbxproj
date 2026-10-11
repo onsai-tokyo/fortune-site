@@ -22,6 +22,7 @@
 		40102DC93EEAE32DDF2138B0 /* TimelineTextReviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020DAE0F2FE206167AFB1BA3 /* TimelineTextReviewData.swift */; };
 		50ECF23164BC3B3E4F5E78EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F165C70345759947694F4DD8 /* RootView.swift */; };
 		5644B45B6B5421E8A2005927 /* AccountScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4DA83CFFB052F55FDB135D1 /* AccountScope.swift */; };
+		5E2B5378E01E6CC951D264BA /* MembershipRenewalDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55F5ACE878B5DE63309322B /* MembershipRenewalDisplay.swift */; };
 		686EFB9AF63BF522B415C998 /* ReportDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214E138D4D33D5009EA88FEC /* ReportDocumentView.swift */; };
 		6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3719AD9E38679916FC4B757D /* KeychainStore.swift */; };
 		6B9E1FEFE63A9E6EFE2216AD /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4638D90D2B3A7DFC56C6D7F /* AuthStore.swift */; };
@@ -41,6 +42,7 @@
 		C16DA413E4EC602441255930 /* PartnerProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */; };
 		CAFAFB84F4B8222BE526B040 /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069069797645F3D197436A70 /* ServerEvents.swift */; };
 		CB425DF427A92494AA4877FB /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9957667F377DC5836B675311 /* AppConfig.swift */; };
+		CBF2AF0E5EF5EECBA06FD5AA /* MembershipRenewalDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16E53E3F961EB8EEB7CC5D5 /* MembershipRenewalDisplayTests.swift */; };
 		CE7C3AE41A6FF55ED8A714F7 /* AuthSessionStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1832FCE85918674AED4E7650 /* AuthSessionStorage.swift */; };
 		D0C479DE47E2A7F874AAF368 /* PendingGeneration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5BC8D8EC67CD8B2EC2AF9B /* PendingGeneration.swift */; };
 		D2A52898BCADB1E7AC23486B /* TabNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901C0851F477A5DBCDCABAA6 /* TabNavigationTests.swift */; };
@@ -118,10 +120,12 @@
 		DE717662F562AEED25CF558C /* FateLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FateLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE9D4B7CE6915487A8835C9F /* AIBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIBookDetailView.swift; sourceTree = "<group>"; };
 		DFF982C58C8DAB600EF68265 /* PendingReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingReport.swift; sourceTree = "<group>"; };
+		E16E53E3F961EB8EEB7CC5D5 /* MembershipRenewalDisplayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipRenewalDisplayTests.swift; sourceTree = "<group>"; };
 		EE294CA2FE73B016DA9E30BA /* TimelineProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineProfileView.swift; sourceTree = "<group>"; };
 		F165C70345759947694F4DD8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F4DA83CFFB052F55FDB135D1 /* AccountScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountScope.swift; sourceTree = "<group>"; };
 		F5342D58A967C8EF3F73846A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F55F5ACE878B5DE63309322B /* MembershipRenewalDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipRenewalDisplay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -187,6 +191,7 @@
 				DC8F8B44392E671602A15C66 /* Info.plist */,
 				132963A65C3787E06DD392A5 /* InsightHubView.swift */,
 				3719AD9E38679916FC4B757D /* KeychainStore.swift */,
+				F55F5ACE878B5DE63309322B /* MembershipRenewalDisplay.swift */,
 				3D04080D70BB79BC5AB54BF2 /* Models.swift */,
 				0809C54FA65C68BB48231A97 /* OnboardingView.swift */,
 				0F5958C4614D18E65E738F83 /* PartnerProfilesView.swift */,
@@ -217,6 +222,7 @@
 			isa = PBXGroup;
 			children = (
 				8F1E8B71666E0AD3CCABAEA4 /* AuthTests.swift */,
+				E16E53E3F961EB8EEB7CC5D5 /* MembershipRenewalDisplayTests.swift */,
 				5413D1F889A388AB5344F771 /* PendingReportTests.swift */,
 				7F86713F18FAC46C60F642CA /* PurchaseDeliveryTests.swift */,
 				5B18443D4256FF163B34F055 /* ServerEventsTests.swift */,
@@ -346,6 +352,7 @@
 				BFE6F24BAB3DD56D2B551BBE /* HomeView.swift in Sources */,
 				EF0116932650EB14E88DC8EE /* InsightHubView.swift in Sources */,
 				6AB5D68938906983EFE8767E /* KeychainStore.swift in Sources */,
+				5E2B5378E01E6CC951D264BA /* MembershipRenewalDisplay.swift in Sources */,
 				F84DD3F1378B99349DF72F5E /* Models.swift in Sources */,
 				3A904DB5706AB0565F1A3023 /* OnboardingView.swift in Sources */,
 				C16DA413E4EC602441255930 /* PartnerProfilesView.swift in Sources */,
@@ -375,6 +382,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F0599EE958CA86A8430388E0 /* AuthTests.swift in Sources */,
+				CBF2AF0E5EF5EECBA06FD5AA /* MembershipRenewalDisplayTests.swift in Sources */,
 				F4AFEAEAD5587B934695BCE2 /* PendingReportTests.swift in Sources */,
 				75245D155A59CE3192F16ECF /* PurchaseDeliveryTests.swift in Sources */,
 				6D197C83B1F3F5354B4A276C /* ServerEventsTests.swift in Sources */,
@@ -462,7 +470,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -532,7 +540,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -602,7 +610,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -771,7 +779,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DB28SG2U7D;
 				ENABLE_NS_ASSERTIONS = NO;

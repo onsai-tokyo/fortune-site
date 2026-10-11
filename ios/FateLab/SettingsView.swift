@@ -4,6 +4,7 @@ import StoreKit
 struct SettingsView: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showDeleteConfirmation = false
 
     var body: some View {
@@ -68,6 +69,9 @@ struct SettingsView: View {
             Text("保存した鑑定書と質問の履歴がすべて削除されます。この操作は取り消せません。継続鑑定をご利用中の場合は、App Storeの設定から別途解約してください。")
         }
         .task { if auth.session != nil { await purchases.sync(auth: auth) } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && auth.session != nil { Task { await purchases.sync(auth: auth) } }
+        }
     }
 
     private var membershipCard: some View {
@@ -82,7 +86,10 @@ struct SettingsView: View {
                 } else if purchases.accessState == .premium {
                     Button("サブスクリプションを管理") {
                         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
-                        Task { try? await AppStore.showManageSubscriptions(in: scene) }
+                        Task {
+                            try? await AppStore.showManageSubscriptions(in: scene)
+                            await purchases.sync(auth: auth)
+                        }
                     }
                 } else if auth.session != nil {
                     if purchases.needsMembershipRestore {
