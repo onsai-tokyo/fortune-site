@@ -17,6 +17,7 @@ final class PurchaseManager: ObservableObject {
     @Published private(set) var isSyncing = false
     @Published var errorMessage: String?
     @Published private(set) var hasStoreKitEntitlement = false
+    @Published private(set) var membershipTitle = "会員プラン"
     @Published private(set) var renewalDisplay: MembershipRenewalDisplay?
     var cancellationNotice: String? { renewalDisplay?.cancellationNotice(isPremium: isPremium) }
     private var isFirstSyncForThisAccount = true
@@ -48,6 +49,7 @@ final class PurchaseManager: ObservableObject {
         accessState = .unknown
         hasStoreKitEntitlement = false
         renewalDisplay = nil
+        membershipTitle = "会員プラン"
         isFirstSyncForThisAccount = true
         consecutiveSyncFailures = 0
         errorMessage = nil
@@ -440,7 +442,7 @@ final class PurchaseManager: ObservableObject {
             try check(owner, auth)
             guard syncID == operation else { return }
             accessState = status.isPremium ? .premium : .standard
-            await refreshRenewalDisplay(auth: auth, owner: owner)
+            await refreshRenewalDisplay(auth: auth, owner: owner, membership: status.appleMembership)
             try check(owner, auth)
             consecutiveSyncFailures = 0
             // An existing Apple entitlement is a restore option, not an error.
@@ -459,7 +461,8 @@ final class PurchaseManager: ObservableObject {
 
     // Presentation only: server-verified access remains authoritative.
     // Never use another FATE LAB account's Apple subscription for this notice.
-    private func refreshRenewalDisplay(auth: AuthStore, owner: AccountScope) async {
+    private func refreshRenewalDisplay(auth: AuthStore, owner: AccountScope, membership: AppleMembershipDisplay?) async {
+        membershipTitle = membership.map { $0.productID == AppConfig.annualSubscriptionProductID ? "年間会員" : "月額会員" } ?? "会員プラン"
         renewalDisplay = nil
         guard storeKitEnabled, isPremium else { return }
         do {
@@ -471,13 +474,18 @@ final class PurchaseManager: ObservableObject {
             for status in statuses {
                 guard let transaction = try? verified(status.transaction),
                       let renewal = try? verified(status.renewalInfo),
-                      transaction.appAccountToken == owner.userID,
                       isActiveSubscription(transaction), !transaction.isUpgraded else { continue }
+                // Match the server-owned lineage after an explicit Sandbox restore.
+                // A local token alone must not borrow another account's renewal state.
+                let matches = membership?.matches(originalID: String(transaction.originalID), productID: transaction.productID, environment: transaction.environment.rawValue)
+                    ?? (transaction.appAccountToken == owner.userID)
+                guard matches else { continue }
                 if latest == nil || transaction.purchaseDate > latest!.transaction.purchaseDate {
                     latest = (transaction, renewal)
                 }
             }
             if let latest, let expiry = latest.transaction.expirationDate {
+                membershipTitle = latest.transaction.productID == AppConfig.annualSubscriptionProductID ? "年間会員" : "月額会員"
                 renewalDisplay = MembershipRenewalDisplay(willAutoRenew: latest.renewal.willAutoRenew, expiresAt: expiry)
             }
         } catch {

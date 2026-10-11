@@ -4,6 +4,15 @@ import XCTest
 final class MembershipRenewalDisplayTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
+    func testTransferredMembershipRequiresExactServerLineage() throws {
+        let data = Data(#"{"originalTransactionId":"123","productId":"annual","environment":"Sandbox"}"#.utf8)
+        let value = try JSONDecoder().decode(AppleMembershipDisplay.self, from: data)
+        XCTAssertTrue(value.matches(originalID: "123", productID: "annual", environment: "Sandbox"))
+        XCTAssertFalse(value.matches(originalID: "other", productID: "annual", environment: "Sandbox"))
+        XCTAssertFalse(value.matches(originalID: "123", productID: "monthly", environment: "Sandbox"))
+        XCTAssertFalse(value.matches(originalID: "123", productID: "annual", environment: "Production"))
+    }
+
     func testCancelledButUnexpiredShowsAccessUntilExpiry() {
         let value = MembershipRenewalDisplay(willAutoRenew: false, expiresAt: now.addingTimeInterval(3600))
         XCTAssertTrue(value.cancellationNotice(isPremium: true, now: now)?.hasPrefix("解約済み・") == true)

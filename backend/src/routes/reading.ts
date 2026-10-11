@@ -1,3 +1,4 @@
+import { appleMembershipDisplay } from '../lib/appleMembershipDisplay.js'
 import { requireAIConsent } from '../middleware/aiConsent.js'
 import {restoreGeneratedSnapshot} from '../lib/readingCardAccess.js'
 import {readingCardProjector,projectedReport,publicReadingConversation} from '../lib/readingCardAccess.js'
@@ -57,9 +58,10 @@ readingRouter.get('/shares/:shareId', async (req, res) => {
 readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
   try {
     const db = getSupabaseUser(req.accessToken!)
-    const [{ data: usage, error: usageError }, premium, { count: approvedCount, error: approvedError }, { data: latestConversations, error: latestError }] = await Promise.all([
+    const [{ data: usage, error: usageError }, premium, membership, { count: approvedCount, error: approvedError }, { data: latestConversations, error: latestError }] = await Promise.all([
       db.from('reading_usage').select('free_questions_used').eq('user_id', req.userId!).maybeSingle(),
       hasPremiumAccess(req.userId!),
+      appleMembershipDisplay(req.userId!),
       db.from('profile_traits').select('id', { count: 'exact', head: true }).eq('user_id', req.userId!).eq('status', 'approved'),
       db.from('reading_conversations').select('id').eq('user_id', req.userId!)
         .or('kind.is.null,kind.eq.personal,kind.eq.self')
@@ -68,7 +70,7 @@ readingRouter.get('/status', requireAuth, async (req: AuthRequest, res) => {
     if (latestError || usageError || approvedError) throw new PremiumAccessUnavailable()
     const used = usage?.free_questions_used ?? 0
     const latestConversationId = latestConversations?.[0]?.id ?? null
-    res.json({ premium, isPremium: premium, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0, hasReading: Boolean(latestConversationId), latestConversationId })
+    res.json({ premium, isPremium: premium, appleMembership: membership, used, limit: FREE_QUESTION_LIMIT, remaining: premium ? null : Math.max(0, FREE_QUESTION_LIMIT - used), approvedCount: approvedCount ?? 0, hasReading: Boolean(latestConversationId), latestConversationId })
   } catch (error) {
     console.error('Reading status failed:', error)
     res.status(503).json({ code: 'DEPENDENCY_NOT_READY', retryable: true, error: '利用状況を確認できませんでした' })

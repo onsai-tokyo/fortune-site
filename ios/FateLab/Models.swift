@@ -176,7 +176,20 @@ struct CompatibilityHistory {
     }
 }
 
+struct AppleMembershipDisplay: Decodable {
+    let originalTransactionID: String
+    let productID: String
+    let environment: String
+    enum CodingKeys: String, CodingKey {
+        case originalTransactionID = "originalTransactionId", productID = "productId", environment
+    }
+    func matches(originalID: String, productID: String, environment: String) -> Bool {
+        originalTransactionID == originalID && self.productID == productID && self.environment == environment
+    }
+}
+
 struct ReadingStatus: Decodable {
+    let appleMembership: AppleMembershipDisplay?
     let isPremium: Bool
     let used: Int
     let limit: Int
@@ -186,7 +199,7 @@ struct ReadingStatus: Decodable {
     let latestConversationID: UUID?
 
     enum CodingKeys: String, CodingKey {
-        case isPremium, premium, used, limit, remaining, approvedCount, hasReading
+        case appleMembership, isPremium, premium, used, limit, remaining, approvedCount, hasReading
         case latestConversationID = "latestConversationId"
     }
 
@@ -194,6 +207,7 @@ struct ReadingStatus: Decodable {
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        appleMembership = try values.decodeIfPresent(AppleMembershipDisplay.self, forKey: .appleMembership)
         isPremium = try values.decodeIfPresent(Bool.self, forKey: .isPremium)
             ?? values.decode(Bool.self, forKey: .premium)
         used = try values.decode(Int.self, forKey: .used)

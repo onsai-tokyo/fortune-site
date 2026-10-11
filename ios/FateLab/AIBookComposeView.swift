@@ -181,14 +181,7 @@ struct AIBookComposeView: View {
                         Button("利用状況を再確認") { Task { await refresh() } }
                     }
                     creationActions
-                    DisclosureGroup("鑑定書について") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("初回の鑑定書は1通無料です。月額プランは毎月3通、年間プランは毎月5通をご利用いただけます（無料1通の上乗せはありません）。単品で追加購入することもできます。作成した鑑定書は本棚に残ります。")
-                            Text("未使用の会員分は更新日に繰り越されません。単品購入分に期限はありません。生成に失敗した場合は利用枠をお戻しします。")
-                            Text("計算結果と確認済みの原稿をもとにAIが構成します。健康・妊娠・生死、法律や投資の判断などは対象外です。")
-                            HStack { Link("利用規約", destination: AppConfig.websiteBaseURL.appendingPathComponent("terms")); Link("プライバシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy")) }
-                        }.font(.footnote).foregroundStyle(FateTheme.muted).lineSpacing(5).padding(.top, 14)
-                    }.font(.subheadline).tint(FateTheme.ink)
+
                 }
             }.padding(.horizontal, FateSpacing.screenH).padding(.top, 12).padding(.bottom, 32)
         }.scrollDismissesKeyboard(.interactively)

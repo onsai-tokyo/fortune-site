@@ -81,7 +81,7 @@ struct SettingsView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "sparkle")
                             .font(.title3).foregroundStyle(FateTheme.muted)
-                        Text("継続鑑定").font(.system(.title3, weight: .medium))
+                        Text(purchases.membershipTitle).font(.system(.title3, weight: .medium))
                         Spacer()
                         Text(purchases.cancellationNotice == nil ? "会員資格あり" : "解約済み")
                             .font(.caption.weight(.medium))
