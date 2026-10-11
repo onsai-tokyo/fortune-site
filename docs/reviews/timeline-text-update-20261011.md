@@ -52,6 +52,7 @@ PR1対更新前・PR2対PR1の両方を再実行し、比較出力も配布物�
 - 最初のビルドは依存パッケージのSwiftフラグ上書きにより失敗。アプリ専用設定への修正後、Simulatorビルド、配信用アーカイブ、バックエンドのTypeScriptビルド成功。
 - Simulator：過去年展開、本人2015年の活動タグと簡易本文、ふたり2018年の簡易本文を確認。タグ欠落・文字切れなし。
 - 画像：outputs/timeline-review123-self-detail.png、outputs/timeline-review123-couple-detail.png。
+- 16:48に123のTestFlightアップロード成功。アーカイブ内の版123・API/Supabase無効URLを確認。Appleでの処理・内部テスト配信および実機確認はこの時点では未完了。
 
 ### 反映前の残り確認
 1. 確認専用123をTestFlight内部テストへ配信。App Reviewには提出しない。
