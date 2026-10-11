@@ -30,19 +30,36 @@ struct LegalDocumentView: View {
         NavigationStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("FATE LAB").font(.caption.weight(.medium)).tracking(3).foregroundStyle(FateTheme.muted)
+                            Text(document.title).font(.system(.title2, weight: .medium))
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
                         ForEach(sections) { section in
-                            VStack(alignment: .leading, spacing: 12) {
-                                if !section.title.isEmpty { Text(section.title).font(.headline) }
-                                ForEach(Array(section.paragraphs.enumerated()), id: \.offset) { _, text in
-                                    Text(text).font(.subheadline).lineSpacing(7).textSelection(.enabled)
+                            VStack(alignment: .leading, spacing: 18) {
+                                if !section.title.isEmpty {
+                                    Text(section.title).font(.system(.headline, weight: .semibold))
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
-                            }.frame(maxWidth: .infinity, alignment: .leading).id(section.id)
+                                ForEach(Array(section.paragraphs.enumerated()), id: \.offset) { _, text in
+                                    legalParagraph(text, highlightsLabels: section.id == "ai-consultation")
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(section.id == "ai-consultation" ? 20 : 0)
+                            .background {
+                                if section.id == "ai-consultation" {
+                                    RoundedRectangle(cornerRadius: 18).fill(FateTheme.card)
+                                }
+                            }
+                            .id(section.id)
+                            if section.id != sections.last?.id { Divider().overlay(FateTheme.line) }
                         }
                         if document == .terms {
                             LegalLink("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appendingPathComponent("privacy"))
+                                .font(.subheadline).padding(.vertical, 12)
                         }
-                    }.padding(24)
+                    }.padding(.horizontal, 24).padding(.vertical, 20)
                 }.onAppear { if let anchor { proxy.scrollTo(anchor, anchor: .top) } }
             }
             .background(FateTheme.canvas).foregroundStyle(FateTheme.ink)
@@ -50,6 +67,24 @@ struct LegalDocumentView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("閉じる") { dismiss() } } }
         }.tint(FateTheme.ink)
     }
+
+    @ViewBuilder private func legalParagraph(_ text: String, highlightsLabels: Bool) -> some View {
+        if highlightsLabels, let separator = text.firstIndex(of: "：") {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(String(text[..<separator])).font(.caption.weight(.semibold)).foregroundStyle(FateTheme.muted)
+                Text(String(text[text.index(after: separator)...])).font(.subheadline).lineSpacing(6)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .textSelection(.enabled)
+        } else {
+            Text(text).font(.subheadline).lineSpacing(7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+    }
+
 }
 
 private struct InAppLegalLinks: ViewModifier {

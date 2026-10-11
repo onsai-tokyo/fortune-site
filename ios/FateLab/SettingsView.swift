@@ -80,38 +80,39 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) {
                         Image(systemName: "sparkle")
-                            .font(.title3).foregroundStyle(FateTheme.muted)
+                            .font(.title3).foregroundStyle(.white.opacity(0.75))
                         Text(purchases.membershipTitle).font(.system(.title3, weight: .medium))
                         Spacer()
                         Text(purchases.cancellationNotice == nil ? "会員資格あり" : "解約済み")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(FateTheme.ink)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(FateTheme.ink, in: Capsule())
+                            .background(.white, in: Capsule())
                     }
                     if let renewal = purchases.renewalDisplay, !renewal.willAutoRenew {
                         Text(renewal.expiresAt, format: .dateTime.month().day().hour().minute())
-                            .font(.subheadline).foregroundStyle(FateTheme.ink)
+                            .font(.subheadline).foregroundStyle(.white)
                         Text("までご利用いただけます。自動更新は停止しています。")
-                            .font(.caption).foregroundStyle(FateTheme.muted)
+                            .font(.caption).foregroundStyle(.white.opacity(0.75))
                             .fixedSize(horizontal: false, vertical: true)
                     } else if let renewal = purchases.renewalDisplay {
                         Text("次回更新：" + renewal.expiresAt.formatted(.dateTime.month().day()))
-                            .font(.caption).foregroundStyle(FateTheme.muted)
+                            .font(.caption).foregroundStyle(.white.opacity(0.75))
                     } else {
                         Text("会員資格は有効です。自動更新の状態はAppleの管理画面で確認できます。")
-                            .font(.caption).foregroundStyle(FateTheme.muted)
+                            .font(.caption).foregroundStyle(.white.opacity(0.75))
                     }
                 }
                 .padding(24)
-                .background {
-                    FateArtwork(name: "QuietMountains").opacity(0.12).clipped()
-                }
+                .foregroundStyle(.white)
+                .background(FateTheme.ink)
             }
             if !AppConfig.storeKitEnabled {
                 Text(AppConfig.purchasesUnavailableMessage)
                     .font(.footnote).foregroundStyle(FateTheme.muted).padding(20)
             } else if purchases.isPremium {
+                SettingsMembershipButton(title: "月額・年間プランを見る")
+                    .padding(20)
                 SettingsDivider()
                 Button {
                     guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
@@ -241,12 +242,13 @@ struct SettingsMembershipButton: View {
     @EnvironmentObject private var auth: AuthStore
     @EnvironmentObject private var purchases: PurchaseManager
     @State private var showingMembership = false
+    var title: String? = nil
 
     var body: some View {
         Button {
             showingMembership = true
         } label: {
-            Text(purchases.membershipActionTitle)
+            Text(title ?? purchases.membershipActionTitle)
                 .frame(maxWidth: .infinity, minHeight: 24)
                 .contentShape(Rectangle())
         }

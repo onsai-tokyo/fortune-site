@@ -22,6 +22,7 @@ struct AIBookComposeView: View {
     @State private var pending: PendingAIBook?
     @State private var accepted: AIBook?
     @State private var error: String?
+    @StateObject private var consentGate = AIConsentGate()
     @State private var working = false
     @State private var preparing = false
     @State private var recoveryBlocked = false
@@ -40,8 +41,10 @@ struct AIBookComposeView: View {
                 Button {
                     if previewMode { preparing = true; return }
                     editingQuestion = false
-                    preparing = true
-                    Task { await beginCreation() }
+                    consentGate.request(auth: auth) {
+                        preparing = true
+                        Task { await beginCreation() }
+                    }
                 } label: {
                     HStack(spacing: 10) {
                         if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
@@ -173,7 +176,7 @@ struct AIBookComposeView: View {
                     if let pending {
                         Text("受付状況を確認しています。重複して利用枠を消費することはありません。").font(.footnote).foregroundStyle(FateTheme.muted)
                         AISharingNoticeView()
-                        Button("同意して受付確認・再送する") { Task { await submit(existing: pending) } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
+                        Button("受付確認・再送する") { consentGate.request(auth: auth) { Task { await submit(existing: pending) } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
                         Button("受付がなければ入力に戻る") { Task { await releaseUnsubmitted() } }.disabled(working)
                     }
                     if let error {
@@ -196,6 +199,9 @@ struct AIBookComposeView: View {
         .toolbar {
             if !isTab { ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } } }
             ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("入力を終える") { editingQuestion = false } }
+        }
+        .sheet(isPresented: $consentGate.isPresented, onDismiss: { consentGate.didDismiss(auth: auth) }) {
+            AIConsentSheet(onAgree: { consentGate.agree(auth: auth) }, onCancel: { consentGate.cancel() })
         }
         .sheet(isPresented: $showPlans, onDismiss: {
             if openMembershipAfterPlan { openMembershipAfterPlan = false; showMembership = true }
@@ -220,6 +226,7 @@ struct AIBookComposeView: View {
             }.environmentObject(auth).environmentObject(purchases)
         }
         .onChange(of: AccountScope(auth)) { _, _ in
+            consentGate.cancel()
             membershipContinuation.cancel(); resumeAfterPlan = false; openMembershipAfterPlan = false; showMembership = false; showPlans = false; preparing = false; working = false
         }
         .task(id: accepted?.id) { await trackAccepted() }
@@ -373,6 +380,10 @@ struct AIBookComposeView: View {
 
     private func submit(existing: PendingAIBook? = nil, draft: PendingAIBook? = nil) async {
         guard !working else { return }
+        guard AISharingConsent.isAccepted(userID: auth.userID) else {
+            consentGate.request(auth: auth) { Task { await submit(existing: existing, draft: draft) } }
+            return
+        }
         let owner = AccountScope(auth), key = pendingKey
         working = true; preparing = true; error = nil
         defer { if owner.isCurrent(auth) { working = false; preparing = false } }

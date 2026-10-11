@@ -22,7 +22,11 @@ struct FateLabApp: App {
         TimelineTextReviewView().environmentObject(auth).environmentObject(purchases)
 #else
 #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--annual121-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--consent134-preview") {
+            AIConsentSheet(onAgree: {}, onCancel: {})
+        } else if ProcessInfo.processInfo.arguments.contains("--legal134-preview") {
+            LegalDocumentView(document: .terms, anchor: "ai-consultation")
+        } else if ProcessInfo.processInfo.arguments.contains("--annual121-preview") {
             NavigationStack { ScrollView { MembershipDetailsView(annual: true).padding(24) }.fateAppHeader() }.environmentObject(auth)
         } else if ProcessInfo.processInfo.arguments.contains("--membership114-preview") {
             NavigationStack {

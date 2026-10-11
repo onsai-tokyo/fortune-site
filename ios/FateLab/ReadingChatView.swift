@@ -13,6 +13,7 @@ struct ReadingChatView: View {
     @State private var messages: [ReadingMessage] = []
     @State private var status: ReadingStatus?
     @State private var input = ""
+    @StateObject private var consentGate = AIConsentGate()
     @State private var isWorking = false
     @State private var errorMessage: String?
     @State private var conversationMissing = false
@@ -105,7 +106,7 @@ struct ReadingChatView: View {
                         if conversationMissing {
                             Button("鑑定一覧へ") { tabRouter.closeMissingChat() }.font(.caption.weight(.semibold))
                         } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Button("同意して再送") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
+                            Button("再送") { streamTask = Task { await send() } }.font(.caption.weight(.semibold))
                         }
                     }
                 }
@@ -155,6 +156,10 @@ struct ReadingChatView: View {
                     .disabled(detail?.conversation.reportText == nil)
                     .accessibilityLabel("もとの鑑定書を確認")
             }
+        }
+        .onChange(of: AccountScope(auth)) { _, _ in consentGate.cancel() }
+        .sheet(isPresented: $consentGate.isPresented, onDismiss: { consentGate.didDismiss(auth: auth) }) {
+            AIConsentSheet(onAgree: { consentGate.agree(auth: auth) }, onCancel: { consentGate.cancel() })
         }
         .sheet(isPresented: $showSourceReport) {
             NavigationStack {
@@ -269,6 +274,11 @@ struct ReadingChatView: View {
         guard auth.session != nil else { return }
         let question = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty, !isWorking else { return }
+        guard AISharingConsent.isAccepted(userID: auth.userID) else {
+            isInputFocused = false
+            consentGate.request(auth: auth) { streamTask = Task { await send() } }
+            return
+        }
         let needsNewThread = activeConversationID == conversationID && detail?.conversation.kind != "chat" && messages.isEmpty
         input = ""; errorMessage = nil; isWorking = true
         shouldFollowLatest = true
@@ -380,7 +390,7 @@ struct PaywallSheet: View {
                             .font(.subheadline).foregroundStyle(FateTheme.muted)
                     }
                     if purchases.isPremium { MembershipActiveBanner() }
-                    if purchases.annualProduct != nil && !purchases.isPremium {
+                    if purchases.annualProduct != nil || purchases.isPremium {
                         Picker("会員プラン", selection: $annual) {
                             Text("月額・毎月3通").tag(false)
                             Text("年間・毎月5通").tag(true)
@@ -400,7 +410,20 @@ struct PaywallSheet: View {
                     }
                     if let session = auth.session {
                         if purchases.isPremium {
-                            Button("会員として利用を続ける") { onRefresh(); if !startsBookAfterPurchase { dismiss() } }.buttonStyle(FLPrimaryButtonStyle())
+                            if startsBookAfterPurchase {
+                                Button("会員として利用を続ける") { onRefresh() }.buttonStyle(FLPrimaryButtonStyle())
+                            } else {
+                                Text("プランの変更・再開はAppleの管理画面から行えます。適用日と料金はAppleの確認画面でご確認ください。")
+                                    .font(.footnote).foregroundStyle(FateTheme.muted)
+                                Button("Appleでプランを変更・再開") {
+                                    guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+                                    Task {
+                                        do { try await AppStore.showManageSubscriptions(in: scene) }
+                                        catch { purchases.errorMessage = "管理画面を開けませんでした。時間をおいて再度お試しください。"; return }
+                                        await purchases.sync(auth: auth)
+                                    }
+                                }.buttonStyle(FLPrimaryButtonStyle())
+                            }
                         } else if purchases.accessState == .unknown || purchases.isSyncing {
                             if purchases.isSyncing {
                                 ProgressView("購入状況を確認しています…").tint(FateTheme.ink)
@@ -433,13 +456,13 @@ struct PaywallSheet: View {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                     }
                     Divider().overlay(FateTheme.line)
-                    MembershipDetailsView(annual: annual)
+                    MembershipDetailsView(annual: annual, followsCurrentPlan: false)
                     Text("期間終了の24時間前までに解約されない場合、自動的に更新されます。解約はApp Storeの設定からいつでも行えます。")
                         .font(.caption).foregroundStyle(FateTheme.muted).lineSpacing(5)
                     HStack {
                         LegalLink("利用規約", destination: AppConfig.websiteBaseURL.appending(path: "/terms"))
                         Text("・")
-                        Link("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
+                        LegalLink("プライバシーポリシー", destination: AppConfig.websiteBaseURL.appending(path: "/privacy"))
                     }.font(.caption).frame(maxWidth: .infinity)
                     }
                 }.padding(24)
@@ -472,10 +495,11 @@ private struct SuggestionButtonStyle: ButtonStyle {
 
 struct MembershipDetailsView: View {
     var annual = false
+    var followsCurrentPlan = true
     @EnvironmentObject private var auth: AuthStore
     @State private var booksEnabled = false
     @State private var currentAnnual = false
-    private var effectiveAnnual: Bool { annual || currentAnnual }
+    private var effectiveAnnual: Bool { annual || (followsCurrentPlan && currentAnnual) }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text(effectiveAnnual ? "年額12,000円（月あたり1,000円・日本価格）" : "月額1,980円（日本価格）").font(.headline)
@@ -507,6 +531,7 @@ struct MembershipDetailsView: View {
             .task(id: AccountScope(auth)) {
                 booksEnabled = false; currentAnnual = false
                 let owner = AccountScope(auth)
+                guard auth.session != nil else { return }
                 if let status = try? await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth), owner.isCurrent(auth) {
                     booksEnabled = status.enabled
                     currentAnnual = status.premium == true && status.monthlyCredits == 5
