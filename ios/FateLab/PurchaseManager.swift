@@ -127,6 +127,10 @@ final class PurchaseManager: ObservableObject {
     private func deliver(_ transaction: Transaction, signed: String, auth: AuthStore, owner: AccountScope, allowTransfer: Bool = false) async throws -> Bool {
         try check(owner, auth)
         guard let userID = owner.userID else { throw CancellationError() }
+        if allowTransfer {
+            try await delivery.authorizeOwnerTransfer(transactionID: String(transaction.id), ownerID: userID)
+            try check(owner, auth)
+        }
         let existing = try delivery.pending().first { $0.transactionID == String(transaction.id) && $0.ownerID == userID }
         let value = existing ?? PendingPurchase(transactionID: String(transaction.id), ownerID: userID,
             signedTransaction: signed, allowOwnerTransfer: allowTransfer, operationID: UUID())

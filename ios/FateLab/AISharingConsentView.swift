@@ -64,29 +64,43 @@ struct AISharingNoticeView: View {
 struct AIConsentSheet: View {
     let onAgree: () -> Void
     let onCancel: () -> Void
+    @State private var agreed = false
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    Text("鑑定をはじめる前に").font(.system(.title2, weight: .medium))
-                    Text("AI鑑定・相談に関する利用条件").font(.headline)
-                    Text("相談に合わせた鑑定書や回答を作成するため、Anthropic PBC（Claude API）へ以下の情報を送信します。")
+            VStack(alignment: .leading, spacing: 18) {
+                Text("はじめに、利用条件をご確認ください。")
+                    .font(.subheadline).foregroundStyle(FateTheme.muted)
+                ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
+                        Text("AI鑑定・相談に関する利用条件").font(.headline)
+                        Text("相談に合わせた鑑定書や回答を作成するため、Anthropic PBC（Claude API）へ以下の情報を送信します。")
                         disclosure("鑑定書をつくる", "相談文、テーマ、もとにする鑑定文、命式・計算結果")
                         disclosure("鑑定結果への質問", "質問文、最近の会話履歴、鑑定文・計算結果、保存した出生情報（生年月日・出生時刻・出生地・性別・ニックネームなど）")
-                    }.padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 18))
-                    Text("ふたりの相談には相手の情報も含まれます。共有してよい情報だけを入力してください。")
-                    Text("同意はこのアカウントでの以後のAI鑑定・質問にも適用されます。送信は鑑定・質問の操作時のみ行います。同意しなくても保存済みの鑑定は読めます。")
-                    LegalLink("利用規約を詳しく読む", destination: AISharingConsent.termsURL)
-                    Button("同意して続ける", action: onAgree).buttonStyle(FLPrimaryButtonStyle())
-                        .accessibilityIdentifier("aiConsent.agree")
-                    Button("今は同意しない", action: onCancel).frame(maxWidth: .infinity, minHeight: 44)
-                }.font(.subheadline).lineSpacing(6).padding(24)
-            }.background(FateTheme.canvas).foregroundStyle(FateTheme.ink)
-                .navigationTitle("AI利用条件").navigationBarTitleDisplayMode(.inline)
+                        Text("ふたりの相談には相手の情報も含まれます。共有してよい情報だけを入力してください。")
+                        Text("同意はこのアカウントでの以後のAI鑑定・質問にも適用されます。送信は鑑定・質問の操作時のみ行います。同意しなくても保存済みの鑑定は読めます。")
+                        LegalLink("利用規約の全文を読む", destination: AISharingConsent.termsURL)
+                    }.font(.subheadline).lineSpacing(5).padding(18)
+                }
+                .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(FateTheme.line, lineWidth: 1))
+                Button { agreed.toggle() } label: {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: agreed ? "checkmark.square.fill" : "square").font(.title3)
+                        Text("利用規約と上記の情報送信に同意する").font(.subheadline)
+                    }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityIdentifier("aiConsent.checkbox")
+                    .accessibilityValue(agreed ? "チェック済み" : "未チェック")
+                Button("同意して続ける") { guard agreed else { return }; onAgree() }
+                    .buttonStyle(FLPrimaryButtonStyle()).disabled(!agreed)
+                    .accessibilityIdentifier("aiConsent.agree")
+            }.padding(24).background(FateTheme.canvas).foregroundStyle(FateTheme.ink)
+                .navigationTitle("利用規約の確認").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("閉じる", action: onCancel) } }
-        }.tint(FateTheme.ink).presentationDetents([.large])
+        }.tint(FateTheme.ink).presentationDetents([.height(620), .large]).presentationDragIndicator(.visible)
     }
+
     private func disclosure(_ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.caption.weight(.semibold)).foregroundStyle(FateTheme.muted)

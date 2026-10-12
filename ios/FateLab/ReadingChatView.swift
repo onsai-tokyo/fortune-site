@@ -367,30 +367,17 @@ struct PaywallSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    let draft = draftQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !draft.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("お書きになった質問").font(.caption).foregroundStyle(FateTheme.muted)
-                            Text("「\(draft)」").lineLimit(3).font(.system(.subheadline))
-                        }
-                        Divider().overlay(FateTheme.line)
-                    }
                     if !AppConfig.storeKitEnabled {
                         Text(AppConfig.purchasesUnavailableMessage).font(.headline)
                         Text("この操作には利用権限の確認が必要です。入力した質問はそのまま残ります。")
                             .foregroundStyle(FateTheme.muted)
                     } else {
-                    if !purchases.isPremium {
-                        Text("あなたを知る言葉を、日々の選択に。")
-                            .font(.system(.subheadline)).foregroundStyle(FateTheme.muted)
-                    }
-                    FateEditorialHero(eyebrow: "MEMBERSHIP", title: purchases.isPremium ? "あなたのメンバーシップ" : "あなたと、ふたりを\nもっと深く知る。", subtitle: "FATE LAB 継続鑑定")
-                    if startsBookAfterPurchase {
-                        Text("会員になって、この相談の鑑定書をつくりますか？")
-                            .font(.headline)
-                        Text("購入の確認後、この相談内容で鑑定書の作成を開始します。会員分の利用枠を1通使用します。")
-                            .font(.subheadline).foregroundStyle(FateTheme.muted)
-                    }
+                    Text(purchases.isPremium ? "あなたのメンバーシップ" : "鑑定書の会員プラン")
+                        .font(FateType.screenTitle)
+                    Text(startsBookAfterPurchase
+                        ? "プランを選んで、入力した相談の鑑定書をつくります。購入確認後に作成を開始し、会員分を1通使用します。"
+                        : "あなたの相談に合わせた鑑定書を、毎月お届けするプランです。")
+                        .font(.subheadline).foregroundStyle(FateTheme.muted)
                     if purchases.isPremium {
                         VStack(alignment: .leading, spacing: 6) {
                             Label(purchases.membershipTitle, systemImage: "checkmark.seal.fill")
@@ -400,23 +387,19 @@ struct PaywallSheet: View {
                             }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    if purchases.annualProduct != nil || purchases.isPremium {
-                        Picker("会員プラン", selection: $annual) {
-                            Text("月額・毎月3通").tag(false)
-                            Text("年間・毎月5通").tag(true)
-                        }.pickerStyle(.segmented)
-                    }
                     if !purchases.isPremium {
-                    VStack(alignment: .leading, spacing: 5) {
-                        if let product = selectedProduct {
-                            Text(annual ? "12,000円／年（月あたり1,000円・日本価格）" : ReadingPrices.monthly)
-                            StorePurchasePrice(product: product)
-                                .font(.system(.title2, weight: .semibold))
-                            Text(annual ? "年額一括払い・1年ごとの自動更新" : "1ヶ月ごとの自動更新").foregroundStyle(FateTheme.muted)
-                        } else if purchases.errorMessage == nil {
-                            ProgressView("商品情報を読み込んでいます…").tint(FateTheme.ink)
+                        VStack(spacing: 12) {
+                            planOption(isAnnual: false, product: purchases.product)
+                            planOption(isAnnual: true, product: purchases.annualProduct)
                         }
                     }
+                    let draft = draftQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !draft.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("作成する鑑定書の相談").font(.caption).foregroundStyle(FateTheme.muted)
+                            Text("「\(draft)」").lineLimit(2).font(.system(.subheadline))
+                        }
+                        Divider().overlay(FateTheme.line)
                     }
                     if let session = auth.session, !purchases.isPremium {
                         if purchases.accessState == .unknown || purchases.isSyncing {
@@ -425,7 +408,10 @@ struct PaywallSheet: View {
                             } else {
                                 Text("購入状況を確認できませんでした。もう一度確認してください。").font(.callout)
                             }
-                            Button("購入状況を再確認") { Task { await purchases.sync(auth: auth) } }.disabled(purchases.isSyncing)
+                            Text("Appleの購入情報を照合して、このアカウントに反映します。入力した相談文は保持されます。")
+                                .font(.footnote).foregroundStyle(FateTheme.muted)
+                            Button("購入済みの会員情報を反映") { Task { await purchases.restore(auth: auth); onRefresh() } }
+                                .buttonStyle(FLSecondaryButtonStyle()).disabled(purchases.isSyncing || purchases.isWorking)
                         } else if !purchases.hasStoreKitEntitlement, purchases.product == nil, purchases.errorMessage != nil {
                             ReportCard {
                                 VStack(alignment: .leading, spacing: 12) {
@@ -436,12 +422,8 @@ struct PaywallSheet: View {
                         } else {
                             Button(startsBookAfterPurchase && !purchases.hasStoreKitEntitlement ? "会員になって鑑定する" : (annual && !purchases.hasStoreKitEntitlement ? "年間会員になる" : purchases.membershipActionTitle)) {
                                 Task { await purchases.purchase(userID: session.user.id, auth: auth, annual: annual); onRefresh() }
-                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership)
+                            }.buttonStyle(FLPrimaryButtonStyle()).disabled(!purchases.canStartMembership || (!purchases.hasStoreKitEntitlement && selectedProduct == nil))
                         }
-                        Button("購入を復元") {
-                            Task { await purchases.restore(auth: auth); onRefresh() }
-                        }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(FateTheme.ink)
-                            .disabled(purchases.isWorking)
                     }
                     if purchases.isWorking { ProgressView(purchases.membershipProgress ?? "購入手続き中…").tint(FateTheme.ink) }
                     if !purchases.isWorking, let message = purchases.restoreMessage {
@@ -451,7 +433,14 @@ struct PaywallSheet: View {
                         Text(error).font(.footnote).foregroundStyle(FateTheme.danger)
                     }
                     Divider().overlay(FateTheme.line)
-                    MembershipDetailsView(annual: annual, followsCurrentPlan: false)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("相手のプロフィールを10人まで登録", systemImage: "person.2")
+                        Label("完成した鑑定書は本棚に保存", systemImage: "books.vertical")
+                        Text("会員分の利用枠は毎月付与され、未使用分は繰り越されません。年間プランは契約開始日を基準に毎月付与されます。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                        Text("完成した鑑定書は、会員期間が終わっても読み返せます。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                    }.font(.subheadline).lineSpacing(4)
                     if purchases.isPremium {
                         if startsBookAfterPurchase {
                             Button("会員として利用を続ける") { onRefresh() }.buttonStyle(FLPrimaryButtonStyle())
@@ -487,6 +476,36 @@ struct PaywallSheet: View {
         }.presentationDetents([.large])
             .task { await purchases.sync(auth: auth); await purchases.load() }
     }
+    private func planOption(isAnnual: Bool, product: Product?) -> some View {
+        Button { annual = isAnnual } label: {
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: annual == isAnnual ? "largecircle.fill.circle" : "circle")
+                    .font(.title3).padding(.top, 2)
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack {
+                        Text(isAnnual ? "年間プラン" : "月額プラン").font(.headline)
+                        Spacer()
+                        Text(isAnnual ? "毎月5通" : "毎月3通").font(.subheadline.weight(.medium))
+                    }
+                    if let product {
+                        Text("\(product.displayPrice)／\(isAnnual ? "年" : "月")").font(.title3.weight(.semibold))
+                        if product.priceFormatStyle.currencyCode != "JPY" {
+                            Text("Appleアカウントの通貨で表示しています").font(.caption2).foregroundStyle(FateTheme.muted)
+                        }
+                    } else {
+                        Text("料金を読み込み中…").font(.subheadline)
+                    }
+                    Text(isAnnual ? "年額一括払い・1年ごとの自動更新" : "1ヶ月ごとの自動更新")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                }
+            }.foregroundStyle(FateTheme.ink).padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(FateTheme.card, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(annual == isAnnual ? FateTheme.ink : FateTheme.line, lineWidth: annual == isAnnual ? 1.5 : 0.7))
+                .contentShape(RoundedRectangle(cornerRadius: 18))
+        }.buttonStyle(.plain).accessibilityAddTraits(annual == isAnnual ? [.isSelected] : [])
+    }
+
 }
 
 private struct SuggestionButtonStyle: ButtonStyle {

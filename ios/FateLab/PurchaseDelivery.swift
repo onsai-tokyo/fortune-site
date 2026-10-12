@@ -48,6 +48,7 @@ struct PendingPurchase: Codable, Equatable {
     private let read: () throws -> Data?
     private let write: (Data) throws -> Void
     private var inFlight = Set<String>()
+    private var waiters: [String: [CheckedContinuation<Void, Never>]] = [:]
     init(read: @escaping () throws -> Data? = { try KeychainStore.readChecked(account: "purchase.pending.v1") },
          write: @escaping (Data) throws -> Void = { try KeychainStore.save($0, account: "purchase.pending.v1") }) {
         self.read = read; self.write = write
@@ -57,6 +58,22 @@ struct PendingPurchase: Codable, Equatable {
         return try JSONDecoder().decode([PendingPurchase].self, from: data)
     }
     private func key(_ value: PendingPurchase) -> String { value.ownerID.uuidString + ":" + value.transactionID }
+    /// Only an explicit purchase/restore may authorize a Sandbox ownership
+    /// transfer. An automatic update may already have persisted a denied event;
+    /// use a new operation identity, since the server journals its old result.
+    func authorizeOwnerTransfer(transactionID: String, ownerID: UUID) async throws {
+        let id = ownerID.uuidString + ":" + transactionID
+        while inFlight.contains(id) {
+            await withCheckedContinuation { waiters[id, default: []].append($0) }
+        }
+        try Task.checkCancellation()
+        var values = try pending()
+        guard let index = values.firstIndex(where: { key($0) == id }), !values[index].allowOwnerTransfer else { return }
+        let old = values[index]
+        values[index] = PendingPurchase(transactionID: old.transactionID, ownerID: old.ownerID,
+            signedTransaction: old.signedTransaction, allowOwnerTransfer: true, operationID: UUID())
+        try write(JSONEncoder().encode(values))
+    }
     func enqueue(_ value: PendingPurchase) throws {
         var values = try pending()
         if let old = values.first(where: { key($0) == key(value) }) {
@@ -71,7 +88,11 @@ struct PendingPurchase: Codable, Equatable {
                  finish: () async -> Void) async throws -> Bool {
         let id = key(value)
         guard !inFlight.contains(id) else { return false }
-        inFlight.insert(id); defer { inFlight.remove(id) }
+        inFlight.insert(id); defer {
+            inFlight.remove(id)
+            let waiting = waiters.removeValue(forKey: id) ?? []
+            waiting.forEach { $0.resume() }
+        }
         try enqueue(value)
         guard isCurrent() else { throw CancellationError() }
         let response = try await mirror()

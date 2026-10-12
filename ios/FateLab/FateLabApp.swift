@@ -29,7 +29,9 @@ struct FateLabApp: App {
         } else if ProcessInfo.processInfo.arguments.contains("--settings135-preview") {
             Settings135Preview()
         } else if ProcessInfo.processInfo.arguments.contains("--consent134-preview") {
-            AIConsentSheet(onAgree: {}, onCancel: {})
+            FateTheme.canvas.ignoresSafeArea().sheet(isPresented: .constant(true)) {
+                AIConsentSheet(onAgree: {}, onCancel: {})
+            }
         } else if ProcessInfo.processInfo.arguments.contains("--legal134-preview") {
             LegalDocumentView(document: .terms, anchor: "ai-consultation")
         } else if ProcessInfo.processInfo.arguments.contains("--annual121-preview") {

@@ -93,6 +93,44 @@ import XCTest
         XCTAssertThrowsError(try store.contains(UUID()))
         XCTAssertThrowsError(try store.set(UUID(), pending: false))
     }
+    func testExplicitRestoreReplacesDeniedAutomaticOperationWithoutFinishingIt() async throws {
+        var data: Data?, finished = false
+        let queue = PurchaseDelivery(read: { data }, write: { data = $0 })
+        var original = purchase; original.operationID = UUID()
+        do {
+            _ = try await queue.deliver(original, isCurrent: { true }, mirror: {
+                try self.response("{\"verified\":true,\"delivery\":\"owner_mismatch\",\"transactionId\":\"synthetic-transaction\",\"ownerId\":null}")
+            }, finish: { finished = true })
+            XCTFail("Owner mismatch must fail")
+        } catch {}
+        XCTAssertFalse(finished)
+        try await queue.authorizeOwnerTransfer(transactionID: original.transactionID, ownerID: UUID())
+        XCTAssertEqual(try queue.pending(), [original], "Never change another account's pending delivery")
+        try await queue.authorizeOwnerTransfer(transactionID: original.transactionID, ownerID: owner)
+        let authorized = try XCTUnwrap(queue.pending().first)
+        XCTAssertTrue(authorized.allowOwnerTransfer)
+        XCTAssertNotEqual(authorized.operationID, original.operationID)
+        XCTAssertEqual(authorized.signedTransaction, original.signedTransaction)
+        try await queue.authorizeOwnerTransfer(transactionID: original.transactionID, ownerID: owner)
+        XCTAssertEqual(try queue.pending().first?.operationID, authorized.operationID, "Retries retain the authorized operation identity")
+        _ = try await queue.deliver(authorized, isCurrent: { true }, mirror: { try self.response() }, finish: { finished = true })
+        XCTAssertTrue(finished)
+        XCTAssertTrue(try queue.pending().isEmpty)
+    }
+
+    func testExplicitTransferWaitsForAutomaticDeliveryToSettle() async throws {
+        var data: Data?
+        let queue = PurchaseDelivery(read: { data }, write: { data = $0 })
+        let first = Task { try await queue.deliver(purchase, isCurrent: { true }, mirror: {
+            try await Task.sleep(for: .milliseconds(30))
+            throw URLError(.notConnectedToInternet)
+        }, finish: { XCTFail("Must not finish failed delivery") }) }
+        try await Task.sleep(for: .milliseconds(5))
+        try await queue.authorizeOwnerTransfer(transactionID: purchase.transactionID, ownerID: owner)
+        _ = await first.result
+        XCTAssertTrue(try XCTUnwrap(queue.pending().first).allowOwnerTransfer)
+    }
+
     func testDeliveryOperationIdentitySurvivesPersistence() throws {
         var data: Data?
         let queue = PurchaseDelivery(read: { data }, write: { data = $0 })

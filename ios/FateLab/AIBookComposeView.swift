@@ -306,7 +306,11 @@ struct AIBookComposeView: View {
     private func openPurchaseOptions() {
         do {
             try persistComposerDraft()
-            if status?.premium == false, let sourceID {
+            guard let premium = status?.premium else {
+                error = "会員情報を確認できませんでした。時間をおいて、もう一度お試しください。"
+                return
+            }
+            if !premium, let sourceID {
                 membershipContinuation.prepare(pending ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme,
                     question: question, focusCardID: focusCardID), owner: AccountScope(auth))
                 showMembership = true
@@ -337,7 +341,7 @@ struct AIBookComposeView: View {
     }
     private var purchaseOptions: some View {
         ScrollView { VStack(alignment: .leading, spacing: 22) {
-            Text("一冊を、あなたの本棚に。").font(FateType.screenTitle)
+            Text("鑑定書を1通追加").font(FateType.screenTitle)
             Text("会員の利用枠を使い切った場合は、1通分を追加購入できます。購入後は入力した相談の作成を開始します。").font(.subheadline).foregroundStyle(FateTheme.muted)
             if let product = purchases.bookProduct {
                 Button("鑑定書1通分 · \(product.displayPrice)") { Task { if await buySingle() { resumeAfterPlan = true; showPlans = false } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
@@ -353,10 +357,10 @@ struct AIBookComposeView: View {
                 Text((status?.memberRemaining ?? 0) == 0 ? "会員分の利用枠がありません。購入済みの場合は、下のボタンから利用枠を再確認できます。" : "会員の利用枠を確認しました。")
                     .font(.subheadline).foregroundStyle(FateTheme.muted)
             }
-            Button("購入を復元・利用枠を再確認") {
+            Button("購入済みの利用枠を再確認") {
                 Task {
                     working = true
-                    await purchases.restore(auth: auth)
+                    await purchases.sync(auth: auth)
                     await refreshMembership()
                     working = false
                     if (status?.remaining ?? 0) > 0 { resumeAfterPlan = true; showPlans = false }
