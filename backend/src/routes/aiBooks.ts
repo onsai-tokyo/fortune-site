@@ -29,7 +29,7 @@ async function settings() {
 }
 aiBooksRouter.post('/trial/device',async(req:AuthRequest,res)=>{
   try { if(!deviceCheckConfigured())throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE');res.json(await claimDeviceTrial(req.userId!,req.body)) }
-  catch(e) { const code=e instanceof DeviceTrialError?e.code:'BOOK_TRIAL_UNAVAILABLE';res.status(code==='BOOK_TRIAL_INPUT'?422:503).json({code,error:code==='BOOK_TRIAL_VERIFICATION_PENDING'?'無料体験の確認が保留になっています。無料枠はまだ付与されていません。お問い合わせから確認をご依頼ください。':'無料体験の確認を完了できませんでした。時間をおいて再確認するか、会員プランをご利用ください。'}) }
+  catch(e) { const code=e instanceof DeviceTrialError?e.code:'BOOK_TRIAL_UNAVAILABLE';console.warn(JSON.stringify({event:'book_trial_verification_failed',code,...(e instanceof DeviceTrialError?e.diagnostic:{stage:'transport_or_configuration'})}));res.status(code==='BOOK_TRIAL_INPUT'?422:503).json({code,error:code==='BOOK_TRIAL_VERIFICATION_PENDING'?'無料体験の確認が保留になっています。無料枠はまだ付与されていません。お問い合わせから確認をご依頼ください。':'無料体験の確認を完了できませんでした。時間をおいて再確認するか、会員プランをご利用ください。'}) }
 })
 aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
   res.setHeader('Cache-Control','private, no-store')

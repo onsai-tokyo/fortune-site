@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {generateKeyPairSync} from 'node:crypto'
 import {claimDeviceTrial,type TrialStore,type TrialDeviceAPI} from './deviceTrial.js'
 const request={requestId:'11111111-1111-4111-8111-111111111111',token:Buffer.from('synthetic-device-token').toString('base64')}
 function fixture() {
@@ -46,4 +47,23 @@ test('late Apple confirmation cannot override a fenced SQL reservation',async()=
  const f=fixture();f.store.finish=async()=> 'indeterminate'
  await assert.rejects(claimDeviceTrial('u',request,f.store,f.device),/BOOK_TRIAL_VERIFICATION_PENDING/)
  assert.equal(f.grants,0)
+})
+
+test('provider diagnostics distinguish failures without exposing tokens or response bodies',async()=>{
+ const {appleTrialDevice,DeviceTrialError,deviceCheckFailureReason}=await import('./deviceTrial.js')
+ assert.equal(deviceCheckFailureReason('Bit State Not Found'),'bit_state_not_found')
+ assert.equal(deviceCheckFailureReason('unrecognized private value'),'unrecognized')
+ const keys=['DEVICECHECK_TEAM_ID','DEVICECHECK_KEY_ID','DEVICECHECK_PRIVATE_KEY','DEVICECHECK_ENVIRONMENT']
+ const before=keys.map(k=>process.env[k]),fetchBefore=globalThis.fetch
+ try {
+  process.env.DEVICECHECK_TEAM_ID='TESTTEAM';process.env.DEVICECHECK_KEY_ID='TESTKEY';process.env.DEVICECHECK_ENVIRONMENT='production'
+  process.env.DEVICECHECK_PRIVATE_KEY=generateKeyPairSync('ec',{namedCurve:'P-256'}).privateKey.export({format:'pem',type:'pkcs8'}).toString()
+  globalThis.fetch=async()=>new Response('Invalid authorization token: private-value',{status:401})
+  await assert.rejects(appleTrialDevice.query(request.token),e=>{
+   assert.ok(e instanceof DeviceTrialError)
+   assert.deepEqual(e.diagnostic,{stage:'query_two_bits',status:401,reason:'authentication'})
+   assert.ok(!JSON.stringify(e).includes('private-value'));assert.ok(!JSON.stringify(e).includes(request.token))
+   return true
+  })
+ } finally {globalThis.fetch=fetchBefore;keys.forEach((k,i)=>{if(before[i]===undefined)delete process.env[k];else process.env[k]=before[i]})}
 })

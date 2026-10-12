@@ -1,7 +1,15 @@
 import jwt from 'jsonwebtoken'
 import {createHash,randomUUID} from 'node:crypto'
 import {getSupabaseAdmin} from './supabaseAdmin.js'
-export class DeviceTrialError extends Error { constructor(public code:string){super(code)} }
+export class DeviceTrialError extends Error { constructor(public code:string,public diagnostic?:{stage:string;status?:number;reason?:string}){super(code)} }
+// Only fixed categories enter logs; never persist the device token or Apple body.
+export function deviceCheckFailureReason(body:string) {
+ if(/bit state not found/i.test(body))return 'bit_state_not_found'
+ if(/auth|authorization|jwt/i.test(body))return 'authentication'
+ if(/device.?token|device token/i.test(body))return 'device_token'
+ if(/timestamp/i.test(body))return 'timestamp'
+ return 'unrecognized'
+}
 export interface TrialDeviceAPI {query(token:string):Promise<boolean>;mark(token:string):Promise<void>}
 export interface TrialStore {begin(user:string,id:string,hash:string):Promise<string>;transition(user:string,id:string,hash:string,expected:string,next:string):Promise<string>;finish(user:string,id:string,hash:string):Promise<string>}
 export const trialStore:TrialStore={
@@ -11,7 +19,7 @@ export const trialStore:TrialStore={
 }
 async function rpc(name:string,args:Record<string,string>):Promise<string> {
  const {data,error}=await getSupabaseAdmin().rpc(name,args)
- if(error)throw new DeviceTrialError(error.message.includes('BOOK_TRIAL_VERIFICATION_PENDING')?'BOOK_TRIAL_VERIFICATION_PENDING':error.message.includes('BOOK_TRIAL_BUSY')?'BOOK_TRIAL_BUSY':'BOOK_TRIAL_UNAVAILABLE')
+ if(error)throw new DeviceTrialError(error.message.includes('BOOK_TRIAL_VERIFICATION_PENDING')?'BOOK_TRIAL_VERIFICATION_PENDING':error.message.includes('BOOK_TRIAL_BUSY')?'BOOK_TRIAL_BUSY':'BOOK_TRIAL_UNAVAILABLE',{stage:name,reason:error.code})
  if(typeof data!=='string')throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE')
  return data
 }
@@ -23,13 +31,13 @@ async function apple(path:string,token:string,mark=false) {
  const auth=jwt.sign({},process.env.DEVICECHECK_PRIVATE_KEY!.replace(/\\n/g,'\n'),{algorithm:'ES256',issuer:process.env.DEVICECHECK_TEAM_ID!,keyid:process.env.DEVICECHECK_KEY_ID!,expiresIn:300})
  const host=process.env.DEVICECHECK_ENVIRONMENT==='production'?'https://api.devicecheck.apple.com':'https://api.development.devicecheck.apple.com'
  const response=await fetch(host+'/v1/'+path,{method:'POST',headers:{authorization:'Bearer '+auth,'content-type':'application/json'},body:JSON.stringify({device_token:token,transaction_id:randomUUID(),timestamp:Date.now(),...(mark?{bit0:true}:{})}),signal:AbortSignal.timeout(10000)})
- if(!response.ok)throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE')
+ if(!response.ok)throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE',{stage:path,status:response.status,reason:deviceCheckFailureReason(await response.text())})
  return response
 }
 export function parseDeviceBits(text:string):boolean|null {
  if(text.trim()==='Bit State Not Found')return null
  try {const value=JSON.parse(text);if(typeof value?.bit0==='boolean')return value.bit0} catch {}
- throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE')
+ throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE',{stage:'parse_query_two_bits',reason:'invalid_response'})
 }
 export const appleTrialDevice:TrialDeviceAPI={
  async query(token){const response=await apple('query_two_bits',token);const used=parseDeviceBits(await response.text());if(used===null){await apple('validate_device_token',token);return false}return used},
