@@ -4,7 +4,7 @@ import {getSupabaseAdmin} from './supabaseAdmin.js'
 export class DeviceTrialError extends Error { constructor(public code:string,public diagnostic?:{stage:string;status?:number;reason?:string}){super(code)} }
 // Only fixed categories enter logs; never persist the device token or Apple body.
 export function deviceCheckFailureReason(body:string) {
- if(/bit state not found/i.test(body))return 'bit_state_not_found'
+ if(isMissingBitState(body))return 'bit_state_not_found'
  if(/auth|authorization|jwt/i.test(body))return 'authentication'
  if(/device.?token|device token/i.test(body))return 'device_token'
  if(/timestamp/i.test(body))return 'timestamp'
@@ -34,8 +34,13 @@ async function apple(path:string,token:string,mark=false) {
  if(!response.ok)throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE',{stage:path,status:response.status,reason:deviceCheckFailureReason(await response.text())})
  return response
 }
+function isMissingBitState(text:string) {
+ // Apple's documentation labels this response "Bit State Not Found", while
+ // the service also returns the plain-text body "Failed to find bit state".
+ return ['Bit State Not Found','Failed to find bit state'].includes(text.trim())
+}
 export function parseDeviceBits(text:string):boolean|null {
- if(text.trim()==='Bit State Not Found')return null
+ if(isMissingBitState(text))return null
  try {const value=JSON.parse(text);if(typeof value?.bit0==='boolean')return value.bit0} catch {}
  throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE',{stage:'parse_query_two_bits',reason:'invalid_response'})
 }
