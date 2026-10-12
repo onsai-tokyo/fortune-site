@@ -4,6 +4,7 @@ struct AIBookDetailView: View {
     let initial: AIBook
     var onUpdate: (AIBook) -> Void = { _ in }
     @EnvironmentObject private var auth: AuthStore
+    @State private var showMembership = false
     @State private var updated: AIBook?
     @State private var error: String?
     private var book: AIBook { updated ?? initial }
@@ -83,6 +84,14 @@ struct AIBookDetailView: View {
                     else if book.state == "failed" { Text(book.failureMessage) }
                     DisclosureGroup("ご相談の内容") { Text(book.question).lineSpacing(7).padding(.top, 12) }.font(.subheadline)
                 }
+                if book.state == "delivered", book.isTrial == true {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("続けて相談するなら、会員プランで。")
+                        Text("月額プランは毎月3通、年間プランは毎月5通。会員は利用枠を使い切ったあと、1通980円で追加もできます。")
+                            .font(.footnote).foregroundStyle(FateTheme.muted)
+                        Button("会員プランを見る") { showMembership = true }.buttonStyle(FLSecondaryButtonStyle())
+                    }
+                }
                 if let error { Text(error).font(.footnote).foregroundStyle(FateTheme.danger) }
             }.frame(maxWidth: 620).padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 48)
                 .frame(maxWidth: .infinity).textSelection(.enabled)
@@ -90,6 +99,7 @@ struct AIBookDetailView: View {
 #if DEBUG
         .defaultScrollAnchor(ProcessInfo.processInfo.arguments.contains("--reader-bottom-preview") ? .bottom : .top)
 #endif
+        .sheet(isPresented: $showMembership) { PaywallSheet(draftQuestion: "", onRefresh: {}) }
         .background(FateTheme.canvas).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {

@@ -456,6 +456,7 @@ struct PaywallSheet: View {
                     }
                 }
         }.presentationDetents([.large])
+            .onAppear { APIClient.shared.trackProductEvent("paywall_viewed", surface: "membership", auth: auth) }
             .task { await purchases.sync(auth: auth); await purchases.load() }
     }
     private func planOption(isAnnual: Bool, product: Product?) -> some View {

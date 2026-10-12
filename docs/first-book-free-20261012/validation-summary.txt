@@ -1,0 +1,1 @@
+v4: books 41/41; SQL 80; HTTP 13; baseline SQL 4; iOS 21/21; tsc passed; patch applies to 139. DeviceCheck and AI mocked. Production unchanged.

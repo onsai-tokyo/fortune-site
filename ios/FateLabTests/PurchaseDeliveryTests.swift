@@ -373,3 +373,36 @@ final class ReadingCategory117Tests: XCTestCase {
         }
     }
 }
+
+@MainActor final class FirstBookFree141Tests: XCTestCase {
+    func testParallelDevicePreparationKeepsOnePersistentReservation() async throws {
+        let key = "trial.test." + UUID().uuidString
+        defer { try? KeychainStore.remove(account: key) }
+        var calls = 0
+        let generate: @MainActor @Sendable () async throws -> Data = {
+            calls += 1
+            try await Task.sleep(for: .milliseconds(15))
+            return Data("synthetic-device-token".utf8)
+        }
+        async let a = TrialDeviceRequest.prepare(key: key, tokenGenerator: generate)
+        async let b = TrialDeviceRequest.prepare(key: key, tokenGenerator: generate)
+        let (one, two) = try await (a, b)
+        XCTAssertEqual(one.requestId, two.requestId)
+        XCTAssertEqual(one.token, two.token)
+        XCTAssertEqual(calls, 1)
+        let replay = try await TrialDeviceRequest.prepare(key: key, tokenGenerator: generate)
+        XCTAssertEqual(replay.requestId, one.requestId)
+        XCTAssertEqual(calls, 1)
+    }
+    func testFreeAndCappedStatusesKeepPaidPurchaseRules() throws {
+        let data = Data(#"{"enabled":true,"monthlyCredits":3,"remaining":1,"memberRemaining":0,"purchasedRemaining":0,"memberExpiresAt":null,"productId":"test","premium":false,"trialRemaining":1,"trialEnabled":true}"#.utf8)
+        var status = try JSONDecoder().decode(AIBookStatus.self, from: data)
+        XCTAssertTrue(status.canCreateBook)
+        XCTAssertFalse(status.canPurchaseExtraBook)
+        status.trialRemaining = 0; status.trialPaused = true
+        XCTAssertFalse(status.canCreateBook)
+        XCTAssertFalse(status.canTryFreeBook)
+        status.premium = true
+        XCTAssertTrue(status.canCreateBook)
+    }
+}

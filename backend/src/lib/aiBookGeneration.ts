@@ -1,3 +1,5 @@
+import type {BookUsageObserver} from './aiBookUsage.js'
+import {bookFailure} from './aiBookFailure.js'
 import type Anthropic from '@anthropic-ai/sdk'
 import {validateBookDocument, BOOK_MIN_CHARACTERS, BOOK_MAX_CHARACTERS, BOOK_TARGET_CHARACTERS, type BookSource} from './aiBooks.js'
 export const BOOK_SYSTEM = `あなたはFATE LABの鑑定書編集者です。相談に具体的に答える日本語の鑑定書をJSONで構成します。
@@ -59,10 +61,22 @@ export function appendBookExpansion(d:any, extra:any) {
   }
   return {...d,answer:[d.answer,extra.answerAddition.trim()].filter(Boolean).join('\n\n'),sections:d.sections.map((s:any)=>({...s,body:[s.body,extra.sectionAdditions.find((x:any)=>x.sourceId===s.sourceId)?.body.trim()].filter(Boolean).join('\n\n')}))}
 }
-export async function generateBookDocument(client: Anthropic, model: string, input: {question:string;theme:string;sources:BookSource[]}) {
-  let inputTokens=0,outputTokens=0
+export async function generateBookDocument(client: Anthropic, model: string, input: {question:string;theme:string;sources:BookSource[]}, observe:BookUsageObserver=async()=>{}) {
+  let inputTokens=0,outputTokens=0,callIndex=0
   const request=async(messages:Anthropic.MessageParam[],system=BOOK_SYSTEM,schema=BOOK_SCHEMA)=>{
-    const response=await client.messages.create({model,max_tokens:12000,system,messages,tools:[{name:'submit_book',description:'完成した鑑定書または追記を構造化して提出する。',input_schema:schema}],tool_choice:{type:'tool',name:'submit_book'}})
+    const index=++callIndex
+    await observe({callIndex:index,phase:'started'})
+    let response
+    try { response=await client.messages.create({model,max_tokens:12000,system,messages,tools:[{name:'submit_book',description:'完成した鑑定書または追記を構造化して提出する。',input_schema:schema}],tool_choice:{type:'tool',name:'submit_book'}})
+    } catch(error) {
+      // A timeout is unknown usage, never zero usage. Preserve the provider error category.
+      await observe({callIndex:index,phase:'error',failureCode:bookFailure(error).code}).catch(()=>console.error('Book usage observation unavailable'))
+      throw error
+    }
+    const cache=response.usage as unknown as {cache_creation_input_tokens?:number;cache_read_input_tokens?:number}
+    await observe({callIndex:index,phase:'response',providerModel:response.model,inputTokens:response.usage.input_tokens,outputTokens:response.usage.output_tokens,
+      cacheCreationInputTokens:cache.cache_creation_input_tokens??0,cacheReadInputTokens:cache.cache_read_input_tokens??0})
+
     inputTokens+=response.usage.input_tokens;outputTokens+=response.usage.output_tokens
     if(response.stop_reason!=='tool_use')throw new Error('BOOK_TRUNCATED')
     const blocks=response.content.filter(c=>c.type==='tool_use')

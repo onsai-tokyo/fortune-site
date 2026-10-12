@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import DeviceCheck
 
 struct AIBookStatus: Decodable {
     let enabled: Bool
@@ -12,6 +13,21 @@ struct AIBookStatus: Decodable {
     var premium: Bool? = nil
     var reviewRemaining: Int? = nil
     var trialRemaining: Int? = nil
+    var trialEligible: Bool? = nil
+    var trialPaused: Bool? = nil
+    var trialEnabled: Bool? = nil
+    var trialVerificationPending: Bool? = nil
+    var trialExpiresAt: String? = nil
+    var trialExpiryLabel: String? {
+        guard let trialExpiresAt else { return nil }
+        let parser = ISO8601DateFormatter()
+        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = parser.date(from: trialExpiresAt) else { return nil }
+        let display = DateFormatter(); display.locale = Locale(identifier: "ja_JP"); display.dateFormat = "M月d日 HH:mm"
+        return display.string(from: date)
+    }
+    var canCreateBook: Bool { premium == true || (trialRemaining ?? 0) > 0 }
+    var canTryFreeBook: Bool { (trialRemaining ?? 0) > 0 || trialEligible == true }
     var canPurchaseExtraBook: Bool {
         enabled && premium == true && memberRemaining == 0 && remaining == 0
     }
@@ -26,6 +42,7 @@ struct AIBookStatus: Decodable {
 struct AIBook: Decodable, Identifiable {
     let id: UUID
     let title: String
+    var isTrial: Bool? = nil
     let targetTitle: String
     let theme: String
     let question: String
@@ -123,3 +140,33 @@ final class BookMembershipContinuation: ObservableObject {
     }
     func cancel() { draft = nil; owner = nil; approved = false }
 }
+
+struct TrialDeviceRequest: Codable {
+    let requestId: UUID
+    let token: String
+    @MainActor private static var preparations: [String: Task<TrialDeviceRequest, Error>] = [:]
+    @MainActor static func prepare(key: String, tokenGenerator: (@MainActor @Sendable () async throws -> Data)? = nil) async throws -> TrialDeviceRequest {
+        if let pending = preparations[key] { return try await pending.value }
+        if let data = try KeychainStore.readChecked(account: key) { return try JSONDecoder().decode(Self.self, from: data) }
+        let pending = Task { @MainActor in
+            let data: Data
+            if let tokenGenerator { data = try await tokenGenerator() }
+            else {
+                guard DCDevice.current.isSupported else { throw APIError.invalidResponse }
+                data = try await withCheckedThrowingContinuation { continuation in
+                    DCDevice.current.generateToken { data, error in
+                        if let data { continuation.resume(returning: data) }
+                        else { continuation.resume(throwing: error ?? APIError.invalidResponse) }
+                    }
+                }
+            }
+            let value = Self(requestId: UUID(), token: data.base64EncodedString())
+            try KeychainStore.save(JSONEncoder().encode(value), account: key)
+            return value
+        }
+        preparations[key] = pending
+        defer { preparations.removeValue(forKey: key) }
+        return try await pending.value
+    }
+}
+struct TrialDeviceResponse: Decodable { let state: String }

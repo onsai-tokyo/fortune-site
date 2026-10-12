@@ -130,6 +130,8 @@ try:
     sql(f"update ai_book_grants set expires_at=now()-interval '1 second' where user_id='{uid(7)}' and source='member';")
     trial(7)
     expect(sql(f"select count(*) from ai_book_grants where user_id='{uid(7)}' and source='trial' and not revoked;")=='0','expired member does not receive a new introductory slot')
+    if os.environ.get('BOOKS_TEST_TRIAL')=='1':
+        exec(compile((base/'tests/first_book_free_cases.py').read_text(),str(base/'tests/first_book_free_cases.py'),'exec'))
     print('ALL BOOK DATABASE CHECKS PASSED',flush=True)
 finally:
     if started:command([str(binpath/'pg_ctl'),'-D',str(cluster),'-m','immediate','-w','stop'])

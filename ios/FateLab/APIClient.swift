@@ -247,6 +247,31 @@ struct APIClient {
         return try JSONDecoder().decode(ReadingStatus.self, from: raw)
     }
 
+    // Best-effort, bounded and account-scoped analytics. Never block a purchase or reading.
+    func trackProductEvent(_ event: String, surface: String, auth: AuthStore) {
+        guard let userID = auth.userID else { return }
+        let owner = AccountScope(auth)
+        let key = "product.events.v1." + userID.uuidString
+        var queue = UserDefaults.standard.array(forKey: key) as? [[String: String]] ?? []
+        queue.append(["id": UUID().uuidString, "event": event, "surface": surface,
+                      "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"])
+        UserDefaults.standard.set(Array(queue.suffix(200)), forKey: key)
+        Task {
+            do {
+                let token = try await auth.validAccessToken()
+                try owner.check(auth)
+                let pending = UserDefaults.standard.array(forKey: key) as? [[String: String]] ?? []
+                for item in pending {
+                    try owner.check(auth)
+                    _ = try await data(for: request(path: "/api/product-events", method: "POST", token: token, json: item), auth: auth)
+                    try owner.check(auth)
+                    let current = UserDefaults.standard.array(forKey: key) as? [[String: String]] ?? []
+                    UserDefaults.standard.set(current.filter { $0["id"] != item["id"] }, forKey: key)
+                }
+            } catch { /* Retain the same event IDs for a later event-triggered retry. */ }
+        }
+    }
+
     func bookCall<T: Decodable>(_ type: T.Type, path: String, method: String = "GET", json: Any? = nil, auth: AuthStore, aiConsentVersion: String? = nil) async throws -> T {
         let owner = AccountScope(auth)
         let token = try await auth.validAccessToken()

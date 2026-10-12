@@ -33,12 +33,14 @@
     "apple:reconcile": "node --import tsx src/scripts/reconcileAppleEvents.ts",
     "books:worker": "tsx src/scripts/aiBookWorker.ts",
     "books:review": "tsx src/scripts/reviewAiBook.ts",
-    "test:books": "tsx --test src/lib/aiBooks.test.ts src/routes/aiBooksMembership.test.ts src/lib/aiBookGeneration.test.ts src/lib/aiBookFailure.test.ts",
+    "test:books": "tsx --test src/lib/aiBooks.test.ts src/routes/aiBooksMembership.test.ts src/lib/aiBookGeneration.test.ts src/lib/aiBookFailure.test.ts src/lib/deviceTrial.test.ts src/routes/productEvents.test.ts",
     "test:books:db": "python3 supabase/tests/ai_books.py",
     "test:timeline3": "node --import tsx --test src/lib/timelineContext.test.ts src/lib/report/timelineV3Integration.test.ts src/lib/report/timelineV3/timelineV3.test.ts src/routes/timeline.test.ts",
     "test:timeline3:db": "python3 supabase/tests/timeline_v3.py",
     "test:reading-access": "tsx --test src/lib/readingAccessPolicy.test.ts src/lib/readingCardPurchases.test.ts src/lib/readingCardAccess.test.ts",
-    "test:reading-access:db": "python3 supabase/tests/reading_cards.py"
+    "test:reading-access:db": "python3 supabase/tests/reading_cards.py",
+    "test:books:http": "python3 supabase/tests/books_postgrest.py",
+    "test:books:trial:db": "BOOKS_TEST_TRIAL=1 python3 supabase/tests/ai_books.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

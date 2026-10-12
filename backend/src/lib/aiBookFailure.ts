@@ -5,7 +5,8 @@ export function bookFailure(error: unknown) {
   const message = typeof e?.message === 'string' ? e.message : ''
   let code = 'BOOK_INTERNAL'
   let retryable = false, pause = false
-  if (status===402 || /credit balance|billing|payment required|spend limit|usage limits|monthly spend/i.test(message)) { code='BOOK_PROVIDER_BILLING'; pause=true }
+  if(message==='BOOK_USAGE_UNAVAILABLE') { code='BOOK_USAGE_UNAVAILABLE'; retryable=true }
+  else if (status===402 || /credit balance|billing|payment required|spend limit|usage limits|monthly spend/i.test(message)) { code='BOOK_PROVIDER_BILLING'; pause=true }
   else if (status===401 || status===403) { code='BOOK_PROVIDER_AUTH'; pause=true }
   else if (status===429) { code='BOOK_PROVIDER_LIMIT'; retryable=true }
   else if (status!==undefined && status>=500) { code='BOOK_PROVIDER_UNAVAILABLE'; retryable=true }

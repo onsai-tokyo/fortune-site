@@ -19,6 +19,7 @@ export function PrivacyPage() {
         </header>
 
         <div className="glass-card p-8 space-y-8">
+          <section><h2 className="text-white font-semibold text-lg mb-3">サービスの利用分析</h2><p className="text-white/70 text-sm">サービス改善のため、アカウント識別子に紐づけて登録完了、年表の表示、鑑定作成ボタンの操作、会員案内の表示、購入・無料枠の利用状況、アプリの版を記録します。この利用分析に相談文、生年月日、鑑定本文は含めず、広告目的の追跡や外部AIへの送信には使用しません。退会時には分析記録とアカウントの紐づけを外します。</p></section>
           <section><h2 className="text-white font-semibold text-lg mb-3">初回無料の重複取得防止</h2><p className="text-white/70 text-sm">初回無料の重複取得を防ぐため、確認済みメールアドレスから秘密値を用いて作成した照合用の値と付与日時を、無料体験を提供する期間中、退会後も保持します。この記録には元のメールアドレス、相談文、命式を保存せず、広告やAIへの送信には使用しません。</p></section>
 
           <section>

@@ -38,11 +38,22 @@ struct AIBookComposeView: View {
                     Spacer()
                     if let status, status.enabled { Text("残り \(status.remaining)通").fontWeight(.semibold).monospacedDigit() }
                 }.font(.caption).foregroundStyle(FateTheme.muted)
+                if (status?.trialRemaining ?? 0) > 0 {
+                    Text("最初の1通は無料です。2通目からは会員プランで続けて相談できます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                    if let expiry = status?.trialExpiryLabel { Text("無料枠の有効期限：\(expiry)").font(.caption2).foregroundStyle(FateTheme.muted) }
+                } else if status?.trialVerificationPending == true {
+                    Text("無料体験の確認が保留になっています。無料枠はまだ付与されていません。お問い合わせから確認をご依頼ください。").font(.caption).foregroundStyle(FateTheme.muted)
+                } else if status?.trialPaused == true {
+                    Text("今月の無料体験の受付は終了しました。会員プランで続けて相談できます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                }
                 AISharingNoticeView()
                 Button {
                     if previewMode { preparing = true; return }
+                    APIClient.shared.trackProductEvent("book_create_tapped", surface: "book", auth: auth)
                     editingQuestion = false
-                    if status?.premium == false {
+                    if status?.premium == false && status?.canTryFreeBook != true {
                         openPurchaseOptions()
                     } else {
                         preparing = true
@@ -51,7 +62,7 @@ struct AIBookComposeView: View {
                 } label: {
                     HStack(spacing: 10) {
                         if working { ProgressView().tint(.white) } else { Image(systemName: "sparkles") }
-                        Text(AISharingConsent.actionTitle)
+                        Text((status?.trialRemaining ?? 0) > 0 ? "最初の1通は無料｜鑑定する" : AISharingConsent.actionTitle)
                     }
                 }.buttonStyle(FLPrimaryButtonStyle()).disabled(!valid || working || status?.enabled != true)
                     .accessibilityIdentifier("book.create")
@@ -181,7 +192,17 @@ struct AIBookComposeView: View {
                     }.disabled(working || pending != nil)
                     if let pending {
                         Text("受付状況を確認しています。重複して利用枠を消費することはありません。").font(.footnote).foregroundStyle(FateTheme.muted)
-                        AISharingNoticeView()
+                        if (status?.trialRemaining ?? 0) > 0 {
+                    Text("最初の1通は無料です。2通目からは会員プランで続けて相談できます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                    if let expiry = status?.trialExpiryLabel { Text("無料枠の有効期限：\(expiry)").font(.caption2).foregroundStyle(FateTheme.muted) }
+                } else if status?.trialVerificationPending == true {
+                    Text("無料体験の確認が保留になっています。無料枠はまだ付与されていません。お問い合わせから確認をご依頼ください。").font(.caption).foregroundStyle(FateTheme.muted)
+                } else if status?.trialPaused == true {
+                    Text("今月の無料体験の受付は終了しました。会員プランで続けて相談できます。")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
+                }
+                AISharingNoticeView()
                         Button("受付確認・再送する") { consentGate.request(auth: auth) { Task { await submit(existing: pending) } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working)
                         Button("受付がなければ入力に戻る") { Task { await releaseUnsubmitted() } }.disabled(working)
                     }
@@ -243,6 +264,9 @@ struct AIBookComposeView: View {
                 sourceID = readings.first?.id
                 question = "仕事で頼まれごとを引き受けすぎてしまいます。自分のペースも大切にしながら、周囲と協力していくにはどうしたらよいでしょうか。"
                 status = AIBookStatus(enabled: true, monthlyCredits: 3, remaining: 3, memberRemaining: 3, purchasedRemaining: 0, memberExpiresAt: nil, productId: "preview", premium: false)
+                if ProcessInfo.processInfo.arguments.contains("--trial141-preview") {
+                    status = AIBookStatus(enabled: true, monthlyCredits: 3, remaining: 1, memberRemaining: 0, purchasedRemaining: 0, memberExpiresAt: nil, productId: "preview", premium: false, trialRemaining: 1, trialEnabled: true, trialExpiresAt: "2026-11-11T12:00:00.000Z")
+                }
                 return
             }
 #endif
@@ -283,7 +307,7 @@ struct AIBookComposeView: View {
         guard owner.isCurrent(auth) else { return }
         working = false
         guard refreshed else { return }
-        if status?.premium == false {
+        if status?.canCreateBook != true {
             do { try await validate(); try owner.check(auth) }
             catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return }
             openPurchaseOptions()
@@ -386,6 +410,29 @@ struct AIBookComposeView: View {
             let updated = try await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth)
             try owner.check(auth)
             status = updated
+            if updated.trialEligible == true {
+                do {
+                    let key = AccountStorage.key("book.trial-device.v1", userID: auth.userID)
+                    let trial = try await TrialDeviceRequest.prepare(key: key)
+                    try owner.check(auth)
+                    let result = try await APIClient.shared.bookCall(TrialDeviceResponse.self, path: "/trial/device", method: "POST",
+                        json: ["requestId": trial.requestId.uuidString, "token": trial.token], auth: auth)
+                    try owner.check(auth)
+                    if result.state == "granted" || result.state == "denied" { try? KeychainStore.remove(account: key) }
+                    let refreshedStatus = try await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth)
+                    try owner.check(auth)
+                    status = refreshedStatus
+                } catch {
+                    guard owner.isCurrent(auth) else { return false }
+                    if let latest = try? await APIClient.shared.bookCall(AIBookStatus.self, path: "/status", auth: auth) {
+                        guard owner.isCurrent(auth) else { return false }
+                        status = latest
+                    }
+                    self.error = status?.trialVerificationPending == true
+                        ? "無料体験の確認が保留になっています。お問い合わせから確認をご依頼ください。"
+                        : "無料体験の確認を完了できませんでした。時間をおいて再確認するか、会員プランをご利用ください。"
+                }
+            }
             Task { await purchases.sync(auth: auth) }
             return true
         } catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return false }
@@ -439,7 +486,7 @@ struct AIBookComposeView: View {
             if let existing { order = existing }
             else {
                 guard await refresh(), owner.isCurrent(auth) else { return }
-                guard status?.premium == true else { openPurchaseOptions(); return }
+                guard status?.canCreateBook == true else { openPurchaseOptions(); return }
                 guard (status?.remaining ?? 0) > 0 else { openPurchaseOptions(); return }
                 guard let sourceID else { throw APIError.invalidResponse }
                 order = draft ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID)

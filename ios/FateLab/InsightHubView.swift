@@ -975,6 +975,7 @@ struct FlowTags: View {
 }
 
 struct SelfTimingList: View {
+    @State private var measuredTimeline = false
     @EnvironmentObject private var auth: AuthStore
     let cards: [ReadingCard]
     let conversationID: UUID?
@@ -1019,7 +1020,16 @@ struct SelfTimingList: View {
                     ForEach(eventReadings.filter { $0.year == card.calendarYear }) { reading in EventReadingView(reading: reading) }
                 }
             }
-        }.task(id: AccountScope(auth)) { await refreshTimeline() }
+        }.onAppear { measureTimeline() }
+        .onChange(of: !visibleCards.isEmpty) { _, _ in measureTimeline() }
+        .onDisappear { measuredTimeline = false }
+        .task(id: AccountScope(auth)) { await refreshTimeline() }
+    }
+
+    private func measureTimeline() {
+        guard !visibleCards.isEmpty, !measuredTimeline else { return }
+        measuredTimeline = true
+        APIClient.shared.trackProductEvent("timeline_viewed", surface: "self", auth: auth)
     }
 
     private func refreshTimeline(forceCards: Bool = false) async {
@@ -1062,6 +1072,13 @@ struct SelfTimingList: View {
 }
 
 struct CoupleTimingList: View {
+    @State private var measuredTimeline = false
+    private var timelineVisible: Bool { history?.entries.isEmpty == false || (error != nil && !cards.isEmpty) }
+    private func measureTimeline() {
+        guard timelineVisible, !measuredTimeline else { return }
+        measuredTimeline = true
+        APIClient.shared.trackProductEvent("timeline_viewed", surface: "couple", auth: auth)
+    }
     @EnvironmentObject private var auth: AuthStore
     let cards: [ReadingCard]
     let conversationID: UUID?
@@ -1134,7 +1151,10 @@ struct CoupleTimingList: View {
                     }
                 }
             }
-        }.task(id: conversationID) { await load() }
+        }.onAppear { measureTimeline() }
+        .onChange(of: timelineVisible) { _, _ in measureTimeline() }
+        .onDisappear { measuredTimeline = false }
+        .task(id: conversationID) { await load() }
     }
     @ViewBuilder private func entries(_ values: [CoupleAllYearsHistory.Entry]) -> some View {
         ForEach(values, id: \.year) { entry in

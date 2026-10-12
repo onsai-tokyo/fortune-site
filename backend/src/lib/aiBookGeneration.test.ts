@@ -63,3 +63,20 @@ test('a long valid reading with mismatched highlights is delivered without anoth
  assert.equal(f.count(),1);assert.deepEqual(out.document.highlights,[])
  assert.equal(out.document.answer,d.answer);assert.deepEqual(out.document.sections,d.sections)
 })
+
+test('usage records each response before validation failure, including truncation',async()=>{
+ const events:any[]=[];const f=fake([draft()],'max_tokens')
+ await assert.rejects(generateBookDocument(f.client,'configured-model',{question:text,theme:'仕事',sources},async e=>{events.push(e)}),/BOOK_TRUNCATED/)
+ assert.deepEqual(events.map(e=>[e.callIndex,e.phase]),[[1,'started'],[1,'response']])
+ assert.equal(events[1].inputTokens,10);assert.equal(events[1].outputTokens,20)
+})
+test('failed second request keeps first response usage and marks timeout usage unknown',async()=>{
+ const events:any[]=[];let n=0;const f=fake([draft()]);const client={messages:{create:async()=>{if(n++===0)return f.client.messages.create({} as any);const e=new Error('not logged');e.name='APIConnectionTimeoutError';throw e}}} as unknown as Anthropic
+ await assert.rejects(generateBookDocument(client,'configured-model',{question:text,theme:'仕事',sources},async e=>{events.push(e)}))
+ assert.deepEqual(events.map(e=>e.phase),['started','response','started','error'])
+ assert.equal(events[3].inputTokens,undefined);assert.equal(events[1].inputTokens,10)
+})
+test('unavailable durable metering prevents a new provider call',async()=>{
+ const f=fake([draft()]);await assert.rejects(generateBookDocument(f.client,'configured-model',{question:text,theme:'仕事',sources},async()=>{throw new Error('BOOK_USAGE_UNAVAILABLE')}))
+ assert.equal(f.count(),0)
+})

@@ -1,3 +1,4 @@
+import {claimDeviceTrial,DeviceTrialError,deviceCheckConfigured} from '../lib/deviceTrial.js'
 import { hasPremiumAccess, PremiumAccessUnavailable } from '../lib/premium.js'
 import { requireAIConsent } from '../middleware/aiConsent.js'
 import {readingCardProjector} from '../lib/readingCardAccess.js'
@@ -10,11 +11,11 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { BookError, BOOK_PRODUCT, bookRPC, bookSources, uuidPattern, validateBookQuestion } from '../lib/aiBooks.js'
 export const aiBooksRouter = Router()
 aiBooksRouter.use(requireAuth)
-const projection = 'id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,metadata'
+const projection = 'id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,metadata,funding_source'
 export function publicBook(b: Record<string, unknown>) {
   const code=(b.metadata as {failure?:{code?:unknown}}|null)?.failure?.code
   const failureCode=b.state==='failed' && typeof code==='string' && /^BOOK_[A-Z_]{1,60}$/.test(code)?code:null
-  return {failureCode,id:b.id,title:b.title,targetTitle:b.target_title,theme:b.theme,question:b.question??'',state:b.state,createdAt:b.created_at,deliveredAt:b.delivered_at,
+  return {isTrial:b.funding_source==='trial',failureCode,id:b.id,title:b.title,targetTitle:b.target_title,theme:b.theme,question:b.question??'',state:b.state,createdAt:b.created_at,deliveredAt:b.delivered_at,
     document:b.state==='delivered'?(b.document??null):null,sources:b.state==='delivered'?(b.source_snapshot??[]):[]}
 }
 function fail(res: Response,error: unknown) {
@@ -22,10 +23,14 @@ function fail(res: Response,error: unknown) {
   res.status(e.status).json({code:e.code,error:e.message})
 }
 async function settings() {
-  const {data,error} = await getSupabaseAdmin().from('ai_book_settings').select('enabled,monthly_credits').eq('id',true).single()
+  const {data,error} = await getSupabaseAdmin().from('ai_book_settings').select('*').eq('id',true).single()
   if (error) throw error
   return data
 }
+aiBooksRouter.post('/trial/device',async(req:AuthRequest,res)=>{
+  try { if(!deviceCheckConfigured())throw new DeviceTrialError('BOOK_TRIAL_UNAVAILABLE');res.json(await claimDeviceTrial(req.userId!,req.body)) }
+  catch(e) { const code=e instanceof DeviceTrialError?e.code:'BOOK_TRIAL_UNAVAILABLE';res.status(code==='BOOK_TRIAL_INPUT'?422:503).json({code,error:code==='BOOK_TRIAL_VERIFICATION_PENDING'?'無料体験の確認が保留になっています。無料枠はまだ付与されていません。お問い合わせから確認をご依頼ください。':'無料体験の確認を完了できませんでした。時間をおいて再確認するか、会員プランをご利用ください。'}) }
+})
 aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
   res.setHeader('Cache-Control','private, no-store')
   try {
@@ -33,26 +38,38 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
     const premium = await hasPremiumAccess(req.userId!)
     if (!config.enabled) { res.json({enabled:false,premium,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,trialRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
-    // New books require membership. Retain legacy trial history, but never
-    // issue an introductory credit to a nonmember from the status endpoint.
+    // Only the DeviceCheck reservation endpoint can issue a new trial grant.
     if (premium) await bookRPC('ai_book_sync_trial',{p_user:req.userId!})
-    const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,quantity,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
+    const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,transaction_id,quantity,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
     if (error) throw error
     let monthlyCredits=config.monthly_credits
-    let memberRemaining=0,purchasedRemaining=0,reviewRemaining=0,trialRemaining=0; let expiry:string|null=null
+    let memberRemaining=0,purchasedRemaining=0,reviewRemaining=0,trialRemaining=0; let expiry:string|null=null; let trialExpiry:string|null=null
     for(const grant of data??[]) {
       if(Date.parse(grant.starts_at)>Date.now()) continue
       if(grant.source==='member' && grant.expires_at && Date.parse(grant.expires_at)>Date.now()) monthlyCredits=grant.quantity
       for(const credit of grant.ai_book_credits) {
-        const end = grant.expires_at===null ? Infinity : Math.max(Date.parse(grant.expires_at),credit.recovery_until?Date.parse(credit.recovery_until):0)
+        const end = grant.source==='trial' ? Date.parse(grant.expires_at) : grant.expires_at===null ? Infinity : Math.max(Date.parse(grant.expires_at),credit.recovery_until?Date.parse(credit.recovery_until):0)
         if(credit.consumed_by || end<=Date.now()) continue
         if(grant.source==='member') { memberRemaining++; if(!expiry || Date.parse(expiry)>end) expiry=new Date(end).toISOString() }
-        else if(grant.source==='trial') continue
+        else if(grant.source==='trial') { if(config.trial_enabled===true && grant.transaction_id?.startsWith('trial:device:')) {trialRemaining++;trialExpiry=new Date(end).toISOString();} }
         else if(grant.source==='review') reviewRemaining++
         else purchasedRemaining++
       }
     }
-    res.json({enabled:true,premium,monthlyCredits,remaining:premium?memberRemaining+purchasedRemaining+reviewRemaining:0,memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
+    let trialEligible=false,trialPaused=false,trialVerificationPending=false
+    if(config.trial_enabled===true) {
+      const pending=await getSupabaseAdmin().from('ai_book_device_claims').select('id').eq('user_id',req.userId!).eq('state','indeterminate').maybeSingle()
+      if(pending.error)throw pending.error
+      trialVerificationPending=!!pending.data
+      const eligibility=await getSupabaseAdmin().rpc('ai_book_trial_eligible',{p_user:req.userId!})
+      if(eligibility.error)throw eligibility.error
+      trialEligible=eligibility.data===true && deviceCheckConfigured()
+      const month=new Date(Date.now()+9*3600000).toISOString().slice(0,7)+'-01'
+      const count=await getSupabaseAdmin().from('ai_book_trial_orders').select('book_id',{count:'exact',head:true}).eq('month_jst',month)
+      if(count.error)throw count.error
+      trialPaused=(count.count??0)>=config.trial_monthly_cap
+    }
+    res.json({enabled:true,premium,monthlyCredits,remaining:(premium?memberRemaining+purchasedRemaining+reviewRemaining:0)+(trialPaused?0:trialRemaining),memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining:trialPaused?0:trialRemaining,trialEligible:trialEligible&&!trialPaused,trialPaused,trialVerificationPending,trialEnabled:config.trial_enabled===true,trialExpiresAt:trialExpiry,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
   } catch(e) { fail(res,e) }
 })
 aiBooksRouter.get('/',async(req:AuthRequest,res)=>{
@@ -119,14 +136,14 @@ aiBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
   try {
     if(!uuidPattern.test(req.body?.operationId??'')) throw new BookError('BOOK_INPUT',422,'受付番号が必要です。')
     // Read retries before source lookup: source deletion must not strand an accepted order.
-    const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id,metadata').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
+    const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id,metadata,funding_source').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
     if(error) throw error
     if(old) {
       const oldFocus=Array.isArray(old.source_snapshot)?old.source_snapshot.find((s:any)=>s.focused===true)?.id:undefined
       if(oldFocus!==req.body?.focusCardId || old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
       res.json({book:publicBook(old)}); return
     }
-    if (!(await hasPremiumAccess(req.userId!))) throw new BookError('BOOK_MEMBERSHIP_REQUIRED',402,'鑑定書の作成には会員登録が必要です。入力した相談はそのままに、会員プランを選んでください。')
+    if (!(await hasPremiumAccess(req.userId!)) && (await settings()).trial_enabled!==true) throw new BookError('BOOK_MEMBERSHIP_REQUIRED',402,'鑑定書の作成には会員登録が必要です。入力した相談はそのままに、会員プランを選んでください。')
     const {question,sources,row}=await prepare(req)
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     await bookRPC('ai_book_sync_trial',{p_user:req.userId!})
