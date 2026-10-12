@@ -31,6 +31,6 @@ Existing build136 failures can be retried through “購入済みの会員情報
 - 19 targeted native tests passed (PurchaseDeliveryTests, BookMembershipContinuationTests, Feedback134Tests).
 - New regressions cover denied automatic verification followed by explicit recovery, new operation identity, wrong-account isolation and concurrent delivery settlement.
 - Simulator: unchecked consent disables Continue; checking enables it. Compact-sheet screenshot saved under outputs/feedback138/consent138.png.
-- Release archive/upload status is recorded in outputs/build138-archive.log and outputs/build138-upload.log.
+- Release archive succeeded; App Store Connect upload succeeded at 2026-10-12 17:58 JST. Logs: outputs/build138-archive.log and outputs/build138-upload.log. Apple processing/test distribution is checked separately.
 
 No backend deployment is required for these changes.
