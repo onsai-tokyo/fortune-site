@@ -185,6 +185,16 @@ final class BookReadingPresentationTests: XCTestCase {
 
 @MainActor
 final class BookMembershipContinuationTests: XCTestCase {
+    func testPurchaseDraftRoundTripPreservesQuestionAndSource() throws {
+        let draft = AIBookComposerDraft(sourceID: UUID(), theme: "恋愛・関係", question: "改行も含めて残したい相談文です。\n直前の入力内容をそのまま復元します。", focusCardID: "couple", focusTitle: "ふたりについて")
+        let restored = try JSONDecoder().decode(AIBookComposerDraft.self, from: JSONEncoder().encode(draft))
+        XCTAssertEqual(restored.question, draft.question)
+        XCTAssertEqual(restored.sourceID, draft.sourceID)
+        XCTAssertEqual(restored.theme, draft.theme)
+        XCTAssertEqual(restored.focusCardID, draft.focusCardID)
+        XCTAssertEqual(restored.focusTitle, draft.focusTitle)
+        XCTAssertNotEqual(AccountStorage.key("book.purchase-draft.v1", userID: UUID()), AccountStorage.key("book.purchase-draft.v1", userID: UUID()))
+    }
     private let owner = AccountScope(userID: UUID(), epoch: 1)
     private func draft() -> PendingAIBook { PendingAIBook(operationID: UUID(), sourceID: UUID(), theme: "仕事", question: "入力済みの相談内容を保持して購入後に一度だけ作成する") }
 

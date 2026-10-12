@@ -33,7 +33,9 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
     const premium = await hasPremiumAccess(req.userId!)
     if (!config.enabled) { res.json({enabled:false,premium,monthlyCredits:config.monthly_credits,remaining:0,memberRemaining:0,purchasedRemaining:0,reviewRemaining:0,trialRemaining:0,memberExpiresAt:null,productId:BOOK_PRODUCT}); return }
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
-    await bookRPC('ai_book_sync_trial',{p_user:req.userId!})
+    // New books require membership. Retain legacy trial history, but never
+    // issue an introductory credit to a nonmember from the status endpoint.
+    if (premium) await bookRPC('ai_book_sync_trial',{p_user:req.userId!})
     const {data,error} = await getSupabaseAdmin().from('ai_book_grants').select('source,quantity,starts_at,expires_at,ai_book_credits(consumed_by,recovery_until)').eq('user_id',req.userId!).eq('revoked',false)
     if (error) throw error
     let monthlyCredits=config.monthly_credits
@@ -45,12 +47,12 @@ aiBooksRouter.get('/status',async(req:AuthRequest,res)=>{
         const end = grant.expires_at===null ? Infinity : Math.max(Date.parse(grant.expires_at),credit.recovery_until?Date.parse(credit.recovery_until):0)
         if(credit.consumed_by || end<=Date.now()) continue
         if(grant.source==='member') { memberRemaining++; if(!expiry || Date.parse(expiry)>end) expiry=new Date(end).toISOString() }
-        else if(grant.source==='trial') trialRemaining++
+        else if(grant.source==='trial') continue
         else if(grant.source==='review') reviewRemaining++
         else purchasedRemaining++
       }
     }
-    res.json({enabled:true,premium,monthlyCredits,remaining:memberRemaining+purchasedRemaining+reviewRemaining+trialRemaining,memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
+    res.json({enabled:true,premium,monthlyCredits,remaining:premium?memberRemaining+purchasedRemaining+reviewRemaining:0,memberRemaining,purchasedRemaining,reviewRemaining,trialRemaining,memberExpiresAt:expiry,productId:BOOK_PRODUCT})
   } catch(e) { fail(res,e) }
 })
 aiBooksRouter.get('/',async(req:AuthRequest,res)=>{
@@ -124,6 +126,7 @@ aiBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
       if(oldFocus!==req.body?.focusCardId || old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
       res.json({book:publicBook(old)}); return
     }
+    if (!(await hasPremiumAccess(req.userId!))) throw new BookError('BOOK_MEMBERSHIP_REQUIRED',402,'鑑定書の作成には会員登録が必要です。入力した相談はそのままに、会員プランを選んでください。')
     const {question,sources,row}=await prepare(req)
     await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     await bookRPC('ai_book_sync_trial',{p_user:req.userId!})

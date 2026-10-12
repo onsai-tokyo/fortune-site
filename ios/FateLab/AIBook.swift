@@ -87,6 +87,16 @@ struct PendingAIBook: Codable {
     }
 }
 
+/// Purchase-screen draft; separate from a submitted request so restoring it
+/// never submits or consumes a credit by itself.
+struct AIBookComposerDraft: Codable {
+    let sourceID: UUID?
+    let theme: String
+    let question: String
+    let focusCardID: String?
+    let focusTitle: String?
+}
+
 /// A purchase dismissal may resume only the exact draft and account that requested it.
 @MainActor
 final class BookMembershipContinuation: ObservableObject {

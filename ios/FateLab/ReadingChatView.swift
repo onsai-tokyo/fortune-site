@@ -533,7 +533,7 @@ struct MembershipDetailsView: View {
             }.membershipFeature()
             VStack(alignment: .leading, spacing: 12) {
             Label("お届けした鑑定書は、解約後も本棚に", systemImage: "books.vertical")
-            Text("初回無料・単品購入・会員枠で作成した鑑定書は、解約後も読み返せます。")
+            Text("作成済みの鑑定書は、解約後も読み返せます。")
                 .font(.footnote).foregroundStyle(FateTheme.muted)
             }.membershipFeature()
             Text(effectiveAnnual ? "年間プランは1年ごとの自動更新・一括払いです。料金はAppleの確認画面でもご確認いただけます。" : "月額プランは1ヶ月ごとの自動更新です。料金は購入前のAppleの確認画面でもご確認いただけます。")

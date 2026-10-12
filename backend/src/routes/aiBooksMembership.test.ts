@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import {aiBooksRouter} from './aiBooks.js'
 import {AI_TERMS_CONSENT_VERSION} from '../middleware/aiConsent.js'
 
-test('nonmembers can spend credits, zero balance cannot order, and accepted orders remain recoverable', async () => {
+test('new orders require membership even with credits; accepted orders remain recoverable after expiry', async () => {
  const originalFetch=globalThis.fetch
  const keys=['SUPABASE_URL','SUPABASE_SERVICE_KEY','SUPABASE_JWT_SECRET','READING_CARD_PURCHASES'] as const
  const saved=Object.fromEntries(keys.map(k=>[k,process.env[k]]))
@@ -35,9 +35,12 @@ test('nonmembers can spend credits, zero balance cannot order, and accepted orde
  const call=(path='',body?:unknown)=>originalFetch(`http://127.0.0.1:${port}/api/books${path}`,{method:body?'POST':'GET',headers:{authorization:`Bearer ${token}`,'content-type':'application/json','X-FateLab-AI-Consent':AI_TERMS_CONSENT_VERSION},body:body?JSON.stringify(body):undefined})
  const payload={operationId:op,sourceId:source,theme:'仕事',question}
  try {
-  const status=await(await call('/status')).json();assert.equal(status.premium,false);assert.equal(status.remaining,1);assert.equal(status.trialRemaining,1);assert.equal(status.purchasedRemaining,0)
+  const status=await(await call('/status')).json();assert.equal(status.premium,false);assert.equal(status.remaining,0);assert.equal(status.trialRemaining,0);assert.equal(status.purchasedRemaining,0)
   calls.length=0
-  let response=await call('',payload);assert.equal(response.status,402);assert.equal((await response.json()).code,'BOOK_NO_CREDITS');assert.equal(orders,0)
+  let response=await call('',payload);assert.equal(response.status,402);assert.equal((await response.json()).code,'BOOK_MEMBERSHIP_REQUIRED');assert.equal(orders,0)
+  credits=1;response=await call('',payload);assert.equal(response.status,402);assert.equal(credits,1);assert.equal(orders,0)
+  unavailable=true;response=await call('',payload);assert.equal(response.status,503);assert.equal(orders,0);unavailable=false
+  premium=true;credits=0;response=await call('',payload);assert.equal(response.status,402);assert.equal((await response.json()).code,'BOOK_NO_CREDITS')
   credits=1;response=await call('',payload);assert.equal(response.status,201,JSON.stringify(await response.json()));assert.equal(orders,1);assert.equal(credits,0)
   premium=false;response=await call('',payload);assert.equal(response.status,200);assert.equal(orders,1,'accepted retry must not consume another credit')
   response=await call('',{...payload,question:question+'変更'});assert.equal(response.status,409)

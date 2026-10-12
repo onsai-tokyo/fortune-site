@@ -29,6 +29,7 @@ struct AIBookComposeView: View {
     private let themes = ["恋愛・関係", "仕事", "人間関係", "時期の判断", "その他"]
     private var valid: Bool { !recoveryBlocked && sourceID != nil && (20...400).contains(question.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count) }
     private var pendingKey: String { AccountStorage.key("book.pending.v1", userID: auth.userID) }
+    private var composerDraftKey: String { AccountStorage.key("book.purchase-draft.v1", userID: auth.userID) }
     @ViewBuilder private var creationActions: some View {
         if !preparing && accepted == nil && pending == nil {
             VStack(spacing: 10) {
@@ -41,7 +42,9 @@ struct AIBookComposeView: View {
                 Button {
                     if previewMode { preparing = true; return }
                     editingQuestion = false
-                    consentGate.request(auth: auth) {
+                    if status?.premium == false {
+                        openPurchaseOptions()
+                    } else {
                         preparing = true
                         Task { await beginCreation() }
                     }
@@ -63,8 +66,11 @@ struct AIBookComposeView: View {
                         .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                     Button("会員プランを見る") {
                         editingQuestion = false
-                        membershipContinuation.cancel()
-                        showMembership = true
+                        do {
+                            try persistComposerDraft()
+                            membershipContinuation.cancel()
+                            showMembership = true
+                        } catch { self.error = userFacingErrorMessage(error) }
                     }.font(.subheadline).foregroundStyle(FateTheme.ink)
                         .frame(maxWidth: .infinity, minHeight: 36)
                         .accessibilityIdentifier("book.membership")
@@ -209,6 +215,7 @@ struct AIBookComposeView: View {
         }) { NavigationStack { purchaseOptions } }
         .sheet(isPresented: $showMembership, onDismiss: {
             guard let draft = membershipContinuation.consume(owner: AccountScope(auth)) else { return }
+            sourceID = draft.sourceID; theme = draft.theme; question = draft.question; focusCardID = draft.focusCardID
             Task { await submit(existing: pending?.operationID == draft.operationID ? draft : nil, draft: draft) }
         }) {
             PaywallSheet(draftQuestion: question, startsBookAfterPurchase: membershipContinuation.hasPendingDraft) {
@@ -247,6 +254,10 @@ struct AIBookComposeView: View {
                     if let data = try KeychainStore.readChecked(account: pendingKey) {
                         let saved = try JSONDecoder().decode(PendingAIBook.self, from: data)
                         pending = saved; sourceID = saved.sourceID; theme = saved.theme; question = saved.question; focusCardID = saved.focusCardID
+                    } else if let data = try KeychainStore.readChecked(account: composerDraftKey) {
+                        let saved = try JSONDecoder().decode(AIBookComposerDraft.self, from: data)
+                        sourceID = saved.sourceID; theme = saved.theme; question = saved.question
+                        focusCardID = saved.focusCardID; focusTitle = saved.focusTitle
                     }
                 } catch { recoveryBlocked = true; self.error = "受付情報を読み込めませんでした。再購入せず、本棚をご確認ください。" }
                 if pending == nil, !recoveryBlocked, isTab, let draft = tabRouter.bookDraft {
@@ -272,13 +283,38 @@ struct AIBookComposeView: View {
         guard owner.isCurrent(auth) else { return }
         working = false
         guard refreshed else { return }
-        if (status?.remaining ?? 0) > 0 {
+        if status?.premium == false {
+            do { try await validate(); try owner.check(auth) }
+            catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return }
+            openPurchaseOptions()
+        } else if (status?.remaining ?? 0) > 0 {
             await submit()
         } else {
             do { try await validate(); try owner.check(auth) }
             catch { if owner.isCurrent(auth) { self.error = userFacingErrorMessage(error) }; return }
-            showPlans = true
+            openPurchaseOptions()
         }
+    }
+
+    private func persistComposerDraft() throws {
+        guard auth.userID != nil else { throw APIError.invalidResponse }
+        let saved = AIBookComposerDraft(sourceID: sourceID, theme: theme, question: question,
+                                       focusCardID: focusCardID, focusTitle: focusTitle)
+        try KeychainStore.save(JSONEncoder().encode(saved), account: composerDraftKey)
+    }
+
+    private func openPurchaseOptions() {
+        do {
+            try persistComposerDraft()
+            if status?.premium == false, let sourceID {
+                membershipContinuation.prepare(pending ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme,
+                    question: question, focusCardID: focusCardID), owner: AccountScope(auth))
+                showMembership = true
+            } else {
+                showPlans = true
+            }
+        }
+        catch { self.error = userFacingErrorMessage(error) }
     }
 
     private func trackAccepted() async {
@@ -302,7 +338,7 @@ struct AIBookComposeView: View {
     private var purchaseOptions: some View {
         ScrollView { VStack(alignment: .leading, spacing: 22) {
             Text("一冊を、あなたの本棚に。").font(FateType.screenTitle)
-            Text("初回1通無料。続けて相談するときは、1通ずつの購入か月額プランを選べます。購入後は入力した相談の作成を開始します。").font(.subheadline).foregroundStyle(FateTheme.muted)
+            Text("会員の利用枠を使い切った場合は、1通分を追加購入できます。購入後は入力した相談の作成を開始します。").font(.subheadline).foregroundStyle(FateTheme.muted)
             if let product = purchases.bookProduct {
                 Button("鑑定書1通分 · \(product.displayPrice)") { Task { if await buySingle() { resumeAfterPlan = true; showPlans = false } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
             } else { Button("料金情報を読み込む") { Task { await purchases.load() } }.buttonStyle(FLPrimaryButtonStyle()) }
@@ -392,7 +428,8 @@ struct AIBookComposeView: View {
             if let existing { order = existing }
             else {
                 guard await refresh(), owner.isCurrent(auth) else { return }
-                guard (status?.remaining ?? 0) > 0 else { showPlans = true; return }
+                guard status?.premium == true else { openPurchaseOptions(); return }
+                guard (status?.remaining ?? 0) > 0 else { openPurchaseOptions(); return }
                 guard let sourceID else { throw APIError.invalidResponse }
                 order = draft ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID)
                 try await validate(order.body); try owner.check(auth)
@@ -405,13 +442,15 @@ struct AIBookComposeView: View {
             // Remove only after an authoritative server acknowledgement.
             try KeychainStore.remove(account: key)
             pending = nil; accepted = book
+            // A stale draft must not reappear after a successful submission.
+            try? KeychainStore.remove(account: composerDraftKey)
         } catch {
             guard owner.isCurrent(auth) else { return }
             self.error = userFacingErrorMessage(error)
             if case APIError.paymentRequired = error {
                 let refreshed = await refresh()
-                if refreshed, owner.isCurrent(auth), (status?.remaining ?? 0) == 0 {
-                    showPlans = true
+                if refreshed, owner.isCurrent(auth), status?.premium != true || (status?.remaining ?? 0) == 0 {
+                    openPurchaseOptions()
                 }
             }
         }
