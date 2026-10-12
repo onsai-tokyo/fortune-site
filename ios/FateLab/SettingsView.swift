@@ -135,7 +135,8 @@ struct SettingsView: View {
                         Button("ログインしてプランを確認") { AuthPresentation.shared.isPresented = true }
                             .buttonStyle(FLPrimaryButtonStyle())
                     }
-                    if !purchases.needsMembershipRestore { StorePurchasePrice(product: purchases.product) }
+                    Text("月額 ¥1,980・毎月3通 ／ 年額 ¥12,000・毎月5通（日本価格）")
+                        .font(.caption).foregroundStyle(FateTheme.muted)
                 }.padding(20)
             }
             if auth.session != nil && AppConfig.storeKitEnabled && !purchases.needsMembershipRestore {

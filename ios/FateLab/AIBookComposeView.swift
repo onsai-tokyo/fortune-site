@@ -343,11 +343,12 @@ struct AIBookComposeView: View {
         ScrollView { VStack(alignment: .leading, spacing: 22) {
             Text("鑑定書を1通追加").font(FateType.screenTitle)
             Text("会員の利用枠を使い切った場合は、1通分を追加購入できます。購入後は入力した相談の作成を開始します。").font(.subheadline).foregroundStyle(FateTheme.muted)
-            if let product = purchases.bookProduct {
-                Button("鑑定書1通分 · \(product.displayPrice)") { Task { if await buySingle() { resumeAfterPlan = true; showPlans = false } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
-            } else { Button("料金情報を読み込む") { Task { await purchases.load() } }.buttonStyle(FLPrimaryButtonStyle()) }
+            if status?.canPurchaseExtraBook == true, let product = purchases.bookProduct {
+                Button("鑑定書1通を追加 · ¥980（日本価格）") { Task { if await buySingle() { resumeAfterPlan = true; showPlans = false } } }.buttonStyle(FLPrimaryButtonStyle()).disabled(working || purchases.isWorking || purchases.isSyncing)
+                StorePurchasePrice(product: product)
+            } else if status?.canPurchaseExtraBook == true { Button("料金情報を読み込む") { Task { await purchases.load() } }.buttonStyle(FLPrimaryButtonStyle()) }
             if status?.premium != true {
-                Button("月額会員になる · 毎月3通") {
+                Button("月額・年間プランを選ぶ") {
                     guard let sourceID else { return }
                     membershipContinuation.prepare(pending ?? PendingAIBook(operationID: UUID(), sourceID: sourceID, theme: theme, question: question.trimmingCharacters(in: .whitespacesAndNewlines), focusCardID: focusCardID), owner: AccountScope(auth))
                     openMembershipAfterPlan = true; showPlans = false
@@ -398,6 +399,12 @@ struct AIBookComposeView: View {
         working = true; error = nil; defer { if owner.isCurrent(auth) { working = false } }
         do {
             guard await refresh(), owner.isCurrent(auth) else { return false }
+            guard status?.premium == true else {
+                error = "追加購入には会員登録が必要です。"
+                return false
+            }
+            if (status?.remaining ?? 0) > 0 { return true }
+            guard status?.canPurchaseExtraBook == true else { return false }
             try await validate(); try owner.check(auth)
             try await purchases.purchaseBook(auth: auth); try owner.check(auth)
             return await refresh() && (status?.remaining ?? 0) > 0

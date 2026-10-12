@@ -174,7 +174,11 @@ struct PartnerProfilesView: View {
             resumeRegistrationAfterPurchase = false
         }) {
             PaywallSheet(draftQuestion: "") {
-                Task { await purchases.sync(auth: auth); await load(); showPaywall = false }
+                Task {
+                    await purchases.sync(auth: auth)
+                    await load()
+                    if remaining > 0 { showPaywall = false }
+                }
             }.environmentObject(auth).environmentObject(purchases)
         }
         .navigationDestination(isPresented: $showCompatibilityResult) {
@@ -223,7 +227,6 @@ struct PartnerProfilesView: View {
                     if remaining == 0 && partnerLimit < 10 {
                         Text("無料プランは1人まで。会員プランでは10人まで登録できます。")
                             .font(.footnote).foregroundStyle(FateTheme.muted)
-                        Button("会員プランを見る") { pickerAction = .paywall; showPicker = false }
                     }
                 } footer: { Text(remaining == 0 ? "登録済みの相手はそのまま残ります。右へスワイプで編集、左へスワイプで削除できます。" : "残り\(remaining)人まで登録できます") }
 

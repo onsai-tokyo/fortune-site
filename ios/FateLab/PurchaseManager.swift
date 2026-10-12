@@ -33,7 +33,7 @@ final class PurchaseManager: ObservableObject {
     private let api: APIClient
     private let storeKitEnabled: Bool
     var isPremium: Bool { accessState == .premium }
-    var membershipActionTitle: String { hasStoreKitEntitlement ? "Appleの購入情報を確認" : "月額会員になる" }
+    var membershipActionTitle: String { "月額会員になる" }
     var needsMembershipRestore: Bool { hasStoreKitEntitlement && accessState == .standard }
     func dismissRestoreMessage() { restoreMessage = nil }
     var canStartMembership: Bool {
@@ -141,6 +141,26 @@ final class PurchaseManager: ObservableObject {
         return delivered
     }
 
+    /// One user-facing purchase action. Reconcile an existing payment first;
+    /// only an authoritative nonmember state may start a new Apple checkout.
+    func startMembershipPurchase(userID: UUID, auth: AuthStore, annual: Bool) async {
+        let owner = bind(auth)
+        guard owner.userID == userID, !isWorking, !isSyncing else { return }
+        await MembershipCheckoutFlow.run(needsRecovery: accessState == .unknown || hasStoreKitEntitlement,
+            recover: {
+                await self.restore(auth: auth)
+                guard owner.isCurrent(auth), self.boundScope == owner else { return .unavailable }
+                switch self.accessState {
+                case .premium: return .member
+                case .standard: return .ready
+                case .unknown: return .unavailable
+                }
+            }, purchase: {
+                guard owner.isCurrent(auth), self.boundScope == owner else { return }
+                await self.purchase(userID: userID, auth: auth, annual: annual)
+            })
+    }
+
     func purchase(userID: UUID, auth: AuthStore, annual: Bool = false) async {
         guard self.storeKitEnabled else { errorMessage = AppConfig.purchasesUnavailableMessage; return }
         let owner = bind(auth)
@@ -227,11 +247,16 @@ final class PurchaseManager: ObservableObject {
     func purchaseBook(auth: AuthStore) async throws {
         guard storeKitEnabled else { throw APIError.server(AppConfig.purchasesUnavailableMessage) }
         let owner = bind(auth)
-        guard let userID = owner.userID, !isWorking, !isSyncing else { throw APIError.server("購入状況の確認が終わってからお試しください。") }
-        guard let bookProduct else { throw APIError.server("鑑定書の商品情報を取得できませんでした。") }
-        guard try delivery.pending().allSatisfy({ $0.ownerID != userID }) else { throw APIError.server("反映待ちの購入があります。再購入せず購入状況を確認してください。") }
+        if let syncTask { await syncTask.value }
+        try check(owner, auth)
+        guard let userID = owner.userID, !isWorking else { throw APIError.server("購入状況の確認が終わってからお試しください。") }
         isWorking = true
         defer { if owner.isCurrent(auth), boundScope == owner { isWorking = false } }
+        let balance = try await api.bookCall(AIBookStatus.self, path: "/status", auth: auth)
+        try check(owner, auth)
+        guard balance.canPurchaseExtraBook else { throw APIError.server("追加購入は、会員の利用枠を使い切ったときにご利用いただけます。") }
+        guard let bookProduct else { throw APIError.server("鑑定書の商品情報を取得できませんでした。") }
+        guard try delivery.pending().allSatisfy({ $0.ownerID != userID }) else { throw APIError.server("反映待ちの購入があります。再購入せず購入状況を確認してください。") }
         let result = try await bookProduct.purchase(options: [.appAccountToken(userID)])
         try check(owner, auth)
         switch result {
@@ -318,6 +343,18 @@ final class PurchaseManager: ObservableObject {
                 try check(owner, auth)
                 guard let transaction = try? verified(result), isActiveSubscription(transaction) else { continue }
                 if try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner, allowTransfer: true) { restored += 1 }
+            }
+            // An expired unfinished Sandbox purchase is absent from currentEntitlements.
+            // Explicit recovery must settle it too before a fresh checkout is allowed.
+            let pendingIDs = Set(try delivery.pending().filter { $0.ownerID == owner.userID }.map(\.transactionID))
+            if !pendingIDs.isEmpty {
+                for await result in Transaction.all {
+                    try check(owner, auth)
+                    guard let transaction = try? verified(result),
+                          pendingIDs.contains(String(transaction.id)),
+                          AppConfig.subscriptionProductIDs.contains(transaction.productID) else { continue }
+                    _ = try await deliver(transaction, signed: result.jwsRepresentation, auth: auth, owner: owner, allowTransfer: true)
+                }
             }
             await syncAfterDelivery(auth: auth)
             try check(owner, auth)

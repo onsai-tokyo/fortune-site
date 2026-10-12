@@ -12,6 +12,9 @@ struct AIBookStatus: Decodable {
     var premium: Bool? = nil
     var reviewRemaining: Int? = nil
     var trialRemaining: Int? = nil
+    var canPurchaseExtraBook: Bool {
+        enabled && premium == true && memberRemaining == 0 && remaining == 0
+    }
     var creditBreakdown: String {
         var parts = ["会員分 \(memberRemaining)通"]
         if let trialRemaining, trialRemaining > 0 { parts.insert("初回無料 \(trialRemaining)通", at: 0) }

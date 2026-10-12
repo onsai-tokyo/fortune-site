@@ -129,3 +129,15 @@ struct PendingPurchase: Codable, Equatable {
         try write(JSONEncoder().encode(values))
     }
 }
+
+/// Recovery must never turn an uncertain payment into a second purchase.
+enum MembershipCheckoutFlow {
+    enum Readiness { case ready, member, unavailable }
+    @MainActor static func run(needsRecovery: Bool,
+        recover: () async -> Readiness, purchase: () async -> Void) async {
+        if needsRecovery {
+            guard await recover() == .ready else { return }
+        }
+        await purchase()
+    }
+}

@@ -345,3 +345,31 @@ final class ReadingCategory117Tests: XCTestCase {
         }
     }
 }
+
+@MainActor final class MembershipCheckout139Tests: XCTestCase {
+    func testUncertainOrAlreadyDeliveredPaymentNeverStartsCheckout() async {
+        for readiness in [MembershipCheckoutFlow.Readiness.unavailable, .member] {
+            var recoveries = 0, purchases = 0
+            await MembershipCheckoutFlow.run(needsRecovery: true, recover: { recoveries += 1; return readiness }, purchase: { purchases += 1 })
+            XCTAssertEqual(recoveries, 1)
+            XCTAssertEqual(purchases, 0)
+        }
+    }
+    func testSuccessfulRecoveryOfExpiredPaymentAllowsExactlyOneNewCheckout() async {
+        var events: [String] = []
+        await MembershipCheckoutFlow.run(needsRecovery: true, recover: { events.append("recover"); return .ready }, purchase: { events.append("purchase") })
+        XCTAssertEqual(events, ["recover", "purchase"])
+    }
+    func testKnownNonmemberGoesStraightToCheckout() async {
+        var purchases = 0
+        await MembershipCheckoutFlow.run(needsRecovery: false, recover: { XCTFail("Unneeded recovery"); return .unavailable }, purchase: { purchases += 1 })
+        XCTAssertEqual(purchases, 1)
+    }
+    func testExtraPurchaseRequiresMembershipAndExhaustedCredits() throws {
+        for (premium, member, remaining, expected) in [(true, 0, 0, true), (true, 1, 1, false), (true, 0, 1, false), (false, 0, 0, false)] {
+            let json = "{\"enabled\":true,\"premium\":\(premium),\"monthlyCredits\":3,\"remaining\":\(remaining),\"memberRemaining\":\(member),\"purchasedRemaining\":0,\"productId\":\"test\"}"
+            let balance = try JSONDecoder().decode(AIBookStatus.self, from: Data(json.utf8))
+            XCTAssertEqual(balance.canPurchaseExtraBook, expected)
+        }
+    }
+}
