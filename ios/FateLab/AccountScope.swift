@@ -22,6 +22,19 @@ enum AccountStorage {
     static func key(_ name: String, userID: UUID?) -> String {
         (AppConfig.internalCheck ? "authcheck." : "") + "fatelab.account.\(userID?.uuidString.lowercased() ?? "guest").\(name)"
     }
+    /// Only call after the server confirms there is no saved self reading or
+    /// timeline profile. An unfinished initial reading must remain recoverable.
+    static func resetCompletedOnboardingIfNeeded(userID: UUID?, hasPendingReading: Bool,
+                                                 defaults: UserDefaults = .standard) -> Bool {
+        guard let userID, !hasPendingReading,
+              defaults.string(forKey: key("onboarding.completedUserID", userID: userID)) == userID.uuidString,
+              (defaults.string(forKey: key("onboarding.draft", userID: userID)) ?? "").isEmpty else { return false }
+        for name in ["onboarding.completedUserID", "onboarding.step", "onboarding.draftVersion",
+                     "birth.profile", "reading.draft", "landing.lastConversationID"] {
+            defaults.removeObject(forKey: key(name, userID: userID))
+        }
+        return true
+    }
     static func birthProfile(userID: UUID?, defaults: UserDefaults = .standard) -> BirthInput? {
         guard userID != nil else { return nil }
         for name in ["birth.profile", "reading.draft"] {

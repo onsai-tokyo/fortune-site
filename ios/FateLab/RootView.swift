@@ -148,6 +148,16 @@ struct RootView: View {
                     cachedConversationID = saved.id.uuidString
                     landingState = .returning(saved.id)
                 } else {
+                    if !onboardedUserID.isEmpty, restoredPendingInput == nil, pendingInput == nil {
+                        let profile = try await APIClient.shared.timelineCall(TimelineProfileResponse.self, path: "/profile", auth: auth)
+                        try owner.check(auth)
+                        if profile.profile == nil {
+                            let hasPending = try APIClient.shared.hasPendingInitialReading(auth: auth)
+                            if AccountStorage.resetCompletedOnboardingIfNeeded(userID: owner.userID, hasPendingReading: hasPending) {
+                                onboardedUserID = ""
+                            }
+                        }
+                    }
                     cachedConversationID = ""
                     landingState = .newUser
                 }

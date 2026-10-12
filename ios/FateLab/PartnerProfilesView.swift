@@ -77,7 +77,7 @@ struct PartnerProfilesView: View {
                 HStack { Text("相手を選ぶ").font(FateType.sectionTitle); Spacer(); Text("\(partners.count) / \(partnerLimit)人").font(.caption).foregroundStyle(FateTheme.muted) }
                     .padding(.bottom, 14)
                 HStack(spacing: 16) {
-                        profileTile(title: ownerDisplayName, subtitle: "", icon: "person", isEmpty: false)
+                        profileTile(title: ownerDisplayName, subtitle: selfReading == nil ? "未設定" : "", icon: "person", isEmpty: selfReading == nil)
                         Text("&").font(.callout).foregroundStyle(FateTheme.muted)
                         Button { showPicker = true } label: {
                             profileTile(title: selected?.displayName ?? "相手を選ぶ",
@@ -195,7 +195,7 @@ struct PartnerProfilesView: View {
 
     private var ownerDisplayName: String {
         if let name = selfReading?.ownerDisplayName { return name }
-        return AccountStorage.birthProfile(userID: auth.userID)?.nickname.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? "あなた"
+        return "あなた"
     }
 
     private func profileTile(title: String, subtitle: String, icon: String, isEmpty: Bool) -> some View {

@@ -43,13 +43,16 @@ struct RelationshipStatusFields: View {
     @Binding var value: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker("今の状況（任意）", selection: Binding(get: { value ?? "" }, set: { value = $0.isEmpty ? nil : $0 })) {
+            Text("今の恋愛・結婚の状況（任意）")
+                .font(.subheadline.weight(.medium)).foregroundStyle(FateTheme.ink)
+            Picker("今の恋愛・結婚の状況", selection: Binding(get: { value ?? "" }, set: { value = $0.isEmpty ? nil : $0 })) {
                 Text("答えない").tag("")
                 Text("交際中").tag("partnered")
                 Text("相手はいない").tag("single")
                 Text("既婚").tag("married")
-            }.tint(FateTheme.ink)
-            Text("時系列の文章と、関係の時期の判定に使います。").font(.footnote).foregroundStyle(FateTheme.muted)
+            }.pickerStyle(.menu).tint(FateTheme.ink)
+            Text("あなたの時系列で、恋愛や結婚の読み解きを今の状況に合わせるために使います。未回答でも鑑定できます。")
+                .font(.footnote).foregroundStyle(FateTheme.muted).fixedSize(horizontal: false, vertical: true)
         }.padding(18).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 18))
     }
 }

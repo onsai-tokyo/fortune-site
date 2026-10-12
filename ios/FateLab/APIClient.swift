@@ -492,6 +492,11 @@ struct APIClient {
         return try reportStore.load(owner: userID)?.restored()
     }
 
+    func hasPendingInitialReading(auth: AuthStore) throws -> Bool {
+        guard let userID = auth.userID else { return false }
+        return try reportStore.load(owner: userID) != nil || generationStore.load(owner: userID) != nil
+    }
+
     func createConversation(report: GeneratedReport, auth: AuthStore) async throws -> UUID {
         let owner = AccountScope(auth)
         try owner.check(auth)

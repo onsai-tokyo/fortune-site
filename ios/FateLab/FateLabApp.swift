@@ -22,7 +22,11 @@ struct FateLabApp: App {
         TimelineTextReviewView().environmentObject(auth).environmentObject(purchases)
 #else
 #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--settings135-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--onboarding136-preview") {
+            OnboardingView(userID: UUID(uuidString: "13613613-6136-4136-8136-136136136136")) { _ in }
+        } else if ProcessInfo.processInfo.arguments.contains("--input136-preview") {
+            NavigationStack { HomeView().fateAppHeader() }.environmentObject(auth)
+        } else if ProcessInfo.processInfo.arguments.contains("--settings135-preview") {
             Settings135Preview()
         } else if ProcessInfo.processInfo.arguments.contains("--consent134-preview") {
             AIConsentSheet(onAgree: {}, onCancel: {})

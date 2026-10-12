@@ -96,11 +96,10 @@ struct HomeView: View {
     }
 
     private var inputForm: some View {
-        VStack(alignment: .center, spacing: 0) {
+        VStack(alignment: .leading, spacing: 24) {
             FateEditorialHero(eyebrow: "YOUR STORY", title: "あなたを読み解く", subtitle: "生まれたときの情報から、最初の鑑定を作ります。")
             BirthProfileFields(date: $input.date, birthTime: $input.birthTime, birthplace: $input.birthplace, gender: $input.gender)
             RelationshipStatusFields(value: $input.relationshipStatus)
-            .padding(20).background(FateTheme.card, in: RoundedRectangle(cornerRadius: 20)).padding(.top, 24).frame(maxWidth: 520)
             if let errorMessage {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(errorMessage).font(.footnote).foregroundStyle(FateTheme.danger)
@@ -109,7 +108,6 @@ struct HomeView: View {
                 .padding(16).frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(FateTheme.danger.opacity(0.45)))
             }
-            Color.clear.frame(height: 104)
         }
     }
 

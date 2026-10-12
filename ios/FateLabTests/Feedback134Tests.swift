@@ -2,6 +2,32 @@ import XCTest
 @testable import FateLab
 
 final class Feedback134Tests: XCTestCase {
+    func testDeletedReadingRestartsOnboardingWithoutTouchingPurchasesOrAnotherAccount() {
+        let suite = "reset-tests-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let user = UUID(), other = UUID()
+        defaults.set(user.uuidString, forKey: AccountStorage.key("onboarding.completedUserID", userID: user))
+        defaults.set(Data("old birth".utf8), forKey: AccountStorage.key("birth.profile", userID: user))
+        defaults.set("purchase", forKey: AccountStorage.key("purchase", userID: user))
+        defaults.set("other", forKey: AccountStorage.key("birth.profile", userID: other))
+        XCTAssertTrue(AccountStorage.resetCompletedOnboardingIfNeeded(userID: user, hasPendingReading: false, defaults: defaults))
+        XCTAssertNil(defaults.object(forKey: AccountStorage.key("birth.profile", userID: user)))
+        XCTAssertNil(defaults.object(forKey: AccountStorage.key("onboarding.completedUserID", userID: user)))
+        XCTAssertEqual(defaults.string(forKey: AccountStorage.key("purchase", userID: user)), "purchase")
+        XCTAssertEqual(defaults.string(forKey: AccountStorage.key("birth.profile", userID: other)), "other")
+    }
+    func testUnfinishedInitialReadingAndOnboardingDraftArePreserved() {
+        let suite = "draft-tests-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let user = UUID(), key = AccountStorage.key("onboarding.completedUserID", userID: user)
+        defaults.set(user.uuidString, forKey: key)
+        XCTAssertFalse(AccountStorage.resetCompletedOnboardingIfNeeded(userID: user, hasPendingReading: true, defaults: defaults))
+        defaults.set("unfinished", forKey: AccountStorage.key("onboarding.draft", userID: user))
+        XCTAssertFalse(AccountStorage.resetCompletedOnboardingIfNeeded(userID: user, hasPendingReading: false, defaults: defaults))
+        XCTAssertEqual(defaults.string(forKey: key), user.uuidString)
+    }
     @MainActor func testConsentWaitsForExplicitAcceptanceThenResumesOnce() {
         let suite = "consent-tests-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: suite)!
