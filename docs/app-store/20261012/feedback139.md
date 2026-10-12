@@ -26,3 +26,7 @@ Eight new TestFlight items received 2026-10-12 around 18:52–18:59 JST. Six wer
 - Simulator visual check uses the same MembershipOfferCard as production; preview callbacks are no-ops and do not purchase or grant access. Image: outputs/feedback139/membership139.png.
 - Actual Apple checkout and purchase-to-book continuation require the user's TestFlight device check.
 - No backend changes or production account mutations.
+
+## Delivery
+
+Release archive succeeded. App Store Connect upload succeeded at 2026-10-12 19:13 JST; Apple processing follows upload. Logs: outputs/build139-archive.log and outputs/build139-upload.log.
