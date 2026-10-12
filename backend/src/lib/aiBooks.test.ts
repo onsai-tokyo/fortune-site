@@ -48,18 +48,17 @@ test('legacy text and AI-generated sources are not promoted to confirmed materia
  assert.deepEqual(bookSources({calculated_data:{_structuredReport:{version:3,reportText:'',cards:[],generator:'ai',generatorVersion:'old'}}},'仕事'),[])
 })
 
-test('short otherwise valid documents cannot consume a delivered 2500-character book',()=>{
+test('complete shorter documents are accepted without padding',()=>{
  const d=valid(); d.answer=text.repeat(4); d.sections.forEach(s=>s.body=text.repeat(2));
- assert.throws(()=>validateBookDocument(d,sources),/BOOK_DOCUMENT_LENGTH/)
+ assert.doesNotThrow(()=>validateBookDocument(d,sources))
 })
 
-test('concise books enforce both length boundaries without accepting old 5000-character drafts',()=>{
+test('overall character count is a guideline rather than a delivery gate',()=>{
  for(const length of [2249,2250,2500,3000,3001,5000]) {
   const d=valid();d.summary='要'.repeat(50);d.actions=['行'.repeat(25),'動'.repeat(25)];
   d.sections.forEach(s=>s.body='根'.repeat(500));d.answer='答'.repeat(Math.min(2000,length-1600));
   if(length===5000)d.sections.forEach(s=>s.body='根'.repeat(1000));
-  if(length>=2250&&length<=3000)assert.doesNotThrow(()=>validateBookDocument(d,sources));
-  else assert.throws(()=>validateBookDocument(d,sources),/BOOK_DOCUMENT_LENGTH/);
+  assert.doesNotThrow(()=>validateBookDocument(d,sources));
  }
 })
 
