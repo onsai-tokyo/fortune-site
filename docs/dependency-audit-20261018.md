@@ -92,7 +92,7 @@ architecture.test.tsはNode組み込みのfs/assert/test/path/urlだけを使っ
 ## 3〜5. ドキュメント
 
 - `docs/prelaunch-check.md`：公開前確認、SQL3つだけ、付与1冊→作成→配達→質問2回→照合→退会、各段階の成功・失敗復旧、環境変数、Vercel/Renderの戻し方。**支払いフラグ未実装を公開ブロッカーとして明記**。
-- `docs/auth-email-templates.md`：Magic Link/Change Email Addressの日本語件名・コード本文案、10分、リンクなし。既存アプリ用他テンプレートは対象外。共有テンプレート自体のiOS影響確認も必須。設定未実施。
+- `docs/auth-email-templates.md`：Magic Link/Change Email Addressの日本語件名・コード本文案、リンクなし。初稿の10分案は後続承認で1時間へ変更し、本番の既存有効期限は変更しない方針へ更新。既存アプリ用他テンプレートは対象外。共有テンプレート自体のiOS影響確認も必須。設定未実施。
 - `docs/anonymous-cleanup-scheduling.md`：現在の清掃スクリプトはdry-runなし、照会失敗を0件扱い、emailなしの非匿名ユーザーを含む、ページング取りこぼし等があるため定期実行を推奨しない。安全性修正後の手動dry-runを最優先とし、将来の週次CI案を提示。課金・設定・削除は未実施。
 
 ## 判断が必要な点（いずれも未実装）

@@ -82,7 +82,7 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
 
   return (
     <form onSubmit={verify} noValidate className="flex flex-col gap-3">
-      <p className="m-0 text-sm leading-[1.85] text-fl-body"><strong className="font-medium text-fl-ink">{email}</strong> に6桁のコードを送りました。10分以内に入力してください。届かない場合は迷惑メールフォルダもご確認ください。</p>
+      <p className="m-0 text-sm leading-[1.85] text-fl-body"><strong className="font-medium text-fl-ink">{email}</strong> に6桁のコードを送りました。1時間以内に入力してください。届かない場合は迷惑メールフォルダもご確認ください。</p>
       <Field ref={codeRef} id={`${idPrefix}-code`} label="確認コード（6桁）" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="123456"
         value={code} onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setError(null) }}
         className="tracking-[0.4em]" />
