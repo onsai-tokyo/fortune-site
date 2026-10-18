@@ -7,6 +7,7 @@ B = os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4190')
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page(ignore_https_errors=True, viewport={'width': 390, 'height': 844})
+    page.route('**/*', lambda r: r.continue_() if urlparse(r.request.url).netloc == urlparse(B).netloc and not urlparse(r.request.url).path.startswith('/api/') else r.abort())
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     for path, title in [('/terms', '利用規約（Web版）'), ('/privacy', 'プライバシーポリシー（Web版）'), ('/tokushoho', '特定商取引法に基づく表記')]:
@@ -16,6 +17,9 @@ with sync_playwright() as p:
         text = article.inner_text()
         assert '温齋株式会社' in text and 'この下書きについて' not in text
         assert 'onsai.tokyo@gmail.com' in text
+        assert '［' not in text and '］' not in text, (path, 'draft placeholder leaked')
+        for note in ['この項を削除', 'この行を削除', '契約条件と保存期間を確認する', '用意しておいてください', '決済代行会社の審査では']:
+            assert note not in text, (path, 'operator note leaked')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), path
         if path == '/terms':
             assert article.get_by_role('heading', level=2).count() == 16
@@ -25,6 +29,9 @@ with sync_playwright() as p:
             assert article.get_by_role('heading', level=2).count() == 12
             assert 'Resend（Plus Five Five, Inc.）' in text and '日本・東京、ap-northeast-1' in text
             assert '本サービス内の冊数と購入の記録も消えます' in text
+            assert '商用API向け公開方針' in text and '例外' in text
+            assert article.get_by_role('link', name='Anthropic商用サービスの学習利用に関する方針', exact=True).get_attribute('href') == 'https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training'
+            assert article.get_by_role('link', name='Anthropic商用サービスの保存期間に関する方針', exact=True).count() == 1
         else:
             assert '現在、ブックの販売は準備中で、購入はできません' in text
         print('PASS', path, 'public / content / no horizontal overflow')

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Footer, Page, PlainHeader } from '../components/ui'
-import { collectedInformation, commerceRows, crossBorderNotice, privacyIntro, privacySections, processors, termsSections, type LegalSection } from '../data/legalContent'
+import { aiDataPolicyLinks, collectedInformation, commerceRows, crossBorderNotice, privacyIntro, privacySections, processors, termsSections, type LegalSection } from '../data/legalContent'
 
 function Layout({ title, children }: { title: string; children: ReactNode }) {
   return <Page><PlainHeader /><article className="flex flex-col gap-7 px-6 pb-8 pt-7 text-sm leading-[1.9] break-words">
@@ -23,6 +23,7 @@ export function WebPrivacyPage() {
   return <Layout title="プライバシーポリシー（Web版）"><p className="m-0">{privacyIntro}</p>
     <section className="space-y-3"><h2 className="m-0 text-lg font-medium">第1条（取得する情報）</h2><Rows headers={['情報', '取得するとき']} rows={collectedInformation} /></section>
     {privacySections.map((s, i) => <Section key={i} section={s}>
+      {s.title.startsWith('第3条') && <ul className="list-disc space-y-2 pl-5">{aiDataPolicyLinks.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noreferrer" className="text-fl-slate underline">{link.title}</a></li>)}</ul>}
       {s.title.startsWith('第4条') && <><Rows headers={['委託先', '委託すること', '国']} rows={processors} /><p>{crossBorderNotice}</p></>}
       {s.title.startsWith('第9条') && <><Rows headers={['送信先', '送られる情報', '目的', '止める方法']} rows={[
         ['Google LLC（Googleアナリティクス）', '開いたページ、端末・ブラウザの情報、IPアドレス、Cookieなどの識別子', '利用状況の分析', 'Googleアナリティクス オプトアウト アドオン'],
@@ -32,8 +33,7 @@ export function WebPrivacyPage() {
   </Layout>
 }
 export function WebCommercePage() {
-  return <Layout title="特定商取引法に基づく表記"><p className="m-0"><strong>現在、ブックの販売は準備中で、購入はできません。</strong>販売を始めるときは、本サービス上でお知らせします。［決済開始時にこの文を削除］</p>
+  return <Layout title="特定商取引法に基づく表記"><p className="m-0"><strong>現在、ブックの販売は準備中で、購入はできません。</strong>販売を始めるときは、本サービス上でお知らせします。</p>
     <dl className="m-0">{commerceRows.map(([label, text]) => <div key={label} className="space-y-2 border-b border-fl-line py-4"><dt className="font-medium text-fl-muted">{label}</dt><dd className="m-0">{text}</dd></div>)}</dl>
-    <p className="m-0">所在地と電話番号を「請求があれば開示」にする場合は、請求を受けたときにすぐ答えられるよう、実際の所在地とつながる電話番号を用意しておいてください。決済代行会社の審査では、住所と電話番号の記載を求められることが多いです。</p>
   </Layout>
 }
