@@ -1,5 +1,7 @@
 # Web公開前・本番確認手順（未実行）
 
+**2026-10-18の追加監査により実行保留。** `release-preparation-20261018.md` を優先する。本番mainとの統合は49ファイル競合、main単体のnpm testも11失敗。共有のFREE_QUESTION_LIMIT=0はiOS非会員の質問も止めるため実行しない。Bの各手順は内容説明後の個別OKが必要で、この文書だけを根拠に公開・設定変更しない。
+
 この文書は将来の承認済みリリース担当者向け。作成時点ではstaging作業は中止中。本番への反映、SQL適用、付与、AI呼び出し、退会は一切実行していない。既存iOSアプリのコード・機能は変更対象外。共有APIの更新にはiOSへの回帰影響確認も必要。
 
 ## 0. 公開を止める条件と事前記録
@@ -44,7 +46,7 @@ and conname in ('ai_book_grants_source_check', 'ai_book_grants_environment_check
 
 - Webの `VITE_EMAIL_OTP_LENGTH` は本番で `8`（未設定も8）。本番SupabaseのOTP桁数8・有効期限3600秒は変更しない。staging再開時だけ `6` を設定して再ビルドする。今回は設定・デプロイしない。VITE値を変更しただけでは既存ビルドには反映されない。
 - Vercelの本番環境で `VITE_PAYMENTS_ENABLED=false` を設定し、再ビルドする。`VITE_TURNSTILE_SITE_KEY` は未設定にする。VITE値はビルド時埋め込みのため、保存のみでは反映されない。公開Supabase URL・公開キー・API URL以外の秘密値をフロントへ入れない。手順0の実装確認も必須。
-- Renderの本番APIで `FREE_QUESTION_LIMIT=0` を設定し、保存後に再デプロイ。通常の読みもの質問を無料提供しない設定。ブック質問の月間枠はPREMIUM_MONTHLY_QUESTION_LIMITとAI_CHAT_MONTHLY_GLOBAL_LIMITを使うので、既存値を保持し0でないことを確認する。
+- **共有の `FREE_QUESTION_LIMIT` は現在値を保持する。** 0へ変更する従来案はiOS非会員の質問も止めるため採用しない。Web専用の経路/サーバーポリシーを検討・実装・検証してから公開する。ブック質問の月間枠はPREMIUM_MONTHLY_QUESTION_LIMITとAI_CHAT_MONTHLY_GLOBAL_LIMITを使うので、既存値を保持し0でないことを確認する。
 - `FRONTEND_URL` は既存の許可オリジンを残し、新ドメインの `https://ホスト名` をカンマ区切りで追加する。パス・末尾スラッシュ・ワイルドカードは入れない。APIとWebのURLを取り違えない。
 - CORSだけでなくSupabaseの本番Auth URL設定も担当者が確認する。Turnstileは今回の公開では有効化せず、サイトキーや許可ホストの追加も行わない。共有Auth設定の変更はiOSへ影響し得るため無断変更しない。
 - 承認済みWebコミットを本番へ反映する。Render API、既存ワーカー、Vercelの順序・互換性をレビューし、全ての成功コミットが予定どおりか確認する。API/ワーカーのコードを別系統に混在させない。
@@ -104,7 +106,7 @@ npm run books:review -- approve <テストbookId>
 
 ## 5. ブック質問2回
 
-届いた同じブックで、AI同意のうえ安全な質問を2回送る。各質問のoperationIdは別にする。非会員・FREE_QUESTION_LIMIT=0のままで行う。
+届いた同じブックで、AI同意のうえ安全な質問を2回送る。各質問のoperationIdは別にする。非会員で行い、本番共有のFREE_QUESTION_LIMITは変更しない。FREE=0でもブック質問は使えるというローカル単体テストを、本番の共有設定を変えて再現しない。
 
 成功：開始questionsLeft=2 → 1回目完了で1 → 2回目完了で0。本文に沿った回答が保存され、再読込でも維持。ブック購入冊数は0のまま。3回目はUIで送信できず、管理者がAPIでも確認する場合はBOOK_QUESTION_LIMIT（409）でAI呼び出しを行わない。同じoperationIdの再取得・再送で回数が増えない。
 
