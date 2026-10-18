@@ -79,7 +79,7 @@ export function LegacyReadingPage({ identifier }: { identifier: 'id' | 'token' |
     </section>)}
     {value?.messages?.map((m, i) => <section key={i}><h2>{m.role === 'user' ? 'あなたの質問' : '回答'}</h2><p className="whitespace-pre-wrap">{m.content}</p></section>)}
     <p className="text-sm">このページは閲覧専用です。新しい購入・生成・質問の送信は行いません。</p>
-    {!value && identifier !== 'share' && <p><Link className="underline" to={`/restore?returnTo=${encodeURIComponent(location.pathname)}`}>Web版のメールで引き継ぐ</Link>。旧アカウントで開けない場合は<Link className="underline" to="/support">お問い合わせ</Link>ください。</p>}
+    {!value && identifier !== 'share' && <p><Link className="underline" to={`/legacy/login?returnTo=${encodeURIComponent(location.pathname)}`}>以前のアカウントでログイン</Link>。新Web版の引き継ぎ用メールを登録した方は<Link className="underline" to={`/restore?returnTo=${encodeURIComponent(location.pathname)}`}>メールコードで引き継ぐ</Link>こともできます。</p>}
     <Link className="underline" to="/">トップへ</Link>
   </article></Page>
 }

@@ -25,6 +25,7 @@ const PrivacyPage = lazy(() => import('./pages/LegalPages').then(m => ({ default
 const TokushohoPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebCommercePage })))
 const SupportPage = lazy(() => import('../pages/SupportPage').then(m => ({ default: m.SupportPage })))
 const LegacyReadingPage = lazy(() => import('./pages/LegacyReadingPage').then(m => ({ default: m.LegacyReadingPage })))
+const LegacyLoginPage = lazy(() => import('./pages/LegacyLoginPage').then(m => ({ default: m.LegacyLoginPage })))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -65,6 +66,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/restore" element={<RestorePage />} />
+        <Route path="/legacy/login" element={<LegacyLoginPage />} />
         <Route path="/s/:shareId" element={<LegacyReadingPage identifier="share" />} />
         <Route path="/r/:secretToken" element={<LegacyReadingPage identifier="token" />} />
         <Route path="/reading" element={<LegacyReadingRedirect />} />

@@ -130,7 +130,7 @@ function storeDraftQuestion(question: string) {
 }
 
 function storeDraftQuestionForUser(question: string, userId?: string) {
-  storeDraftQuestion(question)
+  if (!REMOTE) storeDraftQuestion(question)
   if (!userId) return
   try {
     const key = `${DRAFT_KEY}:${userId}`
@@ -142,7 +142,7 @@ function storeDraftQuestionForUser(question: string, userId?: string) {
 }
 
 function loadDraftQuestionForUser(userId: string): string {
-  try { return window.localStorage.getItem(`${DRAFT_KEY}:${userId}`) ?? window.localStorage.getItem(DRAFT_KEY) ?? '' } catch { return '' }
+  try { return window.localStorage.getItem(`${DRAFT_KEY}:${userId}`) ?? (!REMOTE ? window.localStorage.getItem(DRAFT_KEY) : null) ?? '' } catch { return '' }
 }
 
 const Ctx = createContext<(AppState & Actions) | null>(null)
@@ -150,17 +150,21 @@ const Ctx = createContext<(AppState & Actions) | null>(null)
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => {
     const s = initialState()
-    s.draft.question = loadDraftQuestion()
+    s.draft.question = REMOTE ? '' : loadDraftQuestion()
     return s
   })
   const timers = useRef<number[]>([])
   const stateRef = useRef(state)
+  const remoteAuth = useRef({ owner: null as string | null, token: null as string | null, revision: 0 })
   stateRef.current = state
 
   const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
   useEffect(() => () => timers.current.forEach(t => window.clearTimeout(t)), [])
 
   const refreshRemote = useCallback(async (accessToken: string) => {
+    const revision = remoteAuth.current.revision
+    const current = () => remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
+    if (!current()) return
     try {
       const [history, status, partners, bookshelf, saved] = await Promise.all([
         apiFetch<{ conversations: Array<Record<string, unknown>> }>('/api/reading/conversations', { accessToken }),
@@ -202,7 +206,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         id: String(card.id ?? `chapter-${index}`), title: String(card.title ?? '性格の章'), sub: String(card.summary ?? ''), image: natureImages[index % natureImages.length],
         sections: Array.isArray(card.sections) ? card.sections as ReadingSection[] : [],
       }))
-      setState(s => ({ ...s, profile: profile?.birthDate ? profile : s.profile,
+      if (!current()) return
+      setState(s => !current() ? s : ({ ...s, profile: profile?.birthDate ? profile : s.profile,
         session: s.session === 'none' ? 'anonymous' : s.session,
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
         savedIds: remoteSavedIds,
@@ -217,18 +222,31 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!REMOTE) return
     let disposed = false
-    void supabase.auth.getSession().then(({ data }) => {
-      if (disposed || !data.session) return
-      const linked = Boolean(data.session.user.email && !data.session.user.is_anonymous)
-      setState(s => ({ ...s, session: linked ? 'linked' : 'anonymous', email: data.session?.user.email ?? null, draft: { ...s.draft, question: loadDraftQuestionForUser(data.session!.user.id) } }))
-      void refreshRemote(data.session.access_token)
-    })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    let authEvents = 0
+    const applySession = (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
+      if (disposed) return
+      const owner = session?.user.id ?? null
+      const token = session?.access_token ?? null
+      const changed = remoteAuth.current.owner !== owner
+      if (changed || remoteAuth.current.token !== token) remoteAuth.current.revision++
+      remoteAuth.current.owner = owner; remoteAuth.current.token = token
+      if (changed || !session) clearTimers()
       if (!session) { setState(blankState()); return }
-      setState(s => ({ ...s, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null }))
+      setState(previous => {
+        const base = changed ? blankState() : previous
+        return { ...base, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
+          draft: { ...base.draft, question: changed ? loadDraftQuestionForUser(session.user.id) : base.draft.question } }
+      })
       void refreshRemote(session.access_token)
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!disposed && authEvents === 0) applySession(data.session)
+    }).catch(() => { if (!disposed && authEvents === 0) applySession(null) })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEvents++
+      applySession(session)
     })
-    return () => { disposed = true; listener.subscription.unsubscribe() }
+    return () => { disposed = true; remoteAuth.current.revision++; listener.subscription.unsubscribe() }
   }, [refreshRemote])
 
   const deliverLater = useCallback((bookId: string) => {
@@ -417,7 +435,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setDraft: draft => setState(s => {
       const next = { ...s.draft, ...draft }
       if (draft.question !== undefined) {
-        if (REMOTE) void supabase.auth.getUser().then(({ data }) => storeDraftQuestionForUser(next.question, data.user?.id))
+        if (REMOTE) storeDraftQuestionForUser(next.question, remoteAuth.current.owner ?? undefined)
         else storeDraftQuestion(next.question)
       }
       return { ...s, draft: next }

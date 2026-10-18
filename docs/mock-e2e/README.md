@@ -34,3 +34,14 @@ crawlは相手が登録済みの4プリセットに限り `/couple` → `/couple
 `MOCK_E2E_BASE_URL=https://localhost:4176 python3 payments_remote.py` で購入オフと付与済みの作成・質問を検証する。
 trueビルドでは `MOCK_PAYMENTS_ENABLED=true` を付け、REMOTE仮付与が無効のままか検証する。
 上記の架空の値はテスト専用で、デプロイ用環境変数へ保存しない。
+# 旧ログインのREMOTE fixture
+
+`legacy_login.py` は通常の見本ビルドではなく、公開用に見せかけた合成値だけでビルドして実行する。
+
+```sh
+cd frontend
+VITE_SUPABASE_URL=https://mock.invalid VITE_SUPABASE_ANON_KEY=mock-anon-key VITE_PAYMENTS_ENABLED=false npm exec vite build -- --outDir /private/tmp/fatelab-legacy-auth-fixture-20261018
+npm run preview -- --host 127.0.0.1 --port 4192 --strictPort --outDir /private/tmp/fatelab-legacy-auth-fixture-20261018
+```
+
+別ターミナルでリポジトリ直下から `MOCK_E2E_BASE_URL=https://127.0.0.1:4192 python3 docs/mock-e2e/legacy_login.py` を実行。実際のSupabase値や秘密鍵を入れない。外部通信はfixtureで遮断し、テスト用パスワードも合成文字列のみを使う。Googleは戻り先指定までの検証で、本番OAuth一往復の代替ではない。
