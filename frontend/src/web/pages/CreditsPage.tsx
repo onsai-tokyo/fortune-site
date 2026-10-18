@@ -7,6 +7,11 @@ import { images } from '../data/images'
 import { plans } from '../data/mock'
 import type { PlanId } from '../data/types'
 import { useApp } from '../state/AppState'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+
+function CreditsPreparing() {
+  return <Page><BackHeader to="/compose" title="相談のブック" /><section className="flex flex-col gap-4 px-5 py-7"><h1 className="m-0 text-[24px] font-medium">{BOOK_PREPARING}</h1><p>新しい冊数の購入は、まだご利用いただけません。書いた相談は下書きとして残ります。利用できる冊数がある方は、ブック作成・質問を引き続きご利用いただけます。</p><LinkButton to="/compose">相談の下書きにもどる</LinkButton><LinkButton to="/books" variant="secondary">本棚へ</LinkButton></section></Page>
+}
 
 /**
  * 本番：POST /api/web-payments/checkout（未実装）で決済会社の支払い画面URLを受け取り移動。
@@ -14,6 +19,10 @@ import { useApp } from '../state/AppState'
  * 利用枠の付与は決済会社からの通知（Webhook）でのみ行い、戻りURLでは付与しない。
  */
 export function CreditsPage() {
+  return paymentsAvailable ? <CheckoutPage /> : <CreditsPreparing />
+}
+
+function CheckoutPage() {
   const { credits, purchase, email: linkedEmail, receiptEmail, pendingCreate, draft, cancelPendingCreate } = useApp()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -25,10 +34,12 @@ export function CreditsPage() {
   const [email, setEmail] = useState(linkedEmail ?? receiptEmail ?? '')
   const plan = plans.find(p => p.id === picked)!
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  const [checkoutError, setCheckoutError] = useState('')
 
   function checkout() {
     if (!emailOk) return
-    purchase(picked, email.trim())
+    // Integration seam: replace with provider checkout; never fake a REMOTE grant.
+    if (!purchase(picked, email.trim())) { setCheckoutError('お支払い機能は接続準備中です。相談は下書きに残っています。'); return }
     navigate(`/credits/return?plan=${picked}`)
   }
 
@@ -77,6 +88,7 @@ export function CreditsPage() {
       </section>
 
       <section className="flex flex-col gap-3 px-5 pb-14 pt-6">
+        {checkoutError && <p role="alert">{checkoutError}</p>}
         <Button size="lg" disabled={!emailOk} onClick={checkout}>{plan.name}を買う（{plan.price.toLocaleString()}円）</Button>
         <nav aria-label="お支払いについて" className="flex flex-wrap justify-center gap-x-[18px] text-xs">
           <Link to="/tokushoho" className="flex min-h-[44px] items-center text-fl-body">特定商取引法に基づく表記</Link>
@@ -91,6 +103,10 @@ type ReturnStatus = 'checking' | 'done' | 'delayed'
 
 /** 決済会社から戻った画面。/api/books/status を数秒おきに確認する */
 export function PaymentReturnPage() {
+  return paymentsAvailable ? <PaymentReturnContent /> : <CreditsPreparing />
+}
+
+function PaymentReturnContent() {
   const { credits, session, receiptEmail, linkEmail, startPendingBook } = useApp()
   const [linked, setLinked] = useState(false)
   const [startedBook, setStartedBook] = useState<string | null>(null)

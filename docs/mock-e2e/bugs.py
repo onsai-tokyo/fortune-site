@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
-B='https://localhost:4173'
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173')
 errs=[]
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page()

@@ -7,6 +7,7 @@ import { images } from '../data/images'
 import type { Book } from '../data/types'
 import { useApp } from '../state/AppState'
 import { useState } from 'react'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 /** iOS AIBook.isPending と同じ */
 const isPending = (b: Book) => b.state === 'queued' || b.state === 'generating' || b.state === 'review'
@@ -87,7 +88,7 @@ function BookRow({ book }: { book: Book }) {
 
 /** 本番：GET /api/books（60件ずつ、before カーソル）。作成中は /api/books/operations/:id をポーリング */
 export function BooksPage() {
-  const { books, savedIds, partners, years, chapters } = useApp()
+  const { books, savedIds, partners, years, chapters, credits } = useApp()
   const delivered = books.filter(b => b.state === 'delivered')
   const savedCount = savedCatalog(partners, years, chapters).filter(s => savedIds.includes(s.id)).length
   return (
@@ -109,13 +110,13 @@ export function BooksPage() {
             <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[13px] leading-[1.8] text-fl-body marker:text-fl-muted">
               <li>約2,500文字。章立てで、ゆっくり読めます</li>
               <li>届いたブックには、2回まで質問できます</li>
-              <li>1冊 500円。いつでも本棚で読み返せます</li>
+              <li>{paymentsAvailable ? '1冊 500円。いつでも本棚で読み返せます' : `${BOOK_PREPARING}（新規購入）`}</li>
             </ul>
-            <LinkButton to="/compose">最初の一冊をつくる</LinkButton>
+            <LinkButton to="/compose">{!paymentsAvailable && credits <= 0 ? '相談の下書きを書く' : '最初の一冊をつくる'}</LinkButton>
           </div>
         )}
       </section>
-      {books.length > 0 && <section className="px-5 pt-6"><LinkButton to="/compose" variant="outline">次の一冊をつくる</LinkButton></section>}
+      {books.length > 0 && <section className="px-5 pt-6"><LinkButton to="/compose" variant="outline">{!paymentsAvailable && credits <= 0 ? '相談の下書きを書く' : '次の一冊をつくる'}</LinkButton></section>}
       <Footer />
     </Page>
   )

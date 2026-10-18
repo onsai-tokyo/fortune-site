@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { NatureImage, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
+import { safeReturnTo } from '../../lib/safeReturnTo'
 
 const stages = ['生まれた日の暦を計算しています', '性格の章を書いています', '年ごとの流れを並べています']
 
@@ -15,7 +16,7 @@ export function CreatingPage() {
   const [params] = useSearchParams()
   const [done, setDone] = useState(0)
   const returnTo = params.get('returnTo')
-  const next = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/you'
+  const next = safeReturnTo(returnTo, '/you')
 
   useEffect(() => {
     if (done >= stages.length) {

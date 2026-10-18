@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { startTransition, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
 import { BackHeader, Button, Note, Page } from '../components/ui'
 import { EmailCode } from '../components/EmailCode'
 import { useApp } from '../state/AppState'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -22,16 +23,16 @@ function Row({ label, value, to }: { label: string; value?: ReactNode; to?: stri
 
 /** 購入履歴（本番：決済会社の取引記録をバックエンドで保持して返す。API未実装） */
 export function PurchasesPage() {
-  const rows = [
+  const rows = paymentsAvailable ? [
     { date: '2026年10月12日', item: '相談のブック 5冊セット', price: '1,980円' },
     { date: '2026年9月3日', item: '相談のブック 1冊', price: '500円' },
-  ]
+  ] : []
   return (
     <Page>
       <SiteHeader current="none" />
       <section className="flex flex-col gap-2 px-5 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">購入履歴・領収書</h1>
-        <p className="m-0 text-xs text-fl-muted">表示はサンプルです。</p>
+        <p className="m-0 text-xs text-fl-muted">{paymentsAvailable ? '表示はサンプルです。' : BOOK_PREPARING}</p>
       </section>
       <section className="flex flex-col px-5 pb-12 pt-3">
         {rows.map(r => (
@@ -96,7 +97,7 @@ export function SettingsPage() {
       <section className="flex flex-col gap-3 px-5 pb-12 pt-8">
         {session === 'linked' ? (
           <>
-            <Button variant="secondary" onClick={() => { forgetDevice(); navigate('/') }}>この端末での利用をやめる</Button>
+            <Button variant="secondary" onClick={() => startTransition(() => { forgetDevice(); navigate('/') })}>この端末での利用をやめる</Button>
             <span className="-mt-1 text-center text-xs leading-[1.7] text-fl-muted">共用のパソコンではこちらを。{email} に届くコードで、いつでも戻れます。</span>
           </>
         ) : (
@@ -111,7 +112,7 @@ export function SettingsPage() {
             className="flex w-full max-w-app flex-col gap-3.5 rounded-t-[20px] bg-fl-canvas px-5 pb-7 pt-6">
             <h2 id="del-title" className="m-0 text-lg font-medium">退会しますか？</h2>
             <p className="m-0 text-sm leading-[1.85] text-fl-body">読みもの、登録した相手、相談のブック、残りの冊数がすべて削除され、元に戻せません。残っている冊数分の返金はできません。</p>
-            <Button variant="danger" onClick={() => { deleteAccount(); navigate('/') }}>すべて削除して退会する</Button>
+            <Button variant="danger" onClick={() => startTransition(() => { deleteAccount(); navigate('/') })}>すべて削除して退会する</Button>
             <Button ref={cancelRef} variant="ghost" onClick={() => setConfirming(false)}>やめる</Button>
           </div>
         </div>

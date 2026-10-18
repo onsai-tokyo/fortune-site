@@ -5,6 +5,7 @@ import { images } from '../data/images'
 import { mockYears, plans } from '../data/mock'
 import type { Gender } from '../data/types'
 import { useApp } from '../state/AppState'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 const steps = [
   { title: 'あなたを読む', body: '生年月日を入れると、性格の章と、過去からこれからまでの年ごとの流れが読めます。' },
@@ -126,12 +127,12 @@ export function TopPage() {
       <section className="flex flex-col gap-4 px-6 py-10">
         <h2 className="m-0 text-xl font-medium">料金</h2>
         <div className="flex justify-between border-b border-fl-line py-4 text-[15px]"><span>性格・年ごとの流れ・ふたりの年表</span><span className="font-medium">無料</span></div>
-        {plans.map(plan => (
+        {paymentsAvailable ? plans.map(plan => (
           <div key={plan.id} className="flex justify-between border-b border-fl-line py-4 text-[15px]">
             <span>相談のブック {plan.name}</span><span className="font-medium">{plan.price.toLocaleString()}円</span>
           </div>
-        ))}
-        <span className="text-xs leading-[1.7] text-fl-muted">価格は税込です。ブック1冊ごとに、そのブックへの質問が2回つきます。月額の契約や自動更新はありません。届いたブックは、いつでも本棚で読み返せます。占いの結果は、出来事や効果を約束するものではありません。</span>
+        )) : <p className="text-[15px]">{BOOK_PREPARING}</p>}
+        <span className="text-xs leading-[1.7] text-fl-muted">{paymentsAvailable ? '価格は税込です。' : '新しい冊数の購入は準備中です。'}ブック1冊ごとに、そのブックへの質問が2回つきます。月額の契約や自動更新はありません。届いたブックは、いつでも本棚で読み返せます。占いの結果は、出来事や効果を約束するものではありません。</span>
       </section>
 
       <section className="px-6 pb-12">

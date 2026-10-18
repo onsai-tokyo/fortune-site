@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 import time, urllib.request, ssl
-B='https://localhost:4173'; errs=[]
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173'); errs=[]
 for i in range(40):
     try: urllib.request.urlopen(B, context=ssl._create_unverified_context()); break
     except Exception: time.sleep(0.5)

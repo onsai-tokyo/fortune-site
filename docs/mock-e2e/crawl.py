@@ -1,13 +1,15 @@
 # 各状態で全画面のリンクをたどり、エラー・リダイレクト・画像切れ・はみ出しを集める
 from playwright.sync_api import sync_playwright
-import time, ssl
-B='https://localhost:4173'
+import time, ssl, sys
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173')
 for i in range(40):
     try:
         import urllib.request; urllib.request.urlopen(B, context=ssl._create_unverified_context()); break
     except Exception: time.sleep(0.5)
 presets={'default':'通常の状態で使ってみる','first':'トップ（はじめて来た人）','linked':'設定（引き継ぎ用メール登録済み）','nopartner':'ふたり（相手がいないとき）','zero':'一冊つくる（まだ買っていない）','failed':'本棚（作成に失敗したとき）'}
 issues=[]
+expected_redirects=[]
 with sync_playwright() as p:
     b=p.chromium.launch()
     for key,label in presets.items():
@@ -27,7 +29,13 @@ with sync_playwright() as p:
             seen.add(path)
             pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(250)
             final=pg.evaluate('location.pathname+location.search')
-            if final!=path and not path.startswith('/you/years/2026/ask'): issues.append(f'[{key}] {path} -> redirected {final}')
+            # CouplePage intentionally opens the seeded partner for these four presets.
+            # Do not allow arbitrary partner redirects or redirects in the empty preset.
+            expected_couple = key in ('default', 'linked', 'zero', 'failed') and path == '/couple' and final == '/couple/p-misaki'
+            if expected_couple:
+                expected_redirects.append(f'[{key}] {path} -> {final}')
+            elif final!=path and not path.startswith('/you/years/2026/ask'):
+                issues.append(f'[{key}] {path} -> redirected {final}')
             sw=pg.evaluate('document.documentElement.scrollWidth')
             if sw>390: issues.append(f'[{key}] {final} overflow {sw}')
             broken=pg.evaluate("[...document.images].filter(i=>i.complete&&i.naturalWidth===0).map(i=>i.src)")
@@ -45,3 +53,5 @@ with sync_playwright() as p:
         pg.close()
     b.close()
 print('\n'.join(sorted(set(issues))) or 'no issues')
+print('expected couple redirects', len(expected_redirects))
+sys.exit(1 if issues else 0)

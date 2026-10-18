@@ -5,6 +5,7 @@ import { IconDown } from '../components/icons'
 import type { Gender } from '../data/types'
 import { useApp } from '../state/AppState'
 import { prefectures } from '../data/mock'
+import { safeReturnTo } from '../../lib/safeReturnTo'
 
 /**
  * 生年月日の入力（トップから来なかった人・設定からの変更）。
@@ -16,7 +17,7 @@ export function OnboardingPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const rawReturn = params.get('returnTo')
-  const returnTo = rawReturn && rawReturn.startsWith('/') && !rawReturn.startsWith('//') ? rawReturn : null
+  const returnTo = safeReturnTo(rawReturn, null)
   const [nickname, setNickname] = useState(profile?.nickname ?? '')
   const [birthDate, setBirthDate] = useState(profile?.birthDate ?? '')
   const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '')

@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
-B='https://localhost:4173'; errs=[]
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173'); errs=[]
 def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page(); pg.on('pageerror',lambda e:errs.append(str(e)))
@@ -37,7 +38,7 @@ with sync_playwright() as p:
     ok(pg.get_by_text('あと1回').count()>=1,'question consumed per book')
     nav('/you/years/2026'); ok(pg.get_by_role('link',name='この読みものについて質問する').count()==0,'no free reading questions')
     # restore on another device
-    pg2=b.new_page(viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)
+    pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)
     pg2.fill('#restore-email','me@example.com'); pg2.get_by_role('button',name='コードを送る').click(); pg2.fill('#restore-code','12'); 
     ok(pg2.get_by_role('button',name='引き継ぐ').is_disabled(),'needs 6 digits'); pg2.fill('#restore-code','654321'); pg2.get_by_role('button',name='引き継ぐ').click(); pg2.wait_for_timeout(300)
     ok('/books' in pg2.url,'restored to bookshelf '+pg2.url)

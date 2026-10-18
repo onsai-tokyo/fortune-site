@@ -3,6 +3,7 @@ import { EmailCode } from '../components/EmailCode'
 import { NatureImage, Note, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
 import { useApp } from '../state/AppState'
+import { safeReturnTo } from '../../lib/safeReturnTo'
 
 /** 別の端末で使っていた本棚を開く（ログイン画面の代わり。パスワードなし） */
 export function RestorePage() {
@@ -10,7 +11,7 @@ export function RestorePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const returnTo = params.get('returnTo')
-  const next = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/books'
+  const next = safeReturnTo(returnTo, '/books')
 
   return (
     <Page>

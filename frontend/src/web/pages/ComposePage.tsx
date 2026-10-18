@@ -8,6 +8,7 @@ import { images } from '../data/images'
 import { bookQuestionProblem, bookThemes, countChars, defaultDraftSource, mockChapters, mockCoupleYears, mockYears, plans, relationGroup } from '../data/mock'
 import type { BookTheme } from '../data/types'
 import { useApp } from '../state/AppState'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 const MIN = 20
 const MAX = 400
@@ -52,7 +53,7 @@ export function ComposePage() {
   const empty = credits <= 0
   const consentOk = aiConsented || consent
   // 残りが0冊でも書けて、ボタンから買う（書いてから払う）
-  const ready = lengthOk && !problem && consentOk
+  const ready = lengthOk && !problem && consentOk && (!empty || paymentsAvailable)
   const isCouple = draft.sourceHref.startsWith('/couple')
   const single = plans.find(p => p.id === 'single')!
 
@@ -141,10 +142,10 @@ export function ComposePage() {
       </section>
 
       <section className="flex flex-col gap-2.5 px-5 pb-14 pt-6">
-        <Button size="lg" disabled={!ready} onClick={submit}>{empty ? `${single.price.toLocaleString()}円で一冊つくる` : `一冊つくる（残り${credits}冊）`}</Button>
+        <Button size="lg" disabled={!ready} onClick={submit}>{empty ? (paymentsAvailable ? `${single.price.toLocaleString()}円で一冊つくる` : BOOK_PREPARING) : `一冊つくる（残り${credits}冊）`}</Button>
         <span className="text-center text-xs leading-[1.7] text-fl-muted">
           {empty
-            ? 'お支払いのあと、この相談でそのままつくり始めます。5冊セット（1,980円）も選べます。'
+            ? (paymentsAvailable ? 'お支払いのあと、この相談でそのままつくり始めます。5冊セット（1,980円）も選べます。' : '書いた相談は下書きとして残ります。すでに利用できる冊数がある場合は、そのまま作成できます。')
             : 'できあがるまで数分かかります。画面を閉じても、本棚に届きます。'}
         </span>
       </section>

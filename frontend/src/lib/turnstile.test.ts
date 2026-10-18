@@ -16,6 +16,7 @@ function fixture() {
 
 test('unset site key performs no browser or network work', async () => {
   assert.equal(await requestCaptchaToken(), undefined)
+  assert.equal(await requestCaptchaToken(''), undefined)
 })
 
 test('each authentication attempt obtains its own token and removes its widget', async () => {

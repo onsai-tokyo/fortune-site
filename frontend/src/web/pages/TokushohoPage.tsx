@@ -2,13 +2,14 @@ import { useNavigate } from 'react-router-dom'
 import { IconBack } from '../components/icons'
 import { Footer, Note, Page } from '../components/ui'
 import { plans } from '../data/mock'
+import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 const rows: [string, string][] = [
   ['販売事業者', '温齋株式会社'],
   ['運営責任者', '[代表者名]'],
   ['所在地', '[本店所在地]'],
   ['連絡先', '[問い合わせ用メールアドレス]\n[電話番号]（お問い合わせはメールでお願いします）'],
-  ['販売価格', `${plans.map(p => `相談のブック ${p.name}：${p.price.toLocaleString()}円（税込）`).join('\n')}\n性格・相性・年ごとの読みものは無料です。`],
+  ['販売価格', `${paymentsAvailable ? plans.map(p => `相談のブック ${p.name}：${p.price.toLocaleString()}円（税込）`).join('\n') : BOOK_PREPARING}\n性格・相性・年ごとの読みものは無料です。`],
   ['商品代金以外の必要料金', 'インターネット接続にかかる通信料はお客様のご負担です。'],
   ['お支払い方法・時期', 'クレジットカード（[決済会社確定後に記載]）。ご購入時にお支払いいただきます。月額の契約や自動更新はありません。'],
   ['提供時期', '利用枠はお支払いの確認後すぐに反映されます。相談のブックは作成の受付後、通常数分でお届けします（混雑時はさらにお時間をいただく場合があります）。'],

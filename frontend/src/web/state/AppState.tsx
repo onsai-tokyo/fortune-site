@@ -5,6 +5,8 @@ import type { BirthProfile, Book, BookTheme, Chapter, Partner, PlanId, ReadingSe
 import { supabase } from '../../lib/supabase'
 import { apiFetch, newOperationId } from '../data/api'
 import { requestCaptchaToken } from '../../lib/turnstile'
+import { canCreateWithCredits } from '../data/paymentPolicy'
+import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -59,7 +61,7 @@ interface Actions {
   setDraft: (draft: Partial<AppState['draft']>) => void
   createBook: () => Book
   retryBook: (bookId: string) => void
-  purchase: (planId: PlanId, receiptEmail: string) => void
+  purchase: (planId: PlanId, receiptEmail: string) => boolean
   toggleSaved: (id: string) => void
   consumeBookQuestion: (bookId: string) => void
   acceptAiConsent: () => void
@@ -242,6 +244,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // 仮データの「作成中」のブックも、時間が経つと届くようにする
   useEffect(() => {
+    if (REMOTE) return
     stateRef.current.books.filter(b => b.state === 'queued' || b.state === 'generating' || b.state === 'review').forEach(b => deliverLater(b.id))
   }, [deliverLater])
 
@@ -265,7 +268,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
     storeDraftQuestion('')
     setState(s => ({ ...s, credits: s.credits - 1, books: [created, ...s.books], draft: { ...s.draft, question: '' } }))
-    deliverLater(created.id)
+    if (!REMOTE) deliverLater(created.id)
     return created
   }, [deliverLater])
 
@@ -420,8 +423,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       return { ...s, draft: next }
     }),
     createBook: () => {
+      if (!canCreateWithCredits(stateRef.current.credits)) throw new Error('利用できる冊数がありません。相談は下書きに残っています。')
+      const draft = { ...stateRef.current.draft }
       const created = createBookNow()
-      if (REMOTE) void remoteCreateBook(stateRef.current.draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(s => ({ ...s, books: s.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
+      if (REMOTE) void remoteCreateBook(draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(s => ({ ...s, books: s.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
       return created
     },
     retryBook: bookId => {
@@ -434,12 +439,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       deliverLater(bookId)
     },
     purchase: (planId, receiptEmail) => {
+      // REMOTE must await a future checkout provider and server-confirmed credits.
+      // Even payments=true must NEVER run the demo grant timer.
+      if (!simulatePurchase) return false
       const plan = plans.find(p => p.id === planId)
-      if (!plan) return
+      if (!plan) return false
       setState(s => ({ ...s, receiptEmail }))
       // 実際は決済会社の画面から戻り、Webhookで付与された後に残り冊数が増える
       const t = window.setTimeout(() => setState(s => ({ ...s, credits: s.credits + plan.credits, purchasedEver: true })), 2500)
       timers.current.push(t)
+      return true
     },
     toggleSaved: id => {
       const isSaved = stateRef.current.savedIds.includes(id)
@@ -449,15 +458,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     consumeBookQuestion: bookId => setState(s => ({ ...s, books: s.books.map(b => b.id === bookId ? { ...b, questionsLeft: Math.max(0, b.questionsLeft - 1) } : b) })),
     acceptAiConsent: () => setState(s => ({ ...s, aiConsented: true })),
     dismissGuide: () => setState(s => ({ ...s, showGuide: false })),
-    requestCreateAfterPurchase: () => setState(s => ({ ...s, pendingCreate: true })),
+    requestCreateAfterPurchase: () => { if (paymentsAvailable) setState(s => ({ ...s, pendingCreate: true })) },
     cancelPendingCreate: () => setState(s => (s.pendingCreate ? { ...s, pendingCreate: false } : s)),
     startPendingBook: () => {
+      if (!paymentsAvailable) return null
       const s = stateRef.current
       if (!s.pendingCreate || s.credits <= 0) return null
       const length = countChars(s.draft.question)
       if (length < 20 || length > 400 || bookQuestionProblem(s.draft.question)) { setState(prev => ({ ...prev, pendingCreate: false })); return null }
       setState(prev => ({ ...prev, pendingCreate: false }))
-      return createBookNow()
+      const draft = { ...s.draft }
+      const created = createBookNow()
+      if (REMOTE) void remoteCreateBook(draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(prev => ({ ...prev, books: prev.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
+      return created
     },
     deleteAccount: () => {
       void remoteToken().then(async accessToken => {
@@ -469,6 +482,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(blankState())
     },
     applyDemo: preset => {
+      if (REMOTE) return
       clearTimers()
       const base = initialState()
       if (preset === 'no-partner') Object.assign(base, { partners: [], draft: { ...defaultDraftSource(undefined), question: '' } })

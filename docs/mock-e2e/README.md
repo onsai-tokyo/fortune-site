@@ -14,3 +14,19 @@ python3 crawl.py     # 6つの状態で全リンクをたどり、エラー・�
 ```
 
 `OK` / `FAIL` が1行ずつ出る。最後に `pageerrors []` なら画面のエラーなし。
+
+既存プレビューを止めずに別ポートで確認する場合、全6本で
+`MOCK_E2E_BASE_URL=https://localhost:4175 python3 guest.py` のように指定できる。
+自己署名証明書を許容するのはローカル画面テストのブラウザだけで、本番設定には使わない。
+これらのスクリプトはFAIL表示があっても終了コード0になることがあるため、終了コードだけで合格とせず、出力のFAIL・pageerrors・crawlerのissuesを確認する。
+
+crawlは相手が登録済みの4プリセットに限り `/couple` → `/couple/p-misaki` を仕様どおりの遷移として別集計する。それ以外の問題はissuesとして残し、終了コード1にする。
+
+## REMOTEの決済制御（ローカルfixture専用・追加テスト）
+
+`payments_remote.py` は全APIを合成応答で代替する。実Supabase/Render/Anthropicへは接続しない。
+架空の `VITE_SUPABASE_URL=https://mock.invalid`、`VITE_SUPABASE_ANON_KEY=mock-anon-key` と
+`VITE_PAYMENTS_ENABLED=false` で別outDirへビルドし、別ポートでpreviewする。
+`MOCK_E2E_BASE_URL=https://localhost:4176 python3 payments_remote.py` で購入オフと付与済みの作成・質問を検証する。
+trueビルドでは `MOCK_PAYMENTS_ENABLED=true` を付け、REMOTE仮付与が無効のままか検証する。
+上記の架空の値はテスト専用で、デプロイ用環境変数へ保存しない。

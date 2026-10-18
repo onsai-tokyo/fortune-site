@@ -18,6 +18,7 @@ import { CreditsPage, PaymentReturnPage } from './pages/CreditsPage'
 import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage'
 import { TokushohoPage } from './pages/TokushohoPage'
 import { DemoPage } from './pages/DemoPage'
+import { remoteMode } from './data/paymentConfig'
 
 // 既存の公開ページ（文面はそのまま流用。見た目は今後Web版に合わせて調整）
 const TermsPage = lazy(() => import('../pages/TermsPage').then(m => ({ default: m.TermsPage })))
@@ -82,7 +83,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/contact" element={<Navigate to="/support" replace />} />
-        <Route path="/demo" element={<DemoPage />} />
+        <Route path="/demo" element={remoteMode ? <Navigate to="/" replace /> : <DemoPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
