@@ -7,6 +7,7 @@ import { partnersRouter } from './partners.js'
 import { previewRouter } from './preview.js'
 import { calcRouter } from './calc.js'
 import { webBooksRouter } from './webBooks.js'
+import { webReadingsRouter } from './webReadings.js'
 
 export const webRouter = Router()
 webRouter.use(requireAuth)
@@ -29,7 +30,7 @@ webRouter.put('/reading/saves/:saveKey', async (req: AuthRequest, res) => {
 })
 // No global FREE_QUESTION_LIMIT mutation: the existing iOS routes keep their policy.
 webRouter.post('/reading/conversations/:id/questions', (_req, res) => { res.status(403).json({code:'WEB_READING_QUESTIONS_DISABLED',error:'読みものへの無料質問はWeb版では提供していません。'}) })
-webRouter.use('/reading', coupleTimelineRouter, readingRouter)
+webRouter.use('/reading', webReadingsRouter, coupleTimelineRouter, readingRouter)
 webRouter.use('/partners', partnersRouter)
 webRouter.use('/preview', previewRouter)
 webRouter.use('/calc', calcRouter)

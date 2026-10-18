@@ -16,6 +16,8 @@ export interface ReadingSection {
 
 /** 本人の年ごとの読みもの（API: /api/timeline, /api/reading/:id/timing-history） */
 export interface YearReading {
+  sourceId?: string
+  sourceCardId?: string
   year: number
   label: string
   title: string
@@ -26,6 +28,8 @@ export interface YearReading {
 
 /** 性格の章（API: /api/preview/generate で生成し /api/reading/conversations に保存） */
 export interface Chapter {
+  sourceId?: string
+  sourceCardId?: string
   id: string
   title: string
   sub: string
@@ -52,6 +56,7 @@ export interface Partner {
 
 /** ふたりの年（API: /api/reading/:id/couple-timeline） */
 export interface CoupleYear {
+  sourceCardId?: string
   year: number
   label: string
   title: string
@@ -67,6 +72,7 @@ export type BookTheme = '恋愛・関係' | '仕事' | '人間関係' | '時期�
 
 /** 相談のブック（API: /api/books） */
 export interface Book {
+  sourceCardId?: string
   id: string
   title: string
   theme: BookTheme

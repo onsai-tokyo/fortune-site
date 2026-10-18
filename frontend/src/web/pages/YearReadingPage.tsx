@@ -2,15 +2,18 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { IconBookmark } from '../components/icons'
 import { BackHeader, Disclaimer, LinkButton, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
-import { mockYears, savedKey } from '../data/mock'
+import { savedKey } from '../data/readingData'
+import { remoteMode } from '../data/paymentConfig'
+import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 
 export function YearReadingPage() {
   const { year } = useParams()
-  const { savedIds, toggleSaved, years } = useApp()
-  const yearList = years.length ? years : mockYears
+  const { savedIds, toggleSaved, years, readingsStatus } = useApp()
+  const yearList = years
+  if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   const index = yearList.findIndex(y => String(y.year) === year)
-  if (index < 0) return <Navigate to="/you" replace />
+  if (index < 0) return remoteMode ? <ReadingStatus empty /> : <Navigate to="/you" replace />
   const reading = yearList[index]
   const prev = yearList[index - 1]
   const next = yearList[index + 1]
@@ -62,7 +65,7 @@ export function YearReadingPage() {
         )}
       </nav>
 
-      <section className="px-6 pb-12 pt-5"><Disclaimer>暦の計算に基づく読みものです。出来事や結果を約束するものではありません。{!years.length && '文章はサンプルです。'}</Disclaimer></section>
+      <section className="px-6 pb-12 pt-5"><Disclaimer>暦の計算に基づく読みものです。出来事や結果を約束するものではありません。</Disclaimer></section>
     </Page>
   )
 }

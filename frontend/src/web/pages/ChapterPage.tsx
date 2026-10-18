@@ -1,18 +1,21 @@
 import { Navigate, useParams } from 'react-router-dom'
 import { IconBookmark } from '../components/icons'
 import { BackHeader, Disclaimer, LinkButton, NatureImage, Page } from '../components/ui'
-import { chapterSections, mockChapters, savedKey } from '../data/mock'
+import { chapterSections, savedKey } from '../data/mock'
+import { remoteMode } from '../data/paymentConfig'
+import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 
 export function ChapterPage() {
   const { id } = useParams()
-  const { savedIds, toggleSaved, chapters } = useApp()
-  const chapterList = chapters.length ? chapters : mockChapters
+  const { savedIds, toggleSaved, chapters, readingsStatus } = useApp()
+  const chapterList = chapters
+  if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   const chapter = chapterList.find(c => c.id === id)
-  if (!chapter) return <Navigate to="/you" replace />
+  if (!chapter) return remoteMode ? <ReadingStatus empty /> : <Navigate to="/you" replace />
   const key = savedKey.chapter(chapter.id)
   const saved = savedIds.includes(key)
-  const sections = chapter.sections?.length ? chapter.sections : chapterSections[chapter.id] ?? []
+  const sections = chapter.sections?.length ? chapter.sections : remoteMode ? [] : chapterSections[chapter.id] ?? []
   const index = chapterList.indexOf(chapter)
   const next = chapterList[index + 1]
 
@@ -42,7 +45,7 @@ export function ChapterPage() {
         <LinkButton to={`/compose?source=chapter-${chapter.id}`}>この章について相談する</LinkButton>
         {next && <LinkButton to={`/you/chapters/${next.id}`} variant="secondary">次の章：{next.title}</LinkButton>}
       </section>
-      <section className="px-6 pb-12 pt-5"><Disclaimer>暦の計算に基づく読みものです。{!chapters.length && '文章はサンプルです。'}</Disclaimer></section>
+      <section className="px-6 pb-12 pt-5"><Disclaimer>暦の計算に基づく読みものです。</Disclaimer></section>
     </Page>
   )
 }

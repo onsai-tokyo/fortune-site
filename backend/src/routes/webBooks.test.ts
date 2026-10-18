@@ -41,7 +41,13 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     }
     if(name==='ai_books') value=accepted?row:null
     if(name==='reading_conversations') value={id:source,title:'本人',kind:'self',calculated_data:{_structuredReport:{version:3,reportText:'本人',generator:'deterministic',generatorVersion:'fixture',cards:[1,2,3].map(n=>({id:`card-${n}`,kind:'essence',title:'仕事',summary:'本人の特徴',tags:[],pages:[],evidence:[]}))}}}
-    if(name==='ai_book_order_web'){orders++;accepted=true;value=book}
+    if(name==='ai_book_order_web'){
+      const input = JSON.parse(String(init?.body))
+      assert.equal(input.p_snapshot[0].id,'card-2')
+      assert.equal(input.p_snapshot[0].focused,true)
+      row.source_snapshot=input.p_snapshot
+      orders++;accepted=true;value=book
+    }
     if(name==='ai_book_question_begin')value={state:'generating',created:false}
     assert.notEqual(name,'ai_book_order','must not call the iOS order RPC')
     return new Response(JSON.stringify(value),{status:200,headers:{'content-type':'application/json'}})
@@ -52,11 +58,13 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
   const call=(path:string, body?:unknown, consent=true)=>originalFetch(`http://127.0.0.1:${port}/api/web${path}`,{method:body?'POST':'GET',headers:{authorization:`Bearer ${token}`,'content-type':'application/json',...(consent?{'X-FateLab-AI-Consent':'anthropic-inline-2026-10-11-v3'}:{})},body:body?JSON.stringify(body):undefined})
   try {
     assert.equal((await (await call('/books/status')).json()).remaining,1)
-    const payload={operationId:op,sourceId:source,theme:'仕事',question}
+    const payload={operationId:op,sourceId:source,theme:'仕事',question,focusCardId:'card-2'}
+    assert.equal((await call('/books/validate',{...payload,focusCardId:''})).status,422)
     assert.equal((await call('/books',payload,false)).status,428)
     assert.equal(orders,0)
     assert.equal((await call('/books',payload)).status,201)
     assert.equal((await call('/books',payload)).status,200)
+    assert.equal((await call('/books',{...payload,focusCardId:'card-1'})).status,409)
     assert.equal(orders,1)
     assert.equal((await call('/reading/conversations/'+source+'/questions',{question})).status,403)
     const pending=await call('/books/'+book+'/questions',{operationId:op,question})

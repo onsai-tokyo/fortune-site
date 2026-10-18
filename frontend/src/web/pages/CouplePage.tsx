@@ -1,9 +1,18 @@
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { IconBookmark, IconPen } from '../components/icons'
 import { Card, Footer, LinkButton, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
-import { mockCoupleYears, relationGroup, savedKey } from '../data/mock'
+import { relationGroup, savedKey } from '../data/mock'
+import { remoteMode } from '../data/paymentConfig'
+import { ReadingStatus } from '../components/ReadingStatus'
+
+function MeetingYearForm({ partnerId }: { partnerId: string }) {
+  const { saveMeetingYear } = useApp()
+  const [year, setYear] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false)
+  return <Page><SiteHeader current="couple" /><section className="space-y-4 px-6 py-8"><h1>ふたりの年表</h1><p>出会った年を入力すると、実際のふたりの年表を表示できます。</p><form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try { await saveMeetingYear(partnerId, Number(year)) } catch { setError('保存できませんでした。もう一度お試しください。') } finally { setBusy(false) } }}><label>出会った年<input type="number" required value={year} onChange={e => setYear(e.target.value)} className="block w-full border p-3" /></label><button disabled={busy} className="mt-4 border p-3">保存して年表を読む</button></form>{error && <p role="alert">{error}</p>}</section></Page>
+}
 import { useApp } from '../state/AppState'
 import { useCenterCurrent } from '../components/useCenterCurrent'
 
@@ -40,18 +49,22 @@ export function CoupleIndexPage() {
 export function CouplePage() {
   const { partnerId } = useParams()
   const [params, setParams] = useSearchParams()
-  const { partners, setDraft, savedIds, toggleSaved } = useApp()
+  const { partners, setDraft, savedIds, toggleSaved, coupleYears, coupleStatus, readingsStatus } = useApp()
   const tabsRef = useCenterCurrent<HTMLDivElement>(`${partnerId}-${params.get('year')}`)
   const partner = partners.find(p => p.id === partnerId)
+  if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   if (!partner) return <Navigate to="/couple" replace />
 
-  const years = mockCoupleYears.filter(y => !partner.metYear || y.year >= partner.metYear)
-  const pickedYear = Number(params.get('year')) || 2026
+  const years = (coupleYears[partner.id] ?? []).filter(y => !partner.metYear || y.year >= partner.metYear)
+  if (remoteMode && coupleStatus[partner.id] === 'needs_meeting_year') return <MeetingYearForm partnerId={partner.id} />
+  if (remoteMode && coupleStatus[partner.id] !== 'ready') return <ReadingStatus loading={coupleStatus[partner.id] === 'loading'} />
+  const pickedYear = Number(params.get('year')) || new Date().getFullYear()
   const current = years.find(y => y.year === pickedYear) ?? years[years.length - 2] ?? years[0]
+  if (!current) return <ReadingStatus empty />
   const pick = (year: number) => setParams({ year: String(year) }, { replace: true })
 
   function startCompose() {
-    setDraft({ sourceTitle: `${partner!.name}との${current.year}年`, sourceSub: current.title, sourceHref: `/couple/${partner!.id}?year=${current.year}`, theme: relationGroup(partner!.relation) === 'romantic' ? '恋愛・関係' : '人間関係' })
+    setDraft({ sourceId: undefined, sourceCardId: current.sourceCardId, sourceTitle: `${partner!.name}との${current.year}年`, sourceSub: current.title, sourceHref: `/couple/${partner!.id}?year=${current.year}`, theme: relationGroup(partner!.relation) === 'romantic' ? '恋愛・関係' : '人間関係' })
   }
 
   return (
@@ -93,15 +106,15 @@ export function CouplePage() {
           </div>
           <h2 className="m-0 text-[21px] font-medium leading-relaxed">{current.title}</h2>
           {current.body.map(p => <p key={p} className="m-0 text-[15px] leading-[1.9] text-fl-body">{p}</p>)}
-          <div className="flex flex-wrap gap-2 pt-1">
+          {(current.you || current.partner) && <div className="flex flex-wrap gap-2 pt-1">
             <span className="rounded-full bg-fl-surface px-3 py-1.5 text-xs text-fl-body">あなた：{current.you}</span>
             <span className="rounded-full bg-fl-surface px-3 py-1.5 text-xs text-fl-body">{partner.name}：{current.partner}</span>
-          </div>
+          </div>}
           <Link to="/compose" onClick={startCompose} className="mt-1.5 flex min-h-[50px] items-center justify-center gap-2 rounded-button bg-fl-ink text-[15px] font-medium text-white">
             <IconPen size={18} />この年について相談する
           </Link>
         </Card>
-        <p className="mx-1 mt-2.5 text-xs text-fl-muted">文章はサンプルです。</p>
+        {!remoteMode && <p className="mx-1 mt-2.5 text-xs text-fl-muted">文章はサンプルです。</p>}
       </section>
 
       <section className="flex flex-col gap-1 px-5 pb-6 pt-8">

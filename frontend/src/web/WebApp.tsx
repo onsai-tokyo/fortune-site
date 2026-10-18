@@ -18,6 +18,7 @@ import { CreditsPage, PaymentReturnPage } from './pages/CreditsPage'
 import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage'
 import { DemoPage } from './pages/DemoPage'
 import { remoteMode } from './data/paymentConfig'
+import { ReadingStatus } from './components/ReadingStatus'
 
 // Web版専用。既存アプリ向け文書のソースは上書きしない。
 const TermsPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebTermsPage })))
@@ -39,8 +40,10 @@ function ScrollToTop() {
  * 別の端末で使っていた人は /restore（メールのコード）から本棚を開く。
  */
 function RequireProfile({ children }: { children: ReactNode }) {
-  const { profile } = useApp()
+  const { profile, readingsStatus } = useApp()
   const location = useLocation()
+  if (!profile && remoteMode && readingsStatus === 'loading') return <ReadingStatus loading />
+  if (!profile && remoteMode && readingsStatus === 'error') return <ReadingStatus />
   if (!profile) return <Navigate to={`/welcome?returnTo=${encodeURIComponent(location.pathname + location.search)}`} replace />
   return <>{children}</>
 }

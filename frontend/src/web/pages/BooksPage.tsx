@@ -88,9 +88,9 @@ function BookRow({ book }: { book: Book }) {
 
 /** 本番：GET /api/books（60件ずつ、before カーソル）。作成中は /api/books/operations/:id をポーリング */
 export function BooksPage() {
-  const { books, savedIds, partners, years, chapters, credits } = useApp()
+  const { books, savedIds, partners, years, chapters, coupleYears, credits } = useApp()
   const delivered = books.filter(b => b.state === 'delivered')
-  const savedCount = savedCatalog(partners, years, chapters).filter(s => savedIds.includes(s.id)).length
+  const savedCount = savedCatalog(partners, years, chapters, coupleYears).filter(s => savedIds.includes(s.id)).length
   return (
     <Page>
       <SiteHeader current="books" />
@@ -123,9 +123,9 @@ export function BooksPage() {
 }
 
 export function SavedReadingsPage() {
-  const { books, savedIds, partners, years, chapters } = useApp()
+  const { books, savedIds, partners, years, chapters, coupleYears } = useApp()
   const [filter, setFilter] = useState<'all' | 'you' | 'couple'>('all')
-  const catalog = savedCatalog(partners, years, chapters)
+  const catalog = savedCatalog(partners, years, chapters, coupleYears)
   // 保存した順（新しいものを上）に並べる
   const saved = [...savedIds].reverse().map(id => catalog.find(c => c.id === id)).filter((s): s is NonNullable<typeof s> => !!s)
   const rows = saved.filter(s => filter === 'all' || s.kind === filter)

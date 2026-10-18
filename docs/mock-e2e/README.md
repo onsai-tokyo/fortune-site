@@ -34,6 +34,24 @@ crawlは相手が登録済みの4プリセットに限り `/couple` → `/couple
 `MOCK_E2E_BASE_URL=https://localhost:4176 python3 payments_remote.py` で購入オフと付与済みの作成・質問を検証する。
 trueビルドでは `MOCK_PAYMENTS_ENABLED=true` を付け、REMOTE仮付与が無効のままか検証する。
 上記の架空の値はテスト専用で、デプロイ用環境変数へ保存しない。
+
+## REMOTEの読みもの・相談元（実API形状の合成応答）
+
+`remote_readings.py` は、異なる生年月日の本人2人×相手2人を検証する追加テスト。
+見出し・年と章の本文・ふたりの年表・相談候補のURL/ID/テーマ・実年の保存キー、
+読み込み中/失敗/再読み込みを検証し、REMOTE生成JSに既知の見本本文が含まれないことも確認する。
+APIはすべてローカルfixtureで置き換え、外部への通信は遮断する。
+
+```sh
+cd frontend
+VITE_SUPABASE_URL=https://mock.invalid VITE_SUPABASE_ANON_KEY=mock-anon-key VITE_PAYMENTS_ENABLED=false npm exec vite build -- --outDir /private/tmp/fatelab-remote-real-readings --emptyOutDir
+npm run preview -- --host 127.0.0.1 --port 4192 --strictPort --outDir /private/tmp/fatelab-remote-real-readings
+```
+
+別ターミナルでリポジトリ直下から実行する：
+`MOCK_E2E_BASE_URL=https://127.0.0.1:4192 python3 docs/mock-e2e/remote_readings.py`
+別outDirの場合は `REMOTE_DIST` も指定する。HTTPSを使わない環境ではURLをHTTPに合わせる。
+実DBの権限・実配送・実AI生成の成功を保証するテストではない。
 # 旧ログインのREMOTE fixture
 
 旧法務/SEOの `legacy_legal_seo.py` は通常の見本ビルドで実行する。Vite previewはVercel設定を実行しないため、SEOのrewriteは設定JSONと実際のdist HTMLをブラウザーfixtureで対応づける。実VercelでのURL確認は公開前に別途必要。アプリ向け保存文書はStripe料金を取得せず、保存本文・元ソースSHA256・Web文書との区別を検査する。

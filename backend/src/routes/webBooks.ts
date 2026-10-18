@@ -7,6 +7,7 @@ import { questionLimiter } from './reading.js'
 import { requireAIConsent } from '../middleware/aiConsent.js'
 import { countAvailableBookCredits } from '../lib/webBookCredits.js'
 import { publicBook as appPublicBook } from './aiBooks.js'
+import { resolveBookFocus } from '../lib/aiBookFocus.js'
 export const webBooksRouter = Router()
 webBooksRouter.use(requireAuth)
 const projection = 'id,source_id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,metadata,funding_source'
@@ -19,7 +20,8 @@ export function bookQuestionMonthlyLimits() {
 }
 export function publicBook(b: Record<string, unknown>) {
   const used = Array.isArray(b.ai_book_questions) ? b.ai_book_questions.filter((q: {state: string; created_at: string}) => q.state === 'completed' || (q.state === 'generating' && Date.parse(q.created_at) > Date.now() - 600_000)).length : 0
-  return {...appPublicBook(b),sourceId:b.source_id,questionsLeft:Math.max(0,2-used)}
+  const focusCardId = Array.isArray(b.source_snapshot) ? b.source_snapshot.find((s: { focused?: boolean }) => s.focused)?.id : undefined
+  return {...appPublicBook(b),sourceId:b.source_id,focusCardId,questionsLeft:Math.max(0,2-used)}
 }
 function fail(res: Response,error: unknown) {
   const e = error instanceof BookError ? error : new BookError('BOOK_UNAVAILABLE',503,'本棚を取得できませんでした。時間をおいてお試しください。')
@@ -151,10 +153,11 @@ webBooksRouter.post('/:bookId/questions', questionLimiter, async (req: AuthReque
 async function prepare(req:AuthRequest) {
   const question=validateBookQuestion(req.body?.question,req.body?.theme)
   if(!uuidPattern.test(req.body?.sourceId??'')) throw new BookError('BOOK_INPUT',422,'もとになる鑑定書を選んでください。')
-  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
+  const {data,error}=await getSupabaseAdmin().from('reading_conversations').select('id,title,kind,report_text,calculated_data,birth_data,partner_profile_id,reading_revision_id').eq('user_id',req.userId!).eq('id',req.body.sourceId).maybeSingle()
   if(error) throw error
   if(!data || data.kind==='chat') throw new BookError('BOOK_SOURCE',422,'保存済みの自己鑑定または相性鑑定を選んでください。')
-  const sources=bookSources(data,req.body.theme)
+  const focus = await resolveBookFocus(data,req.body.focusCardId,req.accessToken!,req.userId!)
+  const sources=bookSources(data,req.body.theme,focus)
   if(sources.length<3) throw new BookError('BOOK_SOURCE',422,'この鑑定書には必要な原稿が揃っていません。別の鑑定書を選んでください。')
   return {question,sources,row:data}
 }
@@ -168,6 +171,8 @@ webBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
     const {data:old,error}=await getSupabaseAdmin().from('ai_books').select('id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,source_id').eq('user_id',req.userId!).eq('operation_id',req.body.operationId).maybeSingle()
     if(error) throw error
     if(old) {
+      const oldFocus = Array.isArray(old.source_snapshot) ? old.source_snapshot.find((s: { focused?: boolean }) => s.focused)?.id : undefined
+      if (oldFocus !== req.body.focusCardId) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの読みものと異なります。')
       if(old.source_id!==String(req.body.sourceId).toLowerCase() || old.theme!==req.body.theme || old.question!==String(req.body.question).trim()) throw new BookError('BOOK_OPERATION_CONFLICT',409,'受付済みの相談と内容が異なります。')
       res.json({book:publicBook(old)}); return
     }

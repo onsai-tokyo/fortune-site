@@ -3,7 +3,8 @@ import { SiteHeader } from '../components/SiteHeader'
 import { Card, Footer, ListRow, NatureImage, Page } from '../components/ui'
 import { IconChevron, IconClose } from '../components/icons'
 import { images } from '../data/images'
-import { mockChapters, mockPersonaTitle, mockYears } from '../data/mock'
+import { remoteMode } from '../data/paymentConfig'
+import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 import { useCenterCurrent } from '../components/useCenterCurrent'
 
@@ -13,18 +14,20 @@ function formatBirth(date: string) {
 }
 
 export function YouPage() {
-  const { profile, partners, showGuide, dismissGuide, years, chapters } = useApp()
-  const yearList = years.length ? years : mockYears
-  const chapterList = chapters.length ? chapters : mockChapters
+  const { profile, partners, showGuide, dismissGuide, years, chapters, personaTitle, readingsStatus } = useApp()
+  const yearList = years
+  const chapterList = chapters
   const current = yearList.find(y => y.label === '今年') ?? yearList[yearList.length - 1]
   const partner = partners[0]
-  const stripRef = useCenterCurrent<HTMLDivElement>(current.year)
+  const stripRef = useCenterCurrent<HTMLDivElement>(current?.year)
+  if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
+  if (!current) return <ReadingStatus empty />
   return (
     <Page>
       <SiteHeader current="you" />
 
       <section className="flex flex-col gap-2.5 px-5 pb-2 pt-7">
-        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{mockPersonaTitle}</h1>
+        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{personaTitle || 'あなたの読みもの'}</h1>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">{profile ? `${formatBirth(profile.birthDate)}${profile.birthTime ? `・${profile.birthTime}・${profile.birthPlace}` : ''}。` : ''}生年月日から読んだ、あなたの性格と年ごとの流れです。</p>
       </section>
 
@@ -91,7 +94,6 @@ export function YouPage() {
           <ListRow key={ch.id} to={`/you/chapters/${ch.id}`} title={ch.title} sub={ch.sub}
             leading={<NatureImage src={ch.image} className="h-11 w-11 shrink-0 rounded-[10px]" />} />
         ))}
-        {!years.length && <span className="pt-2.5 text-xs text-fl-muted">章の名前と文章はサンプルです。</span>}
       </section>
 
       <section className="px-5 pt-6">

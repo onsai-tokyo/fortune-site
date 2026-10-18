@@ -4,7 +4,7 @@ import { SiteHeader } from '../components/SiteHeader'
 import { BackHeader, Button, Note, Page } from '../components/ui'
 import { EmailCode } from '../components/EmailCode'
 import { useApp } from '../state/AppState'
-import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { remoteMode, paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -23,7 +23,7 @@ function Row({ label, value, to }: { label: string; value?: ReactNode; to?: stri
 
 /** 購入履歴（本番：決済会社の取引記録をバックエンドで保持して返す。API未実装） */
 export function PurchasesPage() {
-  const rows = paymentsAvailable ? [
+  const rows = !remoteMode && paymentsAvailable ? [
     { date: '2026年10月12日', item: '相談のブック 5冊セット', price: '1,980円' },
     { date: '2026年9月3日', item: '相談のブック 1冊', price: '500円' },
   ] : []
@@ -32,7 +32,7 @@ export function PurchasesPage() {
       <SiteHeader current="none" />
       <section className="flex flex-col gap-2 px-5 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">購入履歴・領収書</h1>
-        <p className="m-0 text-xs text-fl-muted">{paymentsAvailable ? '表示はサンプルです。' : BOOK_PREPARING}</p>
+        <p className="m-0 text-xs text-fl-muted">{!remoteMode && paymentsAvailable ? '表示はサンプルです。' : BOOK_PREPARING}</p>
       </section>
       <section className="flex flex-col px-5 pb-12 pt-3">
         {rows.map(r => (

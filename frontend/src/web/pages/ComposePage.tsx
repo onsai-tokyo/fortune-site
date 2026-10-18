@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
 import { IconDown, IconPeople } from '../components/icons'
 import { Button, Chip, NatureImage, Page } from '../components/ui'
 import { AiConsentNotice } from '../components/AiConsent'
 import { images } from '../data/images'
-import { bookQuestionProblem, bookThemes, countChars, defaultDraftSource, mockChapters, mockCoupleYears, mockYears, plans, relationGroup } from '../data/mock'
-import type { BookTheme } from '../data/types'
+import { bookQuestionProblem, bookThemes, countChars, plans } from '../data/mock'
+import { sourceCatalog } from '../data/readingData'
 import { useApp } from '../state/AppState'
-import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { remoteMode, paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 
 const MIN = 20
 const MAX = 400
@@ -18,34 +18,25 @@ const MAX = 400
  * POST /api/books（operationId・AI同意ヘッダー必須）→ /api/books/operations/:id をポーリング
  */
 export function ComposePage() {
-  const { credits, draft, setDraft, createBook, aiConsented, acceptAiConsent, partners, requestCreateAfterPurchase } = useApp()
+  const { credits, draft, setDraft, createBook, aiConsented, acceptAiConsent, partners, years, chapters, coupleYears, readingsStatus, reloadReadings, requestCreateAfterPurchase } = useApp()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [consent, setConsent] = useState(false)
 
-  // 念のため：もとにする読みものが、いま登録していない相手のものなら差し替える
-  const sourcePartner = draft.sourceHref.match(/^\/couple\/([^?]+)/)?.[1]
-  const sourceMissing = !!sourcePartner && !partners.some(p => p.id === sourcePartner)
+  const sourceGroups = useMemo(() => sourceCatalog(partners, years, chapters, coupleYears), [partners, years, chapters, coupleYears])
+  const sources = useMemo(() => sourceGroups.flatMap(g => g.items), [sourceGroups])
+  const requested = params.get('source')
+  const requestedItem = sources.find(s => requested?.startsWith('you-') ? s.href === `/you/years/${requested.slice(4)}` : requested?.startsWith('chapter-') ? s.href === `/you/chapters/${requested.slice(8)}` : false)
+  const selected = requested && !requestedItem ? undefined : sources.find(s => s.href === draft.sourceHref)
   useEffect(() => {
-    if (sourceMissing) setDraft(defaultDraftSource(partners[0]))
-  }, [sourceMissing, partners, setDraft])
-
-  useEffect(() => {
-    const source = params.get('source')
-    // iOSと同じく、読みものから来たときは相談文が空なら書き出しを入れておく
-    const prefill = (title: string) => draft.question ? {} : { question: `「${title.slice(0, 120)}」について、私の状況に合わせて詳しく知りたいです。` }
-    const match = source?.match(/^you-(\d{4})$/)
-    if (match) {
-      const y = mockYears.find(r => String(r.year) === match[1])
-      if (y) setDraft({ sourceTitle: `あなたの${y.year}年`, sourceSub: y.title, sourceHref: `/you/years/${y.year}`, theme: '時期の判断', ...prefill(y.title) })
+    if (remoteMode && readingsStatus !== 'ready') return
+    const item = requested ? requestedItem : sources.find(s => s.href === draft.sourceHref) ?? sources[0]
+    if (!item) return
+    if (draft.sourceHref !== item.href || draft.sourceCardId !== item.sourceCardId || (!item.href.startsWith('/couple/') && draft.sourceId !== item.sourceId) || (requested && !draft.question)) {
+      setDraft({ sourceTitle: item.title, sourceSub: item.sub, sourceHref: item.href, sourceId: item.sourceId, sourceCardId: item.sourceCardId, theme: item.theme,
+        ...(requested && !draft.question ? { question: `「${(item.href.startsWith('/you/chapters/') ? item.title : item.sub).slice(0, 120)}」について、私の状況に合わせて詳しく知りたいです。` } : {}) })
     }
-    const chapter = source?.match(/^chapter-([a-z]+)$/)
-    if (chapter) {
-      const c = mockChapters.find(ch => ch.id === chapter[1])
-      if (c) setDraft({ sourceTitle: c.title, sourceSub: '性格の章', sourceHref: `/you/chapters/${c.id}`, theme: 'その他', ...prefill(c.title) })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, setDraft])
+  }, [sources, requested, requestedItem, draft.sourceHref, draft.sourceId, draft.sourceCardId, draft.question, setDraft, readingsStatus])
 
   const count = countChars(draft.question)
   const lengthOk = count >= MIN && count <= MAX
@@ -53,21 +44,13 @@ export function ComposePage() {
   const empty = credits <= 0
   const consentOk = aiConsented || consent
   // 残りが0冊でも書けて、ボタンから買う（書いてから払う）
-  const ready = lengthOk && !problem && consentOk && (!empty || paymentsAvailable)
+  const ready = !!selected && (!remoteMode || readingsStatus === 'ready') && lengthOk && !problem && consentOk && (!empty || paymentsAvailable)
   const isCouple = draft.sourceHref.startsWith('/couple')
   const single = plans.find(p => p.id === 'single')!
 
-  // もとにする読みものの候補（あなたの年・性格の章・ふたりの年）
-  const partner = partners[0]
-  type SourceItem = { href: string; title: string; sub: string; theme: BookTheme }
-  const sourceGroups: { label: string; items: SourceItem[] }[] = [
-    { label: 'あなたの年ごとの流れ', items: mockYears.map(y => ({ href: `/you/years/${y.year}`, title: `あなたの${y.year}年`, sub: y.title, theme: '時期の判断' })) },
-    { label: 'あなたの性格の章', items: mockChapters.map(c => ({ href: `/you/chapters/${c.id}`, title: c.title, sub: '性格の章', theme: 'その他' })) },
-    ...(partner ? [{ label: `${partner.name}との年表`, items: mockCoupleYears.filter(y => !partner.metYear || y.year >= partner.metYear).map((y): SourceItem => ({ href: `/couple/${partner.id}?year=${y.year}`, title: `${partner.name}との${y.year}年`, sub: y.title, theme: relationGroup(partner.relation) === 'romantic' ? '恋愛・関係' : '人間関係' })) }] : []),
-  ]
   function pickSource(href: string) {
     const item = sourceGroups.flatMap(g => g.items).find(i => i.href === href)
-    if (item) setDraft({ sourceTitle: item.title, sourceSub: item.sub, sourceHref: item.href, theme: item.theme })
+    if (item) { setDraft({ sourceTitle: item.title, sourceSub: item.sub, sourceHref: item.href, sourceId: item.sourceId, sourceCardId: item.sourceCardId, theme: item.theme }); if (requested) navigate('/compose', { replace: true }) }
   }
 
   function submit() {
@@ -94,14 +77,15 @@ export function ComposePage() {
       </section>
 
       <section className="flex flex-col gap-2.5 px-5 pt-5">
+        {remoteMode && readingsStatus !== 'ready' && <p role="status">{readingsStatus === 'loading' ? '読み込み中です…' : '読み込めませんでした。'}{readingsStatus !== 'loading' && <button onClick={reloadReadings}>再読み込み</button>}</p>}
         <label htmlFor="source" className="text-[13px] font-medium text-fl-body">もとにする読みもの</label>
         <div className="relative flex items-center gap-3.5 rounded-2xl border border-fl-line bg-white p-4 focus-within:outline focus-within:outline-2 focus-within:outline-fl-ink">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fl-cream text-fl-rose">
             {isCouple ? <IconPeople size={20} /> : <NatureImage src={images.nature.pampas} className="h-10 w-10 rounded-xl" />}
           </span>
           <span className="flex flex-1 flex-col gap-0.5">
-            <span className="text-[15px] font-medium">{draft.sourceTitle}</span>
-            <span className="text-xs text-fl-muted">{draft.sourceSub}</span>
+            <span className="text-[15px] font-medium">{selected?.title ?? '読みものを選択してください'}</span>
+            <span className="text-xs text-fl-muted">{selected?.sub}</span>
           </span>
           <span className="flex items-center gap-1 text-[13px] font-medium text-fl-slate" aria-hidden="true">変える<IconDown size={16} /></span>
           {/* 見た目はカード、操作はOS標準の選択（スマホで選びやすい） */}
@@ -113,7 +97,7 @@ export function ComposePage() {
             ))}
           </select>
         </div>
-        <Link to={draft.sourceHref} className="self-start text-xs text-fl-body underline">選んでいる読みものを読む</Link>
+        {selected && <Link to={selected.href} className="self-start text-xs text-fl-body underline">選んでいる読みものを読む</Link>}
       </section>
 
       <section className="flex flex-col gap-2.5 px-5 pt-6">

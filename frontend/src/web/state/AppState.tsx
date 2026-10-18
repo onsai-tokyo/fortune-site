@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { bookQuestionProblem, countChars, defaultDraftSource, initialSavedIds, mockBooks, mockFailedBook, mockPartners, mockProfile, mockChapters, mockYears, plans, QUESTIONS_PER_BOOK, savedKey, relationGroup } from '../data/mock'
+import { bookQuestionProblem, countChars, defaultDraftSource, initialSavedIds, mockBooks, mockFailedBook, mockPartners, mockProfile, mockChapters, mockYears, mockCoupleYears, mockPersonaTitle, plans, QUESTIONS_PER_BOOK, savedKey, relationGroup } from '../data/mock'
+import { personalReadings, coupleReadings, type LoadState } from '../data/readingData'
+import { demoDeliverySections } from '../data/demoData'
 import { images } from '../data/images'
-import type { BirthProfile, Book, BookTheme, Chapter, Partner, PlanId, ReadingSection, YearReading } from '../data/types'
+import type { BirthProfile, Book, BookTheme, Chapter, Partner, PlanId, ReadingSection, YearReading, CoupleYear } from '../data/types'
 import { supabase } from '../../lib/supabase'
 import { apiFetch, newOperationId, webApiPath } from '../data/api'
 import { requestCaptchaToken } from '../../lib/turnstile'
@@ -24,6 +26,11 @@ const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE
 export type Session = 'none' | 'anonymous' | 'linked'
 
 interface AppState {
+  readingsStatus: LoadState
+  personaTitle: string
+  selfSourceId?: string
+  coupleYears: Record<string, CoupleYear[]>
+  coupleStatus: Record<string, LoadState>
   session: Session
   /** 引き継ぎ用にひも付けたメール（linked のときだけ） */
   email: string | null
@@ -39,7 +46,7 @@ interface AppState {
   chapters: Chapter[]
   /** AIへの情報送信への同意（iOS AISharingConsent と同じく、一度同意すれば以後の相談・質問に適用。本番はサーバーに版つきで保存） */
   aiConsented: boolean
-  draft: { sourceTitle: string; sourceSub: string; sourceHref: string; sourceId?: string; theme: BookTheme; question: string }
+  draft: { sourceTitle: string; sourceSub: string; sourceHref: string; sourceId?: string; sourceCardId?: string; theme: BookTheme; question: string }
   /** 一度でも買ったことがあるか（ないうちはヘッダーに残り冊数を出さない） */
   purchasedEver: boolean
   /** はじめて読みものができた直後の案内を出すか */
@@ -49,6 +56,8 @@ interface AppState {
 }
 
 interface Actions {
+  reloadReadings: () => void
+  saveMeetingYear: (partnerId: string, year: number) => Promise<void>
   /** 引き継ぎ用メールをひも付ける（コード確認後） */
   linkEmail: (email: string) => void
   /** 別の端末で使っていた本棚を、メールのコードで開く */
@@ -84,6 +93,7 @@ const pendingPartnerKey = (userId: string) => `fatelab:web:pending-partner:${use
 function initialState(): AppState {
   if (REMOTE) return createBlankState()
   return {
+    readingsStatus: 'ready', personaTitle: mockPersonaTitle, coupleYears: Object.fromEntries(mockPartners.map(p => [p.id, mockCoupleYears])), coupleStatus: Object.fromEntries(mockPartners.map(p => [p.id, 'ready'])),
     session: 'anonymous',
     email: null,
     receiptEmail: 'name@example.com',
@@ -105,7 +115,7 @@ function initialState(): AppState {
 
 /** 何も入力していない状態（はじめての訪問・この端末での利用をやめた後・退会後） */
 function createBlankState(): AppState {
-  return { session: 'none', email: null, receiptEmail: null, profile: null, partners: [], partnerNotice: null, books: [], savedIds: [], years: [], chapters: [], credits: 0, aiConsented: false, draft: { ...defaultDraftSource(undefined), question: '' }, purchasedEver: false, showGuide: false, pendingCreate: false }
+  return { readingsStatus: REMOTE ? 'loading' : 'ready', personaTitle: '', coupleYears: {}, coupleStatus: {}, session: 'none', email: null, receiptEmail: null, profile: null, partners: [], partnerNotice: null, books: [], savedIds: [], years: [], chapters: [], credits: 0, aiConsented: false, draft: { ...(REMOTE ? { sourceTitle: '', sourceSub: '', sourceHref: '', theme: '時期の判断' as BookTheme } : defaultDraftSource(undefined)), question: '' }, purchasedEver: false, showGuide: false, pendingCreate: false }
 }
 
 function blankState(): AppState {
@@ -165,6 +175,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const revision = remoteAuth.current.revision
     const current = () => remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
     if (!current()) return
+    setState(s => ({ ...s, readingsStatus: 'loading', coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'loading'])) }))
     try {
       const [history, status, partners, bookshelf, saved] = await Promise.all([
         apiFetch<{ conversations: Array<Record<string, unknown>> }>('/api/reading/conversations', { accessToken }),
@@ -173,7 +184,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         apiFetch<{ books: Array<Record<string, unknown>> }>('/api/books', { accessToken }),
         apiFetch<{ saves: Array<{ save_key: string }> }>('/api/reading/saves', { accessToken }),
       ])
-      const first = history.conversations?.find(c => c.kind !== 'chat')
+      const first = history.conversations?.find(c => c.kind === 'self' || c.kind === 'personal' || c.kind == null)
       const [timing, cards] = first?.id ? await Promise.all([
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/timing-history', { accessToken }),
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/cards', { accessToken }),
@@ -182,7 +193,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const profile = birth ? {
         nickname: String(birth.nickname ?? ''), birthDate: String(birth.birthDate ?? birth.birth_date ?? ''),
         birthTime: typeof birth.birthTime === 'string' ? birth.birthTime : null,
-        birthPlace: String(birth.birthplace ?? birth.birthPlace ?? '東京都'),
+        birthPlace: String(birth.birthplace ?? birth.birthPlace ?? ''),
         gender: birth.gender === 'male' ? 'male' as const : 'female' as const,
       } : null
       const books = (bookshelf.books ?? []).map(b => ({
@@ -190,21 +201,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         question: String(b.question ?? ''), createdAt: String(b.createdAt ?? b.created_at ?? ''), state: String(b.state ?? 'queued') as Book['state'],
         sourceTitle: String(b.targetTitle ?? ''), sourceSub: '', sourceHref: '/you', cover: images.starMountains,
         sourceId: typeof b.sourceId === 'string' ? b.sourceId : undefined,
+        sourceCardId: typeof b.focusCardId === 'string' ? b.focusCardId : undefined,
         document: b.document && typeof b.document === 'object' ? b.document as Book['document'] : undefined,
         sections: Array.isArray((b.document as Record<string, unknown> | null)?.sections) ? ((b.document as Record<string, unknown>).sections as ReadingSection[]) : [],
         questionsLeft: Number(b.questionsLeft ?? 2),
       }))
       const sourceId = typeof first?.id === 'string' ? first.id : undefined
       const remoteSavedIds = (saved.saves ?? []).map(item => item.save_key)
-      const years = (timing.cards ?? []).map(card => {
-        const yearMatch = String(card.id ?? '').match(/(\d{4})/)
-        const sections = Array.isArray(card.sections) ? card.sections as ReadingSection[] : []
-        return { year: Number(yearMatch?.[1] ?? 0), label: Number(yearMatch?.[1]) === new Date().getFullYear() ? '今年' : '', title: String(card.title ?? 'この年の流れ'), tags: Array.isArray(card.tags) ? card.tags.map(String) : [], summary: String(card.summary ?? ''), sections }
-      }).filter(year => year.year > 0)
-      const natureImages = Object.values(images.nature)
-      const chapters = (cards.cards ?? []).filter(card => card.kind !== 'timing' && card.kind !== 'chart').map((card, index) => ({
-        id: String(card.id ?? `chapter-${index}`), title: String(card.title ?? '性格の章'), sub: String(card.summary ?? ''), image: natureImages[index % natureImages.length],
-        sections: Array.isArray(card.sections) ? card.sections as ReadingSection[] : [],
+      const { years, chapters, personaTitle } = personalReadings(timing.cards ?? [], cards.cards ?? [], sourceId ?? '', images.nature.pampas)
+      const coupleResults = await Promise.all((partners.partners ?? []).map(async p => {
+        const id = String(p.id)
+        try {
+          if (!sourceId) throw new Error('SOURCE_MISSING')
+          const raw = await apiFetch<Parameters<typeof coupleReadings>[0] & { status: string; meetingYear?: number }>(`/api/reading/${sourceId}/partners/${id}/couple-timeline`, { accessToken })
+          if (raw.status === 'needs_meeting_year') return { id, years: [], status: 'needs_meeting_year' as const, meetingYear: undefined }
+          if (!['ready', 'partial'].includes(raw.status)) throw new Error('TIMELINE_UNAVAILABLE')
+          return { id, years: coupleReadings(raw), status: 'ready' as const, meetingYear: raw.meetingYear }
+        } catch { return { id, years: [], status: 'error' as const, meetingYear: undefined } }
       }))
       if (!current()) return
       setState(s => !current() ? s : ({ ...s, profile: profile?.birthDate ? profile : s.profile,
@@ -212,11 +225,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
         savedIds: remoteSavedIds,
         books,
-        draft: sourceId && !s.draft.sourceId ? { ...s.draft, sourceId, sourceTitle: String(first?.title ?? s.draft.sourceTitle) } : s.draft,
-        partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.name ?? p.displayName ?? '相手'), relation: String(p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: typeof p.metYear === 'number' ? p.metYear : null })), partnerNotice: null,
-        years: years.length ? years : s.years, chapters: chapters.length ? chapters : s.chapters,
+        selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
+        coupleYears: Object.fromEntries(coupleResults.map(p => [p.id, p.years])), coupleStatus: Object.fromEntries(coupleResults.map(p => [p.id, p.status])),
+        partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })), partnerNotice: null,
+        years, chapters,
       }))
-    } catch { /* Offline startup is recoverable on the next refresh. */ }
+    } catch { if (current()) setState(s => ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) })) }
   }, [])
 
   useEffect(() => {
@@ -231,7 +245,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (changed || remoteAuth.current.token !== token) remoteAuth.current.revision++
       remoteAuth.current.owner = owner; remoteAuth.current.token = token
       if (changed || !session) clearTimers()
-      if (!session) { setState(blankState()); return }
+      if (!session) { setState({ ...blankState(), readingsStatus: 'idle' }); return }
       setState(previous => {
         const base = changed ? blankState() : previous
         return { ...base, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
@@ -254,7 +268,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const t = window.setTimeout(() => {
       setState(s => ({
         ...s,
-        books: s.books.map(b => b.id === bookId ? { ...b, state: 'delivered', progress: 100, sections: [{ heading: '一　この年の流れから', body: '［サンプル］選んだ読みものをもとにした答えがここに入ります。' }] } : b),
+        books: s.books.map(b => b.id === bookId ? { ...b, state: 'delivered', progress: 100, sections: demoDeliverySections } : b),
       }))
     }, 6000)
     timers.current.push(t)
@@ -280,6 +294,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       sourceSub: draft.sourceSub,
       sourceHref: draft.sourceHref,
       sourceId: draft.sourceId,
+      sourceCardId: draft.sourceCardId,
       cover: images.starMountains,
       sections: [],
       questionsLeft: QUESTIONS_PER_BOOK,
@@ -307,12 +322,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [refreshRemote])
   const remoteCreateBook = useCallback(async (draft: AppState['draft']) => {
     const accessToken = await remoteToken()
-    if (!accessToken || !draft.sourceId) throw new Error('もとになる読みものを確認できませんでした')
+    if (!accessToken) throw new Error('もとになる読みものを確認できませんでした')
+    const pair = draft.sourceHref.match(/^\/couple\/([^?]+)\?year=(\d{4})$/)
+    if (pair) {
+      const selfId = stateRef.current.selfSourceId
+      if (!selfId) throw new Error('本人の読みものを確認できませんでした')
+      const saved = await apiFetch<{ sourceId: string; sourceCardId: string }>(`/api/reading/${selfId}/partners/${pair[1]}/couple-timeline`, { method: 'POST', accessToken, body: JSON.stringify({ year: Number(pair[2]) }) })
+      draft = { ...draft, ...saved }
+    }
+    if (!draft.sourceId) throw new Error('もとになる読みものを確認できませんでした')
     const operationId = newOperationId()
     const userId = (await supabase.auth.getUser()).data.user?.id
     if (userId) window.localStorage.setItem(pendingBookKey(userId), JSON.stringify({ operationId, draft }))
-    await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, theme: draft.theme, question: draft.question }) })
-    await apiFetch('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, theme: draft.theme, question: draft.question }) })
+    await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
+    await apiFetch('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
     return pollRemoteBook(operationId, accessToken)
   }, [pollRemoteBook, remoteToken])
 
@@ -348,8 +371,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // A failed DELETE leaves the old record in place; do not create a second
         // partner in that case. If the list is empty, replay the same payload.
         if ((current.partners ?? []).length === 0) {
-          await apiFetch('/api/partners', { method: 'POST', accessToken: session.access_token, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
+          const result = await apiFetch<{ partner?: { id: string } }>('/api/partners', { method: 'POST', accessToken: session.access_token, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, displayName: input.name, birthplace: input.birthPlace, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
+          if (!result.partner?.id) throw new Error('PARTNER_MISSING')
+          // Registration is already committed. A meeting-year failure must not
+          // replay registration or delete the newly registered partner.
           window.localStorage.removeItem(pendingKey)
+          if (stateRef.current.selfSourceId) {
+            try { await apiFetch(`/api/reading/couple-timeline-settings/${result.partner.id}?selfReadingId=${stateRef.current.selfSourceId}`, { method: 'PATCH', accessToken: session.access_token, body: JSON.stringify({ meetingYear: input.metYear }) }) } catch { /* The real timeline offers meeting-year entry again. */ }
+          }
           await refreshRemote(session.access_token)
         }
       } catch { /* Keep the payload for the next explicit recovery attempt. */ }
@@ -378,6 +407,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [remoteToken])
 
   const actions = useMemo<Actions>(() => ({
+    reloadReadings: () => { const token = remoteAuth.current.token; if (token) void refreshRemote(token) },
+    saveMeetingYear: async (id, year) => {
+      const token = remoteAuth.current.token, selfId = stateRef.current.selfSourceId
+      if (!token || !selfId) throw new Error('本人の読みものを確認できませんでした。')
+      await apiFetch(`/api/reading/couple-timeline-settings/${id}?selfReadingId=${selfId}`, { method: 'PATCH', accessToken: token, body: JSON.stringify({ meetingYear: year }) })
+      await refreshRemote(token)
+    },
     linkEmail: email => {
       if (REMOTE) { void supabase.auth.updateUser({ email }); return }
       setState(s => ({ ...s, session: 'linked', email }))
@@ -397,27 +433,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(blankState())
     },
     saveProfile: profile => {
-      setState(s => ({ ...s, profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
-      if (REMOTE) void remoteSaveProfile(profile).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => undefined)
+      setState(s => ({ ...s, ...(!REMOTE ? { years: mockYears, chapters: mockChapters, personaTitle: mockPersonaTitle } : { readingsStatus: 'loading' as const, years: [], chapters: [], personaTitle: '' }), profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
+      if (REMOTE) void remoteSaveProfile(profile).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(s => s.profile === profile ? { ...s, readingsStatus: 'error' } : s))
     },
     setPartner: input => {
       const partner: Partner = { ...input, id: `p-${Date.now()}` }
+      const old = stateRef.current.partners[0]
       if (REMOTE) {
         void remoteToken().then(async accessToken => {
           if (!accessToken) return
           const userId = (await supabase.auth.getUser()).data.user?.id
           if (userId) window.localStorage.setItem(pendingPartnerKey(userId), JSON.stringify(input))
-          const old = stateRef.current.partners[0]
           let deleted = false
+          let registered = false
           try {
             if (old) { await apiFetch(`/api/partners/${old.id}`, { method: 'DELETE', accessToken }); deleted = true }
-            await apiFetch('/api/partners', { method: 'POST', accessToken, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
+            const result = await apiFetch<{ partner?: { id: string } }>('/api/partners', { method: 'POST', accessToken, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, displayName: input.name, birthplace: input.birthPlace, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
+            if (!result.partner?.id) throw new Error('PARTNER_MISSING')
+            registered = true
             if (userId) window.localStorage.removeItem(pendingPartnerKey(userId))
-            // Keep the local placeholder until the next explicit refresh so the navigation route remains usable.
+            await apiFetch(`/api/reading/couple-timeline-settings/${result.partner.id}?selfReadingId=${stateRef.current.selfSourceId}`, { method: 'PATCH', accessToken, body: JSON.stringify({ meetingYear: input.metYear }) })
+            await refreshRemote(accessToken)
           } catch {
-            if (userId) window.localStorage.setItem(pendingPartnerKey(userId), JSON.stringify(input))
-            if (deleted) setState(s => ({ ...s, partners: [], partnerNotice: '前の相手は削除済みです。新しい相手の登録に失敗しました。入力内容を保持しているので、もう一度登録してください。' }))
+            if (registered) {
+              await refreshRemote(accessToken)
+              setState(s => ({ ...s, partnerNotice: '相手は登録済みです。出会った年を保存できませんでした。ふたりの年表から、もう一度入力してください。' }))
+            } else if (deleted) setState(s => ({ ...s, partners: [], partnerNotice: '前の相手は削除済みです。新しい相手の登録に失敗しました。入力内容を保持しているので、もう一度登録してください。' }))
             else if (old) setState(s => ({ ...s, partners: [old], partnerNotice: '相手の入れ替えを開始できませんでした。前の相手は残っています。' }))
+            else setState(s => ({ ...s, partners: [], partnerNotice: '相手の登録に失敗しました。入力内容を保持しているので、もう一度登録してください。' }))
           }
         })
       }
@@ -427,8 +470,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const savedIds = s.savedIds.filter(id => !prefixes.some(prefix => id.startsWith(prefix)))
         // 書きかけの相談のもとが前の相手なら、新しい相手の同じ年に差し替える（相談文はそのまま）
         const draftOnOldPartner = s.partners.some(p => s.draft.sourceHref.startsWith(`/couple/${p.id}`))
-        const draft = draftOnOldPartner ? { ...s.draft, ...defaultDraftSource(partner, Number(new URLSearchParams(s.draft.sourceHref.split('?')[1]).get('year')) || 2026) } : s.draft
-        return { ...s, partners: [partner], savedIds, draft }
+        const draft = draftOnOldPartner ? { ...s.draft, ...(REMOTE ? { sourceId: undefined, sourceCardId: undefined, sourceTitle: '', sourceSub: '', sourceHref: '' } : defaultDraftSource(partner, Number(new URLSearchParams(s.draft.sourceHref.split('?')[1]).get('year')) || 2026)) } : s.draft
+        return { ...s, partners: [partner], savedIds, draft, coupleYears: REMOTE ? {} : { [partner.id]: mockCoupleYears }, coupleStatus: { [partner.id]: REMOTE ? 'loading' : 'ready' } }
       })
       return partner
     },
@@ -450,7 +493,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     retryBook: bookId => {
       if (REMOTE) {
         const current = stateRef.current.books.find(b => b.id === bookId)
-        if (current?.sourceId) void remoteCreateBook({ ...stateRef.current.draft, sourceId: current.sourceId, sourceTitle: current.sourceTitle, sourceSub: current.sourceSub, sourceHref: current.sourceHref, theme: current.theme, question: current.question }).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => undefined)
+        if (current?.sourceId) void remoteCreateBook({ ...stateRef.current.draft, sourceId: current.sourceId, sourceCardId: current.sourceCardId, sourceTitle: current.sourceTitle, sourceSub: current.sourceSub, sourceHref: current.sourceHref, theme: current.theme, question: current.question }).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => undefined)
         return
       }
       setState(s => ({ ...s, credits: s.credits - 1, books: s.books.map(b => b.id === bookId ? { ...b, state: 'generating', progress: 10, failureCode: undefined } : b) }))

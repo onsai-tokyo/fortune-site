@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { demoAnswer } from '../data/demoData'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { IconChevron, IconSend } from '../components/icons'
 import { BackHeader, Page } from '../components/ui'
@@ -48,7 +49,7 @@ export function AskPage() {
         consumeBookQuestion(currentBook.id)
         setMessages(m => [...m, { id: `a-${Date.now()}`, role: 'assistant', text: result.answer }])
       } else {
-        timer.current = window.setTimeout(() => setMessages(m => [...m, { id: `a-${Date.now()}`, role: 'assistant', text: '［サンプル］ブックの内容と、もとにした読みものに沿って短くお答えします。' }]), 1500)
+        timer.current = window.setTimeout(() => setMessages(m => [...m, { id: `a-${Date.now()}`, role: 'assistant', text: demoAnswer }]), 1500)
         consumeBookQuestion(currentBook.id)
       }
     } catch (error) {
