@@ -1,5 +1,7 @@
 # mainとのローカル統合 続報（2026-10-18）
 
+> テスト続報：ユーザーの続行指示後、既存11件の静的検査を現mainへ整合した。変更と未検証の範囲は [architecture-tests-main-alignment-20261018.md](architecture-tests-main-alignment-20261018.md) を参照。以下の11失敗は整合前の記録。本番未実行・旧URL/法務/無料枠の課題は継続。
+
 ## 状態
 
 本番変更・push・staging作業・実AI/メール送信は未実行。公開可能の判定ではない。
