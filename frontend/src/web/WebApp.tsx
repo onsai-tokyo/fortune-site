@@ -16,13 +16,13 @@ import { BookPage } from './pages/BookPage'
 import { AskPage } from './pages/AskPage'
 import { CreditsPage, PaymentReturnPage } from './pages/CreditsPage'
 import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage'
-import { TokushohoPage } from './pages/TokushohoPage'
 import { DemoPage } from './pages/DemoPage'
 import { remoteMode } from './data/paymentConfig'
 
-// 既存の公開ページ（文面はそのまま流用。見た目は今後Web版に合わせて調整）
-const TermsPage = lazy(() => import('../pages/TermsPage').then(m => ({ default: m.TermsPage })))
-const PrivacyPage = lazy(() => import('../pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
+// Web版専用。既存アプリ向け文書のソースは上書きしない。
+const TermsPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebTermsPage })))
+const PrivacyPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebPrivacyPage })))
+const TokushohoPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebCommercePage })))
 const SupportPage = lazy(() => import('../pages/SupportPage').then(m => ({ default: m.SupportPage })))
 
 function ScrollToTop() {
