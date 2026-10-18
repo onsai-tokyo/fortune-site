@@ -6,6 +6,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#faf7ef" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
     <meta name="description" content="生年月日・出生時刻・出生地から、東洋・西洋・インドの9つの占術を固定ルールで統合。性格・才能・適職・恋愛・人生の転機を無料で鑑定します。" />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <link rel="canonical" href="https://fate-lab.com/" />
@@ -26,12 +27,14 @@
     />
     <title>無料の生年月日占い｜9つの占術による統合鑑定｜Fate Lab</title>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-FPZ7QKTXLJ');
+      // SPA history measurement can include reading tokens after navigation.
+      // Keep collection disabled until route-safe measurement is implemented.
+      window['ga-disable-G-FPZ7QKTXLJ'] = true;
+      function gtag() {}
+      const privateReading = /\/(?:r|s|reading)(?:\/|$)/;
+      const privatePath = privateReading.test(location.pathname) || privateReading.test(location.hash.slice(1));
+      if (privatePath) document.querySelector('meta[name="robots"]').content = 'noindex,nofollow';
     </script>
     <script type="application/ld+json">
       {

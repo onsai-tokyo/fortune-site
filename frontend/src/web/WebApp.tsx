@@ -24,6 +24,7 @@ const TermsPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: 
 const PrivacyPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebPrivacyPage })))
 const TokushohoPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebCommercePage })))
 const SupportPage = lazy(() => import('../pages/SupportPage').then(m => ({ default: m.SupportPage })))
+const LegacyReadingPage = lazy(() => import('./pages/LegacyReadingPage').then(m => ({ default: m.LegacyReadingPage })))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -50,6 +51,13 @@ function YearAskRedirect() {
   return <Navigate to={`/you/years/${year}`} replace />
 }
 
+function LegacyReadingRedirect() {
+  const { search } = useLocation()
+  const id = new URLSearchParams(search).get('conversation')
+  // Old checkout parameters never trigger payment or automatic generation.
+  return <Navigate to={id ? `/reading/${encodeURIComponent(id)}` : '/books'} replace />
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<div aria-label="ページを読み込んでいます" className="fl-root" />}>
@@ -57,6 +65,12 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/restore" element={<RestorePage />} />
+        <Route path="/s/:shareId" element={<LegacyReadingPage identifier="share" />} />
+        <Route path="/r/:secretToken" element={<LegacyReadingPage identifier="token" />} />
+        <Route path="/reading" element={<LegacyReadingRedirect />} />
+        <Route path="/reading/new" element={<Navigate to="/welcome" replace />} />
+        <Route path="/reading/history" element={<Navigate to="/books" replace />} />
+        <Route path="/reading/:conversationId" element={<LegacyReadingPage identifier="id" />} />
         <Route path="/login" element={<Navigate to="/restore" replace />} />
         <Route path="/welcome" element={<OnboardingPage />} />
         <Route path="/creating" element={user(<CreatingPage />)} />

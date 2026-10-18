@@ -13,6 +13,8 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(B + '/demo')
     page.get_by_role('button', name='別の端末から引き継ぐ').click()
+    # Route rendering is asynchronous; wait for help text, not a fixed delay.
+    page.get_by_text(f'届いた{length}桁のコード', exact=False).wait_for()
     assert page.get_by_text(f'届いた{length}桁のコード', exact=False).count() == 1
     page.fill('#restore-email', 'otp-fixture@example.invalid')
     page.get_by_role('button', name='コードを送る', exact=True).click()

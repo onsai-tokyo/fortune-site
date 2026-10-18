@@ -2,6 +2,8 @@
 
 > テスト続報：ユーザーの続行指示後、既存11件の静的検査を現mainへ整合した。変更と未検証の範囲は [architecture-tests-main-alignment-20261018.md](architecture-tests-main-alignment-20261018.md) を参照。以下の11失敗は整合前の記録。本番未実行・旧URL/法務/無料枠の課題は継続。
 
+> URL続報：旧閲覧URLの読み取り専用互換ページと検証を追加した。実装範囲と、旧アカウント再ログイン等の未完了範囲は [legacy-url-compatibility-20261018.md](legacy-url-compatibility-20261018.md) を参照。
+
 ## 状態
 
 本番変更・push・staging作業・実AI/メール送信は未実行。公開可能の判定ではない。
