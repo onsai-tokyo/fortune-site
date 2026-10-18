@@ -26,6 +26,7 @@ const TokushohoPage = lazy(() => import('./pages/LegalPages').then(m => ({ defau
 const SupportPage = lazy(() => import('../pages/SupportPage').then(m => ({ default: m.SupportPage })))
 const LegacyReadingPage = lazy(() => import('./pages/LegacyReadingPage').then(m => ({ default: m.LegacyReadingPage })))
 const LegacyLoginPage = lazy(() => import('./pages/LegacyLoginPage').then(m => ({ default: m.LegacyLoginPage })))
+const LegacyLegalPage = lazy(() => import('./pages/LegacyLegalPage').then(m => ({ default: m.LegacyLegalPage })))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -94,7 +95,10 @@ function AppRoutes() {
         <Route path="/settings/purchases" element={user(<PurchasesPage />)} />
         <Route path="/settings/link" element={user(<LinkEmailPage />)} />
         <Route path="/tokushoho" element={<TokushohoPage />} />
-        <Route path="/tokushohou" element={<Navigate to="/tokushoho" replace />} />
+        <Route path="/tokushohou" element={<LegacyLegalPage document="tokushohou" />} />
+        <Route path="/app-legal/terms" element={<LegacyLegalPage document="terms" />} />
+        <Route path="/app-legal/privacy" element={<LegacyLegalPage document="privacy" />} />
+        <Route path="/app-legal/tokushohou" element={<LegacyLegalPage document="tokushohou" />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/support" element={<SupportPage />} />

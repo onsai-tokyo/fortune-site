@@ -1,5 +1,7 @@
 # 10/18 Web公開準備 A1〜A4 と B実行計画（本番未変更）
 
+> 最新のA4整理・承認済み法務情報・B計画は [release-readiness-current-20261018.md](release-readiness-current-20261018.md) を参照。以下は初回調査の記録であり、解消済み事項の現状判定には使わない。
+
 > 続報：ローカル統合の再実施と検証結果は [web-main-integration-20261018.md](web-main-integration-20261018.md) を参照。以下のA2「統合未完了」は初回調査時の記録であり、続報で更新される。本番公開不可・B未実行の判断は継続する。
 
 ## 判定

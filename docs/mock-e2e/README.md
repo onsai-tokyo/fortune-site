@@ -36,6 +36,8 @@ trueビルドでは `MOCK_PAYMENTS_ENABLED=true` を付け、REMOTE仮付与が�
 上記の架空の値はテスト専用で、デプロイ用環境変数へ保存しない。
 # 旧ログインのREMOTE fixture
 
+旧法務/SEOの `legacy_legal_seo.py` は通常の見本ビルドで実行する。Vite previewはVercel設定を実行しないため、SEOのrewriteは設定JSONと実際のdist HTMLをブラウザーfixtureで対応づける。実VercelでのURL確認は公開前に別途必要。アプリ向け保存文書はStripe料金を取得せず、保存本文・元ソースSHA256・Web文書との区別を検査する。
+
 `legacy_login.py` は通常の見本ビルドではなく、公開用に見せかけた合成値だけでビルドして実行する。
 
 ```sh

@@ -5,7 +5,8 @@ import { collectedInformation, commerceRows, crossBorderNotice, privacyIntro, pr
 
 function Layout({ title, children }: { title: string; children: ReactNode }) {
   return <Page><PlainHeader /><article className="flex flex-col gap-7 px-6 pb-8 pt-7 text-sm leading-[1.9] break-words">
-    <h1 className="m-0 text-2xl font-medium">{title}</h1>{children}
+    <h1 className="m-0 text-2xl font-medium">{title}</h1>
+    <aside className="border-l-2 border-fl-line pl-3 text-xs">これはWeb版の文書です。<Link className="underline" to="/app-legal/terms">アプリ向け文書の保存版</Link>は別に掲載しています。</aside>{children}
     <nav aria-label="規約関連ページ" className="flex flex-wrap gap-4 text-fl-slate underline"><Link to="/terms">利用規約</Link><Link to="/privacy">プライバシーポリシー</Link><Link to="/tokushoho">特定商取引法に基づく表記</Link></nav>
   </article><Footer /></Page>
 }

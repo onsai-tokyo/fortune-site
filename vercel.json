@@ -6,11 +6,6 @@
       "permanent": false
     },
     {
-      "source": "/tokushohou",
-      "destination": "/tokushoho",
-      "permanent": true
-    },
-    {
       "source": "/lp",
       "destination": "/",
       "permanent": true
@@ -64,36 +59,6 @@
       "source": "/compat-report/:path*",
       "destination": "/",
       "permanent": false
-    },
-    {
-      "source": "/guides/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/tools/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/about/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/methodology/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/editorial-policy/:path*",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/press/:path*",
-      "destination": "/",
-      "permanent": false
     }
   ],
   "rewrites": [
@@ -104,6 +69,38 @@
     {
       "source": "/api/apple/notifications",
       "destination": "https://fortune-site-iuzo.onrender.com/api/apple/notifications"
+    },
+    {
+      "source": "/guides",
+      "destination": "/guides/index.html"
+    },
+    {
+      "source": "/guides/:slug",
+      "destination": "/guides/:slug/index.html"
+    },
+    {
+      "source": "/tools",
+      "destination": "/tools/index.html"
+    },
+    {
+      "source": "/tools/:slug",
+      "destination": "/tools/:slug/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology/index.html"
+    },
+    {
+      "source": "/editorial-policy",
+      "destination": "/editorial-policy/index.html"
+    },
+    {
+      "source": "/press",
+      "destination": "/press/index.html"
     },
     {
       "source": "/((?!api/|assets/|images/).*)",

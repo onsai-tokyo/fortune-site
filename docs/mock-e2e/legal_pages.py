@@ -1,5 +1,6 @@
 """Local-only public Web legal page checks; no real auth or data writes."""
 import os
+from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 B = os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4190')
@@ -14,7 +15,7 @@ with sync_playwright() as p:
         article = page.locator('article')
         text = article.inner_text()
         assert '温齋株式会社' in text and 'この下書きについて' not in text
-        assert '［問い合わせ用メールアドレス］' in text
+        assert 'onsai.tokyo@gmail.com' in text
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), path
         if path == '/terms':
             assert article.get_by_role('heading', level=2).count() == 16
@@ -28,7 +29,8 @@ with sync_playwright() as p:
             assert '現在、ブックの販売は準備中で、購入はできません' in text
         print('PASS', path, 'public / content / no horizontal overflow')
     page.goto(B + '/tokushohou')
-    page.wait_for_url(B + '/tokushoho')
+    page.get_by_role('heading', name='アプリ向け文書の保存版', exact=True).wait_for()
+    assert urlparse(page.url).path == '/tokushohou'
     assert not errors, errors
-    print('PASS legacy commerce spelling redirects; pageerrors []')
+    print('PASS legacy commerce URL retains app reference document; pageerrors []')
     browser.close()
