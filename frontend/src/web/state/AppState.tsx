@@ -4,6 +4,7 @@ import { images } from '../data/images'
 import type { BirthProfile, Book, BookTheme, Chapter, Partner, PlanId, ReadingSection, YearReading } from '../data/types'
 import { supabase } from '../../lib/supabase'
 import { apiFetch, newOperationId } from '../data/api'
+import { requestCaptchaToken } from '../../lib/turnstile'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -336,7 +337,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const remoteSaveProfile = useCallback(async (profile: BirthProfile) => {
     let token = await remoteToken()
     if (!token) {
-      const captchaToken = import.meta.env.VITE_TURNSTILE_SITE_KEY ? undefined : undefined
+      const captchaToken = await requestCaptchaToken(import.meta.env.VITE_TURNSTILE_SITE_KEY)
       const result = await supabase.auth.signInAnonymously({ options: captchaToken ? { captchaToken } : undefined })
       if (result.error || !result.data.session) throw result.error ?? new Error('匿名アカウントを作成できませんでした')
       token = result.data.session.access_token

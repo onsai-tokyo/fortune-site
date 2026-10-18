@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button, Field } from './ui'
 import { supabase } from '../../lib/supabase'
+import { requestCaptchaToken } from '../../lib/turnstile'
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 
@@ -25,6 +26,7 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
+  const [sending, setSending] = useState(false)
   const codeRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -37,15 +39,22 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
 
   async function send(e?: FormEvent) {
     e?.preventDefault()
+    if (sending || cooldown > 0) return
     if (!emailOk(email)) { setError('メールアドレスを確かめてください。'); return }
     setError(null)
-    if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      const result = idPrefix === 'link'
-        ? await supabase.auth.updateUser({ email: email.trim() })
-        : await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } })
-      if (result.error) { setError(result.error.message || 'コードを送信できませんでした。'); return }
-    }
-    setCode(''); setStep('code'); setCooldown(60)
+    setSending(true)
+    try {
+      if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        const captchaToken = idPrefix === 'link' ? undefined : await requestCaptchaToken(import.meta.env.VITE_TURNSTILE_SITE_KEY)
+        const result = idPrefix === 'link'
+          ? await supabase.auth.updateUser({ email: email.trim() })
+          : await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, captchaToken } })
+        if (result.error) { setError(result.error.message || 'コードを送信できませんでした。'); return }
+      }
+      setCode(''); setStep('code'); setCooldown(60)
+    } catch {
+      setError('人間確認またはコード送信が完了しませんでした。もう一度お試しください。')
+    } finally { setSending(false) }
   }
 
   async function verify(e: FormEvent) {
@@ -66,7 +75,7 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
         <Field id={`${idPrefix}-email`} label="メールアドレス" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com"
           value={email} onChange={e => { setEmail(e.target.value); setError(null) }} />
         {error && <p role="alert" className="m-0 text-[13px] text-fl-danger">{error}</p>}
-        <Button type="submit" disabled={!email.trim()}>{sendLabel}</Button>
+        <Button type="submit" disabled={!email.trim() || sending || cooldown > 0}>{sending ? '確認しています…' : cooldown > 0 ? `再送まで${cooldown}秒` : sendLabel}</Button>
       </form>
     )
   }
@@ -81,7 +90,7 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
       <Button type="submit" disabled={code.length !== 6}>{verifyLabel}</Button>
       <div className="flex flex-wrap justify-between gap-x-4 text-[13px]">
         <button type="button" onClick={() => { setStep('email'); setError(null) }} className="flex min-h-[44px] items-center text-fl-body">メールアドレスを直す</button>
-        <button type="button" disabled={cooldown > 0} onClick={() => send()} className="flex min-h-[44px] items-center text-fl-body disabled:text-fl-muted">
+        <button type="button" disabled={cooldown > 0 || sending} onClick={() => send()} className="flex min-h-[44px] items-center text-fl-body disabled:text-fl-muted">
           {cooldown > 0 ? `コードを再送（${cooldown}秒後）` : 'コードを再送する'}
         </button>
       </div>
