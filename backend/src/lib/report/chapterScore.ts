@@ -106,7 +106,8 @@ export const CHAPTER_SCORES: Record<ChapterId, ChapterScore> = {
     ],
     opener: 'scene-first',
     closer: 'temporal',
-    lexicalBand: ['選ぶ', '決める', '断る', '引き受ける', '時間', 'お金', '順番'],
+    // 「決め方」ではなく、人生を通して何に向かい何を守るかの語彙。
+    lexicalBand: ['守る', '向かう', '納得', '意味', '理由', '譲れない', '残す'],
     forbidden: null,
     heading: '人生の軸',
   },

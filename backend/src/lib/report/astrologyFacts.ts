@@ -8,6 +8,7 @@ export type Modality = 'cardinal' | 'fixed' | 'mutable'
 type AspectType = 'コンジャンクション' | 'セクスタイル' | 'スクエア' | 'トライン' | 'オポジション'
 type Planet = NonNullable<AstrologyProfile['western']>['planets'][number]
 type FactValue = Omit<ReportFactV2, 'id'>
+export type AstrologyFactInput = Pick<ReportInput, 'birthDate' | 'birthTime' | 'birthplace' | 'astrology'>
 
 type PlanetSpec = {
   axis: FactAxis
@@ -77,19 +78,19 @@ function parseBirthDate(value: string | undefined): [number, number, number] | n
   return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null
 }
 
-function calculatedProfile(input: ReportInput, hour: number, minute: number): AstrologyProfile | undefined {
+function calculatedProfile(input: AstrologyFactInput, hour: number, minute: number): AstrologyProfile | undefined {
   const date = parseBirthDate(input.birthDate)
   return date ? calcAstrology(date[0], date[1], date[2], hour, minute, input.birthplace) : undefined
 }
 
 /** The Moon is safe without a birth time only when its sign agrees at both ends of the local civil day. */
-export function isMoonSignStableForDay(input: ReportInput): boolean {
+export function isMoonSignStableForDay(input: AstrologyFactInput): boolean {
   const start = calculatedProfile(input, 0, 0)?.western?.planets.find(planet => planet.name === '月')?.sign
   const end = calculatedProfile(input, 23, 59)?.western?.planets.find(planet => planet.name === '月')?.sign
   return Boolean(start && end && start === end)
 }
 
-function profileForFacts(input: ReportInput): AstrologyProfile | undefined {
+function profileForFacts(input: AstrologyFactInput): AstrologyProfile | undefined {
   if (input.astrology?.western?.planets?.length) return input.astrology as AstrologyProfile
   // The existing calculator requires a time for ASC/MC. Noon is used only to recover
   // time-independent planetary signs; ASC, MC and houses remain suppressed below.
@@ -220,7 +221,7 @@ function houseFacts(planets: Planet[], ascSign: string | undefined, hasBirthTime
   })
 }
 
-export function extractAstrologyFacts(input: ReportInput): FactValue[] {
+export function extractAstrologyFacts(input: AstrologyFactInput): FactValue[] {
   const profile = profileForFacts(input)
   const western = profile?.western
   if (!western) return []

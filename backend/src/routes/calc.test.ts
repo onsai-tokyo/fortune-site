@@ -262,7 +262,7 @@ test('算命学の人体星図は節入り後の日数に応じて二十八元�
 test('傷官と劫財を官星・財星として誤分類しない', () => {
   const timing = calcTimingCycles(1995, 2, 20, 5, 40, 'female')
   assert.deepEqual(timing.annual.find(item => item.year === 2025)?.themes, ['違和感を言葉にし、表現や方法を磨き直すこと'])
-  assert.deepEqual(timing.annual.find(item => item.year === 2013)?.themes, ['仲間との役割を組み替え、活動範囲を広げること'])
+  assert.deepEqual(timing.annual.find(item => item.year === 2013)?.themes, ['人から刺激を受けながら、自分の進み方を確かめること'])
 })
 
 test('西洋・インド占星術の天体位置を同じ出生条件から固定計算する', () => {

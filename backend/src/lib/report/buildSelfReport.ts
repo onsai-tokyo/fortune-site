@@ -1,3 +1,6 @@
+import { replaceAnnual3600 } from './annual3600/cards.js'
+import { ANNUAL3600_VERSION } from './annual3600/version.js'
+import { japanDateParts } from '../japanDate.js'
 import type { ReportInput } from '../deterministicReport.js'
 import type { StructuredReport } from '../reportCards.js'
 import type { ReportMetadata } from './metadata.js'
@@ -9,7 +12,13 @@ import { buildEditorialStructuredReport } from './editorial.js'
 import { replaceTimingCards } from './timingCards.js'
 import { buildBlockStructuredReport } from './narrativeComposerV2.js'
 import { augmentFindingsWithScoresV2 } from './scoreFindingsV2.js'
-import { buildClaimStructuredReport } from './claimComposer.js'
+import { buildClaimStructuredReport, CLAIM_SELECTOR_VERSION } from './claimComposer.js'
+import { CLAIM_ASSET_VERSION } from './claimAssets.js'
+import { ANNUAL_NARRATIVE_VERSION } from './timingAnnualNarrative.js'
+import { ANNUAL_SIGN_VERSION } from './annualSignAssets.js'
+import { ANNUAL_LAYOUT_VERSION } from './annualReadingLayout.js'
+import { buildPersonalityStructuredReport, PERSONALITY_VERSION, PERSONALITY_LAYOUT_VERSION, PERSONALITY_SPOUSE_VERSION } from './personalityReport.js'
+import { finalizeReportProvenance } from './provenance.js'
 
 /**
  * PR-0a: 自己鑑定の生成経路をHTTPから切り離す。
@@ -27,9 +36,10 @@ import { buildClaimStructuredReport } from './claimComposer.js'
 export type FactPipeline = 'v1' | 'v2'
 
 /** 本文の組み立て方式。'blocks' は PR-2 で有効化する。 */
-export type NarrativeEngine = 'legacy' | 'blocks'
+export type NarrativeEngine = 'legacy' | 'blocks' | 'personality'
 
 export interface SelfReportOptions {
+  annualEngine?: 'legacy' | 'catalog3600'
   factPipeline: FactPipeline
   narrativeEngine: NarrativeEngine
 }
@@ -44,7 +54,7 @@ export const DEFAULT_SELF_REPORT_OPTIONS: SelfReportOptions = {
  * 新旧経路が同じキャッシュキーを共有すると、片方の変更がもう片方の保存済み鑑定書を汚染する。
  */
 export function selfReportPipelineTag(options: SelfReportOptions): string {
-  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}`
+  return `fact:${options.factPipeline}|narrative:${options.narrativeEngine}${options.narrativeEngine === 'blocks' ? `|selector:${CLAIM_SELECTOR_VERSION}|claims:${CLAIM_ASSET_VERSION}` : options.narrativeEngine === 'personality' ? `|personality:${PERSONALITY_VERSION}|personality-layout:${PERSONALITY_LAYOUT_VERSION}|spouse:${PERSONALITY_SPOUSE_VERSION}` : ''}|annual:${ANNUAL_NARRATIVE_VERSION}|signs:${ANNUAL_SIGN_VERSION}|layout:${ANNUAL_LAYOUT_VERSION}${options.annualEngine === 'catalog3600' ? `|${ANNUAL3600_VERSION}` : ''}`
 }
 
 export interface SelfReportResult {
@@ -60,7 +70,7 @@ function isFactPipeline(value: string): value is FactPipeline {
 }
 
 function isNarrativeEngine(value: string): value is NarrativeEngine {
-  return value === 'legacy' || value === 'blocks'
+  return value === 'legacy' || value === 'blocks' || value === 'personality'
 }
 
 /**
@@ -71,6 +81,7 @@ export function resolveSelfReportOptions(env: NodeJS.ProcessEnv = process.env): 
   const factPipeline = (env.FACT_PIPELINE ?? '').trim()
   const narrativeEngine = (env.NARRATIVE_ENGINE ?? '').trim()
   return {
+    ...(env.ANNUAL_READING_ENGINE?.trim() === 'catalog3600' ? {annualEngine:'catalog3600' as const} : {}),
     factPipeline: isFactPipeline(factPipeline) ? factPipeline : DEFAULT_SELF_REPORT_OPTIONS.factPipeline,
     narrativeEngine: isNarrativeEngine(narrativeEngine) ? narrativeEngine : DEFAULT_SELF_REPORT_OPTIONS.narrativeEngine,
   }
@@ -96,9 +107,20 @@ export function buildSelfReport(
   const findings = options.factPipeline === 'v2' && options.narrativeEngine === 'blocks'
     ? augmentFindingsWithScoresV2(facts as ReturnType<typeof buildReportFactsV2>, generated.findings as ReturnType<typeof buildReportFindingsV2>)
     : generated.findings
-  const report = replaceTimingCards(options.narrativeEngine === 'blocks'
-    ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
-    : buildEditorialStructuredReport(facts, findings), input)
+  const generatedReport = options.narrativeEngine === 'personality'
+    ? buildPersonalityStructuredReport(input)
+    : options.narrativeEngine === 'blocks'
+      ? buildClaimStructuredReport(facts as ReturnType<typeof buildReportFactsV2>, findings as ReturnType<typeof buildReportFindingsV2>, input)
+      : buildEditorialStructuredReport(facts, findings)
+  const withTiming = options.annualEngine === 'catalog3600'
+    ? replaceAnnual3600(generatedReport, input, japanDateParts().year)
+    : replaceTimingCards(generatedReport, input)
+  const pipelineTag = selfReportPipelineTag(options)
+  // Timing composition keeps the legacy generator label. Retain the opt-in
+  // personality asset/layout identity in the persisted report as well as cache keys.
+  const report = options.narrativeEngine === 'personality'
+    ? finalizeReportProvenance(withTiming, `self-report-v3|${pipelineTag}`)
+    : withTiming
 
-  return { report, facts, findings, options, pipelineTag: selfReportPipelineTag(options) }
+  return { report, facts, findings, options, pipelineTag }
 }

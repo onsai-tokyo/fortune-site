@@ -1,3 +1,4 @@
+import { hasScoreEvidence, isAvailableScore } from './scoreAvailability.js'
 import { createHash } from 'node:crypto'
 
 export type RelationAxis = 'attraction' | 'depth' | 'communication' | 'fun' | 'safety' | 'values' | 'growth' | 'domestic' | 'conflict' | 'repair' | 'binding'
@@ -83,7 +84,7 @@ export const IMPLEMENTED_COMPATIBILITY_SCORE_KEYS = [...COMPATIBILITY_PROFILE_KE
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
 const text = (value: unknown) => typeof value === 'string' ? value : ''
-const numeric = (value: unknown) => Number.isFinite(Number(value)) ? Number(value) : null
+const numeric = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? value : null
 const id = (parts: unknown[]) => createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 16)
 
 const STEM_ELEMENT: Record<string, string> = { 甲: 'wood', 乙: 'wood', 丙: 'fire', 丁: 'fire', 戊: 'earth', 己: 'earth', 庚: 'metal', 辛: 'metal', 壬: 'water', 癸: 'water' }
@@ -152,10 +153,10 @@ function planetMap(person: JsonRecord): Map<string, number> {
   return new Map(entries.flatMap(([name, raw]) => {
     const point = record(raw)
     const longitude = numeric(point.longitude)
-    if (longitude !== null) return [[name, ((longitude % 360) + 360) % 360] as const]
+    if (longitude !== null && longitude >= 0 && longitude < 360) return [[name, longitude] as const]
     const sign = SIGN_INDEX[text(point.sign)]
     const degree = numeric(point.degree)
-    return sign !== undefined && degree !== null ? [[name, sign * 30 + degree] as const] : []
+    return sign !== undefined && degree !== null && degree >= 0 && degree < 30 ? [[name, sign * 30 + degree] as const] : []
   }))
 }
 
@@ -405,7 +406,7 @@ export function computeEgoCompetitionProfile(
   partner: { pride_sensitivity: TraitScoreInput; status_attraction: TraitScoreInput },
 ): CompatibilityProfileScore {
   const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.status_attraction, partner.status_attraction]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const hasEvidence = inputs.every(score => hasScoreEvidence(score))
   const value = hasEvidence
     ? (self.pride_sensitivity.value * partner.pride_sensitivity.value
       + self.status_attraction.value * partner.status_attraction.value) / 2
@@ -424,7 +425,7 @@ export function computeAmbitionAlignmentProfile(
   partner: { career_absorption: TraitScoreInput; recognition_motivation: TraitScoreInput },
 ): CompatibilityProfileScore {
   const inputs = [self.career_absorption, partner.career_absorption, self.recognition_motivation, partner.recognition_motivation]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const hasEvidence = inputs.every(score => hasScoreEvidence(score))
   const value = hasEvidence
     ? (self.career_absorption.value * partner.career_absorption.value
       + self.recognition_motivation.value * partner.recognition_motivation.value) / 2
@@ -443,7 +444,7 @@ export function computePowerBalanceProfile(
   partner: { pride_sensitivity: TraitScoreInput; group_coordination: TraitScoreInput },
 ): CompatibilityProfileScore {
   const inputs = [self.pride_sensitivity, partner.pride_sensitivity, self.group_coordination, partner.group_coordination]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const hasEvidence = inputs.every(score => hasScoreEvidence(score))
   const similarity = (left: number, right: number) => 1 - Math.min(1, Math.abs(left - right))
   return {
     key: 'power_balance',
@@ -456,22 +457,30 @@ export function computePowerBalanceProfile(
   }
 }
 
-/** 相性§11・§30。各自の開示傾向を方向別に保持し、同じ値だと仮定しない。 */
-export function computeTransparencyProfile(
-  self: { compatibility_transparency: TraitScoreInput },
-  partner: { compatibility_transparency: TraitScoreInput },
-): CompatibilityProfileScore {
-  const inputs = [self.compatibility_transparency, partner.compatibility_transparency]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
-  if (!hasEvidence) return { key: 'transparency', value: 0.5, confidence: 0, contributingFacts: [] }
+/** Directional disclosure evidence is separate from personal and pair similarity scores. */
+export interface DisclosureContext {
+  selfToPartner: TraitScoreInput
+  partnerToSelf: TraitScoreInput
+}
+
+/** 相性§11・§30。開示の観測contextを方向別に保持する。出生スコアで代用しない。 */
+export function computeTransparencyProfile(context?: DisclosureContext): CompatibilityProfileScore {
+  const unknown: CompatibilityProfileScore = { key: 'transparency', value: 0.5, confidence: 0, contributingFacts: [] }
+  const inputs = [context?.selfToPartner, context?.partnerToSelf]
+  const hasEvidence = inputs.every((score): score is TraitScoreInput => Boolean(score &&
+    typeof score.value === 'number' && Number.isFinite(score.value) && score.value >= 0 && score.value <= 1 &&
+    typeof score.confidence === 'number' && Number.isFinite(score.confidence) && score.confidence > 0 && score.confidence <= 1 &&
+    Array.isArray(score.contributingFacts) && score.contributingFacts.length > 0 &&
+    score.contributingFacts.every(id => typeof id === 'string' && id.trim().length > 0)))
+  if (!hasEvidence) return unknown
   const directions = {
-    selfToPartner: Number(self.compatibility_transparency.value.toFixed(3)),
-    partnerToSelf: Number(partner.compatibility_transparency.value.toFixed(3)),
+    selfToPartner: Number(inputs[0].value.toFixed(3)),
+    partnerToSelf: Number(inputs[1].value.toFixed(3)),
   }
   return {
     key: 'transparency',
     value: Number(((directions.selfToPartner + directions.partnerToSelf) / 2).toFixed(3)),
-    // 関係開始時の秘密・相互性は別入力なので、出生傾向だけの上限を設ける。
+    // 既存上限を維持。contextの正式な収集・評価契約は別途必要。
     confidence: Number(Math.min(0.65, ...inputs.map(score => score.confidence)).toFixed(3)),
     contributingFacts: [...new Set(inputs.flatMap(score => score.contributingFacts))],
     directions,
@@ -489,9 +498,8 @@ export function computePredictabilityProfile(
 ): CompatibilityProfileScore {
   const transparency = profiles.find(score => score.key === 'transparency')
   const personal = [self.compatibility_stability, partner.compatibility_stability]
-  const hasEvidence = Boolean(transparency && transparency.confidence > 0
-    && personal.every(score => score.confidence > 0))
-  const sharedRegularity = self.compatibility_stability.value * partner.compatibility_stability.value
+  const hasEvidence = hasScoreEvidence(transparency) && personal.every(score => hasScoreEvidence(score))
+  const sharedRegularity = hasEvidence ? self.compatibility_stability.value * partner.compatibility_stability.value : 0
   return {
     key: 'predictability',
     value: hasEvidence ? Number(((sharedRegularity + transparency!.value) / 2).toFixed(3)) : 0.5,
@@ -512,16 +520,30 @@ export function computeMysteryDistanceProfile(
   facts: readonly SynastryFact[],
   transparency: CompatibilityProfileScore,
 ): CompatibilityProfileScore {
-  if (!transparency.directions || transparency.confidence <= 0) {
+  if (transparency.key !== 'transparency' || !hasScoreEvidence(transparency) || !transparency.directions
+    || !isAvailableScore({ value: transparency.directions.selfToPartner, confidence: transparency.confidence })
+    || !isAvailableScore({ value: transparency.directions.partnerToSelf, confidence: transparency.confidence })) {
     return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
   }
-  const mysteryFacts = facts.filter(fact => {
+  const candidates = facts.filter(fact => {
     if (fact.kind !== 'cross-aspect') return false
     const selfPlanet = fact.selfFactId?.replace(/^planet:/, '') ?? ''
     const partnerPlanet = fact.partnerFactId?.replace(/^planet:/, '') ?? ''
     return (selfPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(partnerPlanet))
       || (partnerPlanet === '海王星' && MYSTERY_DISTANCE_PERSONAL_PLANETS.has(selfPlanet))
   })
+  const byId = new Map<string, SynastryFact>()
+  for (const fact of candidates) {
+    const existing = byId.get(fact.id)
+    if (typeof fact.id !== 'string' || !fact.id.trim()
+      || !isAvailableScore({ value: fact.strength, confidence: 1 })
+      || (existing && (existing.selfFactId !== fact.selfFactId || existing.partnerFactId !== fact.partnerFactId
+        || existing.strength !== fact.strength || existing.signal !== fact.signal))) {
+      return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
+    }
+    byId.set(fact.id, fact)
+  }
+  const mysteryFacts = [...byId.values()].sort((a, b) => a.id.localeCompare(b.id))
   if (mysteryFacts.length === 0) {
     return { key: 'mystery_distance', value: 0.5, confidence: 0, contributingFacts: [] }
   }
@@ -556,7 +578,7 @@ export function computeSocialDisplayAffectionProfile(
   const selfInputs = [self.social_neutrality, self.public_agreeableness]
   const partnerInputs = [partner.social_neutrality, partner.public_agreeableness]
   const inputs = [...selfInputs, ...partnerInputs]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const hasEvidence = inputs.every(score => hasScoreEvidence(score))
   if (!hasEvidence) return { key: 'social_display_affection', value: 0.5, confidence: 0, contributingFacts: [] }
   const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
   const directions = {
@@ -581,7 +603,7 @@ export function computePrivateAffectionProfile(
   const selfInputs = [self.domestic_affection, self.practical_generosity]
   const partnerInputs = [partner.domestic_affection, partner.practical_generosity]
   const inputs = [...selfInputs, ...partnerInputs]
-  const hasEvidence = inputs.every(score => score.confidence > 0)
+  const hasEvidence = inputs.every(score => hasScoreEvidence(score))
   if (!hasEvidence) return { key: 'private_affection', value: 0.5, confidence: 0, contributingFacts: [] }
   const mean = (scores: readonly TraitScoreInput[]) => scores.reduce((sum, score) => sum + score.value, 0) / scores.length
   const directions = {
@@ -604,7 +626,7 @@ export function computePartnershipTeamFeelingProfile(
 ): CompatibilityProfileScore {
   const project = profiles.find(score => score.key === 'shared_project_compatibility')
   const ambition = profiles.find(score => score.key === 'ambition_alignment')
-  const hasEvidence = Boolean(project && ambition && project.confidence > 0 && ambition.confidence > 0)
+  const hasEvidence = hasScoreEvidence(project) && hasScoreEvidence(ambition)
   return {
     key: 'partnership_team_feeling',
     value: hasEvidence ? Number(((project!.value + ambition!.value) / 2).toFixed(3)) : 0.5,
@@ -619,7 +641,7 @@ export function computeFateCompanionFeelingProfile(
 ): CompatibilityProfileScore {
   const identity = profiles.find(score => score.key === 'shared_identity')
   const team = profiles.find(score => score.key === 'partnership_team_feeling')
-  const hasEvidence = Boolean(identity && team && identity.confidence > 0 && team.confidence > 0)
+  const hasEvidence = hasScoreEvidence(identity) && hasScoreEvidence(team)
   return {
     key: 'fate_companion_feeling',
     value: hasEvidence ? Number(((identity!.value + team!.value) / 2).toFixed(3)) : 0.5,
@@ -638,7 +660,7 @@ export function computeRelationshipStimulationNeedProfile(
     'shared_project_compatibility', 'ambition_alignment',
   ]
   const inputs = keys.map(key => profiles.find(score => score.key === key))
-  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => hasScoreEvidence(score))
   return {
     key: 'relationship_stimulation_need',
     value: hasEvidence ? Number((inputs.reduce((sum, score) => sum + score.value, 0) / inputs.length).toFixed(3)) : 0.5,
@@ -656,8 +678,8 @@ export function computeRelationshipBoredomRiskProfile(
 ): CompatibilityProfileScore {
   const stimulation = profiles.find(score => score.key === 'relationship_stimulation_need')
   const inputs = [self.novelty_attraction, partner.novelty_attraction]
-  const hasEvidence = Boolean(stimulation && stimulation.confidence > 0 && inputs.every(score => score.confidence > 0))
-  const sharedNoveltyNeed = self.novelty_attraction.value * partner.novelty_attraction.value
+  const hasEvidence = hasScoreEvidence(stimulation) && inputs.every(score => hasScoreEvidence(score))
+  const sharedNoveltyNeed = hasEvidence ? self.novelty_attraction.value * partner.novelty_attraction.value : 0
   return {
     key: 'relationship_boredom_risk',
     value: hasEvidence ? Number(((sharedNoveltyNeed + stimulation!.value) / 2).toFixed(3)) : 0.5,
@@ -678,9 +700,8 @@ export function computeTrustStabilityProfile(
   const safety = profiles.find(score => score.key === 'emotional_safety')
   const repair = profiles.find(score => score.key === 'repair_capacity')
   const personal = [self.compatibility_reliability, partner.compatibility_reliability]
-  const hasEvidence = Boolean(safety && repair && safety.confidence > 0 && repair.confidence > 0
-    && personal.every(score => score.confidence > 0))
-  const sharedReliability = self.compatibility_reliability.value * partner.compatibility_reliability.value
+  const hasEvidence = hasScoreEvidence(safety) && hasScoreEvidence(repair) && personal.every(score => hasScoreEvidence(score))
+  const sharedReliability = hasEvidence ? self.compatibility_reliability.value * partner.compatibility_reliability.value : 0
   return {
     key: 'trust_stability',
     value: hasEvidence ? Number(((sharedReliability + safety!.value + repair!.value) / 3).toFixed(3)) : 0.5,
@@ -701,7 +722,7 @@ export function computeBetrayalRiskPatternProfile(
 ): CompatibilityProfileScore {
   const required = ['transparency', 'trust_stability', 'repair_capacity', 'relationship_boredom_risk'] as const
   const inputs = required.map(key => profiles.find(score => score.key === key))
-  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
+  const hasEvidence = inputs.every((score): score is CompatibilityProfileScore => hasScoreEvidence(score))
   if (!hasEvidence) return { key: 'betrayal_risk_pattern', value: 0.5, confidence: 0, contributingFacts: [] }
   const [transparency, trust, repair, boredom] = inputs
   const value = ((1 - transparency.value) + (1 - trust.value) + (1 - repair.value) + boredom.value) / 4
@@ -714,9 +735,19 @@ export function computeBetrayalRiskPatternProfile(
   }
 }
 
-/** 相性§57。惹かれる強さを使わず、長期維持要因と未修復の摩擦を正規化して部分算出する。 */
+/** Explicit contextual evidence; power_balance is never a substitute. */
+export interface LongTermBindingContext {
+  unresolvedPowerStruggle: {
+    value: number
+    confidence: number
+    contributingFacts: string[]
+  }
+}
+
+/** 相性§57。観測context欠測時は未算出。出生由来の対等さで権力争いを代用しない。 */
 export function computeLongTermBindingProfile(
   profiles: readonly CompatibilityProfileScore[],
+  context?: LongTermBindingContext,
 ): CompatibilityProfileScore {
   const positiveKeys: CompatibilityProfileKey[] = [
     'emotional_safety', 'value_alignment', 'domestic_compatibility',
@@ -724,9 +755,14 @@ export function computeLongTermBindingProfile(
   ]
   const positives = positiveKeys.map(key => profiles.find(score => score.key === key))
   const conflict = profiles.find(score => score.key === 'conflict_intensity')
-  const power = profiles.find(score => score.key === 'power_balance')
-  const hasEvidence = positives.every((score): score is CompatibilityProfileScore => Boolean(score && score.confidence > 0))
-    && Boolean(conflict && power && conflict.confidence > 0 && power.confidence > 0)
+  const power = context?.unresolvedPowerStruggle
+  const validEvidence = (score: { value: number; confidence: number; contributingFacts: string[] } | undefined) => Boolean(score &&
+    typeof score.value === 'number' && Number.isFinite(score.value) && score.value >= 0 && score.value <= 1 &&
+    typeof score.confidence === 'number' && Number.isFinite(score.confidence) && score.confidence > 0 && score.confidence <= 1 &&
+    Array.isArray(score.contributingFacts) && score.contributingFacts.length > 0 &&
+    score.contributingFacts.every(id => typeof id === 'string' && id.trim().length > 0))
+  const hasEvidence = positives.every((score): score is CompatibilityProfileScore => validEvidence(score))
+    && validEvidence(conflict) && validEvidence(power)
   if (!hasEvidence) return { key: 'long_term_binding', value: 0.5, confidence: 0, contributingFacts: [] }
   const safety = positives.find(score => score.key === 'emotional_safety')!
   const repair = positives.find(score => score.key === 'repair_capacity')!

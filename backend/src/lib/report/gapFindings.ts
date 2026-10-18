@@ -54,21 +54,70 @@ const combined = (scores: TraitScore[]): { value: number; confidence: number; fa
 const findingId = (key: string, gap: number, facts: string[]) => createHash('sha256')
   .update(JSON.stringify([key, gap, facts])).digest('hex').slice(0, 16)
 
-export function buildGapFindings(scores: TraitScoreSet, specs: readonly GapSpec[] = GAP_SPECS): GapFinding[] {
-  return specs.flatMap(spec => {
-    const high = combined(spec.highSides.map(key => scores[key]))
-    const lowScore = scores[spec.lowSide]
-    if (high.confidence < GAP_MIN_CONFIDENCE || lowScore.confidence < GAP_MIN_CONFIDENCE) return []
-    const signedGap = high.value - (spec.invertLow ? 1 - lowScore.value : lowScore.value)
-    if (Math.abs(signedGap) < GAP_THRESHOLD) return []
-    const key = signedGap > 0 ? spec.key : `${spec.key}:aligned`
-    const gap = Number(Math.abs(signedGap).toFixed(3))
-    const facts = [...new Set([...high.facts, ...lowScore.contributingFacts])].sort()
+export type GapEvaluation = {
+  key: string
+  /** Raw sides are retained even when the gap is zero; no high/low cutoffs are inferred. */
+  coexistence: 'not_evaluated_contract_required'
+} & ({
+  status: 'unknown'
+  reason: 'missing_or_invalid_score' | 'insufficient_confidence'
+} | {
+  status: 'observed'
+  left: { keys: readonly TraitScoreKey[]; value: number; confidence: number; facts: string[] }
+  right: { key: TraitScoreKey; value: number; confidence: number; facts: string[] }
+  comparedRightValue: number
+  invertedRight: boolean
+  signedGap: number
+  direction: 'forward' | 'reverse' | 'equal'
+  gapThresholdMet: boolean
+})
+
+const validScore = (score: TraitScore | undefined): score is TraitScore => Boolean(score &&
+  typeof score.value === 'number' && Number.isFinite(score.value) && score.value >= 0 && score.value <= 1 &&
+  typeof score.confidence === 'number' && Number.isFinite(score.confidence) && score.confidence >= 0 && score.confidence <= 1 &&
+  Array.isArray(score.contributingFacts) && score.contributingFacts.length > 0 &&
+  score.contributingFacts.every(id => typeof id === 'string' && id.trim().length > 0))
+
+export function evaluateGapScores(scores: TraitScoreSet, spec: GapSpec): GapEvaluation {
+  const base = { key: spec.key, coexistence: 'not_evaluated_contract_required' as const }
+  const highScores = spec.highSides.map(key => scores[key])
+  const lowScore = scores[spec.lowSide]
+  if (!highScores.length || !highScores.every(validScore) || !validScore(lowScore)) {
+    return { ...base, status: 'unknown', reason: 'missing_or_invalid_score' }
+  }
+  const high = combined(highScores)
+  if (high.confidence < GAP_MIN_CONFIDENCE || lowScore.confidence < GAP_MIN_CONFIDENCE) {
+    return { ...base, status: 'unknown', reason: 'insufficient_confidence' }
+  }
+  const comparedRightValue = spec.invertLow ? 1 - lowScore.value : lowScore.value
+  const signedGap = high.value - comparedRightValue
+  return {
+    ...base, status: 'observed',
+    left: { keys: [...spec.highSides], ...high },
+    right: { key: spec.lowSide, value: lowScore.value, confidence: lowScore.confidence,
+      facts: [...new Set(lowScore.contributingFacts)].sort() },
+    comparedRightValue, invertedRight: Boolean(spec.invertLow), signedGap,
+    direction: signedGap > 0 ? 'forward' : signedGap < 0 ? 'reverse' : 'equal',
+    gapThresholdMet: Math.abs(signedGap) >= GAP_THRESHOLD,
+  }
+}
+
+export function buildGapFindings(scores: TraitScoreSet, specs: readonly GapSpec[] = GAP_SPECS,
+  onEvaluation?: (rows: readonly GapEvaluation[]) => void): GapFinding[] {
+  const evaluations = specs.map(spec => evaluateGapScores(scores, spec))
+  const findings = specs.flatMap((spec, index): GapFinding[] => {
+    const evaluation = evaluations[index]
+    if (evaluation.status !== 'observed' || !evaluation.gapThresholdMet) return []
+    const key = evaluation.direction === 'forward' ? spec.key : `${spec.key}:aligned`
+    const gap = Number(Math.abs(evaluation.signedGap).toFixed(3))
+    const facts = [...new Set([...evaluation.left.facts, ...evaluation.right.facts])].sort()
     return [{
       id: findingId(key, gap, facts), kind: 'gap' as const, key, axis: spec.axis,
       highSide: spec.highSides[0], highSides: spec.highSides, lowSide: spec.lowSide,
-      gap, confidence: Number(Math.min(0.95, Math.min(high.confidence, lowScore.confidence) + 0.1).toFixed(3)),
+      gap, confidence: Number(Math.min(0.95, Math.min(evaluation.left.confidence, evaluation.right.confidence) + 0.1).toFixed(3)),
       primaryFacts: facts, chapter: spec.chapter, sources: spec.sources,
     }]
   })
+  onEvaluation?.(evaluations)
+  return findings
 }

@@ -1,3 +1,4 @@
+import { timingMidrank } from './timingMeasurementSamples.js'
 import { TIMING_SCORE_KEYS, type TimingScoreKey } from '../lib/report/timingClaim.js'
 import { buildMonthlyTimingScoreTimeline, buildTimingScoreTimeline } from '../lib/report/timingEvidencePipeline.js'
 import { evaluateKnownTimingCase, evaluateKnownTimingMonths, KNOWN_TIMING_BENCHMARKS, measureUnlabelledTimingActivation } from '../lib/report/timingKnownEventBenchmark.js'
@@ -30,8 +31,7 @@ const scoreSnapshot = (score: TimingScoreResult) => ({
 })
 
 const signalStrength = (score: TimingScoreResult) => score.relativeStrength * score.confidence
-const percentileRank = (value: number, population: readonly number[]) =>
-  population.length ? population.filter(item => item <= value).length / population.length : 0
+const percentileRank = timingMidrank
 
 const cases = KNOWN_TIMING_BENCHMARKS.map(fixture => {
   const annual = buildTimingScoreTimeline(fixture.input)
@@ -56,12 +56,12 @@ const cases = KNOWN_TIMING_BENCHMARKS.map(fixture => {
         [key, scoreSnapshot(annual.scoresByYear.get(result.event.year)![key])])),
       annualPeakDiagnostics: Object.fromEntries(result.event.expectedScores.map(key => {
         const score = annual.scoresByYear.get(result.event.year)![key]
-        const percentile = percentileRank(signalStrength(score), [...annual.scoresByYear.values()].map(year => signalStrength(year[key])))
+        const rank = percentileRank(signalStrength(score), [...annual.scoresByYear.values()].map(year => signalStrength(year[key])))
         return [key, {
           signalStrength: signalStrength(score),
-          percentile,
+          percentile: rank.value, rankUsable: rank.usable, rankUnavailableReason: rank.reason,
           reliableConsensus: score.sourceFamilyCount >= 2 && score.confidence >= 0.5,
-          topQuintileReliable: percentile >= 0.8 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5,
+          topQuintileReliable: rank.usable && rank.value !== null && rank.value >= 0.8 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5,
         }]
       })),
       annualEvidence: matchedEvidence(annual.byYear.get(result.event.year) ?? [], result.event.expectedScores),
@@ -76,10 +76,10 @@ const cases = KNOWN_TIMING_BENCHMARKS.map(fixture => {
             const sameYear = [...monthly.byMonth.entries()]
               .filter(([key]) => key.startsWith(`${result.event.year}-`))
               .map(([, values]) => signalStrength(values[key]))
-            const percentile = percentileRank(signalStrength(score), sameYear)
+            const rank = percentileRank(signalStrength(score), sameYear)
             return [key, {
-              signalStrength: signalStrength(score), percentile,
-              topQuartileReliable: percentile >= 0.75 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5,
+              signalStrength: signalStrength(score), percentile: rank.value, rankUsable: rank.usable, rankUnavailableReason: rank.reason,
+              topQuartileReliable: rank.usable && rank.value !== null && rank.value >= 0.75 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5,
             }]
           })),
           evidence: matchedEvidence(monthly.evidenceByMonth.get(monthKey) ?? [], result.event.expectedScores),
@@ -97,8 +97,8 @@ const cases = KNOWN_TIMING_BENCHMARKS.map(fixture => {
       claimEligibleExpectedScoreCount: results.reduce((sum, result) => sum + result.claimEligibleScores.length, 0),
       topQuintileReliableExpectedScoreCount: results.reduce((sum, result) => sum + result.event.expectedScores.filter(key => {
         const score = annual.scoresByYear.get(result.event.year)![key]
-        const percentile = percentileRank(signalStrength(score), [...annual.scoresByYear.values()].map(year => signalStrength(year[key])))
-        return percentile >= 0.8 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5
+        const rank = percentileRank(signalStrength(score), [...annual.scoresByYear.values()].map(year => signalStrength(year[key])))
+        return rank.usable && rank.value !== null && rank.value >= 0.8 && score.sourceFamilyCount >= 2 && score.confidence >= 0.5
       }).length, 0),
       unlabelledYearCount: unlabelled.length,
       unlabelledYearsWithLooseActivation: unlabelled.filter(item => item.activatedScores.length > 0).length,
@@ -112,6 +112,9 @@ const familyCoverage = Object.fromEntries(['western', 'vedic', 'stem_branch', 'z
   allEvents.filter(event => event.annualEvidence.some(evidence => evidence.sourceFamily === family)).length]))
 
 process.stdout.write(`${JSON.stringify({
+  purpose: 'known_case_diagnostics',
+  qualityEligible: false,
+  remainingBlockers: ['T04-T11 temporal/evidence corrections', 'T13 unseen evaluation'],
   warning: 'Shadow validation only. Known events are labels, never rules or production prose. Astrology correlations are not causal proof.',
   benchmarkCount: cases.length,
   eventCount: allEvents.length,

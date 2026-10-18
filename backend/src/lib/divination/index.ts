@@ -293,7 +293,7 @@ const PEACH_BLOSSOM: Record<string, string> = {
 function timingThemes(tenGod: string, branchRelation?: string): string[] {
   const themeByTenGod: Record<string, string> = {
     比肩: '自分の基準を立て直し、主体的に進めること',
-    劫財: '仲間との役割を組み替え、活動範囲を広げること',
+    劫財: '人から刺激を受けながら、自分の進み方を確かめること',
     食神: '楽しみや得意なことを、無理なく外へ表すこと',
     傷官: '違和感を言葉にし、表現や方法を磨き直すこと',
     偏財: '人との接点を広げ、機会や成果を動かすこと',

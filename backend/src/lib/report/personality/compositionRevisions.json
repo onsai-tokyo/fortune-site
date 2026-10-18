@@ -1,0 +1,1348 @@
+{
+  "reviewId": "composition-polish-20260924",
+  "scope": "Five common items only; received source-summary comparison and composition revision, not final approval or original-site verification.",
+  "revisions": [
+    {
+      "id": "composition-20260924:丁卯:角宿:02",
+      "conditions": {
+        "dayPillar": "丁卯",
+        "mansion": "角宿"
+      },
+      "sectionId": "02_考え方のくせ",
+      "reason": "行動速度の相反する記述を性格の断定として併記せず、両方の読みと判定限界を一つの段落で示す。裏付けを求める具体的な行動を先頭にする。",
+      "beforeParagraphs": [
+        {
+          "id": "material:day_pillar:丁卯:02:conclusion",
+          "text": "すぐには動かず周囲を待たせても、十分に考えた後には、予想以上に大きな決断をすることがあります。",
+          "refs": [
+            "DP04-021"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:02:tension",
+          "text": "心配が膨らむと、想像の中で悲観を深めてしまうことがあります。",
+          "refs": [
+            "DP04-006"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:02:advice",
+          "text": "考える期間に区切りを置くと、心配が想像の中で膨らむ前に決められます。",
+          "refs": [
+            "DP04-006"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:02:tension"
+          ],
+          "derivationNote": ""
+        },
+        {
+          "id": "material:shukuyo:角宿:02:conclusion",
+          "text": "興味が湧くと、長く考え込む前に行動へ移ります。何かに夢中になっていても、現状をより良くする視点は保つ人です。",
+          "refs": [
+            "SY12-004",
+            "SY12-006",
+            "SY12-033",
+            "SY12-038",
+            "SY12-039",
+            "SY12-044"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:角宿:02:detail",
+          "text": "人や物事の噂より、裏付けを求める面があります。",
+          "refs": [
+            "SY12-044"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:角宿:02:tension",
+          "text": "好き嫌いがはっきりしていて、気の進まないことには柔軟に対応しにくいところがあります。",
+          "refs": [
+            "SY12-016",
+            "SY12-039"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        }
+      ],
+      "sources": [
+        {
+          "id": "DP04-006",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "心配が膨らむと、想像の中で悲観を深めてしまう。【C性格】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-021",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "**慎重な助走から大きく動く**：すぐには動かず周囲を待たせても、十分に考えた後には、予想以上に大きな決断をすることがある。静かな準備と、動き出してからの規模に差がある。【YK行動】",
+          "urls": [
+            "https://www.yuru-tarot.work/entry/no4-hinotou"
+          ]
+        },
+        {
+          "id": "SY12-004",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "何かに夢中になっても、現状を改善する視点を保つ。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/gaiyou.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-006",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "関心を持ったことには、行動へ移るのが早い。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-016",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "好みがはっきりしていて、気の進まないことへ柔軟に対応しにくい。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-033",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "夢中になりながら、現状をよくする視点も持つ。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/gaiyou.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-038",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "興味が湧くと、長く考える前に動く。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-039",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "好き嫌いの強さが、融通の利かなさにつながる。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-044",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "噂より裏付けを求める。",
+          "urls": [
+            "https://zired.net/shukuyou-kakushuku/"
+          ]
+        }
+      ],
+      "paragraphs": [
+        {
+          "text": "人や物事の噂をそのまま信じず、裏付けを確かめようとします。",
+          "refs": [
+            "SY12-044"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "心配が膨らむと、想像の中で悲観を深めてしまうことがあります。好き嫌いがはっきりしていて、気の進まないことには柔軟に対応しにくい面もあります。",
+          "refs": [
+            "DP04-006",
+            "SY12-039"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "何かに夢中になっていても、現状をより良くする視点を持ちます。",
+          "refs": [
+            "SY12-004"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "行動の速さは、一つに決められません。じっくり考えた後に大きく決断するという読みと、興味が湧くと長く考える前に動くという読みがあります。この組み合わせだけでは、どの場面でどちらが表れるかまではわかりません。",
+          "refs": [
+            "DP04-021",
+            "SY12-038"
+          ],
+          "kind": "interpretation_limit"
+        }
+      ]
+    },
+    {
+      "id": "composition-20260924:丁卯:角宿:05",
+      "conditions": {
+        "dayPillar": "丁卯",
+        "mansion": "角宿"
+      },
+      "sectionId": "05_消耗と回復",
+      "reason": "仕事への過集中を一度だけ記述し、両方の出典を保持。強調語や新しい原因・回復方法を加えない。",
+      "beforeParagraphs": [
+        {
+          "id": "material:day_pillar:丁卯:05:conclusion",
+          "text": "場の空気や人の変化を細かく拾い、負担にも感じます。",
+          "refs": [
+            "DP04-008"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:05:detail",
+          "text": "仕事では、関心のある分野へ力を集中し、一度本腰を入れると燃え尽きるほど取り組みます。",
+          "refs": [
+            "DP04-046"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:05:advice",
+          "text": "本腰を入れる前に、その時期は人の変化を拾う量を減らすとよいでしょう。",
+          "refs": [
+            "DP04-008",
+            "DP04-046"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:05:tension"
+          ],
+          "derivationNote": ""
+        },
+        {
+          "id": "material:shukuyo:角宿:05:conclusion",
+          "text": "サービス精神があっても、細かな対人配慮が続く環境では負担を感じやすい面があります。",
+          "refs": [
+            "SY12-013"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:角宿:05:detail",
+          "text": "仕事へ集中しすぎる面があります。",
+          "refs": [
+            "SY12-060"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        }
+      ],
+      "sources": [
+        {
+          "id": "DP04-008",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "場の空気や人の変化を細かく拾い、負担にも感じる。【R性格1】",
+          "urls": [
+            "https://rensa.jp.net/60kanshi-04"
+          ]
+        },
+        {
+          "id": "DP04-046",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "関心のある分野へ力を集中し、一度本腰を入れると燃え尽きるほど取り組む。発想を使う広報・広告・美容・デザインなどに向くが、妥協の難しさが対立につながることもある。【ST適職】",
+          "urls": [
+            "https://sityuu.com/ni04/hinoto2/"
+          ]
+        },
+        {
+          "id": "SY12-013",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "サービス精神はあるが、細かな対人配慮が続く環境は負担になりやすいとされる。",
+          "urls": [
+            "https://rensa.jp.net/shukuyo012"
+          ]
+        },
+        {
+          "id": "SY12-060",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "仕事へ集中しすぎる面。",
+          "urls": [
+            "https://zired.net/shukuyou-kakushuku/"
+          ]
+        }
+      ],
+      "paragraphs": [
+        {
+          "text": "場の空気や人の変化を細かく拾い、気を配ることが負担になる場合があります。サービス精神はあっても、細かな対人配慮が続く環境では疲れやすい面があります。",
+          "refs": [
+            "DP04-008",
+            "SY12-013"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "関心のある仕事に力を集中し、一度本腰を入れると燃え尽きるほど取り組むことがあります。",
+          "refs": [
+            "DP04-046",
+            "SY12-060"
+          ],
+          "kind": "astrological_interpretation"
+        }
+      ]
+    },
+    {
+      "id": "composition-20260924:丁卯:房宿:05",
+      "conditions": {
+        "dayPillar": "丁卯",
+        "mansion": "房宿"
+      },
+      "sectionId": "05_消耗と回復",
+      "reason": "仕事への過集中を一度だけ記述し、両方の出典を保持。強調語や新しい原因・回復方法を加えない。",
+      "beforeParagraphs": [
+        {
+          "id": "material:day_pillar:丁卯:05:conclusion",
+          "text": "場の空気や人の変化を細かく拾い、負担にも感じます。",
+          "refs": [
+            "DP04-008"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:05:detail",
+          "text": "仕事では、関心のある分野へ力を集中し、一度本腰を入れると燃え尽きるほど取り組みます。",
+          "refs": [
+            "DP04-046"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:05:advice",
+          "text": "本腰を入れる前に、その時期は人の変化を拾う量を減らすとよいでしょう。",
+          "refs": [
+            "DP04-008",
+            "DP04-046"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:05:tension"
+          ],
+          "derivationNote": ""
+        },
+        {
+          "id": "material:shukuyo:房宿:05:conclusion",
+          "text": "考えすぎて行動が止まったり、一度生まれた疑いを手放せなくなったりすることがあります。",
+          "refs": [
+            "SY15-012",
+            "SY15-015",
+            "SY15-039",
+            "SY15-040",
+            "SY15-059",
+            "SY15-064"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:房宿:05:detail",
+          "text": "仕事に熱中しすぎる面があります。また、気持ちを深く注いだ相手には、関係が終わっても未練が残りやすいところがあります。",
+          "refs": [
+            "SY15-059",
+            "SY15-064"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:房宿:05:advice",
+          "text": "必要な情報と不要な情報を分けることを意識してみてください。",
+          "refs": [
+            "SY15-012",
+            "SY15-015",
+            "SY15-039",
+            "SY15-040",
+            "SY15-059",
+            "SY15-064"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:shukuyo:房宿:05:conclusion",
+            "material:shukuyo:房宿:05:tension"
+          ],
+          "derivationNote": "繰り返し考えて動く前に力を使うため、抱える情報を増やすだけで解決しようとしない。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "DP04-008",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "場の空気や人の変化を細かく拾い、負担にも感じる。【R性格1】",
+          "urls": [
+            "https://rensa.jp.net/60kanshi-04"
+          ]
+        },
+        {
+          "id": "DP04-046",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "関心のある分野へ力を集中し、一度本腰を入れると燃え尽きるほど取り組む。発想を使う広報・広告・美容・デザインなどに向くが、妥協の難しさが対立につながることもある。【ST適職】",
+          "urls": [
+            "https://sityuu.com/ni04/hinoto2/"
+          ]
+        },
+        {
+          "id": "SY15-012",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "ひとつのことへのこだわりが強く、疑いを手放しにくい。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/gaiyou.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-015",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "よく考える力が、動けないほどの考えすぎになることがある。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-039",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "考えすぎて行動できなくなる場合。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-040",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "必要な情報を選び、不要なものを手放す。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/work.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-059",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "仕事に熱中しすぎる面。",
+          "urls": [
+            "https://zired.net/shukuyou-boushuku/"
+          ]
+        },
+        {
+          "id": "SY15-064",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "気持ちを深く注いだ相手には、関係が終わっても未練が残りやすい面があります。",
+          "urls": [
+            "https://unkoi.com/article/shukuyo_15_boushuku/"
+          ]
+        }
+      ],
+      "paragraphs": [
+        {
+          "text": "場の空気や人の変化を細かく拾い、負担にも感じます。",
+          "refs": [
+            "DP04-008"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "関心のある仕事に力を集中し、一度本腰を入れると燃え尽きるほど取り組むことがあります。",
+          "refs": [
+            "DP04-046",
+            "SY15-059"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "よく考える力が、動けないほどの考えすぎになることがあります。一度生まれた疑いを手放しにくい面もあります。",
+          "refs": [
+            "SY15-012",
+            "SY15-015"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "気持ちを深く注いだ相手には、関係が終わっても未練が残りやすいところがあります。",
+          "refs": [
+            "SY15-064"
+          ],
+          "kind": "astrological_interpretation"
+        }
+      ]
+    },
+    {
+      "id": "composition-20260924:丁卯:角宿:09",
+      "conditions": {
+        "dayPillar": "丁卯",
+        "mansion": "角宿"
+      },
+      "sectionId": "09_関係の築き方",
+      "reason": "相手任せと献身を同時に断定せず判定限界を明記。原資料にない本音と建前・交際段階などの使い分けは作らない。冒頭は理想像を重ねる行動に具体化。",
+      "beforeParagraphs": [
+        {
+          "id": "material:day_pillar:丁卯:09:conclusion",
+          "text": "夢を実現したい気持ちが恋愛にも向かい、理想とする関係の水準が高くなりやすいでしょう。",
+          "refs": [
+            "DP04-033"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:detail",
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にします。束縛を避け、関係を続ける努力が相手任せになりやすいでしょう。",
+          "refs": [
+            "DP04-026",
+            "DP04-030"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:tension",
+          "text": "想像した理想像を相手に重ね、実際の相手を見失う場合があります。相手の欠点も含めて受け止めることが課題になります。",
+          "refs": [
+            "DP04-027",
+            "DP04-028"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:09:conclusion"
+          ],
+          "derivationNote": "DP04-033に基づく09conclusionは、恋愛で理想とする関係の水準が高くなりやすい性質を説明する。ここでDP04-027の理想像を重ねて実際の相手を見失う場合を補い、DP04-028の欠点も含めて受け止めるという原要旨の助言を、その同じ読者に保つ。関係改善の成功は保証しない。",
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:advice",
+          "text": "理想像を重ねていると感じた時は、相手の実際の言葉を思い出してください。",
+          "refs": [
+            "DP04-027",
+            "DP04-028"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:09:tension"
+          ],
+          "derivationNote": ""
+        },
+        {
+          "id": "material:shukuyo:角宿:09:conclusion",
+          "text": "一緒に過ごす時間を楽しめることを重視します。相手を楽しませようと、場を盛り上げることに力を注ぎます。",
+          "refs": [
+            "SY12-007",
+            "SY12-019",
+            "SY12-063"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:角宿:09:detail",
+          "text": "本気の相手には、細かなところまで尽くす面があります。",
+          "refs": [
+            "SY12-054"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:角宿:09:tension",
+          "text": "一方で、自分の自由は守りたいのに、相手には制約を求めることがあります。",
+          "refs": [
+            "SY12-007",
+            "SY12-008",
+            "SY12-019",
+            "SY12-036",
+            "SY12-054",
+            "SY12-063"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "角宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        }
+      ],
+      "sources": [
+        {
+          "id": "DP04-026",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にする。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-027",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "想像した理想像を重ね、実際の相手を見失う場合も。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-028",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "欠点を含めて受け止めることが課題になる。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-030",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "束縛を避け、関係を続ける努力が相手任せになりやすい。【R恋愛】",
+          "urls": [
+            "https://rensa.jp.net/60kanshi-04"
+          ]
+        },
+        {
+          "id": "DP04-033",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "夢を実現したい気持ちが恋愛にも向かい、理想とする関係の水準が高くなりやすい。【A追加・恋愛結婚】",
+          "urls": [
+            "https://sup.andyou.jp/shicyusuimei/kanshi/rokujikkanshi/hinoto-u/"
+          ]
+        },
+        {
+          "id": "SY12-007",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "一緒に過ごす時間を楽しめるかどうかを重視する。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-008",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "自分の自由を守りたくなる一方、相手には制限を求める面がある。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-019",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "相手を楽しませようとする。",
+          "urls": [
+            "https://rensa.jp.net/shukuyo012"
+          ]
+        },
+        {
+          "id": "SY12-036",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "相手に制約を求めても、自分の制約は嫌う面。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=12"
+          ]
+        },
+        {
+          "id": "SY12-054",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "本気の相手には細かく尽くす。",
+          "urls": [
+            "https://zired.net/shukuyou-kakushuku/"
+          ]
+        },
+        {
+          "id": "SY12-063",
+          "family": "shukuyo",
+          "key": "角宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "一緒にいる相手を楽しませようと、場を盛り上げることに力を注ぎます。",
+          "urls": [
+            "https://unkoi.com/article/shukuyo_12_kakushuku/"
+          ]
+        }
+      ],
+      "paragraphs": [
+        {
+          "text": "思い描いた理想を相手に重ね、実際の相手との違いを見落とすことがあります。恋愛にも夢を求め、望む関係の水準が高くなりやすいでしょう。",
+          "refs": [
+            "DP04-027",
+            "DP04-033"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にします。",
+          "refs": [
+            "DP04-026"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "一緒に過ごす時間を楽しめることを重視し、相手を楽しませようと場を盛り上げます。",
+          "refs": [
+            "SY12-007",
+            "SY12-063"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "自分の自由は守りたいのに、相手には制約を求めることがあります。",
+          "refs": [
+            "SY12-008"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "関係を続けるための関わり方には、異なる読みがあります。努力が相手任せになりやすいという読みと、本気の相手には細かく尽くすという読みです。この組み合わせだけで、どちらが中心になるかは決められません。",
+          "refs": [
+            "DP04-030",
+            "SY12-054"
+          ],
+          "kind": "interpretation_limit"
+        }
+      ]
+    },
+    {
+      "id": "composition-20260924:丁卯:房宿:09",
+      "conditions": {
+        "dayPillar": "丁卯",
+        "mansion": "房宿"
+      },
+      "sectionId": "09_関係の築き方",
+      "reason": "相手任せと献身を同時に断定せず判定限界を明記。原資料にない本音と建前・交際段階などの使い分けは作らない。冒頭は理想像を重ねる行動に具体化。",
+      "beforeParagraphs": [
+        {
+          "id": "material:day_pillar:丁卯:09:conclusion",
+          "text": "夢を実現したい気持ちが恋愛にも向かい、理想とする関係の水準が高くなりやすいでしょう。",
+          "refs": [
+            "DP04-033"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:detail",
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にします。束縛を避け、関係を続ける努力が相手任せになりやすいでしょう。",
+          "refs": [
+            "DP04-026",
+            "DP04-030"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:tension",
+          "text": "想像した理想像を相手に重ね、実際の相手を見失う場合があります。相手の欠点も含めて受け止めることが課題になります。",
+          "refs": [
+            "DP04-027",
+            "DP04-028"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:09:conclusion"
+          ],
+          "derivationNote": "DP04-033に基づく09conclusionは、恋愛で理想とする関係の水準が高くなりやすい性質を説明する。ここでDP04-027の理想像を重ねて実際の相手を見失う場合を補い、DP04-028の欠点も含めて受け止めるという原要旨の助言を、その同じ読者に保つ。関係改善の成功は保証しない。",
+          "reviewId": "personal-material-20260924:day"
+        },
+        {
+          "id": "material:day_pillar:丁卯:09:advice",
+          "text": "理想像を重ねていると感じた時は、相手の実際の言葉を思い出してください。",
+          "refs": [
+            "DP04-027",
+            "DP04-028"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "day_pillar",
+            "key": "丁卯"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:day_pillar:丁卯:09:tension"
+          ],
+          "derivationNote": ""
+        },
+        {
+          "id": "material:shukuyo:房宿:09:conclusion",
+          "text": "大切な相手へ献身的に関わり、愛情を注ぎます。",
+          "refs": [
+            "SY15-005",
+            "SY15-006",
+            "SY15-007",
+            "SY15-023",
+            "SY15-034",
+            "SY15-035",
+            "SY15-036"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:房宿:09:detail",
+          "text": "自分が尽くす分、相手からも同じだけの応答を受けたいと望みます。",
+          "refs": [
+            "SY15-005",
+            "SY15-006",
+            "SY15-007",
+            "SY15-023",
+            "SY15-034",
+            "SY15-035",
+            "SY15-036"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:房宿:09:tension",
+          "text": "親密になるほど、自分の好みや期待を強く求めることがあります。独占したい気持ちや嫉妬が強まりやすい面もあります。",
+          "refs": [
+            "SY15-006",
+            "SY15-023",
+            "SY15-035"
+          ],
+          "kind": "astrological_interpretation",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "material_reviewed",
+          "withheldReasons": [],
+          "reviewId": "personal-material-20260924:mansion"
+        },
+        {
+          "id": "material:shukuyo:房宿:09:advice",
+          "text": "疑いで見えにくくなった相手の長所へ、あらためて目を向けることを意識してみてください。",
+          "refs": [
+            "SY15-005",
+            "SY15-006",
+            "SY15-007",
+            "SY15-023",
+            "SY15-034",
+            "SY15-035",
+            "SY15-036"
+          ],
+          "kind": "editorial_advice",
+          "scope": "common",
+          "owner": {
+            "family": "shukuyo",
+            "key": "房宿"
+          },
+          "reviewStatus": "legacy_unreviewed",
+          "withheldReasons": [],
+          "derivedFrom": [
+            "material:shukuyo:房宿:09:tension"
+          ],
+          "derivationNote": "独占や嫉妬で相手へ要求が強まるため、相手の長所へ視点を戻す。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "DP04-026",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にする。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-027",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "想像した理想像を重ね、実際の相手を見失う場合も。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-028",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "欠点を含めて受け止めることが課題になる。【C恋愛】",
+          "urls": [
+            "https://honkaku-uranai.jp/article/8918/"
+          ]
+        },
+        {
+          "id": "DP04-030",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "束縛を避け、関係を続ける努力が相手任せになりやすい。【R恋愛】",
+          "urls": [
+            "https://rensa.jp.net/60kanshi-04"
+          ]
+        },
+        {
+          "id": "DP04-033",
+          "family": "day_pillar",
+          "key": "丁卯",
+          "scope": "common",
+          "scopeBasis": "effective_scope",
+          "exclusionReasons": [],
+          "text": "夢を実現したい気持ちが恋愛にも向かい、理想とする関係の水準が高くなりやすい。【A追加・恋愛結婚】",
+          "urls": [
+            "https://sup.andyou.jp/shicyusuimei/kanshi/rokujikkanshi/hinoto-u/"
+          ]
+        },
+        {
+          "id": "SY15-005",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "相手へ献身的に関わるが、同じだけの応答を望む面がある。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-006",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "親密になるほど、自分の好みや期待を強く求める場合がある。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-007",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "嫉妬や疑いが強まると、相手の長所を見失いやすい。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-023",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "独占や嫉妬が強まりやすい。",
+          "urls": [
+            "https://rensa.jp.net/shukuyo015"
+          ]
+        },
+        {
+          "id": "SY15-034",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "献身に対し、相応の反応を求める面。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-035",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "親密になるほど、自分の好みを通したくなる。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        },
+        {
+          "id": "SY15-036",
+          "family": "shukuyo",
+          "key": "房宿",
+          "scope": "common",
+          "scopeBasis": "gender_scope",
+          "exclusionReasons": [],
+          "text": "嫉妬で隠れる相手の長所へ目を向ける。",
+          "urls": [
+            "https://kosei-do.co.jp/sukuyo/love.php?yado_no=15"
+          ]
+        }
+      ],
+      "paragraphs": [
+        {
+          "text": "思い描いた理想を相手に重ね、実際の相手との違いを見落とすことがあります。恋愛にも夢を求め、望む関係の水準が高くなりやすいでしょう。",
+          "refs": [
+            "DP04-027",
+            "DP04-033"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "恋では直感で動き、気遣いと甘い雰囲気を大切にします。",
+          "refs": [
+            "DP04-026"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "親密になるほど、自分の好みや期待を強く求めることがあります。独占したい気持ちや嫉妬が強まりやすい面もあります。",
+          "refs": [
+            "SY15-006",
+            "SY15-023"
+          ],
+          "kind": "astrological_interpretation"
+        },
+        {
+          "text": "関係を続けるための関わり方には、異なる読みがあります。努力が相手任せになりやすいという読みと、献身的に関わり、同じだけの応答を望むという読みです。この組み合わせだけで、どちらが中心になるかは決められません。",
+          "refs": [
+            "DP04-030",
+            "SY15-005"
+          ],
+          "kind": "interpretation_limit"
+        }
+      ]
+    }
+  ]
+}

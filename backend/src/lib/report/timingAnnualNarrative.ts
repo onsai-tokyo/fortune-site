@@ -1,0 +1,211 @@
+/**
+ * Display copy for the existing legacy calculator's themes / relationshipEvents.
+ * Each entry keeps one specific source meaning. No scoring, year selection, monthly
+ * inference, personal history or generic default belongs in this renderer.
+ */
+export interface AnnualPhrase { id: string; title: string; body: string; detail?: string }
+export const ANNUAL_NARRATIVE_VERSION = 'annual-combinations-v2'
+
+const COPY: Record<string, AnnualPhrase> = {
+  '自分の基準を立て直し、主体的に進めること': {
+    id: 'self-direction', title: '自分で判断する基準を整え直す年',
+    body: '何を大切にして進むかを自分で決め、周囲任せにしていた判断を引き受けることがテーマです。',
+  },
+  '人から刺激を受けながら、自分の進み方を確かめること': {
+    id: 'shared-roles', title: '人から刺激を受け、自分の進み方を確かめる年',
+    body: '人と比べたり刺激を受けたりする中で、自分が何に力を注ぐかを確かめることがテーマです。',
+  },
+  '楽しみや得意なことを、無理なく外へ表すこと': {
+    id: 'expression', title: '好きなことや得意なことを外へ届ける年',
+    body: '楽しめることや得意なことを、負担の少ない形で人に伝えていくことがテーマです。',
+  },
+  '違和感を言葉にし、表現や方法を磨き直すこと': {
+    id: 'refinement', title: '感じていた違和感を言葉にして、方法を磨く年',
+    body: 'しっくりこない部分を言葉にして、伝え方や進め方を練り直すことがテーマです。',
+  },
+  '人との接点を広げ、機会や成果を動かすこと': {
+    id: 'connections', title: '人とのつながりから機会を広げる年',
+    body: '関わる人を増やし、そのつながりを新しい機会や成果へ結びつけることがテーマです。',
+  },
+  '収入と暮らしの基準を整え、継続できる形にすること': {
+    id: 'sustainable-living', title: '収入と生活を、続けられる形に整える年',
+    body: '日々の暮らしと収入の釣り合いを確かめ、無理なく続けられる基準を作ることがテーマです。',
+  },
+  '変化へすばやく対応し、難しい役割へ踏み出すこと': {
+    id: 'respond-to-change', title: '変化に応じながら、難しい役目へ踏み出す年',
+    body: '状況の変化に素早く応じ、これまでより難しい役目に取り組むことがテーマです。',
+  },
+  '責任や肩書を引き受け、関係や役割を正式にすること': {
+    id: 'formal-responsibility', title: '責任を引き受け、曖昧だった役割を正式にする年',
+    body: '肩書や責任を受け持ち、人との関わり方や自分の役割をはっきりさせることがテーマです。',
+  },
+  '慣れた見方を離れ、専門性や新しい方法を試すこと': {
+    id: 'new-methods', title: 'いつもの見方を離れ、新しい方法を試す年',
+    body: '慣れ親しんだ考え方から一歩離れ、専門分野を深めたり、別の方法を試したりすることがテーマです。',
+  },
+  '学びや支援を受け取り、次の土台を固めること': {
+    id: 'learning-support', title: '学びと周囲の支えを、次の土台にする年',
+    body: '人から教わることや助けてもらうことを受け取り、次へ進む準備を整えることがテーマです。',
+  },
+  '縁がまとまること': {
+    id: 'ties-settle', title: '人とのつながりが、ひとつの形にまとまる年',
+    body: '続いてきたつながりを、具体的な形へまとめていくことにも目が向く時期です。',
+  },
+  '移動や配置転換で関係を組み替えること': {
+    id: 'environment-change', title: '場所や担当の変化から、関わり方を見直す年',
+    body: '居場所や担当が変わることを通じて、人との関わり方を組み直すことにも目が向く時期です。',
+  },
+  '隠れていたずれや前提を見直すこと': {
+    id: 'review-assumptions', title: '見過ごしていた食い違いを確かめ直す年',
+    body: '表に出ていなかった食い違いや、当たり前だと思っていた前提を見つめ直すこともテーマになります。',
+  },
+  '出会いや接触が増えやすい': {
+    id: 'new-encounters', title: '新しい人と知り合う機会が広がる年',
+    body: '新しい人との出会いや、人と交流する機会が広がりやすい時期です。',
+  },
+  '隠れていたずれや前提が表面化しやすい': {
+    id: 'hidden-misalignment', title: '表に出ていなかった食い違いに気づく年',
+    body: 'これまで見えていなかった食い違いが表に出て、関係の前提を確かめ直す場面が生まれやすい時期です。',
+  },
+  '交際開始・別離・復縁など関係の状態が切り替わりやすい': {
+    id: 'relationship-transition', title: '近い人との関係が切り替わりやすい年',
+    body: '付き合い始める、離れる、よりを戻すなど、近い人との関わり方が変わる節目に目が向く時期です。',
+  },
+  '関係や生活環境を組み替えやすい': {
+    id: 'relationship-restructure', title: '暮らしと人との関わり方を組み直す年',
+    body: '生活の場や人との付き合い方を、今の状況に合う形へ整え直しやすい時期です。',
+  },
+  '交際・同居・婚約・結婚、または関係の見直しなど節目を定めやすい': {
+    id: 'relationship-definition-review', title: '関係を進めることと、見直すことの節目が重なる年',
+    body: '付き合い方や一緒に暮らすこと、将来の約束を具体的にする一方、関わり方そのものを考え直す節目にも目が向く時期です。',
+  },
+  '交際・同居・婚約・結婚、または正式な終了など関係を定めやすい': {
+    id: 'relationship-definition', title: 'これからの関係を、はっきりした形にする年',
+    body: '付き合うことや一緒に暮らすこと、将来の約束を具体的にする節目に目が向く時期です。続けるだけでなく、関係に区切りをつける方向も含みます。',
+  },
+  '関係の定義や将来を現実的に決めやすい': {
+    id: 'relationship-decisions', title: '人との関係や将来について、具体的に決める年',
+    body: 'これからどのように関わっていくかを、日々の生活も踏まえて具体的に決めやすい時期です。',
+  },
+}
+
+// Concrete ways to consider each calculated theme, not additional predicted events.
+const DETAILS: Record<string, string> = {
+  'self-direction': '周りに合わせて選んできたことを、自分も納得して選んでいるか。そんな問いから読むと、この年のテーマが身近になります。仕事でも暮らしでも、まず一つ、自分で決めたい範囲を言葉にしてみてください。全部を一人で背負うことと、自分の意思を持つことは分けて考えられます。',
+  'shared-roles': '身近な人や同じ目標を持つ人の姿が、励みにも焦りにもなるという読み方です。同じ場で過ごすことと、同じ進み方を選ぶことは分けて考えられます。一緒に何かを担当する場面なら分担の確認にもつながりますが、共同作業をしていることが前提ではありません。',
+  'expression': '上手にできるかを確かめる前に、自分が続けてみたいことへ目を向けてみてください。小さな作品を見せたり、好きなことを人に話したりする形でも構いません。楽しさを義務に変えない量で外へ出すことが、このテーマを日常に生かす方法です。',
+  'refinement': '「何となく違う」と感じる部分を、相手への評価ではなく、具体的な場面として書き出してみてください。説明の順番なのか、頼み方なのか、作業の進め方なのか。変えたい点が一つに絞れると、伝える言葉も選びやすくなります。気づいた点をすべて一度に直そうとせず、小さく試して反応を確かめる読み方ができます。',
+  'connections': 'すでに知っている人との会話や、興味のある場に参加することを、接点を広げる入口として考えてみてください。人の数を増やすだけでなく、何に関心があるかを伝えると、関わり方を具体的にできます。誘いを受けたら、楽しそうかに加えて、自分が使える時間も確かめておくとよいでしょう。',
+  'sustainable-living': '続けたい暮らしに対して、毎月の支出や働く量が無理のない形になっているかを見直すテーマです。大きな決断の前に、続いている習慣を一つずつ確かめてみてください。収入が増えると断定する読みではなく、今の条件で継続できる形を考える手がかりになります。',
+  'respond-to-change': '慣れていない役目を考えるときは、任される範囲と、相談できる相手を具体的にしてみてください。難しさを気合いだけで引き受けず、何を覚える必要があるかを分けておくと、取り組む順番が見えてきます。転職が必ず起こるという意味ではなく、今いる場所での役割の変化にも重ねて読めます。',
+  'formal-responsibility': '頼まれて何となく続けてきたことがあれば、担当範囲や期待されていることを言葉にする機会として考えられます。肩書だけでなく、決められる範囲と支援を受けられる範囲も確かめてみてください。責任を引き受けることが、自分の納得する関わり方になっているかが読みどころです。',
+  'new-methods': 'いつもの手順では進みにくいことを、一つ違う方法で試してみるテーマです。学ぶ分野や相談先を変えるだけでも、見方を比べる材料になります。新しい方法を全面的に採用する前に、小さな範囲で試し、自分に合う部分を残すことから考えられます。',
+  'learning-support': '自力で進めることに慣れているなら、教わることや相談することを次の準備として捉えてみてください。何が分からないのか、どこを手伝ってほしいのかを具体的にすると、支援を受け取りやすくなります。学んだことを一度使ってみるところまで含めて考えると、知識が自分の土台になっていきます。',
+  'ties-settle': '続いているつながりについて、お互いがどんな形を望んでいるかを確かめる手がかりです。会う頻度や一緒に取り組むことなど、具体的な話から始められます。この根拠だけで結婚が決まるとは読まず、今ある関係を形にするテーマとして扱います。',
+  'environment-change': '場所や担当を変えることを考えているなら、そこで誰とどう関わることになるかまで想像してみてください。通う場所だけでなく、日々の連絡や分担も含めて見直すテーマです。引越しが必ず起きるという断定ではなく、環境と関係の組み合わせを考える読みです。',
+  'review-assumptions': '「伝わっているはず」「同じ考えのはず」と思っていたことを、一つずつ確かめる読み方ができます。分からない点は推測で埋めず、相手の言葉を聞いてから整理してみてください。食い違いの根拠は、誰かの裏切りがあることを示すものではありません。',
+  'new-encounters': '新しい場に参加する、紹介された人と話すなど、交流の入口を意識するテーマです。初対面の印象だけで関係の行き先を決めず、会話を重ねて相手を知る時間も含めて考えてみてください。出会いの可能性を読むもので、交際の成立まで約束するものではありません。',
+  'hidden-misalignment': '気になる言動があれば、その場面で何を期待していたかを整理してみてください。相手の意図を決めつけずに確認すると、事実と自分の解釈を分けやすくなります。隠れた食い違いという根拠から、特定の出来事や相手の行動を断定することはできません。',
+  'relationship-transition': '関係を始める、離れる、もう一度つながるという複数の方向が含まれています。今の関係で続けたいことと変えたいことを分け、相手と話せる部分を考えてみてください。どの方向になるかはこの年の情報だけでは決まらず、双方の意思を確かめることが大切です。',
+  'relationship-restructure': '会う時間や生活の分担が、今の暮らしに合っているかを確かめてみてください。以前は自然だった付き合い方も、状況に合わせて話し直せます。関係を終えることだけを意味せず、続けるために形を変える読み方も含まれます。',
+  'relationship-definition-review': '交際・同居・婚約・結婚など、関係を具体的にする話と、今の付き合い方を見直す話の両方が含まれます。将来の希望だけでなく、住まいや日々の分担についても話してみてください。婚期の候補として読める一方、結婚が起こるという確定ではありません。',
+  'relationship-definition': '交際・同居・婚約・結婚など、二人の関係をはっきりさせる節目として読めます。同時に、続いてきた関係に正式な区切りをつける方向も含むため、婚期だけに限定はできません。お互いが望む形を確かめ、曖昧な約束を具体的にすることから考えてみてください。',
+  'relationship-decisions': 'これからの付き合い方について、気持ちだけでなく、会う時間や生活の条件も話し合うテーマです。一緒に決めたいことと、まず自分で整理したいことを分けてみてください。この根拠だけで婚期や新しい出会いの年と断定せず、関係の将来を具体的に考える手がかりとして読みます。',
+}
+
+export const ANNUAL_PHRASE_COUNT = Object.keys(COPY).length
+
+/** Editorial combinations of already calculated meanings. These are not new
+ * event rules: no birth dates, scores, real histories, or shadow engine inputs.
+ * Every required meaning must be present; unmatched meanings stay in the lead.
+ * Definition/transition signals retain their alternative directions. */
+export const ANNUAL_COMBINATIONS: readonly (AnnualPhrase & { requires: readonly string[] })[] = [
+  {
+    id: 'encounters-with-misalignment', requires: ['new-encounters', 'hidden-misalignment'],
+    title: '出会いが広がる一方、関係の食い違いにも気づく年',
+    body: '人と知り合う機会が広がる一方で、これまで見えていなかった食い違いも表に出やすい時期です。接点が増えることと、安心して付き合えることを分けて考える年として読めます。',
+  },
+  {
+    id: 'challenge-with-transition', requires: ['respond-to-change', 'relationship-transition'],
+    title: '新しい役目と、近い人との関係の切り替えが重なる年',
+    body: '難しい役目への対応と、近い人との関わり方の変化が重なる時期です。新しい関係を始める、離れる、つながり直すという複数の方向が含まれ、仕事の変化と合わせて時間の使い方を考えるテーマです。',
+  },
+  {
+    id: 'learning-with-misalignment', requires: ['learning-support', 'hidden-misalignment'],
+    title: '人の支えを受けながら、関係の食い違いを確かめる年',
+    body: '学びや周囲の支えを受け取ることと、関係の中で見過ごしていた食い違いに気づくことが重なります。相談して視野を広げることが、当たり前にしていた考えを見直す手がかりになります。',
+  },
+  {
+    id: 'refinement-with-definition', requires: ['refinement', 'ties-settle', 'relationship-definition'],
+    title: '違和感を話し合い、これからの関係を形にする年',
+    body: 'しっくりこない点を言葉にすることと、続いてきた関係を具体的な形にすることが重なります。交際・同居・将来の約束へ進める方向も、話し合って正式に区切る方向も含む節目です。',
+  },
+  {
+    id: 'living-with-encounters', requires: ['sustainable-living', 'ties-settle', 'new-encounters'],
+    title: '暮らしを整えながら、新しいつながりを形にする年',
+    body: '収入や暮らしを続けられる形に整えることと、人と知り合う機会、つながりをまとめる動きが重なります。交流の楽しさに加え、日々の暮らしに合う関わり方を考えるテーマです。',
+  },
+  {
+    id: 'methods-with-environment', requires: ['new-methods', 'environment-change'],
+    title: '場所や担当の変化を機に、いつもの方法を見直す年',
+    body: '場所や担当を通じた関係の組み替えと、慣れた方法を離れてみることが重なります。環境に合わせて学び方や進め方を試し直すテーマで、転職だけでなく今の場所での担当変更も含めて読めます。',
+  },
+  {
+    id: 'expression-with-decisions', requires: ['expression', 'relationship-decisions'],
+    title: '好きなことを表しながら、関係の将来を話す年',
+    body: '好きなことや得意なことを外へ表すことと、人との関係の将来を具体的に考えることが重なります。一緒に楽しめることだけでなく、これからどう関わりたいかを言葉にするテーマです。',
+  },
+  {
+    id: 'responsibility-with-decisions', requires: ['formal-responsibility', 'relationship-decisions'],
+    title: '仕事の責任と、人との関わり方を具体的に決める年',
+    body: '肩書や担当をはっきりさせることと、近い人との将来を現実的に考えることが重なります。引き受ける役割に合わせて、会う時間や暮らしの分担も話し合うテーマです。',
+  },
+  {
+    id: 'challenge-with-decisions', requires: ['respond-to-change', 'relationship-decisions'],
+    title: '難しい役目に向き合い、人との将来も考える年',
+    body: '変化に応じて難しい役目へ踏み出すことと、人との関係を具体的に考えることが重なります。担える範囲を確かめながら、大切な人とどんな関わり方を続けたいかを考えるテーマです。',
+  },
+  {
+    id: 'learning-with-decisions', requires: ['learning-support', 'relationship-decisions'],
+    title: '学びと支えを土台に、人との将来を考える年',
+    body: '周囲から学びや支援を受け取ることと、人との関係の将来を決めることが重なります。教わったことや助けてもらった経験を、これからの生活や付き合い方にどう生かすかを考えるテーマです。',
+  },
+  {
+    id: 'connections-with-encounters', requires: ['connections', 'new-encounters'],
+    title: '人との接点が広がり、新しい機会につながる年',
+    body: '人とのつながりを機会や成果へ結びつけることと、新しい人に出会う動きが重なります。知り合う人数だけでなく、互いの関心を伝え、どんな関わり方を育てたいかを考えるテーマです。',
+  },
+  {
+    id: 'living-with-definition', requires: ['sustainable-living', 'relationship-definition'],
+    title: '暮らしの条件を確かめ、関係の形を決める年',
+    body: '収入や生活を無理なく続けることと、人との関係をはっきりさせることが重なります。同居や将来の約束へ進む場合も、関係に区切りをつける場合も、住まいや日々の負担を具体的に考えるテーマです。',
+  },
+]
+
+export function composeAnnualNarrative(phrases: readonly AnnualPhrase[]): AnnualPhrase | null {
+  const ids = new Set(phrases.map(phrase => phrase.id))
+  const match = ANNUAL_COMBINATIONS.filter(value => value.requires.every(id => ids.has(id)))
+    .sort((a, b) => b.requires.length - a.requires.length || a.id.localeCompare(b.id))[0]
+  if (!match) return null
+  const remaining = phrases.filter(phrase => !match.requires.includes(phrase.id))
+  return { id: match.id, title: match.title, body: [match.body, ...remaining.map(phrase => phrase.body)].join('') }
+}
+
+/** Normalize this one retired label in both prose and domain classification. */
+export function canonicalAnnualTheme(label: string): string {
+  return label === '仲間との役割を組み替え、活動範囲を広げること'
+    ? '人から刺激を受けながら、自分の進み方を確かめること' : label
+}
+
+export function annualNarrative(values: string[]): AnnualPhrase[] {
+  const seen = new Set<string>()
+  return values.flatMap(value => {
+    // Older stored calculation payloads used a narrower label. Keep their
+    // explicit meaning ID readable without introducing an unknown-value fallback.
+    const source = canonicalAnnualTheme(value.trim())
+    const phrase = Object.hasOwn(COPY, source) ? COPY[source] : undefined
+    if (!phrase || seen.has(phrase.id)) return []
+    seen.add(phrase.id)
+    return [{ ...phrase, detail: DETAILS[phrase.id] }]
+  })
+}

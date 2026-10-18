@@ -14,12 +14,18 @@ export interface ReportCardEvidence {
   detail: string
 }
 
-export interface ReportSection {
+export interface ReportSectionComponent {
   heading: string
   body: string
   evidence: ReportCardEvidence[]
   termGloss: Array<{ term: string; plain: string; system: string }>
   claimId?: string
+}
+
+export interface ReportSection extends ReportSectionComponent {
+  /** Source-level readings retained inside a composed annual section. */
+  components?: ReportSectionComponent[]
+  sourceClaimIds?: string[]
 }
 
 export interface ReportCard {
@@ -36,6 +42,8 @@ export interface ReportCard {
   sections?: ReportSection[]
   evidence: ReportCardEvidence[]
   metadataRefs?: string[]
+  /** Internal audit trail; clients must not display calculation identifiers. */
+  annualCalculation?: { version: string; patternId: string; sourcePatternId: string; segments: Array<{start: string; endExclusive: string; decade: string | null; labels: Array<{kind: string; state: string; text: string}>; rules: Record<string, boolean | 'unknown'>}> }
   /** Optional while reading reports saved before PR-0b-metadata; always written for newly generated reports. */
   generator?: 'ai' | 'deterministic'
   compositionMode?: 'finding' | 'supplement' | 'mixed'

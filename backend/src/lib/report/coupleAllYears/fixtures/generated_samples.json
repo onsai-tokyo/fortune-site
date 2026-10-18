@@ -1,0 +1,5069 @@
+[
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2026,
+      2001
+    ],
+    "output": {
+      "title": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 26,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "応じ合う関わりに触れる",
+              "link": "応じ合う関わりに触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "infant",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい刺激に触れる",
+              "link": "新しい刺激に触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す反応を見守られる",
+              "link": "繰り返す反応を見守られ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "応じ合う関わりに触れる",
+              "link": "応じ合う関わりに触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、日々のペースの積み重ねも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "身近なペースを育む",
+              "link": "身近なペースを育み"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りの支えを受けながら、いつもと違う音や人の気配に触れる可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りに反応を受け止めてもらい、やり取りのリズムに触れる可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの気配に応じる柔らかさが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ反応を期待されると、そのときのペースとずれることがあり、相手は判断や参加を急がされると負担を感じることがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 822,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2026,
+          "age_reached": 0,
+          "band": "infant",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 2001,
+          "age_reached": 25,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2026,
+          2001
+        ]
+      },
+      "cache_key": "40580d31e14c9f146c59509084edb3709318a4eabb644671dbdbf2a5aac79bdd",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2022,
+      2021
+    ],
+    "output": {
+      "title": "あなたは楽しさを分かち合い、相手は流れの変化を支えてもらう年",
+      "title_basis": {
+        "text": "あなたは楽しさを分かち合い、相手は流れの変化を支えてもらう年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 30,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手は自分のペースで知ることがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、遊びや過ごす場所が変わる場面で、周りの支えを受けることがテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "流れの変化を支えてもらう",
+              "link": "流れの変化を支えてもらい"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "preschool",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は好きなことを選ぶ気持ちがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい遊びに触れる",
+              "link": "新しい遊びに触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見守られる",
+              "link": "繰り返すやり方を見守られ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手は自分のペースで知ることがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "preschool",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は好きなことを選ぶ気持ちがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "好きなことを示す",
+              "link": "好きなことを示し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、遊びや過ごす場所が変わる場面で、周りの支えを受けることがテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "流れの変化を支えてもらう",
+              "link": "流れの変化を支えてもらい"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手は自分のペースで知ることがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースで確かめる",
+              "link": "自分のペースで確かめ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な繰り返しも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "身近な流れを重ねる",
+              "link": "身近な流れを重ね"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、一緒に関わる順番も大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "順番や分け合いに触れる",
+              "link": "順番や分け合いに触れ"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい遊びとの接点、相手は好きなことを選ぶ気持ちがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が身近な遊びや関わりの中で、好きなことを言葉やしぐさで示す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、一緒に関わる順番も大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、遊びや過ごす場所が変わる場面で、周りの支えを受けることがテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は自分の好きなやり方から切り替えにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手は自分のペースで知ることがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が身近なものに触れ、自分のペースで確かめたり繰り返したりする可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手の関わり方では、違う考えや話へ関心を向けることが手がかりになります。",
+        "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は次のことを急がされると、戸惑いが表れることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 833,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2022,
+          "age_reached": 4,
+          "band": "preschool",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 2021,
+          "age_reached": 5,
+          "band": "preschool",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2022,
+          2021
+        ]
+      },
+      "cache_key": "83df675d41098444bf7025f7cfb2a87f9b110b62460d99cf8cd94ceab6d74238",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2017,
+      1991
+    ],
+    "output": {
+      "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "child",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "関心のある接点を広げる",
+              "link": "関心のある接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見直す",
+              "link": "繰り返すやり方を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や持ち物の扱い方も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間や持ち物を整える",
+              "link": "時間や持ち物を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 827,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2017,
+          "age_reached": 9,
+          "band": "child",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1991,
+          "age_reached": 35,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2017,
+          1991
+        ]
+      },
+      "cache_key": "7ec29792cbe1bad84e13f9dc2f08a80b8fe05d9191ddcc7eeec67fcbec649e0d",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2010,
+      2009
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手は自分に合う学びのペースがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "teen",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分の希望と対等な関わりがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手は自分に合う学びのペースがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "teen",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分の希望と対等な関わりがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手は自分に合う学びのペースがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な時間と使えるものの整理も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "使える時間を整える",
+              "link": "使える時間を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間との役割分担も大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "できる役割を分ける",
+              "link": "できる役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい関心と接点、相手は自分の希望と対等な関わりがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい活動と一人で続けたいことを選び、関わり方への希望を示す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間との役割分担も大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は自分の決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手は自分に合う学びのペースがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを知り、自分に合う速さや進め方を考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手の関わり方では、違う考えや話へ関心を向けることが手がかりになります。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると、負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 817,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2010,
+          "age_reached": 16,
+          "band": "teen",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 2009,
+          "age_reached": 17,
+          "band": "teen",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2010,
+          2009
+        ]
+      },
+      "cache_key": "bddf35f3eaef34622e2009ae43657c19f87844492702e328331a3f25a254c026",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      1996,
+      1986
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間と費用を整える",
+              "link": "時間と費用を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
+      ],
+      "character_count": 786,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1986,
+          "age_reached": 40,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          1996,
+          1986
+        ]
+      },
+      "cache_key": "894679b127ec3d5e6212b3db1758e9aadf47373a7822e0b839ef354670c10239",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      1951,
+      1946
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間と費用を整える",
+              "link": "時間と費用を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
+      ],
+      "character_count": 786,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1951,
+          "age_reached": 75,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1946,
+          "age_reached": 80,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          1951,
+          1946
+        ]
+      },
+      "cache_key": "89b98e4326afba8d721ab084e9dd45024bbc29af24d33d795b84fc797593f084",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2024,
+      1996
+    ],
+    "output": {
+      "title": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは応じ合う関わりに触れ、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 26,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "応じ合う関わりに触れる",
+              "link": "応じ合う関わりに触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "infant",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい刺激に触れる",
+              "link": "新しい刺激に触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す反応を見守られる",
+              "link": "繰り返す反応を見守られ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "応じ合う関わりに触れる",
+              "link": "応じ合う関わりに触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、日々のペースの積み重ねも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "身近なペースを育む",
+              "link": "身近なペースを育み"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい刺激との接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りの支えを受けながら、いつもと違う音や人の気配に触れる可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、日々のペースの積み重ねも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、繰り返す反応があるとき、周りが働きかけを見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは新しい刺激が重なると、落ち着く時間を取りにくくなることがあり、相手は決め方を譲りにくくなることがあります。いつもの流れとそのときの反応を見比べると、無理の少ない関わり方を選びやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは応じ合う関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りに反応を受け止めてもらい、やり取りのリズムに触れる可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの気配に応じる柔らかさが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ反応を期待されると、そのときのペースとずれることがあり、相手は判断や参加を急がされると負担を感じることがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 822,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2024,
+          "age_reached": 2,
+          "band": "infant",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2024,
+          1996
+        ]
+      },
+      "cache_key": "4039514f8e5810f198211dcc952349f6cff121492e79c4eb63ba19410d59e6ba",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2023,
+      1996
+    ],
+    "output": {
+      "title": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 25,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "preschool",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい遊びに触れる",
+              "link": "新しい遊びに触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見守られる",
+              "link": "繰り返すやり方を見守られ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な繰り返しも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "身近な流れを重ねる",
+              "link": "身近な流れを重ね"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は判断や参加を急がされると負担を感じることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 816,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2023,
+          "age_reached": 3,
+          "band": "preschool",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2023,
+          1996
+        ]
+      },
+      "cache_key": "b5b410a5e009a2183087918f3a5432e4eeb6f4c66f96a8a8a85a98fc82d449e0",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2021,
+      1996
+    ],
+    "output": {
+      "title": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは楽しさを分かち合い、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 25,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "preschool",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい遊びに触れる",
+              "link": "新しい遊びに触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見守られる",
+              "link": "繰り返すやり方を見守られ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "preschool",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "楽しさを分かち合う",
+              "link": "楽しさを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "preschool",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な繰り返しも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "身近な流れを重ねる",
+              "link": "身近な流れを重ね"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい遊びとの接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが周りに見守られながら、新しい遊びや関わりに興味を向ける可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な繰り返しも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じやり方を続けるとき、周りが切り替えを支えることがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたはいろいろ試したくなり、落ち着いて続けにくくなることがあり、相手は決め方を譲りにくくなることがあります。身近な流れを一度に変えず、小さな区切りを示すと、次のことへ移りやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは一緒に楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが周りの手助けを受けながら、楽しいことを分かち合う経験をする可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ遊びを同じように楽しんでほしくなることがあり、相手は判断や参加を急がされると負担を感じることがあります。興味を示すことと実際に続けられることを見比べると、無理の少ない関わりを選びやすくなります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 816,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2021,
+          "age_reached": 5,
+          "band": "preschool",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2021,
+          1996
+        ]
+      },
+      "cache_key": "d3f53a903ca41aa37120e77d2687f95257a8b2ac1bd867e4804a1d48e9d03425",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2020,
+      1996
+    ],
+    "output": {
+      "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "child",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "関心のある接点を広げる",
+              "link": "関心のある接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見直す",
+              "link": "繰り返すやり方を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や持ち物の扱い方も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間や持ち物を整える",
+              "link": "時間や持ち物を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 827,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2020,
+          "age_reached": 6,
+          "band": "child",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2020,
+          1996
+        ]
+      },
+      "cache_key": "9365ea8ff17e16dfbcb58db99959ed0346d7fa6e0196bbc1d23c226e6e2cdd82",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2014,
+      1996
+    ],
+    "output": {
+      "title": "あなたはできることを分かち合い、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたはできることを分かち合い、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "child",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "関心のある接点を広げる",
+              "link": "関心のある接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返すやり方を見直す",
+              "link": "繰り返すやり方を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "child",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "できることを分かち合う",
+              "link": "できることを分かち合い"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "child",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や持ち物の扱い方も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間や持ち物を整える",
+              "link": "時間や持ち物を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは関心を広げる接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが興味を持った遊びや活動について知り、関わってみたいことを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、時間や持ち物の扱い方も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じことで困るとき、繰り返すやり方を周りと見直すことがテーマになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは気になることが増え、落ち着いて続ける時間が少なくなることがあり、相手は決め方を譲りにくくなることがあります。時間や使う物を身近な範囲で確かめると、無理なく続けられる形を考えやすくなります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力して楽しむ関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じことに関心を持つ人と、楽しさやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは同じ強さで関わってほしいという気持ちが先に立つことがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 827,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2014,
+          "age_reached": 12,
+          "band": "child",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2014,
+          1996
+        ]
+      },
+      "cache_key": "5d88a08e3e6d6118ade0e7d3dd936b556840297467876a68370bab1946d771be",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2013,
+      1996
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "teen",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な時間と使えるものの整理も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "使える時間を整える",
+              "link": "使える時間を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 813,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2013,
+          "age_reached": 13,
+          "band": "teen",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2013,
+          1996
+        ]
+      },
+      "cache_key": "68cc8b106f697e697ed084b9c639c3e092f9991a9d7d87e24c3e770e5cd12ee9",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2009,
+      1996
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "teen",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "teen",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "teen",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な時間と使えるものの整理も大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "使える時間を整える",
+              "link": "使える時間を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは新しい関心と接点、相手は自分で選ぶことや対等に関わることがテーマです。あなたが関心を持った活動について知り、無理なく参加できる機会を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な時間と使えるものの整理も大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは関わりたいことが増え、余裕を使いすぎることがあり、相手は決め方を譲りにくくなることがあります。使える時間や身近な物を確かめ、できる範囲から考えることが継続の助けになります。進め方や反応が違うときは、一つの流れに合わせようとすると関わりに無理が生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは協力を深める関わり、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、知ったことやできることを分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたの関わり方では、周りの反応に応じて関わることが手がかりになります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。関心と実際にできる範囲を分けて考えることが、無理の少ない交流を育てる助けになります。働きかけが刺激になる場面では、そのときの反応に合う近さや関わる量を確かめたいところです。"
+      ],
+      "character_count": 813,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2009,
+          "age_reached": 17,
+          "band": "teen",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2009,
+          1996
+        ]
+      },
+      "cache_key": "03c8d475093386e5362346910177c285a4556428726407e25bf23c332929ab36",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      2008,
+      1996
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間と費用を整える",
+              "link": "時間と費用を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
+      ],
+      "character_count": 786,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2008,
+          "age_reached": 18,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          2008,
+          1996
+        ]
+      },
+      "cache_key": "bf8348b4c1c22cfcc57b61bcf25100a625355e258f86657aced30ff5d824f420",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      1962,
+      1996
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間と費用を整える",
+              "link": "時間と費用を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
+      ],
+      "character_count": 786,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1962,
+          "age_reached": 64,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          1962,
+          1996
+        ]
+      },
+      "cache_key": "a76cff513973fae7c8e7cdc48b38a493e5dd99a1a1f60809c64ac140513eeb16",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "壬午",
+      "丙子",
+      "心",
+      "斗",
+      2026,
+      1961,
+      1996
+    ],
+    "output": {
+      "title": "あなたは協力を深め、相手は予定を選び直す年",
+      "title_basis": {
+        "text": "あなたは協力を深め、相手は予定を選び直す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 21,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "self_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "繰り返す対応を見直す",
+              "link": "繰り返す対応を見直し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "clash",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、予定や役割、関わる場所を選び直すこともテーマになります。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "予定を選び直す",
+              "link": "予定を選び直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "衰",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。",
+            "reference": "PY-S-05-08-24",
+            "title_fragment": {
+              "end": "自分のペースを整える",
+              "link": "自分のペースを整え"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "正財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。",
+            "reference": "P19-Y43",
+            "title_fragment": {
+              "end": "時間と費用を整える",
+              "link": "時間と費用を整え"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P13-Y43",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは接点を広げることや機会を選ぶこと、相手は自分で選ぶことや対等に関わることがテーマです。あなたが紹介された活動や集まりから、参加したいものを選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、時間や費用を整えることや積み重ねることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、同じ課題を考え続けるときには、繰り返す対応を見直すことが助けになります。相手側では、予定や役割、関わる場所を選び直すこともテーマになります。一方、あなたは好意で引き受ける用事が増え、余力を使うことがあり、相手は決め方を譲りにくくなることがあります。予定を決めるときは、使える時間と費用、準備の手間を一緒に確かめてみましょう。進め方や予定の決め方に違いが出たとき、最初に決めた案にこだわると調整が難しくなる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは人との協力を深めること、相手はペースを整え、学び直すことがテーマです。あなたが同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性があります。また、相手が関心のあることを学び、今の自分に合うペースを考える可能性もあります。あなたは、人に合わせた応対で、新しい場でも味方をつくります。相手は、異なる価値観を知ることに関心があり、人の話を熱心に聞きます。",
+        "あなたは相手にも同じ参加の熱量を期待することがあり、相手は判断や参加を急がされると負担を感じることがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。相手への働きかけが刺激になる一方、関わる範囲を本人が選べることも大切です。"
+      ],
+      "character_count": 786,
+      "year": 2026,
+      "bazi_key": "PY-B-19-13-43",
+      "sukuyo_key": "PY-S-05-08-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1961,
+          "age_reached": 65,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1996,
+          "age_reached": 30,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-19-13-43",
+        "sukuyo_key": "PY-S-05-08-24",
+        "birth_years": [
+          1961,
+          1996
+        ]
+      },
+      "cache_key": "c87d99b776744019c4a31eed2389e1b1af7116a8777fe0b6118184edbb20533e",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-19-13-43",
+          "pair_ref": "BZ-19-13",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "壬午",
+              "annual_reference": "P19-Y43",
+              "facts_ref": "P19-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "丙子",
+              "annual_reference": "P13-Y43",
+              "facts_ref": "P13-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-05-08-24",
+          "pair_ref": "SR-03",
+          "pair_family": "安壊",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "心",
+              "year_role": "親",
+              "profile_ref": "SYR16-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "斗",
+              "year_role": "衰",
+              "profile_ref": "SYR19-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "戊辰",
+      "戊辰",
+      "角",
+      "角",
+      2026,
+      1991,
+      1991
+    ],
+    "output": {
+      "title": "二人とも新しい見方を探り、慎重に試す年",
+      "title_basis": {
+        "text": "二人とも新しい見方を探り、慎重に試す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "shared",
+        "character_count": 19,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、二人とも新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい方法を慎重に試す",
+              "link": "新しい方法を慎重に試し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、二人とも新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい方法を慎重に試す",
+              "link": "新しい方法を慎重に試し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、二人とも新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい方法を慎重に試す",
+              "link": "新しい方法を慎重に試し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、二人とも新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい方法を慎重に試す",
+              "link": "新しい方法を慎重に試し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "印綬",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、学ぶことや支えを受け取ることも大切な観点です。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "学びを深める",
+              "link": "学びを深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "印綬",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、学ぶことや支えを受け取ることも大切な観点です。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "学びを深める",
+              "link": "学びを深め"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、二人とも新しい見方を試すことや探究することがテーマです。あなたが関心のある分野を調べ、新しい方法を試す可能性があります。また、相手が関心のある分野を調べ、新しい方法を試す形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、学ぶことや支えを受け取ることも大切な観点です。相手には、学ぶことや支えを受け取ることも大切な観点です。一方、あなたは一人で考える時間と、人に関わる時間の配分に迷うことがあり、相手は一人で考える時間と、人に関わる時間の配分に迷うことがあります。情報が欲しいのか、意見を聞きたいのかを最初に示すと、必要なやり取りを選びやすくなります。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、二人とも新しい方法を慎重に試すことがテーマです。あなたが初めての活動を、無理のない範囲で試す可能性があります。また、相手が初めての活動を、無理のない範囲で試す可能性もあります。あなたは、思いやりがあり、苦手な人の話も笑顔で聞けます。相手は、思いやりがあり、苦手な人の話も笑顔で聞けます。",
+        "あなたは試したい気持ちと不安の間で迷うことがあり、相手は試したい気持ちと不安の間で迷うことがあります。一回だけ試す内容と振り返る時点を決めると、結論を急がずに関われます。分かり合える感覚があるほど、言わなくても伝わるという期待がすれ違いにつながる場合があります。"
+      ],
+      "character_count": 662,
+      "year": 2026,
+      "bazi_key": "PY-B-05-05-43",
+      "sukuyo_key": "PY-S-01-01-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1991,
+          "age_reached": 35,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1991,
+          "age_reached": 35,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-05-05-43",
+        "sukuyo_key": "PY-S-01-01-24",
+        "birth_years": [
+          1991,
+          1991
+        ]
+      },
+      "cache_key": "5325f1b5007ba2c8893985d1c0becf555337dad94c5e9fd8a3fa88dff6ac9b5e",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-05-05-43",
+          "pair_ref": "BZ-05-05",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "戊辰",
+              "annual_reference": "P05-Y43",
+              "facts_ref": "P05-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "戊辰",
+              "annual_reference": "P05-Y43",
+              "facts_ref": "P05-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-01-01-24",
+          "pair_ref": "SR-00",
+          "pair_family": "命",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "角",
+              "year_role": "危",
+              "profile_ref": "SYR12-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "角",
+              "year_role": "危",
+              "profile_ref": "SYR12-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "戊辰",
+      "戊辰",
+      "角",
+      "角",
+      2026,
+      2026,
+      1991
+    ],
+    "output": {
+      "title": "あなたは新しい刺激を受け止め、相手は新しい見方を試す年",
+      "title_basis": {
+        "text": "あなたは新しい刺激を受け止め、相手は新しい見方を試す年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは新しい刺激への慎重な触れ方、相手は新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい刺激を受け止める",
+              "link": "新しい刺激を受け止め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは身近なものへの関心、相手は新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "infant",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは身近なものへの関心、相手は新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "気になる刺激に触れる",
+              "link": "気になる刺激に触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは新しい刺激への慎重な触れ方、相手は新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい刺激を受け止める",
+              "link": "新しい刺激を受け止め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは身近なものへの関心、相手は新しい見方を試すことや探究することがテーマです。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "危",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは新しい刺激への慎重な触れ方、相手は新しい方法を慎重に試すことがテーマです。",
+            "reference": "PY-S-01-01-24",
+            "title_fragment": {
+              "end": "新しい方法を慎重に試す",
+              "link": "新しい方法を慎重に試し"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "印綬",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近な刺激からの学びと支えも大切な観点です。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "身近な刺激と支えを受ける",
+              "link": "身近な刺激と支えを受け"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "印綬",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、学ぶことや支えを受け取ることも大切な観点です。",
+            "reference": "P05-Y43",
+            "title_fragment": {
+              "end": "学びを深める",
+              "link": "学びを深め"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは身近なものへの関心、相手は新しい見方を試すことや探究することがテーマです。あなたが周りに見守られながら、気になる音や動きへ反応を向ける可能性があります。また、相手が関心のある分野を調べ、新しい方法を試す形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近な刺激からの学びと支えも大切な観点です。相手には、学ぶことや支えを受け取ることも大切な観点です。一方、あなたは一つの刺激への反応が続き、周りの変化へ移りにくくなることがあり、相手は一人で考える時間と、人に関わる時間の配分に迷うことがあります。声や触れ合いの後に反応を待つことで、受け取れる量に合わせた支えを考えやすくなります。似ている反応があっても、そのときの希望や心地よさには違いが表れる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは新しい刺激への慎重な触れ方、相手は新しい方法を慎重に試すことがテーマです。あなたが見守られながら、新しい音や人の気配を少しずつ受け止める可能性があります。また、相手が初めての活動を、無理のない範囲で試す可能性もあります。あなたの関わり方では、周りの働きかけを柔らかく受け止める反応が手がかりになります。相手は、思いやりがあり、苦手な人の話も笑顔で聞けます。",
+        "あなたは新しい刺激への関心と戸惑いが入り交じることがあり、相手は試したい気持ちと不安の間で迷うことがあります。新しい刺激は小さな範囲から触れられる形にし、そのときの反応を受け止めることが助けになります。通じ合うように感じる場面でも、小さな反応の違いを受け止めることが、すれ違いを減らす手がかりになります。"
+      ],
+      "character_count": 751,
+      "year": 2026,
+      "bazi_key": "PY-B-05-05-43",
+      "sukuyo_key": "PY-S-01-01-24",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 2026,
+          "age_reached": 0,
+          "band": "infant",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1991,
+          "age_reached": 35,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2026,
+        "bazi_key": "PY-B-05-05-43",
+        "sukuyo_key": "PY-S-01-01-24",
+        "birth_years": [
+          2026,
+          1991
+        ]
+      },
+      "cache_key": "9de44091a98db08a992908bd01e06242346000768012cc0df64d36919f883369",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-05-05-43",
+          "pair_ref": "BZ-05-05",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "戊辰",
+              "annual_reference": "P05-Y43",
+              "facts_ref": "P05-Y43"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "戊辰",
+              "annual_reference": "P05-Y43",
+              "facts_ref": "P05-Y43"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-01-01-24",
+          "pair_ref": "SR-00",
+          "pair_family": "命",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "角",
+              "year_role": "危",
+              "profile_ref": "SYR12-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "角",
+              "year_role": "危",
+              "profile_ref": "SYR12-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2026,
+        "bazi_year_pillar": "丙午",
+        "sukuyo_phase_index": 24,
+        "sukuyo_year_mansion": "星",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "甲子",
+      "甲子",
+      "角",
+      "亢",
+      2023,
+      1990,
+      1985
+    ],
+    "output": {
+      "title": "あなたは交流から接点を広げ、相手は接し方の違いを確かめる年",
+      "title_basis": {
+        "text": "あなたは交流から接点を広げ、相手は接し方の違いを確かめる年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 29,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは交流から可能性を広げること、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "交流から接点を広げる",
+              "link": "交流から接点を広げ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "zi_mao_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "接し方の違いを確かめる",
+              "link": "接し方の違いを確かめ"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "印綬",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも学ぶことや支えを受け取ることがテーマです。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "学びを深める",
+              "link": "学びを深め"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_effect",
+            "value": "zi_mao_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなた側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "接し方の違いを確かめる",
+              "link": "接し方の違いを確かめ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは交流から可能性を広げること、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "交流から接点を広げる",
+              "link": "交流から接点を広げ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "印綬",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも学ぶことや支えを受け取ることがテーマです。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "学びを深める",
+              "link": "学びを深め"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_effect",
+            "value": "zi_mao_punishment",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "接し方の違いを確かめる",
+              "link": "接し方の違いを確かめ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは交流から可能性を広げること、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、仲間と動くことや分担を決めることも大切な観点です。",
+            "reference": "P01-Y40",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、二人とも学ぶことや支えを受け取ることがテーマです。あなたが学んだことや役立つ情報を相手へ伝える可能性があります。また、相手が学んだことや役立つ情報をあなたへ伝える形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、仲間と動くことや分担を決めることも大切な観点です。相手には、仲間と動くことや分担を決めることも大切な観点です。あなた側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。相手側では、接し方や礼儀について、受け止め方の違いを確かめることもテーマになります。一方、あなたは助言を期待しすぎたり、説明が多くなったりすることがあり、相手は助言を期待しすぎたり、説明が多くなったりすることがあります。情報が欲しいのか、意見を聞きたいのかを最初に示すと、必要なやり取りを選びやすくなります。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは交流から可能性を広げること、相手は人との協力を深めることがテーマです。あなたが知人や関心のある話題を通じて、情報交換を広げる可能性があります。また、相手が同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性もあります。あなたは、思いやりがあり、苦手な人の話も笑顔で聞けます。相手は、人との距離を測り、公平に調整しようとします。",
+        "あなたは広く応じすぎ、個々の約束が手薄になることがあり、相手はあなたにも同じ参加の熱量を期待することがあります。参加への関心と確定した約束を分け、次も関わりたいことを選んでみましょう。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
+      ],
+      "character_count": 767,
+      "year": 2023,
+      "bazi_key": "PY-B-01-01-40",
+      "sukuyo_key": "PY-S-01-02-21",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1990,
+          "age_reached": 33,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1985,
+          "age_reached": 38,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2023,
+        "bazi_key": "PY-B-01-01-40",
+        "sukuyo_key": "PY-S-01-02-21",
+        "birth_years": [
+          1990,
+          1985
+        ]
+      },
+      "cache_key": "41a7b3e15a870e8c32ee7418678964aa84423b23573bd123e94daafbf780f3f8",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-01-01-40",
+          "pair_ref": "BZ-01-01",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y40",
+              "facts_ref": "P01-Y40"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y40",
+              "facts_ref": "P01-Y40"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-01-02-21",
+          "pair_ref": "SR-01",
+          "pair_family": "栄親",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "角",
+              "year_role": "友",
+              "profile_ref": "SYR12-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "亢",
+              "year_role": "親",
+              "profile_ref": "SYR13-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2023,
+        "bazi_year_pillar": "癸卯",
+        "sukuyo_phase_index": 21,
+        "sukuyo_year_mansion": "井",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "甲子",
+      "甲子",
+      "角",
+      "亢",
+      2024,
+      1990,
+      1985
+    ],
+    "output": {
+      "title": "あなたは自分の希望を選び、相手は交流から接点を広げる年",
+      "title_basis": {
+        "text": "あなたは自分の希望を選び、相手は交流から接点を広げる年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P01-Y41",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは無理のある形を組み直すこと、相手は交流から可能性を広げることがテーマです。",
+            "reference": "PY-S-01-02-22",
+            "title_fragment": {
+              "end": "交流から接点を広げる",
+              "link": "交流から接点を広げ"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P01-Y41",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "壊",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは無理のある形を組み直すこと、相手は交流から可能性を広げることがテーマです。",
+            "reference": "PY-S-01-02-22",
+            "title_fragment": {
+              "end": "負担のある習慣を組み直す",
+              "link": "負担のある習慣を組み直し"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "比肩",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、二人とも自分で選ぶことや対等に関わることがテーマです。",
+            "reference": "P01-Y41",
+            "title_fragment": {
+              "end": "自分の希望を選ぶ",
+              "link": "自分の希望を選び"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは無理のある形を組み直すこと、相手は交流から可能性を広げることがテーマです。",
+            "reference": "PY-S-01-02-22",
+            "title_fragment": {
+              "end": "交流から接点を広げる",
+              "link": "交流から接点を広げ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、接点を広げることや機会を選ぶことも大切な観点です。",
+            "reference": "P01-Y41",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "偏財",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、接点を広げることや機会を選ぶことも大切な観点です。",
+            "reference": "P01-Y41",
+            "title_fragment": {
+              "end": "新しい接点を広げる",
+              "link": "新しい接点を広げ"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、二人とも自分で選ぶことや対等に関わることがテーマです。あなたが参加したい予定と、一人で続けたい活動を選ぶ可能性があります。また、相手が参加したい予定と、一人で続けたい活動を選ぶ形で表れることもあります。二人に関わる用事がある場合には、それぞれの希望を持ち寄ることが、参加の仕方を考える手がかりになります。",
+        "あなたには、接点を広げることや機会を選ぶことも大切な観点です。相手には、接点を広げることや機会を選ぶことも大切な観点です。一方、あなたは決め方を譲りにくくなることがあり、相手は決め方を譲りにくくなることがあります。自分で選びたい部分と相手に任せたい部分を、具体的に伝えてみましょう。似ていると思う部分があっても、今回の希望まで同じと考えると食い違いが生まれる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは無理のある形を組み直すこと、相手は交流から可能性を広げることがテーマです。あなたが負担の大きい習慣を整理し、変える部分を選ぶ可能性があります。また、相手が知人や関心のある話題を通じて、情報交換を広げる可能性もあります。あなたは、思いやりがあり、苦手な人の話も笑顔で聞けます。相手は、人との距離を測り、公平に調整しようとします。",
+        "あなたは今まで通りに進まないことに落胆することがあり、相手は広く応じすぎ、個々の約束が手薄になることがあります。今変えたいことと残したいことを分けると、負担を減らす方法を考えやすくなります。支え合う関わりが続く場合も、頼みごとや感謝を省かず伝えることが大切です。"
+      ],
+      "character_count": 659,
+      "year": 2024,
+      "bazi_key": "PY-B-01-01-41",
+      "sukuyo_key": "PY-S-01-02-22",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1990,
+          "age_reached": 34,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1985,
+          "age_reached": 39,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 2024,
+        "bazi_key": "PY-B-01-01-41",
+        "sukuyo_key": "PY-S-01-02-22",
+        "birth_years": [
+          1990,
+          1985
+        ]
+      },
+      "cache_key": "1b24c0f5be8fb7bf82c421c989a6204798fbb394fada0ad3b4899a7f433cce1b",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-01-01-41",
+          "pair_ref": "BZ-01-01",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y41",
+              "facts_ref": "P01-Y41"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y41",
+              "facts_ref": "P01-Y41"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-01-02-22",
+          "pair_ref": "SR-01",
+          "pair_family": "栄親",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "角",
+              "year_role": "壊",
+              "profile_ref": "SYR12-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "亢",
+              "year_role": "友",
+              "profile_ref": "SYR13-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 2024,
+        "bazi_year_pillar": "甲辰",
+        "sukuyo_phase_index": 22,
+        "sukuyo_year_mansion": "鬼",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  },
+  {
+    "input": [
+      "甲子",
+      "甲子",
+      "角",
+      "亢",
+      1995,
+      1995,
+      1970
+    ],
+    "output": {
+      "title": "あなたは身近な交流に触れ、相手は仲間との役割を分ける年",
+      "title_basis": {
+        "text": "あなたは身近な交流に触れ、相手は仲間との役割を分ける年",
+        "version": "grounded-title-age-1.0",
+        "mode": "actor_contrast",
+        "character_count": 27,
+        "selected": [
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは身近な交流の広がり、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "身近な交流に触れる",
+              "link": "身近な交流に触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは周りと関わるリズム、相手は仲間と動くことや分担を決めることがテーマです。",
+            "reference": "P01-Y12",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          }
+        ],
+        "considered": [
+          {
+            "actor": "A",
+            "source": "bazi_main",
+            "value": "劫財",
+            "age_band": "infant",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは周りと関わるリズム、相手は仲間と動くことや分担を決めることがテーマです。",
+            "reference": "P01-Y12",
+            "title_fragment": {
+              "end": "周りとのリズムに触れる",
+              "link": "周りとのリズムに触れ"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "sukuyo_role",
+            "value": "友",
+            "age_band": "infant",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは身近な交流の広がり、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "身近な交流に触れる",
+              "link": "身近な交流に触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_main",
+            "value": "劫財",
+            "age_band": "adult",
+            "paragraph_index": 0,
+            "evidence_text": "この年、あなたは周りと関わるリズム、相手は仲間と動くことや分担を決めることがテーマです。",
+            "reference": "P01-Y12",
+            "title_fragment": {
+              "end": "仲間との役割を分ける",
+              "link": "仲間との役割を分け"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "sukuyo_role",
+            "value": "親",
+            "age_band": "adult",
+            "paragraph_index": 2,
+            "evidence_text": "こうした動きを気持ちの面から見ると、あなたは身近な交流の広がり、相手は人との協力を深めることがテーマです。",
+            "reference": "PY-S-01-02-21",
+            "title_fragment": {
+              "end": "協力を深める",
+              "link": "協力を深め"
+            }
+          },
+          {
+            "actor": "A",
+            "source": "bazi_secondary",
+            "value": "偏印",
+            "age_band": "infant",
+            "paragraph_index": 1,
+            "evidence_text": "あなたには、身近なものへの関心も大切な観点です。",
+            "reference": "P01-Y12",
+            "title_fragment": {
+              "end": "気になる刺激に触れる",
+              "link": "気になる刺激に触れ"
+            }
+          },
+          {
+            "actor": "B",
+            "source": "bazi_secondary",
+            "value": "偏印",
+            "age_band": "adult",
+            "paragraph_index": 1,
+            "evidence_text": "相手には、新しい見方を試すことや探究することも大切な観点です。",
+            "reference": "P01-Y12",
+            "title_fragment": {
+              "end": "新しい見方を試す",
+              "link": "新しい見方を試し"
+            }
+          }
+        ],
+        "selection_note": "本文に採用された年作用、主要テーマ、補足テーマの順で選び、別の人物の宿曜年役割と組み合わせる。吉凶や確率の順位ではない。"
+      },
+      "paragraphs": [
+        "この年、あなたは周りと関わるリズム、相手は仲間と動くことや分担を決めることがテーマです。あなたが周りの働きかけを受けながら、関わりのリズムに触れる可能性があります。また、相手が仲間との用事で、担当や費用の分け方を考える形で表れることもあります。関わる機会がある場合には、そのときに表れる反応と必要な支えをそれぞれに受け止めることが、無理のない関わり方を探す手がかりになります。",
+        "あなたには、身近なものへの関心も大切な観点です。相手には、新しい見方を試すことや探究することも大切な観点です。一方、あなたは働きかけが重なると、自分のペースが乱れることがあり、相手は人付き合いが広がり、個別の約束に使う余力が少なくなることがあります。自分なりの反応が出るまで間を取り、関わる量を周りが合わせることが支えになります。似ている反応があっても、そのときの希望や心地よさには違いが表れる場合があります。",
+        "こうした動きを気持ちの面から見ると、あなたは身近な交流の広がり、相手は人との協力を深めることがテーマです。あなたが声や表情による働きかけを受け、関わりの違いに触れる可能性があります。また、相手が同じ関心を持つ人と、役立つ情報や機会を分かち合う可能性もあります。あなたの関わり方では、周りの働きかけを柔らかく受け止める反応が手がかりになります。相手は、人との距離を測り、公平に調整しようとします。",
+        "あなたは多くの働きかけが重なると、一つずつ受け取りにくくなることがあり、相手は自分の働きかけに、同じ強さの反応が返ることを期待することがあります。働きかけの後に反応を待ち、受け取れる量に合わせることが、やり取りの土台になります。支えが届いたときの反応を受け止めると、無理なく応じ合う関わりを育てやすくなります。"
+      ],
+      "character_count": 745,
+      "year": 1995,
+      "bazi_key": "PY-B-01-01-12",
+      "sukuyo_key": "PY-S-01-02-21",
+      "version": "all-years-composer-0.3-age",
+      "ages": {
+        "A": {
+          "birth_year": 1995,
+          "age_reached": 0,
+          "band": "infant",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        },
+        "B": {
+          "birth_year": 1970,
+          "age_reached": 25,
+          "band": "adult",
+          "rule": "target_year - birth_year",
+          "policy_version": "age-editorial-1.0"
+        }
+      },
+      "cache_identity": {
+        "composer": "all-years-composer-0.3-age",
+        "age_policy": "age-editorial-1.0",
+        "title_version": "grounded-title-age-1.0",
+        "year": 1995,
+        "bazi_key": "PY-B-01-01-12",
+        "sukuyo_key": "PY-S-01-02-21",
+        "birth_years": [
+          1995,
+          1970
+        ]
+      },
+      "cache_key": "d383b92a5f4f20160ada4043b314fb9d38b05bede3f6fcb62475f6e186b50c77",
+      "audit": {
+        "bazi": {
+          "schema_version": "materials-2.0",
+          "id": "PY-B-01-01-12",
+          "pair_ref": "BZ-01-01",
+          "actors": [
+            {
+              "actor": "A",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y12",
+              "facts_ref": "P01-Y12"
+            },
+            {
+              "actor": "B",
+              "day_pillar": "甲子",
+              "annual_reference": "P01-Y12",
+              "facts_ref": "P01-Y12"
+            }
+          ]
+        },
+        "sukuyo": {
+          "schema_version": "materials-2.0",
+          "id": "PY-S-01-02-21",
+          "pair_ref": "SR-01",
+          "pair_family": "栄親",
+          "actors": [
+            {
+              "actor": "A",
+              "mansion": "角",
+              "year_role": "友",
+              "profile_ref": "SYR12-07"
+            },
+            {
+              "actor": "B",
+              "mansion": "亢",
+              "year_role": "親",
+              "profile_ref": "SYR13-07"
+            }
+          ]
+        }
+      },
+      "probability": null,
+      "calendar": {
+        "year_label": 1995,
+        "bazi_year_pillar": "乙亥",
+        "sukuyo_phase_index": 21,
+        "sukuyo_year_mansion": "井",
+        "calendar_method": "koseido_28_phase_candidate",
+        "date_boundary_resolved": false
+      }
+    }
+  }
+]

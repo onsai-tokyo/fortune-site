@@ -1,0 +1,39 @@
+import { annual3600Cards } from './annual3600/cards.js'
+import { calcTimingCycles } from '../divination/index.js'
+import { buildCoupleTimingHistory } from './coupleTimingCards.js'
+import { buildAnnualHistoryCards } from './timingCards.js'
+import { japanDateParts } from '../japanDate.js'
+
+function birth(value: unknown) {
+  if (!value || typeof value !== 'object') throw new Error('BIRTH_UNAVAILABLE')
+  const data = value as Record<string, unknown>
+  const date = String(data.birthDate ?? data.birth_date ?? '')
+  const time = String(data.birthTime ?? data.birth_time ?? '')
+  const [year, month, day] = date.split('-').map(Number)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || year < 1900 || year > 2100) throw new Error('BIRTH_UNAVAILABLE')
+  const check = new Date(Date.UTC(year, month - 1, day))
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) throw new Error('BIRTH_UNAVAILABLE')
+  if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error('BIRTH_UNAVAILABLE')
+  if (data.gender !== 'male' && data.gender !== 'female') throw new Error('BIRTH_UNAVAILABLE')
+  const [hour, minute] = time ? time.split(':').map(Number) : [undefined, 0]
+  const timing = calcTimingCycles(year, month, day, hour, minute, data.gender)
+  return { year, date, time: time || undefined, birthplace: String(data.birthplace ?? ''), gender: data.gender, timing, annual: timing.annual }
+}
+
+export function selfTimingHistoryFromBirthSnapshot(snapshot: unknown, referenceYear = japanDateParts().year) {
+  const value = birth(snapshot)
+  // Additional signs use only this saved birth snapshot, never an edited profile.
+  const input = { birthDate: value.date, birthTime: value.time, birthplace: value.birthplace, gender: value.gender, timing: value.timing }
+  const data = snapshot as Record<string, unknown>
+  const text = (key: string) => typeof data[key] === 'string' ? data[key] as string : undefined
+  const annualInput = {...input,birthTimeZone:text('birthTimeZone'),spouseConvention:text('spouseConvention'),annualYunConvention:text('annualYunConvention'),workContext:text('workContext')}
+  return { cards: process.env.ANNUAL_READING_ENGINE?.trim() === 'catalog3600' ? annual3600Cards(annualInput,Math.max(value.year+18,1952),referenceYear) : buildAnnualHistoryCards(input, referenceYear), referenceYear }
+}
+
+export function timingHistoryFromBirthSnapshot(snapshot: unknown, referenceYear?: number) {
+  const value = snapshot as { self?: unknown; partner?: unknown } | null
+  // Saved birth input is the only source. Never borrow another conversation or
+  // a partner's subsequently edited profile to fill missing historical data.
+  const self = birth(value?.self), partner = birth(value?.partner)
+  return buildCoupleTimingHistory(self.annual, partner.annual, self.year, partner.year, referenceYear)
+}

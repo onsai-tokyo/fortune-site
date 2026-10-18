@@ -1,0 +1,1383 @@
+{
+  "sourceHash": "517b02d1bf7e54bc760aec2a96505a0da2040b1ce9ed36052e6995cad2f56912",
+  "purpose": "section_locator_index",
+  "atomicReviewComplete": false,
+  "records": [
+    {
+      "sourceId": "T00",
+      "document": "時期",
+      "section": 0,
+      "sourceLines": "3–18",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T01",
+      "document": "時期",
+      "section": 1,
+      "sourceLines": "19–40",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T02",
+      "document": "時期",
+      "section": 2,
+      "sourceLines": "41–53",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T03",
+      "document": "時期",
+      "section": 3,
+      "sourceLines": "54–63",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T04",
+      "document": "時期",
+      "section": 4,
+      "sourceLines": "64–79",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T05",
+      "document": "時期",
+      "section": 5,
+      "sourceLines": "80–89",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T06",
+      "document": "時期",
+      "section": 6,
+      "sourceLines": "90–106",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T07",
+      "document": "時期",
+      "section": 7,
+      "sourceLines": "107–115",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T08",
+      "document": "時期",
+      "section": 8,
+      "sourceLines": "116–130",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T09",
+      "document": "時期",
+      "section": 9,
+      "sourceLines": "131–140",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T10",
+      "document": "時期",
+      "section": 10,
+      "sourceLines": "141–151",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T11",
+      "document": "時期",
+      "section": 11,
+      "sourceLines": "152–160",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T12",
+      "document": "時期",
+      "section": 12,
+      "sourceLines": "161–176",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T13",
+      "document": "時期",
+      "section": 13,
+      "sourceLines": "177–186",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T14",
+      "document": "時期",
+      "section": 14,
+      "sourceLines": "187–197",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T15",
+      "document": "時期",
+      "section": 15,
+      "sourceLines": "198–207",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T16",
+      "document": "時期",
+      "section": 16,
+      "sourceLines": "208–216",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T17",
+      "document": "時期",
+      "section": 17,
+      "sourceLines": "217–228",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T18",
+      "document": "時期",
+      "section": 18,
+      "sourceLines": "229–239",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T19",
+      "document": "時期",
+      "section": 19,
+      "sourceLines": "240–249",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T20",
+      "document": "時期",
+      "section": 20,
+      "sourceLines": "250–258",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T21",
+      "document": "時期",
+      "section": 21,
+      "sourceLines": "259–270",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T22",
+      "document": "時期",
+      "section": 22,
+      "sourceLines": "271–278",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T23",
+      "document": "時期",
+      "section": 23,
+      "sourceLines": "279–290",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T24",
+      "document": "時期",
+      "section": 24,
+      "sourceLines": "291–301",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T25",
+      "document": "時期",
+      "section": 25,
+      "sourceLines": "302–311",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T26",
+      "document": "時期",
+      "section": 26,
+      "sourceLines": "312–320",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T27",
+      "document": "時期",
+      "section": 27,
+      "sourceLines": "321–329",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T28",
+      "document": "時期",
+      "section": 28,
+      "sourceLines": "330–337",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T29",
+      "document": "時期",
+      "section": 29,
+      "sourceLines": "338–346",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T30",
+      "document": "時期",
+      "section": 30,
+      "sourceLines": "347–355",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T31",
+      "document": "時期",
+      "section": 31,
+      "sourceLines": "356–364",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T32",
+      "document": "時期",
+      "section": 32,
+      "sourceLines": "365–377",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T33",
+      "document": "時期",
+      "section": 33,
+      "sourceLines": "378–393",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T34",
+      "document": "時期",
+      "section": 34,
+      "sourceLines": "394–402",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T35",
+      "document": "時期",
+      "section": 35,
+      "sourceLines": "403–411",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T36",
+      "document": "時期",
+      "section": 36,
+      "sourceLines": "412–420",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T37",
+      "document": "時期",
+      "section": 37,
+      "sourceLines": "421–429",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T38",
+      "document": "時期",
+      "section": 38,
+      "sourceLines": "430–448",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T39",
+      "document": "時期",
+      "section": 39,
+      "sourceLines": "449–466",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T40",
+      "document": "時期",
+      "section": 40,
+      "sourceLines": "467–488",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T41",
+      "document": "時期",
+      "section": 41,
+      "sourceLines": "489–499",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T42",
+      "document": "時期",
+      "section": 42,
+      "sourceLines": "500–510",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T43",
+      "document": "時期",
+      "section": 43,
+      "sourceLines": "511–520",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T44",
+      "document": "時期",
+      "section": 44,
+      "sourceLines": "521–529",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T45",
+      "document": "時期",
+      "section": 45,
+      "sourceLines": "530–538",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T46",
+      "document": "時期",
+      "section": 46,
+      "sourceLines": "539–549",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T47",
+      "document": "時期",
+      "section": 47,
+      "sourceLines": "550–558",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T48",
+      "document": "時期",
+      "section": 48,
+      "sourceLines": "559–570",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T49",
+      "document": "時期",
+      "section": 49,
+      "sourceLines": "571–595",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T50",
+      "document": "時期",
+      "section": 50,
+      "sourceLines": "596–609",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T51",
+      "document": "時期",
+      "section": 51,
+      "sourceLines": "610–621",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T52",
+      "document": "時期",
+      "section": 52,
+      "sourceLines": "622–680",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "T53",
+      "document": "時期",
+      "section": 53,
+      "sourceLines": "681–700",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P00",
+      "document": "性格",
+      "section": 0,
+      "sourceLines": "3–18",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P01",
+      "document": "性格",
+      "section": 1,
+      "sourceLines": "19–29",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P02",
+      "document": "性格",
+      "section": 2,
+      "sourceLines": "30–39",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P03",
+      "document": "性格",
+      "section": 3,
+      "sourceLines": "40–50",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P04",
+      "document": "性格",
+      "section": 4,
+      "sourceLines": "51–61",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P05",
+      "document": "性格",
+      "section": 5,
+      "sourceLines": "62–72",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P06",
+      "document": "性格",
+      "section": 6,
+      "sourceLines": "73–82",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P07",
+      "document": "性格",
+      "section": 7,
+      "sourceLines": "83–93",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P08",
+      "document": "性格",
+      "section": 8,
+      "sourceLines": "94–104",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P09",
+      "document": "性格",
+      "section": 9,
+      "sourceLines": "105–115",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P10",
+      "document": "性格",
+      "section": 10,
+      "sourceLines": "116–126",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P11",
+      "document": "性格",
+      "section": 11,
+      "sourceLines": "127–137",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P12",
+      "document": "性格",
+      "section": 12,
+      "sourceLines": "138–148",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P13",
+      "document": "性格",
+      "section": 13,
+      "sourceLines": "149–158",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P14",
+      "document": "性格",
+      "section": 14,
+      "sourceLines": "159–170",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P15",
+      "document": "性格",
+      "section": 15,
+      "sourceLines": "171–179",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P16",
+      "document": "性格",
+      "section": 16,
+      "sourceLines": "180–190",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P17",
+      "document": "性格",
+      "section": 17,
+      "sourceLines": "191–200",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P18",
+      "document": "性格",
+      "section": 18,
+      "sourceLines": "201–210",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P19",
+      "document": "性格",
+      "section": 19,
+      "sourceLines": "211–220",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P20",
+      "document": "性格",
+      "section": 20,
+      "sourceLines": "221–230",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P21",
+      "document": "性格",
+      "section": 21,
+      "sourceLines": "231–240",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P22",
+      "document": "性格",
+      "section": 22,
+      "sourceLines": "241–249",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P23",
+      "document": "性格",
+      "section": 23,
+      "sourceLines": "250–259",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P24",
+      "document": "性格",
+      "section": 24,
+      "sourceLines": "260–270",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P25",
+      "document": "性格",
+      "section": 25,
+      "sourceLines": "271–279",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P26",
+      "document": "性格",
+      "section": 26,
+      "sourceLines": "280–289",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P27",
+      "document": "性格",
+      "section": 27,
+      "sourceLines": "290–298",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P28",
+      "document": "性格",
+      "section": 28,
+      "sourceLines": "299–310",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P29",
+      "document": "性格",
+      "section": 29,
+      "sourceLines": "311–319",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P30",
+      "document": "性格",
+      "section": 30,
+      "sourceLines": "320–330",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P31",
+      "document": "性格",
+      "section": 31,
+      "sourceLines": "331–339",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P32",
+      "document": "性格",
+      "section": 32,
+      "sourceLines": "340–350",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P33",
+      "document": "性格",
+      "section": 33,
+      "sourceLines": "351–360",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P34",
+      "document": "性格",
+      "section": 34,
+      "sourceLines": "361–370",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P35",
+      "document": "性格",
+      "section": 35,
+      "sourceLines": "371–379",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P36",
+      "document": "性格",
+      "section": 36,
+      "sourceLines": "380–388",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P37",
+      "document": "性格",
+      "section": 37,
+      "sourceLines": "389–397",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P38",
+      "document": "性格",
+      "section": 38,
+      "sourceLines": "398–406",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P39",
+      "document": "性格",
+      "section": 39,
+      "sourceLines": "407–415",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P40",
+      "document": "性格",
+      "section": 40,
+      "sourceLines": "416–427",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P41",
+      "document": "性格",
+      "section": 41,
+      "sourceLines": "428–437",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P42",
+      "document": "性格",
+      "section": 42,
+      "sourceLines": "438–447",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P43",
+      "document": "性格",
+      "section": 43,
+      "sourceLines": "448–456",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P44",
+      "document": "性格",
+      "section": 44,
+      "sourceLines": "457–508",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P45",
+      "document": "性格",
+      "section": 45,
+      "sourceLines": "509–549",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P46",
+      "document": "性格",
+      "section": 46,
+      "sourceLines": "550–562",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P47",
+      "document": "性格",
+      "section": 47,
+      "sourceLines": "563–574",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P48",
+      "document": "性格",
+      "section": 48,
+      "sourceLines": "575–584",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P49",
+      "document": "性格",
+      "section": 49,
+      "sourceLines": "585–593",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P50",
+      "document": "性格",
+      "section": 50,
+      "sourceLines": "594–603",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P51",
+      "document": "性格",
+      "section": 51,
+      "sourceLines": "604–618",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P52",
+      "document": "性格",
+      "section": 52,
+      "sourceLines": "619–627",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P53",
+      "document": "性格",
+      "section": 53,
+      "sourceLines": "628–636",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P54",
+      "document": "性格",
+      "section": 54,
+      "sourceLines": "637–645",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P55",
+      "document": "性格",
+      "section": 55,
+      "sourceLines": "646–654",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P56",
+      "document": "性格",
+      "section": 56,
+      "sourceLines": "655–668",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P57",
+      "document": "性格",
+      "section": 57,
+      "sourceLines": "669–692",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "P58",
+      "document": "性格",
+      "section": 58,
+      "sourceLines": "693–710",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R00",
+      "document": "相性",
+      "section": 0,
+      "sourceLines": "3–19",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R01",
+      "document": "相性",
+      "section": 1,
+      "sourceLines": "20–65",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R02",
+      "document": "相性",
+      "section": 2,
+      "sourceLines": "66–78",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R03",
+      "document": "相性",
+      "section": 3,
+      "sourceLines": "79–91",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R04",
+      "document": "相性",
+      "section": 4,
+      "sourceLines": "92–104",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R05",
+      "document": "相性",
+      "section": 5,
+      "sourceLines": "105–115",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R06",
+      "document": "相性",
+      "section": 6,
+      "sourceLines": "116–127",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R07",
+      "document": "相性",
+      "section": 7,
+      "sourceLines": "128–140",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R08",
+      "document": "相性",
+      "section": 8,
+      "sourceLines": "141–151",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R09",
+      "document": "相性",
+      "section": 9,
+      "sourceLines": "152–163",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R10",
+      "document": "相性",
+      "section": 10,
+      "sourceLines": "164–174",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R11",
+      "document": "相性",
+      "section": 11,
+      "sourceLines": "175–186",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R12",
+      "document": "相性",
+      "section": 12,
+      "sourceLines": "187–197",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R13",
+      "document": "相性",
+      "section": 13,
+      "sourceLines": "198–208",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R14",
+      "document": "相性",
+      "section": 14,
+      "sourceLines": "209–219",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R15",
+      "document": "相性",
+      "section": 15,
+      "sourceLines": "220–230",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R16",
+      "document": "相性",
+      "section": 16,
+      "sourceLines": "231–241",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R17",
+      "document": "相性",
+      "section": 17,
+      "sourceLines": "242–253",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R18",
+      "document": "相性",
+      "section": 18,
+      "sourceLines": "254–265",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R19",
+      "document": "相性",
+      "section": 19,
+      "sourceLines": "266–275",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R20",
+      "document": "相性",
+      "section": 20,
+      "sourceLines": "276–286",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R21",
+      "document": "相性",
+      "section": 21,
+      "sourceLines": "287–296",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R22",
+      "document": "相性",
+      "section": 22,
+      "sourceLines": "297–306",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R23",
+      "document": "相性",
+      "section": 23,
+      "sourceLines": "307–317",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R24",
+      "document": "相性",
+      "section": 24,
+      "sourceLines": "318–326",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R25",
+      "document": "相性",
+      "section": 25,
+      "sourceLines": "327–337",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R26",
+      "document": "相性",
+      "section": 26,
+      "sourceLines": "338–346",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R27",
+      "document": "相性",
+      "section": 27,
+      "sourceLines": "347–356",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R28",
+      "document": "相性",
+      "section": 28,
+      "sourceLines": "357–367",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R29",
+      "document": "相性",
+      "section": 29,
+      "sourceLines": "368–377",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R30",
+      "document": "相性",
+      "section": 30,
+      "sourceLines": "378–387",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R31",
+      "document": "相性",
+      "section": 31,
+      "sourceLines": "388–402",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R32",
+      "document": "相性",
+      "section": 32,
+      "sourceLines": "403–412",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R33",
+      "document": "相性",
+      "section": 33,
+      "sourceLines": "413–421",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R34",
+      "document": "相性",
+      "section": 34,
+      "sourceLines": "422–433",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R35",
+      "document": "相性",
+      "section": 35,
+      "sourceLines": "434–445",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R36",
+      "document": "相性",
+      "section": 36,
+      "sourceLines": "446–516",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R37",
+      "document": "相性",
+      "section": 37,
+      "sourceLines": "517–547",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R38",
+      "document": "相性",
+      "section": 38,
+      "sourceLines": "548–574",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R39",
+      "document": "相性",
+      "section": 39,
+      "sourceLines": "575–604",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R40",
+      "document": "相性",
+      "section": 40,
+      "sourceLines": "605–658",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R41",
+      "document": "相性",
+      "section": 41,
+      "sourceLines": "659–696",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R42",
+      "document": "相性",
+      "section": 42,
+      "sourceLines": "697–727",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R43",
+      "document": "相性",
+      "section": 43,
+      "sourceLines": "728–752",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R44",
+      "document": "相性",
+      "section": 44,
+      "sourceLines": "753–774",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R45",
+      "document": "相性",
+      "section": 45,
+      "sourceLines": "775–796",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R46",
+      "document": "相性",
+      "section": 46,
+      "sourceLines": "797–820",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R47",
+      "document": "相性",
+      "section": 47,
+      "sourceLines": "821–838",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R48",
+      "document": "相性",
+      "section": 48,
+      "sourceLines": "839–855",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R49",
+      "document": "相性",
+      "section": 49,
+      "sourceLines": "856–871",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R50",
+      "document": "相性",
+      "section": 50,
+      "sourceLines": "872–893",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R51",
+      "document": "相性",
+      "section": 51,
+      "sourceLines": "894–910",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R52",
+      "document": "相性",
+      "section": 52,
+      "sourceLines": "911–943",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R53",
+      "document": "相性",
+      "section": 53,
+      "sourceLines": "944–962",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R54",
+      "document": "相性",
+      "section": 54,
+      "sourceLines": "963–974",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R55",
+      "document": "相性",
+      "section": 55,
+      "sourceLines": "975–1002",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R56",
+      "document": "相性",
+      "section": 56,
+      "sourceLines": "1003–1024",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R57",
+      "document": "相性",
+      "section": 57,
+      "sourceLines": "1025–1073",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    },
+    {
+      "sourceId": "R58",
+      "document": "相性",
+      "section": 58,
+      "sourceLines": "1074–1097",
+      "status": "needs_review",
+      "reason": "Atomic predicate decomposition and runtime equivalence still require review"
+    }
+  ]
+}

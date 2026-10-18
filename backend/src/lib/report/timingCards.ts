@@ -1,22 +1,34 @@
 import type { ReportInput } from '../deterministicReport.js'
 import type { ReportCard, ReportSection, StructuredReport } from '../reportCards.js'
 import { japanDateParts } from '../japanDate.js'
+import { periodLabel } from '../age.js'
 import { badgeLabel, lifeEvent, type LifeEventKey } from './lifeEventLabels.js'
 import { glossesForEvidence } from './jargon.js'
 import { finalizeReportProvenance, withCardProvenance } from './provenance.js'
 import type { TimingClaimAsset } from './timingClaim.js'
-import { TIMING_CLAIM_ASSETS } from './timingClaimAssets.js'
+import { annualNarrative, canonicalAnnualTheme, composeAnnualNarrative, type AnnualPhrase } from './timingAnnualNarrative.js'
+import { appendAnnualSignReadings } from './annualSignNarrative.js'
+import { organizeAnnualCards } from './annualReadingLayout.js'
 
 type Annual = NonNullable<ReportInput['timing']>['annual'][number]
 type Decade = NonNullable<ReportInput['timing']>['decades'][number]
+type AnnualReportInput = Pick<ReportInput, 'birthDate' | 'birthTime' | 'birthplace' | 'gender' | 'timing'>
 const STRONG_THRESHOLD = 6
-const FALLBACK_ASSETS = TIMING_CLAIM_ASSETS.filter(asset => asset.specificity === 'fallback' && asset.availability === 'enabled')
 
 function unique(values: string[]) { return [...new Set(values.map(value => value.trim()).filter(Boolean))] }
-function stableIndex(value: string, length: number) {
-  let hash = 0
-  for (const character of value) hash = (hash * 31 + character.charCodeAt(0)) >>> 0
-  return length === 0 ? 0 : hash % length
+
+function annualSectionBody(phrases: AnnualPhrase[]): string {
+  // Keep all source meanings first. Add complete explanatory sentences only
+  // within the existing 220-character section contract.
+  let body = phrases.map(phrase => phrase.body).join('')
+  for (const phrase of phrases) {
+    for (const sentence of phrase.detail?.match(/[^。]+。/g) ?? []) {
+      const candidate = `${body}\n\n${sentence}`
+      if (candidate.length > 220) break
+      body = candidate
+    }
+  }
+  return body
 }
 
 export function timingEventKeys(values: string[]): LifeEventKey[] {
@@ -33,7 +45,7 @@ export function timingEventKeys(values: string[]): LifeEventKey[] {
   return keys.length ? keys : ['seed']
 }
 
-export function timingAnnualValues(item: Annual) { return unique([...item.themes, ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]) }
+export function timingAnnualValues(item: Annual) { return unique([...item.themes.map(canonicalAnnualTheme), ...(item.relationshipSignals ?? []), ...(item.relationshipEvents ?? [])]) }
 function primaryEvent(keys: LifeEventKey[]) {
   return [...keys].sort((left, right) => lifeEvent(left).priority - lifeEvent(right).priority || left.localeCompare(right))[0]
 }
@@ -45,11 +57,37 @@ function displayTags(key: LifeEventKey) {
   return unique([domain, legacy])
 }
 
-function paragraph(asset: TimingClaimAsset, index: number) {
-  const parts = [asset.counterpart ? `${asset.counterpart}。` : `${asset.proposition}。`]
-  if (asset.condition) parts.push(index % 2 === 0 ? `これが強く出るのは、${asset.condition}に限られます。` : `当てはまるのは、${asset.condition}です。`)
-  if (asset.cost) parts.push(index % 2 === 0 ? `引き換えになっているのは、${asset.cost}です。` : `そのぶん、${asset.cost}を後回しにします。`)
-  parts.push(index % 2 === 0 ? `${asset.behavior}と、扱いやすくなります。` : `まずは${asset.behavior}ことから試せます。`)
+export function realizeTimingParagraph(asset: Pick<TimingClaimAsset, 'proposition' | 'counterpart' | 'condition' | 'cost' | 'behavior'>, index: number) {
+  const slot = index % 6
+  const openForm = [
+    `${asset.proposition}。`, `この年に起きやすいのはこちらです。${asset.proposition}。`,
+    `${asset.proposition}。ひとつの出来事として現れるとは限りません。`,
+    `目立つ動きはここです。${asset.proposition}。`,
+    `${asset.proposition}。前触れなく来ることは、あまりありません。`,
+    `順を追うと単純です。${asset.proposition}。`,
+  ]
+  const counterLead = ['一方で、', 'その反面、', 'ただし、', '逆に、', 'そのわりに、', '反対に、']
+  const condForm = [
+    `この動きが強く出るのは、${asset.condition}です。`, `いつもそうなるわけではなく、${asset.condition}にはっきり出ます。`,
+    `当てはまるのは、${asset.condition}です。`, `そうなりやすいのは、${asset.condition}のほうです。`,
+    `条件があります。${asset.condition}に、これが出ます。`, `当てはまらない年もあります。はっきり出るのは、${asset.condition}です。`,
+  ]
+  const costForm = [
+    `引き換えになるのは、${asset.cost}です。`, `ここでは、${asset.cost}が後ろへ回ります。`,
+    `代わりに手放すのは、${asset.cost}です。`, `ここで払うのは、${asset.cost}です。`,
+    `見えにくい形で減るのが、${asset.cost}です。`, `同時に失うのは、${asset.cost}です。`,
+  ]
+  const closeForm = [
+    `${asset.behavior}と、この年を扱いやすくなります。`, `${asset.behavior}ところから始められます。`,
+    `まずは${asset.behavior}ことから試せます。`, `${asset.behavior}と、次の年へつながります。`,
+    `${asset.behavior}ことを、年内に一度だけ試せます。`, `${asset.behavior}と、この流れと付き合いやすくなります。`,
+  ]
+  // 時期資産にはsubjectがないため、propositionを必ず先に書く。
+  const parts = [openForm[slot]]
+  if (asset.counterpart) parts.push(`${counterLead[slot]}${asset.counterpart}。`)
+  if (asset.condition) parts.push(condForm[slot])
+  if (asset.cost) parts.push(costForm[slot])
+  parts.push(closeForm[slot])
   return parts.join('')
 }
 
@@ -64,54 +102,72 @@ function clustersFor(allAnnual: Annual[], key: LifeEventKey): number[][] {
   return clusters
 }
 
-function badgesFor(input: ReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[]) {
+function badgesFor(input: AnnualReportInput, item: Annual, key: LifeEventKey, allAnnual: Annual[], visibleAnnual: Annual[]) {
   const definition = lifeEvent(key)
   if (!definition.ordinal) return [definition.label]
   const clusters = clustersFor(allAnnual, key)
   const clusterIndex = clusters.findIndex(cluster => cluster.includes(item.year))
   const strong = Boolean(input.birthTime) && item.score >= STRONG_THRESHOLD
-  return clusters.length >= 2 && clusterIndex >= 0 && strong ? [badgeLabel(key, clusterIndex)] : [definition.label]
+  // Never display an ordinal whose earlier clusters are absent from the reader's list.
+  const earlierVisible = clusters.slice(0, clusterIndex + 1).every(cluster => visibleAnnual.some(value =>
+    cluster.includes(value.year) && value.score >= STRONG_THRESHOLD
+      && primaryEvent(timingEventKeys(timingAnnualValues(value))) === key))
+  return clusters.length >= 2 && clusterIndex >= 0 && strong && earlierVisible ? [badgeLabel(key, clusterIndex)] : [definition.label]
 }
 
-function assetsFor(key: LifeEventKey, item: Annual) {
-  const candidates = FALLBACK_ASSETS.filter(asset => asset.events.length === 1 && asset.events[0] === key)
-    .sort((left, right) => right.salienceBase - left.salienceBase || left.id.localeCompare(right.id))
-  if (candidates.length === 0) return []
-  const headlines = candidates.filter(asset => asset.headline)
-  const headline = headlines[stableIndex(`${item.year}|${key}|headline`, headlines.length)] ?? candidates[0]
-  const body = candidates.filter(asset => asset.id !== headline.id)
-  const offset = stableIndex(`${item.year}|${key}|body`, body.length)
-  return [headline, ...Array.from({ length: body.length }, (_, index) => body[(offset + index) % body.length]).slice(0, 2)]
-}
-
-function card(input: ReportInput, item: Annual, allAnnual: Annual[], decade?: Decade): ReportCard {
+function card(input: AnnualReportInput, item: Annual, allAnnual: Annual[], visibleAnnual: Annual[], decade?: Decade): ReportCard | null {
+  const themes = annualNarrative(item.themes)
+  const relationships = annualNarrative(item.relationshipEvents ?? [])
+  const phrases = [...themes, ...relationships]
+  // A broad event label alone cannot support a year-specific prediction.
+  if (phrases.length === 0) return null
   const rawValues = timingAnnualValues(item)
-  const key = primaryEvent(timingEventKeys(rawValues))
-  const assets = assetsFor(key, item)
-  const headline = assets[0]
-  const badges = badgesFor(input, item, key, allAnnual)
+  const keys = timingEventKeys(rawValues)
+  const key = primaryEvent(keys)
+  const badges = badgesFor(input, item, key, allAnnual, visibleAnnual)
   const rawDetails = unique([item.kanshi, item.tenGod, ...rawValues, ...(decade ? [`長期運 ${decade.kanshi}・${decade.tenGod}`] : [])])
-  const evidence = [{ family: '干支系', system: '四柱推命', detail: rawDetails.join('・').slice(0, 160) }]
-  const sections: ReportSection[] = assets.slice(1).map((asset, index) => ({
-    heading: asset.typeLabel, body: paragraph(asset, index + 1), evidence,
-    termGloss: evidence.flatMap(value => glossesForEvidence(value.detail)), claimId: asset.id,
+  const evidence = [{ family: '干支系', system: '四柱推命', detail: `${item.year}年・${rawDetails.join('・')}` }]
+  const sections: ReportSection[] = [
+    { heading: 'この年のテーマ', values: themes, source: 'themes' },
+    { heading: '人との関係', values: relationships, source: 'relationships' },
+  ].filter(section => section.values.length > 0).map(section => ({
+    heading: section.heading, body: annualSectionBody(section.values), evidence,
+    termGloss: evidence.flatMap(value => glossesForEvidence(value.detail)), claimId: `timing-annual-${item.year}-${section.source}`,
   }))
-  const lead = headline ? paragraph(headline, 0) : lifeEvent(key).lead
+  // Preserve every calculated theme/event even when the primary tag is "work".
+  // Do not manufacture year differences with a hash or silently add monthly timing.
+  const combination = composeAnnualNarrative(phrases)
+  const lead = combination?.body ?? phrases.map(phrase => phrase.body).join('')
   const ordinalBadge = badges.find(label => /第.+回目/.test(label))
-  const title = `${headline?.typeLabel ?? lifeEvent(key).label}${ordinalBadge ? `（${ordinalBadge}）` : ''}`
+  const themeTitle = combination?.title ?? phrases[0].title
+  const title = `${themeTitle}${ordinalBadge ? `（${ordinalBadge}）` : ''}`
   const pages = [{ role: 'opening' as const, label: 'この年の流れ', text: lead }, ...sections.map((section, index) => ({
     role: index === sections.length - 1 ? 'closing' as const : 'core' as const, label: section.heading, text: section.body,
   }))]
   return {
     id: `turning-year-${item.year}`, kind: 'timing', scope: 'self', tab: 'timing', title, summary: lead,
-    tags: unique(['時期', ...displayTags(key), ...badges]), period: { label: `${item.year}年（${item.ageRange}）` }, pages, sections, evidence,
-    metadataRefs: ['turningPoints', `timing-claim:${headline?.id ?? 'none'}`],
+    tags: unique(['時期', ...displayTags(key), ...badges, ...keys.flatMap(displayTags)]),
+    period: { label: input.birthDate ? periodLabel(input.birthDate, item.year)
+      : item.age != null ? `${item.year}年（${item.age}歳になる年）` : `${item.year}年（${item.ageRange}）` },
+    pages, sections, evidence, metadataRefs: ['turningPoints', `timing-annual:${item.year}`, ...phrases.map(phrase => `timing-annual-v1:${phrase.id}`),
+      ...(combination ? [`timing-annual-combination-v1:${combination.id}`] : [])],
   }
 }
 
 function signature(item: Annual) { return timingAnnualValues(item).sort().join('|') }
 
-/** 年の選抜条件は従来どおり。T3は表示と文章資産だけを差し替える。 */
+/** Reader-requested history, including years not selected as turning points.
+ * Uses the same calculated meanings; does not change selection or scores. */
+export function buildAnnualHistoryCards(input: AnnualReportInput, referenceYear = japanDateParts().year): ReportCard[] {
+  const all = [...(input.timing?.annual ?? [])].sort((a, b) => a.year - b.year)
+  const past = all.filter(item => item.year <= referenceYear)
+  return organizeAnnualCards(appendAnnualSignReadings(past.map(item => card(input, item, all, past,
+    input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
+    .filter((value): value is ReportCard => value !== null), input), input)
+    .map(value => withCardProvenance(value, 'deterministic'))
+}
+
+/** 年の選抜条件は従来どおり。本文は既存の年計算が持つ生活語を欠落なく表示する。 */
 export function buildTurningPointCards(input: ReportInput, nowYear = japanDateParts().year): ReportCard[] {
   const start = nowYear - 15
   const end = nowYear + 20
@@ -124,12 +180,14 @@ export function buildTurningPointCards(input: ReportInput, nowYear = japanDatePa
     return relationshipEvent || item.score >= 8 || (changedTheme && item.score >= 6)
   })
   const selected = turningPoints.length ? turningPoints : [...inRange].sort((a, b) => b.score - a.score || a.year - b.year).slice(0, 3).sort((a, b) => a.year - b.year)
-  return selected.map(item => card(input, item, allAnnual, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
+  const visible = selected.filter(item => annualNarrative([...item.themes, ...(item.relationshipEvents ?? [])]).length > 0)
+  return organizeAnnualCards(appendAnnualSignReadings(visible.map(item => card(input, item, allAnnual, visible, input.timing?.decades.find(period => item.year >= period.startYear && item.year <= period.endYear)))
+    .filter((item): item is ReportCard => item !== null), input), input)
 }
 
 export function replaceTimingCards(report: StructuredReport, input: ReportInput): StructuredReport {
+  if (!input.timing) return report
   const timing = buildTurningPointCards(input).map(card => withCardProvenance(card, 'deterministic'))
-  if (timing.length === 0) return report
   const cards = [...report.cards.filter(item => item.kind !== 'timing'), ...timing]
   const reportText = cards.flatMap(item => [`【${item.title}】`, item.summary, ...(item.sections ?? []).flatMap(section => [section.heading, section.body])]).join('\n\n')
   return finalizeReportProvenance({ ...report, reportText, cards }, 'self-report-v3')

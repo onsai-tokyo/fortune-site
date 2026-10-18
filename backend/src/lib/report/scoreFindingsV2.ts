@@ -1,6 +1,6 @@
 import type { ReportFactV2 } from './factsV2.js'
 import type { ReportFindingV2 } from './findingsV2.js'
-import { buildGapFindings } from './gapFindings.js'
+import { buildGapFindings, type GapEvaluation } from './gapFindings.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES } from './traitScores.js'
 
@@ -9,11 +9,11 @@ import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES } from './t
  * Gap findings are converted to the common Finding contract so the chapter
  * planner can compare them with ordinary consensus findings.
  */
-export function buildScoreFindingsV2(facts: ReportFactV2[]): ReportFindingV2[] {
+export function buildScoreFindingsV2(facts: ReportFactV2[], onEvaluation?: (rows: readonly GapEvaluation[]) => void): ReportFindingV2[] {
   const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
   const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, scale)
   const factById = new Map(facts.map(fact => [fact.id, fact]))
-  return buildGapFindings(scores).map(gap => {
+  return buildGapFindings(scores, undefined, onEvaluation).map(gap => {
     const contributing = gap.primaryFacts.map(id => factById.get(id)).filter((fact): fact is ReportFactV2 => Boolean(fact))
     return {
       id: gap.id,

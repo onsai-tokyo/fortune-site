@@ -13,6 +13,8 @@ import { realizeSummary, realizeTitle } from './sentenceForm.js'
 import { bootstrapTraitScoreScale } from './traitScoreScale.js'
 import { ALL_TRAIT_SCORE_KEYS, computeTraitScores, TRAIT_SCORE_RULES, type TraitScoreSet } from './traitScores.js'
 
+export const CLAIM_SELECTOR_VERSION = 'claims-scroll-v4-concrete-pool'
+
 const CHAPTER_ORDER = Object.keys(CHAPTER_SCORES) as ChapterId[]
 const MIN_SECTIONS = 3
 const MAX_SECTIONS = 6
@@ -26,11 +28,23 @@ export function claimTriggerMatchesFinding(asset: ClaimAsset, finding: ReportFin
   switch (asset.trigger.kind) {
     case 'signal': return finding.key === asset.trigger.signal
     case 'axis': return finding.axis === asset.trigger.axis
-    case 'gap': return finding.key === asset.trigger.gapKey || finding.key === `${asset.trigger.gapKey}:aligned`
+    case 'gap': return finding.key === asset.trigger.gapKey
     case 'missing': return finding.key === `missing-${asset.trigger.element}`
     case 'mutagen': return finding.key.startsWith('mutagen-') && finding.key.split('-').includes(asset.trigger.star)
     case 'score': return finding.key === asset.trigger.scoreKey
   }
+}
+
+export interface ClaimAuditRow {
+  claimId: string; chapter: ChapterId; triggerKind: ClaimAsset['trigger']['kind']
+  findingId: string | null; evidenceFactIds: string[]; baseSalience: number
+  primaryFactIds: string[]; supportingFactIds: string[]; scoreFactIds: string[]
+  runtimeSalience: number | null; floor: number; tier: string
+  salienceRank: number | null; rotationRank: number | null; section: number | null; lead: boolean
+  reason: 'no_finding' | 'no_evidence' | 'below_floor' | 'forbidden' | 'eligible_not_selected' | 'selected'
+}
+export function claimRuntimeSalience(base: number, findingConfidence: number, scoreConfidence: number): number {
+  return Math.min(1, base + findingConfidence * 0.04 + scoreConfidence * 0.03)
 }
 
 type ClaimSelectionTier = 'direct' | 'score' | 'axis'
@@ -69,15 +83,20 @@ function scoreFinding(asset: ClaimAsset, facts: ReportFactV2[], scores: TraitSco
 }
 
 function evidenceFor(factIds: readonly string[], factById: Map<string, ReportFactV2>): EvidenceRef[] {
-  const seen = new Set<string>()
-  return factIds.flatMap(id => {
+  const grouped = new Map<string, EvidenceRef>()
+  for (const id of factIds) {
     const fact = factById.get(id)
-    if (!fact) return []
-    const key = `${fact.lineage}|${fact.system}|${fact.factor}`
-    if (seen.has(key)) return []
-    seen.add(key)
-    return [{ family: fact.lineage, system: fact.system, detail: fact.factor, factIds: [fact.id] }]
-  })
+    if (!fact) continue
+    const key = JSON.stringify([fact.lineage, fact.system, fact.factor])
+    const existing = grouped.get(key)
+    // 表示の統合で出典IDを捨てない。独立性の判定・加点には使わない。
+    if (existing) {
+      if (!existing.factIds.includes(fact.id)) existing.factIds.push(fact.id)
+    } else {
+      grouped.set(key, { family: fact.lineage, system: fact.system, detail: fact.factor, factIds: [fact.id] })
+    }
+  }
+  return [...grouped.values()]
 }
 
 function confidenceFor(finding: ReportFindingV2, requiresBirthTime: boolean, birthTimeAvailable: boolean): ClaimConfidence {
@@ -96,7 +115,7 @@ function buildClaim(asset: ClaimAsset, finding: ReportFindingV2, facts: ReportFa
   const requiresBirthTime = factIds.some(id => factById.get(id)?.requiresBirthTime)
   // salienceBase は編集済み資産の品質判定そのもの。確信度は順位の微調整だけに使い、
   // ここで再び大幅に縮小して 0.70 floor 未満へ落とさない。
-  const salience = Math.min(1, asset.salienceBase + finding.confidence * 0.04 + score.confidence * 0.03)
+  const salience = claimRuntimeSalience(asset.salienceBase, finding.confidence, score.confidence)
   return {
     id: asset.id, chapter: asset.chapter, shape: asset.shape,
     subject: asset.subject, proposition: asset.proposition, counterpart: asset.counterpart,
@@ -108,69 +127,123 @@ function buildClaim(asset: ClaimAsset, finding: ReportFindingV2, facts: ReportFa
   }
 }
 
-function paragraph(claim: Claim, index: number): string {
+export function realizeClaimParagraph(claim: Pick<Claim, 'subject' | 'proposition' | 'counterpart' | 'condition' | 'cost' | 'behavior'>, index: number): string {
+  const slot = index % 6
+  const openForm = [
+    `${claim.subject}、${claim.proposition}。`,
+    `心当たりはありますか。${claim.subject}、${claim.proposition}。`,
+    `${claim.subject}、${claim.proposition}。条件も確かめてみてください。`,
+    `よくあるのはこちらです。${claim.subject}、${claim.proposition}。`,
+    `${claim.subject}、${claim.proposition}。よくあることです。`,
+    `順は単純です。${claim.subject}、${claim.proposition}。`,
+  ]
+  const counterLead = ['一方で、', 'その反面、', 'ただし、', '逆に、', 'そのわりに、', '反対に、']
   const condForm = [
-    `これが強く出るのは、${claim.condition}に限られます。`,
-    `いつもそうなるわけではなく、${claim.condition}に、はっきり出ます。`,
-    `当てはまるのは、${claim.condition}です。`,
-    `そうなりやすいのは、${claim.condition}のほうです。`,
+    `これが強く出る条件があります。${claim.condition}です。`,
+    `強く出るのは${claim.condition}です。`,
+    `当てはまるのは${claim.condition}です。`,
+    `${claim.condition}に、とくにはっきり出ます。`,
+    `条件つきです。${claim.condition}に、はっきり出ます。`,
+    `強く出るのは${claim.condition}です。`,
   ]
   const costForm = [
-    `引き換えになっているのは、${claim.cost}です。`, `そのぶん、${claim.cost}を後回しにしています。`,
+    `引き換えになっているのは、${claim.cost}です。`, `ここでは、${claim.cost}が後ろへ回ります。`,
     `代わりに手放しているのは、${claim.cost}です。`, `ここで払っているのは、${claim.cost}です。`,
+    `見えにくい形で減っているのが、${claim.cost}です。`, `同時に失っているのは、${claim.cost}です。`,
   ]
   const closeForm = [
-    `${claim.behavior}と、扱いやすくなります。`, `${claim.behavior}ところから確かめられます。`,
-    `まずは${claim.behavior}ことから試せます。`, `${claim.behavior}と、次から動きやすくなります。`,
+    `試すなら、${claim.behavior}ことからです。`,
+    `当てはまるかどうかは、${claim.behavior}と分かります。`,
+    `今月のうちに一度だけ、${claim.behavior}時間を取ってみてください。`,
+    `${claim.behavior}と、判断の基準が手元に残ります。`,
+    `${claim.behavior}と、あとから見返せる形で残ります。`,
+    `一人で決めず、${claim.behavior}ところを誰かに見てもらえます。`,
   ]
-  const parts = claim.counterpart
-    ? [`${claim.subject}、${claim.counterpart}。`, claim.condition ? condForm[index % 4] : '']
-    : [`${claim.subject}、${claim.proposition}。`, claim.condition ? condForm[index % 4] : '']
-  if (claim.cost) parts.push(costForm[index % 4])
-  parts.push(closeForm[index % 4])
+  // proposition は対比の前提なので、counterpart があっても必ず残す。
+  const parts = [openForm[slot]]
+  if (claim.counterpart) parts.push(`${counterLead[slot]}${claim.counterpart}。`)
+  if (claim.condition) parts.push(condForm[slot])
+  if (claim.cost) parts.push(costForm[slot])
+  parts.push(closeForm[slot])
   return parts.filter(Boolean).join('')
 }
 
-function rotateClaims(claims: SelectableClaim[], seed: string, tier: ClaimSelectionTier): SelectableClaim[] {
+function rotateClaims(claims: SelectableClaim[], seed: string, tier: ClaimSelectionTier | 'concrete'): SelectableClaim[] {
   if (claims.length === 0) return []
   const offset = seedInt(`${seed}|${tier}`) % claims.length
   return Array.from({ length: claims.length }, (_, index) => claims[(offset + index) % claims.length])
 }
 
-function pickClaims(chapter: ChapterId, claims: SelectableClaim[], seed: string): SelectableClaim[] {
+function pickClaims(chapter: ChapterId, claims: SelectableClaim[], seed: string, audit?: Map<string, ClaimAuditRow>): SelectableClaim[] {
   const forbidden = CHAPTER_SCORES[chapter].forbidden
-  const pool = claims.filter(claim => claim.chapter === chapter && claim.salience >= SALIENCE_FLOOR)
-    .filter(claim => !forbidden?.test([claim.typeLabel, claim.subject, claim.proposition, claim.counterpart, claim.condition, claim.behavior, claim.cost].filter(Boolean).join('')))
+  const pool = claims.filter(claim => claim.chapter === chapter).filter(claim => {
+    const row = audit?.get(claim.id)
+    if (claim.salience < SALIENCE_FLOOR) { if (row) row.reason = 'below_floor'; return false }
+    if (forbidden?.test([claim.typeLabel, claim.subject, claim.proposition, claim.counterpart, claim.condition, claim.behavior, claim.cost].filter(Boolean).join(''))) {
+      if (row) row.reason = 'forbidden'
+      return false
+    }
+    if (row) row.reason = 'eligible_not_selected'
+    return true
+  })
     .sort((left, right) => right.salience - left.salience || left.id.localeCompare(right.id))
+  pool.forEach((claim, index) => { const row = audit?.get(claim.id); if (row) row.salienceRank = index })
   if (pool.length === 0) return []
-  const desired = Math.min(MAX_SECTIONS, Math.max(MIN_SECTIONS, pool.length))
   // 具体的な trigger を最優先する。axis は ClaimTrigger の契約どおり、
   // 具体的な候補だけでは章の最低件数を満たせない場合に限るフォールバック。
-  // score はスコア自体を根拠に執筆された資産なので、その次に採る。
-  const ordered = (['direct', 'score', 'axis'] as const).flatMap(tier =>
-    rotateClaims(pool.filter(claim => claim.selectionTier === tier), `${seed}|${chapter}`, tier))
-  return ordered.slice(0, desired)
+  // direct と score は「根拠が成立している具体候補」なので、一つのプールとして巡回する。
+  // tier ごとに分けて巡回すると direct が常に先頭を占め、221件の人手資産のうち
+  // 一部しか見出しにならずタイトルが固定化する（64be9d9 の副作用）。
+  const ordered = [
+    ...rotateClaims(pool.filter(claim => claim.selectionTier !== 'axis'), `${seed}|${chapter}`, 'concrete'),
+    ...rotateClaims(pool.filter(claim => claim.selectionTier === 'axis'), `${seed}|${chapter}`, 'axis'),
+  ]
+  ordered.forEach((claim, index) => { const row = audit?.get(claim.id); if (row) row.rotationRank = index })
+  const concrete = ordered.filter(claim => claim.selectionTier !== 'axis').slice(0, MAX_SECTIONS)
+  const axis = ordered.filter(claim => claim.selectionTier === 'axis')
+    .slice(0, Math.max(0, MIN_SECTIONS - concrete.length))
+  const picked = [...concrete, ...axis]
+  picked.forEach((claim, index) => {
+    const row = audit?.get(claim.id)
+    if (row) { row.reason = 'selected'; row.section = index; row.lead = index === 0 }
+  })
+  return picked
 }
 
-export function buildClaimStructuredReport(facts: ReportFactV2[], findings: ReportFindingV2[], input: ReportInput): StructuredReport {
+export function buildClaimStructuredReport(facts: ReportFactV2[], findings: ReportFindingV2[], input: ReportInput, onTrace?: (rows: readonly ClaimAuditRow[]) => void): StructuredReport {
+  const audit = onTrace ? new Map<string, ClaimAuditRow>() : undefined
   const scores = computeTraitScores(facts, TRAIT_SCORE_RULES, bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS))
   const seed = JSON.stringify([input.birthDate, input.birthTime ?? null, input.birthplace, input.gender])
   const claims = CLAIM_ASSETS.flatMap(asset => {
+    const row: ClaimAuditRow = {
+      claimId: asset.id, chapter: asset.chapter, triggerKind: asset.trigger.kind,
+      findingId: null, evidenceFactIds: [], baseSalience: asset.salienceBase,
+      primaryFactIds: [], supportingFactIds: [], scoreFactIds: [],
+      runtimeSalience: null, floor: SALIENCE_FLOOR, tier: selectionTier(asset),
+      salienceRank: null, rotationRank: null, section: null, lead: false, reason: 'no_finding',
+    }
+    audit?.set(asset.id, row)
     const triggered = findings.filter(item => claimTriggerMatchesFinding(asset, item))
       .sort((left, right) => right.confidence - left.confidence || left.id.localeCompare(right.id))[0]
     // 非 score 資産は固有 trigger が成立したときだけ採用する。
     // 広い Trait Score だけで具体的な生活場面を補うと、根拠のない断定になる。
     const finding = triggered ?? (asset.trigger.kind === 'score' ? scoreFinding(asset, facts, scores) : null)
     if (!finding) return []
+    row.findingId = finding.id
+    row.primaryFactIds = finding.primaryFacts.filter(id => facts.some(f => f.id === id))
+    row.supportingFactIds = finding.supportingFacts.filter(id => facts.some(f => f.id === id))
+    row.scoreFactIds = [...scores[asset.scoreKey === 'private_affection' ? 'domestic_affection' : asset.scoreKey].contributingFacts]
     const claim = buildClaim(asset, finding, facts, scores, Boolean(input.birthTime))
+    row.reason = claim ? 'eligible_not_selected' : 'no_evidence'
+    if (claim) { row.runtimeSalience = claim.salience; row.evidenceFactIds = claim.evidence.flatMap(item => item.factIds) }
     return claim ? [claim] : []
   })
   const cards: ReportCard[] = CHAPTER_ORDER.flatMap(chapter => {
-    const picked = pickClaims(chapter, claims, seed)
+    const picked = pickClaims(chapter, claims, seed, audit)
     if (picked.length === 0) return []
     const sections: ReportSection[] = picked.map((claim, index) => ({
       heading: claim.typeLabel,
-      body: paragraph(claim, index),
+      body: realizeClaimParagraph(claim, index),
       evidence: claim.evidence.map(item => ({ family: item.family, system: item.system, detail: item.detail })),
       termGloss: claim.termGloss,
       claimId: claim.id,
@@ -193,9 +266,10 @@ export function buildClaimStructuredReport(facts: ReportFactV2[], findings: Repo
       ]),
     }, 'deterministic', 'finding', 0)]
   })
+  if (onTrace && audit) onTrace([...audit.values()].map(row => ({ ...row, evidenceFactIds: [...row.evidenceFactIds], primaryFactIds:[...row.primaryFactIds], supportingFactIds:[...row.supportingFactIds], scoreFactIds:[...row.scoreFactIds] })))
   return finalizeReportProvenance({
     version: 3,
     cards,
     reportText: cards.flatMap(card => [`【${card.title}】`, ...(card.sections ?? []).flatMap(section => [section.heading, section.body])]).join('\n\n'),
-  }, 'claims-scroll-v1')
+  }, CLAIM_SELECTOR_VERSION)
 }

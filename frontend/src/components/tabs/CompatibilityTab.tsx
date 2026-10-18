@@ -1,352 +1,151 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import type { FortuneData, CompatibilityAnalysis, PartnerData } from '../../lib/types'
-import { apiFetch, calculatePerson } from '../../lib/api'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { saveAnalysis } from '../../lib/history'
-import { addAnalyzedFeature } from '../../lib/analyzedFeatures'
+import { registrationKey } from '../../lib/partnerRegistrationRecovery'
+import { deletionKey } from '../../lib/partnerDeletion'
+import { PartnerDeletionPanel } from '../PartnerDeletionPanel'
+import { PartnerRegistrationForm } from '../PartnerRegistrationForm'
+import { supabase } from '../../lib/supabase'
+import { compatibilityKey, loadCompatibilityOperation, recoverCompatibility, type CompatibilityOperation } from '../../lib/compatibilityRecovery'
 
-interface Props {
-  fortuneData: FortuneData
-  onSaved?: (id: string) => void
+type Choice = { id: string; title?: string; kind?: string; display_name?: string }
+const relationships: Record<string, string[]> = {
+  romantic: ['片思い', 'お付き合い中', '婚約中', '夫婦', '復縁希望', '元恋人'],
+  friend: ['友人', '親友', '会社の同僚', '上司', '部下', '取引先', 'その他'],
+  family: ['親', '子', '兄弟姉妹', '配偶者の家族'],
 }
+const fieldClass = 'w-full bg-navy-light border border-white/15 rounded-lg px-3 py-3 text-white text-sm'
 
-type SubTab = 'work' | 'romantic'
-
-function ScoreRing({ score, label }: { score: number; label: string }) {
-  const color = score >= 80 ? '#34d399' : score >= 65 ? '#60a5fa' : '#fbbf24'
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-20 h-20">
-        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-          <circle
-            cx="40" cy="40" r="32" fill="none" stroke={color} strokeWidth="6"
-            strokeDasharray={`${2 * Math.PI * 32}`}
-            strokeDashoffset={`${2 * Math.PI * 32 * (1 - score / 100)}`}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-bold font-mono text-white">{score}</span>
-        </div>
-      </div>
-      <span className="text-white/40 text-xs">{label}</span>
-    </div>
-  )
-}
-
-function CompatResult({ data, sub }: { data: CompatibilityAnalysis; sub: SubTab }) {
-  const section = sub === 'work' ? data.work : data.romantic
-  const label = sub === 'work' ? '仕事相性' : '恋愛相性'
-
-  return (
-    <div className="space-y-4 animate-fade-in">
-      {/* スコア表示 */}
-      <div className="glass-card p-6">
-        <div className="flex items-center justify-around mb-4">
-          <ScoreRing score={data.overall} label="総合スコア" />
-          <ScoreRing score={data.work.score} label="仕事相性" />
-          <ScoreRing score={data.romantic.score} label="恋愛相性" />
-        </div>
-        <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-center">
-          <p className="text-white/40 text-xs mb-1">関係性タイプ</p>
-          <p className="text-white font-semibold text-sm">{data.dynamic}</p>
-        </div>
-      </div>
-
-      {/* 詳細 */}
-      <div className="glass-card p-6 space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className={`w-1 h-5 rounded-full ${sub === 'work' ? 'bg-blue-400' : 'bg-pink-400'}`} />
-          <h3 className="text-white font-semibold text-base">{label}詳細</h3>
-          <span className="ml-auto text-white/20 font-bold font-mono text-lg">{section.score}</span>
-        </div>
-
-        <p className="text-white/70 text-sm leading-relaxed">{section.summary}</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <p className="text-emerald-400 text-xs font-medium mb-2">強み</p>
-            {section.strengths.map((s, i) => (
-              <div key={i} className="flex items-start gap-2 mb-1.5">
-                <span className="text-emerald-400 text-xs mt-0.5">+</span>
-                <span className="text-white/60 text-xs">{s}</span>
-              </div>
-            ))}
-          </div>
-          <div>
-            <p className="text-amber-400 text-xs font-medium mb-2">注意点</p>
-            {section.challenges.map((c, i) => (
-              <div key={i} className="flex items-start gap-2 mb-1.5">
-                <span className="text-amber-400 text-xs mt-0.5">△</span>
-                <span className="text-white/60 text-xs">{c}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-accent/10 border border-accent/20 rounded-lg px-4 py-3">
-          <p className="text-white/40 text-xs mb-1">アドバイス</p>
-          <p className="text-white/80 text-sm">{section.advice}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function PartnerForm({ onSubmit }: { onSubmit: (partner: PartnerData & { birthDate: string; gender: string }) => void }) {
-  const [year, setYear] = useState('')
-  const [month, setMonth] = useState('')
-  const [day, setDay] = useState('')
-  const [gender, setGender] = useState<'male' | 'female'>('female')
-
-  const YEARS = Array.from({ length: 107 }, (_, i) => 2026 - i)
-  const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
-  const DAYS = Array.from({ length: 31 }, (_, i) => i + 1)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!year || !month || !day) return
-    const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    onSubmit({ ...await calculatePerson(birthDate, gender), birthDate, gender })
-  }
-
-  return (
-    <div className="glass-card p-6 border border-accent/15">
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-1 h-5 bg-accent rounded-full" />
-        <h3 className="text-white font-semibold text-base">相手の情報を入力</h3>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="text-white/50 text-xs mb-2 block">相手の生年月日 <span className="text-accent">*</span></label>
-          <div className="grid grid-cols-3 gap-2">
-            <select value={year} onChange={e => setYear(e.target.value)}
-              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-              <option value="">年</option>
-              {YEARS.map(y => <option key={y} value={y}>{y}年</option>)}
-            </select>
-            <select value={month} onChange={e => setMonth(e.target.value)}
-              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-              <option value="">月</option>
-              {MONTHS.map(m => <option key={m} value={m}>{m}月</option>)}
-            </select>
-            <select value={day} onChange={e => setDay(e.target.value)}
-              className="bg-navy-light border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none">
-              <option value="">日</option>
-              {DAYS.map(d => <option key={d} value={d}>{d}日</option>)}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className="text-white/50 text-xs mb-2 block">相手の性別 <span className="text-accent">*</span></label>
-          <div className="grid grid-cols-2 gap-2">
-            {(['female', 'male'] as const).map(g => (
-              <button
-                key={g} type="button"
-                onClick={() => setGender(g)}
-                className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${gender === g ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-white/40 hover:text-white/60'}`}
-              >
-                {g === 'female' ? '女性' : '男性'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button
-          type="submit"
-          disabled={!year || !month || !day}
-          className="w-full py-3.5 bg-accent hover:bg-accent-dark text-white font-bold rounded-lg transition-all text-sm disabled:opacity-40"
-        >
-          ✦ 相性を診断する
-        </button>
-      </form>
-    </div>
-  )
-}
-
-export function CompatibilityTab({ fortuneData, onSaved }: Props) {
-  const navigate = useNavigate()
+export function CompatibilityTab() {
   const { user, refreshPoints } = useAuth()
-  const [result, setResult] = useState<CompatibilityAnalysis | null>(null)
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const boundary = useRef({ owner: user?.id ?? null, epoch: 0 })
+  if (boundary.current.owner !== (user?.id ?? null)) boundary.current = { owner: user?.id ?? null, epoch: boundary.current.epoch + 1 }
+  const [authEpoch, setAuthEpoch] = useState(0)
+  const active = useRef<symbol | null>(null)
+  const partnerListRevision = useRef(0)
+  const [busy, setBusy] = useState(false)
+  const [state, setState] = useState<{ owner: string; epoch: number; partners: Choice[]; readings: Choice[]; pending: CompatibilityOperation | null } | null>(null)
   const [error, setError] = useState('')
-  const [isPointInsufficient, setIsPointInsufficient] = useState(false)
-  const [subTab, setSubTab] = useState<SubTab>('work')
-  const [partnerBirthDate, setPartnerBirthDate] = useState('')
-  const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('female')
-  const [submittedPartnerBlock, setSubmittedPartnerBlock] = useState<PartnerData & { birthDate: string; gender: string } | null>(null)
+  const [partnerId, setPartnerId] = useState('')
+  const [conversationId, setConversationId] = useState('')
+  const [relationshipLabel, setRelationshipLabel] = useState('友人')
+  const owner = user?.id
+  const visible = state?.owner === owner && state?.epoch === boundary.current.epoch ? state : null
 
-  function saveAndOpenReport(r: CompatibilityAnalysis, pBirthDate: string, pGender: string) {
-    const reportData = {
-      result: r,
-      self: {
-        birthDate: fortuneData.input.birthDate,
-        gender: fortuneData.input.gender,
-        shichuDay: fortuneData.shichu.day.kanshi,
-      },
-      partner: {
-        birthDate: pBirthDate,
-        gender: pGender,
-        shichuDay: '', // partnerブロックから取得
-      },
-      generatedAt: new Date().toISOString(),
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || boundary.current.owner !== (session?.user.id ?? null)) {
+        boundary.current = { owner: session?.user.id ?? null, epoch: boundary.current.epoch + 1 }
+        active.current = null; setBusy(false); setState(null); setError(''); setAuthEpoch(value => value + 1)
+      }
+    })
+    return () => { boundary.current.epoch++; data.subscription.unsubscribe() }
+  }, [])
+
+  function context() {
+    const id = owner, epoch = boundary.current.epoch
+    const current = () => !!id && boundary.current.owner === id && boundary.current.epoch === epoch
+    const check = () => { if (!current()) throw new Error('ログイン状態が変更されました') }
+    const authorize = async (refresh: boolean) => {
+      check()
+      const response = refresh ? await supabase.auth.refreshSession() : await supabase.auth.getSession()
+      check()
+      if (response.error || !response.data.session || response.data.session.user.id !== id || !response.data.session.access_token) throw new Error('ログイン状態を確認してください')
+      return response.data.session.access_token
     }
-    // partnerの日柱を取得
-    if (fortuneData.partner) {
-      reportData.partner.shichuDay = fortuneData.partner.shichu.day.kanshi
-    } else if (submittedPartnerBlock) {
-      reportData.partner.shichuDay = submittedPartnerBlock.shichu.day.kanshi
-    }
-    localStorage.setItem('compat_report_data', JSON.stringify(reportData))
-    navigate('/compat-report')
+    return { id: id!, epoch, current, check, authorize }
   }
 
-  async function runAnalysis(partnerBlock?: PartnerData & { birthDate: string; gender: string }) {
-    setLoading(true)
-    setError('')
-    setIsPointInsufficient(false)
-    if (partnerBlock) {
-      setPartnerBirthDate(partnerBlock.birthDate)
-      setPartnerGender(partnerBlock.gender as 'male' | 'female')
-      setSubmittedPartnerBlock(partnerBlock)
+  useEffect(() => {
+    if (!owner) return
+    const ctx = context()
+    let disposed = false
+    const current = () => !disposed && ctx.current()
+    async function load() {
+      if (active.current) return
+      const listRevision = ++partnerListRevision.current
+      try {
+        const pending = loadCompatibilityOperation(localStorage, owner!)
+        if (!current()) return
+        // A pending operation is recoverable even when the source/partner list is unavailable or removed.
+        setState(previous => ({ owner: owner!, epoch: ctx.epoch, partners: previous && previous.owner === owner && previous.epoch === ctx.epoch ? previous.partners : [], readings: previous && previous.owner === owner && previous.epoch === ctx.epoch ? previous.readings : [], pending }))
+        const read = async (path: string) => {
+          for (let refreshed = false;; refreshed = true) {
+            const token = await ctx.authorize(refreshed)
+            const response = await fetch(path, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+            ctx.check()
+            if (response.status === 401 && !refreshed) continue
+            if (!response.ok) throw new Error('相手と本人鑑定の一覧を取得できませんでした')
+            const data = await response.json(); ctx.check(); return data
+          }
+        }
+        const [partners, readings] = await Promise.all([read('/api/partners'), read('/api/reading/conversations')])
+        if (!Array.isArray(partners.partners) || !Array.isArray(readings.conversations)) throw new Error('一覧の形式を確認できませんでした')
+        if (current() && listRevision === partnerListRevision.current) setState({ owner: owner!, epoch: ctx.epoch, partners: partners.partners, readings: readings.conversations.filter((item: Choice) => item.kind === 'self'), pending: loadCompatibilityOperation(localStorage, owner!) })
+      } catch (reason) { if (current()) setError(reason instanceof Error ? reason.message : '一覧を確認できませんでした') }
     }
+    void load()
+    const changed = (event: StorageEvent) => { if (event.key === compatibilityKey(owner!) || event.key === registrationKey(owner!) || event.key === deletionKey(owner!) || event.key === null) void load() }
+    const focused = () => { void load() }
+    window.addEventListener('storage', changed); window.addEventListener('focus', focused)
+    return () => { disposed = true; window.removeEventListener('storage', changed); window.removeEventListener('focus', focused) }
+  // The context captures this owner/epoch; SDK token refresh is handled at each request.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [owner, authEpoch])
+
+  async function run(releaseCheckedOperation = false) {
+    if (!owner || active.current) return
+    const ctx = context()
+    const operationToken = Symbol()
+    active.current = operationToken; setBusy(true); setError('')
     try {
-      console.log('[CompatibilityTab] Starting analysis with partnerBlock:', partnerBlock)
-      const res = await apiFetch('/api/analyze/compatibility', {
-        method: 'POST',
-        body: JSON.stringify({ fortuneData, partnerBlock }),
-      })
-      console.log('[CompatibilityTab] Response status:', res.status)
-      if (res.status === 402) {
-        setIsPointInsufficient(true)
-        throw new Error('ポイントが不足しています')
-      }
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        console.error('[CompatibilityTab] Error response:', errData)
-        throw new Error(errData.error || `相性診断に失敗しました（ステータス: ${res.status}）`)
-      }
-      const analysisResult = await res.json() as CompatibilityAnalysis
-      console.log('[CompatibilityTab] Analysis result received')
-      setResult(analysisResult)
-      refreshPoints()
-      // 鑑定済みフラグを保存
-      addAnalyzedFeature(user?.id, 'compat')
-      if (user && partnerBlock) {
-        saveAnalysis(
-          user.id,
-          'compat',
-          fortuneData.input.birthDate,
-          `相性診断 - ${fortuneData.input.birthDate} × ${partnerBlock.birthDate}`,
-          { result: analysisResult }
-        ).then(id => { if (id) onSaved?.(id) })
-          .catch(err => console.error('[CompatibilityTab] Failed to save analysis:', err))
-      }
-    } catch (e) {
-      console.error('[CompatibilityTab] Error:', e)
-      setError(e instanceof Error ? e.message : '相性診断に失敗しました。再度お試しください。')
+      if (!navigator.locks) throw new Error('このブラウザでは生成状況を安全に保存できません')
+      const pending = loadCompatibilityOperation(localStorage, owner)
+      const input = pending?.input ?? { partnerId, conversationId, relationshipLabel, relationshipType: Object.keys(relationships).find(key => relationships[key].includes(relationshipLabel))! }
+      const id = await recoverCompatibility({ owner, input, storage: localStorage, check: ctx.check, authorize: ctx.authorize, fetcher: fetch, newID: () => crypto.randomUUID(), releaseCheckedOperation, lock: async (name, work) => await navigator.locks.request(name, work) })
+      ctx.check()
+      if (releaseCheckedOperation) { setPartnerId(''); setConversationId('') }
+      else { void refreshPoints(); navigate(`/reading/${id}`) }
+    } catch (reason) {
+      if (ctx.current()) setError(reason instanceof Error ? reason.message : '相性鑑定を確認できませんでした')
     } finally {
-      setLoading(false)
+      if (active.current === operationToken) active.current = null
+      if (ctx.current()) {
+        setBusy(false)
+        try { const pending = loadCompatibilityOperation(localStorage, owner); setState(previous => previous ? { ...previous, pending } : null) } catch { /* Keep the error and the original pending data. */ }
+      }
     }
   }
 
-  // 既存のパートナーデータがあれば自動実行
-  const [autoRan, setAutoRan] = useState(false)
-  if (fortuneData.partner && !autoRan && !loading && !result) {
-    setAutoRan(true)
-    runAnalysis()
-  }
-
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <div className="flex gap-1.5">
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
-        ))}
-      </div>
-      <p className="text-white/40 text-sm">相性を解析中...</p>
-    </div>
-  )
-
-  if (error) {
-    if (isPointInsufficient) {
-      return (
-        <div className="glass-card border border-amber-400/20 p-8 text-center space-y-4">
-          <div className="w-16 h-16 rounded-full border-2 border-amber-400/30 bg-amber-400/10 flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-amber-400 font-semibold text-base mb-2">ポイントが不足しています</p>
-            <p className="text-white/60 text-sm mb-1">この分析には <span className="text-accent font-semibold">3ポイント</span> が必要です</p>
-            <p className="text-white/40 text-xs">ポイントを購入してご利用ください</p>
-          </div>
-          <button
-            onClick={() => navigate('/?section=pricing')}
-            className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-lg text-sm transition-all"
-          >
-            ポイントを購入する
-          </button>
-        </div>
-      )
-    }
-    return (
-      <div className="glass-card p-6 text-center space-y-3">
-        <p className="text-red-400 text-sm">{error}</p>
-        <button onClick={() => runAnalysis(submittedPartnerBlock || undefined)} className="text-accent text-xs underline">再試行する</button>
-      </div>
-    )
-  }
-
-  if (!result && !fortuneData.partner) {
-    return <PartnerForm onSubmit={runAnalysis} />
-  }
-
-  if (!result) return null
-
-  return (
-    <div className="space-y-4 animate-fade-in">
-      {/* サブタブ */}
-      <div className="flex border-b border-navy-light">
-        {([['work', '仕事の相性'], ['romantic', '恋愛・プライベート']] as [SubTab, string][]).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setSubTab(id)}
-            className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${subTab === id ? 'border-accent text-accent' : 'border-transparent text-white/40 hover:text-white/60'}`}
-          >
-            {label}
-          </button>
-        ))}
-        {!fortuneData.partner && (
-          <button
-            onClick={() => { setResult(null); setAutoRan(false) }}
-            className="ml-auto text-white/20 text-xs hover:text-white/40 pr-1"
-          >
-            再入力
-          </button>
-        )}
-      </div>
-
-      <CompatResult data={result} sub={subTab} />
-
-      {/* レポート保存ボタン */}
-      <div className="pt-2">
-        <button
-          onClick={() => {
-            const pDate = fortuneData.input.partnerBirthDate || partnerBirthDate
-            const pGender = fortuneData.input.partnerGender || partnerGender
-            saveAndOpenReport(result, pDate, pGender)
-          }}
-          className="w-full py-3 rounded-xl text-sm font-semibold border border-pink-400/30 text-pink-300 hover:bg-pink-400/10 transition-all flex items-center justify-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          レポートをPDFで保存する
-        </button>
-      </div>
-    </div>
-  )
+  if (!user) return <div className="glass-card p-6"><Link to="/auth" className="text-accent">ログインして相性鑑定を開く</Link></div>
+  return <div className="glass-card p-6 space-y-5">
+    <h2 className="text-white font-semibold text-lg">二人の相性鑑定</h2>
+    <p className="text-white/50 text-sm">保存済みの「あなたについて」と登録済みの相手から作成します。新規作成は3ポイント（Premiumは消費なし）です。</p>
+    {error && <p role="alert" className="text-red-300 text-sm">{error}</p>}
+    {visible?.pending ? <div className="space-y-3">
+      <p className="text-white/70 text-sm">前の相性鑑定が残っています。先に保存状況を確認してください。</p>
+      <button disabled={busy} onClick={() => void run()} className="w-full py-3 bg-accent rounded-lg text-white disabled:opacity-40">{busy ? '確認中…' : '前の鑑定を確認・再開する'}</button>
+      <button disabled={busy} onClick={() => void run(true)} className="text-white/60 text-sm underline">前の操作が終了していれば、新しい入力へ進む</button>
+    </div> : <>
+      <label className="block text-white/60 text-sm">本人の鑑定<select className={fieldClass} value={conversationId} disabled={busy || !visible} onChange={event => setConversationId(event.target.value)}><option value="">選択してください</option>{visible?.readings.map(item => <option key={item.id} value={item.id}>{item.title || 'あなたについて'}</option>)}</select></label>
+      {visible && !visible.readings.length && <Link to="/" className="block text-accent text-sm">「あなたについて」を作成・保存する</Link>}
+      <label className="block text-white/60 text-sm">登録済みの相手<select className={fieldClass} value={partnerId} disabled={busy || !visible} onChange={event => setPartnerId(event.target.value)}><option value="">選択してください</option>{visible?.partners.map(item => <option key={item.id} value={item.id}>{item.display_name || '登録済みの相手'}</option>)}</select></label>
+      {visible && !visible.partners.length && <p className="text-white/50 text-sm">登録済みの相手がいません。下のフォームから登録してください。</p>}
+      <label className="block text-white/60 text-sm">関係性<select className={fieldClass} value={relationshipLabel} disabled={busy} onChange={event => setRelationshipLabel(event.target.value)}>{Object.values(relationships).flat().map(label => <option key={label}>{label}</option>)}</select></label>
+      <button disabled={busy || !visible || !visible.readings.some(item => item.id === conversationId) || !visible.partners.some(item => item.id === partnerId)} onClick={() => void run()} className="w-full py-3 bg-accent rounded-lg text-white disabled:opacity-40">{busy ? '鑑定を作成中…' : '相性鑑定を作成する'}</button>
+    </>}
+    <PartnerRegistrationForm key={`${owner}:${boundary.current.epoch}`} owner={user.id} partnerIDs={(visible?.partners??[]).map(partner=>partner.id)} onRegistered={partner=>{
+      partnerListRevision.current++
+      setPartnerId(partner.id)
+      setRelationshipLabel(partner.relationship_label)
+      setState(previous=>previous && previous.owner===owner && previous.epoch===boundary.current.epoch ? {...previous,partners:[...previous.partners.filter(item=>item.id!==partner.id),partner]} : previous)
+    }} />
+    <PartnerDeletionPanel key={`delete:${owner}:${boundary.current.epoch}`} owner={user.id} partners={(visible?.partners??[]).map(partner=>({id:partner.id,display_name:partner.display_name||'登録済みの相手'}))} onChanged={partners=>{
+      partnerListRevision.current++
+      setPartnerId(value=>partners.some(partner=>partner.id===value)?value:'')
+      setState(previous=>previous && previous.owner===owner && previous.epoch===boundary.current.epoch ? {...previous,partners} : previous)
+    }} />
+    <Link to="/reading/history" className="block text-accent text-sm">保存済みの鑑定を見る</Link>
+  </div>
 }

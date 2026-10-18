@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, realpathSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, readdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { buildProductionTimingScoreTimeline, resolveTimingEngineMode } from './timingCompositionRoot.js'
+import { TIMING_SHADOW_MODULES, TIMING_PRODUCTION_SHARED_MODULES } from './timingShadowInventory.js'
 import { assertTimingManifestHash } from './timingExactManifest.js'
 
 const productionEntrypoints = [
@@ -14,13 +15,7 @@ const productionEntrypoints = [
   new URL('../deterministicReport.ts', import.meta.url), new URL('./buildSelfReport.ts', import.meta.url),
   new URL('./editorial.ts', import.meta.url), new URL('./timingCards.ts', import.meta.url),
 ]
-const experimentalModules = [
-  'timingCompositionRoot', 'timingEvidencePipeline', 'timingScoreEngine', 'timingClaimSelector', 'timingRuleReadiness',
-  'timingKnownEventBenchmark',
-  'timingAdditionalStemBranchEvidence',
-  'timingExactManifest', 'timingLineageContract', 'timingScoreDesignContract', 'timingStemBranchEvidence',
-  'timingWesternEvidence', 'timingVedicEvidence', 'timingZiweiEvidence',
-]
+const experimentalModules = TIMING_SHADOW_MODULES
 const astronomyAdapter = realpathSync(fileURLToPath(new URL('../astronomyEngineAdapter.ts', import.meta.url)))
 const APPROVED_ASTRONOMY_ADAPTER_SHA256 = '761bf2da0e434467538619e91dee6a2a0b0c9d5244102288dde3c5ef53b1f258'
 function referencedModules(source: string): string[] {
@@ -215,4 +210,19 @@ test('manifest hashは64桁SHA-256の完全一致だけを受け付ける', () =
   assert.throws(() => assertTimingManifestHash(null, hash), /not available/)
   assert.throws(() => assertTimingManifestHash(hash, undefined), /missing or invalid/)
   assert.throws(() => assertTimingManifestHash(hash, 'b'.repeat(64)), /hash mismatch/)
+})
+
+
+test('all timing runtime modules have an explicit engineering classification', () => {
+  const files = readdirSync(new URL('.', import.meta.url)).filter(name => /^timing.*\.ts$/.test(name) && !name.endsWith('.test.ts')).map(name => name.slice(0, -3)).sort()
+  const classified = [...TIMING_SHADOW_MODULES, ...TIMING_PRODUCTION_SHARED_MODULES].sort()
+  assert.equal(new Set(classified).size, classified.length)
+  assert.deepEqual(files, classified, 'New timing modules must be classified before use; this never approves a manifest')
+})
+
+
+test('developer research and synthetic model loader are unreachable from production', () => {
+  for (const entrypoint of productionEntrypoints) for (const dependency of dependencyGraph(entrypoint)) {
+    assert.ok(!dependency.includes('/research/') && !dependency.endsWith('/researchStagingModel.ts'), `Research dependency reached from ${entrypoint.pathname}`)
+  }
 })

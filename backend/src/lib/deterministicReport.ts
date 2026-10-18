@@ -5,6 +5,11 @@ import { NAYIN_ALIAS, normalizeSukuyo } from './report/keywordSignalMappings.js'
 export interface ReportInput {
   birthDate?: string
   birthTime?: string
+  /** Explicit civil timezone for the opt-in personality spouse calculation. */
+  birthTimeZone?: string
+  spouseConvention?: string
+  annualYunConvention?: string
+  workContext?: string
   birthplace?: string
   gender?: string
   age?: number

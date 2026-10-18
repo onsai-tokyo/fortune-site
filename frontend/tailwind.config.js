@@ -12,9 +12,17 @@ export default {
         'gold': '#3B82F6',
         'gold-light': '#60A5FA',
         'ink': '#1E293B',
+        fl: {
+          canvas: '#F9F8F5', ink: '#141614', body: '#3D3F3A', muted: '#6C7068',
+          line: '#E2E1DC', surface: '#EFEEE9', card: '#FFFFFF', cream: '#F6F1E4',
+          rose: '#965E6B', slate: '#5A708C', moss: '#667D63', ochre: '#94704A',
+          dusk: '#7A6991', danger: '#B42318',
+        },
       },
       fontFamily: {
         sans: ['"Noto Sans JP"', 'sans-serif'],
+        fl: ['"Zen Kaku Gothic New"', '"Hiragino Sans"', 'sans-serif'],
+        book: ['"Zen Old Mincho"', '"Hiragino Mincho ProN"', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

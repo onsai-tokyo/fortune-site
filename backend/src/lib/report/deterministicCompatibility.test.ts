@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { compatibilityProfileBlock } from './compatibilityNarrativeAssets.js'
 import type { ReportInput } from '../deterministicReport.js'
 import { buildCompatibilityTraitScoreBundle, buildDeterministicCompatibilityReport } from './deterministicCompatibility.js'
 
@@ -69,15 +70,107 @@ test('個人情報を渡さず集計済みの二人比較スコアだけを根�
   const report = buildDeterministicCompatibilityReport(selfInput, partnerInput, 'romantic', '片思い', bundle)
   const serialized = JSON.stringify(report)
   assert.doesNotMatch(serialized, /1995-02-20|03:02|名古屋市/)
-  assert.ok(report.cards.every(card => card.metadataRefs?.some(ref => ref.startsWith('pairTraitScore.'))))
-  assert.ok(report.cards.every(card => card.evidence.some(item => item.system === '決定論スコア')))
-  assert.deepEqual(report.cards.find(card => card.id === 'compat-beginning')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [
-    'pairTraitScore.compatibility_transparency',
-  ])
-  assert.deepEqual(report.cards.find(card => card.id === 'compat-marriage')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [
-    'pairTraitScore.compatibility_independence', 'pairTraitScore.compatibility_lifestyle', 'pairTraitScore.compatibility_value_match',
-  ].sort())
+  assert.ok(report.cards.every(card => !card.metadataRefs?.includes('pairTraitScore.compatibility_transparency')))
+  assert.ok(report.cards.every(card => !card.evidence.some(e => e.detail.startsWith('compatibility_transparency='))))
+  assert.ok(report.cards.every(card => card.evidence.filter(item => item.system === '決定論スコア').every(item => !/confidence=0(?:$|;)/.test(item.detail))))
+  assert.deepEqual(report.cards.find(card => card.id === 'compat-beginning')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [])
+  assert.ok(bundle.pair.every(score => score.confidence === 0))
+  assert.deepEqual(report.cards.find(card => card.id === 'compat-marriage')?.metadataRefs?.filter(ref => ref.startsWith('pairTraitScore.')), [])
   assert.deepEqual(report.cards.find(card => card.id === 'compat-caution')?.metadataRefs?.filter(ref => ref.startsWith('mutualUnderstanding.')), [
-    'mutualUnderstanding.cognitive', 'mutualUnderstanding.emotional', 'mutualUnderstanding.deep',
+    ...Object.values(bundle.mutualUnderstanding.components).filter(c => c.confidence > 0).map(c => `mutualUnderstanding.${c.key}`),
   ])
+})
+
+test('birth-only pipeline does not invent unresolved power struggle for long-term binding', () => {
+  const bundle = buildCompatibilityTraitScoreBundle(scoredInput('癸卯', '牡羊座'), scoredInput('乙亥', '獅子座'))
+  const longTerm = bundle.profile.find(score => score.key === 'long_term_binding')!
+  assert.equal(longTerm.confidence, 0)
+  assert.deepEqual(longTerm.contributingFacts, [])
+})
+
+
+test('birth-only profiles retain disclosure and dependent predictions as unknown', () => {
+  const bundle = buildCompatibilityTraitScoreBundle(scoredInput('癸卯', '牡羊座'), scoredInput('乙亥', '獅子座'))
+  for (const key of ['transparency', 'predictability', 'betrayal_risk_pattern']) {
+    const score = bundle.profile.find(score => score.key === key)!
+    assert.equal(score.confidence, 0, key)
+    assert.deepEqual(score.contributingFacts, [], key)
+    assert.equal(score.directions, undefined, key)
+    assert.equal(compatibilityProfileBlock(score, '会話'), null, key)
+  }
+})
+
+
+test('only available pair scores appear as report evidence', () => {
+  const left = scoredInput('癸卯', '牡羊座'), right = scoredInput('乙亥', '獅子座')
+  const bundle = buildCompatibilityTraitScoreBundle(left, right)
+  bundle.pair = bundle.pair.map(score => score.key === 'compatibility_independence' ? { ...score, value: .8, confidence: .7 } : score)
+  const report = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', bundle)
+  const card = report.cards.find(card => card.id === 'compat-marriage')!
+  assert.deepEqual(card.metadataRefs!.filter(ref => ref.startsWith('pairTraitScore.')), ['pairTraitScore.compatibility_independence'])
+  assert.ok(card.evidence.some(e => e.detail === 'compatibility_independence=0.8; confidence=0.7'))
+  assert.ok(!report.cards.some(c => c.evidence.some(e => e.detail.startsWith('compatibility_transparency='))))
+})
+
+
+test('unknown profile and understanding values do not appear as report evidence', () => {
+  const left = scoredInput('癸卯', '牡羊座'), right = scoredInput('乙亥', '獅子座')
+  const bundle = buildCompatibilityTraitScoreBundle(left, right)
+  bundle.profile = [
+    { key: 'emotional_safety', value: .5, confidence: 0, contributingFacts: [] },
+    { key: 'transparency', value: NaN, confidence: .8, contributingFacts: ['invalid'] },
+    { key: 'conversational_depth', value: .8, confidence: .7, contributingFacts: ['depth'] },
+  ]
+  bundle.mutualUnderstanding.components.cognitive = { key: 'cognitive', value: .5, confidence: 0, contributingFacts: [] }
+  bundle.mutualUnderstanding.components.emotional = { key: 'emotional', value: NaN, confidence: .8, contributingFacts: ['invalid'] }
+  bundle.mutualUnderstanding.components.deep = { key: 'deep', value: .8, confidence: .7, contributingFacts: ['deep'] }
+  const card = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', bundle).cards.find(c => c.id === 'compat-caution')!
+  assert.deepEqual(card.metadataRefs!.filter(ref => ref.startsWith('compatibilityProfile.')), ['compatibilityProfile.conversational_depth'])
+  assert.deepEqual(card.metadataRefs!.filter(ref => ref.startsWith('mutualUnderstanding.')), ['mutualUnderstanding.deep'])
+  assert.ok(!card.evidence.some(e => /NaN|confidence=0(?:$|;)/.test(e.detail)))
+})
+
+test('report keeps strong conversation and weak depth in separate chapters', () => {
+  const left = scoredInput('癸卯', '牡羊座'), right = scoredInput('乙亥', '獅子座')
+  const bundle = buildCompatibilityTraitScoreBundle(left, right)
+  bundle.profile = [
+    { key: 'conversational_flow', value: .9, confidence: .8, contributingFacts: ['conversation'] },
+    { key: 'conversational_depth', value: .1, confidence: .8, contributingFacts: ['depth'] },
+  ]
+  const report = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', bundle)
+  for (const [chapter, key] of [['compat-beginning', 'conversational_flow'], ['compat-caution', 'conversational_depth']] as const) {
+    const profile = bundle.profile.find(p => p.key === key)!
+    const card = report.cards.find(c => c.id === chapter)!
+    const expected = compatibilityProfileBlock(profile, '')!
+    assert.ok(card.pages.some(p => p.text.endsWith(expected.text)))
+  }
+})
+
+test('friction chapter retains high conflict and high repair even when power balance is available', () => {
+  const left = scoredInput('癸卯', '牡羊座'), right = scoredInput('乙亥', '獅子座')
+  const bundle = buildCompatibilityTraitScoreBundle(left, right)
+  bundle.profile = [
+    { key: 'conflict_intensity', value: .9, confidence: .8, contributingFacts: ['conflict'] },
+    { key: 'repair_capacity', value: .9, confidence: .8, contributingFacts: ['repair'] },
+    { key: 'power_balance', value: .9, confidence: .8, contributingFacts: ['balance'] },
+  ]
+  const report = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', bundle)
+  const text = report.cards.find(c => c.id === 'compat-friction')!.pages.map(p => p.text).join('\n')
+  assert.match(text, /反応が強くぶつかっても、関係へ戻る手がかり/)
+})
+
+test('invalid profiles cannot alter chapter axes or report text before narrative filtering', () => {
+  const left = scoredInput('癸卯', '牡羊座'), right = scoredInput('乙亥', '獅子座')
+  const bundle = buildCompatibilityTraitScoreBundle(left, right)
+  bundle.profile = []
+  const expected = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', bundle)
+  for (const key of ['conversational_flow', 'conversational_depth', 'conflict_intensity', 'repair_capacity'] as const) {
+    for (const field of ['value', 'confidence'] as const) {
+      for (const bad of [null, NaN, Infinity, -1, 1.1]) {
+        const profile = { key, value: .9, confidence: 1, contributingFacts: ['invalid'], [field]: bad as number }
+        const actual = buildDeterministicCompatibilityReport(left, right, 'romantic', '片思い', { ...bundle, profile: [profile] })
+        assert.deepEqual(actual, expected, `${key}:${field}:${bad}`)
+      }
+    }
+  }
 })

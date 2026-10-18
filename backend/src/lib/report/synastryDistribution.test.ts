@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { BIRTH_FIXTURES, buildFixtureReportInput } from './fixtures.js'
-import { buildDeterministicCompatibilityReport } from './deterministicCompatibility.js'
+import { buildCompatibilityTraitScoreBundle, buildDeterministicCompatibilityReport } from './deterministicCompatibility.js'
 import { buildSynastryFacts, computeRelationScores, type RelationAxis } from './synastryFacts.js'
 
 const pairs = Array.from({ length: 20 }, (_, index) => ({
@@ -59,4 +59,37 @@ test('出生時刻なし同士でも相性を生成し時刻依存Factを混入�
   assert.ok(facts.some(fact => fact.kind === 'number'))
   assert.equal(facts.some(fact => fact.requiresSelfBirthTime || fact.requiresPartnerBirthTime), false)
   assert.equal(buildDeterministicCompatibilityReport(self, partner, 'friend', '友人').cards.length, 7)
+})
+
+
+test('C02 birth-to-bundle-to-report preserves missing context, pair symmetry and directional exchange for 20 pairs', () => {
+  for (const [index, { self, partner }] of pairs.entries()) {
+    const bundle = buildCompatibilityTraitScoreBundle(self, partner)
+    const swapped = buildCompatibilityTraitScoreBundle(partner, self)
+    assert.deepEqual(bundle.pair, swapped.pair, `pair symmetry: ${index}`)
+    for (const key of ['transparency', 'predictability', 'betrayal_risk_pattern', 'long_term_binding', 'mystery_distance']) {
+      const score = bundle.profile.find(score => score.key === key)!
+      assert.equal(score.confidence, 0, `${index}:${key}`)
+      assert.deepEqual(score.contributingFacts, [])
+    }
+    for (const key of ['social_display_affection', 'private_affection']) {
+      const forward = bundle.profile.find(score => score.key === key)!
+      const reverse = swapped.profile.find(score => score.key === key)!
+      assert.equal(forward.value, reverse.value, `${index}:${key}`)
+      assert.equal(forward.confidence, reverse.confidence)
+      assert.equal(forward.directions?.selfToPartner, reverse.directions?.partnerToSelf)
+      assert.equal(forward.directions?.partnerToSelf, reverse.directions?.selfToPartner)
+    }
+    const report = buildDeterministicCompatibilityReport(self, partner, 'romantic', '片思い', bundle)
+    assert.deepEqual(report, buildDeterministicCompatibilityReport(self, partner, 'romantic', '片思い', bundle))
+    assert.equal(report.cards.length, 8)
+    for (const card of report.cards) {
+      assert.ok(card.evidence.every(e => !/NaN|Infinity|confidence=0(?:$|;)/.test(e.detail)))
+      for (const ref of card.metadataRefs ?? []) {
+        if (ref.startsWith('compatibilityProfile.')) {
+          assert.ok(bundle.profile.find(score => score.key === ref.slice('compatibilityProfile.'.length))!.confidence > 0)
+        }
+      }
+    }
+  }
 })

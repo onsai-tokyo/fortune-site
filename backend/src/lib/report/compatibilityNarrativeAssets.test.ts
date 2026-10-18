@@ -577,3 +577,20 @@ test('価値観の違いを相性不良とせず確認方法へ変換する', ()
   assert.ok([low, middle, high].every(block => block && [...block.text].length <= 120))
   assert.equal(compatibilityProfileBlock(profile(0.8, 0.24), '二人の輪郭'), null)
 })
+
+test('invalid numeric scores cannot produce pair, profile or tension claims', () => {
+  const valid: CompatibilityProfileScore = { key: 'conflict_intensity', value: .8, confidence: .8, contributingFacts: ['fact'] }
+  for (const field of ['value', 'confidence'] as const) {
+    for (const bad of [null, undefined, NaN, Infinity, -1, 1.1, '0.8']) {
+      const invalid = { ...valid, [field]: bad as number }
+      assert.equal(compatibilityProfileBlock(invalid, '会話'), null)
+      assert.equal(compatibilityScoreBlock({ ...score('compatibility_lifestyle', .8), [field]: bad as number }, '暮らし'), null)
+      assert.equal(relationshipTensionBlock(invalid, undefined, undefined, '衝突'), null)
+      assert.equal(relationshipTensionBlock(valid, { ...invalid, key: 'repair_capacity' }, undefined, '衝突')?.text,
+        relationshipTensionBlock(valid, undefined, undefined, '衝突')?.text)
+    }
+  }
+  assert.equal(compatibilityProfileBlock({ ...valid, key: 'romantic_attraction', value: 0, confidence: .25 }, '衝突')?.band, 'low')
+  assert.equal(compatibilityProfileBlock({ ...valid, key: 'romantic_attraction', value: 1, confidence: .25 }, '衝突')?.band, 'high')
+  assert.equal(compatibilityProfileBlock({ ...valid, confidence: .249 }, '衝突'), null)
+})

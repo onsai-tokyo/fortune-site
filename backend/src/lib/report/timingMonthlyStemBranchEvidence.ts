@@ -1,3 +1,4 @@
+import { projectTimingMonth } from './timingMonthProjection.js'
 import { calcShichu } from '../divination/index.js'
 import type { TimingScoreKey } from './timingClaim.js'
 import type { TimingEvidenceDefinition } from './timingScoreEngine.js'
@@ -17,7 +18,6 @@ const BREAK: Readonly<Record<string, string>> = { 子:'酉',酉:'子',丑:'辰',
 const HARM: Readonly<Record<string, string>> = { 子:'未',未:'子',丑:'午',午:'丑',寅:'巳',巳:'寅',卯:'辰',辰:'卯',申:'亥',亥:'申',酉:'戌',戌:'酉' }
 const PEACH: Readonly<Record<string, string>> = { 申:'酉',子:'酉',辰:'酉',寅:'卯',午:'卯',戌:'卯',亥:'子',卯:'子',未:'子',巳:'午',酉:'午',丑:'午' }
 const branch = (kanshi: string) => [...kanshi].at(-1) ?? ''
-const key = (year: number, month: number) => `${year}-${String(month).padStart(2, '0')}`
 
 function evidence(
   id: string, year: number, month: number, scoreKey: TimingScoreKey, lineage: string,
@@ -31,8 +31,8 @@ function evidence(
   }
 }
 
-/** 提出ルールの流月部分。月次単独では使わず、同じ年の年次Evidenceへ合流させる。 */
-export function buildMonthlyStemBranchEvidence(input: MonthlyStemBranchInput): ReadonlyMap<string, readonly TimingEvidenceDefinition[]> {
+/** 提出ルールの流月部分。月次単独では使わず、年次合成は未修正。43流年は先頭年2月〜末尾翌年1月であり、43完全暦年ではない。 */
+export function buildMonthlyStemBranchEvidence(input: MonthlyStemBranchInput): ReadonlyMap<string, readonly (TimingEvidenceDefinition & { timeProjection: ReturnType<typeof projectTimingMonth> })[]> {
   const natal = calcShichu(input.birthYear, input.birthMonth, input.birthDay, input.birthHour, input.birthMinute ?? 0)
   const endpoints = input.birthHour === undefined
     ? [calcShichu(input.birthYear, input.birthMonth, input.birthDay, 0, 0), calcShichu(input.birthYear, input.birthMonth, input.birthDay, 23, 59)]
@@ -41,8 +41,11 @@ export function buildMonthlyStemBranchEvidence(input: MonthlyStemBranchInput): R
   const monthAvailable = endpoints.every(value => value.month.kanshi === natal.month.kanshi)
   const yearAvailable = endpoints.every(value => value.year.kanshi === natal.year.kanshi)
   const spouseGods = new Set(input.gender === 'male' ? ['偏財','正財'] : ['偏官','正官'])
-  const result = new Map<string, readonly TimingEvidenceDefinition[]>()
-  for (const annual of input.annual) for (const monthly of annual.monthly) {
+  const result = new Map<string, readonly (TimingEvidenceDefinition & { timeProjection: ReturnType<typeof projectTimingMonth> })[]>()
+  for (const annual of input.annual) for (const [index, monthly] of annual.monthly.entries()) {
+    const projection = projectTimingMonth(annual.year, index)
+    if (monthly.month !== projection.civilMonth) throw new Error('Unexpected flow month order')
+    if (result.has(projection.key)) throw new Error('Duplicate projected month key')
     const monthlyBranch = branch(monthly.kanshi)
     const dayClash = CLASH[natal.day.branch] === monthlyBranch
     const dayBreak = BREAK[natal.day.branch] === monthlyBranch
@@ -56,21 +59,21 @@ export function buildMonthlyStemBranchEvidence(input: MonthlyStemBranchInput): R
     const resource = monthly.tenGod === '偏印' || monthly.tenGod === '正印'
     const peach = PEACH[natal.day.branch] === monthlyBranch
     const detail = `流月${monthly.month}月 ${monthly.kanshi}(${monthly.tenGod})`
-    result.set(key(annual.year, monthly.month), [
-      evidence('monthly-rel-spouse', annual.year, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:ten_god:spouse_star', .08, dayAvailable, spouse, detail),
-      evidence('monthly-rel-combine', annual.year, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:day_branch:combine', .08, dayAvailable, dayCombine, detail),
-      evidence('monthly-rel-peach', annual.year, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:day_branch:peach_blossom', .05, dayAvailable, peach, detail),
-      evidence('monthly-rel-disruption', annual.year, monthly.month, 'relationship_disruption', 'stem_branch:monthly_pillar:day_branch:disruption', .10, dayAvailable, dayClash || dayBreak || dayHarm, detail),
-      evidence('monthly-rel-secrecy', annual.year, monthly.month, 'relationship_secrecy', 'stem_branch:monthly_pillar:day_branch:break_harm', .08, dayAvailable, dayBreak || dayHarm, detail),
-      evidence('monthly-career-change', annual.year, monthly.month, 'career_change', 'stem_branch:monthly_pillar:natal_month:clash', .10, monthAvailable, monthClash, detail),
-      evidence('monthly-money', annual.year, monthly.month, 'money_status', 'stem_branch:monthly_pillar:ten_god:wealth_star', .08, yearAvailable, wealth, detail),
-      evidence('monthly-study', annual.year, monthly.month, 'education_activation', 'stem_branch:monthly_pillar:ten_god:resource_star', .08, yearAvailable, resource, detail),
-      evidence('monthly-study-disrupt', annual.year, monthly.month, 'education_disruption', 'stem_branch:monthly_pillar:natal_year_month:clash', .08, monthAvailable || yearAvailable, monthClash || yearClash, detail),
-      evidence('monthly-relocation', annual.year, monthly.month, 'relocation', 'stem_branch:monthly_pillar:natal_year_month:clash', .08, monthAvailable || yearAvailable, monthClash || yearClash, detail),
-      evidence('monthly-identity', annual.year, monthly.month, 'identity_reset', 'stem_branch:monthly_pillar:multiple_relations', .06, dayAvailable && (monthAvailable || yearAvailable), (dayClash || dayBreak || dayHarm) && (monthClash || yearClash), detail),
-      evidence('monthly-responsibility', annual.year, monthly.month, 'responsibility', 'stem_branch:monthly_pillar:ten_god:official_star', .08, yearAvailable, official, detail),
-      evidence('monthly-stress', annual.year, monthly.month, 'emotional_stress', 'stem_branch:monthly_pillar:day_branch:disruption', .08, dayAvailable, dayClash || dayBreak || dayHarm, detail),
-    ])
+    result.set(projection.key, [
+      evidence('monthly-rel-spouse', projection.civilYear, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:ten_god:spouse_star', .08, dayAvailable, spouse, detail),
+      evidence('monthly-rel-combine', projection.civilYear, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:day_branch:combine', .08, dayAvailable, dayCombine, detail),
+      evidence('monthly-rel-peach', projection.civilYear, monthly.month, 'relationship_activation', 'stem_branch:monthly_pillar:day_branch:peach_blossom', .05, dayAvailable, peach, detail),
+      evidence('monthly-rel-disruption', projection.civilYear, monthly.month, 'relationship_disruption', 'stem_branch:monthly_pillar:day_branch:disruption', .10, dayAvailable, dayClash || dayBreak || dayHarm, detail),
+      evidence('monthly-rel-secrecy', projection.civilYear, monthly.month, 'relationship_secrecy', 'stem_branch:monthly_pillar:day_branch:break_harm', .08, dayAvailable, dayBreak || dayHarm, detail),
+      evidence('monthly-career-change', projection.civilYear, monthly.month, 'career_change', 'stem_branch:monthly_pillar:natal_month:clash', .10, monthAvailable, monthClash, detail),
+      evidence('monthly-money', projection.civilYear, monthly.month, 'money_status', 'stem_branch:monthly_pillar:ten_god:wealth_star', .08, yearAvailable, wealth, detail),
+      evidence('monthly-study', projection.civilYear, monthly.month, 'education_activation', 'stem_branch:monthly_pillar:ten_god:resource_star', .08, yearAvailable, resource, detail),
+      evidence('monthly-study-disrupt', projection.civilYear, monthly.month, 'education_disruption', 'stem_branch:monthly_pillar:natal_year_month:clash', .08, monthAvailable || yearAvailable, monthClash || yearClash, detail),
+      evidence('monthly-relocation', projection.civilYear, monthly.month, 'relocation', 'stem_branch:monthly_pillar:natal_year_month:clash', .08, monthAvailable || yearAvailable, monthClash || yearClash, detail),
+      evidence('monthly-identity', projection.civilYear, monthly.month, 'identity_reset', 'stem_branch:monthly_pillar:multiple_relations', .06, dayAvailable && (monthAvailable || yearAvailable), (dayClash || dayBreak || dayHarm) && (monthClash || yearClash), detail),
+      evidence('monthly-responsibility', projection.civilYear, monthly.month, 'responsibility', 'stem_branch:monthly_pillar:ten_god:official_star', .08, yearAvailable, official, detail),
+      evidence('monthly-stress', projection.civilYear, monthly.month, 'emotional_stress', 'stem_branch:monthly_pillar:day_branch:disruption', .08, dayAvailable, dayClash || dayBreak || dayHarm, detail),
+    ].map(item => ({ ...item, timeProjection: projection })))
   }
   return result
 }

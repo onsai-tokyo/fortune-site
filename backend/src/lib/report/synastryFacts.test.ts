@@ -1,3 +1,4 @@
+import type { CompatibilityProfileKey, CompatibilityProfileScore, SynastryFact } from './synastryFacts.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildSynastryFacts, computeAmbitionAlignmentProfile, computeBetrayalRiskPatternProfile, computeCompatibilityProfile, computeEgoCompetitionProfile, computeFateCompanionFeelingProfile, computeLongTermBindingProfile, computeMysteryDistanceProfile, computeMutualUnderstanding, computePartnershipTeamFeelingProfile, computePowerBalanceProfile, computePredictabilityProfile, computePrivateAffectionProfile, computeRelationScores, computeRelationshipBoredomRiskProfile, computeRelationshipStimulationNeedProfile, computeSocialDisplayAffectionProfile, computeTransparencyProfile, computeTrustStabilityProfile } from './synastryFacts.js'
@@ -447,10 +448,10 @@ test('相性§19は個人傾向の根拠が欠ける場合に力関係を推測�
 
 test('相性§11・§30は透明性を自分から相手と相手から自分の2方向で保持する', () => {
   const trait = (value: number, fact: string) => ({ value, confidence: 0.8, contributingFacts: [fact] })
-  const result = computeTransparencyProfile(
-    { compatibility_transparency: trait(0.8, 'self-open') },
-    { compatibility_transparency: trait(0.3, 'partner-open') },
-  )
+  const result = computeTransparencyProfile({
+    selfToPartner: trait(0.8, 'self-open'),
+    partnerToSelf: trait(0.3, 'partner-open'),
+  })
   assert.equal(result.key, 'transparency')
   assert.equal(result.value, 0.55)
   assert.equal(result.confidence, 0.65)
@@ -459,10 +460,10 @@ test('相性§11・§30は透明性を自分から相手と相手から自分の
 })
 
 test('相性§30は片方向の根拠が欠ける場合に透明性を対称値として推測しない', () => {
-  const result = computeTransparencyProfile(
-    { compatibility_transparency: { value: 0.8, confidence: 0.8, contributingFacts: ['self'] } },
-    { compatibility_transparency: { value: 0.5, confidence: 0, contributingFacts: [] } },
-  )
+  const result = computeTransparencyProfile({
+    selfToPartner: { value: 0.8, confidence: 0.8, contributingFacts: ['self'] },
+    partnerToSelf: { value: 0.5, confidence: 0, contributingFacts: [] },
+  })
   assert.equal(result.value, 0.5)
   assert.equal(result.confidence, 0)
   assert.equal(result.directions, undefined)
@@ -681,11 +682,13 @@ test('相性§57は惹かれる強さを使わず維持要因と未修復摩擦�
     { key: 'conflict_intensity', value: 0.8, confidence: 0.65, contributingFacts: ['conflict'] },
     { key: 'power_balance', value: 0.7, confidence: 0.6, contributingFacts: ['power'] },
     { key: 'admiration_mutual', value: 1, confidence: 1, contributingFacts: ['attraction-not-used'] },
-  ])
+  ], { unresolvedPowerStruggle: { value: .7, confidence: .6, contributingFacts: ['observed-struggle'] } })
   assert.equal(result.key, 'long_term_binding')
   assert.equal(result.value, 0.758)
   assert.equal(result.confidence, 0.5)
   assert.ok(!result.contributingFacts.includes('attraction-not-used'))
+  assert.ok(!result.contributingFacts.includes('power'))
+  assert.ok(result.contributingFacts.includes('observed-struggle'))
 })
 
 test('相性§57は維持要因か摩擦要因が欠ける場合に長期結合を推測しない', () => {
@@ -814,4 +817,159 @@ test('本番calcAstrologyのplanets配列から天体間Factを生成する', ()
   const facts = buildSynastryFacts(withArray, partnerWithArray)
   assert.ok(facts.some(fact => fact.kind === 'cross-aspect'))
   assert.ok(facts.some(fact => fact.axis === 'attraction'))
+})
+
+test('null, strings and out-of-range planetary positions never become zero degrees', () => {
+  const known = { astrology: { western: { planets: [{ name: '水星', longitude: 0 }] } } }
+  assert.ok(buildSynastryFacts(known, known).some(f => f.kind === 'cross-aspect'))
+  for (const longitude of [null, '', false, '0', NaN, Infinity, -1, 360]) {
+    const a = { astrology: { western: { planets: [{ name: '水星', longitude }] } } }
+    const b = { astrology: { western: { planets: [{ name: '水星', longitude: 0 }] } } }
+    assert.equal(buildSynastryFacts(a, b).filter(f => f.kind === 'cross-aspect').length, 0)
+  }
+})
+
+
+test('equal power never supplies or penalizes unresolved power struggle', () => {
+  const keys = ['emotional_safety', 'value_alignment', 'domestic_compatibility', 'friendship_compatibility', 'repair_capacity', 'growth_compatibility', 'conflict_intensity'] as const
+  const profiles = keys.map(key => ({ key, value: .8, confidence: .7, contributingFacts: [key] }))
+  const context = { unresolvedPowerStruggle: { value: .2, confidence: .7, contributingFacts: ['context-struggle'] } }
+  const baseline = computeLongTermBindingProfile(profiles, context)
+  for (const value of [0, .5, 1]) {
+    const withBalance = [...profiles, { key: 'power_balance' as const, value, confidence: 1, contributingFacts: ['balance'] }]
+    assert.deepEqual(computeLongTermBindingProfile(withBalance, context), baseline)
+    assert.deepEqual(computeLongTermBindingProfile(withBalance), { key: 'long_term_binding', value: .5, confidence: 0, contributingFacts: [] })
+  }
+})
+
+test('missing or invalid struggle evidence cannot produce a long term claim', () => {
+  const keys = ['emotional_safety', 'value_alignment', 'domestic_compatibility', 'friendship_compatibility', 'repair_capacity', 'growth_compatibility', 'conflict_intensity'] as const
+  const profiles = keys.map(key => ({ key, value: .8, confidence: .7, contributingFacts: [key] }))
+  for (const value of [null, NaN, Infinity, -1, 1.1]) {
+    assert.equal(computeLongTermBindingProfile(profiles, { unresolvedPowerStruggle: {
+      value: value as number, confidence: .8, contributingFacts: ['context'],
+    } }).confidence, 0)
+  }
+  assert.equal(computeLongTermBindingProfile(profiles, { unresolvedPowerStruggle: { value: 0, confidence: .8, contributingFacts: [] } }).confidence, 0)
+})
+
+
+test('disclosure rejects personal/pair score substitution and invalid directional evidence', () => {
+  const valid = { value: .8, confidence: .8, contributingFacts: ['observed'] }
+  // @ts-expect-error Pair/personal fields are not directional disclosure context.
+  assert.equal(computeTransparencyProfile({ compatibility_transparency: valid }).confidence, 0)
+  assert.equal(computeTransparencyProfile().confidence, 0)
+  for (const bad of [null, NaN, Infinity, -1, 1.1, '0.8']) {
+    const score = { ...valid, value: bad as number }
+    assert.equal(computeTransparencyProfile({ selfToPartner: score, partnerToSelf: valid }).confidence, 0)
+    assert.equal(computeTransparencyProfile({ selfToPartner: valid, partnerToSelf: score }).confidence, 0)
+  }
+  assert.equal(computeTransparencyProfile({ selfToPartner: { ...valid, contributingFacts: [] }, partnerToSelf: valid }).confidence, 0)
+  const forward = computeTransparencyProfile({ selfToPartner: valid, partnerToSelf: { ...valid, value: .2 } })
+  const reverse = computeTransparencyProfile({ selfToPartner: { ...valid, value: .2 }, partnerToSelf: valid })
+  assert.equal(forward.value, reverse.value)
+  assert.equal(forward.directions!.selfToPartner, reverse.directions!.partnerToSelf)
+})
+
+
+test('derived profile chains reject each malformed or unsupported prerequisite', () => {
+  const cases: [typeof computePartnershipTeamFeelingProfile, CompatibilityProfileKey[]][] = [
+    [computePartnershipTeamFeelingProfile, ['shared_project_compatibility', 'ambition_alignment']],
+    [computeFateCompanionFeelingProfile, ['shared_identity', 'partnership_team_feeling']],
+    [computeRelationshipStimulationNeedProfile, ['novelty_compatibility', 'adventure_compatibility', 'growth_compatibility', 'shared_project_compatibility', 'ambition_alignment']],
+    [computeBetrayalRiskPatternProfile, ['transparency', 'trust_stability', 'repair_capacity', 'relationship_boredom_risk']],
+  ]
+  for (const [compute, keys] of cases) {
+    const inputs: CompatibilityProfileScore[] = keys.map(key => ({ key, value: .8, confidence: .7, contributingFacts: [key] }))
+    assert.ok(compute(inputs).confidence > 0)
+    assert.deepEqual(compute(inputs), compute([...inputs].reverse()))
+    for (const key of keys) {
+      const absent = compute(inputs.filter(input => input.key !== key))
+      assert.equal(absent.confidence, 0, key)
+      for (const field of ['value', 'confidence'] as const) {
+        for (const bad of [null, undefined, NaN, Infinity, -1, 1.1, '0.8']) {
+          const result = compute(inputs.map(input => input.key === key ? { ...input, [field]: bad as number } : input))
+          assert.deepEqual(result, absent, `${compute.name}:${key}:${field}:${bad}`)
+        }
+      }
+      for (const contributingFacts of [[], [''], [' ']]) {
+        assert.deepEqual(compute(inputs.map(input => input.key === key ? { ...input, contributingFacts } : input)), absent)
+      }
+    }
+  }
+})
+
+test('missing project evidence stays unknown through team and companion derivation', () => {
+  const team = computePartnershipTeamFeelingProfile([
+    { key: 'shared_project_compatibility', value: .8, confidence: .8, contributingFacts: [] },
+    { key: 'ambition_alignment', value: .8, confidence: .8, contributingFacts: ['ambition'] },
+  ])
+  const companion = computeFateCompanionFeelingProfile([team,
+    { key: 'shared_identity', value: .8, confidence: .8, contributingFacts: ['identity'] },
+  ])
+  assert.equal(team.confidence, 0)
+  assert.equal(companion.confidence, 0)
+  assert.deepEqual(companion.contributingFacts, [])
+})
+
+test('personal-to-pair derivations reject missing or invalid inputs on either side before arithmetic', () => {
+  type Personal = Parameters<typeof computeEgoCompetitionProfile>[0]
+    & Parameters<typeof computeAmbitionAlignmentProfile>[0] & Parameters<typeof computePowerBalanceProfile>[0]
+    & Parameters<typeof computeSocialDisplayAffectionProfile>[0] & Parameters<typeof computePrivateAffectionProfile>[0]
+    & Parameters<typeof computePredictabilityProfile>[1] & Parameters<typeof computeTrustStabilityProfile>[1]
+    & Parameters<typeof computeRelationshipBoredomRiskProfile>[1]
+  const profiles: CompatibilityProfileScore[] = ['transparency', 'emotional_safety', 'repair_capacity', 'relationship_stimulation_need'].map(key => ({
+    key: key as CompatibilityProfileKey, value: .8, confidence: .8, contributingFacts: [key],
+  }))
+  const cases: { run: (a: Personal, b: Personal) => CompatibilityProfileScore; keys: (keyof Personal)[] }[] = [
+    { run: computeEgoCompetitionProfile, keys: ['pride_sensitivity', 'status_attraction'] },
+    { run: computeAmbitionAlignmentProfile, keys: ['career_absorption', 'recognition_motivation'] },
+    { run: computePowerBalanceProfile, keys: ['pride_sensitivity', 'group_coordination'] },
+    { run: computeSocialDisplayAffectionProfile, keys: ['social_neutrality', 'public_agreeableness'] },
+    { run: computePrivateAffectionProfile, keys: ['domestic_affection', 'practical_generosity'] },
+    { run: (a, b) => computePredictabilityProfile(profiles, a, b), keys: ['compatibility_stability'] },
+    { run: (a, b) => computeTrustStabilityProfile(profiles, a, b), keys: ['compatibility_reliability'] },
+    { run: (a, b) => computeRelationshipBoredomRiskProfile(profiles, a, b), keys: ['novelty_attraction'] },
+  ]
+  const valid = Object.fromEntries(cases.flatMap(c => c.keys).map(key => [key, { value: .8, confidence: .8, contributingFacts: [key] }])) as Personal
+  for (const { run, keys } of cases) {
+    assert.ok(run(valid, valid).confidence > 0)
+    for (const key of keys) {
+      const badScores = [undefined, null, { ...valid[key], contributingFacts: [] },
+        ...(['value', 'confidence'] as const).flatMap(field => [null, undefined, NaN, Infinity, -1, 1.1, '0.8'].map(bad => ({ ...valid[key], [field]: bad }))),
+      ]
+      for (const badScore of badScores) {
+        const invalid = { ...valid, [key]: badScore } as Personal
+        for (const result of [run(invalid, valid), run(valid, invalid)]) {
+          assert.equal(result.confidence, 0, `${result.key}:${key}`)
+          assert.equal(result.value, .5)
+          assert.deepEqual(result.contributingFacts, [])
+          assert.equal(result.directions, undefined)
+        }
+      }
+    }
+  }
+})
+
+
+test('mystery distance rejects invalid directions and facts; repeats cannot inflate intensity', () => {
+  const fact: SynastryFact = { id: 'contact', kind: 'cross-aspect', selfFactId: 'planet:月', partnerFactId: 'planet:海王星', axis: 'depth', signal: '月-海王星-conjunction', polarity: 1, strength: .8, requiresSelfBirthTime: false, requiresPartnerBirthTime: false, detail: 'test' }
+  const context: CompatibilityProfileScore = { key: 'transparency', value: .6, confidence: .65, contributingFacts: ['disclosure'], directions: { selfToPartner: .8, partnerToSelf: .4 } }
+  const baseline = computeMysteryDistanceProfile([fact], context)
+  assert.ok(baseline.confidence > 0)
+  assert.deepEqual(computeMysteryDistanceProfile([fact, { ...fact }], context), baseline)
+  for (const bad of [null, undefined, NaN, Infinity, -1, 1.1, '0.8']) {
+    for (const direction of ['selfToPartner', 'partnerToSelf'] as const) {
+      assert.equal(computeMysteryDistanceProfile([fact], { ...context, directions: { ...context.directions!, [direction]: bad as number } }).confidence, 0)
+    }
+    assert.equal(computeMysteryDistanceProfile([{ ...fact, strength: bad as number }], context).confidence, 0)
+  }
+  assert.equal(computeMysteryDistanceProfile([fact], { ...context, key: 'power_balance' }).confidence, 0)
+  assert.equal(computeMysteryDistanceProfile([fact], { ...context, contributingFacts: [] }).confidence, 0)
+  assert.equal(computeMysteryDistanceProfile([fact, { ...fact, strength: .2 }], context).confidence, 0)
+  const swapped = computeMysteryDistanceProfile([{ ...fact, selfFactId: fact.partnerFactId, partnerFactId: fact.selfFactId }], {
+    ...context, directions: { selfToPartner: .4, partnerToSelf: .8 },
+  })
+  assert.equal(swapped.directions!.selfToPartner, baseline.directions!.partnerToSelf)
+  assert.equal(swapped.directions!.partnerToSelf, baseline.directions!.selfToPartner)
 })

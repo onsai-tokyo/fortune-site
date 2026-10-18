@@ -2,20 +2,40 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ReportInput } from '../deterministicReport.js'
 import { containsJargon } from './jargon.js'
-import { buildTurningPointCards } from './timingCards.js'
+import { buildAnnualHistoryCards, buildTurningPointCards, replaceTimingCards } from './timingCards.js'
+import { buildStructuredReport } from '../reportCards.js'
+import { calcTimingCycles } from '../divination/index.js'
+import { annualNarrative } from './timingAnnualNarrative.js'
 
 const input: ReportInput = {
   birthTime: '03:02', shichuDay: '甲子', nayin: '海中金', sanmeiStar: '貫索星', chusatsu: '戌亥', sukuyo: '角', lifePathNumber: 1, honmeiName: '一白水星',
   timing: { direction: '順行', startDate: '2000-01-01', marriageCandidates: [], decades: [], annual: [
-    { year: 2024, ageRange: '26歳', kanshi: '甲辰', tenGod: '偏財', score: 8, relationshipSignals: [], themes: ['環境の変化'] },
-    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: ['出会い'], themes: ['恋愛'] },
+    { year: 2024, ageRange: '26歳', kanshi: '甲辰', tenGod: '偏財', score: 8, relationshipSignals: [], themes: ['移動や配置転換で関係を組み替えること'] },
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: ['出会い'], themes: ['人との接点を広げ、機会や成果を動かすこと'] },
   ] },
 }
+
+test('全年度表示は選抜されなかった年を既存本文で読め、選抜とスコアを変更しない', () => {
+  const value = structuredClone(input)
+  value.timing!.annual.unshift({ year: 2023, ageRange: '25歳', kanshi: '癸卯', tenGod: '食神', score: 0,
+    relationshipSignals: [], relationshipEvents: [], themes: ['楽しみや得意なことを、無理なく外へ表すこと'] })
+  const before = structuredClone(value)
+  const selected = buildTurningPointCards(value, 2026)
+  assert.ok(!selected.some(card => card.id === 'turning-year-2023'))
+  const all = buildAnnualHistoryCards(value, 2026)
+  const added = all.find(card => card.id === 'turning-year-2023')!
+  assert.ok(added)
+  assert.doesNotMatch(added.summary, /交際|結婚|彼氏/)
+  assert.equal(added.summary, annualNarrative(value.timing!.annual[0].themes).map(p => p.body).join(''))
+  assert.deepEqual(value, before)
+  assert.deepEqual(buildTurningPointCards(value, 2026), selected)
+  assert.ok(buildAnnualHistoryCards(value, 2024).every(card => Number(card.id.slice(-4)) <= 2024))
+})
 
 test('年の選抜は従来条件を保ち、スクロール節を返す', () => {
   const cards = buildTurningPointCards(input, 2026)
   assert.equal(cards.length, 2)
-  assert.ok(cards.every(card => card.sections && card.sections.length >= 1 && card.sections.length <= 2))
+  assert.ok(cards.every(card => card.sections && card.sections.length === 3))
   assert.ok(cards.every(card => /^\d{4}年（.+）$/.test(card.period?.label ?? '')))
 })
 
@@ -38,7 +58,7 @@ test('見出しに使った資産を節見出しとして繰り返さない', ()
 })
 
 test('連続年と1年空きは1クラスタにまとめる', () => {
-  const annual = [2020, 2021, 2023, 2030].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['恋愛'] }))
+  const annual = [2020, 2021, 2023, 2030].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['人との接点を広げ、機会や成果を動かすこと'] }))
   const report: ReportInput = { ...input, timing: { ...input.timing!, annual } }
   const cards = buildTurningPointCards(report, 2025)
   assert.match(cards.find(card => card.id === 'turning-year-2020')!.title, /第一回目の婚期/)
@@ -47,22 +67,120 @@ test('連続年と1年空きは1クラスタにまとめる', () => {
 })
 
 test('クラスタが1つだけなら第一回目を表示しない', () => {
-  const annual = [2025, 2026].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['恋愛'] }))
+  const annual = [2025, 2026].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['人との接点を広げ、機会や成果を動かすこと'] }))
   const report: ReportInput = { ...input, timing: { ...input.timing!, annual } }
   assert.ok(buildTurningPointCards(report, 2026).every(card => !/第一回目/.test(card.title)))
 })
 
 test('出生時刻なしではstrong扱いの通し番号を表示しない', () => {
-  const annual = [2020, 2030].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['恋愛'] }))
+  const annual = [2020, 2030].map(year => ({ year, ageRange: '30歳', kanshi: '甲子', tenGod: '正官', score: 8, relationshipSignals: ['結婚'], themes: ['人との接点を広げ、機会や成果を動かすこと'] }))
   const report: ReportInput = { ...input, birthTime: undefined, timing: { ...input.timing!, annual } }
   assert.ok(buildTurningPointCards(report, 2025).every(card => !/回目/.test(card.title)))
 })
 
+test('非表示の先行年を数えた番号だけが表示されない', () => {
+  const annual = [1990, 2000, 2010, 2032].map(year => ({
+    year, ageRange: '36歳', kanshi: '壬子', tenGod: '偏官', score: 8,
+    relationshipSignals: [], themes: ['変化へすばやく対応し、難しい役割へ踏み出すこと'],
+  }))
+  const cards = buildTurningPointCards({ ...input, timing: { ...input.timing!, annual } }, 2026)
+  assert.deepEqual(cards.map(card => card.id), ['turning-year-2032'])
+  assert.doesNotMatch(cards[0].title, /回目/)
+  assert.ok(cards[0].tags.every(tag => !/回目/.test(tag)))
+})
+
+test('先行クラスタが別の主要分類で表示される場合も番号を飛ばさない', () => {
+  const annual = [2020, 2032].map(year => ({
+    year, ageRange: '36歳', kanshi: '壬子', tenGod: '偏官', score: 8,
+    relationshipSignals: year === 2020 ? ['結婚'] : [],
+    themes: ['変化へすばやく対応し、難しい役割へ踏み出すこと'],
+  }))
+  const cards = buildTurningPointCards({ ...input, timing: { ...input.timing!, annual } }, 2026)
+  assert.doesNotMatch(cards[1].title, /回目/)
+})
+
 test('移動テーマを生活語の環境変化へ配線する', () => {
   const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [
-    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: [], themes: ['移動・配置転換・関係の組み替え'] },
+    { year: 2026, ageRange: '28歳', kanshi: '丙午', tenGod: '正財', score: 9, relationshipSignals: [], themes: ['移動や配置転換で関係を組み替えること'] },
   ] } }
   const [card] = buildTurningPointCards(report, 2026)
   assert.ok(card.tags.includes('引越し・環境変化'))
   assert.equal(containsJargon([card.title, card.summary, ...card.pages.map(page => page.text)].join('\n')), false)
+})
+
+// TestFlight 64: adjacent years had different calculated themes but the same work copy.
+test('年ごとの計算済みテーマを保持し、同じ仕事分類でも隣接年を同文に潰さない', () => {
+  const timing = calcTimingCycles(1995, 2, 20, 3, 2, 'female')
+  const report: ReportInput = { ...input, birthDate: '1995-02-20', timing }
+  const cards = buildTurningPointCards(report, 2026)
+  for (const [left, right] of [[2018, 2019], [2028, 2029]]) {
+    const a = cards.find(card => card.id === `turning-year-${left}`)!
+    const b = cards.find(card => card.id === `turning-year-${right}`)!
+    assert.ok(a && b)
+    assert.notEqual(a.title, b.title)
+    assert.notEqual(a.summary, b.summary)
+  }
+  const year = timing.annual.find(item => item.year === 2023)!
+  const card = cards.find(card => card.id === 'turning-year-2023')!
+  assert.match(card.summary, /人と比べたり刺激を受けたり/)
+  assert.match(card.summary, /前提を見つめ直す/)
+  assert.match(card.summary, /人と知り合う機会が広がる/)
+  assert.match(card.summary, /食い違いも表に出/)
+  // The opening now composes the two meanings. Their individual explanations
+  // remain in the detail, so combination copy must not erase source content.
+  const detail = card.sections!.map(section => section.body).join('\n')
+  assert.match(detail, /新しく知り合う入口や接点/)
+  assert.match(detail, /見えていなかった食い違い/)
+  for (const value of [...year.themes, ...year.relationshipEvents]) {
+    assert.ok(card.evidence.some(evidence => evidence.detail.includes(value)))
+  }
+  assert.ok(card.tags.includes('出会い'))
+  assert.doesNotMatch(card.summary, /裏切|前半|後半/)
+  assert.deepEqual(buildTurningPointCards(report, 2026), cards)
+})
+
+test('年齢はその年の誕生日に迎える年齢で表示する', () => {
+  const report: ReportInput = { ...input, birthDate: '1995-02-20', timing: { ...input.timing!, annual: [2014, 2015].map(year => ({
+    year, age: year - 1995, ageRange: `${year - 1996}〜${year - 1995}歳`, kanshi: '甲子', tenGod: '正官',
+    score: 8, relationshipSignals: ['出会い'], themes: ['人との接点を広げ、機会や成果を動かすこと'],
+  })) } }
+  assert.deepEqual(buildTurningPointCards(report, 2026).map(card => card.period?.label), [
+    '2014年（19歳になる年）', '2015年（20歳になる年）',
+  ])
+})
+
+test('表示可能な年の根拠がない場合、分類だけの汎用文章で埋めない', () => {
+  const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [{
+    year: 2026, ageRange: '30歳', kanshi: '丙午', tenGod: '正財', score: 8,
+    relationshipSignals: ['天干に配偶者星の正財'], themes: [],
+  }] } }
+  assert.deepEqual(buildTurningPointCards(report, 2026), [])
+  const oldReport = buildStructuredReport('【本質】\n保存する本文')
+  oldReport.cards.push(...buildTurningPointCards(input, 2026))
+  const replaced = replaceTimingCards(oldReport, report)
+  assert.equal(replaced.cards.some(card => card.kind === 'timing'), false)
+  assert.deepEqual(replaced.cards.map(card => card.id), oldReport.cards.filter(card => card.kind !== 'timing').map(card => card.id))
+})
+
+test('年テーマ・関係イベントの各根拠に文章が対応し、未知の分類は補完しない', () => {
+  for (const gender of ['female', 'male'] as const) {
+    const timing = calcTimingCycles(1995, 2, 20, 3, 2, gender)
+    for (const year of timing.annual) for (const value of [...year.themes, ...year.relationshipEvents]) {
+      assert.equal(annualNarrative([value]).length, 1, `未対応の計算済み根拠: ${value}`)
+      const phrase = annualNarrative([value])[0]
+      assert.ok(phrase.detail && phrase.detail !== phrase.body, `本文解説がない: ${value}`)
+    }
+  }
+  assert.deepEqual(annualNarrative(['仕事', '恋愛', '未知の計算結果', '__proto__']), [])
+})
+
+test('短い年テーマの要約を本文だけの繰り返しにしない', () => {
+  const report: ReportInput = { ...input, timing: { ...input.timing!, annual: [{
+    year: 2026, age: 30, ageRange: '30歳', kanshi: '丙午', tenGod: '正印', score: 8,
+    relationshipSignals: [], themes: ['学びや支援を受け取り、次の土台を固めること'],
+  }] } }
+  const [card] = buildTurningPointCards(report, 2026)
+  assert.notEqual(card.summary, card.sections![0].body)
+  assert.match(card.sections![0].body, /何が分からないのか/)
+  assert.ok(card.evidence.some(item => item.detail.includes('学びや支援を受け取り、次の土台を固めること')))
 })

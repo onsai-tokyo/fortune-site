@@ -1,3 +1,4 @@
+import { isAvailableScore } from './scoreAvailability.js'
 import type { PairTraitScore } from './derivedTraitScores.js'
 import type { CompatibilityProfileScore, MutualUnderstandingProfile, UnderstandingComponentKey } from './synastryFacts.js'
 
@@ -357,14 +358,14 @@ const textByScore: Record<PairTraitScore['key'], Record<ScoreBand, (cue: string)
 
 /** 相性§41・§52・§53。確信度不足では一般論を生成せずnullへ戻す。 */
 export function compatibilityScoreBlock(score: PairTraitScore | undefined, cue: string): CompatibilityScoreBlock | null {
-  if (!score || score.confidence < 0.25) return null
+  if (!isAvailableScore(score, 0.25)) return null
   const scoreBand = band(score.value)
   return { scoreKey: score.key, band: scoreBand, text: textByScore[score.key][scoreBand](cue), source: '相性§41・§52・§53' }
 }
 
 /** 相性§43・§44・§53。話しやすさ／感情の深さ／安心感を混同しない。 */
 export function compatibilityProfileBlock(score: CompatibilityProfileScore | undefined, cue: string): CompatibilityScoreBlock | null {
-  if (!score || score.confidence < 0.25 || !isStandaloneProfileKey(score.key)) return null
+  if (!isAvailableScore(score, 0.25) || !isStandaloneProfileKey(score.key)) return null
   const scoreBand = band(score.value)
   return {
     scoreKey: score.key,
@@ -381,10 +382,10 @@ export function relationshipTensionBlock(
   safety: CompatibilityProfileScore | undefined,
   cue: string,
 ): CompatibilityScoreBlock | null {
-  if (!conflict || conflict.key !== 'conflict_intensity' || conflict.confidence < 0.25) return null
+  if (!isAvailableScore(conflict, 0.25) || conflict.key !== 'conflict_intensity') return null
   const conflictBand = band(conflict.value)
-  const repairAvailable = repair?.key === 'repair_capacity' && repair.confidence >= 0.25
-  const safetyAvailable = safety?.key === 'emotional_safety' && safety.confidence >= 0.25
+  const repairAvailable = isAvailableScore(repair, 0.25) && repair.key === 'repair_capacity'
+  const safetyAvailable = isAvailableScore(safety, 0.25) && safety.key === 'emotional_safety'
   const returnStrength = Math.max(repairAvailable ? repair.value : 0, safetyAvailable ? safety.value : 0)
   const text = conflictBand === 'high' && returnStrength >= 0.6
     ? `${cue}では、反応が強くぶつかっても、関係へ戻る手がかりを見つけやすい二人です。勢いに任せず、仲直りの順序を決めてください。`
@@ -399,7 +400,7 @@ export function relationshipTensionBlock(
 /** 相性§52。理解の3成分を平均せず、確かな成分と届きにくい成分を同時に書く。 */
 export function mutualUnderstandingBlock(profile: MutualUnderstandingProfile | undefined, cue: string): CompatibilityScoreBlock | null {
   if (!profile) return null
-  const available = Object.values(profile.components).filter(component => component.confidence >= 0.25)
+  const available = Object.values(profile.components).filter(component => isAvailableScore(component, 0.25))
   if (!available.length) return null
   const strongest = [...available].sort((a, b) => b.confidence - a.confidence || b.value - a.value || a.key.localeCompare(b.key))[0]
   const weakest = [...available].sort((a, b) => a.value - b.value || b.confidence - a.confidence || a.key.localeCompare(b.key))[0]

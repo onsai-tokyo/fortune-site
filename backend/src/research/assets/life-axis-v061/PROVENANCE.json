@@ -1,0 +1,13 @@
+{
+  "origin": "files (10).zip / previously reviewed v0.6.1",
+  "productionEnabled": false,
+  "sources": {
+    "copy_dictionary_600.json": "9060075bebd07aad70cb436f9b0006b430c42ff4ea923d4837403bd1cf81e90f",
+    "structure600.json": "60683f3d537c63b082a719b04f08c955a079d57d22b1fde8f68309a7701c3a58"
+  },
+  "reference": {
+    "originSha256": "de1a8fa26ce8b65f30f0bb112b414b85086dc26acd5529a3bf8047a69a8940b2",
+    "uncompressedSha256": "f2631812ef58c109ecf452b329d0c9aa724a76285e8f9f6c3beec350065c944b",
+    "note": "600 life_axis outputs extracted unchanged from submitted reference; not regenerated from new renderer."
+  }
+}

@@ -1,0 +1,5692 @@
+{
+  "schemaVersion": 1,
+  "reference": "sxtwl-CST-corrected-received-convention-v1",
+  "library": {
+    "name": "sxtwl",
+    "version": "2.0.7"
+  },
+  "tableSha256": "f2bf0e18373722beaa528ab11610e64a382bd82478ee1c15170b21f99e3105d7",
+  "conventions": {
+    "timezone": "fixed UTC+09:00 for supported modern inputs",
+    "dayBoundary": "00:00 JST",
+    "nthDay": "floor(elapsed_seconds / 86400) + 1",
+    "precision": "input HH:mm denotes [minute, minute+60s)"
+  },
+  "limits": [
+    "Reproduces received table, not validation of all schools.",
+    "Raw values retain unverified mao/shen10 table completions.",
+    "Boundary safety margin is assessed separately by cross-library comparison.",
+    "No actual person birth inputs are stored."
+  ],
+  "fixtures": [
+    {
+      "id": "setsu-小寒--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "17:19",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.46851998832176,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.469214432754626,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小寒--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "17:21",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.46990887721065,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.470603321643516,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小寒-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "17:22",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.470603321655094,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 7.693501157407408e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-小寒-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "17:23",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 7.693502314814815e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.0007713794560185184,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小寒-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "17:25",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.001465823912037037,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.0021602683449074077,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-小寒-巳-after14d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "17:19",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.997299157245369,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.997993601678239,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-小寒-巳-after14d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "17:21",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.998688046134259,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.999382490567129,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-小寒-巳-after14d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "17:22",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.999382490578702,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 14.000076935011572,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-小寒-巳-after14d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "17:23",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 14.000076935023147,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 14.000771379456017,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-小寒-巳-after14d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "17:25",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 14.001465823912035,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 14.002160268344905,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立春--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-02-04",
+        "birthTime": "04:58",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 29.482715823912034,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 29.483410268344908,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立春--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-02-04",
+        "birthTime": "05:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 29.484104712800924,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 29.484799157233798,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立春-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-02-04",
+        "birthTime": "05:01",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 29.48479915724537,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 9.962054398148148e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-立春-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-02-04",
+        "birthTime": "05:02",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 9.962055555555555e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 0.0007940649884259259,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立春-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-02-04",
+        "birthTime": "05:04",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 0.0014885094444444444,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 0.0021829538773148146,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-啓蟄--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-03-05",
+        "birthTime": "22:55",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 29.745238509444444,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 29.745932953877315,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-啓蟄--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-03-05",
+        "birthTime": "22:57",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 29.746627398333334,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 29.7473218427662,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-啓蟄-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-03-05",
+        "birthTime": "22:58",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 29.74732184277778,
+        "nthDay": 30,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 0.00019954574074074075,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-啓蟄-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-03-05",
+        "birthTime": "22:59",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 0.00019954575231481483,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 0.0008939901851851852,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-啓蟄-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-03-05",
+        "birthTime": "23:01",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 0.0015884346412037037,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 0.002282879074074074,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-清明--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-04-05",
+        "birthTime": "03:36",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 30.192560656863428,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 30.193255101296295,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-清明--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-04-05",
+        "birthTime": "03:38",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 30.193949545752318,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 30.194643990185185,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-清明-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-04-05",
+        "birthTime": "03:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "啓蟄",
+        "setsuAtJst": "2026-03-05T22:58:42.759247+09:00",
+        "elapsedDays": 30.19464399019676,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 0.0001973284490740741,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-清明-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-04-05",
+        "birthTime": "03:40",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 0.00019732846064814813,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 0.0008917728935185185,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-清明-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-04-05",
+        "birthTime": "03:42",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 0.0015862173495370371,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己酉",
+        "branch": "酉",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 0.0022806617824074078,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立夏--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-05-05",
+        "birthTime": "20:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 30.7120028840162,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 30.712697328449075,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立夏--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-05-05",
+        "birthTime": "20:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 30.71339177290509,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 30.714086217337965,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立夏-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-05-05",
+        "birthTime": "20:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 30.714086217349536,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 0.0003864394212962963,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-立夏-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-05-05",
+        "birthTime": "20:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 0.0003864394328703704,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 0.0010808838657407407,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立夏-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-05-05",
+        "birthTime": "20:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 0.001775328321759259,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 0.0024697727546296295,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立夏-巳-after14d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-05-19",
+        "birthTime": "20:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 13.997608661655093,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 13.998303106087963,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立夏-巳-after14d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-05-19",
+        "birthTime": "20:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 13.998997550543981,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 13.999691994976851,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立夏-巳-after14d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-05-19",
+        "birthTime": "20:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 13.999691994988426,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 14.000386439421296,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-立夏-巳-after14d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-05-19",
+        "birthTime": "20:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 14.000386439432871,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 14.001080883865741,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立夏-巳-after14d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-05-19",
+        "birthTime": "20:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 14.00177532832176,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "正財",
+        "hiddenStem": "丙",
+        "primaryStar": "司禄星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 14.00246977275463,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-芒種--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-06-06",
+        "birthTime": "00:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "壬",
+        "primaryStar": "調舒星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 31.16427532832176,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "壬",
+        "primaryStar": "調舒星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 31.164969772754628,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-芒種--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-06-06",
+        "birthTime": "00:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "壬",
+        "primaryStar": "調舒星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 31.165664217210647,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "壬",
+        "primaryStar": "調舒星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 31.166358661643518,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-芒種-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-06-06",
+        "birthTime": "00:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "壬",
+        "primaryStar": "調舒星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2026-05-05T20:48:26.611633+09:00",
+        "elapsedDays": 31.166358661655092,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "正財",
+        "hiddenStem": "甲",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 0.0006515608796296296,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-芒種-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-06-06",
+        "birthTime": "00:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "正財",
+        "hiddenStem": "甲",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 0.0006515608912037036,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "正財",
+        "hiddenStem": "甲",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 0.0013460053240740742,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-芒種-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-06-06",
+        "birthTime": "00:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "正財",
+        "hiddenStem": "甲",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 0.0020404497800925927,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛亥",
+        "branch": "亥",
+        "star": "正財",
+        "hiddenStem": "甲",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 0.002734894212962963,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-申-after9d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "00:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "戊",
+        "primaryStar": "龍高星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 8.997873783113427,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "戊",
+        "primaryStar": "龍高星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 8.998568227546297,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-申-after9d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "00:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "戊",
+        "primaryStar": "龍高星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 8.999262672002315,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "戊",
+        "primaryStar": "龍高星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 8.999957116435185,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-申-after9d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "00:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "戊",
+        "primaryStar": "龍高星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 8.99995711644676,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.00065156087963,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-芒種-申-after9d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "00:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.000651560891203,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.001346005324073,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-申-after9d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "00:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.002040449780093,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.002734894212963,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-亥-after12d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-18",
+        "birthTime": "00:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "甲",
+        "primaryStar": "調舒星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.997873783113427,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "甲",
+        "primaryStar": "調舒星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.998568227546297,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-亥-after12d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-18",
+        "birthTime": "00:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "甲",
+        "primaryStar": "調舒星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.999262672002315,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "甲",
+        "primaryStar": "調舒星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.999957116435185,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-亥-after12d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-18",
+        "birthTime": "00:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "傷官",
+        "hiddenStem": "甲",
+        "primaryStar": "調舒星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.99995711644676,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "劫財",
+        "hiddenStem": "壬",
+        "primaryStar": "石門星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 12.00065156087963,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-芒種-亥-after12d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-18",
+        "birthTime": "00:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "劫財",
+        "hiddenStem": "壬",
+        "primaryStar": "石門星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 12.000651560891203,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "劫財",
+        "hiddenStem": "壬",
+        "primaryStar": "石門星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 12.001346005324073,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-亥-after12d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-18",
+        "birthTime": "00:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "劫財",
+        "hiddenStem": "壬",
+        "primaryStar": "石門星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 12.002040449780093,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸亥",
+        "branch": "亥",
+        "star": "劫財",
+        "hiddenStem": "壬",
+        "primaryStar": "石門星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 12.002734894212963,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-午-after19d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-25",
+        "birthTime": "00:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "印綬",
+        "hiddenStem": "己",
+        "primaryStar": "玉堂星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 18.997873783113427,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "印綬",
+        "hiddenStem": "己",
+        "primaryStar": "玉堂星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 18.998568227546297,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-午-after19d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-25",
+        "birthTime": "00:47",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "印綬",
+        "hiddenStem": "己",
+        "primaryStar": "玉堂星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 18.999262672002317,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "印綬",
+        "hiddenStem": "己",
+        "primaryStar": "玉堂星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 18.999957116435187,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-午-after19d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-25",
+        "birthTime": "00:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "印綬",
+        "hiddenStem": "己",
+        "primaryStar": "玉堂星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 18.999957116446758,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "丁",
+        "primaryStar": "牽牛星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 19.00065156087963,
+        "nthDay": 20,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-芒種-午-after19d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-25",
+        "birthTime": "00:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "丁",
+        "primaryStar": "牽牛星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 19.000651560891203,
+        "nthDay": 20,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "丁",
+        "primaryStar": "牽牛星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 19.001346005324073,
+        "nthDay": 20,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-芒種-午-after19d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-06-25",
+        "birthTime": "00:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "丁",
+        "primaryStar": "牽牛星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 19.002040449780093,
+        "nthDay": 20,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "丁",
+        "primaryStar": "牽牛星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 19.002734894212963,
+        "nthDay": 20,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小暑--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-07-07",
+        "birthTime": "10:53",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 31.420096005335648,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 31.420790449768518,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小暑--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-07-07",
+        "birthTime": "10:55",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 31.421484894224537,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 31.422179338657404,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小暑-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-07-07",
+        "birthTime": "10:56",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 31.422179338668982,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 0.00023580391203703702,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-小暑-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-07-07",
+        "birthTime": "10:57",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 0.00023580392361111113,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 0.0009302483564814814,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-小暑-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-07-07",
+        "birthTime": "10:59",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 0.0016246928125,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 0.0023191372453703705,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立秋--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-08-07",
+        "birthTime": "20:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "己",
+        "primaryStar": "車騎星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 31.40440247059028,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "己",
+        "primaryStar": "車騎星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 31.405096915023147,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立秋--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-08-07",
+        "birthTime": "20:41",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "己",
+        "primaryStar": "車騎星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 31.405791359479167,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "己",
+        "primaryStar": "車騎星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 31.406485803912037,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立秋-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-08-07",
+        "birthTime": "20:42",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "己",
+        "primaryStar": "車騎星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 31.406485803923612,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 0.00039774046296296294,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-立秋-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-08-07",
+        "birthTime": "20:43",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 0.000397740474537037,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 0.0010921849074074074,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立秋-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-08-07",
+        "birthTime": "20:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 0.001786629363425926,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 0.0024810737962962966,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-戌-after9d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-16",
+        "birthTime": "20:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "印綬",
+        "hiddenStem": "辛",
+        "primaryStar": "玉堂星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 8.99761996269676,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "印綬",
+        "hiddenStem": "辛",
+        "primaryStar": "玉堂星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 8.99831440712963,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-戌-after9d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-16",
+        "birthTime": "20:41",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "印綬",
+        "hiddenStem": "辛",
+        "primaryStar": "玉堂星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 8.999008851585648,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "印綬",
+        "hiddenStem": "辛",
+        "primaryStar": "玉堂星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 8.999703296018518,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-戌-after9d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-16",
+        "birthTime": "20:42",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "印綬",
+        "hiddenStem": "辛",
+        "primaryStar": "玉堂星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 8.999703296030093,
+        "nthDay": 9,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 9.000397740462963,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-立秋-戌-after9d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-16",
+        "birthTime": "20:43",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 9.000397740474538,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 9.001092184907408,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-戌-after9d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-16",
+        "birthTime": "20:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 9.001786629363426,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 9.002481073796297,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-丑-after12d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-19",
+        "birthTime": "20:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 11.99761996269676,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 11.99831440712963,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-丑-after12d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-19",
+        "birthTime": "20:41",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 11.999008851585648,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 11.999703296018518,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-丑-after12d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-19",
+        "birthTime": "20:42",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 11.999703296030093,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 12.000397740462963,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-立秋-丑-after12d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-19",
+        "birthTime": "20:43",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 12.000397740474538,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 12.001092184907408,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-立秋-丑-after12d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-08-19",
+        "birthTime": "20:45",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 12.001786629363426,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙丑",
+        "branch": "丑",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 12.002481073796297,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-白露--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-09-07",
+        "birthTime": "23:37",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏官",
+        "hiddenStem": "庚",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 31.121231073807873,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏官",
+        "hiddenStem": "庚",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 31.12192551824074,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-白露--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-09-07",
+        "birthTime": "23:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏官",
+        "hiddenStem": "庚",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 31.12261996269676,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏官",
+        "hiddenStem": "庚",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 31.12331440712963,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-白露-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-09-07",
+        "birthTime": "23:40",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏官",
+        "hiddenStem": "庚",
+        "primaryStar": "車騎星",
+        "setsuName": "立秋",
+        "setsuAtJst": "2026-08-07T20:42:25.635223+09:00",
+        "elapsedDays": 31.123314407141205,
+        "nthDay": 32,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 1.6964791666666666e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-白露-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-09-07",
+        "birthTime": "23:41",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 1.6964803240740742e-05,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 0.0007114092361111111,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-白露-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-09-07",
+        "birthTime": "23:43",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 0.0014058536921296297,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 0.002100298125,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-寒露--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-10-08",
+        "birthTime": "15:25",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 30.655572520358795,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 30.656266964791666,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-寒露--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-10-08",
+        "birthTime": "15:27",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 30.656961409247682,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 30.657655853680556,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-寒露-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-10-08",
+        "birthTime": "15:28",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "白露",
+        "setsuAtJst": "2026-09-07T23:40:58.534241+09:00",
+        "elapsedDays": 30.657655853692127,
+        "nthDay": 31,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 6.744583333333334e-06,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-寒露-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-10-08",
+        "birthTime": "15:29",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 6.744594907407407e-06,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 0.0007011890277777778,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-寒露-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-10-08",
+        "birthTime": "15:31",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 0.0013956334837962963,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 0.0020900779166666667,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-寒露-巳-after14d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-10-22",
+        "birthTime": "15:25",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 13.99722896681713,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 13.99792341125,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-寒露-巳-after14d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-10-22",
+        "birthTime": "15:27",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 13.998617855706017,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 13.999312300138888,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-寒露-巳-after14d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-10-22",
+        "birthTime": "15:28",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 13.999312300150462,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 14.000006744583333,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-寒露-巳-after14d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-10-22",
+        "birthTime": "15:29",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 14.000006744594907,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 14.000701189027778,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-寒露-巳-after14d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-10-22",
+        "birthTime": "15:31",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 14.001395633483796,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 14.002090077916666,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立冬--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-11-07",
+        "birthTime": "18:48",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 30.138201189039354,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 30.13889563347222,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立冬--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-11-07",
+        "birthTime": "18:50",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 30.139590077928244,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 30.14028452236111,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立冬-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-11-07",
+        "birthTime": "18:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2026-10-08T15:28:59.417267+09:00",
+        "elapsedDays": 30.14028452237269,
+        "nthDay": 31,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 0.0001585430439814815,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-立冬-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-11-07",
+        "birthTime": "18:52",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 0.00015854305555555555,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 0.0008529874884259259,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-立冬-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-11-07",
+        "birthTime": "18:54",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 0.0015474319444444442,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 0.0022418763773148147,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-大雪--3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-12-07",
+        "birthTime": "11:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 29.706408543055552,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 29.707102987488426,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-大雪--1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-12-07",
+        "birthTime": "11:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 29.707797431944442,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 29.708491876377316,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-大雪-+0m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-12-07",
+        "birthTime": "11:52",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "立冬",
+        "setsuAtJst": "2026-11-07T18:51:46.301880+09:00",
+        "elapsedDays": 29.708491876388887,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 0.0005373212962962963,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "setsu-大雪-+1m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-12-07",
+        "birthTime": "11:53",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 0.0005373213078703704,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 0.0012317657407407408,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "setsu-大雪-+3m",
+      "category": "solar_term_boundary",
+      "input": {
+        "birthDate": "2026-12-07",
+        "birthTime": "11:55",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 0.0019262101967592593,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙卯",
+        "branch": "卯",
+        "star": "比肩",
+        "hiddenStem": "乙",
+        "primaryStar": "貫索星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 0.0026206546296296297,
+        "nthDay": 1,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-大雪-巳-after14d--3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-12-21",
+        "birthTime": "11:49",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 13.997759543530092,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 13.998453987962963,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-大雪-巳-after14d--1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-12-21",
+        "birthTime": "11:51",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 13.99914843241898,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 13.99984287685185,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-大雪-巳-after14d-+0m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-12-21",
+        "birthTime": "11:52",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "庚",
+        "primaryStar": "調舒星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 13.999842876863426,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 14.000537321296296,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "hidden-大雪-巳-after14d-+1m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-12-21",
+        "birthTime": "11:53",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 14.00053732130787,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 14.00123176574074,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "hidden-大雪-巳-after14d-+3m",
+      "category": "hidden_stem_boundary",
+      "input": {
+        "birthDate": "2026-12-21",
+        "birthTime": "11:55",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 14.001926210196759,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "丙",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2026-12-07T11:52:13.575439+09:00",
+        "elapsedDays": 14.002620654629629,
+        "nthDay": 15,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-01-06T00:00",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-01-06",
+        "birthTime": "00:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚辰",
+        "branch": "辰",
+        "star": "正財",
+        "hiddenStem": "乙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.27577137946759256,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚辰",
+        "branch": "辰",
+        "star": "正財",
+        "hiddenStem": "乙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.276465823900463,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-05-01T22:59",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "22:59",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.80505843957176,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.80575288400463,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-05-01T23:00",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "23:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.8057528840162,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.806447328449075,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-05-01T23:59",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "23:59",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.846725106238424,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.847419550671297,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-05-02T00:00",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-05-02",
+        "birthTime": "00:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.84741955068287,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.848113995115742,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "civil-2026-05-02T00:01",
+      "category": "civil_midnight_and_23h",
+      "input": {
+        "birthDate": "2026-05-02",
+        "birthTime": "00:01",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.848113995127314,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "清明",
+        "setsuAtJst": "2026-04-05T03:39:42.950821+09:00",
+        "elapsedDays": 26.848808439560187,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-小寒-shen-after10d--3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-01-15",
+        "birthTime": "11:29",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 9.997553973726852,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 9.998248418159722,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-小寒-shen-after10d--1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-01-15",
+        "birthTime": "11:31",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 9.99894286261574,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 9.99963730704861,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-小寒-shen-after10d-+0m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-01-15",
+        "birthTime": "11:32",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 9.999637307060185,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 10.000331751493055,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "table-scope-小寒-shen-after10d-+1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-01-15",
+        "birthTime": "11:33",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 10.00033175150463,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 10.0010261959375,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-小寒-shen-after10d-+3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-01-15",
+        "birthTime": "11:35",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 10.001720640393518,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2025-01-05T11:32:31.336670+09:00",
+        "elapsedDays": 10.002415084826389,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-立夏-shen-after10d--3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-05-15",
+        "birthTime": "14:53",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 9.997253741157408,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 9.997948185590278,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-立夏-shen-after10d--1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-05-15",
+        "birthTime": "14:55",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 9.998642630046296,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 9.999337074479167,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-立夏-shen-after10d-+0m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-05-15",
+        "birthTime": "14:56",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 9.999337074490741,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 10.000031518923612,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "table-scope-立夏-shen-after10d-+1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-05-15",
+        "birthTime": "14:57",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 10.000031518935186,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 10.000725963368057,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-立夏-shen-after10d-+3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-05-15",
+        "birthTime": "14:59",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 10.001420407824074,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏印",
+        "hiddenStem": "壬",
+        "primaryStar": "龍高星",
+        "setsuName": "立夏",
+        "setsuAtJst": "2025-05-05T14:56:57.276764+09:00",
+        "elapsedDays": 10.002114852256945,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-寒露-shen-after10d--3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-10-18",
+        "birthTime": "09:37",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 9.997261042060185,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 9.997955486493055,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-寒露-shen-after10d--1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-10-18",
+        "birthTime": "09:39",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 9.998649930949073,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 9.999344375381943,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-寒露-shen-after10d-+0m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-10-18",
+        "birthTime": "09:40",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 9.999344375393518,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 10.000038819826388,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "table-scope-寒露-shen-after10d-+1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-10-18",
+        "birthTime": "09:41",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 10.000038819837963,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 10.000733264270833,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-寒露-shen-after10d-+3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-10-18",
+        "birthTime": "09:43",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 10.001427708726851,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "寒露",
+        "setsuAtJst": "2025-10-08T09:40:56.645966+09:00",
+        "elapsedDays": 10.002122153159721,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-大雪-shen-after10d--3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-12-17",
+        "birthTime": "06:01",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 9.997686654988426,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 9.998381099421296,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-大雪-shen-after10d--1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-12-17",
+        "birthTime": "06:03",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 9.999075543877316,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 9.999769988310186,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-大雪-shen-after10d-+0m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-12-17",
+        "birthTime": "06:04",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 9.99976998832176,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 10.00046443275463,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": true
+    },
+    {
+      "id": "table-scope-大雪-shen-after10d-+1m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-12-17",
+        "birthTime": "06:05",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 10.000464432766204,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 10.001158877199074,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-scope-大雪-shen-after10d-+3m",
+      "category": "table_applicability_boundary",
+      "input": {
+        "birthDate": "2025-12-17",
+        "birthTime": "06:07",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 10.001853321655092,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 10.002547766087963,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-1",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-01",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 25.246992210543983,
+        "nthDay": 26,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "壬",
+        "primaryStar": "玉堂星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 25.24768665497685,
+        "nthDay": 26,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-2",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-02",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 26.246992210543983,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙子",
+        "branch": "子",
+        "star": "正官",
+        "hiddenStem": "癸",
+        "primaryStar": "牽牛星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 26.24768665497685,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-3",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-03",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丁丑",
+        "branch": "丑",
+        "star": "食神",
+        "hiddenStem": "己",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 27.246992210543983,
+        "nthDay": 28,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丁丑",
+        "branch": "丑",
+        "star": "食神",
+        "hiddenStem": "己",
+        "primaryStar": "鳳閣星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 27.24768665497685,
+        "nthDay": 28,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-4",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-04",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 28.246992210543983,
+        "nthDay": 29,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "甲",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 28.24768665497685,
+        "nthDay": 29,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-5",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-05",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.246992210543983,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己卯",
+        "branch": "卯",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "大雪",
+        "setsuAtJst": "2025-12-07T06:04:19.873009+09:00",
+        "elapsedDays": 29.24768665497685,
+        "nthDay": 30,
+        "tableProvisionalReasons": [
+          "mao_hidden_stem_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-6",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-06",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚辰",
+        "branch": "辰",
+        "star": "正財",
+        "hiddenStem": "乙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.7757713794675927,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚辰",
+        "branch": "辰",
+        "star": "正財",
+        "hiddenStem": "乙",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 0.7764658239004629,
+        "nthDay": 1,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-7",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-07",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "辛巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "戊",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 1.7757713794675924,
+        "nthDay": 2,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "辛巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "戊",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 1.7764658239004631,
+        "nthDay": 2,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-8",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-08",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 2.7757713794675922,
+        "nthDay": 3,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬午",
+        "branch": "午",
+        "star": "正官",
+        "hiddenStem": "己",
+        "primaryStar": "牽牛星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 2.776465823900463,
+        "nthDay": 3,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-9",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-09",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸未",
+        "branch": "未",
+        "star": "偏財",
+        "hiddenStem": "丁",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 3.7757713794675927,
+        "nthDay": 4,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸未",
+        "branch": "未",
+        "star": "偏財",
+        "hiddenStem": "丁",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 3.776465823900463,
+        "nthDay": 4,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-10",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-10",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 4.775771379467593,
+        "nthDay": 5,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 4.776465823900463,
+        "nthDay": 5,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-11",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-11",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 5.775771379467593,
+        "nthDay": 6,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙酉",
+        "branch": "酉",
+        "star": "偏官",
+        "hiddenStem": "辛",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 5.776465823900463,
+        "nthDay": 6,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-12",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-12",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "辛",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 6.775771379467593,
+        "nthDay": 7,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "辛",
+        "primaryStar": "司禄星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 6.776465823900463,
+        "nthDay": 7,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-13",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-13",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丁亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "甲",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 7.775771379467593,
+        "nthDay": 8,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丁亥",
+        "branch": "亥",
+        "star": "印綬",
+        "hiddenStem": "甲",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 7.776465823900463,
+        "nthDay": 8,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-14",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-15",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己丑",
+        "branch": "丑",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 9.775771379467592,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己丑",
+        "branch": "丑",
+        "star": "食神",
+        "hiddenStem": "辛",
+        "primaryStar": "鳳閣星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 9.776465823900462,
+        "nthDay": 10,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-15",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-16",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "丙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 10.775771379467592,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚寅",
+        "branch": "寅",
+        "star": "偏官",
+        "hiddenStem": "丙",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 10.776465823900462,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-16",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-18",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬辰",
+        "branch": "辰",
+        "star": "偏官",
+        "hiddenStem": "戊",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 12.775771379467592,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬辰",
+        "branch": "辰",
+        "star": "偏官",
+        "hiddenStem": "戊",
+        "primaryStar": "車騎星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 12.776465823900462,
+        "nthDay": 13,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-17",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-19",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.775771379467592,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸巳",
+        "branch": "巳",
+        "star": "印綬",
+        "hiddenStem": "庚",
+        "primaryStar": "玉堂星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 13.776465823900462,
+        "nthDay": 14,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-18",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-21",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙未",
+        "branch": "未",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 15.775771379467592,
+        "nthDay": 16,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙未",
+        "branch": "未",
+        "star": "偏財",
+        "hiddenStem": "己",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 15.776465823900462,
+        "nthDay": 16,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-19",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-22",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "庚",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 16.775771379467592,
+        "nthDay": 17,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙申",
+        "branch": "申",
+        "star": "偏財",
+        "hiddenStem": "庚",
+        "primaryStar": "禄存星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 16.776465823900462,
+        "nthDay": 17,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-20",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-24",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "戊戌",
+        "branch": "戌",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 18.775771379467592,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "戊戌",
+        "branch": "戌",
+        "star": "比肩",
+        "hiddenStem": "戊",
+        "primaryStar": "貫索星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 18.776465823900462,
+        "nthDay": 19,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-21",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-01-31",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "乙巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "丙",
+        "primaryStar": "調舒星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 25.775771379467592,
+        "nthDay": 26,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "乙巳",
+        "branch": "巳",
+        "star": "傷官",
+        "hiddenStem": "丙",
+        "primaryStar": "調舒星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 25.776465823900466,
+        "nthDay": 26,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-22",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-02-01",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "丙午",
+        "branch": "午",
+        "star": "劫財",
+        "hiddenStem": "丁",
+        "primaryStar": "石門星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 26.775771379467592,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "丙午",
+        "branch": "午",
+        "star": "劫財",
+        "hiddenStem": "丁",
+        "primaryStar": "石門星",
+        "setsuName": "小寒",
+        "setsuAtJst": "2026-01-05T17:22:53.352814+09:00",
+        "elapsedDays": 26.776465823900466,
+        "nthDay": 27,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-23",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-02-08",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 4.290377398333333,
+        "nthDay": 5,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "癸丑",
+        "branch": "丑",
+        "star": "比肩",
+        "hiddenStem": "癸",
+        "primaryStar": "貫索星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 4.291071842766204,
+        "nthDay": 5,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-24",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-02-09",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "甲寅",
+        "branch": "寅",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 5.290377398333333,
+        "nthDay": 6,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "甲寅",
+        "branch": "寅",
+        "star": "偏財",
+        "hiddenStem": "戊",
+        "primaryStar": "禄存星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 5.291071842766204,
+        "nthDay": 6,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-25",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-02-14",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "己未",
+        "branch": "未",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 10.290377398333334,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "己未",
+        "branch": "未",
+        "star": "偏官",
+        "hiddenStem": "乙",
+        "primaryStar": "車騎星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 10.291071842766204,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-26",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-02-15",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 11.290377398333334,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "立春",
+        "setsuAtJst": "2026-02-04T05:01:51.392784+09:00",
+        "elapsedDays": 11.291071842766204,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-27",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-06-15",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.466623783113427,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "庚申",
+        "branch": "申",
+        "star": "食神",
+        "hiddenStem": "壬",
+        "primaryStar": "鳳閣星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 9.467318227546297,
+        "nthDay": 10,
+        "tableProvisionalReasons": [
+          "shen_day10_editorial_completion"
+        ]
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-28",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-06-17",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.466623783113427,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬戌",
+        "branch": "戌",
+        "star": "正財",
+        "hiddenStem": "丁",
+        "primaryStar": "司禄星",
+        "setsuName": "芒種",
+        "setsuAtJst": "2026-06-06T00:48:03.705139+09:00",
+        "elapsedDays": 11.467318227546297,
+        "nthDay": 12,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    },
+    {
+      "id": "table-29",
+      "category": "table_coverage",
+      "input": {
+        "birthDate": "2026-07-17",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "rawAtMinuteStart": {
+        "dayPillar": "壬辰",
+        "branch": "辰",
+        "star": "劫財",
+        "hiddenStem": "癸",
+        "primaryStar": "石門星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 10.043985803923611,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "rawBeforeMinuteEnd": {
+        "dayPillar": "壬辰",
+        "branch": "辰",
+        "star": "劫財",
+        "hiddenStem": "癸",
+        "primaryStar": "石門星",
+        "setsuName": "小暑",
+        "setsuAtJst": "2026-07-07T10:56:39.626541+09:00",
+        "elapsedDays": 10.044680248356482,
+        "nthDay": 11,
+        "tableProvisionalReasons": []
+      },
+      "crossesDecisionBoundaryWithinMinute": false
+    }
+  ],
+  "pendingInputs": [
+    {
+      "id": "unknown-time",
+      "input": {
+        "birthDate": "2026-05-01",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "invalid-leap-date",
+      "input": {
+        "birthDate": "2026-02-29",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "invalid-month-date",
+      "input": {
+        "birthDate": "2026-04-31",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "invalid-time",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "24:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "unknown-timezone",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "12:00"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "overseas-timezone",
+      "input": {
+        "birthDate": "2026-05-01",
+        "birthTime": "12:00",
+        "timeZone": "America/New_York"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "historical-dst-unresolved",
+      "input": {
+        "birthDate": "1949-06-01",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "mismatching-day",
+      "input": {
+        "birthDate": "2026-01-06",
+        "birthTime": "00:00",
+        "timeZone": "Asia/Tokyo",
+        "expectedDayPillar": "甲子"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "below-supported-range",
+      "input": {
+        "birthDate": "1951-12-31",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    },
+    {
+      "id": "above-supported-range",
+      "input": {
+        "birthDate": "2101-01-01",
+        "birthTime": "12:00",
+        "timeZone": "Asia/Tokyo"
+      },
+      "expected": "pending"
+    }
+  ]
+}

@@ -266,7 +266,7 @@ test('派生本人スコアは既存Factを再利用し新しい占術票を作�
   assert.ok(scores.private_assertiveness.value >= 0 && scores.private_assertiveness.value <= 1)
 })
 
-test('二人比較専用4スコアは本人差分とSynastry軸から再現可能に算出する', () => {
+test('二人比較スコアは再現可能で未審査の開示proxyを未算出にする', () => {
   const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
   const self = computeTraitScores([
     fact({ id: 'self-moon', factor: 'planet:月:蟹座', axis: 'relation', signal: 'care', canonicalSourceId: 'planet:月' }),
@@ -288,5 +288,60 @@ test('二人比較専用4スコアは本人差分とSynastry軸から再現可�
     'compatibility_transparency', 'compatibility_independence', 'compatibility_lifestyle', 'compatibility_value_match',
   ])
   assert.ok(first.every(score => score.value >= 0 && score.value <= 1))
-  assert.ok(first.every(score => score.inputScores.length > 0))
+  assert.ok(first.filter(score => score.confidence > 0).every(score => score.inputScores.length > 0))
+  assert.deepEqual(first.find(score => score.key === 'compatibility_transparency'), { key: 'compatibility_transparency', value: .5, confidence: 0, inputScores: [], relationAxes: [], unavailableReason: 'unreviewed_disclosure_proxy' })
+})
+
+
+test('matching low or high sensitivity cannot imply pair disclosure even with strong communication', () => {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const self = computeTraitScores([], TRAIT_SCORE_RULES, scale)
+  for (const value of [.1, .9]) {
+    for (const key of ['social_sensitivity', 'public_agreeableness'] as const) {
+      self[key] = { ...self[key], value, confidence: 1, contributingFacts: ['personal'] }
+    }
+    const pair = computePairTraitScores(self, self, [
+      { key: 'communication', value: 1, confidence: 1, contributingFacts: ['communication'] },
+      { key: 'safety', value: 1, confidence: 1, contributingFacts: ['safety'] },
+    ])
+    assert.equal(pair.find(score => score.key === 'compatibility_transparency')!.confidence, 0)
+  }
+})
+
+test('pair derivation requires both personal inputs and isolates missing traits', () => {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const make = () => {
+    const scores = computeTraitScores([], TRAIT_SCORE_RULES, scale)
+    for (const key of ALL_TRAIT_SCORE_KEYS) scores[key] = { ...scores[key], value: .8, confidence: .8, contributingFacts: [`fact:${key}`] }
+    return scores
+  }
+  const self = make(), partner = make()
+  const baseline = computePairTraitScores(self, partner, [])
+  assert.equal(baseline.find(s => s.key === 'compatibility_independence')!.value, 1)
+  for (const value of [null, undefined, NaN, Infinity, -1, 1.1, '0.8']) {
+    partner.friendship_independence.value = value as number
+    const pair = computePairTraitScores(self, partner, [])
+    assert.deepEqual(pair.find(s => s.key === 'compatibility_independence'), {
+      key: 'compatibility_independence', value: .5, confidence: 0, inputScores: [], relationAxes: [], unavailableReason: 'missing_or_invalid_input',
+    })
+    assert.deepEqual(pair.find(s => s.key === 'compatibility_lifestyle'), baseline.find(s => s.key === 'compatibility_lifestyle'))
+  }
+  partner.friendship_independence = { ...self.friendship_independence, contributingFacts: [] }
+  assert.equal(computePairTraitScores(self, partner, [])[1].confidence, 0)
+  delete (partner as Partial<typeof partner>).friendship_independence
+  assert.equal(computePairTraitScores(self, partner, [])[1].confidence, 0)
+})
+
+test('optional pair relation needs real evidence and preserves the valid formula', () => {
+  const scale = bootstrapTraitScoreScale(ALL_TRAIT_SCORE_KEYS)
+  const self = computeTraitScores([], TRAIT_SCORE_RULES, scale)
+  for (const key of ALL_TRAIT_SCORE_KEYS) self[key] = { ...self[key], value: .8, confidence: .8, contributingFacts: [key] }
+  const without = computePairTraitScores(self, self, []).find(s => s.key === 'compatibility_value_match')!
+  for (const value of [null, NaN, Infinity]) {
+    const result = computePairTraitScores(self, self, [{ key: 'values', value: value as number, confidence: .8, contributingFacts: ['values'] }])
+    assert.deepEqual(result.find(s => s.key === 'compatibility_value_match'), without)
+  }
+  const withEvidence = computePairTraitScores(self, self, [{ key: 'values', value: .2, confidence: .6, contributingFacts: ['values'] }])
+  assert.equal(withEvidence.find(s => s.key === 'compatibility_value_match')!.value, .6)
+  assert.equal(withEvidence.find(s => s.key === 'compatibility_value_match')!.confidence, .6)
 })

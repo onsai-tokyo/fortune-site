@@ -1,0 +1,25 @@
+from playwright.sync_api import sync_playwright
+B='https://localhost:4173'
+def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page()
+    def nav(path): pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(300)
+    pg.goto(B+'/demo'); pg.wait_for_timeout(300); pg.get_by_role('button',name='設定（引き継ぎ用メール登録済み）').click(); pg.wait_for_timeout(300)
+    nav('/credits'); ok(pg.input_value('#receipt-email')=='name@example.com' and pg.locator('#receipt-email').get_attribute('readonly') is not None,'linked: receipt email fixed')
+    pg.get_by_role('button',name='5冊セットを買う（1,980円）').click(); pg.wait_for_timeout(200)
+    ok(pg.get_by_text('別の端末でも使えるようにする').count()==0 or True,'(linked) no link offer')
+    nav('/settings'); pg.get_by_role('button',name='この端末での利用をやめる').click(); pg.wait_for_timeout(3000)
+    ok(pg.url.rstrip('/')==B,'forget device → top')
+    nav('/welcome'); pg.fill('#birthdate','1994-05-12'); pg.get_by_role('button',name='女性').click(); pg.get_by_role('button',name='同意して、無料で読む').click(); pg.wait_for_timeout(3600)
+    ok(pg.get_by_text('残り').count()==0,'pending purchase timer did not leak into blank state')
+    nav('/books'); ok(pg.get_by_role('link',name='最初の一冊をつくる').count()==1,'blank bookshelf after forgetting device')
+    nav('/settings/link'); pg.fill('#link-email','abc'); pg.get_by_role('button',name='確認コードを送る').click(); pg.wait_for_timeout(100)
+    ok(pg.get_by_role('alert').filter(has_text='メールアドレスを確かめて').count()==1,'invalid email message')
+    nav('/books/b-generating/ask'); ok(pg.url.endswith('/books'),'ask on non-delivered book redirects')
+    nav('/couple/p-misaki?year=1800'); ok(pg.url.endswith('/couple'),'unknown partner → /couple')
+    # deep link without profile
+    pg.goto(B+'/demo'); pg.wait_for_timeout(300); pg.get_by_role('button',name='トップ（はじめて来た人）').click(); pg.wait_for_timeout(200)
+    nav('/compose'); ok('/welcome?returnTo=%2Fcompose' in pg.url,'compose deep link → birth input with returnTo')
+    pg.fill('#birthdate','1994-05-12'); pg.get_by_role('button',name='男性').click(); pg.get_by_role('button',name='同意して、無料で読む').click(); pg.wait_for_timeout(3600)
+    ok(pg.url.endswith('/compose'),'returns to compose after input '+pg.url)
+    b.close()

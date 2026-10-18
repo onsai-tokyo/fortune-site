@@ -1,3 +1,5 @@
+import { identity as coupleTimelineIdentity } from './report/coupleAllYears/composer.js'
+import { COMPATIBILITY_V24_IDENTITY } from './report/compatibilityV24/version.js'
 import type { StructuredReport } from './reportCards.js'
 import { resolveSelfReportOptions, selfReportPipelineTag } from './report/buildSelfReport.js'
 
@@ -33,6 +35,8 @@ export function runtimeIdentity(env: NodeJS.ProcessEnv = process.env) {
       ...selfReport,
       pipelineTag: selfReportPipelineTag(selfReport),
     },
+    compatibilityVersion: COMPATIBILITY_V24_IDENTITY,
+    coupleTimelineVersion: coupleTimelineIdentity(),
     aiReportEnabled: env.AI_REPORT_ENABLED !== 'false',
     deterministicScope: normalizedList(env.DETERMINISTIC_SCOPE),
     timingEngineMode: timingMode(env.TIMING_ENGINE_MODE),

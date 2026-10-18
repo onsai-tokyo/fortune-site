@@ -4,8 +4,7 @@ import type { ReportFinding } from './findings.js'
 /**
  * PR-0b: 「似ている」を数値で測る。
  *
- * 以降のPRは、この指標のベースライン差分だけで合否を判定する。
- * 目視の印象で採否を決めないこと。印象は再現しないが、この数値は再現する。
+ * 分布の診断値は品質合格を意味しない。既存の受入閾値と意味・根拠の検証を併用する。
  */
 
 export interface ReportQualityMetrics {
@@ -197,5 +196,70 @@ export function measureCorpusQuality(samples: CorpusSample[]): CorpusQualityMetr
     meanSupplementChapterRate: prepared.length === 0 ? 0
       : Number((prepared.reduce((sum, item) => sum + item.metrics.supplementChapterRate, 0) / prepared.length).toFixed(4)),
     totalLoveWorkLeakage: prepared.reduce((sum, item) => sum + item.metrics.loveWorkLeakage, 0),
+  }
+}
+
+/** Raw Shannon entropy (nats), never a quality grade normalized by observed titles. */
+export function measureTitleDistribution(titles: readonly string[]) {
+  const counts = new Map<string, number>()
+  for (const title of titles) counts.set(title, (counts.get(title) ?? 0) + 1)
+  const probabilities = [...counts.values()].sort((a, b) => a - b).map(count => count / titles.length)
+  const entropy = titles.length ? -probabilities.reduce((sum, p) => sum + p * Math.log(p), 0) : null
+  return {
+    observations: titles.length, distinctTitles: counts.size, entropy,
+    effectiveTitleCount: entropy === null ? null : Math.exp(entropy),
+    maxShare: titles.length ? Math.max(...probabilities) : null,
+  }
+}
+
+export interface DiversityAsset { id: string; chapter: string; typeLabel: string }
+export interface DiversitySample {
+  id: string
+  /** Trace from the runtime selector, after evidence/floor/forbidden checks. */
+  rows: readonly Pick<import('./claimComposer.js').ClaimAuditRow, 'claimId' | 'chapter' | 'reason' | 'lead'>[]
+}
+
+/** Diagnostic only. Eligible means pre-ranking candidates, not guaranteed selection.
+ * Section includes the lead (the first displayed section). Coverage counts asset IDs;
+ * entropy counts titles. An empty denominator is unknown, never perfect coverage.
+ */
+export function measureClaimDiversity(samples: readonly DiversitySample[], assets: readonly DiversityAsset[]) {
+  const catalog = new Map(assets.map(asset => [asset.id, asset]))
+  if (catalog.size !== assets.length) throw new Error('Duplicate asset ID')
+  if (new Set(samples.map(sample => sample.id)).size !== samples.length) throw new Error('Duplicate sample ID')
+  for (const sample of samples) {
+    if (sample.rows.length !== assets.length || new Set(sample.rows.map(row => row.claimId)).size !== assets.length) {
+      throw new Error(`Incomplete runtime trace: ${sample.id}`)
+    }
+    for (const row of sample.rows) {
+      if (catalog.get(row.claimId)?.chapter !== row.chapter) throw new Error(`Unknown asset/chapter: ${row.claimId}`)
+      if (row.lead && row.reason !== 'selected') throw new Error(`Unselected lead: ${row.claimId}`)
+    }
+  }
+  const scopes = [null, ...new Set(assets.map(asset => asset.chapter).sort())]
+  return {
+    qualityEligible: false as const,
+    sampleOrder: samples.map(sample => sample.id),
+    groups: scopes.flatMap(chapter => (['lead', 'section'] as const).map(role => {
+      const allAssetCount = assets.filter(asset => chapter === null || asset.chapter === chapter).length
+      const selected = new Set<string>(), eligible = new Set<string>(), titles: string[] = []
+      const coverageCurve = samples.map((sample, index) => {
+        for (const row of sample.rows) {
+          if (chapter !== null && row.chapter !== chapter) continue
+          if (row.reason === 'selected' || row.reason === 'eligible_not_selected') eligible.add(row.claimId)
+          if (row.reason === 'selected' && (role === 'section' || row.lead)) {
+            selected.add(row.claimId)
+            titles.push(catalog.get(row.claimId)!.typeLabel)
+          }
+        }
+        return {
+          sampleCount: index + 1, selectedAssetCount: selected.size,
+          eligibleAssetCount: eligible.size, allAssetCount,
+          eligibleCoverage: eligible.size ? selected.size / eligible.size : null,
+          allAssetCoverage: allAssetCount ? selected.size / allAssetCount : null,
+        }
+      })
+      return { chapter, role, allAssetCount, distribution: measureTitleDistribution(titles), coverageCurve }
+    })),
   }
 }

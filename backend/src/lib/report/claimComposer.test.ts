@@ -49,3 +49,10 @@ test('Aケースの具体Claimは固有triggerなしの汎用スコア補完へ�
   assert.ok(sourceRefs.length > 0)
   assert.ok(sourceRefs.includes('claim-source:direct'))
 })
+
+test('reverse career/romance gap never matches forward career-first prose', () => {
+  const asset = CLAIM_ASSETS.find(asset => asset.trigger.kind === 'gap' && asset.trigger.gapKey === 'gap:career-romantic')!
+  assert.ok(asset)
+  const reverse = { key: 'gap:career-romantic:aligned' } as ReportFindingV2
+  assert.equal(claimTriggerMatchesFinding(asset, reverse), false)
+})
