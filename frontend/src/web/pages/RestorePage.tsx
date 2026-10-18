@@ -4,6 +4,7 @@ import { NatureImage, Note, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
 import { useApp } from '../state/AppState'
 import { safeReturnTo } from '../../lib/safeReturnTo'
+import { EMAIL_OTP_LENGTH } from '../../lib/emailOtpConfig'
 
 /** 別の端末で使っていた本棚を開く（ログイン画面の代わり。パスワードなし） */
 export function RestorePage() {
@@ -19,7 +20,7 @@ export function RestorePage() {
       <NatureImage src={images.welcomeSky} alt="雲の上に浮かぶ月" className="h-[160px]" position="center 20%" />
       <section className="flex flex-col gap-3 px-6 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">別の端末から引き継ぐ</h1>
-        <p className="m-0 text-sm leading-[1.85] text-fl-body">引き継ぎ用に登録したメールアドレスを入れてください。届いた6桁のコードを入れると、同じ本棚と残りの冊数がこの端末でも開けます。</p>
+        <p className="m-0 text-sm leading-[1.85] text-fl-body">引き継ぎ用に登録したメールアドレスを入れてください。届いた{EMAIL_OTP_LENGTH}桁のコードを入れると、同じ本棚と残りの冊数がこの端末でも開けます。</p>
       </section>
       <section className="flex flex-col gap-4 px-6 pb-12 pt-4">
         {session === 'anonymous' && (

@@ -8,7 +8,7 @@
 - 本番ブランチへ取り込んだ後、そのブランチにそろっている承認済みiOSソースとともにbackendで `npm ci` → `npm test` を実行し、**全件成功（fail=0）**を必ず確認する。Web作業ブランチの既存15件は依存修正前後で完全一致したiOS版の不整合だが、取り込みだけで必ず直るとは仮定しない。残る場合は公開を止めて版・契約を調査し、iOSを書き換えたりテストをskip・緩和したりして通さない。モックテストの成功では代替不可。
 - 開発依存の脆弱性9件は利用範囲と残存リスクを記録し、ユーザー判断で公開後の移行対象とする。`postlaunch-dependency-work.md` に従い追跡する。実行時依存の新しい指摘まで同じ扱いにしない。
 - 本番API・生成ワーカー・メールの準備、実AI認証の確認、露出した旧キーの失効状況を運用担当者が確認する。CAPTCHAは以下の方針に従い本番で有効化しない。秘密値を作業記録へ貼らない。
-- **本番のOTP有効期限（Email OTP Expiration）は変更しない。** 現在の1時間（3600秒）を維持し、Web画面・メール本文も1時間と案内する。これはConfirm signup等の既存iOSのメールにも効く共有設定なので、Webのために10分へ短縮しない。担当者が現行値を読み取り確認し、想定と違う場合は先に相談する。Magic Link/Change Email Addressの本文だけが変更対象で、Confirm signupやReset Password等は変更しない。iOS側の利用確認は `ios-auth-email-impact-20261018.md` を参照。stagingは10分設定のまま、中止中のため変更しない。
+- **本番のOTP桁数・有効期限は変更しない。** 2026-10-18に読み取り確認した8桁・1時間（3600秒）を維持する。本番用メール本文は1時間、Web画面は「メールに記載された有効期限内」と案内する。これはConfirm signup等の既存iOSのメールにも効く共有設定なので、Webのために6桁・10分へ変更しない。公開時に現行値が異なれば先に相談する。Magic Link/Change Email Addressの本文だけが変更対象で、Confirm signupやReset Password等は変更しない。iOS側の利用確認は `ios-auth-email-impact-20261018.md` を参照。stagingは6桁・10分設定のまま、中止中のため変更しない。
 - Vercel/Render/ワーカーの現在の成功デプロイIDとコミット、旧環境変数（値は秘密管理先のみ）、本番バックアップと復元責任者を記録する。Webブランチのコミットを明示して差分レビューする。
 - 現在本番とWebブランチでは鑑定エンジン設定が異なる。既存の本番設定をWebの値で丸ごと置き換えない。
 - テストは専用アカウント1つだけ。実ユーザーのUIDやApple会員状態を使わない。担当者、日時、テストUID、注文ID、operationId、bookId、前後の冊数を記録（トークン・質問本文など個人情報は記録しない）。
@@ -42,6 +42,7 @@ and conname in ('ai_book_grants_source_check', 'ai_book_grants_environment_check
 
 ## 2. 環境変数と反映
 
+- Webの `VITE_EMAIL_OTP_LENGTH` は本番で `8`（未設定も8）。本番SupabaseのOTP桁数8・有効期限3600秒は変更しない。staging再開時だけ `6` を設定して再ビルドする。今回は設定・デプロイしない。VITE値を変更しただけでは既存ビルドには反映されない。
 - Vercelの本番環境で `VITE_PAYMENTS_ENABLED=false` を設定し、再ビルドする。`VITE_TURNSTILE_SITE_KEY` は未設定にする。VITE値はビルド時埋め込みのため、保存のみでは反映されない。公開Supabase URL・公開キー・API URL以外の秘密値をフロントへ入れない。手順0の実装確認も必須。
 - Renderの本番APIで `FREE_QUESTION_LIMIT=0` を設定し、保存後に再デプロイ。通常の読みもの質問を無料提供しない設定。ブック質問の月間枠はPREMIUM_MONTHLY_QUESTION_LIMITとAI_CHAT_MONTHLY_GLOBAL_LIMITを使うので、既存値を保持し0でないことを確認する。
 - `FRONTEND_URL` は既存の許可オリジンを残し、新ドメインの `https://ホスト名` をカンマ区切りで追加する。パス・末尾スラッシュ・ワイルドカードは入れない。APIとWebのURLを取り違えない。
@@ -54,6 +55,11 @@ and conname in ('ai_book_grants_source_check', 'ai_book_grants_environment_check
 
 ### 本番CAPTCHAと匿名サインインの運用方針（設定は未実施）
 
+- 2026-10-18の本番読み取り確認では **Allow anonymous sign-ins=OFF**。公開時にはONが必要だが、まだ変更しない。事前のRLS確認結果・全17ポリシーと実効権限は `production-anonymous-rls-audit-20261018.md` を参照。`authenticated` は匿名ユーザーにも付くため、ロール名だけを安全の根拠にしない。
+- 将来の承認済み公開担当者は、まず監査SQLを読み取り再実行し、全体許可・所有者条件の欠落・RLS無効・課金情報への書込権限が増えていないことを確認する。RPC/バックエンドの認可・AI上限と専用アカウントでの所有者間分離も確認し、未解決ならONにしない。
+- 確認が通ったら現在の設定を記録し、**先に**下記のAnonymous sign-ins制限を10回/IP/時間へ設定する。その後 Dashboard → Authentication → Sign In / Providers → **Allow anonymous sign-insだけをON** → Save changes。Confirm email、manual linking、Emailの桁数・期限、OAuth、CAPTCHAは同時変更しない。セキュリティ上の権限拡大なので実行直前に承認を得る。本書作成では一切変更していない。
+- 成功：専用Webアカウントで匿名ログインでき、`is_anonymous=true`、所有者はそのUIDだけ、他UIDの読みもの等を取得・更新できない。既存iOSのメール/Apple/Googleログインを確認する。10回枠は画面の保存値で確認し、本番で大量アカウントを作って枯渇させない。
+- 失敗時：Webの新規利用を停止し、匿名スイッチを記録したOFFへ戻す。**OFFは新規匿名ログインを止めるもので、発行済みセッション・データの失効や削除にはならない。** 既存匿名セッションの対処は対象を特定し別途承認する。rate limitは記録値へ戻す。他の認証/iOS機能やRLSは一括変更しない。
 - **既存iOSがCAPTCHAトークン未対応という運用前提のため、本番SupabaseのCAPTCHAを有効にしない。** プロジェクトの共通設定であり、Webだけのために有効化すると対象の既存認証フローに影響する。既存の設定を無断でオンにもオフにもしない。すでにオンの場合は想定と異なるため担当者へ確認する。[Supabase CAPTCHA公式説明](https://supabase.com/docs/guides/auth/auth-captcha)
 - Turnstileコードは将来対応用に残す。`VITE_TURNSTILE_SITE_KEY` 未設定ならスクリプト読込・widget生成・トークン要求を行わず、通常の匿名認証/メールコード要求を継続する。ローカルの未設定テストとビルドは確認済みだが、実メール配送や実本番認証の受入確認は別途必要。
 - 匿名ユーザー作成の初期推奨は **1 IPあたり10回/時間**。これはFATE LAB向けの控えめな運用提案であり、Supabaseの公式既定値は30回/時間。API全体や既存ユーザーのトークン更新を10回にする設定ではない。[Supabase Rate Limits](https://supabase.com/docs/guides/auth/rate-limits)
@@ -63,7 +69,7 @@ and conname in ('ai_book_grants_source_check', 'ai_book_grants_environment_check
 
 ## 3. テストアカウントと1冊付与
 
-Webの通常導線で専用アカウントを1つ作り、出生情報を保存する。テスト用メールを登録し、実メールの6桁コードで確認する。UIとDBの所有者UIDが同じであることを運用担当が確認する。一般公開画面やチャットへUIDやトークンを貼らない。
+Webの通常導線で専用アカウントを1つ作り、出生情報を保存する。テスト用メールを登録し、実メールの8桁コードで確認する。UIとDBの所有者UIDが同じであることを運用担当が確認する。一般公開画面やチャットへUIDやトークンを貼らない。
 
 初期値 `/api/books/status` のenabled、remaining、memberRemaining、purchasedRemainingを確認。**非会員かつremaining=0の専用アカウント**を使う。既存会員状態を変更して条件を作らない。
 

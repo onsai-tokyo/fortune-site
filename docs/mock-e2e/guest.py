@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 import os
 B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173'); errs=[]
+OTP_LENGTH=int(os.environ.get('MOCK_E2E_OTP_LENGTH', '8'))
 def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page(); pg.on('pageerror',lambda e:errs.append(str(e)))
@@ -27,7 +28,7 @@ with sync_playwright() as p:
     ok(pg.get_by_text('5冊セットを追加しました').count()==1,'purchase done')
     ok(pg.get_by_text('別の端末でも使えるようにする').count()==1,'link offer after purchase')
     ok(pg.input_value('#link-email')=='me@example.com','prefilled with receipt email')
-    pg.get_by_role('button',name='確認コードを送る').click(); pg.fill('#link-code','123456'); pg.get_by_role('button',name='登録する').click(); pg.wait_for_timeout(200)
+    pg.get_by_role('button',name='確認コードを送る').click(); pg.fill('#link-code','1234567890'[:OTP_LENGTH]); pg.get_by_role('button',name='登録する').click(); pg.wait_for_timeout(200)
     ok(pg.get_by_text('引き継ぎ用に登録しました').count()==1,'email linked')
     nav('/settings'); ok(pg.get_by_text('me@example.com').count()>=1,'settings shows linked email')
     # book questions
@@ -40,7 +41,7 @@ with sync_playwright() as p:
     # restore on another device
     pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)
     pg2.fill('#restore-email','me@example.com'); pg2.get_by_role('button',name='コードを送る').click(); pg2.fill('#restore-code','12'); 
-    ok(pg2.get_by_role('button',name='引き継ぐ').is_disabled(),'needs 6 digits'); pg2.fill('#restore-code','654321'); pg2.get_by_role('button',name='引き継ぐ').click(); pg2.wait_for_timeout(300)
+    ok(pg2.get_by_role('button',name='引き継ぐ').is_disabled(),f'needs {OTP_LENGTH} digits'); pg2.fill('#restore-code','0987654321'[:OTP_LENGTH]); pg2.get_by_role('button',name='引き継ぐ').click(); pg2.wait_for_timeout(300)
     ok('/books' in pg2.url,'restored to bookshelf '+pg2.url)
     pg2.close()
     # anonymous settings warning

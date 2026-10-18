@@ -23,7 +23,7 @@ with sync_playwright() as p:
     # Restore consumer with a protocol-relative target.
     nav('/restore?returnTo=' + quote('//evil.invalid', safe=''))
     page.fill('#restore-email', 'synthetic@example.invalid'); page.get_by_role('button', name='コードを送る').click()
-    page.fill('#restore-code', '123456'); page.get_by_role('button', name='引き継ぐ', exact=True).click()
+    page.fill('#restore-code', '1234567890'[:int(os.environ.get('MOCK_E2E_OTP_LENGTH', '8'))]); page.get_by_role('button', name='引き継ぐ', exact=True).click()
     page.wait_for_url(B + '/books')
     # Legitimate app deep link and query remain available after editing birth info.
     nav('/welcome?returnTo=' + quote('/compose?source=you-2026', safe=''))

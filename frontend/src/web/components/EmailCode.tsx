@@ -2,17 +2,19 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button, Field } from './ui'
 import { supabase } from '../../lib/supabase'
 import { requestCaptchaToken } from '../../lib/turnstile'
+import { isEmailOtp } from '../../lib/emailOtp'
+import { EMAIL_OTP_LENGTH } from '../../lib/emailOtpConfig'
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 
 /**
- * メールに届く6桁のコードで本人確認する入力（パスワードなし）。
+ * メールに届く環境別の桁数のコードで本人確認する入力（パスワードなし）。
  * - 引き継ぎの設定（匿名アカウントにメールをひも付ける）
  *     本番：supabase.auth.updateUser({ email }) → verifyOtp({ email, token, type: 'email_change' })
  * - 別の端末からの引き継ぎ（ひも付け済みアカウントを開く）
  *     本番：supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, captchaToken } })
  *           → verifyOtp({ email, token, type: 'email' })
- * Supabaseのメールテンプレートで {{ .Token }}（6桁のコード）を本文に入れておくこと。
+ * Supabaseのメールテンプレートで {{ .Token }} を本文に入れておくこと。
  */
 export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerified, idPrefix }: {
   initialEmail?: string
@@ -59,8 +61,8 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
 
   async function verify(e: FormEvent) {
     e.preventDefault()
-    // 画面確認用：6桁なら通す。本番はサーバーの判定（期限切れ・間違い）をそのまま表示する
-    if (!/^\d{6}$/.test(code)) { setError('メールに届いた6桁の数字を入力してください。'); return }
+    // 桁数だけをローカル確認し、本番の正当性・期限はSupabaseで検証する。
+    if (!isEmailOtp(code, EMAIL_OTP_LENGTH)) { setError(`メールに届いた${EMAIL_OTP_LENGTH}桁の数字を入力してください。`); return }
     setError(null)
     if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
       const result = await supabase.auth.verifyOtp({ email: email.trim(), token: code, type: idPrefix === 'link' ? 'email_change' : 'email' })
@@ -82,12 +84,12 @@ export function EmailCode({ initialEmail = '', sendLabel, verifyLabel, onVerifie
 
   return (
     <form onSubmit={verify} noValidate className="flex flex-col gap-3">
-      <p className="m-0 text-sm leading-[1.85] text-fl-body"><strong className="font-medium text-fl-ink">{email}</strong> に6桁のコードを送りました。1時間以内に入力してください。届かない場合は迷惑メールフォルダもご確認ください。</p>
-      <Field ref={codeRef} id={`${idPrefix}-code`} label="確認コード（6桁）" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="123456"
+      <p className="m-0 text-sm leading-[1.85] text-fl-body"><strong className="font-medium text-fl-ink">{email}</strong> に{EMAIL_OTP_LENGTH}桁のコードを送りました。メールに記載された有効期限内に入力してください。届かない場合は迷惑メールフォルダもご確認ください。</p>
+      <Field ref={codeRef} id={`${idPrefix}-code`} label={`確認コード（${EMAIL_OTP_LENGTH}桁）`} inputMode="numeric" autoComplete="one-time-code" maxLength={EMAIL_OTP_LENGTH} placeholder={'1234567890'.slice(0, EMAIL_OTP_LENGTH)}
         value={code} onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setError(null) }}
         className="tracking-[0.4em]" />
       {error && <p role="alert" className="m-0 text-[13px] text-fl-danger">{error}</p>}
-      <Button type="submit" disabled={code.length !== 6}>{verifyLabel}</Button>
+      <Button type="submit" disabled={!isEmailOtp(code, EMAIL_OTP_LENGTH)}>{verifyLabel}</Button>
       <div className="flex flex-wrap justify-between gap-x-4 text-[13px]">
         <button type="button" onClick={() => { setStep('email'); setError(null) }} className="flex min-h-[44px] items-center text-fl-body">メールアドレスを直す</button>
         <button type="button" disabled={cooldown > 0 || sending} onClick={() => send()} className="flex min-h-[44px] items-center text-fl-body disabled:text-fl-muted">

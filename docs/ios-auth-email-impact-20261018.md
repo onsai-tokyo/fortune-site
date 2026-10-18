@@ -1,5 +1,7 @@
 # iOSの認証メール利用確認（2026-10-18・読み取りのみ）
 
+追記：その後、同日の本番Dashboard読み取りで **OTP length=8 / expiration=3600秒** と確認した。Web側は `VITE_EMAIL_OTP_LENGTH`（未設定8、staging用6）に対応し、画面は「メールに記載された有効期限内」、本番メール案は8桁・1時間・リンクなしへ更新した。下記の「6桁」「設定画面未確認」は当初調査時の記録であり、現在の設定・実装を表さない。共有設定とConfirm signup、iOSコードは変更していない。
+
 ## 確認した版
 
 1. GitHub APIで確認時点のmain HEADを取得し、**79da2705966908e91bf49004fad89fbc9bca9837** と特定。このコミットのGitオブジェクトを取得し、全iOS Swiftソースをgit grepで読み取り確認した。ブランチの移動・checkout・pushはしていない。

@@ -15,6 +15,8 @@ python3 crawl.py     # 6つの状態で全リンクをたどり、エラー・�
 
 `OK` / `FAIL` が1行ずつ出る。最後に `pageerrors []` なら画面のエラーなし。
 
+OTPは未設定ビルドで8桁。staging相当は `VITE_EMAIL_OTP_LENGTH=6 npm run build` で別outDirへビルドし、テストにも `MOCK_E2E_OTP_LENGTH=6` を渡す（guest / return_to / email_otpが対応）。`email_otp.py` は案内・ラベル・入力上限・数字フィルター・不正桁数のエラー・先頭ゼロ・引き継ぎ成功をローカル見本で検証する。本番のメール配送やサーバーでのOTP照合を代替しない。
+
 既存プレビューを止めずに別ポートで確認する場合、全6本で
 `MOCK_E2E_BASE_URL=https://localhost:4175 python3 guest.py` のように指定できる。
 自己署名証明書を許容するのはローカル画面テストのブラウザだけで、本番設定には使わない。
