@@ -2,6 +2,7 @@ import {productEventsRouter} from './routes/productEvents.js'
 import {readingAccessRouter} from './routes/readingAccess.js'
 import { timelineRouter } from './routes/timeline.js'
 import { aiBooksRouter } from './routes/aiBooks.js'
+import { webRouter } from './routes/web.js'
 import { coupleTimelineRouter } from './routes/coupleTimeline.js'
 import { config } from 'dotenv'
 config({ override: true })
@@ -129,6 +130,7 @@ app.use('/api/report', reportRouter)
 app.use('/api/analyze', analyzeRouter)
 app.use('/api/preview', previewRouter)
 app.use('/api/calc', calcRouter)
+app.use('/api/web', webRouter)
 app.use('/api/books', aiBooksRouter)
 app.use('/api/product-events', productEventsRouter)
 app.use('/api/timeline', timelineRouter)

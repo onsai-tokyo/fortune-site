@@ -1,0 +1,30 @@
+from playwright.sync_api import sync_playwright
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173')
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page()
+    pg.on('pageerror',lambda e:errs.append(str(e)))
+    def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
+    def nav(path):  # client-side navigation, keeps mock state
+        pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(350)
+    pg.goto(B+'/you'); pg.wait_for_timeout(500)
+    pg.get_by_role('link',name='人との距離').click(); pg.wait_for_timeout(300)
+    ok('/you/chapters/distance' in pg.url and pg.get_by_role('heading',name='人との距離').count()>0,'chapter row opens chapter '+pg.url)
+    ok(pg.get_by_role('button',name='保存を取り消す').count()==1,'chapter distance shows as saved')
+    pg.get_by_role('link',name='この章について相談する').click(); pg.wait_for_timeout(300)
+    ok(pg.get_by_text('性格の章').count()>0,'compose source = chapter')
+    nav('/you/years/2025'); pg.get_by_role('button',name='本棚に保存する').click()
+    nav('/books/saved')
+    ok(pg.get_by_text('保存した読みもの 5件').count()==1,'saved count = 5')
+    ok(pg.get_by_text('2025年').count()>0 or pg.get_by_text('土台を固め直す').count()>0,'2025 on shelf')
+    nav('/books'); pg.wait_for_timeout(7000)
+    ok(pg.get_by_text('作成中').count()==0,'seeded generating book delivered')
+    nav('/couple/p-misaki?year=2024'); pg.get_by_role('button',name='本棚に保存する').click(); pg.wait_for_timeout(200)
+    ok(pg.get_by_role('button',name='保存を取り消す').count()==1,'couple year bookmark toggles')
+    nav('/credits/return?plan=pack5&status=done')
+    t=pg.get_by_text('いまの残りは').inner_text(); ok('7冊' in t,'done shows credits+5: '+t)
+    pg.goto(B+'/demo'); pg.wait_for_timeout(300); pg.get_by_role('button',name='トップ（はじめて来た人）').click(); pg.wait_for_timeout(200)
+    nav('/books/saved'); ok('/welcome?returnTo=%2Fbooks%2Fsaved' in pg.url,'no profile → birth input with returnTo '+pg.url)
+    b.close()
+print('pageerrors:',errs)

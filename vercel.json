@@ -1,12 +1,128 @@
 {
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://fortune-site-iuzo.onrender.com/api/$1"
+      "source": "/contact",
+      "destination": "/support",
+      "permanent": false
     },
     {
-      "source": "/health",
-      "destination": "https://fortune-site-iuzo.onrender.com/health"
+      "source": "/tokushohou",
+      "destination": "/tokushoho",
+      "permanent": true
+    },
+    {
+      "source": "/lp",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/reading/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/r/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/s/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/chat/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/mypage/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/me/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/analyze/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/result/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/feature/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/payment/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/history/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/compat-report/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/guides/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/tools/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/about/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/methodology/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/editorial-policy/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/press/:path*",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/:path*"
+    },
+    {
+      "source": "/api/apple/notifications",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/apple/notifications"
+    },
+    {
+      "source": "/((?!api/|assets/|images/).*)",
+      "destination": "/index.html"
     }
   ]
 }

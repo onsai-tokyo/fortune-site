@@ -1,0 +1,35 @@
+from playwright.sync_api import sync_playwright
+import os
+B=os.environ.get('MOCK_E2E_BASE_URL', 'https://localhost:4173'); errs=[]
+def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_context(ignore_https_errors=True, viewport={'width':390,'height':844}).new_page(); pg.on('pageerror',lambda e:errs.append(str(e)))
+    def nav(path): pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(350)
+    pg.goto(B+'/compose'); pg.wait_for_timeout(500)
+    chips=[c.inner_text() for c in pg.locator('[aria-labelledby=theme-label] button').all()]
+    ok(chips==['恋愛・関係','仕事','人間関係','時期の判断','その他'],'themes = server BOOK_THEMES '+str(chips))
+    btn=pg.get_by_role('button',name='一冊つくる（残り2冊）')
+    pg.fill('#question','😀'*19); ok(pg.get_by_text('あと1文字以上').count()==1,'emoji counted as 1 char each (19)')
+    pg.fill('#question','最近体調が悪く、病気かどうか占いで診断してほしいです。どうでしょうか。'); pg.get_by_role('checkbox').check()
+    ok(pg.get_by_role('alert').filter(has_text='健康').count()==1 and btn.is_disabled(),'policy words blocked like server')
+    pg.fill('#question','仕事で頼まれごとを引き受けすぎてしまいます。自分のペースを守るにはどうしたらよいでしょうか。')
+    ok(btn.is_enabled(),'valid question + consent enables create')
+    pg.fill('#question','あ'*401); ok(btn.is_disabled() and pg.get_by_text('1文字減らすと').count()==1,'over 400 blocked with message')
+    pg.fill('#question','仕事で頼まれごとを引き受けすぎてしまいます。自分のペースを守るにはどうしたらよいでしょうか。'); btn.click(); pg.wait_for_timeout(300)
+    nav('/compose'); ok(pg.get_by_role('checkbox').count()==0 and pg.get_by_text('同意済み').count()==1,'consent remembered after first agreement')
+    nav('/you/chapters/core'); pg.get_by_role('link',name='この章について相談する').click(); pg.wait_for_timeout(300)
+    ok('「あなたの芯」について、私の状況に合わせて詳しく知りたいです。' in pg.input_value('#question'),'prefill question like iOS')
+    nav('/couple/new')
+    opts=pg.locator('#prel option').all_inner_texts(); ok(len(opts)==17,'17 relationship options')
+    ok(pg.locator('#pplace option').count()==47,'47 prefectures (no 海外)')
+    pg.fill('#pname','けん'); pg.fill('#pbirth','1998-04-01'); pg.fill('#pmet','1993')
+    pg.get_by_role('button',name='みさきと入れ替えて登録').click(); pg.wait_for_timeout(200)
+    ok(pg.get_by_role('alert').filter(has_text='ふたりが生まれた年以降').count()==1,'met year before birth rejected')
+    pg.fill('#pmet','2020'); pg.select_option('#prel','親友'); pg.get_by_role('button',name='男性').click()
+    pg.get_by_role('button',name='みさきと入れ替えて登録').click(); pg.wait_for_timeout(300)
+    ok('/couple/p-' in pg.url and pg.get_by_text('親友').count()>0,'partner registered with label '+pg.url)
+    pg.get_by_role('link',name='この年について相談する').click(); pg.wait_for_timeout(300)
+    ok(pg.locator('[aria-labelledby=theme-label] button[aria-pressed=true]').inner_text()=='人間関係','friend partner → 人間関係 theme')
+
+    b.close()
+print('pageerrors',errs)

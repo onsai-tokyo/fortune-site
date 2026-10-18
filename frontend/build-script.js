@@ -717,5 +717,5 @@ writePage('tools', toolIndexHtml());
 const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushohou'];
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => `  <url><loc>${SITE_URL}/${route}</loc><lastmod>${UPDATED}</lastmod><changefreq>${route === '' || route.endsWith('/') ? 'weekly' : 'monthly'}</changefreq><priority>${route === '' ? '1.0' : route === 'tools/shichu-suimei-calculator' ? '0.9' : route.startsWith('guides/angel-number') ? '0.8' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`;
 fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml);
-fs.copyFileSync(topPagePath, indexPath);
+// Keep Vite's WebApp entry at /. The legacy landing page remains at /lp.html.
 console.log(`Generated SEO HTML for /, ${appRoutes.length} app routes, ${guides.length} guides, ${tools.length} tools, and ${infoPages.length} information pages`);
