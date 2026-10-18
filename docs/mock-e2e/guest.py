@@ -32,7 +32,7 @@ with sync_playwright() as p:
     ok(pg.get_by_text('引き継ぎ用に登録しました').count()==1,'email linked')
     nav('/settings'); ok(pg.get_by_text('me@example.com').count()>=1,'settings shows linked email')
     # book questions
-    nav('/books/b-distance'); 
+    nav('/books/b-distance');
     nav('/demo'); pg.get_by_role('button',name='ブックへの質問').click(); pg.wait_for_timeout(400)
     ok(pg.get_by_text('あと2回').count()>=1,'book has 2 questions')
     pg.get_by_role('checkbox').check(); pg.fill('#ask','この時期はいつ頃ですか？'); pg.get_by_role('button',name='送信').click(); pg.wait_for_timeout(1700)
@@ -40,7 +40,7 @@ with sync_playwright() as p:
     nav('/you/years/2026'); ok(pg.get_by_role('link',name='この読みものについて質問する').count()==0,'no free reading questions')
     # restore on another device
     pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)
-    pg2.fill('#restore-email','me@example.com'); pg2.get_by_role('button',name='コードを送る').click(); pg2.fill('#restore-code','12'); 
+    pg2.fill('#restore-email','me@example.com'); pg2.get_by_role('button',name='コードを送る').click(); pg2.fill('#restore-code','12');
     ok(pg2.get_by_role('button',name='引き継ぐ').is_disabled(),f'needs {OTP_LENGTH} digits'); pg2.fill('#restore-code','0987654321'[:OTP_LENGTH]); pg2.get_by_role('button',name='引き継ぐ').click(); pg2.wait_for_timeout(300)
     ok('/books' in pg2.url,'restored to bookshelf '+pg2.url)
     pg2.close()

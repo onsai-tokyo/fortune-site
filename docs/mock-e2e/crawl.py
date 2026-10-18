@@ -46,7 +46,7 @@ with sync_playwright() as p:
             for n in nolabel: issues.append(f'[{key}] {final} unlabeled control {n}')
             links=pg.evaluate("[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href'))")
             for l in links:
-                if l.startswith('/') and not l.startswith('//'): 
+                if l.startswith('/') and not l.startswith('//'):
                     if l not in seen: queue.append(l)
         for e in errs: issues.append(f'[{key}] {e}')
         print(key,'visited',len(seen))

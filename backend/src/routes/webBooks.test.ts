@@ -66,6 +66,7 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     assert.equal(process.env.FREE_QUESTION_LIMIT,'2')
     assert.ok(!calls.includes('app_store_subscriptions'))
     assert.ok(!calls.includes('ai_book_sync_trial'))
+    assert.ok(!calls.includes('ai_book_sync_member'),'Web orders must not mutate iOS member grants')
   } finally {
     server.closeAllConnections(); await new Promise<void>(resolve=>server.close(()=>resolve()))
     globalThis.fetch=originalFetch

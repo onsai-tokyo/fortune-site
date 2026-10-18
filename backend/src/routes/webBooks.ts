@@ -172,11 +172,9 @@ webBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
       res.json({book:publicBook(old)}); return
     }
     const {question,sources,row}=await prepare(req)
-    await bookRPC('ai_book_sync_member',{p_user:req.userId!})
     const id=await bookRPC('ai_book_order_web',{p_user:req.userId!,p_operation:req.body.operationId,p_source:row.id,p_target:row.title,p_theme:req.body.theme,p_question:question,p_snapshot:sources})
     const result=await getSupabaseAdmin().from('ai_books').select(projection).eq('user_id',req.userId!).eq('id',id).single()
     if(result.error) throw result.error
     res.status(201).json({book:publicBook(result.data)})
   } catch(e) {fail(res,e)}
 })
-
