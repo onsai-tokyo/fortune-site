@@ -5,6 +5,7 @@ import { BackHeader, Button, Note, Page } from '../components/ui'
 import { EmailCode } from '../components/EmailCode'
 import { useApp } from '../state/AppState'
 import { remoteMode, paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { ACCOUNT_DELETE_FAILED, ACCOUNT_DELETE_AUTH_REQUIRED, ACCOUNT_DELETE_OWNER_CHANGED, ACCOUNT_DELETE_SIGNOUT_FAILED } from '../state/accountDeletion'
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -52,12 +53,32 @@ export function SettingsPage() {
   const { profile, partners, credits, forgetDevice, deleteAccount, aiConsented, session, email } = useApp()
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deletingRef = useRef(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
+  const closeConfirmation = () => { if (!deletingRef.current) setConfirming(false) }
+  const confirmDeletion = async () => {
+    if (deletingRef.current) return
+    deletingRef.current = true
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteAccount()
+      navigate('/', { replace: true })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      setDeleteError([ACCOUNT_DELETE_AUTH_REQUIRED, ACCOUNT_DELETE_OWNER_CHANGED, ACCOUNT_DELETE_SIGNOUT_FAILED].includes(message) ? message : ACCOUNT_DELETE_FAILED)
+    } finally {
+      deletingRef.current = false
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     if (!confirming) return
     cancelRef.current?.focus()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirming(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !deletingRef.current) setConfirming(false) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [confirming])
@@ -103,17 +124,18 @@ export function SettingsPage() {
         ) : (
           <Note>いまはこの端末だけで使っています。ブラウザのデータを消したり機種を変えたりすると、本棚と残りの冊数を開けなくなります。<Link to="/settings/link" className="underline">引き継ぎ用のメールを登録</Link>しておくと安心です。</Note>
         )}
-        <Button variant="dangerText" onClick={() => setConfirming(true)}>退会する（アカウントを削除）</Button>
+        <Button variant="dangerText" disabled={deleting} onClick={() => { setDeleteError(null); setConfirming(true) }}>退会する（アカウントを削除）</Button>
       </section>
 
       {confirming && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-fl-ink/45" onClick={() => setConfirming(false)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="del-title" onClick={e => e.stopPropagation()}
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-fl-ink/45" onClick={closeConfirmation}>
+          <div role="dialog" aria-modal="true" aria-busy={deleting} aria-labelledby="del-title" onClick={e => e.stopPropagation()}
             className="flex w-full max-w-app flex-col gap-3.5 rounded-t-[20px] bg-fl-canvas px-5 pb-7 pt-6">
             <h2 id="del-title" className="m-0 text-lg font-medium">退会しますか？</h2>
             <p className="m-0 text-sm leading-[1.85] text-fl-body">読みもの、登録した相手、相談のブック、残りの冊数がすべて削除され、元に戻せません。残っている冊数分の返金はできません。</p>
-            <Button variant="danger" onClick={() => startTransition(() => { deleteAccount(); navigate('/') })}>すべて削除して退会する</Button>
-            <Button ref={cancelRef} variant="ghost" onClick={() => setConfirming(false)}>やめる</Button>
+            {deleteError && <p role="alert" className="m-0 text-sm leading-[1.85] text-fl-danger">{deleteError}</p>}
+            <Button variant="danger" disabled={deleting} onClick={() => { void confirmDeletion() }}>{deleting ? '退会処理中です…' : 'すべて削除して退会する'}</Button>
+            <Button ref={cancelRef} variant="ghost" disabled={deleting} onClick={closeConfirmation}>やめる</Button>
           </div>
         </div>
       )}

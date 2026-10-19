@@ -1,0 +1,28 @@
+{
+  "status": "LOCAL_FIX_VERIFIED_NOT_DEPLOYED",
+  "baseCommit": "d58aefa84d77e5bb08ff7c943f1cd2c498699454",
+  "branch": "codex/fatelab-web-release-20261018",
+  "scope": "Web frontend only; no iOS, backend, SQL or production settings changed",
+  "changes": [
+    "Await confirmed server DELETE before local cleanup and navigation",
+    "Missing authentication, server rejection and lost response cannot imply successful deletion",
+    "Pending action disables duplicate submit, cancel and Escape dismissal",
+    "Account change prevents stale completion from signing out or clearing another owner",
+    "Local sign-out failure is distinguished from deletion failure; explicit retry skips an already confirmed DELETE",
+    "Successful cleanup removes only the deleted owner's draft and pending book/partner keys"
+  ],
+  "verification": {
+    "frontendUnit": { "passed": 107, "failed": 0, "newDeletionCases": 8 },
+    "backendNpmTest": { "passed": 535, "failed": 0 },
+    "frontendBuild": "PASS including TypeScript and SEO generation",
+    "backendBuild": "PASS",
+    "syntheticRemoteBuild": "PASS with mock.invalid and payments disabled",
+    "syntheticRemoteDeletion": { "passed": 4, "cases": ["204 success", "500 failure", "lost response", "owner change"] },
+    "originalMockE2E": { "passed": 6, "scripts": ["journey", "guest", "logic", "bugs", "probe3", "crawl"], "failures": 0 },
+    "crawl": { "visited": [33, 9, 36, 32, 33, 43], "issues": 0, "expectedRedirects": 4 },
+    "gitDiffCheck": "PASS"
+  },
+  "warnings": ["Existing Supabase static/dynamic import bundling warning"],
+  "testNote": "Initial owner-change fixture incorrectly expected the old dialog to survive the auth refresh. Corrected to verify the new account remains signed in and receives no logout or state cleanup. All four final cases passed twice.",
+  "productionAcceptance": "NOT_RUN; no new live account deletions or emails sent during this local repair"
+}

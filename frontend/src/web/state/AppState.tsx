@@ -11,6 +11,7 @@ import { canCreateWithCredits } from '../data/paymentPolicy'
 import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
 import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, type PartnerDraft, type PendingPartner } from './partnerDraft'
+import { createAccountDeletion } from './accountDeletion'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -83,7 +84,7 @@ interface Actions {
   cancelPendingCreate: () => void
   /** 支払い反映後に呼ぶ。待っている相談があればブックをつくって返す */
   startPendingBook: () => Book | null
-  deleteAccount: () => void
+  deleteAccount: () => Promise<void>
   applyDemo: (preset: DemoPreset) => void
 }
 
@@ -333,6 +334,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [deliverLater])
 
   const remoteToken = useCallback(async () => (await supabase.auth.getSession()).data.session?.access_token ?? null, [])
+
+  const deleteAccount = useMemo(() => createAccountDeletion({
+    remote: REMOTE,
+    currentOwner: () => remoteAuth.current.owner,
+    session: async () => {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
+      return data.session ? { owner: data.session.user.id, token: data.session.access_token } : null
+    },
+    remove: async accessToken => { await apiFetch('/api/reading/account', { method: 'DELETE', accessToken }) },
+    signOut: async () => {
+      // Only remove this browser's session after server-confirmed deletion.
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      if (error) throw error
+    },
+    clearLocal: owner => {
+      storeDraftQuestionForUser('', owner)
+      if (owner) {
+        try {
+          window.localStorage.removeItem(pendingPartnerKey(owner))
+          window.localStorage.removeItem(pendingBookKey(owner))
+        } catch { /* Server deletion has succeeded; storage may be unavailable. */ }
+      }
+      refreshSequence.current++
+      clearTimers()
+      setState(blankState())
+    },
+  }), [])
   const pollRemoteBook = useCallback(async (operationId: string, accessToken: string) => {
     for (let attempt = 0; attempt < 60; attempt++) {
       const result = await apiFetch<{ book: Record<string, unknown> | null }>(`/api/books/operations/${operationId}`, { accessToken })
@@ -619,15 +648,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (REMOTE) void remoteCreateBook(draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(prev => ({ ...prev, books: prev.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
       return created
     },
-    deleteAccount: () => {
-      void remoteToken().then(async accessToken => {
-        if (REMOTE && accessToken) { try { await apiFetch('/api/reading/account', { method: 'DELETE', accessToken }) } catch { /* local cleanup still proceeds */ } }
-        if (REMOTE) await supabase.auth.signOut()
-      })
-      storeDraftQuestionForUser('', undefined)
-      clearTimers()
-      setState(blankState())
-    },
+    deleteAccount,
     applyDemo: preset => {
       if (REMOTE) return
       clearTimers()
@@ -640,7 +661,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(base)
       base.books.filter(b => b.state === 'generating').forEach(b => deliverLater(b.id))
     },
-  }), [deliverLater, createBookNow, refreshRemote, remoteCreateBook, remoteToken])
+  }), [deliverLater, createBookNow, refreshRemote, remoteCreateBook, remoteToken, deleteAccount])
 
   const value = useMemo(() => ({ ...state, ...actions }), [state, actions])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
