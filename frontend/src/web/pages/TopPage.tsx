@@ -71,7 +71,7 @@ export function TopPage() {
               </div>
             </fieldset>
             <p className="m-0 text-xs leading-[1.8] text-fl-muted">
-              <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。18歳以上の方がご利用いただけます。
+              <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。AIの相談ブック作成・質問は18歳以上の方に限ります。
             </p>
             <Button type="submit" size="lg" disabled={!valid}>同意して、無料で読む</Button>
             <span className="text-center text-xs leading-[1.7] text-fl-muted">登録・ログインは不要です。出生時刻と出生地は、あとから足せます。</span>

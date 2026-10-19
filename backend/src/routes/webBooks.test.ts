@@ -4,6 +4,15 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import { webRouter } from './web.js'
 import { publicBook } from './webBooks.js'
+import { declaredAdult } from '../middleware/webAiAge.js'
+
+test('Web AI declared age is fail-closed and changes at the eighteenth birthday in Japan', () => {
+  assert.equal(declaredAdult('2008-10-19', new Date('2026-10-18T14:59:59Z')), false)
+  assert.equal(declaredAdult('2008-10-19', new Date('2026-10-18T15:00:00Z')), true)
+  for (const dob of [null, '', '2008-02-30', '2008-10-19junk', '2999-01-01']) {
+    assert.equal(declaredAdult(dob, new Date('2026-10-19T00:00:00Z')), false)
+  }
+})
 
 test('Web projections ignore failed/stale questions and retain main failure metadata', () => {
   const now = new Date().toISOString()
@@ -26,6 +35,8 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
   const question='仕事の進め方について自分の特徴を踏まえて詳しく知りたいです。'
   const row={id:book,source_id:source,operation_id:op,question,theme:'仕事',state:'queued',source_snapshot:[],funding_source:'web'}
   let orders=0, accepted=false
+  let selfBirth: unknown = '1987-05-12'
+  let ageLookupFailed = false
   const calls: string[]=[]
   globalThis.fetch=async(resource, init)=>{
     const url=new URL(String(resource))
@@ -39,8 +50,16 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
       assert.equal(url.searchParams.get('environment'),'eq.Web')
       value=[{source:'web',starts_at:'2020-01-01',expires_at:null,ai_book_credits:[{consumed_by:null,recovery_until:null}]}]
     }
-    if(name==='ai_books') value=accepted?row:null
-    if(name==='reading_conversations') value={id:source,title:'本人',kind:'self',calculated_data:{_structuredReport:{version:3,reportText:'本人',generator:'deterministic',generatorVersion:'fixture',cards:[1,2,3].map(n=>({id:`card-${n}`,kind:'essence',title:'仕事',summary:'本人の特徴',tags:[],pages:[],evidence:[]}))}}}
+    if(name==='ai_books') value=url.searchParams.has('limit')?(accepted?[row]:[]):accepted?row:null
+    if(name==='reading_conversations') {
+      if (url.searchParams.get('select') === 'birth_data') {
+        assert.equal(url.searchParams.get('user_id'), 'eq.'+user)
+        assert.equal(url.searchParams.get('or'), '(kind.eq.self,kind.eq.personal,kind.is.null)')
+        assert.equal(url.searchParams.get('limit'), '1')
+        if (ageLookupFailed) return new Response(JSON.stringify({message:'synthetic failure'}), {status:503,headers:{'content-type':'application/json'}})
+      }
+      value={id:source,title:'本人',kind:'self',birth_data:{birthDate:selfBirth},calculated_data:{_structuredReport:{version:3,reportText:'本人',generator:'deterministic',generatorVersion:'fixture',cards:[1,2,3].map(n=>({id:`card-${n}`,kind:'essence',title:'仕事',summary:'本人の特徴',tags:[],pages:[],evidence:[]}))}}}
+    }
     if(name==='ai_book_order_web'){
       const input = JSON.parse(String(init?.body))
       assert.equal(input.p_snapshot[0].id,'card-2')
@@ -67,6 +86,11 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     assert.equal((await call('/books',{...payload,focusCardId:'card-1'})).status,409)
     assert.equal(orders,1)
     assert.equal((await call('/reading/conversations/'+source+'/questions',{question})).status,403)
+    const beforePreview = calls.length
+    const previewQuestion = await call('/preview/question', { question, questionToken: 'synthetic-paid-token', birthDate: '1980-01-01' })
+    assert.equal(previewQuestion.status,403)
+    assert.equal((await previewQuestion.json()).code,'WEB_PREVIEW_QUESTIONS_DISABLED')
+    assert.equal(calls.length,beforePreview,'Web legacy question must stop before shared handler or storage calls')
     const pending=await call('/books/'+book+'/questions',{operationId:op,question})
     assert.equal(pending.status,409)
     assert.equal((await pending.json()).code,'BOOK_QUESTION_PENDING')
@@ -75,6 +99,23 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     assert.ok(!calls.includes('app_store_subscriptions'))
     assert.ok(!calls.includes('ai_book_sync_trial'))
     assert.ok(!calls.includes('ai_book_sync_member'),'Web orders must not mutate iOS member grants')
+    for (const birth of [`${new Date().getUTCFullYear()-17}-01-01`, `${new Date().getUTCFullYear()-15}-01-01`, null, '2008-02-30']) {
+      selfBirth = birth
+      for (const path of ['/books/validate', '/books', '/books/'+book+'/questions']) {
+        const before = calls.length
+        const blocked = await call(path, {...payload,birthDate:'1980-01-01',age:40})
+        assert.equal(blocked.status,403)
+        assert.equal((await blocked.json()).code,'WEB_AI_ADULT_ONLY')
+        assert.ok(!calls.slice(before).some(c => c.startsWith('ai_book_question_') || c==='ai_book_order_web'), 'blocked requests must not reserve credits/questions or call AI')
+      }
+      assert.equal((await call('/books')).status,200,'existing books remain readable')
+    }
+    ageLookupFailed = true
+    assert.equal((await call('/books/validate',payload)).status,503,'lookup failure must not grant access')
+    ageLookupFailed = false
+    selfBirth = '1987-05-12'
+    assert.equal((await call('/books',payload)).status,200,'adult retries remain idempotent')
+    assert.equal(orders,1)
   } finally {
     server.closeAllConnections(); await new Promise<void>(resolve=>server.close(()=>resolve()))
     globalThis.fetch=originalFetch

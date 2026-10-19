@@ -1,0 +1,16 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "status": "SAVED_IN_PRODUCTION_DASHBOARD",
+  "anonymous_sign_ins_enabled": true,
+  "anonymous_requests_per_hour_per_ip": 10,
+  "verification": "Providers saved, anonymous control enabled the rate field; Rate limits successfully updated; value 10 visible and save disabled. Reopened Providers and confirmed anonymous ON, other signup switches unchanged.",
+  "other_observed_user_signup_settings": {
+    "allow_new_users": true,
+    "allow_manual_linking": false,
+    "confirm_email": true
+  },
+  "captcha_otp_smtp_or_other_limits_modified": false,
+  "real_anonymous_signup_tested": false,
+  "rollback": "With per-action approval, turn Allow anonymous sign-ins OFF; restore rate 30 if desired while editable. Disabling sign-ins does not delete accounts or revoke existing sessions.",
+  "proof_images": ["anonymous-sign-ins-saved.jpg", "anonymous-rate-limit-saved.jpg"]
+}

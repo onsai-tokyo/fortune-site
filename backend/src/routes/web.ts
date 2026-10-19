@@ -4,7 +4,7 @@ import { getSupabaseUser } from '../lib/supabaseUser.js'
 import { readingRouter } from './reading.js'
 import { coupleTimelineRouter } from './coupleTimeline.js'
 import { partnersRouter } from './partners.js'
-import { previewRouter } from './preview.js'
+import { webPreviewRouter } from './webPreview.js'
 import { calcRouter } from './calc.js'
 import { webBooksRouter } from './webBooks.js'
 import { webReadingsRouter } from './webReadings.js'
@@ -32,5 +32,5 @@ webRouter.put('/reading/saves/:saveKey', async (req: AuthRequest, res) => {
 webRouter.post('/reading/conversations/:id/questions', (_req, res) => { res.status(403).json({code:'WEB_READING_QUESTIONS_DISABLED',error:'読みものへの無料質問はWeb版では提供していません。'}) })
 webRouter.use('/reading', webReadingsRouter, coupleTimelineRouter, readingRouter)
 webRouter.use('/partners', partnersRouter)
-webRouter.use('/preview', previewRouter)
+webRouter.use('/preview', webPreviewRouter)
 webRouter.use('/calc', calcRouter)

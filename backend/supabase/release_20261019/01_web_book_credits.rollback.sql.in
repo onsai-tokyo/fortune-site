@@ -1,0 +1,4 @@
+@HEADER_AND_BEGIN@
+-- Restore both deployed predicates verbatim; do not guess review/trial rules.
+@RESTORE_BODY@
+commit;

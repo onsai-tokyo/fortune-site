@@ -21,7 +21,7 @@ with sync_playwright() as p:
     browser = p.chromium.launch()
     ctx = browser.new_context(ignore_https_errors=True, viewport={'width': 390, 'height': 844})
     ctx.add_init_script('localStorage.setItem("sb-mock-auth-token", ' + json.dumps(json.dumps(session)) + ')')
-    state = {'credits': 0, 'books': [], 'creates': 0, 'questions': 0, 'checkout': 0}
+    state = {'credits': 0, 'books': [], 'creates': 0, 'questions': 0, 'checkout': 0, 'birthDate': '1994-05-12'}
     external = []
     def route(r):
         request = r.request
@@ -33,7 +33,7 @@ with sync_playwright() as p:
         if path.startswith('/api/'):
             if path.startswith('/api/web-payments'): state['checkout'] += 1
             data = {}
-            if path == '/api/reading/conversations': data = {'conversations': [{'id': source_id, 'kind': 'self', 'title': 'テスト読みもの', 'birth_data': {'birthDate': '1994-05-12', 'gender': 'female'}}]}
+            if path == '/api/reading/conversations': data = {'conversations': [{'id': source_id, 'kind': 'self', 'title': 'テスト読みもの', 'birth_data': {'birthDate': state['birthDate'], 'gender': 'female'}}]}
             elif path == '/api/books/status': data = {'enabled': True, 'remaining': state['credits'], 'purchasedRemaining': state['credits']}
             elif path == '/api/partners': data = {'partners': []}
             elif path == '/api/reading/saves': data = {'saves': []}
@@ -108,4 +108,25 @@ with sync_playwright() as p:
     assert state['questions'] == 2 and not errors
     assert not any('onrender.com' in url or 'supabase.co' in url or 'anthropic' in url for url in external)
     print('PASS administrator-granted credit permits real-API-shaped create and two questions; pageerrors []')
+    # Even administrator-granted credits must not enable AI for minors.
+    from datetime import datetime, timezone, timedelta
+    current_year = datetime.now(timezone(timedelta(hours=9))).year
+    for age in (15, 17):
+        state['birthDate'] = str(current_year-age) + '-01-01'
+        state['credits'] = 1
+        state['books'][0]['questionsLeft'] = 2
+        before = (state['creates'], state['questions'])
+        page.goto(B + '/'); page.get_by_role('link', name='つづきを読む').first.wait_for()
+        nav('/compose')
+        page.fill('#question', question)
+        page.get_by_role('status').get_by_text('AIの相談ブック作成・質問は18歳以上', exact=False).wait_for()
+        assert page.get_by_role('button', name='一冊つくる（残り1冊）', exact=True).is_disabled()
+        nav('/books'); nav('/compose')
+        assert page.input_value('#question') == question
+        nav('/books/' + book_id + '/ask')
+        assert page.locator('#ask').is_disabled()
+        assert page.get_by_role('button', name='送信', exact=True).is_disabled()
+        assert (state['creates'], state['questions']) == before and state['credits'] == 1
+    assert not errors, errors
+    print('PASS ages 15/17 retain drafts and existing books but cannot create/ask, even with a granted credit')
     browser.close()

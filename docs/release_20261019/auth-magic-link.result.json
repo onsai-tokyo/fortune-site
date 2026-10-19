@@ -1,0 +1,12 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "template": "Magic link or OTP",
+  "status": "SAVED_IN_PRODUCTION_DASHBOARD",
+  "subject": "【FATE LAB】引き継ぎ用の確認コード",
+  "body_source": "docs/auth-email-templates.md Magic Link HTML",
+  "verification": "Dashboard reported Successfully updated email template; preview showed Japanese text, 8 digits, Token placeholder, one-hour guidance, no login link; Save changes disabled after completion.",
+  "actual_email_delivery_tested": false,
+  "other_templates_or_auth_settings_modified": false,
+  "rollback_file": "auth-magic-link.before.json",
+  "proof_image": "magic-link-saved.jpg"
+}

@@ -9,6 +9,7 @@ import { apiFetch, newOperationId, webApiPath } from '../data/api'
 import { requestCaptchaToken } from '../../lib/turnstile'
 import { canCreateWithCredits } from '../data/paymentPolicy'
 import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
+import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -321,6 +322,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return null
   }, [refreshRemote])
   const remoteCreateBook = useCallback(async (draft: AppState['draft']) => {
+    if (!webAiAdult(stateRef.current.profile?.birthDate)) throw new Error(WEB_AI_ADULT_NOTICE)
     const accessToken = await remoteToken()
     if (!accessToken) throw new Error('もとになる読みものを確認できませんでした')
     const pair = draft.sourceHref.match(/^\/couple\/([^?]+)\?year=(\d{4})$/)

@@ -1,0 +1,5 @@
+@HEADER_AND_BEGIN@
+-- Only for a baseline where ai_book_questions did not exist.
+-- Refuse populated tables; export/cleanup requires separate authority.
+@RESTORE_BODY@
+commit;

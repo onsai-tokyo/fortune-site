@@ -1,0 +1,5 @@
+@HEADER_AND_BEGIN@
+-- Only for a baseline where reading_saves did not exist.
+-- Reverse the partner trigger before removing its table.
+@RESTORE_BODY@
+commit;

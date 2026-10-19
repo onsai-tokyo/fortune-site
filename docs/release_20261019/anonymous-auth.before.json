@@ -1,0 +1,14 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "anonymous_sign_ins_enabled": false,
+  "anonymous_requests_per_hour_per_ip": 30,
+  "rate_field_disabled": true,
+  "other_observed_user_signup_settings": {
+    "allow_new_users": true,
+    "allow_manual_linking": false,
+    "confirm_email": true
+  },
+  "status": "NO_SETTINGS_CHANGED_WAITING_FOR_ENABLE_APPROVAL",
+  "observation": "Anonymous sign-ins are OFF and the anonymous rate limit field is disabled. Did not bypass the disabled control or change any setting.",
+  "proof_image": "anonymous-rate-limit-before.jpg"
+}

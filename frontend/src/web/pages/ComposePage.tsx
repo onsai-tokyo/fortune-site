@@ -9,6 +9,7 @@ import { bookQuestionProblem, bookThemes, countChars, plans } from '../data/mock
 import { sourceCatalog } from '../data/readingData'
 import { useApp } from '../state/AppState'
 import { remoteMode, paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 
 const MIN = 20
 const MAX = 400
@@ -18,7 +19,7 @@ const MAX = 400
  * POST /api/books（operationId・AI同意ヘッダー必須）→ /api/books/operations/:id をポーリング
  */
 export function ComposePage() {
-  const { credits, draft, setDraft, createBook, aiConsented, acceptAiConsent, partners, years, chapters, coupleYears, readingsStatus, reloadReadings, requestCreateAfterPurchase } = useApp()
+  const { profile, credits, draft, setDraft, createBook, aiConsented, acceptAiConsent, partners, years, chapters, coupleYears, readingsStatus, reloadReadings, requestCreateAfterPurchase } = useApp()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [consent, setConsent] = useState(false)
@@ -43,8 +44,9 @@ export function ComposePage() {
   const problem = bookQuestionProblem(draft.question)
   const empty = credits <= 0
   const consentOk = aiConsented || consent
+  const ageAllowed = !remoteMode || webAiAdult(profile?.birthDate)
   // 残りが0冊でも書けて、ボタンから買う（書いてから払う）
-  const ready = !!selected && (!remoteMode || readingsStatus === 'ready') && lengthOk && !problem && consentOk && (!empty || paymentsAvailable)
+  const ready = ageAllowed && !!selected && (!remoteMode || readingsStatus === 'ready') && lengthOk && !problem && consentOk && (!empty || paymentsAvailable)
   const isCouple = draft.sourceHref.startsWith('/couple')
   const single = plans.find(p => p.id === 'single')!
 
@@ -126,6 +128,7 @@ export function ComposePage() {
       </section>
 
       <section className="flex flex-col gap-2.5 px-5 pb-14 pt-6">
+        {!ageAllowed && <p role="status" className="m-0 text-sm leading-relaxed">{WEB_AI_ADULT_NOTICE} 書いた相談は下書きとして残ります。</p>}
         <Button size="lg" disabled={!ready} onClick={submit}>{empty ? (paymentsAvailable ? `${single.price.toLocaleString()}円で一冊つくる` : BOOK_PREPARING) : `一冊つくる（残り${credits}冊）`}</Button>
         <span className="text-center text-xs leading-[1.7] text-fl-muted">
           {empty

@@ -1,0 +1,16 @@
+{
+  "service": "fortune-site",
+  "service_id": "srv-d6mjp65actks7384ebg0",
+  "environment": "Production",
+  "status": "READ_ONLY_CONFIRMED_NO_CHANGE_REQUIRED",
+  "frontend_url": "https://fate-lab.com",
+  "service_public_url": "https://fortune-site-iuzo.onrender.com",
+  "deployed_branch_observed": "main",
+  "deployed_commit_observed": "79da2705966908e91bf49004fad89fbc9bca9837",
+  "environment_values_modified": false,
+  "redeploy_triggered": false,
+  "free_question_limit_modified_or_revealed": false,
+  "secret_values_revealed_or_copied": false,
+  "observation": "Revealed only the non-secret FRONTEND_URL row, recorded its public URL, then selected Hide secret. Did not use Edit, Export, Copy value or deploy controls.",
+  "proof_image": "render-frontend-url-current.jpg"
+}

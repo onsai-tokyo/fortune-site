@@ -1,0 +1,130 @@
+#!/bin/bash
+# New scoped workflow. Does not invoke or reuse old Test/Resume clusters.
+set +x
+set -euo pipefail
+umask 077
+scoped_release=@RELEASE_DIR@
+scoped_tools=@TOOLS_DIR@
+scoped_cache="$scoped_tools/cli-home/cache/stack"
+scoped_root="$HOME/Library/Application Support/FATELAB-Backups"
+scoped_source="$scoped_root/FATELAB-production-20261018T160712Z.sparseimage"
+scoped_target="$scoped_root/FATELAB-SCOPED-WORK-20261019.sparseimage"
+scoped_record="$scoped_root/FATELAB-production-20261018T160712Z.status.txt"
+scoped_helper="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+scoped_status="$scoped_helper/scoped-rehearsal.status.json"
+scoped_source_mount=''
+scoped_target_mount=''
+scoped_source_open=0
+scoped_target_open=0
+scoped_locked=0
+scoped_detach_safe=1
+scoped_attempt=''
+scoped_result=NOT_STARTED
+
+scoped_check() {
+  [[ -x "$scoped_tools/supabase" && -x /opt/homebrew/opt/libpq/bin/pg_restore && -d "$scoped_cache" ]]
+  command -v python3 >/dev/null
+  [[ -f "$scoped_release/scoped_rehearsal.py" && -f "$scoped_release/generate_rollbacks.py" ]]
+  [[ ! -L "$scoped_status" && -f "$scoped_helper/code-checksums.txt" && ! -L "$scoped_helper/code-checksums.txt" ]]
+  (cd "$scoped_release" && /usr/bin/shasum -a 256 -c "$scoped_helper/code-checksums.txt") >/dev/null 2>&1
+}
+if [[ "${1:-}" == --check && "$#" == 1 ]]; then
+  scoped_check
+  printf 'SCOPED_TOOLS_AND_CODE_OK: 開錠・本番接続なし\n'; exit 0
+fi
+[[ "$#" == 0 && -t 0 ]] || { printf 'ご本人のターミナルで引数なしで開いてください。\n'; exit 1; }
+scoped_check || { printf 'CODE_OR_TOOLS_CHANGED_STOP\n'; exit 1; }
+for scoped_path in "$scoped_source" "$scoped_record"; do
+  [[ -f "$scoped_path" && ! -L "$scoped_path" ]] || exit 1
+done
+[[ ! -L "$scoped_target" ]] || exit 1
+[[ ! -e "$scoped_target" || -f "$scoped_target" ]] || exit 1
+[[ ! -L "$scoped_root" && ! -L "$HOME/Library" && ! -L "$HOME/Library/Application Support" ]] || exit 1
+scoped_in_use=$(/usr/bin/hdiutil info -plist | python3 -B -c 'import plistlib,sys; s=plistlib.loads(sys.stdin.buffer.read()); targets=set(sys.argv[1:]); print("IN_USE" if any(i.get("image-path") in targets for i in s.get("images",[])) else "AVAILABLE")' "$scoped_source" "$scoped_target")
+[[ "$scoped_in_use" == AVAILABLE ]] || { printf 'IMAGE_ALREADY_OPEN_STOP\n'; exit 1; }
+/usr/bin/grep -qx 'STATUS=ARCHIVE_VALIDATED' "$scoped_record" || exit 1
+scoped_expected=$(/usr/bin/awk -F= '$1=="ENCRYPTED_IMAGE_SHA256" {print $2}' "$scoped_record")
+[[ "$scoped_expected" =~ ^[0-9a-f]{64}$ ]] || exit 1
+scoped_actual=$(/usr/bin/shasum -a 256 "$scoped_source")
+[[ "${scoped_actual%% *}" == "$scoped_expected" ]] || { printf 'SOURCE_HASH_MISMATCH\n'; exit 1; }
+printf '\nFATE LAB 3 SQL限定リハーサル（新しい手順）\n'
+printf '本番には接続しません。元バックアップは読み取り専用です。\n'
+printf '新しい作業用暗号化ディスクを1つだけ作ります。再実行時は同じものを使います。\n'
+printf '以前の作業用ディスクやバックアップは変更・削除しません。\n'
+printf '正式なSupabase初期化後、publicの構造と指定4表だけを復元します。\n'
+printf 'auth.usersは参照先IDだけの試験用行です。メール・認証情報は復元しません。\n'
+printf '4表の再投入中だけ業務トリガーを停止して元に戻します。外部キーは有効のままです。\n'
+printf '3 SQL適用・再適用・相手削除・逆SQL・元の構造との一致を自動確認します。\n'
+printf '元バックアップは今回保存した暗号化パスワードで開きます。\n'
+printf '作業用の作成時も、同じ保存済みパスワードを使えます。値は非表示入力してください。\n'
+printf 'DBパスワードやAPIキーは入力しません。続けますか？ [y/N]: '
+IFS= read -r scoped_answer
+[[ "$scoped_answer" == y || "$scoped_answer" == Y ]] || exit 0
+
+scoped_cleanup() {
+  if [[ -n "$scoped_attempt" && -f "$scoped_attempt/summary.json" ]]; then
+    # Only the deliberately safe summary, never private logs/data/catalog SQL.
+    if python3 -B -c 'import json,sys; s=json.load(open(sys.argv[1])); sys.exit(0 if s.get("server_stopped") is True else 1)' "$scoped_attempt/summary.json"; then
+      scoped_detach_safe=1
+    fi
+    /bin/cp "$scoped_attempt/summary.json" "$scoped_status"
+    scoped_result=$(python3 -B -c 'import json,sys; s=json.load(open(sys.argv[1])); v=s.get("status",""); print(v if v and all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789" for c in v) else "INVALID_STATUS")' "$scoped_status")
+  else
+    printf '{"status":"%s","production_connection":"NONE"}\n' "$scoped_result" >"$scoped_status"
+  fi
+  if [[ "$scoped_detach_safe" == 1 ]]; then
+    if [[ "$scoped_locked" == 1 ]]; then /bin/rmdir "$scoped_target_mount/.scoped-rehearsal.lock" 2>/dev/null || true; fi
+    if [[ "$scoped_source_open" == 1 ]]; then
+      if /usr/bin/hdiutil detach "$scoped_source_mount" -quiet; then scoped_source_open=0; else scoped_result=SOURCE_DETACH_REQUIRED; fi
+    fi
+    if [[ "$scoped_target_open" == 1 ]]; then
+      if /usr/bin/hdiutil detach "$scoped_target_mount" -quiet; then scoped_target_open=0; else scoped_result=TARGET_DETACH_REQUIRED; fi
+    fi
+  else
+    scoped_result=SERVER_STOP_NOT_CONFIRMED_DO_NOT_FORCE_DETACH
+    printf '\nサーバー停止を確認できないためディスクを残しています。強制取り外しせず、結果だけ伝えてください。\n'
+  fi
+  for scoped_empty in "$scoped_source_mount" "$scoped_target_mount"; do
+    if [[ -n "$scoped_empty" ]]; then /bin/rmdir "$scoped_empty" 2>/dev/null || true; fi
+  done
+  if [[ "$scoped_source_open" == 0 ]]; then
+    scoped_actual=$(/usr/bin/shasum -a 256 "$scoped_source")
+    if [[ "${scoped_actual%% *}" != "$scoped_expected" ]]; then scoped_result=SOURCE_HASH_CHANGED_STOP; fi
+  fi
+  # Save cleanup outcome separately; never let an earlier PASS mask detach errors.
+  printf '%s\n' "$scoped_result" >"$scoped_helper/cleanup.status.txt"
+  printf '\n結果: %s\n' "$scoped_result"
+  printf '本番SQL・設定変更・pushは未実行です。ディスクも削除していません。\n'
+  printf '完了後は結果だけ伝えてください。パスワード・ログ・バックアップは貼らないでください。\n'
+  printf 'Enterで終了します。'
+  IFS= read -r scoped_end || true
+}
+trap scoped_cleanup EXIT
+trap 'exit 130' INT TERM
+scoped_source_mount=$(/usr/bin/mktemp -d /private/tmp/fl-scope-src.XXXXXX)
+scoped_target_mount=$(/usr/bin/mktemp -d /private/tmp/fl-scope-work.XXXXXX)
+printf '\n元バックアップの暗号化パスワードを入力してください。\n'
+if ! /usr/bin/hdiutil attach -readonly -nobrowse -mountpoint "$scoped_source_mount" "$scoped_source" >/dev/null 2>/dev/null; then scoped_result=SOURCE_UNLOCK_FAILED; exit 1; fi
+scoped_source_open=1
+if [[ ! -e "$scoped_target" ]]; then
+  scoped_result=TARGET_CREATE_FAILED
+  printf '\n新しい作業用ディスクを作ります。保存済みの暗号化パスワードを入力・確認してください。\n'
+  /usr/bin/hdiutil create -size 3g -type SPARSE -fs APFS -volname FATELAB-Scoped-Work -encryption AES-256 "$scoped_target" >/dev/null
+  /bin/chmod 600 "$scoped_target"
+fi
+printf '作業用ディスクの暗号化パスワードを入力してください。\n'
+if ! /usr/bin/hdiutil attach -nobrowse -mountpoint "$scoped_target_mount" "$scoped_target" >/dev/null 2>/dev/null; then scoped_result=TARGET_UNLOCK_FAILED; exit 1; fi
+scoped_target_open=1
+/usr/bin/touch "$scoped_target_mount/.metadata_never_index"
+if ! /bin/mkdir "$scoped_target_mount/.scoped-rehearsal.lock"; then scoped_result=EXISTING_ATTEMPT_LOCK_STOP; exit 1; fi
+scoped_locked=1
+scoped_free=$(/bin/df -Pk "$scoped_target_mount" | /usr/bin/awk 'END {print $4}')
+[[ "$scoped_free" =~ ^[0-9]+$ && "$scoped_free" -ge 524288 ]] || { scoped_result=WORK_VOLUME_SPACE_LOW_STOP; exit 1; }
+scoped_stamp=$(/bin/date -u +%Y%m%dT%H%M%SZ)
+scoped_attempt=$(/usr/bin/mktemp -d "$scoped_target_mount/attempt-$scoped_stamp.XXXXXX")
+scoped_detach_safe=0
+scoped_exit=0
+python3 -B "$scoped_release/scoped_rehearsal.py" \
+  --archive "$scoped_source_mount/database.dump" --attempt "$scoped_attempt" \
+  --cli "$scoped_tools/supabase" --artifact-cache "$scoped_cache" || scoped_exit=$?
+exit "$scoped_exit"

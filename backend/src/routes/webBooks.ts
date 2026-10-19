@@ -8,6 +8,7 @@ import { requireAIConsent } from '../middleware/aiConsent.js'
 import { countAvailableBookCredits } from '../lib/webBookCredits.js'
 import { publicBook as appPublicBook } from './aiBooks.js'
 import { resolveBookFocus } from '../lib/aiBookFocus.js'
+import { requireWebAiAdult } from '../middleware/webAiAge.js'
 export const webBooksRouter = Router()
 webBooksRouter.use(requireAuth)
 const projection = 'id,source_id,title,target_title,theme,question,state,created_at,delivered_at,document,source_snapshot,metadata,funding_source'
@@ -120,7 +121,7 @@ webBooksRouter.get('/:bookId/questions/operations/:operationId', async (req: Aut
   } catch (e) { fail(res, e) }
 })
 
-webBooksRouter.post('/:bookId/questions', questionLimiter, async (req: AuthRequest, res) => {
+webBooksRouter.post('/:bookId/questions', requireWebAiAdult, questionLimiter, async (req: AuthRequest, res) => {
   if (!requireAiConsent(req, res)) return
   let operationId: string | undefined
   let ownsOperation = false
@@ -161,10 +162,10 @@ async function prepare(req:AuthRequest) {
   if(sources.length<3) throw new BookError('BOOK_SOURCE',422,'この鑑定書には必要な原稿が揃っていません。別の鑑定書を選んでください。')
   return {question,sources,row:data}
 }
-webBooksRouter.post('/validate',async(req:AuthRequest,res)=>{
+webBooksRouter.post('/validate',requireWebAiAdult,async(req:AuthRequest,res)=>{
   try { if(!(await settings()).enabled) throw new BookError('BOOK_DISABLED',503,'AI鑑定書は準備中です。'); await prepare(req); res.json({valid:true}) } catch(e) {fail(res,e)}
 })
-webBooksRouter.post('/',requireAIConsent,async(req:AuthRequest,res)=>{
+webBooksRouter.post('/',requireAIConsent,requireWebAiAdult,async(req:AuthRequest,res)=>{
   try {
     if(!uuidPattern.test(req.body?.operationId??'')) throw new BookError('BOOK_INPUT',422,'受付番号が必要です。')
     // Read retries before source lookup: source deletion must not strand an accepted order.

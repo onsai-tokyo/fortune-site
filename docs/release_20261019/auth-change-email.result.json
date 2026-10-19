@@ -1,0 +1,13 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "template": "Change email address",
+  "status": "SAVED_IN_PRODUCTION_DASHBOARD",
+  "subject": "【FATE LAB】メールアドレス確認コード",
+  "body_source": "docs/auth-email-templates.md Change Email Address HTML",
+  "verification": "Dashboard reported Successfully updated email template; preview showed Japanese text, 8 digits, Token placeholder, one-hour guidance and both-address notice, with no link; Save changes disabled after completion. Subject visually verified.",
+  "actual_email_delivery_tested": false,
+  "secure_email_change_flow_tested": false,
+  "other_templates_or_auth_settings_modified": false,
+  "rollback_file": "auth-change-email.before.json",
+  "proof_image": "change-email-saved.jpg"
+}

@@ -1,0 +1,10 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "template": "Magic link or OTP",
+  "captured_date": "2026-10-19",
+  "subject": "Your Magic Link",
+  "body": "<h2>Magic Link</h2>\n\n<p>Follow this link to login:</p>\n<p><a href=\"{{ .ConfirmationURL }}\">Log In</a></p>",
+  "source": "Production Dashboard subject and visible source editor before modification",
+  "contains_actual_token_or_secret": false,
+  "rollback": "Restore only the subject and source body of Magic link or OTP; do not reset other templates or auth settings."
+}

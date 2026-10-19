@@ -1,4 +1,20 @@
-# Web公開前・本番確認手順（未実行）
+# Web公開前・本番確認手順（実施状況は先頭参照）
+
+最新の実施状況（2026-10-19、この段落を過去の未実施記載より優先）：個別承認を受け、限定リハーサルとB0照合後、許可された3 SQLだけを本番へ順次適用し、各DB内の適用前後照合・COMMIT・終了処理を確認した。Magic Link/Change Email Addressの件名・本文を8桁/1時間/リンクなしに変更し、匿名サインインONと10回/IP/時を保存済み。OTP設定・Confirm signup・CAPTCHA・SMTPは変更していない。Render本番のFRONTEND_URLは既にhttps://fate-lab.comで変更不要、共有FREE_QUESTION_LIMITにも触れていない。各控え・証跡は `release_20261019/`。本番APIは79da270のままで、Webコードはまだpush/デプロイ/ドメイン切替をしていない。
+
+最新ローカル再検証：backend npm test529件、追加ブック回帰39件、frontend unit96件、SQL補助ツールunit56件、両buildと合成REMOTE build、既存mock-e2e6本＋追加8本が成功。crawlは全6状態でissuesなし。iOS/既存API/生成エンジン/ワーカーの保護チェックも成功。初回の見本テストは実行側がSupabase値を空文字にしたため失敗し、正しく未設定にして再ビルド後、全件再実行して成功した。本番では有効な公開URL/anonキーを設定する。詳細と未確認項目は `release_20261019/local-verification.result.json`。実配送・実AI生成・実DBの2アカウント隔離・iOS実機はまだ未確認であり、ローカル成功を公開完了と扱わない。本番反映は対象コミットと戻し方を報告し、改めて個別OKを受ける。
+
+追記（2026-10-19・Webサポート）：Web専用 `/support` を追加し、`/contact` からの導線も維持。承認済み窓口 onsai.tokyo@gmail.com、メール引き継ぎ、販売準備中、生成失敗、15歳以上/AI18歳以上、退会の案内を掲載。特商法リンクはWeb用 `/tokushoho`。既存 `frontend/src/pages/SupportPage.tsx` は未変更で、Webルートからの読み込み先だけを専用ページへ切り替えた。frontend unit96件・build成功。support.pyで未認証のsupport/contact、メールリンクの宛先（送信はしない）、法務/引き継ぎリンク、320/390px幅を確認。legal_pages.py成功、6状態のcrawlはno issues。今回はbackendを変更・再実行していない（直前の全件結果は529件成功）。本番・pushは未実行で、実メール受信や実Vercelでの動作は未確認。
+
+追記（2026-10-19・年齢方針）：承認により無料の読みもの・年表は15歳以上、18歳未満は法定代理人の同意が必要。WebのAI相談ブック作成・質問は当面18歳以上とし、管理者付与の冊数も例外にしない。Web専用のvalidate/create/questionsは、本人が保存した最新の自己鑑定の生年月日をサーバー側で確認し、不明・不正・照会失敗では許可しない。相手の生年月日・リクエストの年齢・選択した相談元だけでは許可しない。日本時間の18歳の誕生日から許可する。画面の送信制限・下書き保持・規約と開始画面の案内も合わせる。既存ブックの閲覧や状態確認は制限しない。
+
+この確認は申告した生年月日による制限であり、身分証による本人・年齢確認や保護者同意の証明ではない。虚偽申告を防げると説明しない。iOS向け `/api/books` は変更せず、今回の制限は `/api/web/books` のみに適用するため、共有の旧APIを含む全経路での未成年者排除を保証するものでもない。未成年者へのAI提供を開始する前に、Anthropicの未成年者向けガイドラインに基づく年齢確認・内容フィルタ・報告/監視等を別途評価する。必要な対策がiOSや共有APIに及ぶ場合は承認を得る。公式資料：https://support.claude.com/en/articles/9307344-responsible-use-of-anthropic-s-models-guidelines-for-organizations-serving-minors
+
+この変更のローカル検証：backend `npm test` 527件成功、frontend unit 94件成功、両build成功。既存mock-e2e6本（journey/guest/logic/bugs/probe3/crawl）はFAIL・pageerror・crawl issuesなし。規約3ページと旧特商法URLの表示テスト成功。合成REMOTEのpayments_remoteは成人の作成・質問2回、および15/17歳の付与済み冊数での作成・質問無効化、下書き保持を確認して成功。APIテストでは18歳誕生日の日本時間境界、不正/不明の生年月日、照会失敗、クライアントの年齢偽装パラメータ無視、拒否時に注文/質問RPC未呼出し、成人の冪等リトライを確認。身分証確認・保護者同意確認・共有iOS経路の年齢制限・本番受入試験はこの検証に含まない。既存iOS向けルーターとiOSソースの差分はなし。push/デプロイ/本番設定変更はしていない。
+
+追加対策（2026-10-19・承認済み）：Web専用previewラッパーを設け、`/api/web/preview/question` はAI同意や決済トークンの有無にかかわらず403。無料生成のPOST `/api/web/preview/generate` はサーバー側でAI同意ヘッダーを除き、共有生成器の `!hasAIConsent(req)` の固定文分岐へ進める。生成状況GET `/api/web/preview/generations/:opId` は維持し、その他のpreview機能はWebへ自動公開しない。本文・操作ID・認証ヘッダー・SSE指定・共有環境変数は変更しない。共有の `preview.ts`、`/api/preview`、iOSコードは変更しない。この制限もWeb専用経路のものであり、旧共有APIへの直接アクセスや、申告年齢の偽装を解消するものではない。過去の生成結果の閲覧を、今回の新規AI呼び出し制限と混同しない。
+
+追記（2026-10-19）：ユーザー承認の方針で全体復元試験（旧Test/Resume系）を中止。公開前ゲートは「3 SQLの変更範囲の復元・逆SQL・トリガーを限定リハーサルで検証」に変更。取り直したバックアップ（20261018T160712Z）による限定リハーサルは `SCOPED_REHEARSAL_OK` で完了し、4表の復元、外部キー、3 SQL適用・再適用、相手削除、逆SQL後の構造一致・データ不変、ローカルサーバー停止・取り外しを確認済み。ただし本番の現時点の構造を照合するB0は結果未確認で、SQL適用へは進まない。本番の読み取りもB0の内容説明と個別OKが必要。準備物と停止条件は `backend/supabase/release_20261019/README.txt` を参照。過去の「全体復元未完了で停止」は経緯として残し、今後のゲートはこの方針を優先する。本番への3 SQL適用・Auth設定・push・デプロイは引き続き未実施。
 
 追記（2026-10-18）：Webの販売準備中用文面から仮置き・編集注記を除去した。内容と残る運営判断は `legal-publication-preparation-20261018.md` を参照。直前のREMOTE修正はbackend526件/frontend unit90件成功（`remote-readings-fix-20261018.md`）。以下の過去の522件や「残る仮置き」は当時の記録で、最新結果・文面は続報と照合する。本番作業・専門家確認・受入確認が完了した意味ではない。
 

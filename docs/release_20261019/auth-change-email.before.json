@@ -1,0 +1,10 @@
+{
+  "project": "jarerymytxcsqvzduqub",
+  "template": "Change email address",
+  "captured_date": "2026-10-19",
+  "body": "<h2>Confirm Change of Email</h2>\n\n<p>Follow this link to confirm the update of your email from {{ .Email }} to {{ .NewEmail }}:</p>\n<p><a href=\"{{ .ConfirmationURL }}\">Change Email</a></p>",
+  "subject": "Confirm Email Change",
+  "subject_source": "Visually confirmed in unchanged production Subject field before saving",
+  "contains_actual_token_or_secret": false,
+  "rollback": "Restore only this template subject and source body; do not reset other templates or auth settings."
+}

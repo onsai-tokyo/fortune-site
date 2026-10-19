@@ -1,6 +1,19 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { aiDataPolicyLinks, collectedInformation, commerceRows, crossBorderNotice, privacyIntro, privacySections, processors, termsSections } from './legalContent'
+
+test('approved Web eligibility permits ages 15+ with guardian consent below 18 across entry pages', () => {
+  const eligibility = termsSections.find(s => s.title.startsWith('第2条'))!.paragraphs.join('')
+  assert.ok(eligibility.includes('AIの相談ブック作成・質問は、当面18歳以上の方に限ります。'))
+  for (const text of [eligibility, ...['TopPage', 'OnboardingPage'].map(name =>
+    readFileSync(new URL(`../pages/${name}.tsx`, import.meta.url), 'utf8'))]) {
+    assert.match(text, /15歳以上/)
+    assert.ok(text.includes('18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。'))
+    assert.ok(!text.includes('18歳以上の方が'))
+    assert.ok(!text.includes('18歳未満の方は利用できません'))
+  }
+})
 
 test('revised Web legal text retains all articles and preparation notices, not draft introduction', () => {
   assert.equal(termsSections.filter(s => s.title.startsWith('第')).length, 15)

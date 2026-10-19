@@ -19,6 +19,8 @@ OTPは未設定ビルドで8桁。staging相当は `VITE_EMAIL_OTP_LENGTH=6 npm 
 
 `legal_pages.py` は認証なしで `/terms`・`/privacy`・`/tokushoho` を開き、全条文見出し、販売準備中、確認済み委託先/リージョン、仮置き/編集注記の不在、AI公開方針の公式リンク、モバイル幅、旧 `/tokushohou` のアプリ向け保存版を確認する。未確定条件は公開文ではなく `docs/legal-publication-preparation-20261018.md` に記録する。外部/API通信は遮断する。これは文面の法的な適否や専門家確認の代替ではない。
 
+`support.py` はWeb専用 `/support` と `/contact` の転送、承認済みメール宛先、Web版FAQ（引き継ぎ・販売準備中・年齢条件等）、Web用 `/tokushoho` への遷移、320/390px幅を検査する。外部/API通信は遮断し、メールリンクは宛先を読むだけで送信しない。実行例：`MOCK_E2E_BASE_URL=https://127.0.0.1:4198 python3 docs/mock-e2e/support.py`（リポジトリ直下から）。実メール受信や実Vercelの動作確認を代替しない。
+
 既存プレビューを止めずに別ポートで確認する場合、全6本で
 `MOCK_E2E_BASE_URL=https://localhost:4175 python3 guest.py` のように指定できる。
 自己署名証明書を許容するのはローカル画面テストのブラウザだけで、本番設定には使わない。

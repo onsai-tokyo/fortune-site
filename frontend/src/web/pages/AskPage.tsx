@@ -7,6 +7,8 @@ import { AiConsentNotice } from '../components/AiConsent'
 import type { ChatMessage } from '../data/types'
 import { useApp } from '../state/AppState'
 import { apiFetch, newOperationId } from '../data/api'
+import { remoteMode } from '../data/paymentConfig'
+import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 
 /**
  * 相談のブックへの質問（1冊につき2回。無料の質問はなし）。
@@ -15,7 +17,7 @@ import { apiFetch, newOperationId } from '../data/api'
  */
 export function AskPage() {
   const { bookId } = useParams()
-  const { books, consumeBookQuestion, aiConsented, acceptAiConsent } = useApp()
+  const { profile, books, consumeBookQuestion, aiConsented, acceptAiConsent } = useApp()
   const book = books.find(b => b.id === bookId)
   const [agreed, setAgreed] = useState(false)
   const consentOk = aiConsented || agreed
@@ -25,6 +27,7 @@ export function AskPage() {
   const endRef = useRef<HTMLDivElement>(null)
   const timer = useRef<number>()
   const remaining = book?.questionsLeft ?? 0
+  const ageAllowed = !remoteMode || webAiAdult(profile?.birthDate)
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }) }, [messages, waiting])
   useEffect(() => () => window.clearTimeout(timer.current), [])
@@ -35,7 +38,7 @@ export function AskPage() {
   async function send(e: FormEvent) {
     e.preventDefault()
     const q = text.trim()
-    if (!q || waiting || remaining <= 0 || !consentOk) return
+    if (!ageAllowed || !q || waiting || remaining <= 0 || !consentOk) return
     if (!aiConsented) acceptAiConsent()
     setMessages(m => [...m, { id: `u-${Date.now()}`, role: 'user', text: q }])
     setText('')
@@ -65,6 +68,7 @@ export function AskPage() {
 
         <h1 className="sr-only">「{book.title}」への質問</h1>
         <section className="flex flex-1 flex-col gap-4 px-4 py-5" aria-live="polite">
+          {!ageAllowed && <p role="status" className="m-0 text-sm leading-relaxed">{WEB_AI_ADULT_NOTICE}</p>}
           <div className="self-center rounded-xl bg-fl-surface px-3 py-1.5 text-center text-xs leading-[1.7] text-fl-body">このブックで気になったところを、2回まで質問できます</div>
           {messages.length === 0 && remaining > 0 && (
             <div className="flex flex-col gap-2" aria-label="質問の例">
@@ -102,10 +106,10 @@ export function AskPage() {
         <form onSubmit={send} className="sticky bottom-0 flex flex-col gap-1.5 border-t border-fl-line bg-fl-canvas px-3 pb-3.5 pt-2.5">
           <div className="flex items-end gap-2">
             <label htmlFor="ask" className="sr-only">質問を入力</label>
-            <textarea id="ask" rows={1} value={text} onChange={e => setText(e.target.value)} maxLength={1200} disabled={remaining <= 0}
+            <textarea id="ask" rows={1} value={text} onChange={e => setText(e.target.value)} maxLength={1200} disabled={!ageAllowed || remaining <= 0}
               placeholder={remaining > 0 ? 'このブックについて質問する' : '質問は使い切りました'}
               className="min-h-[48px] flex-1 resize-none rounded-2xl border border-fl-line bg-white px-3.5 py-3 text-base leading-normal placeholder:text-fl-muted disabled:bg-fl-surface" />
-            <button type="submit" aria-label="送信" disabled={!text.trim() || waiting || remaining <= 0 || !consentOk}
+            <button type="submit" aria-label="送信" disabled={!ageAllowed || !text.trim() || waiting || remaining <= 0 || !consentOk}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-fl-ink text-white disabled:bg-fl-line disabled:text-fl-muted"><IconSend /></button>
           </div>
           <span className="pl-1 text-[11px] text-fl-muted">{remaining > 0 ? `このブックへの質問 あと${remaining}回` : 'このブックへの質問は使い切りました'}</span>
