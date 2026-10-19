@@ -12,6 +12,7 @@ import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
 import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, type PartnerDraft, type PendingPartner } from './partnerDraft'
 import { createAccountDeletion } from './accountDeletion'
+import { isBookPending, pollBookOperation } from './bookPolling'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -29,6 +30,7 @@ const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE
 export type Session = 'none' | 'anonymous' | 'linked'
 
 interface AppState {
+  bookRefreshError?: string | null
   readingsStatus: LoadState
   personaTitle: string
   selfSourceId?: string
@@ -92,6 +94,20 @@ export type DemoPreset = 'default' | 'first-visit' | 'linked' | 'no-partner' | '
 
 const DRAFT_KEY = 'fatelab:web:compose-draft:v1'
 const pendingBookKey = (userId: string) => `fatelab:web:pending-book:${userId}:v1`
+
+function mapRemoteBook(b: Record<string, unknown>): Book {
+  return {
+    id: String(b.id), title: String(b.title ?? '相談のブック'), theme: String(b.theme ?? 'その他') as BookTheme,
+    question: String(b.question ?? ''), createdAt: String(b.createdAt ?? b.created_at ?? ''), state: String(b.state ?? 'queued') as Book['state'],
+    sourceTitle: String(b.targetTitle ?? ''), sourceSub: '', sourceHref: '/you', cover: images.starMountains,
+    sourceId: typeof b.sourceId === 'string' ? b.sourceId : undefined,
+    sourceCardId: typeof b.focusCardId === 'string' ? b.focusCardId : undefined,
+    document: b.document && typeof b.document === 'object' ? b.document as Book['document'] : undefined,
+    sections: Array.isArray((b.document as Record<string, unknown> | null)?.sections) ? ((b.document as Record<string, unknown>).sections as ReadingSection[]) : [],
+    questionsLeft: Number(b.questionsLeft ?? 2),
+    failureCode: typeof b.failureCode === 'string' && /^BOOK_[A-Z_]{1,60}$/.test(b.failureCode) ? b.failureCode : undefined,
+  }
+}
 
 function initialState(): AppState {
   if (REMOTE) return createBlankState()
@@ -173,6 +189,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const profileSaveOwner = useRef<string | null>(null)
   const refreshSequence = useRef(0)
   const partnerSaveInProgress = useRef(false)
+  const activeBookPolls = useRef(new Map<string, Promise<string | null>>())
+  const activeShelfReads = useRef(new Map<string, Promise<boolean>>())
+  const [bookPollRevision, setBookPollRevision] = useState(0)
   stateRef.current = state
 
   const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
@@ -206,16 +225,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         birthPlace: String(birth.birthplace ?? birth.birthPlace ?? ''),
         gender: birth.gender === 'male' ? 'male' as const : 'female' as const,
       } : null
-      const books = (bookshelf.books ?? []).map(b => ({
-        id: String(b.id), title: String(b.title ?? '相談のブック'), theme: String(b.theme ?? 'その他') as BookTheme,
-        question: String(b.question ?? ''), createdAt: String(b.createdAt ?? b.created_at ?? ''), state: String(b.state ?? 'queued') as Book['state'],
-        sourceTitle: String(b.targetTitle ?? ''), sourceSub: '', sourceHref: '/you', cover: images.starMountains,
-        sourceId: typeof b.sourceId === 'string' ? b.sourceId : undefined,
-        sourceCardId: typeof b.focusCardId === 'string' ? b.focusCardId : undefined,
-        document: b.document && typeof b.document === 'object' ? b.document as Book['document'] : undefined,
-        sections: Array.isArray((b.document as Record<string, unknown> | null)?.sections) ? ((b.document as Record<string, unknown>).sections as ReadingSection[]) : [],
-        questionsLeft: Number(b.questionsLeft ?? 2),
-      }))
+      const books = (bookshelf.books ?? []).map(mapRemoteBook)
       const sourceId = typeof first?.id === 'string' ? first.id : undefined
       const remoteSavedIds = (saved.saves ?? []).map(item => item.save_key)
       const { years, chapters, personaTitle } = personalReadings(timing.cards ?? [], cards.cards ?? [], sourceId ?? '', images.nature.pampas)
@@ -234,7 +244,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         session: s.session === 'none' ? 'anonymous' : s.session,
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
         savedIds: remoteSavedIds,
-        books,
+        books, bookRefreshError: null,
         selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
         coupleYears: Object.fromEntries(coupleResults.map(p => [p.id, p.years])), coupleStatus: Object.fromEntries(coupleResults.map(p => [p.id, p.status])),
         partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })),
@@ -362,38 +372,122 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(blankState())
     },
   }), [])
-  const pollRemoteBook = useCallback(async (operationId: string, accessToken: string) => {
-    for (let attempt = 0; attempt < 60; attempt++) {
-      const result = await apiFetch<{ book: Record<string, unknown> | null }>(`/api/books/operations/${operationId}`, { accessToken })
-      if (result.book) {
-        const bookId = String(result.book.id)
-        const key = (await supabase.auth.getUser()).data.user?.id
-        if (key) window.localStorage.removeItem(pendingBookKey(key))
-        await refreshRemote(accessToken)
-        return bookId
+  // Shelf polling does not put all reading pages back into their loading state.
+  const refreshBookShelf = useCallback((owner: string): Promise<boolean> => {
+    const existing = activeShelfReads.current.get(owner)
+    if (existing) return existing
+    const pending = (async () => {
+    const token = remoteAuth.current.token
+    if (!token || remoteAuth.current.owner !== owner) return false
+    const [bookshelf, status] = await Promise.all([
+      apiFetch<{ books: Array<Record<string, unknown>> }>('/api/books', { accessToken: token }),
+      apiFetch<{ remaining: number; purchasedRemaining?: number }>('/api/books/status', { accessToken: token }),
+    ])
+    if (remoteAuth.current.owner !== owner) return false
+    setState(s => ({ ...s, books: (bookshelf.books ?? []).map(mapRemoteBook), credits: status.remaining,
+      purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver, bookRefreshError: null }))
+    return true
+    })().finally(() => { activeShelfReads.current.delete(owner) })
+    activeShelfReads.current.set(owner, pending)
+    return pending
+  }, [])
+  const pollRemoteBook = useCallback((operationId: string, _accessToken: string): Promise<string | null> => {
+    const owner = remoteAuth.current.owner
+    if (!owner) return Promise.resolve(null)
+    const pollKey = `${owner}:${operationId}`
+    const existing = activeBookPolls.current.get(pollKey)
+    if (existing) return existing
+    const current = () => remoteAuth.current.owner === owner
+    const pending = (async () => {
+      let lastState = ''
+      try {
+        const book = await pollBookOperation({
+          current, attempts: 300,
+          read: async () => {
+            const token = remoteAuth.current.token
+            if (!current() || !token) return null
+            const result = await apiFetch<{ book: Record<string, unknown> | null }>(`/api/books/operations/${operationId}`, { accessToken: token })
+            return result.book ? mapRemoteBook(result.book) : null
+          },
+          observe: async book => {
+            if (lastState !== book.state) {
+              if (!await refreshBookShelf(owner)) throw new Error('BOOK_REFRESH_UNCONFIRMED')
+              lastState = book.state
+            }
+          },
+          sleep: () => new Promise(resolve => window.setTimeout(resolve, 2000)),
+        })
+        if (!current()) return null
+        if (!book) {
+          setState(s => ({ ...s, bookRefreshError: '作成状況の自動確認を一旦止めました。作成をやり直さず、再読み込みで確認してください。' }))
+          return null
+        }
+        // Completion of this operation cannot erase a newer operation's cache.
+        const key = pendingBookKey(owner)
+        try {
+          const saved = JSON.parse(window.localStorage.getItem(key) ?? 'null')
+          if (saved?.operationId === operationId) window.localStorage.removeItem(key)
+        } catch { /* Keep uncertain recovery data. */ }
+        return book.id
+      } catch (error) {
+        if (current()) setState(s => ({ ...s, bookRefreshError: '作成状況を取得できませんでした。作成をやり直さず、再読み込みで確認してください。' }))
+        throw error
       }
-      await new Promise(resolve => window.setTimeout(resolve, 2000))
-    }
-    return null
-  }, [refreshRemote])
+    })().finally(() => { activeBookPolls.current.delete(pollKey) })
+    activeBookPolls.current.set(pollKey, pending)
+    return pending
+  }, [refreshBookShelf])
+
+  // Covers older accepted jobs whose operation cache was already cleared, too.
+  const shelfOwner = remoteAuth.current.owner
+  const pendingShelfIds = state.books.filter(b => isBookPending(b.state) && /^[a-f\d]{8}-[a-f\d-]{27}$/i.test(b.id)).map(b => b.id).sort().join(',')
+  useEffect(() => {
+    if (!REMOTE || !shelfOwner || !pendingShelfIds || activeBookPolls.current.size > 0) return
+    let cancelled = false
+    void (async () => {
+      for (let i = 0; i < 300 && !cancelled && remoteAuth.current.owner === shelfOwner; i++) {
+        try {
+          await refreshBookShelf(shelfOwner)
+          if (!stateRef.current.books.some(b => isBookPending(b.state))) return
+        } catch {
+          if (!cancelled && remoteAuth.current.owner === shelfOwner) setState(s => ({ ...s, bookRefreshError: '作成状況を取得できませんでした。再読み込みで確認できます。' }))
+        }
+        await new Promise(resolve => window.setTimeout(resolve, 2000))
+      }
+      if (!cancelled && remoteAuth.current.owner === shelfOwner) setState(s => ({ ...s, bookRefreshError: '作成状況の自動確認を一旦止めました。再読み込みで確認してください。' }))
+    })()
+    return () => { cancelled = true }
+  }, [shelfOwner, pendingShelfIds, bookPollRevision, refreshBookShelf])
   const remoteCreateBook = useCallback(async (draft: AppState['draft']) => {
     if (!webAiAdult(stateRef.current.profile?.birthDate)) throw new Error(WEB_AI_ADULT_NOTICE)
     const accessToken = await remoteToken()
     if (!accessToken) throw new Error('もとになる読みものを確認できませんでした')
+    const owner = remoteAuth.current.owner
+    const current = () => Boolean(owner && remoteAuth.current.owner === owner)
+    if (!current()) throw new Error('BOOK_OWNER_CHANGED')
     const pair = draft.sourceHref.match(/^\/couple\/([^?]+)\?year=(\d{4})$/)
     if (pair) {
       const selfId = stateRef.current.selfSourceId
       if (!selfId) throw new Error('本人の読みものを確認できませんでした')
       const saved = await apiFetch<{ sourceId: string; sourceCardId: string }>(`/api/reading/${selfId}/partners/${pair[1]}/couple-timeline`, { method: 'POST', accessToken, body: JSON.stringify({ year: Number(pair[2]) }) })
+      if (!current()) throw new Error('BOOK_OWNER_CHANGED')
       draft = { ...draft, ...saved }
     }
     if (!draft.sourceId) throw new Error('もとになる読みものを確認できませんでした')
     const operationId = newOperationId()
     const userId = (await supabase.auth.getUser()).data.user?.id
+    if (!current() || userId !== owner) throw new Error('BOOK_OWNER_CHANGED')
     if (userId) window.localStorage.setItem(pendingBookKey(userId), JSON.stringify({ operationId, draft }))
-    await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
-    await apiFetch('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
-    return pollRemoteBook(operationId, accessToken)
+    try {
+      await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
+      if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+      await apiFetch('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
+      if (!current()) return null
+      return await pollRemoteBook(operationId, accessToken)
+    } catch (error) {
+      if (current()) setState(s => ({ ...s, bookRefreshError: '作成の受付・状況を確認できませんでした。作成をやり直さず、再読み込みで確認してください。' }))
+      throw error
+    }
   }, [pollRemoteBook, remoteToken])
 
   // Reloading the page must not strand a submitted book. The operation id is
@@ -412,7 +506,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       } catch { /* The retry button remains available if recovery cannot finish. */ }
     })()
     return () => { cancelled = true }
-  }, [pollRemoteBook])
+  }, [pollRemoteBook, bookPollRevision])
 
   // Pending partner data is restored as a draft only. Reload must never silently
   // delete/register a partner; recovery requires another explicit form submit.
@@ -447,7 +541,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [remoteToken])
 
   const actions = useMemo<Actions>(() => ({
-    reloadReadings: () => { const token = remoteAuth.current.token; if (token) void refreshRemote(token) },
+    reloadReadings: () => { setBookPollRevision(n => n + 1); const token = remoteAuth.current.token; if (token) void refreshRemote(token) },
     saveMeetingYear: async (id, year) => {
       const token = remoteAuth.current.token, selfId = stateRef.current.selfSourceId
       if (!token || !selfId) throw new Error('本人の読みものを確認できませんでした。')
@@ -602,7 +696,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!canCreateWithCredits(stateRef.current.credits)) throw new Error('利用できる冊数がありません。相談は下書きに残っています。')
       const draft = { ...stateRef.current.draft }
       const created = createBookNow()
-      if (REMOTE) void remoteCreateBook(draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(s => ({ ...s, books: s.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
+      if (REMOTE) void remoteCreateBook(draft).catch(() => { /* Unknown results remain recoverable; never pretend server failure. */ })
       return created
     },
     retryBook: bookId => {
@@ -645,7 +739,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ ...prev, pendingCreate: false }))
       const draft = { ...s.draft }
       const created = createBookNow()
-      if (REMOTE) void remoteCreateBook(draft).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(prev => ({ ...prev, books: prev.books.map(b => b.id === created.id ? { ...b, state: 'failed', failureCode: 'BOOK_UNAVAILABLE' } : b) })))
+      if (REMOTE) void remoteCreateBook(draft).catch(() => { /* Preserve the pending operation on uncertain responses. */ })
       return created
     },
     deleteAccount,

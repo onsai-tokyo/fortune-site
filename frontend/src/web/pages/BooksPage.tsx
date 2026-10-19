@@ -8,6 +8,7 @@ import type { Book } from '../data/types'
 import { useApp } from '../state/AppState'
 import { useState } from 'react'
 import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { formatBookDate as formatDate } from '../data/bookDate'
 
 /** iOS AIBook.isPending と同じ */
 const isPending = (b: Book) => b.state === 'queued' || b.state === 'generating' || b.state === 'review'
@@ -17,11 +18,6 @@ const stateLabel: Record<string, string> = { queued: '受付済み', generating:
 function failureMessage(code?: string) {
   if (code === 'BOOK_REFUSED' || code === 'BOOK_DOCUMENT_POLICY') return 'このご相談は読みもので扱える範囲を超えていたため、使った1冊分をお戻ししました。相談内容は保存されています。'
   return '作成を完了できなかったため、使った1冊分をお戻ししました。相談内容はそのままで再試行できます。'
-}
-
-function formatDate(date: string) {
-  const [, m, d] = date.split('-').map(Number)
-  return `${m}月${d}日`
 }
 
 export function ShelfTabs({ active, bookCount, savedCount }: { active: 'books' | 'saved'; bookCount: number; savedCount: number }) {
@@ -88,7 +84,7 @@ function BookRow({ book }: { book: Book }) {
 
 /** 本番：GET /api/books（60件ずつ、before カーソル）。作成中は /api/books/operations/:id をポーリング */
 export function BooksPage() {
-  const { books, savedIds, partners, years, chapters, coupleYears, credits } = useApp()
+  const { books, savedIds, partners, years, chapters, coupleYears, credits, bookRefreshError, reloadReadings } = useApp()
   const delivered = books.filter(b => b.state === 'delivered')
   const savedCount = savedCatalog(partners, years, chapters, coupleYears).filter(s => savedIds.includes(s.id)).length
   return (
@@ -99,6 +95,7 @@ export function BooksPage() {
         <ShelfTabs active="books" bookCount={delivered.length} savedCount={savedCount} />
       </section>
       <section className="flex flex-col gap-3 px-5 pt-3">
+        {bookRefreshError && <div role="alert" className="rounded-2xl border border-fl-ochre bg-white p-4"><p>{bookRefreshError}</p><Button variant="secondary" onClick={reloadReadings}>再読み込み</Button></div>}
         {books.filter(b => b.state === 'failed').map(b => <FailedCard key={b.id} book={b} />)}
         {books.filter(b => isPending(b)).map(b => <GeneratingCard key={b.id} book={b} />)}
         {delivered.map(b => <BookRow key={b.id} book={b} />)}

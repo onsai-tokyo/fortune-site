@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-20",
+  "scope": "Local only; uncommitted and unpushed",
+  "baseCommit": "21e31ce2def34e43d5f68072ed129fc4a96500f6",
+  "changes": [
+    "Book dates support date-only values and timestamp values displayed in Asia/Tokyo; invalid values show 日付不明",
+    "Queued/generating/review states continue GET-only polling until delivered/failed; pending operation data survives uncertain results",
+    "Owner-scoped recovery and shelf-only refresh prevent stale cross-account book responses; existing jobs without operation cache are monitored",
+    "Web-funded jobs only: allowlisted evidence failure classification without source text, quotes, IDs or validation relaxation"
+  ],
+  "verification": {
+    "backendFullTests": { "passed": 538, "failed": 0 },
+    "targetedBookTests": { "passed": 31, "failed": 0 },
+    "frontendUnitFinal": { "passed": 113, "failed": 0 },
+    "backendBuild": "passed",
+    "frontendBuildFinal": "passed",
+    "syntheticRemoteBuildFinal": "passed",
+    "existingMockE2E": { "passedScripts": 6, "note": "Passed before final REMOTE-only shelf-read coalescing; demo behavior unchanged" },
+    "syntheticBookPollingFinal": { "passedCases": 7, "cases": ["delivered", "failed", "reload", "no-operation-cache", "network-error", "owner-switch", "invalid-date"] },
+    "syntheticPaymentsFinal": "passed: no fake purchase credits, granted-credit create/ask, minor restriction",
+    "diffCheck": "passed"
+  },
+  "notPerformed": ["push", "commit", "production settings or SQL changes", "AI/provider requests", "live book regeneration", "iOS source changes"],
+  "remaining": [
+    "The cause of the live BOOK_DOCUMENT_EVIDENCE failure is not yet identified or fixed",
+    "Successful real AI delivery and two real questions remain unverified",
+    "Diagnostic deployment and any live retry require separate approval; native validation/request/retry policy is unchanged"
+  ]
+}

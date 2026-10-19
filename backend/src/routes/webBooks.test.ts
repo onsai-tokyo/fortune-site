@@ -1,4 +1,6 @@
 import test from 'node:test'
+// Included here because npm test enumerates Web route suites explicitly.
+import '../lib/aiBookWebDiagnostics.test.js'
 import assert from 'node:assert/strict'
 import express from 'express'
 import jwt from 'jsonwebtoken'
