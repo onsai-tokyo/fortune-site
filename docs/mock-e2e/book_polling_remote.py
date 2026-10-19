@@ -26,7 +26,7 @@ with sync_playwright() as p:
         flags={'state':'queued','held':None,'network':False}
         calls,forbidden,errors=[],[],[]
         def row():
-            return {'id':book_id,'sourceId':source,'title':'合成の生活習慣ブック','targetTitle':'あなたの2025年','theme':'その他','question':'架空の生活習慣の相談です。','state':flags['state'],'createdAt':'bad-date' if case=='invalid-date' else '2026-10-19T15:43:06.915445+00:00','failureCode':'BOOK_DOCUMENT_EVIDENCE' if flags['state']=='failed' else None,'document':{'title':'合成の生活習慣ブック','summary':'合成の要約','answer':'合成の答え','sections':[],'actions':[]} if flags['state']=='delivered' else None,'questionsLeft':2}
+            return {'id':book_id,'sourceId':source,'focusCardId':'turning-year-2025','title':'合成の生活習慣ブック','targetTitle':'あなたの2025年','theme':'その他','question':'架空の生活習慣の相談です。','state':flags['state'],'createdAt':'bad-date' if case=='invalid-date' else '2026-10-19T15:43:06.915445+00:00','failureCode':'BOOK_DOCUMENT_EVIDENCE' if flags['state']=='failed' else None,'document':{'title':'合成の生活習慣ブック','summary':'合成の要約','answer':'合成の答え','sections':[],'actions':[]} if flags['state']=='delivered' else None,'questionsLeft':2}
         def route(r):
             req=r.request; u=urlparse(req.url); path=u.path
             if u.netloc=='mock.invalid':
@@ -96,6 +96,13 @@ with sync_playwright() as p:
             assert 'NaN' not in body and 'undefined月' not in body
             assert ('日付不明' if case=='invalid-date' else '10月20日') in body
             if case=='failed':page.screenshot(path='/private/tmp/fatelab-book-polling-failed-refund-fixed-20261020.png')
+            if case in ['delivered','invalid-date']:
+                page.get_by_role('link',name='合成の生活習慣ブック',exact=False).click()
+                page.get_by_role('heading',name='合成の生活習慣ブック',exact=True).wait_for()
+                body=page.locator('body').inner_text()
+                assert 'NaN' not in body
+                assert ('日付不明にお届け' if case=='invalid-date' else '2026年10月20日にお届け') in body
+                assert page.get_by_role('link',name='あなたの2025年',exact=False).get_attribute('href')=='/you/years/2025'
         assert not forbidden and not errors,(forbidden,errors)
         print('PASS book polling',case,'GET-only, pending retained, state/date/owner verified')
         ctx.close()

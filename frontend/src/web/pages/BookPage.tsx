@@ -3,6 +3,7 @@ import { IconChevron } from '../components/icons'
 import { BackHeader, Disclaimer, LinkButton, NatureImage, Page } from '../components/ui'
 import { useApp } from '../state/AppState'
 import { useState } from 'react'
+import { formatBookDate } from '../data/bookDate'
 
 const sizes = ['text-[15px]', 'text-base', 'text-lg'] as const
 
@@ -13,10 +14,9 @@ export function BookPage() {
   const [size, setSize] = useState(1)
   const book = books.find(b => b.id === bookId)
   if (!book || book.state !== 'delivered') return <Navigate to="/books" replace />
-  const [y, m, d] = book.createdAt.split('-').map(Number)
   // 相手を入れ替えたあとは、前の相手の年表はもう開けない（ブックの中身は作成時のまま残る）
   const sourcePartner = book.sourceHref.match(/^\/couple\/([^?]+)/)?.[1]
-  const sourceAvailable = !sourcePartner || partners.some(p => p.id === sourcePartner)
+  const sourceAvailable = Boolean(book.sourceHref) && (!sourcePartner || partners.some(p => p.id === sourcePartner))
   const document = book.document
 
   return (
@@ -29,7 +29,7 @@ export function BookPage() {
       <section className="flex flex-col gap-3.5 bg-fl-cream px-6 py-7">
         <span className="text-[11px] font-medium tracking-[0.25em] text-fl-rose">相談のブック ・ {book.theme}</span>
         <h1 className="m-0 font-book text-[26px] font-semibold leading-relaxed">{book.title}</h1>
-        <span className="text-xs text-fl-body">{y}年{m}月{d}日にお届け</span>
+        <span className="text-xs text-fl-body">{formatBookDate(book.deliveredAt ?? book.createdAt, true)}にお届け</span>
       </section>
 
       <section className="px-6 pb-2 pt-7">
@@ -63,7 +63,7 @@ export function BookPage() {
         ) : (
           <div className="flex min-h-[60px] flex-col justify-center gap-0.5 rounded-2xl border border-fl-line bg-fl-surface px-4 py-2.5">
             <span className="text-sm font-medium">{book.sourceTitle}</span>
-            <span className="text-xs text-fl-muted">入れ替える前の相手の年表です（このブックの内容はそのまま読めます）</span>
+            <span className="text-xs text-fl-muted">{sourcePartner ? '入れ替える前の相手の年表です（このブックの内容はそのまま読めます）' : '元の読みものを現在確認できません（このブックの内容はそのまま読めます）'}</span>
           </div>
         )}
       </section>

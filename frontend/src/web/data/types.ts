@@ -78,6 +78,7 @@ export interface Book {
   theme: BookTheme
   question: string
   createdAt: string
+  deliveredAt?: string
   state: BookState
   progress?: number
   failureCode?: string

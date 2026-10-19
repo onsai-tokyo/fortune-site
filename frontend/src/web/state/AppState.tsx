@@ -13,6 +13,7 @@ import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
 import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, type PartnerDraft, type PendingPartner } from './partnerDraft'
 import { createAccountDeletion } from './accountDeletion'
 import { isBookPending, pollBookOperation } from './bookPolling'
+import { resolveBookSource } from '../data/bookSource'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -30,6 +31,7 @@ const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE
 export type Session = 'none' | 'anonymous' | 'linked'
 
 interface AppState {
+  bookSourcePartners?: Record<string, string>
   bookRefreshError?: string | null
   readingsStatus: LoadState
   personaTitle: string
@@ -99,7 +101,8 @@ function mapRemoteBook(b: Record<string, unknown>): Book {
   return {
     id: String(b.id), title: String(b.title ?? '相談のブック'), theme: String(b.theme ?? 'その他') as BookTheme,
     question: String(b.question ?? ''), createdAt: String(b.createdAt ?? b.created_at ?? ''), state: String(b.state ?? 'queued') as Book['state'],
-    sourceTitle: String(b.targetTitle ?? ''), sourceSub: '', sourceHref: '/you', cover: images.starMountains,
+    sourceTitle: String(b.targetTitle ?? ''), sourceSub: '', sourceHref: '', cover: images.starMountains,
+    deliveredAt: typeof b.deliveredAt === 'string' ? b.deliveredAt : undefined,
     sourceId: typeof b.sourceId === 'string' ? b.sourceId : undefined,
     sourceCardId: typeof b.focusCardId === 'string' ? b.focusCardId : undefined,
     document: b.document && typeof b.document === 'object' ? b.document as Book['document'] : undefined,
@@ -245,6 +248,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
         savedIds: remoteSavedIds,
         books, bookRefreshError: null,
+        bookSourcePartners: Object.fromEntries((history.conversations ?? []).filter(c => c.kind === 'compatibility' && typeof c.id === 'string' && typeof c.partner_profile_id === 'string').map(c => [String(c.id), String(c.partner_profile_id)])),
         selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
         coupleYears: Object.fromEntries(coupleResults.map(p => [p.id, p.years])), coupleStatus: Object.fromEntries(coupleResults.map(p => [p.id, p.status])),
         partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })),
@@ -471,6 +475,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!selfId) throw new Error('本人の読みものを確認できませんでした')
       const saved = await apiFetch<{ sourceId: string; sourceCardId: string }>(`/api/reading/${selfId}/partners/${pair[1]}/couple-timeline`, { method: 'POST', accessToken, body: JSON.stringify({ year: Number(pair[2]) }) })
       if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+      setState(s => ({ ...s, bookSourcePartners: { ...s.bookSourcePartners, [saved.sourceId]: pair[1] } }))
       draft = { ...draft, ...saved }
     }
     if (!draft.sourceId) throw new Error('もとになる読みものを確認できませんでした')
@@ -757,7 +762,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
   }), [deliverLater, createBookNow, refreshRemote, remoteCreateBook, remoteToken, deleteAccount])
 
-  const value = useMemo(() => ({ ...state, ...actions }), [state, actions])
+  const value = useMemo(() => ({ ...state, books: REMOTE ? state.books.map(book => resolveBookSource(book, state)) : state.books, ...actions }), [state, actions])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-20",
+  "baseCommit": "18547d80c185411fb20f1532f76cd1d7ea930c12",
+  "scope": "Local frontend fixes only; uncommitted and unpushed",
+  "changes": [
+    "Book detail uses the common Japan-time formatter, including year, and prefers API deliveredAt over createdAt",
+    "REMOTE book source is resolved from exact sourceId and focusCardId against owner-loaded years and chapters",
+    "Couple links additionally require the conversation-to-partner association, current partner and exact timeline card; newly persisted couple sources retain their association",
+    "Unknown, old, missing or removed source references produce no link instead of falling back to /you; book text remains readable",
+    "Existing API responses and iOS code are unchanged"
+  ],
+  "tests": {
+    "frontendUnit": { "passed": 116, "failed": 0 },
+    "backendFull": { "passed": 538, "failed": 0 },
+    "frontendBuild": "passed",
+    "backendBuild": "passed",
+    "syntheticRemoteBuild": "passed",
+    "mockE2E": { "passedScripts": 6, "pageErrors": 0, "crawlerIssues": 0, "expectedCoupleRedirects": 4 },
+    "syntheticBookPolling": { "passedCases": 7, "includes": ["detail date with year", "invalid detail date without NaN", "link to /you/years/2025", "GET-only recovery", "owner switch"] },
+    "syntheticPayments": "passed: purchase disabled, granted credits permit create/ask, minor restrictions preserved",
+    "sourceUnitCoverage": ["personal year", "personality chapter", "two partners sharing the same card ID", "deleted partner", "foreign or stale source", "missing source/card"],
+    "diffCheck": "passed"
+  },
+  "notPerformed": ["commit", "push", "production settings/SQL/deploy changes", "real AI generation or questions"],
+  "remaining": ["Live verification after separately approved preview deployment", "Real two-question acceptance test remains unperformed"],
+  "limitations": ["A source absent from the currently returned owned reading history or timeline cannot be linked; it is explicitly shown as unavailable rather than guessed"]
+}
