@@ -1,0 +1,31 @@
+{
+  "status": "LOCAL_FIX_VERIFIED_NOT_COMMITTED_OR_DEPLOYED",
+  "baseCommit": "2534dabacdbd83c92d07d64fe76c87460ecea8b4",
+  "branch": "codex/fatelab-web-release-20261018",
+  "cause": "Web apiFetch always attempted response.json(), including successful DELETE 204 with no body. The resulting exception stopped before the deleted flag and replacement POST. Form also navigated before async registration completion.",
+  "changes": [
+    "Web apiFetch accepts 204 without parsing JSON",
+    "Partner form awaits server registration, meeting-year save and refresh before navigating to the real partner id; disables controls while pending",
+    "Owner-scoped draft persists input, stable registration operation id, confirmed deletion and registered partner id",
+    "Explicit retry checks old partner presence before DELETE, reuses registration operation id, and never deletes/re-registers a known replacement",
+    "Reload restores draft/guidance only, with no automatic mutation",
+    "Confirmed deletion clears old visible partner and old partner draft source/saved references; failed or uncertain deletion is not presented as confirmed success",
+    "Account switch stops late writes and clears old form data"
+  ],
+  "verification": {
+    "backendTests": { "passed": 535, "failed": 0 },
+    "frontendUnitTests": { "passed": 99, "failed": 0 },
+    "backendBuild": "PASS",
+    "frontendBuildAndSeo": "PASS",
+    "syntheticRemoteBuildPaymentsFalse": "PASS",
+    "replacementRemoteCases": ["204 success", "DELETE failure", "DELETE reply lost", "registration failure", "registration reply lost", "meeting-year failure", "refresh failure", "owner switch during DELETE"],
+    "replacementRemoteResult": "8 PASS; retained form and reload; no mutation on reload; same operation id; no deletion of replacement",
+    "existingRemote": { "onboarding_remote": "8 PASS", "legacy_login": "PASS", "remote_readings": "PASS (two births x two partners)", "payments_remote": "PASS" },
+    "mockE2e": { "journey": "PASS", "guest": "PASS", "logic": "PASS", "bugs": "PASS", "probe3": "PASS", "crawl": "PASS; no issues; 4 expected redirects" },
+    "gitDiffCheck": "PASS",
+    "buildWarnings": "Existing static/dynamic Supabase import warning"
+  },
+  "testNotes": "Initial draft roundtrip test exposed an undefined optional field and was corrected in parser. Initial refresh-reload fixture kept history unavailable; test now restores read availability before checking form recovery. Final artifacts were frozen for the final full rerun.",
+  "notPerformed": ["commit", "push", "production writes or connection", "production config", "SQL", "iOS changes", "live replacement retry"],
+  "remaining": "Commit/push and Preview update require approval. Backend unchanged; no Render redeploy needed for this frontend-only fix. Existing live test has no registered partner; any new registration requires approval."
+}

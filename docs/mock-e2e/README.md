@@ -24,6 +24,7 @@ OTPは未設定ビルドで8桁。staging相当は `VITE_EMAIL_OTP_LENGTH=6 npm 
 既存プレビューを止めずに別ポートで確認する場合、全6本で
 `MOCK_E2E_BASE_URL=https://localhost:4175 python3 guest.py` のように指定できる。
 自己署名証明書を許容するのはローカル画面テストのブラウザだけで、本番設定には使わない。
+`partner_replacement_remote.py` は合成REMOTEビルドで実行する追加テスト。DELETEの204、削除失敗・削除応答不明、登録失敗・登録応答不明、出会った年の保存失敗、再取得失敗、途中のアカウント切替を検証する。入力とユーザー別の操作IDを復元し、再読み込みだけでは再送せず、明示的な再試行でも新しい相手を削除・重複登録しないことを確認する。実Supabase・Renderへは接続しない。
 これらのスクリプトはFAIL表示があっても終了コード0になることがあるため、終了コードだけで合格とせず、出力のFAIL・pageerrors・crawlerのissuesを確認する。
 
 crawlは相手が登録済みの4プリセットに限り `/couple` → `/couple/p-misaki` を仕様どおりの遷移として別集計する。それ以外の問題はissuesとして残し、終了コード1にする。

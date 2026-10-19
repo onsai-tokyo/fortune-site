@@ -59,6 +59,8 @@ export async function apiFetch<T>(path: string, init: RequestInit & { accessToke
     const body = (await response.json().catch(() => ({}))) as { error?: string; code?: string }
     throw new ApiError(body.error ?? '通信に失敗しました。時間をおいてお試しください。', response.status, body.code)
   }
+  // DELETE endpoints deliberately return 204 with no JSON body.
+  if (response.status === 204) return undefined as T
   return (await response.json()) as T
 }
 

@@ -10,6 +10,7 @@ import { requestCaptchaToken } from '../../lib/turnstile'
 import { canCreateWithCredits } from '../data/paymentPolicy'
 import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
 import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
+import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, type PartnerDraft, type PendingPartner } from './partnerDraft'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -40,6 +41,7 @@ interface AppState {
   profile: BirthProfile | null
   partners: Partner[]
   partnerNotice: string | null
+  partnerDraft: PartnerDraft | null
   credits: number
   books: Book[]
   savedIds: string[]
@@ -67,7 +69,7 @@ interface Actions {
   forgetDevice: () => void
   saveProfile: (profile: BirthProfile) => Promise<void>
   /** 相手は1人だけ。登録すると前の相手と入れ替わる（何度でも無料） */
-  setPartner: (partner: Omit<Partner, 'id'>) => Partner
+  setPartner: (partner: Omit<Partner, 'id'>) => Promise<Partner>
   setDraft: (draft: Partial<AppState['draft']>) => void
   createBook: () => Book
   retryBook: (bookId: string) => void
@@ -89,7 +91,6 @@ export type DemoPreset = 'default' | 'first-visit' | 'linked' | 'no-partner' | '
 
 const DRAFT_KEY = 'fatelab:web:compose-draft:v1'
 const pendingBookKey = (userId: string) => `fatelab:web:pending-book:${userId}:v1`
-const pendingPartnerKey = (userId: string) => `fatelab:web:pending-partner:${userId}:v1`
 
 function initialState(): AppState {
   if (REMOTE) return createBlankState()
@@ -100,7 +101,7 @@ function initialState(): AppState {
     receiptEmail: 'name@example.com',
     profile: mockProfile,
     partners: mockPartners,
-    partnerNotice: null,
+    partnerNotice: null, partnerDraft: null,
     credits: 2,
     books: mockBooks,
     savedIds: initialSavedIds,
@@ -116,7 +117,7 @@ function initialState(): AppState {
 
 /** 何も入力していない状態（はじめての訪問・この端末での利用をやめた後・退会後） */
 function createBlankState(): AppState {
-  return { readingsStatus: REMOTE ? 'loading' : 'ready', personaTitle: '', coupleYears: {}, coupleStatus: {}, session: 'none', email: null, receiptEmail: null, profile: null, partners: [], partnerNotice: null, books: [], savedIds: [], years: [], chapters: [], credits: 0, aiConsented: false, draft: { ...(REMOTE ? { sourceTitle: '', sourceSub: '', sourceHref: '', theme: '時期の判断' as BookTheme } : defaultDraftSource(undefined)), question: '' }, purchasedEver: false, showGuide: false, pendingCreate: false }
+  return { readingsStatus: REMOTE ? 'loading' : 'ready', personaTitle: '', coupleYears: {}, coupleStatus: {}, session: 'none', email: null, receiptEmail: null, profile: null, partners: [], partnerNotice: null, partnerDraft: null, books: [], savedIds: [], years: [], chapters: [], credits: 0, aiConsented: false, draft: { ...(REMOTE ? { sourceTitle: '', sourceSub: '', sourceHref: '', theme: '時期の判断' as BookTheme } : defaultDraftSource(undefined)), question: '' }, purchasedEver: false, showGuide: false, pendingCreate: false }
 }
 
 function blankState(): AppState {
@@ -170,6 +171,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const profileSaveInProgress = useRef(false)
   const profileSaveOwner = useRef<string | null>(null)
   const refreshSequence = useRef(0)
+  const partnerSaveInProgress = useRef(false)
   stateRef.current = state
 
   const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
@@ -234,7 +236,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         books,
         selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
         coupleYears: Object.fromEntries(coupleResults.map(p => [p.id, p.years])), coupleStatus: Object.fromEntries(coupleResults.map(p => [p.id, p.status])),
-        partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })), partnerNotice: null,
+        partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })),
         years, chapters,
       }))
       return true
@@ -262,7 +264,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!session) { setState({ ...blankState(), readingsStatus: 'idle' }); return }
       setState(previous => {
         const base = changed ? blankState() : previous
-        return { ...base, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
+        let partnerDraft = base.partnerDraft
+        let partnerNotice = base.partnerNotice
+        if (changed) {
+          try {
+            const raw = window.localStorage.getItem(pendingPartnerKey(session.user.id))
+            partnerDraft = partnerDraftFromRaw(raw); partnerNotice = pendingPartnerNotice(raw)
+          } catch { /* Never reuse another owner's draft. */ }
+        }
+        return { ...base, partnerDraft, partnerNotice, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
           draft: { ...base.draft, question: changed ? loadDraftQuestionForUser(session.user.id) : base.draft.question } }
       })
       // A fresh SIGNED_IN must still clear the previous owner's state, but an
@@ -375,33 +385,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [pollRemoteBook])
 
-  useEffect(() => {
-    if (!REMOTE) return
-    void (async () => {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session) return
-      const pendingKey = pendingPartnerKey(session.user.id)
-      const raw = window.localStorage.getItem(pendingKey)
-      if (!raw) return
-      try {
-        const input = JSON.parse(raw) as Omit<Partner, 'id'>
-        const current = await apiFetch<{ partners: Array<Record<string, unknown>> }>('/api/partners', { accessToken: session.access_token })
-        // A failed DELETE leaves the old record in place; do not create a second
-        // partner in that case. If the list is empty, replay the same payload.
-        if ((current.partners ?? []).length === 0) {
-          const result = await apiFetch<{ partner?: { id: string } }>('/api/partners', { method: 'POST', accessToken: session.access_token, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, displayName: input.name, birthplace: input.birthPlace, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
-          if (!result.partner?.id) throw new Error('PARTNER_MISSING')
-          // Registration is already committed. A meeting-year failure must not
-          // replay registration or delete the newly registered partner.
-          window.localStorage.removeItem(pendingKey)
-          if (stateRef.current.selfSourceId) {
-            try { await apiFetch(`/api/reading/couple-timeline-settings/${result.partner.id}?selfReadingId=${stateRef.current.selfSourceId}`, { method: 'PATCH', accessToken: session.access_token, body: JSON.stringify({ meetingYear: input.metYear }) }) } catch { /* The real timeline offers meeting-year entry again. */ }
-          }
-          await refreshRemote(session.access_token)
-        }
-      } catch { /* Keep the payload for the next explicit recovery attempt. */ }
-    })()
-  }, [refreshRemote])
+  // Pending partner data is restored as a draft only. Reload must never silently
+  // delete/register a partner; recovery requires another explicit form submit.
   const remoteSaveProfile = useCallback(async (profile: BirthProfile) => {
     let token = await remoteToken()
     if (!token) {
@@ -480,33 +465,90 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         profileSaveOwner.current = null
       }
     },
-    setPartner: input => {
+    setPartner: async input => {
       const partner: Partner = { ...input, id: `p-${Date.now()}` }
       const old = stateRef.current.partners[0]
       if (REMOTE) {
-        void remoteToken().then(async accessToken => {
-          if (!accessToken) return
-          const userId = (await supabase.auth.getUser()).data.user?.id
-          if (userId) window.localStorage.setItem(pendingPartnerKey(userId), JSON.stringify(input))
-          let deleted = false
-          let registered = false
-          try {
-            if (old) { await apiFetch(`/api/partners/${old.id}`, { method: 'DELETE', accessToken }); deleted = true }
-            const result = await apiFetch<{ partner?: { id: string } }>('/api/partners', { method: 'POST', accessToken, headers: { 'Idempotency-Key': newOperationId() }, body: JSON.stringify({ ...input, displayName: input.name, birthplace: input.birthPlace, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
-            if (!result.partner?.id) throw new Error('PARTNER_MISSING')
-            registered = true
-            if (userId) window.localStorage.removeItem(pendingPartnerKey(userId))
-            await apiFetch(`/api/reading/couple-timeline-settings/${result.partner.id}?selfReadingId=${stateRef.current.selfSourceId}`, { method: 'PATCH', accessToken, body: JSON.stringify({ meetingYear: input.metYear }) })
-            await refreshRemote(accessToken)
-          } catch {
-            if (registered) {
-              await refreshRemote(accessToken)
-              setState(s => ({ ...s, partnerNotice: '相手は登録済みです。出会った年を保存できませんでした。ふたりの年表から、もう一度入力してください。' }))
-            } else if (deleted) setState(s => ({ ...s, partners: [], partnerNotice: '前の相手は削除済みです。新しい相手の登録に失敗しました。入力内容を保持しているので、もう一度登録してください。' }))
-            else if (old) setState(s => ({ ...s, partners: [old], partnerNotice: '相手の入れ替えを開始できませんでした。前の相手は残っています。' }))
-            else setState(s => ({ ...s, partners: [], partnerNotice: '相手の登録に失敗しました。入力内容を保持しているので、もう一度登録してください。' }))
+        if (partnerSaveInProgress.current) throw new Error('登録処理中です。完了をお待ちください。')
+        partnerSaveInProgress.current = true
+        const owner = remoteAuth.current.owner
+        let pending: PendingPartner | null = null
+        let stage = 'prepare'
+        const current = () => Boolean(owner && remoteAuth.current.owner === owner)
+        const check = () => { if (!current()) throw new Error('ログイン状態が変わりました。') }
+        try {
+          const accessToken = await remoteToken()
+          check()
+          if (!accessToken || !owner || !stateRef.current.selfSourceId) throw new Error('AUTH_REQUIRED')
+          const sourceId = stateRef.current.selfSourceId
+          const key = pendingPartnerKey(owner)
+          const raw = window.localStorage.getItem(key)
+          pending = pendingPartnerFromRaw(raw)
+          if (raw && (!partnerDraftFromRaw(raw) || (!pending && JSON.parse(raw).version === 2))) throw new Error('INVALID_PENDING')
+          if (pending && JSON.stringify(pending.input) !== JSON.stringify(input)) {
+            throw new Error('PENDING_INPUT_CHANGED')
           }
-        })
+          if (!pending) {
+            // Legacy drafts have no operation id. First reconcile the list; do
+            // not interpret an already registered partner as a deletion target.
+            if (raw) {
+              const list = await apiFetch<{ partners: Array<{ id: string }> }>('/api/partners', { accessToken })
+              check()
+              if (list.partners.length) throw new Error('LEGACY_PENDING_UNCERTAIN')
+            }
+            pending = { version: 2, input, operationId: newOperationId(), oldPartnerId: old?.id ?? null, deleted: false }
+          }
+          const persist = () => { check(); window.localStorage.setItem(key, JSON.stringify(pending)) }
+          persist() // If durable recovery is unavailable, stop before DELETE.
+          setState(s => ({ ...s, partnerDraft: input, partnerNotice: null }))
+          if (pending.oldPartnerId && !pending.deleted && !pending.registeredId) {
+            stage = 'delete'
+            const list = await apiFetch<{ partners: Array<{ id: string }> }>('/api/partners', { accessToken })
+            check()
+            if (list.partners.some(p => p.id !== pending!.oldPartnerId)) throw new Error('PARTNER_CHANGED')
+            if (list.partners.some(p => p.id === pending!.oldPartnerId)) {
+              await apiFetch<void>(`/api/partners/${pending.oldPartnerId}`, { method: 'DELETE', accessToken })
+              check()
+            }
+            pending.deleted = true
+            persist()
+            const removedId = pending.oldPartnerId
+            setState(s => ({ ...s,
+              partners: s.partners.filter(p => p.id !== removedId),
+              savedIds: s.savedIds.filter(id => !id.startsWith(savedKey.couplePrefix(removedId!))),
+              draft: s.draft.sourceHref.startsWith(`/couple/${removedId}`)
+                ? { ...s.draft, sourceId: undefined, sourceCardId: undefined, sourceTitle: '', sourceSub: '', sourceHref: '' } : s.draft,
+            }))
+          }
+          stage = 'register'
+          if (!pending.registeredId) {
+            const result = await apiFetch<{ partner?: { id: string } }>('/api/partners', { method: 'POST', accessToken, headers: { 'Idempotency-Key': pending.operationId }, body: JSON.stringify({ ...input, displayName: input.name, birthplace: input.birthPlace, relationshipLabel: input.relation, relationshipType: relationGroup(input.relation) }) })
+            check()
+            if (!result.partner?.id) throw new Error('PARTNER_MISSING')
+            pending.registeredId = result.partner.id
+            persist()
+          }
+          stage = 'meeting_year'
+          await apiFetch(`/api/reading/couple-timeline-settings/${pending.registeredId}?selfReadingId=${sourceId}`, { method: 'PATCH', accessToken, body: JSON.stringify({ meetingYear: input.metYear }) })
+          check()
+          stage = 'refresh'
+          if (!await refreshRemote(accessToken)) throw new Error('REFRESH_FAILED')
+          check()
+          window.localStorage.removeItem(key)
+          setState(s => ({ ...s, partnerDraft: null, partnerNotice: null }))
+          return { ...input, id: pending.registeredId }
+        } catch {
+          if (current()) {
+            const notice = pending?.registeredId
+              ? stage === 'refresh' ? '相手は登録済みです。年表を読み込めませんでした。入力を残しています。もう一度押すと登録を重複させずに再確認します。'
+                : '相手は登録済みです。出会った年を保存できませんでした。入力を残しています。もう一度押すと年の保存だけを再試行します。'
+              : pending?.deleted ? '前の相手は削除済みです。新しい相手の登録結果を確認できませんでした。入力を残しています。同じ入力でもう一度登録してください。'
+                : stage === 'delete' ? '前の相手の削除結果を確認できませんでした。入力を残しています。同じ入力でもう一度押すと、現在の登録状況から確認します。'
+                  : '登録を開始できませんでした。前の操作が残っている場合は、その入力で再確認してください。'
+            setState(s => ({ ...s, partnerDraft: pending?.input ?? input, partnerNotice: notice }))
+          }
+          throw new Error('登録を完了できませんでした。入力を残しているので、案内を確認してください。')
+        } finally { partnerSaveInProgress.current = false }
       }
       setState(s => {
         // 前の相手の年表は保存一覧からも外す。前の相手について作ったブックは本棚に残す

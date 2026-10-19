@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BackHeader, Button, Chip, Field, Note, Page } from '../components/ui'
 import { prefectures, relationGroup, relationOptions } from '../data/mock'
@@ -11,7 +11,7 @@ import { useApp } from '../state/AppState'
  * → 出会った年は coupleMeetingSettings で別に保存（相手の登録だけ成功した場合は「登録」を押し直すと年だけ保存し直す）
  */
 export function PartnerNewPage() {
-  const { setPartner, partners, partnerNotice, profile } = useApp()
+  const { setPartner, partners, partnerNotice, partnerDraft, profile } = useApp()
   const current = partners[0]
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -22,21 +22,33 @@ export function PartnerNewPage() {
   const [gender, setGender] = useState<Gender>('female')
   const [metYear, setMetYear] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    setName(partnerDraft?.name ?? ''); setRelation(partnerDraft?.relation ?? 'お付き合い中')
+    setBirthDate(partnerDraft?.birthDate ?? '1990-01-01'); setBirthTime(partnerDraft?.birthTime ?? '')
+    setBirthPlace(partnerDraft?.birthPlace ?? '東京都'); setGender(partnerDraft?.gender ?? 'female')
+    setMetYear(partnerDraft?.metYear == null ? '' : String(partnerDraft.metYear)); setError(null)
+  }, [partnerDraft])
   const thisYear = new Date().getFullYear()
   // iOSと同じ：出会った年は「ふたりが生まれた年以降」から今年まで
   const minMetYear = Math.max(Number(birthDate.slice(0, 4)) || 1900, Number(profile?.birthDate.slice(0, 4)) || 0)
   const valid = name.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(birthDate)
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!valid) return
+    if (!valid || saving) return
     const raw = metYear.trim()
     if (raw && (!/^[0-9]{4}$/.test(raw) || Number(raw) < minMetYear || Number(raw) > thisYear)) {
       setError('出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください。')
       return
     }
-    const partner = setPartner({ name: name.trim(), relation, birthDate, birthTime: birthTime || null, birthPlace, gender, metYear: raw ? Number(raw) : null })
-    navigate(`/couple/${partner.id}`)
+    setSaving(true); setError(null)
+    try {
+      const partner = await setPartner({ name: name.trim(), relation, birthDate, birthTime: birthTime || null, birthPlace, gender, metYear: raw ? Number(raw) : null })
+      navigate(`/couple/${partner.id}`)
+    } catch {
+      setError('登録を完了できませんでした。入力を残しているので、案内を確認してください。')
+    } finally { setSaving(false) }
   }
 
   return (
@@ -49,7 +61,8 @@ export function PartnerNewPage() {
         {current && <Note>登録できる相手は1人です。登録すると、いまの相手（{current.name}）の年表と入れ替わります。{current.name}について作ったブックは本棚に残ります。入れ替えは何度でも無料です。</Note>}
       </section>
 
-      <form onSubmit={submit} noValidate className="flex flex-col gap-[22px] px-6 pt-5">
+      <form onSubmit={submit} noValidate aria-busy={saving} className="flex flex-col gap-[22px] px-6 pt-5">
+        <fieldset disabled={saving} className="contents">
         <Field id="pname" label="表示名" required maxLength={20} value={name} onChange={e => setName(e.target.value)} placeholder="呼び名" hint="読みものの中でこの名前を使います。本名でなくてかまいません。" />
         <div className="flex flex-col gap-1.5">
           <Field id="pmet" label="出会った年（任意）" inputMode="numeric" placeholder="例：2023" maxLength={4} value={metYear}
@@ -89,8 +102,9 @@ export function PartnerNewPage() {
         <Note>相手の方の生年月日は、ご本人の了解を得たうえで入力してください。登録した相手は、いつでも削除できます。</Note>
 
         <div className="flex flex-col gap-2.5 pb-12 pt-2">
-          <Button type="submit" size="lg" disabled={!valid}>{current ? `${current.name}と入れ替えて登録` : '登録'}</Button>
+          <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '登録しています…' : current ? `${current.name}と入れ替えて登録` : '登録'}</Button>
         </div>
+        </fieldset>
       </form>
     </Page>
   )
