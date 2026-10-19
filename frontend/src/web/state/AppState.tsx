@@ -65,7 +65,7 @@ interface Actions {
   restore: (email: string) => void
   /** この端末での利用をやめる（linked のときだけ。メールで戻れる） */
   forgetDevice: () => void
-  saveProfile: (profile: BirthProfile) => void
+  saveProfile: (profile: BirthProfile) => Promise<void>
   /** 相手は1人だけ。登録すると前の相手と入れ替わる（何度でも無料） */
   setPartner: (partner: Omit<Partner, 'id'>) => Partner
   setDraft: (draft: Partial<AppState['draft']>) => void
@@ -167,15 +167,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const timers = useRef<number[]>([])
   const stateRef = useRef(state)
   const remoteAuth = useRef({ owner: null as string | null, token: null as string | null, revision: 0 })
+  const profileSaveInProgress = useRef(false)
+  const profileSaveOwner = useRef<string | null>(null)
+  const refreshSequence = useRef(0)
   stateRef.current = state
 
   const clearTimers = () => { timers.current.forEach(t => window.clearTimeout(t)); timers.current = [] }
   useEffect(() => () => timers.current.forEach(t => window.clearTimeout(t)), [])
 
   const refreshRemote = useCallback(async (accessToken: string) => {
+    // A stale caller must not invalidate the new owner's active refresh.
+    if (remoteAuth.current.token !== accessToken) return false
     const revision = remoteAuth.current.revision
-    const current = () => remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
-    if (!current()) return
+    const sequence = ++refreshSequence.current
+    const current = () => refreshSequence.current === sequence && remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
+    if (!current()) return false
     setState(s => ({ ...s, readingsStatus: 'loading', coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'loading'])) }))
     try {
       const [history, status, partners, bookshelf, saved] = await Promise.all([
@@ -220,7 +226,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           return { id, years: coupleReadings(raw), status: 'ready' as const, meetingYear: raw.meetingYear }
         } catch { return { id, years: [], status: 'error' as const, meetingYear: undefined } }
       }))
-      if (!current()) return
+      if (!current()) return false
       setState(s => !current() ? s : ({ ...s, profile: profile?.birthDate ? profile : s.profile,
         session: s.session === 'none' ? 'anonymous' : s.session,
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
@@ -231,7 +237,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })), partnerNotice: null,
         years, chapters,
       }))
-    } catch { if (current()) setState(s => ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) })) }
+      return true
+    } catch {
+      if (current()) setState(s => ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) }))
+      return false
+    }
   }, [])
 
   useEffect(() => {
@@ -242,6 +252,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (disposed) return
       const owner = session?.user.id ?? null
       const token = session?.access_token ?? null
+      // Bind only this form's first anonymous sign-in. A later account switch
+      // must load the new owner's data rather than being suppressed by it.
+      if (profileSaveInProgress.current && profileSaveOwner.current === null && session?.user.is_anonymous) profileSaveOwner.current = owner
       const changed = remoteAuth.current.owner !== owner
       if (changed || remoteAuth.current.token !== token) remoteAuth.current.revision++
       remoteAuth.current.owner = owner; remoteAuth.current.token = token
@@ -252,7 +265,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { ...base, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
           draft: { ...base.draft, question: changed ? loadDraftQuestionForUser(session.user.id) : base.draft.question } }
       })
-      void refreshRemote(session.access_token)
+      // A fresh SIGNED_IN must still clear the previous owner's state, but an
+      // empty-history refresh must not race the initial profile persistence.
+      // The form keeps its input locally and awaits saveProfile before leaving.
+      if (!profileSaveInProgress.current || profileSaveOwner.current !== owner) void refreshRemote(session.access_token)
     }
     void supabase.auth.getSession().then(({ data }) => {
       if (!disposed && authEvents === 0) applySession(data.session)
@@ -394,18 +410,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (result.error || !result.data.session) throw result.error ?? new Error('匿名アカウントを作成できませんでした')
       token = result.data.session.access_token
     }
+    const assertOwner = () => {
+      if (remoteAuth.current.token !== token || profileSaveOwner.current !== remoteAuth.current.owner) throw new Error('ログイン状態が変わりました。もう一度お試しください。')
+    }
+    assertOwner()
     const operationId = newOperationId()
     await apiFetch('/api/calc/divination', { method: 'POST', accessToken: token, body: JSON.stringify({ birthDate: profile.birthDate, birthTime: profile.birthTime, birthplace: profile.birthPlace, gender: profile.gender }) })
+    assertOwner()
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}${webApiPath('/api/preview/generate?format=sse')}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'Idempotency-Key': operationId },
       body: JSON.stringify({ birthDate: profile.birthDate, birthTime: profile.birthTime, birthplace: profile.birthPlace, gender: profile.gender, nickname: profile.nickname }),
     })
     const text = await response.text()
+    assertOwner()
     if (!response.ok) throw new Error('読みものを生成できませんでした')
     const complete = [...text.matchAll(/data: (\{.*\})/g)].map(m => JSON.parse(m[1]) as { type?: string; report?: Record<string, unknown> }).find(x => x.type === 'complete')
     if (!complete?.report) throw new Error('生成結果を確認できませんでした')
     const report = complete.report
     await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData: { ...profile, birthplace: profile.birthPlace }, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
+    assertOwner()
+    return token
   }, [remoteToken])
 
   const actions = useMemo<Actions>(() => ({
@@ -434,9 +458,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (REMOTE) { void supabase.auth.signOut(); return }
       setState(blankState())
     },
-    saveProfile: profile => {
-      setState(s => ({ ...s, ...(!REMOTE ? { years: mockYears, chapters: mockChapters, personaTitle: mockPersonaTitle } : { readingsStatus: 'loading' as const, years: [], chapters: [], personaTitle: '' }), profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
-      if (REMOTE) void remoteSaveProfile(profile).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => setState(s => s.profile === profile ? { ...s, readingsStatus: 'error' } : s))
+    saveProfile: async profile => {
+      if (!REMOTE) {
+        setState(s => ({ ...s, years: mockYears, chapters: mockChapters, personaTitle: mockPersonaTitle, profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
+        return
+      }
+      if (profileSaveInProgress.current) throw new Error('読みものを作成中です。')
+      profileSaveInProgress.current = true
+      profileSaveOwner.current = remoteAuth.current.owner
+      // Invalidate an older empty-history refresh before starting persistence.
+      refreshSequence.current++
+      try {
+        const token = await remoteSaveProfile(profile)
+        // The server is now the source of truth. Never hydrate a different
+        // account, even if a sign-in/sign-out happened during the request.
+        if (remoteAuth.current.token !== token) throw new Error('ログイン状態が変わりました。')
+        setState(s => ({ ...s, profile, showGuide: s.profile ? s.showGuide : true }))
+        if (!await refreshRemote(token)) throw new Error('保存した読みものを読み込めませんでした。')
+      } finally {
+        profileSaveInProgress.current = false
+        profileSaveOwner.current = null
+      }
     },
     setPartner: input => {
       const partner: Partner = { ...input, id: `p-${Date.now()}` }

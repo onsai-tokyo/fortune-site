@@ -23,15 +23,22 @@ export function OnboardingPage() {
   const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '')
   const [birthPlace, setBirthPlace] = useState(profile?.birthPlace ?? '東京都')
   const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const editing = !!profile
   const valid = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && gender !== null
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!valid || !gender) return
-    saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender })
-    if (editing) navigate(returnTo ?? '/settings')
-    else navigate(`/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
+    if (!valid || !gender || saving) return
+    setSaving(true)
+    setSaveError(false)
+    try {
+      await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender })
+      if (editing) navigate(returnTo ?? '/settings')
+      else navigate(`/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
+    } catch { setSaveError(true) }
+    finally { setSaving(false) }
   }
 
   return (
@@ -46,7 +53,7 @@ export function OnboardingPage() {
       </section>
 
       <form onSubmit={submit} className="flex flex-col gap-[22px] px-6 pt-5">
-        <Field id="birthdate" label="生年月日" type="date" required value={birthDate} onChange={e => setBirthDate(e.target.value)} min="1900-01-01" max={new Date().toISOString().slice(0, 10)} />
+        <Field id="birthdate" label="生年月日" type="date" required disabled={saving} value={birthDate} onChange={e => setBirthDate(e.target.value)} min="1900-01-01" max={new Date().toISOString().slice(0, 10)} />
         <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
           <legend className="pb-1.5 text-[13px] font-medium text-fl-body">性別</legend>
           <div className="grid grid-cols-2 gap-2">
@@ -84,7 +91,8 @@ export function OnboardingPage() {
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。AIの相談ブック作成・質問は18歳以上の方に限ります。
             </p>
           )}
-          <Button type="submit" size="lg" disabled={!valid}>{editing ? '保存する' : '同意して、無料で読む'}</Button>
+          {saveError && <p role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">読みものを作成できませんでした。入力は残っています。時間をおいて、もう一度お試しください。</p>}
+          <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : editing ? '保存する' : '同意して、無料で読む'}</Button>
           {!editing && <span className="text-center text-xs leading-[1.7] text-fl-muted">登録・ログインは不要です。</span>}
         </div>
       </form>

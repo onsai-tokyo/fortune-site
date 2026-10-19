@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-19",
+  "branch": "codex/fatelab-web-release-20261018",
+  "base_commit": "9619d9caa0b9bdb715335e135e5697614d2ee8da",
+  "status": "LOCAL_FIX_VERIFIED_NOT_COMMITTED_OR_DEPLOYED",
+  "reproduction": "New anonymous SIGNED_IN resets the provider to blankState while initial persistence is in flight; the old optimistic navigation loses the form and RequireProfile redirects to welcome. The new fixture failed on the pre-fix REMOTE artifact with: new SIGNED_IN must not discard the initial form.",
+  "changes": [
+    "saveProfile returns an awaited promise; both entry forms navigate only after persistence and hydration",
+    "Busy submit and retained form fields with a visible retryable failure notice",
+    "Suppress competing empty-history hydration only for the owner of the pending initial save; retain account-change clearing",
+    "Stop subsequent writes and hydration if auth changes while a profile save is in flight",
+    "Latest refresh wins; rejected stale-token callers cannot invalidate the current owner's refresh"
+  ],
+  "frontend_unit": {"passed": 96, "failed": 0},
+  "backend_npm_test": {"passed": 529, "failed": 0},
+  "frontend_build": "PASS (including SEO generation)",
+  "backend_build": "PASS",
+  "synthetic_remote_build_payments_false": "PASS",
+  "onboarding_regression": {
+    "passed": 8,
+    "cases": ["welcome new anonymous signup", "top new anonymous signup", "signup failure retry", "calculation failure retry", "generation failure retry", "persistence failure retry", "owner switch during pending save stops old writes", "late empty history cannot overwrite saved reading"],
+    "successful_cases_also_check": "Retained input, loading submit, server-derived heading, persisted profile on reload, no sample body and no extra signup after API failures"
+  },
+  "original_mock_e2e": {"journey":"PASS", "guest":"PASS", "logic":"PASS", "bugs":"PASS", "probe3":"PASS", "crawl":"PASS"},
+  "crawl": {"visited":{"default":33,"first":9,"linked":36,"nopartner":32,"zero":33,"failed":43},"issues":0,"expected_couple_redirects":4},
+  "existing_remote_regressions": {"legacy_login":"PASS", "remote_readings":"PASS (two births x two partners)", "payments_remote":"PASS (payments off, granted credit, under-18 gates)"},
+  "isolation_check": "PASS: iOS/native/shared protected code unchanged",
+  "diff_check": "PASS",
+  "source_sha256": {
+    "frontend/src/web/state/AppState.tsx": "bdc63f935acd4a140b1a5077302dcd21eb456e5aec62607fc1aa32f37523f4e5",
+    "frontend/src/web/pages/TopPage.tsx": "dbe6e03e8690052e157e771647faf1bcf3a47204518ed4de7473f8c84f700c5f",
+    "frontend/src/web/pages/OnboardingPage.tsx": "74eae14cfb3fac6d11a852dbf33c882c53b82b7a6c351a48ef9637e4079a2429",
+    "docs/mock-e2e/onboarding_remote.py": "3440459f69a04e9613c5a5abe2cdb21005bf9c3bd086adc331c9dfad38ebbe09"
+  },
+  "test_harness_notes": [
+    "The first retry fixture run held the calculation after signup retry and timed out; fixed the fixture and reran all eight cases successfully.",
+    "An intermediate crawler hit removed old chunks because the operator rebuilt dist during its run; froze final artifacts and reran all six scripts successfully. No application source change was made to hide that error.",
+    "Sandbox IPC/browser/listen denials were rerun with permission; they are not application test failures."
+  ],
+  "build_warning": "Existing static/dynamic Supabase import warning; build succeeds",
+  "external_network": "All browser fixture auth/API requests fulfilled locally; other external requests blocked",
+  "production_changes_in_this_task": false,
+  "live_signup_retried": false,
+  "real_email_or_ai_calls": false,
+  "committed_at_verification": false,
+  "pushed": false,
+  "deployed": false,
+  "remaining": [
+    "Individually approved commit/push/Preview update required",
+    "Live initial onboarding failure was reproduced locally, but real Supabase/API behavior after this fix is still unverified; other deployment or network issues are not ruled out",
+    "Preserve existing test browser session; actual account creation and any saved data from the earlier live attempt have not been confirmed or deleted",
+    "Real partner registration/replacement, email transfer, granted-credit AI book/questions, cross-account isolation and test cleanup remain",
+    "Actual iOS login/readings/partner deletion and domain cutover remain separately gated"
+  ],
+  "synthetic_success_screenshot": "/private/tmp/fatelab-onboarding-fixed-local-20261019.png"
+}

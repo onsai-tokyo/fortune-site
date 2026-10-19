@@ -22,16 +22,23 @@ export function TopPage() {
   const navigate = useNavigate()
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState<Gender | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const dateRef = useRef<HTMLInputElement>(null)
   const valid = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && gender !== null
   const today = new Date().toISOString().slice(0, 10)
 
-  function start(e: FormEvent) {
+  async function start(e: FormEvent) {
     e.preventDefault()
-    if (!valid || !gender) return
+    if (!valid || !gender || saving) return
     // 出生時刻・出生地・呼び名はあとから足せる（出生地は時刻がない間は計算に影響しない）
-    saveProfile({ nickname: '', birthDate, birthTime: null, birthPlace: '東京都', gender })
-    navigate('/creating')
+    setSaving(true)
+    setSaveError(false)
+    try {
+      await saveProfile({ nickname: '', birthDate, birthTime: null, birthPlace: '東京都', gender })
+      navigate('/creating')
+    } catch { setSaveError(true) }
+    finally { setSaving(false) }
   }
 
   function goToForm() {
@@ -59,7 +66,7 @@ export function TopPage() {
           <form id="start" onSubmit={start} className="flex flex-col gap-[18px] rounded-card border border-fl-line bg-white p-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="top-birthdate" className="text-[13px] font-medium text-fl-body">生年月日</label>
-              <input ref={dateRef} id="top-birthdate" type="date" required min="1900-01-01" max={today} value={birthDate} onChange={e => setBirthDate(e.target.value)}
+              <input ref={dateRef} id="top-birthdate" type="date" required disabled={saving} min="1900-01-01" max={today} value={birthDate} onChange={e => setBirthDate(e.target.value)}
                 className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base text-fl-ink" />
             </div>
             <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
@@ -73,7 +80,8 @@ export function TopPage() {
             <p className="m-0 text-xs leading-[1.8] text-fl-muted">
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。AIの相談ブック作成・質問は18歳以上の方に限ります。
             </p>
-            <Button type="submit" size="lg" disabled={!valid}>同意して、無料で読む</Button>
+            {saveError && <p role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">読みものを作成できませんでした。入力は残っています。時間をおいて、もう一度お試しください。</p>}
+            <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : '同意して、無料で読む'}</Button>
             <span className="text-center text-xs leading-[1.7] text-fl-muted">登録・ログインは不要です。出生時刻と出生地は、あとから足せます。</span>
           </form>
         )}
