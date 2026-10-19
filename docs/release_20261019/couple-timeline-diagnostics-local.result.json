@@ -1,0 +1,21 @@
+{
+  "status": "LOCAL_DIAGNOSTICS_VERIFIED_NOT_COMMITTED_OR_DEPLOYED",
+  "baseCommit": "675f67989e348f575d8861dc1f627c182526a9af",
+  "branch": "codex/fatelab-web-release-20261018",
+  "scope": "Web-only couple timeline route diagnostic logging; no production connection or writes",
+  "event": "WEB_COUPLE_TIMELINE_FAILED",
+  "fields": ["method", "stage", "status", "code"],
+  "privacy": "All fields are fixed categories; no raw error or database messages/details/hints, IDs, birth data, names, tokens, keys or report/question text",
+  "preserved": "Existing HTTP statuses, response bodies, authorization, calculation and persistence behavior; shared/iOS routes unchanged",
+  "verification": {
+    "newTests": 3,
+    "routeTests": "7 passed (included in full suite)",
+    "backendNpmTest": { "total": 532, "passed": 532, "failed": 0, "durationMs": 56578.606458 },
+    "backendBuild": "passed",
+    "gitDiffCheck": "passed",
+    "coverage": ["database fixed-code classification at source lookup and settings lookup", "raw/private error text excluded", "snapshot, meeting validation, context, calculation and save failure stages", "400/404/422 fixed diagnostic codes", "successful requests emit no diagnostic", "existing owned-source and same-engine tests"]
+  },
+  "notRun": ["frontend build/unit/mock-e2e (no frontend changes)", "production reproduction with diagnostics"],
+  "remaining": "Actual production failure cause is still unknown until an individually approved deployment and read-only retry",
+  "externalChanges": "None: no commit, push, deploy, SQL, settings, user or partner writes"
+}
