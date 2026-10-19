@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { webCoupleTimeline } from './webReadings.js'
 import { coupleSnapshot, snapshotTimeline } from '../lib/report/coupleAllYears/snapshot.js'
 import { bookSources } from '../lib/aiBooks.js'
+import { profileMeetingKey } from './coupleTimeline.js'
 const source = '11111111-1111-4111-8111-111111111111', partner = '22222222-2222-4222-8222-222222222222'
 function setup(birthDate = '1994-05-12', otherDate = '1996-08-23') {
   const saved: { payload: unknown; operation: string | undefined }[] = []
@@ -65,6 +66,67 @@ test('Web couple timeline rejects missing self/partner IDs, including POST persi
   }
 })
 
+test('Web source lookup uses server-side owned reads even when authenticated table reads are forbidden', async t => {
+  t.mock.method(console, 'warn', () => {})
+  const f = setup()
+  let userReads = 0
+  f.deps.user = () => { userReads++; throw new Error('authenticated partner_profiles access forbidden') }
+  assert.equal((await f.run()).status, 200)
+  assert.equal(userReads, 0)
+  assert.equal(f.saved.length, 0)
+})
+
+test('server-side Web source lookup filters both owner and id, rejecting mixed-owner GET and POST', async t => {
+  t.mock.method(console, 'warn', () => {})
+  const foreignSource = '33333333-3333-4333-8333-333333333333'
+  const foreignPartner = '44444444-4444-4444-8444-444444444444'
+  for (const method of ['GET', 'POST']) for (const [selfId, partnerId, expected] of [
+    [source, partner, 200], [source, foreignPartner, 404],
+    [foreignSource, partner, 404], [foreignSource, foreignPartner, 404],
+  ] as const) {
+    const f = setup()
+    const reads: Array<{ table: string; filters: Record<string, unknown> }> = []
+    const realTimeline = f.deps.timeline
+    let calculations = 0
+    f.deps.timeline = (...args) => { calculations++; return realTimeline(...args) }
+    f.deps.admin = () => ({ from(table: string) {
+      const filters: Record<string, unknown> = {}
+      const query = { select() { return query }, eq(k: string, v: unknown) { filters[k] = v; return query }, async maybeSingle() {
+        reads.push({ table, filters: { ...filters } })
+        assert.equal(filters.user_id, 'owner', 'service reads must include verified request owner, never client body owner')
+        if (table === 'couple_timeline_settings') {
+          assert.equal(filters.relationship_key, profileMeetingKey(partner))
+          return { data: { meeting_year: 2024 }, error: null }
+        }
+        assert.equal(typeof filters.id, 'string', 'service reads must target the selected id')
+        const ownRow = table === 'reading_conversations' ? f.a : f.b
+        const foreignId = table === 'reading_conversations' ? foreignSource : foreignPartner
+        const row = filters.id === ownRow.id ? { ...ownRow, user_id: 'owner' }
+          : filters.id === foreignId ? { ...ownRow, id: foreignId, user_id: 'other' } : null
+        return { data: row?.user_id === filters.user_id ? row : null, error: null }
+      } }
+      return query
+    } }) as any
+    f.req.params = { selfId, partnerId }; f.req.method = method
+    f.req.body = { year: 2026, user_id: 'other', userId: 'other', owner: 'other' }
+    assert.equal((await f.run()).status, expected)
+    assert.equal(reads.filter(r => r.table !== 'couple_timeline_settings').length, 2)
+    assert.equal(calculations, expected === 200 ? 1 : 0)
+    assert.equal(f.saved.length, expected === 200 && method === 'POST' ? 1 : 0)
+  }
+})
+
+test('Web couple handler fails closed before server access if authenticated identity is absent', async t => {
+  t.mock.method(console, 'warn', () => {})
+  for (const missing of ['userId', 'accessToken'] as const) {
+    const f = setup()
+    f.req[missing] = ''
+    f.deps.admin = () => { throw new Error('must not access server client') }
+    assert.equal((await f.run()).status, 401)
+    assert.equal(f.saved.length, 0)
+  }
+})
+
 test('Web timeline diagnostics classify database failures without logging database text or private fields', async t => {
   const log = t.mock.method(console, 'warn', () => {})
   const privateText = 'DO_NOT_LOG token=secret birth=1990-01-15 report=private owner=id'
@@ -77,8 +139,11 @@ test('Web timeline diagnostics classify database failures without logging databa
     const f = setup()
     const query = { select() { return query }, eq() { return query }, async maybeSingle() { return { data: null, error: { code: dbCode, message: privateText, details: privateText, hint: privateText } } } }
     const failingClient = { from() { return query } } as any
-    if (stage === 'source_lookup') f.deps.user = () => failingClient
-    else f.deps.admin = () => failingClient
+    const base = f.deps.admin()
+    f.deps.admin = () => ({ from(table: string) {
+      return (stage === 'source_lookup' ? table !== 'couple_timeline_settings' : table === 'couple_timeline_settings')
+        ? failingClient.from(table) : base.from(table)
+    } }) as any
     const result = await f.run()
     assert.equal(result.status, 503)
     assert.deepEqual(result.body, { error: 'ふたりの年表を読み込めませんでした。再読み込みしてください。' })
@@ -100,7 +165,8 @@ test('Web timeline diagnostics identify computation and persistence stages, neve
       if (stage === 'birth_snapshot') { f.a.birth_data.birthDate = 'invalid'; }
       if (stage === 'meeting_validation') {
         const query = { select() { return query }, eq() { return query }, async maybeSingle() { return { data: { meeting_year: 1800 }, error: null } } }
-        f.deps.admin = () => ({ from() { return query } }) as any
+        const base = f.deps.admin()
+        f.deps.admin = () => ({ from(table: string) { return table === 'couple_timeline_settings' ? query : base.from(table) } }) as any
         code = 'INVALID_MEETING_YEAR'
       }
       if (stage === 'timeline_context') f.deps.context = async () => { throw new Error(privateText) }

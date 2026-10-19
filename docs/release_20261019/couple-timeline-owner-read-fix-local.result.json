@@ -1,0 +1,19 @@
+{
+  "status": "LOCAL_FIX_VERIFIED_NOT_COMMITTED_OR_DEPLOYED",
+  "baseCommit": "7b493846a2998761b43afe54ff86d846bdc1d9a4",
+  "branch": "codex/fatelab-web-release-20261018",
+  "scope": "Only Web couple timeline source lookup now uses the existing server-side Supabase client; both source queries retain selected id and authenticated user_id filters",
+  "authentication": "Handler rejects missing verified owner or access token before any server-side query; router requireAuth remains unchanged",
+  "security": "No SQL, grants, RLS or secret changes; client-provided owner fields are ignored; no shared/iOS API or calculation changes",
+  "verification": {
+    "newRegressionTests": 3,
+    "routeTests": "10 passed (included in full suite)",
+    "backendNpmTest": { "total": 535, "passed": 535, "failed": 0, "durationMs": 38758.988333 },
+    "backendBuild": "passed",
+    "gitDiffCheck": "passed",
+    "cases": ["authenticated direct table access forbidden while owned server read succeeds", "GET and POST owner/id filters for self and partner", "mixed-owner and both-foreign source combinations return 404 before calculation/persistence", "spoofed body owner ignored", "missing identity or token returns 401 before DB access", "existing diagnostics privacy and same-engine tests remain passing"]
+  },
+  "notRun": ["frontend build/unit/mock-e2e (no frontend changes)", "live production acceptance with this fix"],
+  "externalChanges": "None; no commit, push, deployment, production connection, SQL, settings or test-data writes",
+  "remaining": "Separate approval required for commit/push and production rollout; actual production timeline still unverified"
+}

@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import type { AuthRequest } from '../middleware/auth.js'
-import { getSupabaseUser } from '../lib/supabaseUser.js'
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 import { coupleSnapshot, snapshotTimeline, validateMeetingYear } from '../lib/report/coupleAllYears/snapshot.js'
 import { profileMeetingKey } from './coupleTimeline.js'
@@ -29,8 +28,10 @@ function timelineFailureCode(error: unknown) {
 }
 // Same snapshot/engine/settings as iOS, but no compatibility-operation points
 // reservation. A selected year becomes a real owned source only on explicit POST.
-export async function webCoupleTimeline(req: AuthRequest, res: import('express').Response, deps = { user: getSupabaseUser, admin: getSupabaseAdmin, timeline: snapshotTimeline, save: saveReadingSnapshot, context: loadTimelineContext }) {
+export async function webCoupleTimeline(req: AuthRequest, res: import('express').Response, deps = { admin: getSupabaseAdmin, timeline: snapshotTimeline, save: saveReadingSnapshot, context: loadTimelineContext }) {
   res.setHeader('Cache-Control', 'private, no-store')
+  // The router authenticates first; also fail closed when this handler is invoked directly.
+  if (!req.userId || !req.accessToken) { res.status(401).json({ error: 'ログイン状態を確認してください。' }); return }
   if (!uuid.test(String(req.params.selfId)) || !uuid.test(String(req.params.partnerId))) {
     console.warn('WEB_COUPLE_TIMELINE_FAILED', { method: req.method === 'GET' ? 'GET' : 'POST', stage: 'request_validation', status: 400, code: 'INVALID_IDS' })
     res.status(400).json({ error: '本人の読みものと相手を選択してください。' }); return
@@ -38,7 +39,9 @@ export async function webCoupleTimeline(req: AuthRequest, res: import('express')
   let stage = 'source_lookup'
   let databaseCode: string | undefined
   try {
-    const db = deps.user(req.accessToken!)
+    // Partner table access is server-only. Never widen authenticated table grants:
+    // both privileged source reads must include the verified owner AND selected id.
+    const db = deps.admin()
     const [self, partner] = await Promise.all([
       db.from('reading_conversations').select('id,kind,birth_data,reading_revision_id').eq('id', req.params.selfId).eq('user_id', req.userId!).maybeSingle(),
       db.from('partner_profiles').select('id,display_name,birth_date,birth_time,birthplace,gender,relationship_label,relationship_type').eq('id', req.params.partnerId).eq('user_id', req.userId!).maybeSingle(),
