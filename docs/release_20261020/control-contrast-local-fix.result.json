@@ -1,0 +1,19 @@
+{
+  "status": "LOCAL_VERIFIED_NOT_DEPLOYED",
+  "baseCommit": "41b2624d06950ed6dd3d9ff790050f617e474e3d",
+  "rootCause": "Legacy global .text-white color override with !important also recolored new Web dark controls",
+  "scope": "CSS overrides under .fl-root only; no logic, iOS, backend, SQL or production changes",
+  "fix": ["Restore white text for Web dark controls, selected chips and chat bubbles", "Preserve explicit muted disabled foreground"],
+  "tests": {
+    "frontendUnit": { "passed": 107, "failed": 0 },
+    "frontendBuild": "PASS including TypeScript and SEO",
+    "contrast": { "passedScreenChecks": 24, "widths": [320, 390, 1280], "enabledMinimumRatio": "4.5:1", "disabledForeground": "rgb(108, 112, 104)" },
+    "mockE2E": { "passed": 6, "names": ["journey", "guest", "logic", "bugs", "probe3", "crawl"] },
+    "crawl": { "visited": [33, 9, 36, 32, 33, 43], "issues": 0, "expectedRedirects": 4 },
+    "gitDiffCheck": "PASS"
+  },
+  "testNote": "Initial contrast fixture used an exact label for a demo button whose accessible name includes a route suffix. Corrected the fixture; final 24 screen checks passed.",
+  "warnings": ["Existing Supabase static/dynamic import bundling warning"],
+  "screenshot": "/private/tmp/fatelab-control-contrast-fixed-20261020.png",
+  "liveAcceptance": "Not run; Preview still uses the preceding commit"
+}

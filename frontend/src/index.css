@@ -295,3 +295,15 @@ button.bg-accent-dark {
 ::-webkit-scrollbar-thumb {
   background: rgba(155, 130, 77, 0.5);
 }
+
+/* The legacy ivory theme remaps .text-white globally. New Web screens use
+   actual dark controls, selected chips and chat bubbles: keep their intended
+   foreground without changing any legacy route's palette. */
+.fl-root .text-white {
+  color: #fff !important;
+}
+
+/* Preserve the explicit disabled foreground over the white override above. */
+.fl-root .disabled\:text-fl-muted:disabled {
+  color: #6c7068 !important;
+}
