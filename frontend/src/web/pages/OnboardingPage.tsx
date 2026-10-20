@@ -79,7 +79,7 @@ export function OnboardingPage() {
               <select id="place" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base">
                 <option value="">未選択・分からない</option>{prefectures.map(p => <option key={p}>{p}</option>)}
               </select>
-              <span className="text-xs leading-[1.7] text-fl-muted">出生時刻と合わせて、時差の補正に使います。</span>
+              <span className="text-xs leading-[1.7] text-fl-muted">暦は日本標準時で計算します。出生地が未選択の場合、場所は不明のまま扱います。海外生まれの方には対応していません。</span>
             </div>
             <Field id="nickname" label="呼び名（任意）" maxLength={20} value={nickname} onChange={e => setNickname(e.target.value)} placeholder="例：ゆう" hint="読みものの中で、この名前で呼びかけます。" />
         </div>

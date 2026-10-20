@@ -32,9 +32,17 @@ with sync_playwright() as p:
                 return r.fulfill(json={"state":"completed","result":report})
             if u.path.endswith("/preview/generate"):
                 state["generates"] += 1
+                payload = r.request.post_data_json
+                assert payload["birthplace"] == ""
+                assert payload["birthTimeZone"] == "Asia/Tokyo"
+                if state["saved"]:
+                    return r.fulfill(content_type="text/event-stream", body="data: "+json.dumps({"type":"complete","report":report})+"\n\n")
                 return r.abort("connectionfailed")
             if u.path.endswith("/conversations"):
                 if r.request.method == "POST":
+                    payload = r.request.post_data_json["birthData"]
+                    assert payload["birthplace"] == ""
+                    assert payload["birthTimeZone"] == "Asia/Tokyo"
                     state["saved"] = True
                     state["saves"] += 1
                     return r.fulfill(json={"id":"owned"})
@@ -69,6 +77,11 @@ with sync_playwright() as p:
     page.goto(B+"/")
     expect(page.get_by_role("link",name="出生情報を確認して再開",exact=True)).to_be_visible()
     assert page.get_by_text("あなたの読みものは、この端末に用意してあります。",exact=True).count() == 0
+    page.get_by_role("link",name="出生情報を確認して再開",exact=True).click()
+    page.get_by_role("button",name="保存する",exact=True).click()
+    expect(page.get_by_role("alert")).to_contain_text("読みものを作成できませんでした。入力は残っています")
+    assert state["saves"] == 2, state
+    assert "/welcome" in page.url, page.url
     assert not errors, errors
     print("PASS synthetic REMOTE: lost response recovered without regeneration; empty result is not advertised as ready")
     browser.close()

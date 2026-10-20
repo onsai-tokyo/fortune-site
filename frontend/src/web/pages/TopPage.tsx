@@ -87,7 +87,7 @@ export function TopPage() {
                 <Field id="top-birthtime" label="出生時刻（任意）" type="time" value={birthTime} onChange={e => setBirthTime(e.target.value)} hint="分からない場合は空欄で進めます。" />
                 <label htmlFor="top-birthplace" className="text-[13px]">出生地（任意）</label>
                 <select id="top-birthplace" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] rounded-field border bg-white px-4 text-base"><option value="">未選択・分からない</option>{prefectures.map(p => <option key={p}>{p}</option>)}</select>
-                <p className="m-0 text-xs text-fl-muted">出生時刻と出生地を合わせて、暦の計算に使います。あとから変更できます。</p>
+                <p className="m-0 text-xs text-fl-muted">暦は日本標準時で計算します。出生地が未選択の場合、場所は不明のまま扱います。海外生まれの方には対応していません。あとから変更できます。</p>
               </div>
             <p className="m-0 text-xs leading-[1.8] text-fl-muted">
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。AIの相談ブック作成・質問は18歳以上の方に限ります。

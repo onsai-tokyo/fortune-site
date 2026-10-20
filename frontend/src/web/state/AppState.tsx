@@ -17,6 +17,7 @@ import { resolveBookSource } from '../data/bookSource'
 import { bookRetryOperationId, existingBookRetry, knownBookRejection } from './bookCreation'
 import { readReadingStream } from '../data/readingStream'
 import { validBirthDate } from '../data/birthDate'
+import { webBirthCalculation, personalReadingReady } from '../data/birthCalculation'
 
 function pendingBirthProfile(owner: string): BirthProfile | null {
   try {
@@ -273,12 +274,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         savedIds: savedRevision.current === savesAtStart && ![...savingReads.current].some(key => key.startsWith(`${remoteAuth.current.owner}:${remoteAuth.current.ownerEpoch}:`)) ? remoteSavedIds : s.savedIds,
         books, bookRefreshError: null,
         bookSourcePartners: Object.fromEntries((history.conversations ?? []).filter(c => c.kind === 'compatibility' && typeof c.id === 'string' && typeof c.partner_profile_id === 'string').map(c => [String(c.id), String(c.partner_profile_id)])),
-        selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
+        selfSourceId: sourceId, personaTitle, readingsStatus: sourceId && !personalReadingReady(years, chapters) ? 'error' : 'ready',
         coupleYears: Object.fromEntries(coupleResults.map(p => [p.id, p.years])), coupleStatus: Object.fromEntries(coupleResults.map(p => [p.id, p.status])),
         partners: (partners.partners ?? []).map(p => ({ id: String(p.id), name: String(p.display_name ?? p.name ?? p.displayName ?? '相手'), relation: String(p.relationship_label ?? p.relationshipLabel ?? p.relation ?? 'その他') as Partner['relation'], birthDate: String(p.birthDate ?? p.birth_date ?? ''), birthTime: typeof p.birth_time === 'string' ? p.birth_time : typeof p.birthTime === 'string' ? p.birthTime : null, birthPlace: String(p.birthPlace ?? p.birthplace ?? ''), gender: p.gender === 'male' ? 'male' : 'female', metYear: coupleResults.find(c => c.id === String(p.id))?.meetingYear ?? null })),
         years, chapters,
       }))
-      return true
+      return !sourceId || personalReadingReady(years, chapters)
     } catch {
       if (current()) setState(s => ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) }))
       return false
@@ -598,7 +599,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
     assertOwner()
     const pendingKey = `fl-reading-operation:${remoteAuth.current.owner}`
-    const signature = JSON.stringify(profile)
+    const birthData = webBirthCalculation(profile)
+    const signature = JSON.stringify(birthData)
     let operationId = newOperationId()
     let reused = false
     try {
@@ -621,14 +623,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (!report) {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}${webApiPath('/api/preview/generate?format=sse')}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'Idempotency-Key': operationId },
-      body: JSON.stringify({ birthDate: profile.birthDate, birthTime: profile.birthTime, birthplace: profile.birthPlace, gender: profile.gender, nickname: profile.nickname }),
+      body: JSON.stringify(birthData),
       signal: AbortSignal.timeout(120_000),
     })
     report = await readReadingStream(response, percent => { assertOwner(); onProgress(percent) })
     }
     assertOwner()
     onProgress(96)
-    await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, signal: AbortSignal.timeout(30_000), headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData: { ...profile, birthplace: profile.birthPlace }, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
+    await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, signal: AbortSignal.timeout(30_000), headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
     assertOwner()
     try { sessionStorage.removeItem(pendingKey) } catch { /* Optional storage. */ }
     return token
