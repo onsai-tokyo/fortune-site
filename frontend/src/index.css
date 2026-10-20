@@ -310,45 +310,103 @@ button.bg-accent-dark {
 
 /* Web editorial theme. Scoped so the preserved app/legacy pages keep their styles. */
 .fl-root {
+  --fl-gutter: clamp(20px, 5.6vw, 40px);
+  --fl-heading: "Noto Serif JP", "Hiragino Mincho ProN", serif;
   min-height: 100dvh;
-  background: #eeede8;
-  color: #141614;
+  background:
+    radial-gradient(ellipse at 14% 12%, #e1e8e0 0, transparent 45%),
+    radial-gradient(ellipse at 90% 65%, #e8e2d8 0, transparent 50%), #eeede8;
+  color: #242c27;
   font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  font-size: 15px;
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   overflow-wrap: anywhere;
 }
 
 .fl-root .fl-sheet {
-  background: #f9f8f5;
-  box-shadow: 0 0 80px rgba(30, 39, 32, .045);
+  background: linear-gradient(160deg, #fbfaf7 0, #f9f8f5 600px);
+  box-shadow: 0 20px 100px rgba(30, 39, 32, .055);
+}
+
+.fl-root .fl-sheet > :is(section, article, nav, footer):is(.px-5, .px-6) {
+  padding-left: var(--fl-gutter);
+  padding-right: var(--fl-gutter);
 }
 
 .fl-root h1,
 .fl-root h2 {
-  font-family: "Noto Serif JP", "Hiragino Mincho ProN", serif;
+  font-family: var(--fl-heading);
   text-wrap: pretty;
   letter-spacing: .025em;
 }
 
-.fl-root .fl-page-title { padding-top: 36px; padding-bottom: 12px; gap: 14px; }
-.fl-root .fl-page-title h1 { font-size: clamp(25px, 5.8vw, 30px); line-height: 1.65; }
-.fl-root .fl-page-title p { color: #62675f; line-height: 1.95; }
+.fl-root .fl-page-title { padding-top: 36px; padding-bottom: 16px; gap: 12px; }
+.fl-root .fl-page-title h1 { font-size: clamp(25px, 5.8vw, 30px); line-height: 1.6; font-weight: 500; }
+.fl-root .fl-page-title p { color: #62675f; line-height: 1.9; }
+.fl-root .fl-page-title .fl-profile-meta { font-size: 12px; letter-spacing: .035em; margin-top: 4px; }
+.fl-root .fl-page-title .fl-profile-meta + p { margin-top: -6px; }
 .fl-root h3 { letter-spacing: .04em; }
+.fl-root .font-book { font-family: var(--fl-heading); }
 
-.fl-root header { background-color: rgba(249, 248, 245, .96); }
-.fl-root header > a:first-child { letter-spacing: .26em; }
-.fl-root .fl-card { box-shadow: 0 5px 22px rgba(35, 44, 36, .035); border-color: #e4e5df; }
-.fl-root .fl-year-feature { padding: 22px; gap: 16px; }
-.fl-root .fl-year-feature > img { height: 174px; border-radius: 14px; }
-.fl-root .fl-year-feature h2 { font-size: 23px; }
+.fl-root header { background-color: rgba(249, 248, 245, .95); backdrop-filter: blur(16px); }
+.fl-root .fl-masthead { min-height: 65px; padding-left: var(--fl-gutter); padding-right: max(12px, calc(var(--fl-gutter) - 10px)); }
+.fl-root .fl-wordmark { gap: 10px; letter-spacing: .24em; font-size: 12px; }
+.fl-root .fl-wordmark::before {
+  content: ""; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #859582;
+  border-radius: 50%; box-shadow: inset 4px 0 0 #dfe5da; transform: rotate(-30deg);
+}
+.fl-root .fl-back-header { min-height: 65px; }
+.fl-root .fl-card { box-shadow: 0 8px 30px rgba(35, 44, 36, .035); border-color: #e1e5dc; }
+.fl-root .fl-year-feature { padding: 20px; gap: 16px; }
+.fl-root .fl-year-feature > img { height: clamp(152px, 40vw, 220px); border-radius: 12px; }
+.fl-root .fl-year-feature h2 { font-size: clamp(21px, 5vw, 25px); line-height: 1.65; }
 .fl-root .fl-year-feature > p { line-height: 2; }
+.fl-root .fl-feature-meta { margin-bottom: -8px; }
+.fl-root .fl-eyebrow { letter-spacing: .14em; line-height: 1.8; }
+.fl-root .fl-section-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-bottom: 18px; }
+.fl-root .fl-section-heading h2 { margin: 0; font-size: 19px; font-weight: 500; letter-spacing: .06em; }
+.fl-root .fl-section-heading > span { color: #6c7068; font-size: 11px; letter-spacing: .04em; }
+.fl-root .fl-year-section { padding-top: 36px; }
+.fl-root .fl-year-section > .fl-section-heading { padding-inline: var(--fl-gutter); }
+.fl-root .fl-year-strip { padding-inline: var(--fl-gutter); gap: 12px; scrollbar-width: thin; scroll-padding-inline: var(--fl-gutter); }
+.fl-root .fl-year-strip > a { width: 148px; min-height: 124px; padding: 16px; gap: 12px; border-radius: 16px; }
+.fl-root .fl-year-strip > a > :first-child { font-variant-numeric: tabular-nums; letter-spacing: .045em; }
+.fl-root .fl-chapters { padding-top: 38px; }
+.fl-root .fl-chapter-row { gap: 18px; padding-block: 22px; }
+.fl-root .fl-chapter-number { min-width: 24px; font-family: "EB Garamond", Georgia, serif; font-size: 24px; line-height: 1.25; color: #74846c; }
+.fl-root .fl-chapter-row > span:nth-child(2) > :first-child { font-size: 12px; line-height: 1.8; }
+.fl-root .fl-chapter-row > span:nth-child(2) > :last-child { font-family: var(--fl-heading); font-size: 17px; font-weight: 500; line-height: 1.7; }
+.fl-root .fl-chapter-row svg { transition: transform .2s ease; }
 
-.fl-root .fl-button { letter-spacing: .025em; padding-top: 10px; padding-bottom: 10px; }
+.fl-root .fl-hero { gap: 20px; padding-top: 44px; padding-bottom: 24px; }
+.fl-root .fl-hero h1 { font-size: clamp(25px, 6.5vw, 36px); line-height: 1.65; letter-spacing: .025em; }
+.fl-root .fl-hero > p { font-size: 14px; line-height: 2; max-width: 36em; }
+.fl-root .fl-hero-image { margin-top: 8px; height: clamp(150px, 42vw, 230px); border-radius: 70px 16px 16px 16px; }
+.fl-root .fl-entry-form { padding: clamp(20px, 4vw, 28px); gap: 22px; box-shadow: 0 12px 40px #253b3108; }
+.fl-root .fl-landing-section { padding-top: 40px; padding-bottom: 40px; gap: 22px; }
+.fl-root .fl-landing-section h2 { font-size: 23px; line-height: 1.6; }
+.fl-root .fl-reading-title { padding-top: 30px; padding-bottom: 12px; gap: 16px; }
+.fl-root .fl-reading-title h1 { font-size: clamp(25px, 5.8vw, 30px); line-height: 1.65; }
+.fl-root .fl-reading-body { gap: 32px; padding-top: 24px; }
+.fl-root .fl-reading-body h2 { font-size: 19px; line-height: 1.7; padding-bottom: 10px; border-bottom: 1px solid #e2e5dc; }
+.fl-root .fl-reading-body p { font-size: 15px; line-height: 2.1; letter-spacing: .025em; }
+.fl-root .fl-shelf-tabs { gap: 4px; border: 1px solid #e2e1dc; padding: 5px; }
+.fl-root .fl-shelf-tabs a { font-size: 12px; line-height: 1.6; padding: 8px; }
+.fl-root .fl-shelf-tabs a[aria-current="page"] { box-shadow: 0 2px 8px #253b3110; }
+.fl-root .fl-book-row { padding: 20px; align-items: center; gap: 18px; }
+.fl-root .fl-book-row > img { height: 88px; width: 60px; box-shadow: 3px 4px 10px #253b3115; }
+.fl-root .fl-book-row > span { min-width: 0; gap: 8px; }
+.fl-root .fl-book-row > span > :nth-child(2) { font-family: var(--fl-heading); font-size: 16px; line-height: 1.75; }
+.fl-root .fl-book-row > svg { flex-shrink: 0; }
+
+.fl-root .fl-button { letter-spacing: .035em; padding: 12px 16px; line-height: 1.6; font-size: 14px; }
 .fl-root .bg-fl-ink { background-color: #253b31; }
 .fl-root .bg-fl-ink:disabled { background-color: #e2e1dc; }
 @media (hover: hover) {
   .fl-root .fl-button.bg-fl-ink:not(:disabled):hover { background-color: #344f40; }
+  .fl-root .fl-chapter-row:hover svg { transform: translateX(3px); }
+  .fl-root .fl-chapter-row:hover { background: #eeeee340; }
 }
 .fl-root .bg-fl-cream { background-color: #eeeee3; }
 .fl-root input,
@@ -368,14 +426,17 @@ button.bg-accent-dark {
 }
 .fl-root :is(a, button) { -webkit-tap-highlight-color: transparent; }
 .fl-root a { text-underline-offset: 4px; }
-.fl-root footer { margin-top: 48px; padding-top: 28px; padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+.fl-root footer { margin-top: 52px; padding-top: 32px; padding-bottom: max(36px, env(safe-area-inset-bottom)); gap: 18px; }
+.fl-root footer nav { row-gap: 4px; }
 .fl-root ::selection { background: #dce5d6; color: #141614; }
 .fl-root ::-webkit-scrollbar-track { background: transparent; }
 .fl-root ::-webkit-scrollbar-thumb { background: #c6cfc1; }
 
 @media (min-width: 640px) {
-  .fl-root .fl-page-title { padding-top: 44px; }
-  .fl-root .fl-year-feature > img { height: 210px; }
+  .fl-root .fl-page-title { padding-top: 48px; padding-bottom: 20px; }
+  .fl-root .fl-year-feature { padding: 28px; gap: 20px; }
+  .fl-root .fl-hero { padding-top: 56px; }
+  .fl-root .fl-reading-body { gap: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fl-root *, .fl-root *::before, .fl-root *::after {

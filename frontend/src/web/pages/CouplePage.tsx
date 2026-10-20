@@ -2,7 +2,7 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { IconPen } from '../components/icons'
-import { Card, Footer, LinkButton, NatureImage, Page } from '../components/ui'
+import { Card, Footer, LinkButton, NatureImage, Page, SectionHeading } from '../components/ui'
 import { images } from '../data/images'
 import { relationGroup, savedKey } from '../data/mock'
 import { remoteMode } from '../data/paymentConfig'
@@ -27,7 +27,7 @@ export function CoupleIndexPage() {
   return (
     <Page>
       <SiteHeader current="couple" />
-      <section className="flex flex-col gap-5 px-6 pb-5 pt-10">
+      <section className="fl-hero flex flex-col gap-5 px-6 pb-5 pt-10">
         <span className="text-xs tracking-[.2em] text-fl-moss">TWO LIVES, ONE TIMELINE</span>
         <h1 className="m-0 text-[28px] leading-[1.65]">出会いから、いま。<br />ふたりの歩みを読む。</h1>
         <p className="m-0 text-sm leading-[1.95] text-fl-body">近づく年も、それぞれの毎日を大切にする年も。ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解きます。</p>
@@ -74,7 +74,7 @@ export function CouplePage() {
     <Page>
       <SiteHeader current="couple" />
 
-      <section className="flex flex-col gap-3.5 px-5 pb-2 pt-6">
+      <section className="fl-page-title flex flex-col gap-3.5 px-5 pb-2 pt-6">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">ふたりの年表</h1>
         <div className="flex min-h-[64px] items-center gap-3 rounded-2xl border border-fl-line bg-white px-4 py-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-fl-cream text-[15px] font-medium text-fl-rose">{partner.name.slice(0, 1)}</span>
@@ -96,7 +96,7 @@ export function CouplePage() {
       </section>
 
       <section className="px-5 pt-1">
-        <Card className="flex flex-col gap-3.5 px-5 py-[22px]">
+        <Card className="fl-year-feature flex flex-col gap-3.5 px-5 py-[22px]">
           <NatureImage src={images.starMountains} className="h-[140px] rounded-xl" position="center 55%" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium tracking-[0.15em] text-fl-slate">{current.year}年のふたり</span>
@@ -119,7 +119,7 @@ export function CouplePage() {
       </section>
 
       <section className="flex flex-col gap-1 px-5 pb-6 pt-8">
-        <h3 className="mb-2 mt-0 text-base font-medium">ふたりの年表</h3>
+        <SectionHeading detail="一年ずつ、関係をたどる">ふたりの年表</SectionHeading>
         {years.map(y => {
           const on = y.year === current.year
           return (

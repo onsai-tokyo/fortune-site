@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Chip, Field, Footer, LinkButton, NatureImage, Page, PlainHeader } from '../components/ui'
+import { Button, Chip, Eyebrow, Field, Footer, LinkButton, NatureImage, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
 import { mockYears, plans, prefectures } from '../data/mock'
 import { CreatingPage } from './CreatingPage'
@@ -55,9 +55,11 @@ export function TopPage() {
     <Page>
       <PlainHeader right={<Link to={profile ? '/you' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? 'つづきを読む' : 'ログイン'}</Link>} />
 
-      <section className="flex flex-col gap-4 px-6 pb-6 pt-10">
+      <section className="fl-hero flex flex-col gap-4 px-6 pb-6 pt-10">
+        <Eyebrow>暦をひらく。自分を知る。</Eyebrow>
         <h1 className="m-0 text-[28px] font-medium leading-[1.6]">生まれた日から、<br />あなたの一年ずつを読む。</h1>
-        <p className="m-0 text-[15px] leading-[1.9] text-fl-body">四柱推命とインド占星術の暦の計算から、あなたの性格と、過去からこれからまでの年ごとの流れを読みものにします。大切な人を登録すれば、ふたりの年表も。</p>
+        <p className="m-0 text-[15px] leading-[1.9] text-fl-body">四柱推命とインド占星術の暦から、あなたの性格と年ごとの流れを読み解きます。大切な人を登録すると、ふたりの年表もひらけます。</p>
+        <NatureImage src={images.mountains} alt="霧のかかった山なみ" className="fl-hero-image h-[180px] rounded-card sm:h-[220px]" />
       </section>
 
       <section className="px-5 pb-10">
@@ -68,7 +70,7 @@ export function TopPage() {
             <LinkButton to="/you" size="lg">つづきを読む</LinkButton>
           </div>
         ) : (
-          <form id="start" onSubmit={start} className="flex flex-col gap-[18px] rounded-card border border-fl-line bg-white p-5">
+          <form id="start" onSubmit={start} className="fl-entry-form flex flex-col gap-[18px] rounded-card border border-fl-line bg-white p-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="top-birthdate" className="text-[13px] font-medium text-fl-body">生年月日</label>
               <input ref={dateRef} id="top-birthdate" type="date" required disabled={saving} min="1900-01-01" max={today} value={birthDate} onChange={e => setBirthDate(e.target.value)}
@@ -101,11 +103,7 @@ export function TopPage() {
         )}
       </section>
 
-      <section className="px-5 pb-8">
-        <NatureImage src={images.mountains} alt="霧のかかった山なみ" className="h-[180px] rounded-card sm:h-[220px]" />
-      </section>
-
-      <section className="flex flex-col gap-4 px-6 pb-12">
+      <section className="fl-landing-section flex flex-col gap-4 px-6 pb-12">
         <h2 className="m-0 text-xl font-medium leading-relaxed">たとえば、こんな年表に</h2>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">一年ごとに、その年の流れと過ごし方を読めます。過去の年をふり返ることも、これからの年を先に読むこともできます。</p>
         <img src="/images/timeline-preview.svg" alt="年ごとの流れの見本。2024年は土台を整える、2025年は新しい一歩、2026年はつながりを育てる。" width="640" height="380" loading="lazy" className="w-full rounded-card border border-fl-line" />
@@ -129,7 +127,7 @@ export function TopPage() {
         <p className="m-0 text-xs leading-[1.7] text-fl-muted">見本です。表示される文章は、生年月日によって変わります。</p>
       </section>
 
-      <section className="flex flex-col gap-7 bg-fl-surface px-6 py-10">
+      <section className="fl-landing-section flex flex-col gap-7 bg-fl-surface px-6 py-10">
         <h2 className="m-0 text-xl font-medium leading-relaxed">できること</h2>
         <div className="grid grid-cols-3 gap-2" aria-hidden="true">
           {[images.nature.leaf, images.nature.cosmos, images.nature.stones].map(src => (
@@ -147,9 +145,9 @@ export function TopPage() {
         ))}
       </section>
 
-      <section className="flex flex-col gap-4 px-6 py-10">
+      <section className="fl-landing-section flex flex-col gap-4 px-6 py-10">
         <h2 className="m-0 text-xl font-medium">料金</h2>
-        <div className="flex justify-between border-b border-fl-line py-4 text-[15px]"><span>性格・年ごとの流れ・ふたりの年表</span><span className="font-medium">無料</span></div>
+        <div className="flex justify-between gap-4 border-b border-fl-line py-4 text-[15px]"><span>性格・年ごとの流れ・ふたりの年表</span><span className="shrink-0 font-medium">無料</span></div>
         {paymentsAvailable ? plans.map(plan => (
           <div key={plan.id} className="flex justify-between border-b border-fl-line py-4 text-[15px]">
             <span>相談のブック {plan.name}</span><span className="font-medium">{plan.price.toLocaleString()}円</span>

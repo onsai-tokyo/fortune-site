@@ -28,7 +28,11 @@ export function LinkButton({ to, variant = 'primary', size = 'md', className = '
 /** 画面の小見出し。ページの見出しを兼ねるときは as="h1" にする（見た目は同じ） */
 export function Eyebrow({ children, className = '', as = 'span' }: { children: ReactNode; className?: string; as?: 'span' | 'h1' }) {
   const Tag = as
-  return <Tag className={`m-0 text-[11px] font-medium tracking-[0.25em] text-fl-body ${className}`}>{children}</Tag>
+  return <Tag className={`fl-eyebrow m-0 text-xs font-medium text-fl-moss ${className}`}>{children}</Tag>
+}
+
+export function SectionHeading({ children, detail }: { children: ReactNode; detail?: ReactNode }) {
+  return <div className="fl-section-heading"><h2>{children}</h2>{detail && <span>{detail}</span>}</div>
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -69,8 +73,8 @@ export function NatureImage({ src, alt = '', className = '', position }: { src: 
 
 export function BackHeader({ to, title, right, sticky }: { to: string; title: ReactNode; right?: ReactNode; sticky?: boolean }) {
   return (
-    <header className={`flex items-center gap-2 border-b border-fl-line bg-fl-canvas px-3 py-1.5 ${sticky ? 'sticky top-0 z-20' : ''}`}>
-      <Link to={to} aria-label="もどる" className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-fl-surface"><IconBack /></Link>
+    <header className={`fl-back-header flex items-center gap-2 border-b border-fl-line bg-fl-canvas px-3 py-1.5 ${sticky ? 'sticky top-0 z-20' : ''}`}>
+      <Link to={to} aria-label="もどる" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-fl-surface"><IconBack /></Link>
       <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{title}</div>
       {right}
     </header>
@@ -79,8 +83,8 @@ export function BackHeader({ to, title, right, sticky }: { to: string; title: Re
 
 export function PlainHeader({ right }: { right?: ReactNode }) {
   return (
-    <header className="flex items-center justify-between border-b border-fl-line px-5 py-1.5">
-      <Link to="/" className="flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
+    <header className="fl-masthead flex items-center justify-between border-b border-fl-line px-5 py-1.5">
+      <Link to="/" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
       {right}
     </header>
   )

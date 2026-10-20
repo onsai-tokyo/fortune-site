@@ -77,7 +77,7 @@ export function ComposePage() {
       <SiteHeader current="compose" />
 
       <section className="px-5 pt-5"><NatureImage src={images.leaves} className="h-[120px] rounded-2xl" /></section>
-      <section className="flex flex-col gap-2.5 px-5 pb-2 pt-6">
+      <section className="fl-page-title flex flex-col gap-2.5 px-5 pb-2 pt-6">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">いま、知りたいことを。</h1>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">読みものを一つ選んで、相談を書いてください。ひとつの相談に、その読みものをもとにした答えを一冊のブックにしてお届けします（約2,500文字）。</p>
       </section>

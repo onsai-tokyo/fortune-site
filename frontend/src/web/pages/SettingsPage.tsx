@@ -91,7 +91,7 @@ export function SettingsPage() {
   return (
     <Page>
       <SiteHeader current="none" />
-      <section className="px-5 pt-7"><h1 className="m-0 text-[24px] font-medium leading-[1.55]">設定</h1></section>
+      <section className="fl-page-title px-5 pt-7"><h1 className="m-0 text-[24px] font-medium leading-[1.55]">設定</h1></section>
 
       <Group title="アカウント">
         {session === 'linked'

@@ -24,12 +24,12 @@ export function ChapterPage() {
         <SaveReadingButton readingKey={key} compact />
       } />
       <NatureImage src={chapter.image} className="h-[170px]" />
-      <section className="flex flex-col gap-3 px-6 pb-2 pt-7">
+      <section className="fl-reading-title flex flex-col gap-3 px-6 pb-2 pt-7">
         <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">性格の章 ・ {index + 1} / {chapterList.length}</span>
         <p className="m-0 text-sm font-medium text-fl-moss">{chapter.sub}</p>
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{chapter.title}</h1>
       </section>
-      <article className="flex flex-col gap-6 px-6 pb-2 pt-4">
+      <article className="fl-reading-body flex flex-col gap-6 px-6 pb-2 pt-4">
         {sections.map(s => (
           <div key={s.heading} className="flex flex-col gap-2.5">
             <h2 className="m-0 text-[17px] font-medium">{s.heading}</h2>

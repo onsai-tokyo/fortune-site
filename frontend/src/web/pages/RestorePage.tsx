@@ -18,7 +18,7 @@ export function RestorePage() {
     <Page>
       <PlainHeader />
       <NatureImage src={images.welcomeSky} alt="雲の上に浮かぶ月" className="h-[160px]" position="center 20%" />
-      <section className="flex flex-col gap-3 px-6 pb-2 pt-7">
+      <section className="fl-page-title flex flex-col gap-3 px-6 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">ログイン</h1>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">登録したメールアドレスに届く{EMAIL_OTP_LENGTH}桁のコードで、あなたの本棚を開きます。パスワードは不要です。別のスマホやPCでも、同じ鑑定結果と本棚を読めます。</p>
       </section>

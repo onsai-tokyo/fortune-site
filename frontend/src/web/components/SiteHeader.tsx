@@ -32,8 +32,8 @@ export function SiteHeader({ current }: { current: NavKey }) {
 
   return (
     <div className="sticky top-0 z-30">
-      <header className="relative flex items-center justify-between gap-3 border-b border-fl-line bg-fl-canvas py-1.5 pl-5 pr-2">
-        <Link to="/you" className="flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
+      <header className="fl-masthead relative flex items-center justify-between gap-3 border-b border-fl-line bg-fl-canvas py-1.5 pl-5 pr-2">
+        <Link to="/you" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
         <div className="flex items-center gap-1">
           {purchasedEver && (paymentsAvailable
             ? <Link to="/credits" aria-label={`相談のブック 残り${credits}冊`} className="flex min-h-[44px] items-center px-2.5 text-[13px] text-fl-body hover:text-fl-ink">残り {credits}冊</Link>
@@ -46,7 +46,7 @@ export function SiteHeader({ current }: { current: NavKey }) {
       </header>
       {open && (
         <>
-          <button type="button" aria-label="メニューを閉じる" tabIndex={-1} onClick={() => setOpen(false)} className="fixed inset-0 top-[57px] z-0 cursor-default bg-fl-ink/20" />
+          <button type="button" aria-label="メニューを閉じる" tabIndex={-1} onClick={() => setOpen(false)} className="fixed inset-0 top-[65px] z-0 cursor-default bg-fl-ink/20" />
           <nav id="site-menu" aria-label="メニュー" className="absolute left-0 right-0 top-full z-10 flex flex-col border-b border-fl-line bg-fl-canvas px-5 pb-5 pt-2 shadow-[0_16px_32px_rgba(20,22,20,0.08)]">
             {items.map(item => (
               <Link key={item.key} to={item.to} aria-current={item.key === current ? 'page' : undefined}

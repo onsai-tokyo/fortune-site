@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
-import { Card, Footer, NatureImage, Page } from '../components/ui'
+import { Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../components/ui'
 import { SaveReadingButton } from '../components/SaveReadingButton'
 import { savedKey } from '../data/readingData'
 import { IconChevron, IconClose } from '../components/icons'
@@ -29,8 +29,10 @@ export function YouPage() {
       <SiteHeader current="you" />
 
       <section className="fl-page-title flex flex-col gap-2.5 px-5 pb-2 pt-7">
+        <Eyebrow>あなたの読みもの</Eyebrow>
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{personaTitle || 'あなたの読みもの'}</h1>
-        <p className="m-0 text-sm leading-[1.85] text-fl-body">{profile ? `${formatBirth(profile.birthDate)}${profile.birthTime ? `・${profile.birthTime}・${profile.birthPlace}` : ''}。` : ''}生年月日から読んだ、あなたの性格と年ごとの流れです。</p>
+        {profile && <p className="fl-profile-meta m-0 text-sm text-fl-body">{formatBirth(profile.birthDate)}{profile.birthTime ? `・${profile.birthTime}・${profile.birthPlace}` : ''}</p>}
+        <p className="m-0 text-sm leading-[1.85] text-fl-body">生年月日から、あなたの性格と一年ずつの流れを読み解きます。</p>
       </section>
 
       {showGuide && (
@@ -61,12 +63,11 @@ export function YouPage() {
       <section className="px-5 pb-2 pt-5">
         <Card className="fl-year-feature flex flex-col gap-3 p-5">
           <NatureImage src={images.nature.pampas} className="h-[132px] rounded-xl" />
-          <div className="flex items-center justify-between">
+          <div className="fl-feature-meta flex items-center justify-between gap-3">
             <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">{current.year}年のあなた</span>
-            <span className="text-xs text-fl-muted">{current.label}</span>
+            <span className="flex items-center gap-2 text-xs text-fl-muted">{current.label}<SaveReadingButton readingKey={savedKey.year(current.year)} compact /></span>
           </div>
           <h2 className="m-0 text-[19px] font-medium leading-relaxed">{current.title}</h2>
-          <div className="flex justify-end"><SaveReadingButton readingKey={savedKey.year(current.year)} /></div>
           <p className="m-0 text-sm leading-[1.85] text-fl-body">{current.summary}</p>
           <div className="flex gap-2.5 pt-1">
             <Link to={`/you/years/${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] border border-fl-line text-sm font-medium">続きを読む</Link>
@@ -75,9 +76,9 @@ export function YouPage() {
         </Card>
       </section>
 
-      <section className="pb-2 pt-5">
-        <h3 className="mx-5 mb-3 mt-0 text-base font-medium">年ごとの流れ</h3>
-        <div ref={stripRef} className="relative flex gap-2.5 overflow-x-auto px-5 pb-2">
+      <section className="fl-year-section pb-2 pt-5">
+        <SectionHeading detail="過去から、これからへ">年ごとの流れ</SectionHeading>
+        <div ref={stripRef} className="fl-year-strip relative flex gap-2.5 overflow-x-auto px-5 pb-2">
           {yearList.map(y => {
             const on = y.year === current.year
             return (
@@ -91,11 +92,11 @@ export function YouPage() {
         </div>
       </section>
 
-      <section className="flex flex-col px-5 pb-2 pt-6">
-        <h3 className="mb-2 mt-0 text-base font-medium">性格の章</h3>
+      <section className="fl-chapters flex flex-col px-5 pb-2 pt-6">
+        <SectionHeading detail={`${chapterList.length}の視点`}>性格の章</SectionHeading>
         {chapterList.map((ch, index) => (
-          <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="group flex items-center gap-4 border-b border-fl-line py-5">
-            <span aria-hidden="true" className="self-start pt-1 font-book text-lg text-fl-moss">{String(index + 1).padStart(2, '0')}</span>
+          <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="fl-chapter-row group flex items-center gap-4 border-b border-fl-line py-5">
+            <span aria-hidden="true" className="fl-chapter-number self-start pt-1 text-lg text-fl-moss">{String(index + 1).padStart(2, '0')}</span>
             <span className="flex min-w-0 flex-1 flex-col gap-2">
               <span className="text-xs font-medium tracking-[.08em] text-fl-moss">{ch.sub}</span>
               <span className="text-[15px] font-medium leading-[1.85] group-hover:underline">{ch.title}</span>

@@ -23,7 +23,7 @@ function failureMessage(code?: string) {
 export function ShelfTabs({ active, bookCount, savedCount }: { active: 'books' | 'saved'; bookCount: number; savedCount: number }) {
   const tab = (on: boolean) => `flex min-h-[44px] items-center justify-center rounded-[11px] text-sm ${on ? 'bg-white font-medium' : 'text-fl-body'}`
   return (
-    <nav aria-label="本棚の表示" className="grid grid-cols-2 rounded-[14px] bg-fl-surface p-1">
+    <nav aria-label="本棚の表示" className="fl-shelf-tabs grid grid-cols-2 rounded-[14px] bg-fl-surface p-1">
       <Link to="/books" aria-current={active === 'books' ? 'page' : undefined} className={tab(active === 'books')}>相談のブック {bookCount}冊</Link>
       <Link to="/books/saved" aria-current={active === 'saved' ? 'page' : undefined} className={tab(active === 'saved')}>保存した読みもの {savedCount}件</Link>
     </nav>
@@ -77,7 +77,7 @@ function FailedCard({ book }: { book: Book }) {
 
 function BookRow({ book }: { book: Book }) {
   return (
-    <Link to={`/books/${book.id}`} className="flex gap-3.5 rounded-2xl border border-fl-line bg-white p-4 hover:bg-fl-surface/40">
+    <Link to={`/books/${book.id}`} className="fl-book-row flex gap-3.5 rounded-2xl border border-fl-line bg-white p-4 hover:bg-fl-surface/40">
       <NatureImage src={book.cover} className="h-[72px] w-[52px] shrink-0 rounded-md" />
       <span className="flex flex-1 flex-col gap-1.5">
         <span className="text-xs text-fl-muted">{formatDate(book.createdAt)}・{book.theme}</span>
@@ -97,7 +97,7 @@ export function BooksPage() {
   return (
     <Page>
       <SiteHeader current="books" />
-      <section className="flex flex-col gap-4 px-5 pb-2 pt-7">
+      <section className="fl-page-title flex flex-col gap-4 px-5 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">本棚</h1>
         <ShelfTabs active="books" bookCount={delivered.length} savedCount={savedCount} />
       </section>
@@ -137,7 +137,7 @@ export function SavedReadingsPage() {
   return (
     <Page>
       <SiteHeader current="books" />
-      <section className="flex flex-col gap-4 px-5 pb-2 pt-7">
+      <section className="fl-page-title flex flex-col gap-4 px-5 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">本棚</h1>
         <ShelfTabs active="saved" bookCount={books.filter(b => b.state === 'delivered').length} savedCount={saved.length} />
         <div className="flex flex-wrap gap-2">
