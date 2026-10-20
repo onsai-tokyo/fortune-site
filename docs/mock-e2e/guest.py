@@ -8,7 +8,7 @@ with sync_playwright() as p:
     def nav(path): pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(350)
     # first visit
     pg.goto(B+'/demo'); pg.wait_for_timeout(400); pg.get_by_role('button',name='トップ（はじめて来た人）').click(); pg.wait_for_timeout(300)
-    ok(pg.get_by_role('link',name='別の端末から引き継ぐ').count()==1,'top shows 引き継ぐ, no login')
+    ok(pg.get_by_role('link',name='ログイン',exact=True).count()==1,'top shows login for returning readers')
     nav('/welcome'); ok('/welcome' in pg.url,'birth input page reachable '+pg.url)
     pg.fill('#birthdate','1994-05-12'); pg.get_by_role('button',name='女性').click()
     sub=pg.get_by_role('button',name='同意して、無料で読む'); ok(sub.is_enabled(),'required fields filled')
@@ -29,7 +29,7 @@ with sync_playwright() as p:
     ok(pg.get_by_text('別の端末でも使えるようにする').count()==1,'link offer after purchase')
     ok(pg.input_value('#link-email')=='me@example.com','prefilled with receipt email')
     pg.get_by_role('button',name='確認コードを送る').click(); pg.fill('#link-code','1234567890'[:OTP_LENGTH]); pg.get_by_role('button',name='登録する').click(); pg.wait_for_timeout(200)
-    ok(pg.get_by_text('引き継ぎ用に登録しました').count()==1,'email linked')
+    ok(pg.get_by_text('メールを登録しました').count()==1,'email linked')
     nav('/settings'); ok(pg.get_by_text('me@example.com').count()>=1,'settings shows linked email')
     # Web books now finish with one answer; old question URLs return to the book.
     nav('/books/b-distance');
@@ -37,9 +37,9 @@ with sync_playwright() as p:
     ok(pg.url.endswith('/books/b-distance') and pg.locator('#ask').count()==0,'old question URL returns to book without question form')
     nav('/you/years/2026'); ok(pg.get_by_role('link',name='この読みものについて質問する').count()==0,'no free reading questions')
     # restore on another device
-    pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)
+    pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='ログイン').click(); pg2.wait_for_timeout(300)
     pg2.fill('#restore-email','me@example.com'); pg2.get_by_role('button',name='コードを送る').click(); pg2.fill('#restore-code','12');
-    ok(pg2.get_by_role('button',name='引き継ぐ').is_disabled(),f'needs {OTP_LENGTH} digits'); pg2.fill('#restore-code','0987654321'[:OTP_LENGTH]); pg2.get_by_role('button',name='引き継ぐ').click(); pg2.wait_for_timeout(300)
+    ok(pg2.get_by_role('button',name='ログイン',exact=True).is_disabled(),f'needs {OTP_LENGTH} digits'); pg2.fill('#restore-code','0987654321'[:OTP_LENGTH]); pg2.get_by_role('button',name='ログイン',exact=True).click(); pg2.wait_for_timeout(300)
     ok('/books' in pg2.url,'restored to bookshelf '+pg2.url)
     pg2.close()
     # anonymous settings warning

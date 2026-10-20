@@ -48,7 +48,7 @@ export function OnboardingPage() {
     <Page>
       {editing
         ? <BackHeader to={returnTo ?? '/settings'} title="生まれた日の情報" />
-        : <PlainHeader right={<Link to="/restore" className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">別の端末から引き継ぐ</Link>} />}
+        : <PlainHeader right={<Link to="/restore" className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">ログイン</Link>} />}
 
       <section className="flex flex-col gap-3 px-6 pb-2 pt-8">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{editing ? '生まれた日の情報を変える' : <>生まれた日を<br />教えてください</>}</h1>

@@ -53,7 +53,7 @@ export function TopPage() {
   if (saving) return <CreatingPage pending />
   return (
     <Page>
-      <PlainHeader right={<Link to={profile ? '/you' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? 'つづきを読む' : '別の端末から引き継ぐ'}</Link>} />
+      <PlainHeader right={<Link to={profile ? '/you' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? 'つづきを読む' : 'ログイン'}</Link>} />
 
       <section className="flex flex-col gap-4 px-6 pb-6 pt-10">
         <h1 className="m-0 text-[28px] font-medium leading-[1.6]">生まれた日から、<br />あなたの一年ずつを読む。</h1>

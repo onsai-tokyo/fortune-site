@@ -5,7 +5,7 @@ import { useApp, type DemoPreset } from '../state/AppState'
 const screens: { to: string; label: string; preset?: DemoPreset }[] = [
   { to: '/', label: 'トップ（はじめて来た人）', preset: 'first-visit' },
   { to: '/welcome', label: '生年月日の入力（はじめて）', preset: 'first-visit' },
-  { to: '/restore', label: '別の端末から引き継ぐ', preset: 'first-visit' },
+  { to: '/restore', label: 'ログイン', preset: 'first-visit' },
   { to: '/creating', label: '読みものをつくっています' },
   { to: '/you', label: 'あなた' },
   { to: '/you/years/2026', label: '読みものの本文' },

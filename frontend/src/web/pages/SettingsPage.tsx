@@ -161,7 +161,7 @@ export function LinkEmailPage() {
       </section>
       <section className="flex flex-col gap-4 px-6 pb-12 pt-4">
         {done || session === 'linked' ? (
-          <Note><strong className="font-medium text-fl-ink">{email}</strong> を引き継ぎ用に登録しました。別の端末では「別の端末から引き継ぐ」からこのメールを入れてください。</Note>
+          <Note><strong className="font-medium text-fl-ink">{email}</strong> を登録しました。別のスマホやPCでも「ログイン」からこのメールを入れると、同じ本棚を開けます。</Note>
         ) : (
           <LinkEmailForm initialEmail={receiptEmail ?? ''} onDone={address => { linkEmail(address); setDone(true) }} />
         )}

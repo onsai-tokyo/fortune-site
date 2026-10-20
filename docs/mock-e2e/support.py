@@ -23,7 +23,7 @@ with sync_playwright() as p:
         for old in ('support@fate-lab.com', 'App Store', 'Apple Account', 'サブスクリプション'):
             assert old not in text, old
         assert page.get_by_role('link', name='特定商取引法に基づく表記', exact=True).get_attribute('href') == '/tokushoho'
-        assert page.get_by_role('link', name='別の端末から引き継ぐ', exact=True).get_attribute('href') == '/restore'
+        assert page.get_by_role('link', name='ログイン', exact=True).get_attribute('href') == '/restore'
         for width in (320, 390):
             page.set_viewport_size({'width': width, 'height': 844})
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (path, width)

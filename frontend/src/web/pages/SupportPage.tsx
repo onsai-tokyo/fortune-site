@@ -17,7 +17,7 @@ export function SupportPage() {
         <h2 className="m-0 text-lg font-medium">{question.title}</h2>
         {question.paragraphs.map((text, index) => <p key={index} className="m-0">{text}</p>)}
       </section>)}
-      <Link to="/restore" className="flex min-h-[44px] items-center text-fl-slate underline">別の端末から引き継ぐ</Link>
+      <Link to="/restore" className="flex min-h-[44px] items-center text-fl-slate underline">ログイン</Link>
     </article>
     <Footer />
   </Page>

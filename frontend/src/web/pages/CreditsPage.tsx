@@ -161,7 +161,7 @@ function PaymentReturnContent() {
               <div className="mt-6 flex w-full flex-col gap-3 rounded-card border border-fl-line bg-white p-5 text-left">
                 <span className="text-base font-medium">別の端末でも使えるようにする</span>
                 {linked ? (
-                  <Note>引き継ぎ用に登録しました。別の端末では「別の端末から引き継ぐ」からこのメールを入れてください。</Note>
+                  <Note>メールを登録しました。別のスマホやPCでも「ログイン」からこのメールを入れてください。</Note>
                 ) : (
                   <>
                     <span className="text-[13px] leading-[1.8] text-fl-body">いまはこの端末だけで使っています。メールを登録しておくと、機種変更のあとも同じ本棚と残りの冊数を開けます（パスワード不要）。</span>

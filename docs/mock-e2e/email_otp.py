@@ -12,17 +12,17 @@ with sync_playwright() as p:
     page = context.new_page()
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(B + '/demo')
-    page.get_by_role('button', name='別の端末から引き継ぐ').click()
+    page.get_by_role('button', name='ログイン').click()
     # Route rendering is asynchronous; wait for help text, not a fixed delay.
-    page.get_by_text(f'届いた{length}桁のコード', exact=False).wait_for()
-    assert page.get_by_text(f'届いた{length}桁のコード', exact=False).count() == 1
+    page.get_by_text(f'届く{length}桁のコード', exact=False).wait_for()
+    assert page.get_by_text(f'届く{length}桁のコード', exact=False).count() == 1
     page.fill('#restore-email', 'otp-fixture@example.invalid')
     page.get_by_role('button', name='コードを送る', exact=True).click()
     field = page.get_by_label(f'確認コード（{length}桁）', exact=True)
     assert field.get_attribute('maxlength') == str(length)
     assert page.get_by_text(f'に{length}桁のコードを送りました', exact=False).count() == 1
     assert page.get_by_text('メールに記載された有効期限内', exact=False).count() == 1
-    submit = page.get_by_role('button', name='引き継ぐ', exact=True)
+    submit = page.get_by_role('button', name='ログイン', exact=True)
     field.fill('1' * (length - 1))
     assert submit.is_disabled()
     # Exercise the validation guard even if a client bypasses the disabled button.
