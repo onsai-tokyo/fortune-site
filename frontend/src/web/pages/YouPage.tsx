@@ -3,7 +3,7 @@ import { SiteHeader } from '../components/SiteHeader'
 import { Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../components/ui'
 import { SaveReadingButton } from '../components/SaveReadingButton'
 import { savedKey } from '../data/readingData'
-import { IconChevron, IconClose } from '../components/icons'
+import { IconChevron } from '../components/icons'
 import { chapterSections } from '../data/mock'
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
@@ -17,7 +17,7 @@ function formatBirth(date: string) {
 }
 
 export function YouPage() {
-  const { profile, partners, showGuide, dismissGuide, years, chapters, personaTitle, readingsStatus } = useApp()
+  const { profile, partners, years, chapters, personaTitle, readingsStatus } = useApp()
   const yearList = years
   const chapterList = chapters
   const current = yearList.find(y => y.label === '今年') ?? yearList[yearList.length - 1]
@@ -36,32 +36,18 @@ export function YouPage() {
         <p className="m-0 text-sm leading-[1.85] text-fl-body">生年月日から、あなたの性格と一年ずつの流れを読み解きます。</p>
       </section>
 
-      {showGuide && (
-        <section className="px-5 pt-5" aria-labelledby="guide-title">
-          <div className="relative flex flex-col gap-3 rounded-card bg-fl-cream p-5">
-            <button type="button" onClick={dismissGuide} aria-label="案内を閉じる" className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-xl text-fl-body hover:bg-white/60"><IconClose size={18} /></button>
-            <h2 id="guide-title" className="m-0 pr-10 text-base font-medium leading-relaxed">{profile?.nickname ? `${profile.nickname}さん` : 'あなた'}の読みものができました</h2>
-            <p className="m-0 text-[13px] leading-[1.8] text-fl-body">ここから読んでみてください。</p>
-            <div className="flex flex-col">
-              {[
-                { to: `/you/years/${current.year}`, title: '今年の流れを読む', sub: `${current.year}年：${current.title}` },
-                { to: partner ? `/couple/${partner.id}` : '/couple', title: '大切な人との年表をつくる', sub: '相手の生年月日と出会った年から' },
-                { to: '/compose', title: '気になることを相談する', sub: '読みものをもとに、答えを一冊のブックに' },
-              ].map(item => (
-                <Link key={item.title} to={item.to} className="flex min-h-[60px] items-center gap-3 border-t border-fl-ink/10 py-2">
-                  <span className="flex flex-1 flex-col gap-0.5"><span className="text-[15px] font-medium">{item.title}</span><span className="text-xs text-fl-body">{item.sub}</span></span>
-                  <IconChevron size={16} className="text-fl-body" />
-                </Link>
-              ))}
-            </div>
-            {!profile?.birthTime && (
-              <Link to="/welcome?returnTo=%2Fyou" className="text-[13px] leading-[1.7] text-fl-slate underline">出生時刻がわかる方は、足すともっと正確に読めます</Link>
-            )}
-          </div>
-        </section>
-      )}
+      <nav className="fl-reading-contents" aria-labelledby="contents-title">
+        <div className="fl-contents-heading">
+          <h2 id="contents-title">目次</h2>
+          <span>{profile?.nickname ? `${profile.nickname}さんの読みもの` : 'あなたの読みもの'}</span>
+        </div>
+        <a href="#personality-chapters"><span>01</span><strong>性格の章</strong><small>{chapterList.length}の視点</small><IconChevron size={14} /></a>
+        <a href="#personal-years"><span>02</span><strong>年ごとの流れ</strong><small>{yearList[0]?.year} — {yearList[yearList.length - 1]?.year}</small><IconChevron size={14} /></a>
+        <Link to={partner ? `/couple/${partner.id}` : '/couple'}><span>03</span><strong>ふたりの年表</strong><small>{partner ? partner.name : '相手を登録する'}</small><IconChevron size={14} /></Link>
+        <Link to="/compose"><span>04</span><strong>個別相談</strong><small>鑑定を深く読む</small><IconChevron size={14} /></Link>
+      </nav>
 
-      <section className="fl-chapters flex flex-col px-5 pb-2 pt-6">
+      <section id="personality-chapters" className="fl-chapters flex flex-col px-5 pb-2 pt-6">
         <SectionHeading detail={`${chapterList.length}の視点`}>性格の章</SectionHeading>
         {chapterList.map((ch, index) => (
           <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="fl-chapter-row group flex items-center gap-4 border-b border-fl-line py-5">
@@ -76,7 +62,7 @@ export function YouPage() {
         ))}
       </section>
 
-      <section className="fl-year-section pb-2 pt-5">
+      <section id="personal-years" className="fl-year-section pb-2 pt-5">
         <SectionHeading detail="過去から、これからへ">年ごとの流れ</SectionHeading>
         <div ref={stripRef} className="fl-year-strip relative flex gap-2.5 overflow-x-auto px-5 pb-2">
           {yearList.map(y => {

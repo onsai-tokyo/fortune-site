@@ -28,11 +28,10 @@ export function CoupleIndexPage() {
     <Page>
       <SiteHeader current="couple" />
       <section className="fl-hero flex flex-col gap-5 px-6 pb-5 pt-10">
-        <span className="text-xs tracking-[.2em] text-fl-moss">TWO LIVES, ONE TIMELINE</span>
+        <span className="text-xs tracking-[.12em] text-fl-moss">ふたりの年表</span>
         <h1 className="m-0 text-[28px] leading-[1.65]">出会いから、いま。<br />ふたりの歩みを読む。</h1>
         <p className="m-0 text-sm leading-[1.95] text-fl-body">近づく年も、それぞれの毎日を大切にする年も。ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解きます。</p>
         <NatureImage src={images.dunes} className="h-[180px] rounded-card" />
-        <div className="grid grid-cols-3 gap-2 text-center text-xs text-fl-moss">{['無料で読める', '恋人・友人・家族も', '何度でも入れ替え'].map(t => <span key={t} className="rounded-field bg-fl-cream px-2 py-3">{t}</span>)}</div>
       </section>
       <PartnerNewPage embedded />
       <section className="flex flex-col gap-1 px-5 pt-8">

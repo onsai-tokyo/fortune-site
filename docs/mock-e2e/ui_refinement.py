@@ -52,6 +52,13 @@ with sync_playwright() as p:
             output = Path(os.environ["UI_SCREENSHOT_DIR"])
             output.mkdir(parents=True, exist_ok=True)
             page.screenshot(path=str(output / f"you-{width}.png"), full_page=True)
+        # Returning to the landing page must offer fresh input even with a reading.
+        page.goto(B + "/")
+        expect(page.locator("#start")).to_be_visible()
+        expect(page.get_by_text("おかえりなさい", exact=True)).to_have_count(0)
+        expect(page.get_by_role("link", name="つづきを読む", exact=True)).to_have_count(0)
+        expect(page.get_by_role("button", name="生年月日を入れて読む", exact=True)).to_be_visible()
+        layout()
         preset("ふたりの年表")
         assert page.locator(".fl-timeline-choice").first.evaluate("(el) => !!(el.compareDocumentPosition(document.querySelector('.fl-year-feature')) & Node.DOCUMENT_POSITION_FOLLOWING)")
         page.locator(".fl-timeline-choice").first.click()

@@ -463,3 +463,30 @@ button.bg-accent-dark {
 
 .fl-root .fl-chapter-preview { font-size: 13px; line-height: 1.85; font-weight: 400; }
 .fl-root .fl-chapter-number { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 18px; }
+
+/* 読みものの目次と共通の誌面。装飾よりも罫線と文字の階層で整理する。 */
+.fl-root .fl-reading-contents { margin: 28px var(--fl-gutter) 8px; border-top: 1px solid #758074; }
+.fl-root .fl-contents-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; padding: 20px 0 14px; }
+.fl-root .fl-contents-heading h2 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: .12em; }
+.fl-root .fl-contents-heading > span { font-size: 12px; color: #6c7068; }
+.fl-root .fl-reading-contents > a { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 14px; align-items: center; gap: 12px; min-height: 64px; padding: 14px 0; border-bottom: 1px solid #dedfd7; text-decoration: none; }
+.fl-root .fl-reading-contents > a > span { font-size: 11px; color: #74846c; font-variant-numeric: tabular-nums; }
+.fl-root .fl-reading-contents strong { font-size: 15px; font-weight: 500; }
+.fl-root .fl-reading-contents small { max-width: 11em; font-size: 11px; color: #6c7068; overflow-wrap: anywhere; text-align: right; }
+.fl-root :is(#personality-chapters, #personal-years) { scroll-margin-top: 100px; }
+.fl-root:not(:has(.fl-hero-backdrop)) .fl-card { border-radius: 8px; box-shadow: none; }
+.fl-root:not(:has(.fl-hero-backdrop)) .fl-button { border-radius: 8px; }
+.fl-root .fl-year-strip > a { border-radius: 4px; }
+.fl-root .fl-timeline-choice { border: 0; border-bottom: 1px solid #dedfd7; border-radius: 0; background: transparent; margin-bottom: 0; padding: 14px 8px; }
+.fl-root .fl-timeline-choice[aria-pressed="true"] { box-shadow: inset 3px 0 #526348; }
+.fl-root .fl-shelf-tabs { border: 0; border-bottom: 1px solid #dedfd7; border-radius: 0; padding: 0; gap: 16px; }
+.fl-root .fl-shelf-tabs a { border-radius: 0; background: transparent; padding: 14px 0; }
+.fl-root .fl-shelf-tabs a[aria-current="page"] { box-shadow: inset 0 -2px #253b31; color: #253b31; background: transparent; }
+@media (hover: hover) {
+  .fl-root .fl-reading-contents > a:hover { color: #526348; background: #eeeee340; }
+}
+@media (max-width: 359px) {
+  .fl-root .fl-reading-contents > a { gap: 8px; grid-template-columns: 20px minmax(0, 1fr) auto 14px; }
+  .fl-root .fl-reading-contents strong { font-size: 14px; }
+  .fl-root .fl-reading-contents small { max-width: 8em; font-size: 10px; }
+}

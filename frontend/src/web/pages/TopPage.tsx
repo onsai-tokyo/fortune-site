@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Chip, Eyebrow, Field, Footer, LinkButton, NatureImage, Page, PlainHeader } from '../components/ui'
+import { Button, Chip, Eyebrow, Field, Footer, NatureImage, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
 import { prefectures } from '../data/mock'
 import { CreatingPage } from './CreatingPage'
@@ -17,8 +17,7 @@ const steps = [
 ]
 
 export function TopPage() {
-  const { profile, saveProfile, years, chapters, readingsStatus } = useApp()
-  const hasReading = Boolean(profile && (!remoteMode || (readingsStatus === 'ready' && years.length && chapters.length)))
+  const { profile, saveProfile } = useApp()
   const navigate = useNavigate()
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState<Gender | null>(null)
@@ -50,7 +49,7 @@ export function TopPage() {
   if (saving) return <CreatingPage pending progress={progress} />
   return (
     <Page>
-      <PlainHeader right={<Link to={profile ? '/you' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? 'つづきを読む' : 'ログイン'}</Link>} />
+      <PlainHeader right={<Link to={profile ? '/books' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? '本棚' : 'ログイン'}</Link>} />
 
       <section className="fl-hero fl-hero-backdrop flex flex-col gap-4 px-6 pb-6 pt-10" style={{ backgroundImage: `linear-gradient(90deg, rgba(250,249,245,.96), rgba(250,249,245,.76)), url("${images.mountains}")` }}>
         <Eyebrow>暦をひらく。自分を知る。</Eyebrow>
@@ -59,20 +58,6 @@ export function TopPage() {
       </section>
 
       <section className="px-5 pb-10">
-        {hasReading ? (
-          <div className="flex flex-col gap-3 rounded-card bg-white p-5">
-            <span className="text-[15px] font-medium">おかえりなさい</span>
-            <span className="text-sm leading-[1.8] text-fl-body">あなたの読みものは、この端末に用意してあります。</span>
-            <LinkButton to="/you" size="lg">つづきを読む</LinkButton>
-          </div>
-        ) : profile ? (
-          <div className="flex flex-col gap-3 rounded-card bg-white p-5">
-            <span className="text-[15px] font-medium">鑑定の表示を確認しましょう</span>
-            <span className="text-sm leading-[1.8] text-fl-body">出生情報はありますが、読みものの表示を確認できていません。保存状況を確認するか、出生情報から作成を再開できます。</span>
-            <LinkButton to="/you" size="lg">保存状況を確認する</LinkButton>
-            <LinkButton to="/welcome?returnTo=%2Fyou">出生情報を確認して再開</LinkButton>
-          </div>
-        ) : (
           <form id="start" onSubmit={start} className="fl-entry-form flex flex-col gap-[18px] rounded-card border border-fl-line bg-white p-5">
             <BirthDateFields id="top-birthdate" value={birthDate} onChange={setBirthDate} disabled={saving} />
             <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
@@ -96,7 +81,6 @@ export function TopPage() {
             <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : '同意して、無料で読む'}</Button>
             <span className="text-center text-xs leading-[1.7] text-fl-muted">読むだけなら登録不要です。本棚への保存にはメール登録が必要です。</span>
           </form>
-        )}
       </section>
 
       <section className="fl-landing-section flex flex-col gap-4 px-6 pb-12">
@@ -145,7 +129,7 @@ export function TopPage() {
       </section>
 
       <section className="px-6 pb-12">
-        {profile ? <LinkButton to="/you" size="lg">つづきを読む</LinkButton> : <Button size="lg" onClick={goToForm}>生年月日を入れて読む</Button>}
+        <Button size="lg" onClick={goToForm}>生年月日を入れて読む</Button>
       </section>
 
       <Footer />
