@@ -1,0 +1,35 @@
+{
+  "dateJst": "2026-10-20",
+  "publicUrl": "https://fate-lab.com",
+  "status": "Published, payments disabled",
+  "frontendSourceCommit": "01a9e8773a049f5736257b7b7aa9818708a9ec53",
+  "productionDeployment": "dpl_6nAZepV8DKesU8ZsFFwRQBqPa3cR",
+  "productionUniqueUrl": "https://fortune-site-mgxda82x2-onsaitokyo-4984s-projects.vercel.app",
+  "rollbackDeployment": "dpl_CXvRnLsEeLtopaFiJnPnRVdtVdrC",
+  "rollbackUrl": "https://fortune-site-wa5w21x3c-onsaitokyo-4984s-projects.vercel.app",
+  "branch": "codex/fatelab-web-release-20261018",
+  "recentUiCommitsPushed": false,
+  "latestChecks": {
+    "bf81a1fUiRevision": "Frontend unit 118 pass; build and synthetic REMOTE build pass; original mock-e2e six pass; three-width UI flow pass; synthetic onboarding eight cases pass",
+    "01a9e87LoginCopy": "Build pass; relevant unit six pass; email_otp, return_to, guest and support UI checks pass",
+    "productionDomain": "Vercel inspect confirmed exact approved deployment after promotion",
+    "productionExistingSession": "Real personal reading with 15 chapters; delivered book and bookshelf readable",
+    "productionLogin": "Login heading, 8-digit instructions and free-reading link visible; no email sent during this check"
+  },
+  "priorAcceptanceLimits": [
+    "Real email-code restore and real AI delivery were tested before the latest UI changes",
+    "Two completed questions belonged to the earlier Web product; additional-question UI is now intentionally unavailable",
+    "Cross-account check used UI routes, not crafted direct API requests",
+    "Initial failed AI generation root cause remains unconfirmed; credit was refunded and approved retry delivered",
+    "Full DB restore and all native iOS feature regressions were not completed; scoped SQL rehearsal passed"
+  ],
+  "remainingOperations": [
+    "User-approved backup push of recent release commits to GitHub",
+    "Precisely identify any anonymous account from the earlier failed alternate-origin attempt before proposing cleanup; do not delete by birth date or broad criteria",
+    "Retain the original linked acceptance account unless the user explicitly approves its exact deletion",
+    "Consider removal of the preview origin from production CORS under separate production approval",
+    "Payment provider selection and review, payment integration and commercial terms before enabling sales",
+    "Dependency maintenance and full disaster-recovery preparation as separately scoped work"
+  ],
+  "mustNotDoFromThisRecord": ["Reapply migrations", "Enable payments", "Change shared auth or iOS settings", "Push or delete production data without authorization"]
+}

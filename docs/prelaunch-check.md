@@ -1,5 +1,19 @@
 # Web公開前・本番確認手順（実施状況は先頭参照）
 
+## 現在の公開状態（2026-10-20）
+
+この節を、以下の過去の「未公開」「未デプロイ」等の記録より優先する。FATE LAB Web版は `https://fate-lab.com` で決済オフのまま公開済み。最新の公開ソースは `01a9e8773a049f5736257b7b7aa9818708a9ec53`、Vercelデプロイは `dpl_6nAZepV8DKesU8ZsFFwRQBqPa3cR`。段階ごとのユーザー承認を受け、ドメイン未割当の本番ビルドで確認後に切り替え、公開ドメインのデプロイIDを照合した。
+
+最新のWeb UIでは、トップの任意の出生時刻・出生地、年表イメージ、章の項目名を先に置く画像なし一覧、ふたりのページ内の相手登録、内容に基づく年表タグ、保存前の無料メール登録案内、「ログイン」表記を反映した。Webのブックは一問一答とし、追加質問の入口を外し、旧質問URLは本文へ戻す。共有の質問API・iOSコードは変更していない。
+
+3 SQLとAuthの反映は完了済みであり、再実行しない。CAPTCHA・OTP有効期限・Confirm signup・SMTP・共有FREE_QUESTION_LIMITは今回も変更していない。Webの決済は `VITE_PAYMENTS_ENABLED=false` を維持。
+
+切替後は既存セッションで本人の実鑑定（15章）と既存ブック・本棚・設定の閲覧を確認した。実メールでのログイン、実AI生成と2回の質問、別アカウントからの他人のブック/質問画面の非表示は、今回のUI変更より前の公開受入確認で実施済み。今回の文言変更時は実メール・AIを再送していない。アカウント隔離の確認は画面経由であり、細工したAPIリクエストによる総合的な権限監査を意味しない。iOS全機能の実機回帰と全DBの復元は未検証で、限定SQLリハーサルの成功とは区別する。
+
+戻し先は直前の公開版 `dpl_CXvRnLsEeLtopaFiJnPnRVdtVdrC`（`https://fortune-site-wa5w21x3c-onsaitokyo-4984s-projects.vercel.app`）。問題があればこの版へVercel rollbackし、SQLは再適用しない。ソースはローカルreleaseブランチにコミット済みだが、今回のUI更新コミットはGitHubへpushしていない。バックアップ目的でも、pushは別途の明示承認を受ける。
+
+検証の版と残る運用項目は `release_20261020/current-publication-status.result.json` を参照。以下は過去の準備・確認履歴であり、そのまま再実行するための承認ではない。
+
 最新の実施状況（2026-10-19、この段落を過去の未実施記載より優先）：個別承認を受け、限定リハーサルとB0照合後、許可された3 SQLだけを本番へ順次適用し、各DB内の適用前後照合・COMMIT・終了処理を確認した。Magic Link/Change Email Addressの件名・本文を8桁/1時間/リンクなしに変更し、匿名サインインONと10回/IP/時を保存済み。OTP設定・Confirm signup・CAPTCHA・SMTPは変更していない。Render本番のFRONTEND_URLは既にhttps://fate-lab.comで変更不要、共有FREE_QUESTION_LIMITにも触れていない。各控え・証跡は `release_20261019/`。本番APIは79da270のままで、Webコードはまだpush/デプロイ/ドメイン切替をしていない。
 
 最新ローカル再検証：backend npm test529件、追加ブック回帰39件、frontend unit96件、SQL補助ツールunit56件、両buildと合成REMOTE build、既存mock-e2e6本＋追加8本が成功。crawlは全6状態でissuesなし。iOS/既存API/生成エンジン/ワーカーの保護チェックも成功。初回の見本テストは実行側がSupabase値を空文字にしたため失敗し、正しく未設定にして再ビルド後、全件再実行して成功した。本番では有効な公開URL/anonキーを設定する。詳細と未確認項目は `release_20261019/local-verification.result.json`。実配送・実AI生成・実DBの2アカウント隔離・iOS実機はまだ未確認であり、ローカル成功を公開完了と扱わない。本番反映は対象コミットと戻し方を報告し、改めて個別OKを受ける。
