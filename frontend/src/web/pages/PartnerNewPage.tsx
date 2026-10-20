@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BackHeader, Button, Chip, Field, Note, Page } from '../components/ui'
 import { prefectures, relationGroup, relationOptions } from '../data/mock'
 import type { Gender, Relation } from '../data/types'
@@ -11,8 +11,13 @@ import { useApp } from '../state/AppState'
  * → 出会った年は coupleMeetingSettings で別に保存（相手の登録だけ成功した場合は「登録」を押し直すと年だけ保存し直す）
  */
 export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
-  const { setPartner, partners, partnerNotice, partnerDraft, profile } = useApp()
-  const current = partners[0]
+  const { setPartner, cancelPartnerDraft, partners, partnerNotice, partnerDraft, partnerReplacementId, partnerLimit, reloadReadings, profile } = useApp()
+  const [params] = useSearchParams()
+  const [replacementId, setReplacementId] = useState(params.get('replace') ?? partnerReplacementId ?? '')
+  const multiple = partners.length > 1
+  const current = partners.find(p => p.id === (partnerDraft ? partnerReplacementId : replacementId)) ?? (!replacementId && !multiple && !partnerDraft ? partners[0] : undefined)
+  const missingTarget = !partnerDraft && !!replacementId && !partners.some(p => p.id === replacementId)
+  const noCapacity = multiple && (!partnerLimit || partners.length - 1 >= partnerLimit)
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [relation, setRelation] = useState<Relation>('お付き合い中')
@@ -23,6 +28,9 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
   const [metYear, setMetYear] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    if (partnerReplacementId) setReplacementId(partnerReplacementId)
+  }, [partnerReplacementId])
   useEffect(() => {
     setName(partnerDraft?.name ?? ''); setRelation(partnerDraft?.relation ?? 'お付き合い中')
     setBirthDate(partnerDraft?.birthDate ?? '1990-01-01'); setBirthTime(partnerDraft?.birthTime ?? '')
@@ -36,7 +44,7 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!valid || saving) return
+    if (!valid || saving || missingTarget || (!partnerDraft && multiple && (!current || noCapacity))) return
     const raw = metYear.trim()
     if (raw && (!/^[0-9]{4}$/.test(raw) || Number(raw) < minMetYear || Number(raw) > thisYear)) {
       setError('出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください。')
@@ -44,7 +52,7 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
     }
     setSaving(true); setError(null)
     try {
-      const partner = await setPartner({ name: name.trim(), relation, birthDate, birthTime: birthTime || null, birthPlace, gender, metYear: raw ? Number(raw) : null })
+      const partner = await setPartner({ name: name.trim(), relation, birthDate, birthTime: birthTime || null, birthPlace, gender, metYear: raw ? Number(raw) : null }, partnerDraft ? partnerReplacementId ?? undefined : replacementId || current?.id)
       navigate(`/couple/${partner.id}`)
     } catch {
       setError('登録を完了できませんでした。入力を残しているので、案内を確認してください。')
@@ -57,8 +65,22 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
       <section className="flex flex-col gap-2.5 px-6 pb-2 pt-7">
         <Heading className="m-0 text-[24px] font-medium leading-[1.55]">{current ? '相手を変える' : '相手を登録する'}</Heading>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">相手の生年月日と出会った年から、ふたりの関係を一年ずつ読みます。</p>
+        {missingTarget && <p role="alert" className="text-sm leading-relaxed">選択した相手が見つかりません。別の相手には自動で切り替えません。<button type="button" className="underline" onClick={() => setReplacementId('')}>対象を選び直す</button></p>}
+        {multiple && <>
+          <p role="status" className="text-sm leading-relaxed">相手が{partners.length}人登録されています。読む相手、または入れ替える相手を選んでください。他の相手は削除しません。</p>
+          <nav aria-label="登録済みの相手" className="flex flex-col gap-2">{partners.map(p => <Link key={p.id} to={`/couple/${p.id}`} className="rounded-xl border border-fl-line p-3 text-sm">{p.name}との年表を読む</Link>)}</nav>
+          <label className="text-sm">入れ替える相手<select aria-label="入れ替える相手" value={current?.id ?? ''} disabled={saving || !!partnerDraft} onChange={e => setReplacementId(e.target.value)} className="mt-2 block w-full rounded-xl border border-fl-line p-3"><option value="">選んでください</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+          {noCapacity && <p role="status" className="text-sm leading-relaxed">{partnerLimit ? '1人を削除しても登録枠が足りないため、入れ替えは開始できません。' : '登録枠を確認できないため、入れ替えは開始できません。'}既存の相手はそのまま読めます。アプリで登録状況を確認するか、<button type="button" className="underline" onClick={reloadReadings}>再読み込み</button>してください。</p>}
+        </>}
         {partnerNotice && <p role="alert" className="m-0 text-[13px] leading-[1.7] text-fl-danger">{partnerNotice}</p>}
-        {current && <Note>登録できる相手は1人です。登録すると、いまの相手（{current.name}）の年表と入れ替わります。{current.name}について作ったブックは本棚に残ります。入れ替えは何度でも無料です。</Note>}
+        {partnerDraft && <Button variant="secondary" disabled={saving} onClick={async () => {
+          setSaving(true); setError(null)
+          try { await cancelPartnerDraft(); setReplacementId('') }
+          catch (error) { setError(error instanceof Error ? error.message : '登録状況を確認できませんでした。') }
+          finally { setSaving(false) }
+        }}>未完了の登録を取り消して入力し直す</Button>}
+        {partnerDraft && <p className="text-xs text-fl-muted">登録済みの相手を削除する操作ではありません。前の相手が削除済みの場合は、取り消しても元には戻りません。</p>}
+        {current && <Note>{!multiple && '登録できる相手は1人です。'}登録すると、{multiple ? '選んだ相手' : 'いまの相手'}（{current.name}）の年表と入れ替わります。{multiple && '他の相手は削除しません。'}{current.name}について作ったブックは本棚に残ります。入れ替えは何度でも無料です。</Note>}
       </section>
 
       <form onSubmit={submit} noValidate aria-busy={saving} className="flex flex-col gap-[22px] px-6 pt-5">
@@ -102,7 +124,7 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
         <Note>登録した相手は、いつでも削除できます。</Note>
 
         <div className="flex flex-col gap-2.5 pb-12 pt-2">
-          <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '登録しています…' : current ? `${current.name}と入れ替えて登録` : '登録'}</Button>
+          <Button type="submit" size="lg" disabled={!valid || saving || missingTarget || (!partnerDraft && multiple && (!current || noCapacity))}>{saving ? '登録しています…' : partnerDraft ? '登録状況を再確認する' : current ? `${current.name}と入れ替えて登録` : '登録'}</Button>
         </div>
         </fieldset>
       </form>

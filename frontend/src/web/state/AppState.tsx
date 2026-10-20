@@ -5,15 +5,16 @@ import { demoDeliverySections } from '../data/demoData'
 import { images } from '../data/images'
 import type { BirthProfile, Book, BookTheme, Chapter, Partner, PlanId, ReadingSection, YearReading, CoupleYear } from '../data/types'
 import { supabase } from '../../lib/supabase'
-import { apiFetch, newOperationId, webApiPath } from '../data/api'
+import { apiFetch, ApiError, newOperationId, webApiPath } from '../data/api'
 import { requestCaptchaToken } from '../../lib/turnstile'
 import { canCreateWithCredits } from '../data/paymentPolicy'
 import { simulatePurchase, paymentsAvailable } from '../data/paymentConfig'
 import { webAiAdult, WEB_AI_ADULT_NOTICE } from '../../lib/webAiEligibility'
-import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, type PartnerDraft, type PendingPartner } from './partnerDraft'
+import { pendingPartnerKey, partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerNotice, unchangedOtherPartners, type PartnerDraft, type PendingPartner } from './partnerDraft'
 import { createAccountDeletion } from './accountDeletion'
 import { isBookPending, pollBookOperation } from './bookPolling'
 import { resolveBookSource } from '../data/bookSource'
+import { bookRetryOperationId, existingBookRetry, knownBookRejection } from './bookCreation'
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -31,6 +32,11 @@ const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE
 export type Session = 'none' | 'anonymous' | 'linked'
 
 interface AppState {
+  retryTargets?: Record<string, string>
+  partnerLimit?: number
+  partnerReplacementId?: string | null
+  savingIds?: string[]
+  saveErrors?: Record<string, string>
   bookSourcePartners?: Record<string, string>
   bookRefreshError?: string | null
   readingsStatus: LoadState
@@ -71,13 +77,14 @@ interface Actions {
   /** 別の端末で使っていた本棚を、メールのコードで開く */
   restore: (email: string) => void
   /** この端末での利用をやめる（linked のときだけ。メールで戻れる） */
-  forgetDevice: () => void
+  forgetDevice: () => Promise<void>
   saveProfile: (profile: BirthProfile) => Promise<void>
   /** 相手は1人だけ。登録すると前の相手と入れ替わる（何度でも無料） */
-  setPartner: (partner: Omit<Partner, 'id'>) => Promise<Partner>
+  setPartner: (partner: Omit<Partner, 'id'>, replacementId?: string) => Promise<Partner>
+  cancelPartnerDraft: () => Promise<void>
   setDraft: (draft: Partial<AppState['draft']>) => void
-  createBook: () => Book
-  retryBook: (bookId: string) => void
+  createBook: () => Promise<Book>
+  retryBook: (bookId: string) => Promise<void>
   purchase: (planId: PlanId, receiptEmail: string) => boolean
   toggleSaved: (id: string) => void
   consumeBookQuestion: (bookId: string) => void
@@ -87,7 +94,7 @@ interface Actions {
   requestCreateAfterPurchase: () => void
   cancelPendingCreate: () => void
   /** 支払い反映後に呼ぶ。待っている相談があればブックをつくって返す */
-  startPendingBook: () => Book | null
+  startPendingBook: () => Promise<Book | null>
   deleteAccount: () => Promise<void>
   applyDemo: (preset: DemoPreset) => void
 }
@@ -187,11 +194,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   })
   const timers = useRef<number[]>([])
   const stateRef = useRef(state)
-  const remoteAuth = useRef({ owner: null as string | null, token: null as string | null, revision: 0 })
+  const remoteAuth = useRef({ owner: null as string | null, token: null as string | null, revision: 0, ownerEpoch: 0 })
   const profileSaveInProgress = useRef(false)
   const profileSaveOwner = useRef<string | null>(null)
   const refreshSequence = useRef(0)
   const partnerSaveInProgress = useRef(false)
+  const savingReads = useRef(new Set<string>())
+  const savedRevision = useRef(0)
+  const submittingBooks = useRef(new Set<string>())
   const activeBookPolls = useRef(new Map<string, Promise<string | null>>())
   const activeShelfReads = useRef(new Map<string, Promise<boolean>>())
   const [bookPollRevision, setBookPollRevision] = useState(0)
@@ -204,6 +214,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // A stale caller must not invalidate the new owner's active refresh.
     if (remoteAuth.current.token !== accessToken) return false
     const revision = remoteAuth.current.revision
+    const savesAtStart = savedRevision.current
     const sequence = ++refreshSequence.current
     const current = () => refreshSequence.current === sequence && remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
     if (!current()) return false
@@ -212,7 +223,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const [history, status, partners, bookshelf, saved] = await Promise.all([
         apiFetch<{ conversations: Array<Record<string, unknown>> }>('/api/reading/conversations', { accessToken }),
         apiFetch<{ remaining: number; purchasedRemaining?: number }>('/api/books/status', { accessToken }),
-        apiFetch<{ partners: Array<Record<string, unknown>> }>('/api/partners', { accessToken }),
+        apiFetch<{ partners: Array<Record<string, unknown>>; limit?: number }>('/api/partners', { accessToken }),
         apiFetch<{ books: Array<Record<string, unknown>> }>('/api/books', { accessToken }),
         apiFetch<{ saves: Array<{ save_key: string }> }>('/api/reading/saves', { accessToken }),
       ])
@@ -246,7 +257,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(s => !current() ? s : ({ ...s, profile: profile?.birthDate ? profile : s.profile,
         session: s.session === 'none' ? 'anonymous' : s.session,
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
-        savedIds: remoteSavedIds,
+        partnerLimit: Number.isInteger(partners.limit) && partners.limit! > 0 ? partners.limit : undefined,
+        savedIds: savedRevision.current === savesAtStart && ![...savingReads.current].some(key => key.startsWith(`${remoteAuth.current.owner}:${remoteAuth.current.ownerEpoch}:`)) ? remoteSavedIds : s.savedIds,
         books, bookRefreshError: null,
         bookSourcePartners: Object.fromEntries((history.conversations ?? []).filter(c => c.kind === 'compatibility' && typeof c.id === 'string' && typeof c.partner_profile_id === 'string').map(c => [String(c.id), String(c.partner_profile_id)])),
         selfSourceId: sourceId, personaTitle, readingsStatus: 'ready',
@@ -273,6 +285,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       // must load the new owner's data rather than being suppressed by it.
       if (profileSaveInProgress.current && profileSaveOwner.current === null && session?.user.is_anonymous) profileSaveOwner.current = owner
       const changed = remoteAuth.current.owner !== owner
+      if (changed) remoteAuth.current.ownerEpoch++
       if (changed || remoteAuth.current.token !== token) remoteAuth.current.revision++
       remoteAuth.current.owner = owner; remoteAuth.current.token = token
       if (changed || !session) clearTimers()
@@ -281,13 +294,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const base = changed ? blankState() : previous
         let partnerDraft = base.partnerDraft
         let partnerNotice = base.partnerNotice
+        let partnerReplacementId = base.partnerReplacementId
         if (changed) {
           try {
             const raw = window.localStorage.getItem(pendingPartnerKey(session.user.id))
             partnerDraft = partnerDraftFromRaw(raw); partnerNotice = pendingPartnerNotice(raw)
+            partnerReplacementId = pendingPartnerFromRaw(raw)?.oldPartnerId
           } catch { /* Never reuse another owner's draft. */ }
         }
-        return { ...base, partnerDraft, partnerNotice, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
+        return { ...base, partnerDraft, partnerNotice, partnerReplacementId, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
           draft: { ...base.draft, question: changed ? loadDraftQuestionForUser(session.user.id) : base.draft.question } }
       })
       // A fresh SIGNED_IN must still clear the previous owner's state, but an
@@ -302,7 +317,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       authEvents++
       applySession(session)
     })
-    return () => { disposed = true; remoteAuth.current.revision++; listener.subscription.unsubscribe() }
+    return () => { disposed = true; remoteAuth.current.revision++; remoteAuth.current.ownerEpoch++; listener.subscription.unsubscribe() }
   }, [refreshRemote])
 
   const deliverLater = useCallback((bookId: string) => {
@@ -430,7 +445,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const key = pendingBookKey(owner)
         try {
           const saved = JSON.parse(window.localStorage.getItem(key) ?? 'null')
-          if (saved?.operationId === operationId) window.localStorage.removeItem(key)
+          if (saved?.operationId === operationId) {
+            window.localStorage.removeItem(key)
+            if (book.state === 'delivered' && saved.clearDraft !== false && saved.draft?.question && loadDraftQuestionForUser(owner) === saved.draft.question) {
+              storeDraftQuestionForUser('', owner)
+              setState(s => ({ ...s, draft: s.draft.question === saved.draft.question ? { ...s.draft, question: '' } : s.draft }))
+            }
+          }
         } catch { /* Keep uncertain recovery data. */ }
         return book.id
       } catch (error) {
@@ -462,13 +483,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     })()
     return () => { cancelled = true }
   }, [shelfOwner, pendingShelfIds, bookPollRevision, refreshBookShelf])
-  const remoteCreateBook = useCallback(async (draft: AppState['draft']) => {
+  const remoteCreateBook = useCallback(async (draft: AppState['draft'], retryOf?: string) => {
     if (!webAiAdult(stateRef.current.profile?.birthDate)) throw new Error(WEB_AI_ADULT_NOTICE)
-    const accessToken = await remoteToken()
-    if (!accessToken) throw new Error('もとになる読みものを確認できませんでした')
     const owner = remoteAuth.current.owner
-    const current = () => Boolean(owner && remoteAuth.current.owner === owner)
+    const ownerEpoch = remoteAuth.current.ownerEpoch
+    const original = retryOf ? stateRef.current.books.find(b => b.id === retryOf) : undefined
+    const current = () => Boolean(owner && remoteAuth.current.owner === owner && remoteAuth.current.ownerEpoch === ownerEpoch)
+    const accessToken = await remoteToken()
     if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+    if (!accessToken) throw new Error('もとになる読みものを確認できませんでした')
+    const operationId = retryOf ? await bookRetryOperationId(owner!, retryOf) : newOperationId()
+    if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+    const accepted = (raw: Record<string, unknown>, trackOperation = true) => {
+      if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+      const book = mapRemoteBook(raw)
+      if (!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(book.id) || (retryOf && book.id === retryOf)) throw new Error('受付済みのブックを確認できませんでした。')
+      if (!retryOf && loadDraftQuestionForUser(owner!) === draft.question) storeDraftQuestionForUser('', owner!)
+      setState(s => ({ ...s, draft: !retryOf && s.draft.question === draft.question ? { ...s.draft, question: '' } : s.draft,
+        books: [book, ...s.books.filter(b => b.id !== book.id)], bookRefreshError: null,
+        retryTargets: retryOf ? { ...s.retryTargets, [retryOf]: book.id } : s.retryTargets }))
+      if (trackOperation) void pollRemoteBook(operationId, accessToken).catch(() => undefined)
+      return book
+    }
+    if (retryOf) {
+      // Read first, including after reload/lost response. A failed read never starts a new order.
+      const existing = await apiFetch<{ book: Record<string, unknown> | null }>(`/api/books/operations/${operationId}`, { accessToken })
+      if (!current()) throw new Error('BOOK_OWNER_CHANGED')
+      if (existing.book) return accepted(existing.book)
+      // A fresh shelf read also detects orders made with the previous random-id client.
+      const shelf = await apiFetch<{ books: Record<string, unknown>[] }>('/api/books', { accessToken })
+      if (!current() || !original) throw new Error('BOOK_OWNER_CHANGED')
+      const raw = shelf.books.find(b => existingBookRetry(original, [mapRemoteBook(b)]))
+      if (raw) return accepted(raw, false)
+    }
     const pair = draft.sourceHref.match(/^\/couple\/([^?]+)\?year=(\d{4})$/)
     if (pair) {
       const selfId = stateRef.current.selfSourceId
@@ -479,19 +526,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       draft = { ...draft, ...saved }
     }
     if (!draft.sourceId) throw new Error('もとになる読みものを確認できませんでした')
-    const operationId = newOperationId()
     const userId = (await supabase.auth.getUser()).data.user?.id
     if (!current() || userId !== owner) throw new Error('BOOK_OWNER_CHANGED')
-    if (userId) window.localStorage.setItem(pendingBookKey(userId), JSON.stringify({ operationId, draft }))
+    // A rejected validation is not an accepted job. Keep the draft and credits.
+    await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
+    if (!current() || !userId) throw new Error('BOOK_OWNER_CHANGED')
+    const pending = JSON.parse(window.localStorage.getItem(pendingBookKey(userId)) ?? 'null')
+    if (pending && (!retryOf || pending.operationId !== operationId || pending.draft?.sourceId !== draft.sourceId || pending.draft?.question !== draft.question || pending.draft?.theme !== draft.theme || pending.draft?.sourceCardId !== draft.sourceCardId)) throw new Error('前の相談の受付状況を確認中です。本棚で再読み込みしてください。')
+    window.localStorage.setItem(pendingBookKey(userId), JSON.stringify({ operationId, draft, clearDraft: !retryOf }))
     try {
-      await apiFetch('/api/books/validate', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
-      if (!current()) throw new Error('BOOK_OWNER_CHANGED')
-      await apiFetch('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
-      if (!current()) return null
-      return await pollRemoteBook(operationId, accessToken)
+      const result = await apiFetch<{ book: Record<string, unknown> }>('/api/books', { method: 'POST', accessToken, aiConsent: true, body: JSON.stringify({ operationId, sourceId: draft.sourceId, focusCardId: draft.sourceCardId, theme: draft.theme, question: draft.question }) })
+      return accepted(result.book)
     } catch (error) {
+      if (current() && error instanceof ApiError && knownBookRejection(error.status, error.code)) {
+        const key = pendingBookKey(userId)
+        const saved = JSON.parse(window.localStorage.getItem(key) ?? 'null')
+        if (saved?.operationId === operationId) window.localStorage.removeItem(key)
+        setState(s => ({ ...s, bookRefreshError: null }))
+        // The shared RPC's legacy error text describes iOS membership/pricing.
+        if (error.code === 'BOOK_NO_CREDITS') throw new Error('利用できる冊数がありません。相談は下書きに残っています。')
+        throw error
+      }
       if (current()) setState(s => ({ ...s, bookRefreshError: '作成の受付・状況を確認できませんでした。作成をやり直さず、再読み込みで確認してください。' }))
-      throw error
+      throw new Error('作成の受付結果を確認できませんでした。下書きは残っています。再作成せず、本棚で再読み込みしてください。')
     }
   }, [pollRemoteBook, remoteToken])
 
@@ -554,21 +611,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       await refreshRemote(token)
     },
     linkEmail: email => {
-      if (REMOTE) { void supabase.auth.updateUser({ email }); return }
+      if (REMOTE) return // EmailCode already verified; the auth listener hydrates the session.
       setState(s => ({ ...s, session: 'linked', email }))
     },
     restore: email => {
-      if (REMOTE) { void supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } }); return }
+      if (REMOTE) return // Do not send another OTP after successful verification.
       // 本番：signInWithOtp({ email, options: { shouldCreateUser: false } }) → verifyOtp({ email, token, type: 'email' })
       storeDraftQuestion('')
       clearTimers()
       setState({ ...initialState(), session: 'linked', email, receiptEmail: email })
     },
-    forgetDevice: () => {
+    forgetDevice: async () => {
+      if (REMOTE) {
+        const owner = remoteAuth.current.owner
+        if (!owner) throw new Error('ログイン状態を確認できませんでした。')
+        const result = await supabase.auth.signOut({ scope: 'local' })
+        if (result.error) throw new Error('ログアウトできませんでした。通信を確認してもう一度お試しください。')
+        storeDraftQuestion('') // Remove the legacy, unscoped device draft too.
+        storeDraftQuestionForUser('', owner)
+        window.localStorage.removeItem(pendingPartnerKey(owner))
+        window.localStorage.removeItem(pendingBookKey(owner))
+        // A different account may have signed in while the response was pending.
+        if (remoteAuth.current.owner && remoteAuth.current.owner !== owner) throw new Error('ログイン状態が変わりました。現在のアカウントをご確認ください。')
+        refreshSequence.current++
+        clearTimers()
+        setState(blankState())
+        return
+      }
       // 共用のパソコンで次の人に見えないよう、下書きも消す
       storeDraftQuestion('')
       clearTimers()
-      if (REMOTE) { void supabase.auth.signOut(); return }
       setState(blankState())
     },
     saveProfile: async profile => {
@@ -593,9 +665,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         profileSaveOwner.current = null
       }
     },
-    setPartner: async input => {
+    setPartner: async (input, replacementId) => {
       const partner: Partner = { ...input, id: `p-${Date.now()}` }
-      const old = stateRef.current.partners[0]
+      const expectedPartnerIds = stateRef.current.partners.map(p => p.id)
+      const old = replacementId ? stateRef.current.partners.find(p => p.id === replacementId) : stateRef.current.partners.length === 1 ? stateRef.current.partners[0] : undefined
       if (REMOTE) {
         if (partnerSaveInProgress.current) throw new Error('登録処理中です。完了をお待ちください。')
         partnerSaveInProgress.current = true
@@ -616,7 +689,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           if (pending && JSON.stringify(pending.input) !== JSON.stringify(input)) {
             throw new Error('PENDING_INPUT_CHANGED')
           }
+          if (pending && replacementId && pending.oldPartnerId !== replacementId) throw new Error('PENDING_TARGET_CHANGED')
           if (!pending) {
+            if (replacementId && !old) throw new Error('PARTNER_CHANGED')
             // Legacy drafts have no operation id. First reconcile the list; do
             // not interpret an already registered partner as a deletion target.
             if (raw) {
@@ -624,16 +699,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
               check()
               if (list.partners.length) throw new Error('LEGACY_PENDING_UNCERTAIN')
             }
-            pending = { version: 2, input, operationId: newOperationId(), oldPartnerId: old?.id ?? null, deleted: false }
+            if (stateRef.current.partners.length > 1) {
+              if (!old) throw new Error('PARTNER_SELECTION_REQUIRED')
+              const list = await apiFetch<{ partners: Array<{ id: string }>; limit?: number }>('/api/partners', { accessToken })
+              check()
+              if (!Number.isInteger(list.limit) || list.limit! < 1) throw new Error('PARTNER_CAPACITY_UNKNOWN')
+              if (list.partners.length - 1 >= list.limit!) throw new Error('PARTNER_CAPACITY_FULL')
+            }
+            pending = { version: 2, input, operationId: newOperationId(), oldPartnerId: old?.id ?? null, deleted: false,
+              ...(expectedPartnerIds.length > 1 ? { expectedPartnerIds } : {}) }
           }
           const persist = () => { check(); window.localStorage.setItem(key, JSON.stringify(pending)) }
           persist() // If durable recovery is unavailable, stop before DELETE.
-          setState(s => ({ ...s, partnerDraft: input, partnerNotice: null }))
+          setState(s => ({ ...s, partnerDraft: input, partnerReplacementId: pending!.oldPartnerId, partnerNotice: null }))
           if (pending.oldPartnerId && !pending.deleted && !pending.registeredId) {
             stage = 'delete'
-            const list = await apiFetch<{ partners: Array<{ id: string }> }>('/api/partners', { accessToken })
+            const list = await apiFetch<{ partners: Array<{ id: string }>; limit?: number }>('/api/partners', { accessToken })
             check()
-            if (list.partners.some(p => p.id !== pending!.oldPartnerId)) throw new Error('PARTNER_CHANGED')
+            if (!unchangedOtherPartners(pending, list.partners.map(p => p.id))) throw new Error('PARTNER_CHANGED')
+            if ((pending.expectedPartnerIds?.length ?? 0) > 1 && (!Number.isInteger(list.limit) || list.limit! < 1)) throw new Error('PARTNER_CAPACITY_UNKNOWN')
+            if ((pending.expectedPartnerIds?.length ?? 0) > 1 && list.partners.filter(p => p.id !== pending!.oldPartnerId).length >= list.limit!) throw new Error('PARTNER_CAPACITY_FULL')
             if (list.partners.some(p => p.id === pending!.oldPartnerId)) {
               await apiFetch<void>(`/api/partners/${pending.oldPartnerId}`, { method: 'DELETE', accessToken })
               check()
@@ -663,17 +748,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           if (!await refreshRemote(accessToken)) throw new Error('REFRESH_FAILED')
           check()
           window.localStorage.removeItem(key)
-          setState(s => ({ ...s, partnerDraft: null, partnerNotice: null }))
+          setState(s => ({ ...s, partnerDraft: null, partnerReplacementId: undefined, partnerNotice: null }))
           return { ...input, id: pending.registeredId }
-        } catch {
+        } catch (error) {
           if (current()) {
-            const notice = pending?.registeredId
+            const inputChanged = error instanceof Error && error.message === 'PENDING_INPUT_CHANGED'
+            const code = error instanceof Error ? error.message : ''
+            const specific: Record<string, string> = {
+              PARTNER_SELECTION_REQUIRED: '相手が複数登録されています。入れ替える相手を選んでください。他の相手は削除しません。',
+              PARTNER_CAPACITY_UNKNOWN: '登録枠を確認できないため、入れ替えを開始していません。既存の相手はそのまま読めます。再読み込みで状況を確認してください。',
+              PARTNER_CAPACITY_FULL: '選んだ相手を1人削除しても登録枠が足りないため、入れ替えを開始していません。他の相手を勝手に削除せず、既存の相手を選んで読むか、アプリで登録状況を確認してください。',
+              PARTNER_CHANGED: '相手の登録状況が変わったため、削除・登録を停止しました。未完了の登録を取り消し、再読み込みして対象を選び直してください。',
+              PENDING_TARGET_CHANGED: '未完了の登録が残っています。対象を変える場合は、先に未完了の登録を取り消してください。',
+            }
+            const notice = specific[code] ?? (inputChanged ? '前の登録が未完了です。入力を変える場合は「未完了の登録を取り消して入力し直す」を押してください。取消結果が確認できるまで、新しい登録や相手の削除は行いません。' : pending?.registeredId
               ? stage === 'refresh' ? '相手は登録済みです。年表を読み込めませんでした。入力を残しています。もう一度押すと登録を重複させずに再確認します。'
                 : '相手は登録済みです。出会った年を保存できませんでした。入力を残しています。もう一度押すと年の保存だけを再試行します。'
               : pending?.deleted ? '前の相手は削除済みです。新しい相手の登録結果を確認できませんでした。入力を残しています。同じ入力でもう一度登録してください。'
                 : stage === 'delete' ? '前の相手の削除結果を確認できませんでした。入力を残しています。同じ入力でもう一度押すと、現在の登録状況から確認します。'
-                  : '登録を開始できませんでした。前の操作が残っている場合は、その入力で再確認してください。'
-            setState(s => ({ ...s, partnerDraft: pending?.input ?? input, partnerNotice: notice }))
+                  : '登録を開始できませんでした。前の操作が残っている場合は、その入力で再確認してください。')
+            setState(s => ({ ...s, partnerDraft: inputChanged || !pending ? s.partnerDraft : pending.input, partnerNotice: notice }))
           }
           throw new Error('登録を完了できませんでした。入力を残しているので、案内を確認してください。')
         } finally { partnerSaveInProgress.current = false }
@@ -689,6 +783,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       })
       return partner
     },
+    cancelPartnerDraft: async () => {
+      if (!REMOTE) { setState(s => ({ ...s, partnerDraft: null, partnerNotice: null })); return }
+      const { owner, token, ownerEpoch } = remoteAuth.current
+      if (!owner || !token || partnerSaveInProgress.current) throw new Error('登録状況を確認できませんでした。時間をおいてお試しください。')
+      const key = pendingPartnerKey(owner)
+      const raw = window.localStorage.getItem(key)
+      const pending = pendingPartnerFromRaw(raw)
+      if (!pending || pending.registeredId) throw new Error('登録済み、または状況が不明です。同じ入力で登録状況を再確認してください。')
+      partnerSaveInProgress.current = true
+      try {
+        const result = await apiFetch<{ state: string }>(`/api/partners/registration/operations/${pending.operationId}/cancel`, { method: 'POST', accessToken: token })
+        if (remoteAuth.current.owner !== owner || remoteAuth.current.ownerEpoch !== ownerEpoch) throw new Error('ログイン状態が変わりました。')
+        if (result.state !== 'cancelled') throw new Error('すでに登録が進んでいるため、入力を解除できません。同じ入力で再確認してください。')
+        if (window.localStorage.getItem(key) !== raw) throw new Error('登録状況が変わりました。もう一度確認してください。')
+        window.localStorage.removeItem(key)
+        setState(s => ({ ...s, partnerDraft: null, partnerReplacementId: undefined, partnerNotice: null }))
+      } finally { partnerSaveInProgress.current = false }
+    },
     setDraft: draft => setState(s => {
       const next = { ...s.draft, ...draft }
       if (draft.question !== undefined) {
@@ -697,17 +809,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
       return { ...s, draft: next }
     }),
-    createBook: () => {
+    createBook: async () => {
       if (!canCreateWithCredits(stateRef.current.credits)) throw new Error('利用できる冊数がありません。相談は下書きに残っています。')
       const draft = { ...stateRef.current.draft }
-      const created = createBookNow()
-      if (REMOTE) void remoteCreateBook(draft).catch(() => { /* Unknown results remain recoverable; never pretend server failure. */ })
-      return created
+      if (!REMOTE) return createBookNow()
+      const owner = remoteAuth.current.owner
+      if (!owner || submittingBooks.current.has(owner)) throw new Error('受付を確認しています。しばらくお待ちください。')
+      submittingBooks.current.add(owner)
+      try { return await remoteCreateBook(draft) } finally { submittingBooks.current.delete(owner) }
     },
-    retryBook: bookId => {
+    retryBook: async bookId => {
       if (REMOTE) {
         const current = stateRef.current.books.find(b => b.id === bookId)
-        if (current?.sourceId) void remoteCreateBook({ ...stateRef.current.draft, sourceId: current.sourceId, sourceCardId: current.sourceCardId, sourceTitle: current.sourceTitle, sourceSub: current.sourceSub, sourceHref: current.sourceHref, theme: current.theme, question: current.question }).then(() => remoteToken().then(token => { if (token) return refreshRemote(token) })).catch(() => undefined)
+        if (current?.state !== 'failed' || !current.sourceId) throw new Error('再作成できるブックを確認できませんでした。')
+        await remoteCreateBook({ ...stateRef.current.draft, sourceId: current.sourceId, sourceCardId: current.sourceCardId, sourceTitle: current.sourceTitle, sourceSub: current.sourceSub, sourceHref: current.sourceHref, theme: current.theme, question: current.question }, bookId)
         return
       }
       setState(s => ({ ...s, credits: s.credits - 1, books: s.books.map(b => b.id === bookId ? { ...b, state: 'generating', progress: 10, failureCode: undefined } : b) }))
@@ -728,15 +843,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     toggleSaved: id => {
       if (stateRef.current.session !== 'linked') return
       const isSaved = stateRef.current.savedIds.includes(id)
-      setState(s => ({ ...s, savedIds: isSaved ? s.savedIds.filter(x => x !== id) : [...s.savedIds, id] }))
-      if (REMOTE) void remoteToken().then(accessToken => { if (accessToken) return apiFetch(`/api/reading/saves/${encodeURIComponent(id)}`, { method: 'PUT', accessToken, body: JSON.stringify({ isSaved: !isSaved }) }).then(() => refreshRemote(accessToken)) }).catch(() => undefined)
+      const update = (s: AppState) => ({ ...s, savedIds: isSaved ? s.savedIds.filter(x => x !== id) : [...s.savedIds.filter(x => x !== id), id] })
+      if (!REMOTE) { setState(update); return }
+      const { owner, token, ownerEpoch } = remoteAuth.current
+      const key = `${owner}:${ownerEpoch}:${id}`
+      if (!owner || !token || savingReads.current.has(key)) return
+      const current = () => remoteAuth.current.owner === owner && remoteAuth.current.ownerEpoch === ownerEpoch
+      savingReads.current.add(key)
+      savedRevision.current++
+      setState(s => ({ ...s, savingIds: [...s.savingIds ?? [], id], saveErrors: { ...s.saveErrors, [id]: '' } }))
+      void apiFetch(`/api/reading/saves/${encodeURIComponent(id)}`, { method: 'PUT', accessToken: token, body: JSON.stringify({ isSaved: !isSaved }) })
+        .then(() => { if (current()) { savedRevision.current++; setState(update) } })
+        .catch(() => { if (current()) setState(s => ({ ...s, saveErrors: { ...s.saveErrors, [id]: '保存できませんでした。もう一度お試しください。' } })) })
+        .finally(() => { savingReads.current.delete(key); if (current()) setState(s => ({ ...s, savingIds: s.savingIds?.filter(x => x !== id) })) })
     },
     consumeBookQuestion: bookId => setState(s => ({ ...s, books: s.books.map(b => b.id === bookId ? { ...b, questionsLeft: Math.max(0, b.questionsLeft - 1) } : b) })),
     acceptAiConsent: () => setState(s => ({ ...s, aiConsented: true })),
     dismissGuide: () => setState(s => ({ ...s, showGuide: false })),
     requestCreateAfterPurchase: () => { if (paymentsAvailable) setState(s => ({ ...s, pendingCreate: true })) },
     cancelPendingCreate: () => setState(s => (s.pendingCreate ? { ...s, pendingCreate: false } : s)),
-    startPendingBook: () => {
+    startPendingBook: async () => {
       if (!paymentsAvailable) return null
       const s = stateRef.current
       if (!s.pendingCreate || s.credits <= 0) return null
@@ -744,9 +870,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (length < 20 || length > 400 || bookQuestionProblem(s.draft.question)) { setState(prev => ({ ...prev, pendingCreate: false })); return null }
       setState(prev => ({ ...prev, pendingCreate: false }))
       const draft = { ...s.draft }
-      const created = createBookNow()
-      if (REMOTE) void remoteCreateBook(draft).catch(() => { /* Preserve the pending operation on uncertain responses. */ })
-      return created
+      return REMOTE ? remoteCreateBook(draft) : createBookNow()
     },
     deleteAccount,
     applyDemo: preset => {

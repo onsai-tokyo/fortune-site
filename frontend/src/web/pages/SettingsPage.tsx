@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { safeReturnTo } from '../../lib/safeReturnTo'
 import { SiteHeader } from '../components/SiteHeader'
@@ -55,6 +55,8 @@ export function SettingsPage() {
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [forgetting, setForgetting] = useState(false)
+  const [forgetError, setForgetError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const deletingRef = useRef(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
@@ -101,7 +103,7 @@ export function SettingsPage() {
 
       <Group title="ご利用状況">
         <Row label="相談のブックの残り" value={<span className="font-medium text-fl-ink">{credits}冊</span>} />
-        <Row label="ふたりの相手" value={partners[0]?.name ?? '未登録'} to="/couple" />
+        <Row label="ふたりの相手" value={partners.length > 1 ? `${partners.length}人（選択して読む）` : partners[0]?.name ?? '未登録'} to="/couple" />
         <Row label="購入履歴・領収書" to="/settings/purchases" />
       </Group>
 
@@ -119,13 +121,19 @@ export function SettingsPage() {
       <section className="flex flex-col gap-3 px-5 pb-12 pt-8">
         {session === 'linked' ? (
           <>
-            <Button variant="secondary" onClick={() => startTransition(() => { forgetDevice(); navigate('/') })}>この端末での利用をやめる</Button>
+            <Button variant="secondary" disabled={forgetting || deleting} onClick={async () => {
+              setForgetting(true); setForgetError(null)
+              try { await forgetDevice(); navigate('/', { replace: true }) }
+              catch (error) { setForgetError(error instanceof Error ? error.message : 'ログアウトできませんでした。') }
+              finally { setForgetting(false) }
+            }}>{forgetting ? 'ログアウトしています…' : 'この端末での利用をやめる'}</Button>
+            {forgetError && <p role="alert" className="text-sm text-fl-danger">{forgetError}</p>}
             <span className="-mt-1 text-center text-xs leading-[1.7] text-fl-muted">共用のパソコンではこちらを。{email} に届くコードで、いつでも戻れます。</span>
           </>
         ) : (
           <Note>いまはこの端末だけで使っています。ブラウザのデータを消したり機種を変えたりすると、本棚と残りの冊数を開けなくなります。<Link to="/settings/link" className="underline">引き継ぎ用のメールを登録</Link>しておくと安心です。</Note>
         )}
-        <Button variant="dangerText" disabled={deleting} onClick={() => { setDeleteError(null); setConfirming(true) }}>退会する（アカウントを削除）</Button>
+        <Button variant="dangerText" disabled={deleting || forgetting} onClick={() => { setDeleteError(null); setConfirming(true) }}>退会する（アカウントを削除）</Button>
       </section>
 
       {confirming && (

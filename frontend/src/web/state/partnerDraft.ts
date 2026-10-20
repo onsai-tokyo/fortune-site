@@ -4,6 +4,7 @@ export type PartnerDraft = Omit<Partner, 'id'>
 export type PendingPartner = {
   version: 2; input: PartnerDraft; operationId: string; oldPartnerId: string | null;
   deleted: boolean; registeredId?: string
+  expectedPartnerIds?: string[]
 }
 export const pendingPartnerKey = (owner: string) => `fatelab:web:pending-partner:${owner}:v1`
 export function partnerDraftFromRaw(raw: string | null): PartnerDraft | null {
@@ -28,8 +29,17 @@ export function pendingPartnerFromRaw(raw: string | null): PendingPartner | null
   if (value.version !== 2 || !uuid(value.operationId) ||
     !(value.oldPartnerId === null || uuid(value.oldPartnerId)) || typeof value.deleted !== 'boolean' ||
     !(value.registeredId === undefined || uuid(value.registeredId))) return null
+  if (value.expectedPartnerIds !== undefined && (!Array.isArray(value.expectedPartnerIds) || value.expectedPartnerIds.length > 100 || !value.expectedPartnerIds.every(uuid) || new Set(value.expectedPartnerIds).size !== value.expectedPartnerIds.length || (value.oldPartnerId && !value.expectedPartnerIds.includes(value.oldPartnerId)))) return null
   return { version: 2, input, operationId: value.operationId, oldPartnerId: value.oldPartnerId,
-    deleted: value.deleted, ...(value.registeredId === undefined ? {} : { registeredId: value.registeredId }) }
+    deleted: value.deleted, ...(value.registeredId === undefined ? {} : { registeredId: value.registeredId }),
+    ...(value.expectedPartnerIds === undefined ? {} : { expectedPartnerIds: value.expectedPartnerIds }) }
+}
+
+/** Only the explicitly chosen target may disappear; all other rows must stay the same. */
+export function unchangedOtherPartners(pending: PendingPartner, actualIds: string[]): boolean {
+  const expected = pending.expectedPartnerIds ?? (pending.oldPartnerId ? [pending.oldPartnerId] : [])
+  const others = (ids: string[]) => ids.filter(id => id !== pending.oldPartnerId).sort().join(',')
+  return new Set(actualIds).size === actualIds.length && others(expected) === others(actualIds)
 }
 export function pendingPartnerNotice(raw: string | null): string | null {
   if (!partnerDraftFromRaw(raw)) return null

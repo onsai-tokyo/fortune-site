@@ -22,7 +22,8 @@ import { useCenterCurrent } from '../components/useCenterCurrent'
 /** /couple：相手がいれば最初の相手へ、いなければ案内 */
 export function CoupleIndexPage() {
   const { partners } = useApp()
-  if (partners.length) return <Navigate to={`/couple/${partners[0].id}`} replace />
+  if (partners.length === 1) return <Navigate to={`/couple/${partners[0].id}`} replace />
+  if (partners.length > 1) return <Page><SiteHeader current="couple" /><section className="flex flex-col gap-4 px-6 py-8"><h1 className="text-2xl">ふたりの相手を選ぶ</h1><p className="text-sm leading-relaxed">{partners.length}人の相手が登録されています。表示する相手を選んでください。選択するだけでは、相手の登録や削除は行いません。</p>{partners.map(p => <Link key={p.id} to={`/couple/${p.id}`} className="rounded-2xl border border-fl-line bg-white p-4">{p.name}<span className="ml-3 text-sm text-fl-muted">{p.relation}</span></Link>)}<LinkButton to="/couple/new" variant="secondary">入れ替える相手を選ぶ</LinkButton></section><Footer /></Page>
   return (
     <Page>
       <SiteHeader current="couple" />
@@ -81,7 +82,7 @@ export function CouplePage() {
             <span className="text-base font-medium">あなた と {partner.name}</span>
             <span className="text-xs text-fl-muted">{partner.relation}{partner.metYear ? `・${partner.metYear}年から` : ''}</span>
           </span>
-          <Link to="/couple/new" className="flex min-h-[44px] items-center px-1 text-[13px] font-medium text-fl-slate">相手を変える</Link>
+          <Link to={`/couple/new?replace=${partner.id}`} className="flex min-h-[44px] items-center px-1 text-[13px] font-medium text-fl-slate">相手を変える</Link>
         </div>
       </section>
 
@@ -139,8 +140,9 @@ export function CouplePage() {
       <p className="mx-6 text-xs leading-relaxed text-fl-muted">タグは読みものの内容を整理する目印です。出来事や結果を約束するものではありません。</p>
 
       <section className="px-5">
-        <LinkButton to="/couple/new" variant="secondary">別の人との年表を見る（相手を変える）</LinkButton>
-        <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">相手は1人ずつ登録できます。何度でも無料で入れ替えられます。{partner.name}について作ったブックは、入れ替えても本棚に残ります。</p>
+        {partners.length > 1 && <LinkButton to="/couple" variant="secondary">登録済みの別の相手を選ぶ</LinkButton>}
+        <LinkButton to={`/couple/new?replace=${partner.id}`} variant="secondary">別の人との年表を見る（相手を変える）</LinkButton>
+        <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">{partners.length > 1 ? '選んだ相手だけを入れ替えます。他の相手は削除しません。' : '相手は1人ずつ登録できます。何度でも無料で入れ替えられます。'}{partner.name}について作ったブックは、入れ替えても本棚に残ります。</p>
       </section>
 
       <Footer />

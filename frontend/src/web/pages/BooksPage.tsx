@@ -47,8 +47,9 @@ function GeneratingCard({ book }: { book: Book }) {
 }
 
 function FailedCard({ book }: { book: Book }) {
-  const { credits, retryBook } = useApp()
+  const { credits, retryBook, retryTargets } = useApp()
   const [retried, setRetried] = useState(false)
+  const [retryError, setRetryError] = useState<string | null>(null)
   return (
     <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-fl-ochre bg-white p-[18px]">
       <div className="flex items-start gap-3">
@@ -60,9 +61,15 @@ function FailedCard({ book }: { book: Book }) {
       </div>
       <p className="m-0 text-sm leading-[1.85] text-fl-body">{failureMessage(book.failureCode)}（いまの残り {credits}冊）</p>
       <div className="grid grid-cols-2 gap-2.5">
-        <Button disabled={retried || credits <= 0} onClick={() => { setRetried(true); retryBook(book.id) }}>もう一度つくる</Button>
+        {retryTargets?.[book.id] ? <LinkButton to={`/books/${retryTargets[book.id]}`}>同じ相談のブックを確認</LinkButton> : <Button disabled={retried || credits <= 0} onClick={async () => {
+          setRetried(true); setRetryError(null)
+          try { await retryBook(book.id) }
+          catch (error) { setRetryError(error instanceof Error ? error.message : '受付を確認できませんでした。') }
+          finally { setRetried(false) }
+        }}>もう一度つくる</Button>}
         <LinkButton to="/support" variant="secondary">お問い合わせ</LinkButton>
       </div>
+      {retryError && <p role="alert" className="text-sm text-fl-danger">{retryError}</p>}
       <span className="text-xs leading-[1.7] text-fl-muted">相談文は保存されているので、書き直す必要はありません。</span>
     </div>
   )

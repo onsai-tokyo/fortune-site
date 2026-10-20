@@ -23,6 +23,8 @@ export function ComposePage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [consent, setConsent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const sourceGroups = useMemo(() => sourceCatalog(partners, years, chapters, coupleYears), [partners, years, chapters, coupleYears])
   const sources = useMemo(() => sourceGroups.flatMap(g => g.items), [sourceGroups])
@@ -55,8 +57,8 @@ export function ComposePage() {
     if (item) { setDraft({ sourceTitle: item.title, sourceSub: item.sub, sourceHref: item.href, sourceId: item.sourceId, sourceCardId: item.sourceCardId, theme: item.theme }); if (requested) navigate('/compose', { replace: true }) }
   }
 
-  function submit() {
-    if (!ready) return
+  async function submit() {
+    if (!ready || submitting) return
     if (!aiConsented) acceptAiConsent()
     if (empty) {
       // 支払いが反映されたら、この相談でそのままつくる
@@ -64,8 +66,10 @@ export function ComposePage() {
       navigate('/credits?from=compose')
       return
     }
-    createBook()
-    navigate('/books')
+    setSubmitting(true); setSubmitError(null)
+    try { await createBook(); navigate('/books') }
+    catch (error) { setSubmitError(error instanceof Error ? error.message : '受付を確認できませんでした。相談は下書きに残っています。') }
+    finally { setSubmitting(false) }
   }
 
   return (
@@ -129,7 +133,8 @@ export function ComposePage() {
 
       <section className="flex flex-col gap-2.5 px-5 pb-14 pt-6">
         {!ageAllowed && <p role="status" className="m-0 text-sm leading-relaxed">{WEB_AI_ADULT_NOTICE} 書いた相談は下書きとして残ります。</p>}
-        <Button size="lg" disabled={!ready} onClick={submit}>{empty ? (paymentsAvailable ? `${single.price.toLocaleString()}円で一冊つくる` : BOOK_PREPARING) : `一冊つくる（残り${credits}冊）`}</Button>
+        {submitError && <p role="alert" className="text-sm text-fl-danger">{submitError}</p>}
+        <Button size="lg" disabled={!ready || submitting} onClick={submit}>{submitting ? '受付を確認しています…' : empty ? (paymentsAvailable ? `${single.price.toLocaleString()}円で一冊つくる` : BOOK_PREPARING) : `一冊つくる（残り${credits}冊）`}</Button>
         <span className="text-center text-xs leading-[1.7] text-fl-muted">
           {empty
             ? (paymentsAvailable ? 'お支払いのあと、この相談でそのままつくり始めます。5冊セット（1,980円）も選べます。' : '書いた相談は下書きとして残ります。すでに利用できる冊数がある場合は、そのまま作成できます。')

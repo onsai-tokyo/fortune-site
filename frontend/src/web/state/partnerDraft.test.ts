@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerKey, pendingPartnerNotice } from './partnerDraft'
+import { partnerDraftFromRaw, pendingPartnerFromRaw, pendingPartnerKey, pendingPartnerNotice, unchangedOtherPartners, type PendingPartner } from './partnerDraft'
 const input = { name: '架空B', relation: '友人', birthDate: '1988-03-12', birthTime: null, birthPlace: '東京都', gender: 'female', metYear: 2020 }
 const pending = { version: 2, input, operationId: '11111111-1111-4111-8111-111111111111', oldPartnerId: '22222222-2222-4222-8222-222222222222', deleted: true }
 test('pending partner keys separate accounts; legacy input restores without implicit operation', () => {
@@ -21,4 +21,16 @@ test('malformed pending data is not interpreted as registration instructions', (
     assert.equal(pendingPartnerFromRaw(value), null)
   }
   assert.equal(pendingPartnerFromRaw(JSON.stringify({ ...pending, operationId: 'bad' })), null)
+})
+test('multiple-partner replacement preserves the unselected rows and rejects a concurrent addition/removal', () => {
+  const a = pending.oldPartnerId, b = '33333333-3333-4333-8333-333333333333', c = '44444444-4444-4444-8444-444444444444'
+  const value = { ...pending, expectedPartnerIds: [a,b] }
+  const decoded = pendingPartnerFromRaw(JSON.stringify(value))!
+  assert.deepEqual(decoded.expectedPartnerIds, [a,b])
+  assert.equal(unchangedOtherPartners(decoded, [b,a]), true)
+  assert.equal(unchangedOtherPartners(decoded, [b]), true) // chosen row was already deleted
+  for (const ids of [[a], [a,b,c], [], [a,b,b]]) assert.equal(unchangedOtherPartners(decoded, ids), false)
+  assert.equal(unchangedOtherPartners(pending as PendingPartner, [a,b]), false) // old caches do not consent to extra rows
+  assert.equal(pendingPartnerFromRaw(JSON.stringify({ ...value, expectedPartnerIds:[b] })), null)
+  assert.equal(pendingPartnerFromRaw(JSON.stringify({ ...value, expectedPartnerIds:[a,a] })), null)
 })

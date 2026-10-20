@@ -129,8 +129,7 @@ function PaymentReturnContent() {
   // 書いてから払った人：反映されたら、その相談でブックをつくり始める（1回だけ）
   useEffect(() => {
     if (status !== 'done' || startedBook) return
-    const book = startPendingBook()
-    if (book) setStartedBook(book.title)
+    void startPendingBook().then(book => { if (book) setStartedBook(book.title) }).catch(() => { /* Draft/operation remain recoverable in compose/books. */ })
   }, [status, startedBook, startPendingBook])
 
   return (

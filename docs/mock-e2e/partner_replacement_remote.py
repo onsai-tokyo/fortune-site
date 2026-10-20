@@ -111,7 +111,8 @@ with sync_playwright() as p:
             assert page.locator('#pmet').input_value()=='2020'
             assert [c for c in calls[len(before):] if c[0]!='GET']==[], 'reload must not mutate'
             flags['failure']=None
-            page.get_by_role('button',name='架空Aと入れ替えて登録' if failure=='delete' else '架空Bと入れ替えて登録' if flags['created'] else '登録',exact=True).click()
+            # Recovery must not label the newly registered row as a deletion target.
+            page.get_by_role('button',name='登録状況を再確認する',exact=True).click()
         page.wait_for_url('**/couple/'+new)
         page.get_by_role('heading',name='ふたりの年表',exact=True).first.wait_for()
         assert len([c for c in calls if c==('DELETE','/api/web/partners/'+old)])==(2 if failure=='delete' else 1)
