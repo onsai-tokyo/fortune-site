@@ -10,7 +10,7 @@
 
 切替後は既存セッションで本人の実鑑定（15章）と既存ブック・本棚・設定の閲覧を確認した。実メールでのログイン、実AI生成と2回の質問、別アカウントからの他人のブック/質問画面の非表示は、今回のUI変更より前の公開受入確認で実施済み。今回の文言変更時は実メール・AIを再送していない。アカウント隔離の確認は画面経由であり、細工したAPIリクエストによる総合的な権限監査を意味しない。iOS全機能の実機回帰と全DBの復元は未検証で、限定SQLリハーサルの成功とは区別する。
 
-戻し先は直前の公開版 `dpl_CXvRnLsEeLtopaFiJnPnRVdtVdrC`（`https://fortune-site-wa5w21x3c-onsaitokyo-4984s-projects.vercel.app`）。問題があればこの版へVercel rollbackし、SQLは再適用しない。ソースはローカルreleaseブランチにコミット済みだが、今回のUI更新コミットはGitHubへpushしていない。バックアップ目的でも、pushは別途の明示承認を受ける。
+戻し先は直前の公開版 `dpl_CXvRnLsEeLtopaFiJnPnRVdtVdrC`（`https://fortune-site-wa5w21x3c-onsaitokyo-4984s-projects.vercel.app`）。問題があればこの版へVercel rollbackし、SQLは再適用しない。今回のUI更新と公開記録は、個別の明示承認後にGitHubの `codex/fatelab-web-release-20261018` だけへバックアップpush済み（コードを含む記録コミット `71df72e`）。mainへのpushや本番ドメインの切り替えは、このバックアップ作業では行わない。以後のpushも明示承認を受ける。
 
 検証の版と残る運用項目は `release_20261020/current-publication-status.result.json` を参照。以下は過去の準備・確認履歴であり、そのまま再実行するための承認ではない。
 
