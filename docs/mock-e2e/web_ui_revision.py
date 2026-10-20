@@ -47,13 +47,11 @@ with sync_playwright() as p:
         if width == 390: page.screenshot(path='/private/tmp/fatelab-couple-inline-20261020.png',full_page=True)
         nav('/demo'); page.get_by_role('button',name='トップ（はじめて来た人）').click()
         page.locator('#top-birthdate').wait_for()
-        image=page.locator('img[src="/images/timeline-preview.svg"]')
+        image=page.locator('.fl-timeline-example')
         image.scroll_into_view_if_needed()
-        page.wait_for_function('()=>{const e=document.querySelector("img[src=\\"/images/timeline-preview.svg\\"]");return e && e.complete && e.naturalWidth>0}')
-        assert image.evaluate('(e)=>e.complete && e.naturalWidth>0')
+        assert image.locator('li').count()==3
         assert '質問が2回' not in page.locator('body').inner_text()
-        page.get_by_text('出生時刻・出生地も入力する（任意）',exact=True).click()
-        assert page.locator('#top-birthtime').is_visible() and page.locator('#top-birthplace option').count()==47
+        assert page.locator('#top-birthtime').is_visible() and page.locator('#top-birthplace option').count()==48
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert not errors, errors
         print('PASS Web UI / registration gate / both saves / one answer / inline partner / timeline image',width)

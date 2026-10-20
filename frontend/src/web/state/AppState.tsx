@@ -15,6 +15,18 @@ import { createAccountDeletion } from './accountDeletion'
 import { isBookPending, pollBookOperation } from './bookPolling'
 import { resolveBookSource } from '../data/bookSource'
 import { bookRetryOperationId, existingBookRetry, knownBookRejection } from './bookCreation'
+import { readReadingStream } from '../data/readingStream'
+import { validBirthDate } from '../data/birthDate'
+
+function pendingBirthProfile(owner: string): BirthProfile | null {
+  try {
+    const pending = JSON.parse(sessionStorage.getItem(`fl-reading-operation:${owner}`) ?? 'null')
+    const p = JSON.parse(pending?.signature ?? 'null')
+    return p && validBirthDate(p.birthDate) && ['female', 'male'].includes(p.gender)
+      && typeof p.nickname === 'string' && typeof p.birthPlace === 'string'
+      && (p.birthTime === null || typeof p.birthTime === 'string') ? p : null
+  } catch { return null }
+}
 
 const REMOTE = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -78,7 +90,7 @@ interface Actions {
   restore: (email: string) => void
   /** この端末での利用をやめる（linked のときだけ。メールで戻れる） */
   forgetDevice: () => Promise<void>
-  saveProfile: (profile: BirthProfile) => Promise<void>
+  saveProfile: (profile: BirthProfile, onProgress?: (percent: number) => void) => Promise<void>
   /** 相手は1人だけ。登録すると前の相手と入れ替わる（何度でも無料） */
   setPartner: (partner: Omit<Partner, 'id'>, replacementId?: string) => Promise<Partner>
   cancelPartnerDraft: () => Promise<void>
@@ -302,7 +314,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             partnerReplacementId = pendingPartnerFromRaw(raw)?.oldPartnerId
           } catch { /* Never reuse another owner's draft. */ }
         }
-        return { ...base, partnerDraft, partnerNotice, partnerReplacementId, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
+        return { ...base, profile: base.profile ?? pendingBirthProfile(session.user.id), partnerDraft, partnerNotice, partnerReplacementId, session: session.user.email && !session.user.is_anonymous ? 'linked' : 'anonymous', email: session.user.email ?? null,
           draft: { ...base.draft, question: changed ? loadDraftQuestionForUser(session.user.id) : base.draft.question } }
       })
       // A fresh SIGNED_IN must still clear the previous owner's state, but an
@@ -384,6 +396,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         try {
           window.localStorage.removeItem(pendingPartnerKey(owner))
           window.localStorage.removeItem(pendingBookKey(owner))
+          sessionStorage.removeItem(`fl-reading-operation:${owner}`)
         } catch { /* Server deletion has succeeded; storage may be unavailable. */ }
       }
       refreshSequence.current++
@@ -572,7 +585,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // Pending partner data is restored as a draft only. Reload must never silently
   // delete/register a partner; recovery requires another explicit form submit.
-  const remoteSaveProfile = useCallback(async (profile: BirthProfile) => {
+  const remoteSaveProfile = useCallback(async (profile: BirthProfile, onProgress: (percent: number) => void = () => {}) => {
     let token = await remoteToken()
     if (!token) {
       const captchaToken = await requestCaptchaToken(import.meta.env.VITE_TURNSTILE_SITE_KEY)
@@ -584,21 +597,40 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (remoteAuth.current.token !== token || profileSaveOwner.current !== remoteAuth.current.owner) throw new Error('ログイン状態が変わりました。もう一度お試しください。')
     }
     assertOwner()
-    const operationId = newOperationId()
-    await apiFetch('/api/calc/divination', { method: 'POST', accessToken: token, body: JSON.stringify({ birthDate: profile.birthDate, birthTime: profile.birthTime, birthplace: profile.birthPlace, gender: profile.gender }) })
-    assertOwner()
+    const pendingKey = `fl-reading-operation:${remoteAuth.current.owner}`
+    const signature = JSON.stringify(profile)
+    let operationId = newOperationId()
+    let reused = false
+    try {
+      const previous = JSON.parse(sessionStorage.getItem(pendingKey) ?? 'null')
+      if (previous?.signature === signature && typeof previous.operationId === 'string') { operationId = previous.operationId; reused = true }
+      sessionStorage.setItem(pendingKey, JSON.stringify({ operationId, signature }))
+    } catch { /* Storage may be unavailable; do not block reading. */ }
+    onProgress(0)
+    let report: Record<string, unknown> | undefined
+    if (reused) {
+      const status = await apiFetch<{ state: string; result?: Record<string, unknown> }>(`/api/preview/generations/${operationId}`, { accessToken: token, signal: AbortSignal.timeout(30_000) })
+      assertOwner()
+      if (status.state === 'completed' && status.result) report = status.result
+      else if (status.state === 'failed') {
+        try { sessionStorage.removeItem(pendingKey) } catch { /* Optional storage. */ }
+        throw new Error('前の生成は失敗しました。もう一度操作すると新しく作成します。')
+      } else if (status.state !== 'not_found') throw new Error('前の生成状況を確認中です。時間をおいて再度お試しください。')
+    }
+    // Generation already computes divination. Avoid a redundant blocking call.
+    if (!report) {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}${webApiPath('/api/preview/generate?format=sse')}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'Idempotency-Key': operationId },
       body: JSON.stringify({ birthDate: profile.birthDate, birthTime: profile.birthTime, birthplace: profile.birthPlace, gender: profile.gender, nickname: profile.nickname }),
+      signal: AbortSignal.timeout(120_000),
     })
-    const text = await response.text()
+    report = await readReadingStream(response, percent => { assertOwner(); onProgress(percent) })
+    }
     assertOwner()
-    if (!response.ok) throw new Error('読みものを生成できませんでした')
-    const complete = [...text.matchAll(/data: (\{.*\})/g)].map(m => JSON.parse(m[1]) as { type?: string; report?: Record<string, unknown> }).find(x => x.type === 'complete')
-    if (!complete?.report) throw new Error('生成結果を確認できませんでした')
-    const report = complete.report
-    await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData: { ...profile, birthplace: profile.birthPlace }, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
+    onProgress(96)
+    await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, signal: AbortSignal.timeout(30_000), headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData: { ...profile, birthplace: profile.birthPlace }, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
     assertOwner()
+    try { sessionStorage.removeItem(pendingKey) } catch { /* Optional storage. */ }
     return token
   }, [remoteToken])
 
@@ -631,6 +663,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         storeDraftQuestionForUser('', owner)
         window.localStorage.removeItem(pendingPartnerKey(owner))
         window.localStorage.removeItem(pendingBookKey(owner))
+        try { sessionStorage.removeItem(`fl-reading-operation:${owner}`) } catch { /* Optional storage. */ }
         // A different account may have signed in while the response was pending.
         if (remoteAuth.current.owner && remoteAuth.current.owner !== owner) throw new Error('ログイン状態が変わりました。現在のアカウントをご確認ください。')
         refreshSequence.current++
@@ -643,7 +676,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       clearTimers()
       setState(blankState())
     },
-    saveProfile: async profile => {
+    saveProfile: async (profile, onProgress) => {
       if (!REMOTE) {
         setState(s => ({ ...s, years: mockYears, chapters: mockChapters, personaTitle: mockPersonaTitle, profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
         return
@@ -654,7 +687,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       // Invalidate an older empty-history refresh before starting persistence.
       refreshSequence.current++
       try {
-        const token = await remoteSaveProfile(profile)
+        const token = await remoteSaveProfile(profile, onProgress)
         // The server is now the source of truth. Never hydrate a different
         // account, even if a sign-in/sign-out happened during the request.
         if (remoteAuth.current.token !== token) throw new Error('ログイン状態が変わりました。')

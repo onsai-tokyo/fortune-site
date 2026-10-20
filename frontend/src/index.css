@@ -412,12 +412,18 @@ button.bg-accent-dark {
 .fl-root input,
 .fl-root select,
 .fl-root textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
   background-color: #fff !important;
   border-color: #d4d9d1 !important;
   color: #141614 !important;
   font-family: inherit;
   box-shadow: inset 0 1px 2px rgba(25, 40, 30, .025);
 }
+.fl-root .fl-hero-backdrop { background-size: cover; background-position: center; padding-bottom: 44px; }
+.fl-root input::-webkit-date-and-time-value { text-align: left; min-height: 1.5em; }
 .fl-root input::placeholder,
 .fl-root textarea::placeholder { color: #747a71 !important; }
 .fl-root :is(a, button, input, select, textarea, summary):focus-visible {

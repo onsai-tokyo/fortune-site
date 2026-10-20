@@ -30,10 +30,18 @@ with sync_playwright() as p:
         expect(page.locator("#top-birthtime")).to_be_visible()
         expect(page.locator("#top-birthplace")).to_be_visible()
         assert page.locator("#top-birthplace").input_value() == ""
-        assert page.locator('img[src="/images/timeline-preview.svg"]').count() == 1
+        assert page.locator('.fl-timeline-example li').count() == 3
+        assert page.locator('#top-birthdate select').count() == 3
+        assert page.locator('.fl-hero img').count() == 0
+        for field in page.locator('#start input, #start select').all():
+            assert field.evaluate('(e) => e.getBoundingClientRect().right <= document.querySelector("#start").getBoundingClientRect().right')
         assert page.get_by_role("heading", name="料金", exact=True).count() == 0
         assert page.locator("details").count() == 0
         layout()
+        if os.environ.get("UI_SCREENSHOT_DIR"):
+            output = Path(os.environ["UI_SCREENSHOT_DIR"])
+            output.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(output / f"top-{width}.png"), full_page=True)
         preset("あなた")
         assert page.locator(".fl-chapters").evaluate("(el) => !!(el.compareDocumentPosition(document.querySelector('.fl-year-section')) & Node.DOCUMENT_POSITION_FOLLOWING)")
         assert page.locator(".fl-year-section").evaluate("(el) => !!(el.compareDocumentPosition(document.querySelector('.fl-year-feature')) & Node.DOCUMENT_POSITION_FOLLOWING)")

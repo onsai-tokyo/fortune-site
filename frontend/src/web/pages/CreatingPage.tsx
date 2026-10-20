@@ -11,12 +11,13 @@ const stages = ['生まれた日の暦を計算しています', '性格の章�
  * 本番：/api/calc/divination → /api/preview/generate（SSEの進み具合をそのまま stages に当てる）。
  * 画面確認用では一定の間隔で進める。
  */
-export function CreatingPage({ pending = false }: { pending?: boolean }) {
+export function CreatingPage({ pending = false, progress = 0 }: { pending?: boolean; progress?: number }) {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [done, setDone] = useState(0)
   const returnTo = params.get('returnTo')
   const next = safeReturnTo(returnTo, '/you')
+  const activeStage = pending ? progress >= 76 ? 2 : progress >= 58 ? 1 : 0 : done
 
   useEffect(() => {
     if (pending) return
@@ -33,10 +34,10 @@ export function CreatingPage({ pending = false }: { pending?: boolean }) {
       <PlainHeader />
       <section className="flex flex-col items-center gap-6 px-8 pb-16 pt-14 text-center">
         <NatureImage src={images.moonClouds} className="h-36 w-36 rounded-full" />
-        <h1 className="m-0 text-[22px] font-medium leading-relaxed">あなたの読みものを<br />つくっています</h1>
+        <h1 className="m-0 w-full text-[22px] font-medium leading-relaxed">あなたの鑑定を<br />つくっています</h1>
         <ol aria-live="polite" className="m-0 flex w-full max-w-[300px] list-none flex-col gap-3 p-0 text-left">
           {stages.map((stage, i) => {
-            const state = i < done ? 'done' : i === done ? 'now' : 'wait'
+            const state = i < activeStage ? 'done' : i === activeStage ? 'now' : 'wait'
             return (
               <li key={stage} className={`flex items-center gap-3 text-sm ${state === 'wait' ? 'text-fl-muted' : 'text-fl-ink'}`}>
                 <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${state === 'done' ? 'bg-fl-moss text-white' : state === 'now' ? 'border-2 border-fl-moss motion-safe:animate-pulse' : 'border border-fl-line'}`}>{state === 'done' ? '✓' : ''}</span>
@@ -45,7 +46,7 @@ export function CreatingPage({ pending = false }: { pending?: boolean }) {
             )
           })}
         </ol>
-        <p className="m-0 text-xs leading-[1.8] text-fl-muted">数秒で終わります。画面はそのままでお待ちください。</p>
+        <p className="m-0 text-xs leading-[1.8] text-fl-muted">{pending && progress >= 96 ? '鑑定を保存しています。' : '通信状況により1〜2分ほどかかる場合があります。'}<br />これは進み具合の表示です。各項目を押す必要はありません。</p>
       </section>
     </Page>
   )

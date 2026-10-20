@@ -50,7 +50,7 @@ with sync_playwright() as p:
         page.get_by_role('button',name='トップ（はじめて来た人）').click()
         page.locator('#top-birthdate').wait_for()
         check_controls(page,f'{width}px disabled primary')
-        page.locator('#top-birthdate').fill('1990-01-15')
+        for label, value in [('年','1990'),('月','01'),('日','15')]: page.get_by_label('生まれた'+label, exact=True).select_option(value)
         page.get_by_role('button',name='女性',exact=True).click()
         page.wait_for_timeout(200)  # allow the control's color transition to settle
         check_controls(page,f'{width}px enabled primary')

@@ -14,7 +14,8 @@ with sync_playwright() as p:
     # Onboarding: decoded backslash and nested encoding must not become an external URL.
     page.goto(B + '/demo'); page.get_by_role('button', name='トップ（はじめて来た人）').click()
     nav('/welcome?returnTo=' + quote('/%255cevil.invalid', safe=''))
-    page.fill('#birthdate', '1994-05-12'); page.get_by_role('button', name='女性', exact=True).click()
+    for label, value in [('年','1994'),('月','05'),('日','12')]: page.get_by_label('生まれた'+label, exact=True).select_option(value)
+    page.get_by_role('button', name='女性', exact=True).click()
     page.get_by_role('button', name='同意して、無料で読む').click()
     page.wait_for_url(B + '/you')
     # Creating consumer also handles crafted direct URLs, not only onboarding output.

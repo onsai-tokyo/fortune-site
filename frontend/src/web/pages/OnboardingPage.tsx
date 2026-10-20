@@ -7,6 +7,8 @@ import { prefectures } from '../data/mock'
 import { safeReturnTo } from '../../lib/safeReturnTo'
 import { CreatingPage } from './CreatingPage'
 import { remoteMode } from '../data/paymentConfig'
+import { BirthDateFields } from '../components/BirthDateFields'
+import { validBirthDate } from '../data/birthDate'
 
 /**
  * 生年月日の入力（トップから来なかった人・設定からの変更）。
@@ -26,8 +28,9 @@ export function OnboardingPage() {
   const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
+  const [progress, setProgress] = useState(0)
   const editing = !!profile
-  const valid = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && gender !== null
+  const valid = validBirthDate(birthDate) && gender !== null
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -35,14 +38,14 @@ export function OnboardingPage() {
     setSaving(true)
     setSaveError(false)
     try {
-      await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender })
+      await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender }, setProgress)
       if (editing) navigate(returnTo ?? '/settings')
       else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
     } catch { setSaveError(true) }
     finally { setSaving(false) }
   }
 
-  if (saving && !editing) return <CreatingPage pending />
+  if (saving) return <CreatingPage pending progress={progress} />
   return (
     <Page>
       {editing
@@ -55,7 +58,7 @@ export function OnboardingPage() {
       </section>
 
       <form onSubmit={submit} className="flex flex-col gap-[22px] px-6 pt-5">
-        <Field id="birthdate" label="生年月日" type="date" required disabled={saving} value={birthDate} onChange={e => setBirthDate(e.target.value)} min="1900-01-01" max={new Date().toISOString().slice(0, 10)} />
+        <BirthDateFields id="birthdate" value={birthDate} onChange={setBirthDate} disabled={saving} />
         <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
           <legend className="pb-1.5 text-[13px] font-medium text-fl-body">性別</legend>
           <div className="grid grid-cols-2 gap-2">
