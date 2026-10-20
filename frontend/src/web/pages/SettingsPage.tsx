@@ -52,7 +52,7 @@ export function PurchasesPage() {
 
 /** 退会の本番：DELETE /api/reading/account */
 export function SettingsPage() {
-  const { profile, partners, credits, forgetDevice, deleteAccount, aiConsented, session, email } = useApp()
+  const { profile, partners, credits, forgetDevice, deleteAccount, aiConsented, session, email, resetReading } = useApp()
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -100,6 +100,10 @@ export function SettingsPage() {
           : <Row label="登録メールアドレス" value={<span className="text-fl-ochre">未登録</span>} to="/settings/link" />}
         <Row label="呼び名" value={profile?.nickname || '未設定'} to="/welcome" />
         <Row label="あなたの出生情報" value={birth} to="/welcome" />
+        <button type="button" className="min-h-[56px] px-4 text-left text-sm text-fl-moss" onClick={()=>{
+          if (!window.confirm('表示中の未保存の鑑定と相談の下書きをリセットして、入力し直します。保存済みの鑑定・相談ブックは残ります。')) return
+          resetReading(); navigate('/welcome')
+        }}>入力をリセットして、別の鑑定を読む</button>
       </Group>
 
       <Group title="ご利用状況">

@@ -1,4 +1,5 @@
 import type { BookTheme, Chapter, CoupleYear, Partner, ReadingSection, SavedReading, YearReading } from './types'
+import { visibleYearSections } from './readingPresentation'
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error' | 'needs_meeting_year'
 export const savedKey = { year: (y: number) => `you-${y}`, chapter: (id: string) => `chapter-${id}`, couple: (id: string, y: number) => `couple-${id}-${y}`, couplePrefix: (id: string) => `couple-${id}-` }
 export function realText(value: unknown): string {
@@ -21,7 +22,7 @@ export function personalReadings(timing: RawCard[], cards: RawCard[], sourceId: 
   return { chapters, years, personaTitle: chapters[0]?.title ?? '' }
 }
 export function coupleReadings(raw: { entries?: { year: number; label?: string | null; contentStatus: string; card?: RawCard | null }[] }): CoupleYear[] {
-  return (raw.entries ?? []).filter(e => e.contentStatus === 'ready' && e.card && !e.card.access?.locked).map(e => ({ year: e.year, label: realText(e.label), title: realText(e.card!.title), tags: (e.card!.tags ?? []).map(realText), you: '', partner: '', body: readingSections(e.card!).map(s => s.body), sourceCardId: e.card!.id }))
+  return (raw.entries ?? []).filter(e => e.contentStatus === 'ready' && e.card && !e.card.access?.locked).map(e => ({ year: e.year, label: realText(e.label), title: realText(e.card!.title), tags: (e.card!.tags ?? []).map(realText), you: '', partner: '', body: visibleYearSections(readingSections(e.card!)).map(s => s.body), sourceCardId: e.card!.id }))
 }
 export type SourceItem = { href: string; title: string; sub: string; theme: BookTheme; sourceId?: string; sourceCardId?: string }
 export function sourceCatalog(partners: Partner[], years: YearReading[], chapters: Chapter[], couples: Record<string, CoupleYear[]>): { label: string; items: SourceItem[] }[] {

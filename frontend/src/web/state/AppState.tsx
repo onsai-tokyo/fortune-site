@@ -18,6 +18,8 @@ import { bookRetryOperationId, existingBookRetry, knownBookRejection } from './b
 import { readReadingStream } from '../data/readingStream'
 import { validBirthDate } from '../data/birthDate'
 import { webBirthCalculation, personalReadingReady } from '../data/birthCalculation'
+import { keepReadingVisible } from '../data/readingPresentation'
+import { snapshotForReading, matchingSnapshot, type ReadingSnapshot } from '../data/readingSnapshot'
 
 function pendingBirthProfile(owner: string): BirthProfile | null {
   try {
@@ -69,6 +71,8 @@ interface AppState {
   credits: number
   books: Book[]
   savedIds: string[]
+  snapshots?: ReadingSnapshot[]
+  snapshotError?: string | null
   years: YearReading[]
   chapters: Chapter[]
   /** AIへの情報送信への同意（iOS AISharingConsent と同じく、一度同意すれば以後の相談・質問に適用。本番はサーバーに版つきで保存） */
@@ -83,6 +87,8 @@ interface AppState {
 }
 
 interface Actions {
+  resetReading: () => void
+  removeSnapshot: (id: string) => Promise<void>
   reloadReadings: () => void
   saveMeetingYear: (partnerId: string, year: number) => Promise<void>
   /** 引き継ぎ用メールをひも付ける（コード確認後） */
@@ -99,7 +105,7 @@ interface Actions {
   createBook: () => Promise<Book>
   retryBook: (bookId: string) => Promise<void>
   purchase: (planId: PlanId, receiptEmail: string) => boolean
-  toggleSaved: (id: string) => void
+  toggleSaved: (id: string, saveOnly?: boolean) => void
   consumeBookQuestion: (bookId: string) => void
   acceptAiConsent: () => void
   dismissGuide: () => void
@@ -211,6 +217,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const profileSaveInProgress = useRef(false)
   const profileSaveOwner = useRef<string | null>(null)
   const refreshSequence = useRef(0)
+  // Deliberately memory-only. A fresh page session does not restore an unsaved
+  // reading from server history or localStorage.
+  const activeReading = useRef<{owner: string; id: string}|null>(null)
   const partnerSaveInProgress = useRef(false)
   const savingReads = useRef(new Set<string>())
   const savedRevision = useRef(0)
@@ -231,16 +240,22 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const sequence = ++refreshSequence.current
     const current = () => refreshSequence.current === sequence && remoteAuth.current.revision === revision && remoteAuth.current.token === accessToken
     if (!current()) return false
-    setState(s => ({ ...s, readingsStatus: 'loading', coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'loading'])) }))
+    setState(s => ({ ...s,
+      readingsStatus: keepReadingVisible(s.readingsStatus, s.years, s.chapters) ? 'ready' : 'loading',
+      coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, s.coupleStatus[p.id] === 'ready' && s.coupleYears[p.id]?.length ? 'ready' : 'loading'])),
+    }))
     try {
-      const [history, status, partners, bookshelf, saved] = await Promise.all([
+      const [history, status, partners, bookshelf, saved, snapshotResult] = await Promise.all([
         apiFetch<{ conversations: Array<Record<string, unknown>> }>('/api/reading/conversations', { accessToken }),
         apiFetch<{ remaining: number; purchasedRemaining?: number }>('/api/books/status', { accessToken }),
         apiFetch<{ partners: Array<Record<string, unknown>>; limit?: number }>('/api/partners', { accessToken }),
         apiFetch<{ books: Array<Record<string, unknown>> }>('/api/books', { accessToken }),
         apiFetch<{ saves: Array<{ save_key: string }> }>('/api/reading/saves', { accessToken }),
+        apiFetch<{snapshots: ReadingSnapshot[]}>('/api/reading/snapshots', {accessToken})
+          .then(data=>({rows:data.snapshots,error:null as string|null}))
+          .catch(()=>({rows:null,error:'保存した鑑定を読み込めませんでした。再読み込みしてください。'})),
       ])
-      const first = history.conversations?.find(c => c.kind === 'self' || c.kind === 'personal' || c.kind == null)
+      const first = history.conversations?.find(c => activeReading.current?.owner === remoteAuth.current.owner && c.id === activeReading.current?.id)
       const [timing, cards] = first?.id ? await Promise.all([
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/timing-history', { accessToken }),
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/cards', { accessToken }),
@@ -272,6 +287,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         credits: status.remaining ?? 0, purchasedEver: (status.purchasedRemaining ?? 0) > 0 || s.purchasedEver,
         partnerLimit: Number.isInteger(partners.limit) && partners.limit! > 0 ? partners.limit : undefined,
         savedIds: savedRevision.current === savesAtStart && ![...savingReads.current].some(key => key.startsWith(`${remoteAuth.current.owner}:${remoteAuth.current.ownerEpoch}:`)) ? remoteSavedIds : s.savedIds,
+        snapshots: savedRevision.current === savesAtStart ? snapshotResult.rows ?? s.snapshots : s.snapshots,
+        snapshotError: snapshotResult.error,
         books, bookRefreshError: null,
         bookSourcePartners: Object.fromEntries((history.conversations ?? []).filter(c => c.kind === 'compatibility' && typeof c.id === 'string' && typeof c.partner_profile_id === 'string').map(c => [String(c.id), String(c.partner_profile_id)])),
         selfSourceId: sourceId, personaTitle, readingsStatus: sourceId && !personalReadingReady(years, chapters) ? 'error' : 'ready',
@@ -281,7 +298,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }))
       return !sourceId || personalReadingReady(years, chapters)
     } catch {
-      if (current()) setState(s => ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) }))
+      if (current()) setState(s => keepReadingVisible(s.readingsStatus, s.years, s.chapters)
+        ? s
+        : ({ ...s, readingsStatus: 'error', personaTitle: '', years: [], chapters: [], coupleYears: {}, coupleStatus: Object.fromEntries(s.partners.map(p => [p.id, 'error'])) }))
       return false
     }
   }, [])
@@ -298,6 +317,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       // must load the new owner's data rather than being suppressed by it.
       if (profileSaveInProgress.current && profileSaveOwner.current === null && session?.user.is_anonymous) profileSaveOwner.current = owner
       const changed = remoteAuth.current.owner !== owner
+      if (changed) activeReading.current = null
       if (changed) remoteAuth.current.ownerEpoch++
       if (changed || remoteAuth.current.token !== token) remoteAuth.current.revision++
       remoteAuth.current.owner = owner; remoteAuth.current.token = token
@@ -630,13 +650,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
     assertOwner()
     onProgress(96)
-    await apiFetch('/api/reading/conversations', { method: 'POST', accessToken: token, signal: AbortSignal.timeout(30_000), headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
+    const saved = await apiFetch<{id: string}>('/api/reading/conversations', { method: 'POST', accessToken: token, signal: AbortSignal.timeout(30_000), headers: { 'Idempotency-Key': operationId }, body: JSON.stringify({ birthData, calculatedData: report.calculatedData ?? {}, reportText: String(report.reportText ?? JSON.stringify(report)), structuredReport: report, sourceSection: 'あなたについて' }) })
     assertOwner()
+    if (!saved.id || !remoteAuth.current.owner) throw new Error('保存結果を確認できませんでした。')
+    activeReading.current = {owner:remoteAuth.current.owner,id:saved.id}
     try { sessionStorage.removeItem(pendingKey) } catch { /* Optional storage. */ }
     return token
   }, [remoteToken])
 
   const actions = useMemo<Actions>(() => ({
+    resetReading: () => {
+      if (profileSaveInProgress.current) return
+      activeReading.current = null
+      refreshSequence.current++
+      const owner=remoteAuth.current.owner
+      if(owner)try { sessionStorage.removeItem(`fl-reading-operation:${owner}`) } catch { /* optional */ }
+      setState(s=>({...s,profile:null,selfSourceId:undefined,years:[],chapters:[],personaTitle:'',coupleYears:{},coupleStatus:{},readingsStatus:'ready',
+        draft:{...s.draft,sourceId:undefined,sourceCardId:undefined,sourceTitle:'',sourceSub:'',sourceHref:'',question:''}}))
+    },
+    removeSnapshot: async id => {
+      const {owner,token,ownerEpoch}=remoteAuth.current
+      if(!token)throw new Error('ログインしてください。')
+      savedRevision.current++
+      await apiFetch(`/api/reading/snapshots/${encodeURIComponent(id)}`,{method:'DELETE',accessToken:token})
+      if(remoteAuth.current.owner!==owner || remoteAuth.current.ownerEpoch!==ownerEpoch)return
+      savedRevision.current++
+      setState(s=>({...s,snapshots:s.snapshots?.filter(r=>r.id!==id)}))
+    },
     reloadReadings: () => { setBookPollRevision(n => n + 1); const token = remoteAuth.current.token; if (token) void refreshRemote(token) },
     saveMeetingYear: async (id, year) => {
       const token = remoteAuth.current.token, selfId = stateRef.current.selfSourceId
@@ -875,22 +915,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       timers.current.push(t)
       return true
     },
-    toggleSaved: id => {
+    toggleSaved: (id, saveOnly = false) => {
       if (stateRef.current.session !== 'linked') return
+      if (REMOTE) {
+        const input=snapshotForReading(id,stateRef.current)
+        const {owner,token,ownerEpoch}=remoteAuth.current
+        const key=`${owner}:${ownerEpoch}:${id}`
+        if(!input || !owner || !token || savingReads.current.has(key))return
+        if(stateRef.current.snapshotError) {
+          setState(s=>({...s,saveErrors:{...s.saveErrors,[id]:'本棚の保存状況を確認してから、再度お試しください。'}}))
+          return
+        }
+        const existing=matchingSnapshot(stateRef.current.snapshots??[],input)
+        if (saveOnly && existing) return
+        const current=()=>remoteAuth.current.owner===owner && remoteAuth.current.ownerEpoch===ownerEpoch
+        savingReads.current.add(key); savedRevision.current++
+        setState(s=>({...s,savingIds:[...s.savingIds??[],id],saveErrors:{...s.saveErrors,[id]:''}}))
+        const request=existing
+          ? apiFetch(`/api/reading/snapshots/${existing.id}`,{method:'DELETE',accessToken:token}).then(()=>null)
+          : apiFetch<{snapshot:ReadingSnapshot}>('/api/reading/snapshots',{method:'POST',accessToken:token,body:JSON.stringify(input)}).then(r=>r.snapshot)
+        void request.then(row=>{
+          if(!current())return
+          savedRevision.current++
+          setState(s=>({...s,snapshots:row?[row,...(s.snapshots??[]).filter(r=>r.id!==row.id)]:(s.snapshots??[]).filter(r=>r.id!==existing?.id)}))
+        }).catch(()=>{if(current())setState(s=>({...s,saveErrors:{...s.saveErrors,[id]:'保存状態を確認できませんでした。もう一度お試しください。'}}))})
+          .finally(()=>{savingReads.current.delete(key);if(current())setState(s=>({...s,savingIds:s.savingIds?.filter(x=>x!==id)}))})
+        return
+      }
       const isSaved = stateRef.current.savedIds.includes(id)
       const update = (s: AppState) => ({ ...s, savedIds: isSaved ? s.savedIds.filter(x => x !== id) : [...s.savedIds.filter(x => x !== id), id] })
-      if (!REMOTE) { setState(update); return }
-      const { owner, token, ownerEpoch } = remoteAuth.current
-      const key = `${owner}:${ownerEpoch}:${id}`
-      if (!owner || !token || savingReads.current.has(key)) return
-      const current = () => remoteAuth.current.owner === owner && remoteAuth.current.ownerEpoch === ownerEpoch
-      savingReads.current.add(key)
-      savedRevision.current++
-      setState(s => ({ ...s, savingIds: [...s.savingIds ?? [], id], saveErrors: { ...s.saveErrors, [id]: '' } }))
-      void apiFetch(`/api/reading/saves/${encodeURIComponent(id)}`, { method: 'PUT', accessToken: token, body: JSON.stringify({ isSaved: !isSaved }) })
-        .then(() => { if (current()) { savedRevision.current++; setState(update) } })
-        .catch(() => { if (current()) setState(s => ({ ...s, saveErrors: { ...s.saveErrors, [id]: '保存できませんでした。もう一度お試しください。' } })) })
-        .finally(() => { savingReads.current.delete(key); if (current()) setState(s => ({ ...s, savingIds: s.savingIds?.filter(x => x !== id) })) })
+      setState(update)
     },
     consumeBookQuestion: bookId => setState(s => ({ ...s, books: s.books.map(b => b.id === bookId ? { ...b, questionsLeft: Math.max(0, b.questionsLeft - 1) } : b) })),
     acceptAiConsent: () => setState(s => ({ ...s, aiConsented: true })),

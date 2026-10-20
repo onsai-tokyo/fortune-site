@@ -6,6 +6,7 @@ import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 import { SaveReadingButton } from '../components/SaveReadingButton'
+import { visibleYearSections } from '../data/readingPresentation'
 
 export function YearReadingPage() {
   const { year } = useParams()
@@ -36,7 +37,7 @@ export function YearReadingPage() {
       </section>
 
       <article className="fl-reading-body flex flex-col gap-6 px-6 pb-2 pt-4">
-        {sections.map(s => (
+        {visibleYearSections(sections).map(s => (
           <div key={s.heading} className="flex flex-col gap-2.5">
             <h2 className="m-0 text-[17px] font-medium">{s.heading}</h2>
             <p className="m-0 text-[15px] leading-[1.95] text-fl-body">{s.body}</p>
@@ -48,15 +49,19 @@ export function YearReadingPage() {
         <LinkButton to={`/compose?source=you-${reading.year}`}>この年について相談する</LinkButton>
       </section>
 
-      <nav aria-label="ほかの年" className="grid grid-cols-2 gap-3 px-6 pb-2 pt-7">
+      <nav aria-label="ほかの年" className="mx-6 mt-8 grid grid-cols-2 border-y border-fl-line">
         {prev ? (
-          <Link to={`/you/years/${prev.year}`} className="flex flex-col gap-1 rounded-[14px] border border-fl-line bg-white p-3.5">
-            <span className="text-xs text-fl-muted">← {prev.year}年</span><span className="text-sm font-medium">{prev.title}</span>
+          <Link to={`/you/years/${prev.year}`} className="group flex min-h-[112px] flex-col justify-center gap-2 py-5 pr-5 transition-colors hover:bg-fl-surface/50">
+            <span className="text-[11px] tracking-widest text-fl-moss">前の年へ</span>
+            <span className="flex items-center gap-3 text-xl font-medium"><span aria-hidden="true" className="text-fl-moss">‹</span>{prev.year}<span className="text-xs font-normal">年</span></span>
+            <span className="text-xs leading-relaxed text-fl-muted">{prev.title}</span>
           </Link>
         ) : <span />}
         {next && (
-          <Link to={`/you/years/${next.year}`} className="flex flex-col gap-1 rounded-[14px] border border-fl-line bg-white p-3.5 text-right">
-            <span className="text-xs text-fl-muted">{next.year}年 →</span><span className="text-sm font-medium">{next.title}</span>
+          <Link to={`/you/years/${next.year}`} className="group flex min-h-[112px] flex-col justify-center gap-2 border-l border-fl-line py-5 pl-5 text-right transition-colors hover:bg-fl-surface/50">
+            <span className="text-[11px] tracking-widest text-fl-moss">次の年へ</span>
+            <span className="flex items-center justify-end gap-3 text-xl font-medium">{next.year}<span className="text-xs font-normal">年</span><span aria-hidden="true" className="text-fl-moss">›</span></span>
+            <span className="text-xs leading-relaxed text-fl-muted">{next.title}</span>
           </Link>
         )}
       </nav>

@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useApp } from '../state/AppState'
 import { IconChevron, IconClose, IconMenu } from './icons'
-import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { paymentsAvailable } from '../data/paymentConfig'
 
 export type NavKey = 'you' | 'couple' | 'compose' | 'books' | 'none'
 
 const items: { key: NavKey; label: string; sub: string; to: string }[] = [
   { key: 'you', label: 'あなた', sub: '性格の章と、年ごとの流れ', to: '/you' },
   { key: 'couple', label: 'ふたり', sub: '相手との年表', to: '/couple' },
-  { key: 'compose', label: '一冊つくる', sub: '読みものをもとに相談する', to: '/compose' },
+  { key: 'compose', label: '個別相談', sub: 'あなたの鑑定から、相談を深める', to: '/compose' },
   { key: 'books', label: '本棚', sub: '届いたブックと保存した読みもの', to: '/books' },
 ]
 
@@ -51,15 +51,15 @@ export function SiteHeader({ current }: { current: NavKey }) {
           <nav id="site-menu" aria-label="メニュー" className="absolute left-0 right-0 top-full z-10 flex flex-col border-b border-fl-line bg-fl-canvas px-5 pb-5 pt-2 shadow-[0_16px_32px_rgba(20,22,20,0.08)]">
             {items.map(item => (
               <Link key={item.key} to={item.to} aria-current={item.key === current ? 'page' : undefined}
-                className={`flex min-h-[60px] items-center gap-3 border-b border-fl-line py-1.5 text-base ${item.key === current ? 'font-bold' : 'font-medium'}`}>
+                className={`my-1 flex min-h-[68px] items-center gap-3 rounded-xl border-l-[3px] px-4 py-2 text-base transition-colors ${item.key === current ? 'border-fl-moss bg-fl-surface font-medium text-fl-ink' : 'border-transparent font-medium hover:bg-fl-surface/50'}`}>
                 <span className="flex flex-1 flex-col gap-0.5">
-                  <span>{item.key === 'compose' && !paymentsAvailable && credits <= 0 ? BOOK_PREPARING : item.label}</span>
+                  <span className="flex items-center gap-3">{item.label}{item.key === current && <span className="text-[10px] font-medium tracking-wider text-fl-moss">表示中</span>}</span>
                   <span className="text-xs font-normal text-fl-muted">{item.sub}</span>
                 </span>
                 <IconChevron size={16} className="text-fl-muted" />
               </Link>
             ))}
-            {paymentsAvailable ? purchasedEver && <Link to="/credits" className="mt-3 flex min-h-[48px] items-center justify-center rounded-[14px] border border-fl-line bg-white text-[15px] font-medium">相談のブックを買い足す（残り{credits}冊）</Link> : <p className="text-[13px] text-fl-muted">{BOOK_PREPARING}（新規購入）</p>}
+            {paymentsAvailable && purchasedEver && <Link to="/credits" className="mt-3 flex min-h-[48px] items-center justify-center rounded-[14px] border border-fl-line bg-white text-[15px] font-medium">相談のブックを買い足す（残り{credits}冊）</Link>}
             <div className="flex flex-wrap gap-x-5 pt-3 text-[13px]">
               <Link to="/settings" className="flex min-h-[44px] items-center text-fl-body">設定</Link>
               <Link to="/support" className="flex min-h-[44px] items-center text-fl-body">お問い合わせ</Link>

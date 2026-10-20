@@ -8,9 +8,11 @@ import { webPreviewRouter } from './webPreview.js'
 import { calcRouter } from './calc.js'
 import { webBooksRouter } from './webBooks.js'
 import { webReadingsRouter } from './webReadings.js'
+import { webReadingSnapshotsRouter } from './webReadingSnapshots.js'
 
 export const webRouter = Router()
 webRouter.use(requireAuth)
+webRouter.use('/reading/snapshots', webReadingSnapshotsRouter)
 webRouter.use('/books', webBooksRouter)
 const savedKey = /^(?:you-[0-9]{4}|chapter-[A-Za-z0-9_-]{1,120}|couple-[0-9a-fA-F-]{36}-[0-9]{4})$/
 webRouter.get('/reading/saves', async (req: AuthRequest, res) => {

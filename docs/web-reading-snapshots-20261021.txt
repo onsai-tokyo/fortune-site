@@ -1,0 +1,159 @@
+Web explicit snapshot saving — LOCAL IMPLEMENTATION ONLY
+
+The user's approved policy:
+- Keep a reading in memory while navigating or returning from another app.
+- Do not automatically restore an unsaved reading after a new page session.
+- Saving requires a linked account and an explicit Save button.
+- Reset affects current input/reading/draft, not saved snapshots or purchased books.
+
+Implementation:
+New immutable web_reading_snapshots table; Web-only /api/web/reading/snapshots API.
+Snapshots store whitelisted display text, not entitlements or AI source data.
+POST validates the authenticated owner's source before insertion.
+RLS additionally checks owner, non-anonymous status, and owned source/partner.
+The narrow SECURITY DEFINER ownership predicate avoids changing source-table
+privileges required by existing iOS APIs. Its search_path is fixed and PUBLIC
+and anon execution are revoked. Source lookups through the service client
+always include authenticated user_id as well as the source id.
+No UPDATE privilege; repeat POST ignores identical source/content hash.
+Account deletion cascades; partner deletion cascades coupled snapshots.
+Deleting the underlying reading nulls source_id without losing saved display text.
+
+Legacy limitation — release gate:
+Old reading_saves records contain only keys, not saved text or revision IDs.
+They are kept unchanged and shown separately as awaiting migration.
+Do not reconstruct them from a different/new input or claim the original text
+has been recovered. Decide how to identify and confirm old source revisions
+with the owner before production rollout. Current local UI does not expose
+legacy entries as though they were verified immutable snapshots.
+
+Legacy transition (approved and implemented locally 2026-10-21):
+- Keep all old bookmark rows unchanged; do not silently backfill from latest input.
+- Present old keys as legacy entries, separate from new immutable snapshots.
+- Let the user select/enter the relevant birth input, inspect the newly generated
+  reading, then explicitly save that version. Explain it may differ from the
+  original; never label a fresh calculation as restored original text.
+- Do not remove the old bookmark as a side effect of saving the new version.
+- If exact original preservation is required, stop until a verifiable source
+  revision is identified; created_at alone is not proof of the original content.
+- /books/legacy/:readingKey shows current candidate text, requires a confirmation
+  checkbox, and uses save-only behavior (never toggles an existing snapshot off).
+  A changed input/body remounts the confirmation form and clears its checkbox.
+  Missing candidate does not offer a save action; it directs users to check input.
+  The old save row is never deleted or updated by this flow.
+- Synthetic browser checks passed: missing candidate, consent gating, failed save
+  retry, saved confirmation, old saves endpoint read-only, existing snapshot flows.
+  Frontend build and 131 frontend-related unit tests passed.
+
+Data retention:
+Generation still creates server-side reading records needed by existing APIs.
+This change removes automatic display restoration, not those internal records.
+Automatic cleanup/retention and its implications for linked books require a
+separate policy; no deletion or schema changes to existing tables were made.
+An interrupted generation may retain pending input in user-scoped sessionStorage
+for explicit recovery. Completed readings are memory-only until explicit save.
+Auth sessions remain persistent; no secret or report content is newly cached.
+A browser discarding the whole page is a new session, not background refresh.
+
+Production procedure (NOT EXECUTED):
+1. Review legacy migration gate and SQL/ownership model.
+2. Rehearse new SQL with the actual Supabase roles, source-table grants and
+   owner/anonymous JWTs; test RLS and FK cleanup with synthetic data.
+3. Obtain approval before applying web_reading_snapshots_20261021.sql.
+4. Deploy Web API then frontend only after explicit production authorization.
+5. Verify real linked/anonymous access, cross-account isolation, save/retry/reset.
+Do not deploy frontend first: the missing snapshot endpoint is reported as an
+error and Save is blocked rather than falling back to old bookmarks.
+
+Rollback: return frontend/backend to the preceding releases. Leave the additive
+snapshot table intact to preserve newly saved text. Do NOT drop it after use.
+No backfill, production SQL, push, deployment, iOS code, or real account deletion
+was performed for this implementation.
+
+2026-10-21 local database validation:
+Synthetic fixture using official Supabase PostgreSQL 17.6 initialization.
+The database-only package lacked auth.jwt(); the test adds the upstream Auth
+migration function, not a guessed stub:
+https://github.com/supabase/auth/blob/master/migrations/20220531120530_add_auth_jwt_function.up.sql
+JWT fixture sets both legacy claim.sub and JSON claims (bootstrap auth.uid uses
+the legacy setting). This does not test real Auth issuance or PostgREST headers.
+Passed: linked owner insert without source-table SELECT, anonymous/forged owner/
+foreign source/foreign partner denial, cross-account read/delete isolation,
+immutable payload, retry deduplication, partner cascade, source SET NULL retaining
+text, and account cascade. Server stopped after each attempt; TCP denied.
+This is NOT validation of production schema drift or real HTTP authentication.
+Only synthetic data was used; existing encrypted backups were not opened.
+
+2026-10-21 authorized production structure preflight:
+Executed a read-only transaction with a 10s statement timeout in the Supabase
+SQL Editor for jarerymytxcsqvzduqub (fortune-site / main). Rolled back at end.
+No user rows or secret values selected. Results:
+- PostgreSQL 17.6.
+- web_reading_snapshots and web_snapshot_source_owned(uuid,uuid): absent.
+- auth.uid() and auth.jwt(): present.
+- auth.users.id, public.reading_conversations.id/user_id,
+  public.partner_profiles.id/user_id: uuid NOT NULL.
+- All three referenced tables have PRIMARY KEY(id).
+This matches prerequisites tested locally. Migration NOT applied.
+No production settings, user data, push or deployment changed.
+
+2026-10-21 subsequent separately authorized production migration:
+Applied web_reading_snapshots_20261021.sql in fortune-site / main
+(jarerymytxcsqvzduqub) via SQL Editor. Result: Success. No rows returned.
+Then ran read-only catalog verification, ending with ROLLBACK.
+Verified RLS enabled, exactly three owner-scoped policies, non-anonymous insert
+and source ownership predicate; authenticated SELECT/INSERT/DELETE only;
+no anon table grants; anon function EXECUTE false, authenticated EXECUTE true.
+Verified SECURITY DEFINER with fixed pg_catalog/public search_path and expected
+ownership body, primary key, per-owner hash uniqueness, payload checks, and
+FK actions (account/partner CASCADE, source SET NULL).
+No existing user rows selected or modified, no old reading_saves migration.
+API/frontend deployments and push NOT performed. Real HTTP acceptance pending.
+
+Subsequent authorized API-only branch push, 2026-10-21:
+Pushed codex/web-snapshots-api-20261021 to onsai-tokyo/fortune-site on GitHub.
+Remote SHA verified: eb0577de6f9664a43e29496e8411d9bfa6ad57f6.
+Base: currently live API 2534dabacdbd83c92d07d64fe76c87460ecea8b4.
+Isolated checkout: /private/tmp/fatelab-snapshots-api-20261021.
+Build passed; 541 existing and added tests passed. No iOS, worker, frontend,
+dependency or generation-logic changes in this API-only commit.
+Vercel preview check completed successfully (deployment FhAAPdaqRvP7sS9hhL4ZhMdBfoW4).
+No Render deployment started. Specific commit is selected in the UI, awaiting
+separate production approval. Current rollback deployment remains
+dep-dbb1s5lg1s2s73dv0gs0 / 2534dab. Main was not pushed.
+
+Subsequent separately authorized API production deployment, 2026-10-21:
+Render service srv-d6mjp65actks7384ebg0 deployed exact commit
+eb0577de6f9664a43e29496e8411d9bfa6ad57f6 via specific-commit deployment.
+Deployment dep-dbbpbc7avr4c73dondd0: Deploy succeeded | Live.
+Public /health: HTTP 200, status ok, apiMaintenance false, runtime commit matches.
+Unauthenticated GET /api/web/reading/snapshots, /api/web/reading/saves,
+/api/reading/conversations: HTTP 401 AUTH_SESSION_INVALID.
+Actual linked-session save/read/delete remains pending frontend acceptance.
+Frontend and worker were not deployed in this step. No SQL rerun or settings
+changes. Rollback target: 2534dab / dep-dbb1s5lg1s2s73dv0gs0.
+
+Web final preparation, 2026-10-21:
+Repeated reading_snapshots.py including legacy migration review: PASS.
+Repeated ui_refinement.py at 320/390/1280px: PASS, external traffic blocked.
+Existing final frontend build and 131 frontend-related unit tests passed.
+Earlier six mock journeys and synthetic reading recovery also passed.
+Current fate-lab.com deployment verified Ready using Vercel inspect:
+dpl_3wQCCfh6ucRakMNge7pNM4nQUv2Q
+https://fortune-site-lnf23tme4-onsaitokyo-4984s-projects.vercel.app
+Retain it as the Web rollback target. Web deployment is a separate approval.
+Do not deploy the release branch to Render: the API-only eb0577d release
+already deployed is the intended API version; release has other historical
+backend differences. Vercel builds frontend only. Payments remain disabled.
+No production Web deployment performed during this preparation.
+
+Local test commands:
+backend: npm test
+backend: npm run test:web-snapshots
+backend: npm run build
+python3 backend/supabase/tests/web_reading_snapshots.py --runtime <official-PG17.6-runtime>
+frontend: npm run build
+backend: node --import tsx --test ../frontend/src/lib/*.test.ts ../frontend/src/web/data/*.test.ts ../frontend/src/web/state/*.test.ts ../docs/mock-e2e/birthCalculation.test.ts
+Synthetic REMOTE (mock.invalid env, local preview only):
+MOCK_E2E_BASE_URL=https://127.0.0.1:4336 python3 docs/mock-e2e/reading_snapshots.py
+MOCK_E2E_BASE_URL=https://127.0.0.1:4336 python3 docs/mock-e2e/reading_recovery.py

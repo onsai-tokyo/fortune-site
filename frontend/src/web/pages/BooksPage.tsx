@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
 import { IconAlert, IconChevron, IconClock } from '../components/icons'
 import { Button, Footer, LinkButton, NatureImage, Page } from '../components/ui'
@@ -7,7 +7,9 @@ import { images } from '../data/images'
 import type { Book } from '../data/types'
 import { useApp } from '../state/AppState'
 import { useState } from 'react'
-import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
+import { paymentsAvailable, BOOK_PREPARING, remoteMode } from '../data/paymentConfig'
+import { visibleYearSections } from '../data/readingPresentation'
+import { matchingSnapshot, snapshotForReading } from '../data/readingSnapshot'
 import { formatBookDate as formatDate } from '../data/bookDate'
 
 /** iOS AIBook.isPending と同じ */
@@ -91,9 +93,9 @@ function BookRow({ book }: { book: Book }) {
 
 /** 本番：GET /api/books（60件ずつ、before カーソル）。作成中は /api/books/operations/:id をポーリング */
 export function BooksPage() {
-  const { books, savedIds, partners, years, chapters, coupleYears, credits, bookRefreshError, reloadReadings } = useApp()
+  const { books, savedIds, partners, years, chapters, coupleYears, credits, bookRefreshError, reloadReadings, snapshots } = useApp()
   const delivered = books.filter(b => b.state === 'delivered')
-  const savedCount = savedCatalog(partners, years, chapters, coupleYears).filter(s => savedIds.includes(s.id)).length
+  const savedCount = remoteMode ? (snapshots?.length ?? 0) + savedIds.length : savedCatalog(partners, years, chapters, coupleYears).filter(s => savedIds.includes(s.id)).length
   return (
     <Page>
       <SiteHeader current="books" />
@@ -127,11 +129,13 @@ export function BooksPage() {
 }
 
 export function SavedReadingsPage() {
-  const { books, savedIds, partners, years, chapters, coupleYears } = useApp()
+  const { books, savedIds, partners, years, chapters, coupleYears, snapshots, snapshotError, reloadReadings } = useApp()
   const [filter, setFilter] = useState<'all' | 'you' | 'couple'>('all')
   const catalog = savedCatalog(partners, years, chapters, coupleYears)
   // 保存した順（新しいものを上）に並べる
-  const saved = [...savedIds].reverse().map(id => catalog.find(c => c.id === id)).filter((s): s is NonNullable<typeof s> => !!s)
+  const saved = remoteMode
+    ? (snapshots??[]).map(r=>({id:r.id,kind:r.payload.kind,title:r.payload.title,label:r.payload.label,href:`/books/saved/${r.id}`}))
+    : [...savedIds].reverse().map(id => catalog.find(c => c.id === id)).filter((s): s is NonNullable<typeof s> => !!s)
   const rows = saved.filter(s => filter === 'all' || s.kind === filter)
   const filters: { id: typeof filter; label: string }[] = [{ id: 'all', label: 'すべて' }, { id: 'you', label: 'あなた' }, { id: 'couple', label: 'ふたり' }]
   return (
@@ -139,7 +143,7 @@ export function SavedReadingsPage() {
       <SiteHeader current="books" />
       <section className="fl-page-title flex flex-col gap-4 px-5 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">本棚</h1>
-        <ShelfTabs active="saved" bookCount={books.filter(b => b.state === 'delivered').length} savedCount={saved.length} />
+        <ShelfTabs active="saved" bookCount={books.filter(b => b.state === 'delivered').length} savedCount={saved.length + (remoteMode ? savedIds.length : 0)} />
         <div className="flex flex-wrap gap-2">
           {filters.map(f => (
             <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}
@@ -148,6 +152,15 @@ export function SavedReadingsPage() {
         </div>
       </section>
       <section className="flex flex-col px-5 pt-1">
+        {snapshotError && <div role="alert"><p>{snapshotError}</p><Button onClick={reloadReadings}>再読み込み</Button></div>}
+        {remoteMode && savedIds.length > 0 && <aside className="my-4 rounded-xl bg-fl-surface p-4 text-sm leading-relaxed">
+          以前の保存項目 {savedIds.length}件は残っています。旧方式では保存時点の本文を記録していなかったため、新しい鑑定と混ぜずに保留しています。
+          項目を開き、現在の鑑定を確認して保存し直せます。以前の保存は消えません。
+          <ul className="mt-3 list-none p-0">{savedIds.map(key=><li key={key}>
+            <Link className="flex min-h-[48px] items-center justify-between border-t border-fl-line py-3 text-fl-moss"
+              to={`/books/legacy/${encodeURIComponent(key)}`}>{legacyLabel(key)}<IconChevron size={16}/></Link>
+          </li>)}</ul>
+        </aside>}
         {rows.map(r => (
           <Link key={r.id} to={r.href} className="flex min-h-[72px] items-center gap-3.5 border-b border-fl-line">
             <span className={`h-10 w-2 shrink-0 rounded ${r.kind === 'you' ? 'bg-fl-moss' : 'bg-fl-rose'}`} />
@@ -158,10 +171,86 @@ export function SavedReadingsPage() {
             <IconChevron size={16} className="text-fl-muted" />
           </Link>
         ))}
-        {rows.length === 0 && <p className="m-0 py-8 text-center text-sm leading-[1.85] text-fl-muted">保存した読みものはまだありません。<br />読みものの右上の保存ボタンで、ここに残せます。</p>}
+        {rows.length === 0 && !snapshotError && <p className="m-0 py-8 text-center text-sm leading-[1.85] text-fl-muted">保存した読みものはまだありません。<br />読みものの右上の保存ボタンで、ここに残せます。</p>}
       </section>
       <section className="px-5 pt-6"><p className="m-0 text-xs leading-[1.8] text-fl-muted">読みものの右上の保存ボタンで、ここに追加できます。</p></section>
       <Footer />
     </Page>
   )
+}
+
+function legacyLabel(key: string) {
+  const year = /^you-(\d{4})$/.exec(key)
+  if (year) return `${year[1]}年のあなた（以前の保存）`
+  const couple = /^couple-.+-(\d{4})$/.exec(key)
+  if (couple) return `${couple[1]}年のふたり（以前の保存）`
+  return key.startsWith('chapter-') ? '性格の章（以前の保存）' : '以前の保存項目'
+}
+
+export function LegacySavedReadingPage() {
+  const { readingKey = '' } = useParams()
+  const state = useApp()
+  const input = snapshotForReading(readingKey, state)
+  // A changed source/body must require fresh confirmation.
+  return <LegacySavedReadingReview key={JSON.stringify([readingKey,input])} readingKey={readingKey}/>
+}
+
+function LegacySavedReadingReview({readingKey}: {readingKey:string}) {
+  const state = useApp()
+  const [confirmed,setConfirmed] = useState(false)
+  const input = snapshotForReading(readingKey,state)
+  const existing = matchingSnapshot(state.snapshots??[],input)
+  const available = remoteMode && state.savedIds.includes(readingKey)
+  return <Page><SiteHeader current="books"/><section className="px-6 py-8">
+    <Link to="/books/saved" className="text-sm text-fl-moss">‹ 本棚へ</Link>
+    <h1 className="mt-6 text-2xl">{legacyLabel(readingKey)}</h1>
+    {!available ? <p>この保存項目は見つかりません。</p> : <>
+      <p className="rounded-xl bg-fl-surface p-4 text-sm leading-loose">
+        以前の保存には本文の記録がありません。ここで保存するのは現在表示している鑑定です。
+        保存当時の本文の復元ではなく、内容が異なる場合があります。以前の保存項目は残ります。
+      </p>
+      {!input || input.payload.sections.length===0 ? <>
+        <p className="text-sm leading-loose">確認できる鑑定がありません。「あなた」で生年月日などを確認し、ふたりの鑑定なら対象の相手も選んでください。その後、本棚のこの項目へ戻ってください。</p>
+        <LinkButton to="/you">あなたの鑑定を確認する</LinkButton>
+        {readingKey.startsWith('couple-') && <LinkButton to="/couple" variant="secondary">相手を確認する</LinkButton>}
+      </> : <>
+        <p className="text-sm text-fl-moss">現在の入力：{state.profile?.birthDate}／出生時刻 {state.profile?.birthTime || '不明'}</p>
+        <h2 className="text-xl">{input.payload.title}</h2>
+        {visibleYearSections(input.payload.sections).map((s,i)=><section key={i} className="my-6">
+          {s.heading&&<h3 className="text-base">{s.heading}</h3>}
+          <p className="whitespace-pre-wrap text-sm leading-loose">{s.body}</p>
+        </section>)}
+        {existing ? <><p role="status">この内容は保存済みです。以前の保存項目も残しています。</p>
+          <LinkButton to={`/books/saved/${existing.id}`}>保存した鑑定を開く</LinkButton></> : <>
+          <label className="my-5 flex items-start gap-3 text-sm leading-relaxed">
+            <input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} className="mt-1"/>
+            対象と本文を確認しました。保存当時の復元ではなく、この内容を新しく保存します。
+          </label>
+          <Button disabled={!confirmed || state.session!=='linked' || !!state.snapshotError || state.savingIds?.includes(readingKey)}
+            onClick={()=>state.toggleSaved(readingKey,true)}>この内容で保存し直す</Button>
+          {state.session!=='linked' && <Link to="/settings/link">新規登録・ログインして保存</Link>}
+        </>}
+        {(state.snapshotError || state.saveErrors?.[readingKey]) && <p role="alert">{state.snapshotError || state.saveErrors?.[readingKey]}</p>}
+      </>}
+    </>}
+  </section><Footer/></Page>
+}
+
+export function SavedSnapshotPage() {
+  const {id}=useParams()
+  const {snapshots,snapshotError,readingsStatus,removeSnapshot,reloadReadings}=useApp()
+  const [error,setError]=useState('')
+  const [removing,setRemoving]=useState(false)
+  const row=snapshots?.find(r=>r.id===id)
+  return <Page><SiteHeader current="books"/><section className="px-6 py-8">
+    <Link to="/books/saved" className="text-sm text-fl-moss">‹ 本棚へ</Link>
+    {!row ? <><p role="status">{snapshotError ?? (readingsStatus==='loading'?'保存した鑑定を読み込んでいます…':'この保存項目は見つかりません。')}</p><Button onClick={reloadReadings}>再読み込み</Button></>
+      : <><p className="text-xs text-fl-moss">保存した時点の鑑定</p><h1 className="text-2xl">{row.payload.title}</h1>
+        {visibleYearSections(row.payload.sections).map((s,i)=><section key={i} className="my-7">{s.heading&&<h2 className="text-lg">{s.heading}</h2>}<p className="whitespace-pre-wrap text-sm leading-loose">{s.body}</p></section>)}
+        <Button variant="secondary" disabled={removing} onClick={async()=>{
+          if(!window.confirm('この鑑定を本棚から削除しますか？'))return
+          setRemoving(true);setError('')
+          try{await removeSnapshot(row.id)}catch{setError('削除できませんでした。もう一度お試しください。')}finally{setRemoving(false)}
+        }}>本棚から削除</Button>{error&&<p role="alert">{error}</p>}</>}
+  </section></Page>
 }

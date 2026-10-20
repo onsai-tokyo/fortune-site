@@ -11,7 +11,7 @@ import { ChapterPage } from './pages/ChapterPage'
 import { CouplePage, CoupleIndexPage } from './pages/CouplePage'
 import { PartnerNewPage } from './pages/PartnerNewPage'
 import { ComposePage } from './pages/ComposePage'
-import { BooksPage, SavedReadingsPage } from './pages/BooksPage'
+import { BooksPage, SavedReadingsPage, SavedSnapshotPage, LegacySavedReadingPage } from './pages/BooksPage'
 import { BookPage } from './pages/BookPage'
 import { CreditsPage, PaymentReturnPage } from './pages/CreditsPage'
 import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage'
@@ -90,13 +90,15 @@ function AppRoutes() {
         <Route path="/couple/new" element={user(<PartnerNewPage />)} />
         <Route path="/couple/:partnerId" element={user(<CouplePage />)} />
         <Route path="/compose" element={user(<ComposePage />)} />
-        <Route path="/books" element={user(<BooksPage />)} />
-        <Route path="/books/saved" element={user(<SavedReadingsPage />)} />
-        <Route path="/books/:bookId" element={user(<BookPage />)} />
+        <Route path="/books" element={<BooksPage />} />
+        <Route path="/books/saved" element={<SavedReadingsPage />} />
+        <Route path="/books/saved/:id" element={<SavedSnapshotPage />} />
+        <Route path="/books/legacy/:readingKey" element={<LegacySavedReadingPage />} />
+        <Route path="/books/:bookId" element={<BookPage />} />
         <Route path="/books/:bookId/ask" element={user(<BookAskRedirect />)} />
         <Route path="/credits" element={user(<CreditsPage />)} />
         <Route path="/credits/return" element={user(<PaymentReturnPage />)} />
-        <Route path="/settings" element={user(<SettingsPage />)} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/purchases" element={user(<PurchasesPage />)} />
         <Route path="/settings/link" element={user(<LinkEmailPage />)} />
         <Route path="/tokushoho" element={<TokushohoPage />} />

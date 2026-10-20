@@ -25,6 +25,6 @@ with sync_playwright() as p:
     nav('/credits/return?plan=pack5&status=done')
     t=pg.get_by_text('いまの残りは').inner_text(); ok('7冊' in t,'done shows credits+5: '+t)
     pg.goto(B+'/demo'); pg.wait_for_timeout(300); pg.get_by_role('button',name='トップ（はじめて来た人）').click(); pg.wait_for_timeout(200)
-    nav('/books/saved'); ok('/welcome?returnTo=%2Fbooks%2Fsaved' in pg.url,'no profile → birth input with returnTo '+pg.url)
+    nav('/books/saved'); ok(pg.url.endswith('/books/saved'),'bookshelf independent of current unsaved birth input '+pg.url)
     b.close()
 print('pageerrors:',errs)

@@ -12,13 +12,15 @@ token = enc({"alg":"HS256"})+"."+enc({"sub":uid,"exp":int(time.time())+3600})+".
 session = {"access_token":token,"refresh_token":"fixture","token_type":"bearer","expires_at":int(time.time())+3600,"expires_in":3600,"user":user}
 birth = {"birthDate":"1994-05-12","gender":"female"}
 chapter = {"id":"personality-1","kind":"personality","title":"確認用の性格","summary":"人生の軸","sections":[{"heading":"特徴","body":"合成APIの性格本文です。"}]}
-year = {"id":"turning-year-2026","kind":"timing","title":"確認用の今年","sections":[{"heading":"流れ","body":"合成APIの年表本文です。"}]}
+year = {"id":"turning-year-2026","kind":"timing","title":"確認用の今年","sections":[{"heading":"流れ","body":"合成APIの年表本文です。"},{"heading":"根拠と期間","body":"合成APIの根拠です。"}]}
+years = [{**year,"id":"turning-year-"+str(y)} for y in [2025,2026,2027]]
 report = {"version":3,"reportText":"確認用の鑑定","cards":[chapter,year]}
 with sync_playwright() as p:
     browser = p.chromium.launch()
     ctx = browser.new_context(ignore_https_errors=True, viewport={"width":390,"height":844})
     ctx.add_init_script("localStorage.setItem('sb-mock-auth-token', "+json.dumps(json.dumps(session))+");")
-    state = {"saved":False,"empty":False,"generates":0,"checks":0,"saves":0}
+    state = {"saved":False,"empty":False,"generates":0,"checks":0,"saves":0,"hold":False}
+    held = []
     errors = []
     def route(r):
         u = urlparse(r.request.url)
@@ -46,11 +48,15 @@ with sync_playwright() as p:
                     state["saved"] = True
                     state["saves"] += 1
                     return r.fulfill(json={"id":"owned"})
+                if state["hold"]:
+                    held.append(r)
+                    return
                 return r.fulfill(json={"conversations":[{"id":"owned","kind":"self","birth_data":birth}] if state["saved"] else []})
-            if u.path.endswith("/timing-history"): return r.fulfill(json={"cards":[] if state["empty"] else [year]})
+            if u.path.endswith("/timing-history"): return r.fulfill(json={"cards":[] if state["empty"] else years})
             if u.path.endswith("/cards"): return r.fulfill(json={"cards":[] if state["empty"] else [chapter]})
             if u.path.endswith("/partners"): return r.fulfill(json={"partners":[]})
             if u.path.endswith("/saves"): return r.fulfill(json={"saves":[]})
+            if u.path.endswith("/snapshots"): return r.fulfill(json={"snapshots":[]})
             if u.path.endswith("/books"): return r.fulfill(json={"books":[]})
             if u.path.endswith("/status"): return r.fulfill(json={"remaining":0})
             raise AssertionError(u.path)
@@ -71,13 +77,36 @@ with sync_playwright() as p:
     page.wait_for_url(B+"/you")
     expect(page.get_by_role("heading",name="確認用の性格",exact=True)).to_be_visible()
     assert (state["generates"],state["checks"],state["saves"]) == (1,1,1), state
+    # Supabase emits SIGNED_IN again when returning to a visible tab.
+    state["hold"] = True
+    page.evaluate("window.dispatchEvent(new Event('visibilitychange'))")
+    page.wait_for_timeout(1000)
+    assert held, "background auth refresh was not exercised"
+    expect(page.get_by_role("heading",name="確認用の性格",exact=True)).to_be_visible()
+    assert page.get_by_text("読み込み中です…", exact=True).count() == 0
+    state["hold"] = False
+    for request in held:
+        request.fulfill(status=503, json={"error":"temporary"})
+    page.wait_for_timeout(300)
+    expect(page.get_by_role("heading",name="確認用の性格",exact=True)).to_be_visible()
+    page.get_by_role("button",name="メニューを開く",exact=True).click()
+    expect(page.get_by_role("link",name="個別相談",exact=False)).to_be_visible()
+    assert page.get_by_text("相談のブックは準備中です（新規購入）",exact=True).count() == 0
+    assert page.locator('#site-menu a[aria-current="page"]').inner_text().startswith("あなた")
+    page.screenshot(path="/private/tmp/fatelab-menu-refinement-20261021.png",full_page=False)
+    page.get_by_role("button",name="メニューを閉じる",exact=True).first.click()
+    page.locator('a[href="/you/years/2026"]').first.click()
+    expect(page.get_by_role("heading",name="確認用の今年",exact=True)).to_be_visible()
+    assert page.get_by_text("根拠と期間",exact=True).count() == 0
+    expect(page.get_by_role("link",name="前の年へ",exact=False)).to_be_visible()
+    expect(page.get_by_role("link",name="次の年へ",exact=False)).to_be_visible()
+    page.get_by_role("link",name="次の年へ",exact=False).click()
+    page.wait_for_url(B+"/you/years/2027")
+    page.screenshot(path="/private/tmp/fatelab-year-refinement-20261021.png",full_page=True)
     state["empty"] = True
-    page.reload()
+    page.evaluate("window.dispatchEvent(new Event('visibilitychange'))")
     expect(page.get_by_role("link",name="出生情報を確認して作成する",exact=True)).to_be_visible()
-    page.goto(B+"/")
-    expect(page.get_by_role("link",name="出生情報を確認して再開",exact=True)).to_be_visible()
-    assert page.get_by_text("あなたの読みものは、この端末に用意してあります。",exact=True).count() == 0
-    page.get_by_role("link",name="出生情報を確認して再開",exact=True).click()
+    page.get_by_role("link",name="出生情報を確認して作成する",exact=True).click()
     page.get_by_role("button",name="保存する",exact=True).click()
     expect(page.get_by_role("alert")).to_contain_text("読みものを作成できませんでした。入力は残っています")
     assert state["saves"] == 2, state
