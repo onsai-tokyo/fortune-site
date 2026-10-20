@@ -56,6 +56,7 @@ export interface Partner {
 
 /** ふたりの年（API: /api/reading/:id/couple-timeline） */
 export interface CoupleYear {
+  tags?: string[]
   sourceCardId?: string
   year: number
   label: string

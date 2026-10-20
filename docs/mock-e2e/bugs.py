@@ -8,7 +8,7 @@ with sync_playwright() as p:
     def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
     def nav(path):  # client-side navigation, keeps mock state
         pg.evaluate("p=>{history.pushState({},'',p);dispatchEvent(new PopStateEvent('popstate'))}",path); pg.wait_for_timeout(350)
-    pg.goto(B+'/you'); pg.wait_for_timeout(500)
+    pg.goto(B+'/demo'); pg.wait_for_timeout(300); pg.get_by_role('button',name='設定（引き継ぎ用メール登録済み）').click(); nav('/you')
     pg.get_by_role('link',name='人との距離').click(); pg.wait_for_timeout(300)
     ok('/you/chapters/distance' in pg.url and pg.get_by_role('heading',name='人との距離').count()>0,'chapter row opens chapter '+pg.url)
     ok(pg.get_by_role('button',name='保存を取り消す').count()==1,'chapter distance shows as saved')

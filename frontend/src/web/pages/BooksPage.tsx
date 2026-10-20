@@ -106,7 +106,7 @@ export function BooksPage() {
             <p className="m-0 text-sm leading-[1.85] text-fl-body">読みものを一つ選んで相談を書くと、その読みものをもとにした答えが一冊のブックになって届きます。</p>
             <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[13px] leading-[1.8] text-fl-body marker:text-fl-muted">
               <li>約2,500文字。章立てで、ゆっくり読めます</li>
-              <li>届いたブックには、2回まで質問できます</li>
+              <li>ひとつの相談に、一冊の答えをお届けします</li>
               <li>{paymentsAvailable ? '1冊 500円。いつでも本棚で読み返せます' : `${BOOK_PREPARING}（新規購入）`}</li>
             </ul>
             <LinkButton to="/compose">{!paymentsAvailable && credits <= 0 ? '相談の下書きを書く' : '最初の一冊をつくる'}</LinkButton>

@@ -1,5 +1,6 @@
 import { startTransition, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { safeReturnTo } from '../../lib/safeReturnTo'
 import { SiteHeader } from '../components/SiteHeader'
 import { BackHeader, Button, Note, Page } from '../components/ui'
 import { EmailCode } from '../components/EmailCode'
@@ -147,11 +148,15 @@ export function SettingsPage() {
 export function LinkEmailPage() {
   const { session, email, receiptEmail, linkEmail } = useApp()
   const [done, setDone] = useState(false)
+  const [params] = useSearchParams()
+  const returnTo = safeReturnTo(params.get('returnTo'), '/settings') ?? '/settings'
+  const savingReading = params.get('purpose') === 'save'
   return (
     <Page>
-      <BackHeader to="/settings" title="引き継ぎ用メール" />
+      <BackHeader to={returnTo} title="引き継ぎ用メール" />
       <section className="flex flex-col gap-3 px-6 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">別の端末でも使えるようにする</h1>
+        {savingReading && <Note>本棚に保存するには、無料のメール登録をお願いします。登録後に元の読みものへ戻り、「本棚に保存」を押してください。</Note>}
         <p className="m-0 text-sm leading-[1.85] text-fl-body">メールアドレスを登録すると、機種変更やブラウザのデータを消したあとも、届いたコードを入れるだけで同じ本棚と残りの冊数を開けます。パスワードは不要です。</p>
       </section>
       <section className="flex flex-col gap-4 px-6 pb-12 pt-4">
@@ -160,7 +165,7 @@ export function LinkEmailPage() {
         ) : (
           <LinkEmailForm initialEmail={receiptEmail ?? ''} onDone={address => { linkEmail(address); setDone(true) }} />
         )}
-        <Link to="/settings" className="flex min-h-[44px] items-center self-center text-[13px] text-fl-body">設定にもどる</Link>
+        <Link to={returnTo} className="flex min-h-[44px] items-center self-center text-[13px] text-fl-body">{savingReading ? '読みものにもどる' : '設定にもどる'}</Link>
       </section>
     </Page>
   )

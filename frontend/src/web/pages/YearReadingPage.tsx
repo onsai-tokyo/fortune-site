@@ -1,15 +1,15 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { IconBookmark } from '../components/icons'
 import { BackHeader, Disclaimer, LinkButton, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
 import { savedKey } from '../data/readingData'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
+import { SaveReadingButton } from '../components/SaveReadingButton'
 
 export function YearReadingPage() {
   const { year } = useParams()
-  const { savedIds, toggleSaved, years, readingsStatus } = useApp()
+  const { years, readingsStatus } = useApp()
   const yearList = years
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   const index = yearList.findIndex(y => String(y.year) === year)
@@ -18,16 +18,12 @@ export function YearReadingPage() {
   const prev = yearList[index - 1]
   const next = yearList[index + 1]
   const key = savedKey.year(reading.year)
-  const saved = savedIds.includes(key)
   const sections = reading.sections.length ? reading.sections : [{ heading: 'この年の流れ', body: reading.summary }]
 
   return (
     <Page>
       <BackHeader to="/you" title={`${reading.year}年のあなた`} sticky right={
-        <button type="button" onClick={() => toggleSaved(key)} aria-pressed={saved}
-          aria-label={saved ? '保存を取り消す' : '本棚に保存する'} className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-fl-surface">
-          <IconBookmark filled={saved} />
-        </button>
+        <SaveReadingButton readingKey={key} compact />
       } />
       <NatureImage src={images.nature.seaLight} className="h-[170px]" />
 

@@ -1,0 +1,30 @@
+{
+  "scope": "Web-only product and UI revision requested 2026-10-20",
+  "changes": [
+    "Top page includes a labelled, code-native SVG timeline illustration",
+    "Web follows one consultation / one book: additional question links removed and old ask routes redirect to the book; shared and iOS question APIs retained",
+    "Optional birth time and prefecture inputs at initial entry use existing calculation, generation and persistence payloads",
+    "Initial save renders the preparation page directly, preserves input on failure, and navigates to the real result when complete",
+    "Personality chapter index uses numbered text rows with category before personal headline, without repeated thumbnails",
+    "Empty couple landing contains the actual registration form and expanded introduction; existing partner replacement workflow retained",
+    "Partner permission notice removed from the registration UI per user request",
+    "Couple tags retain API tags or describe explicit title language; no new predictive calculation",
+    "Personal years, chapters and couple years share a save control that directs anonymous readers to email registration and safely back to the original reading",
+    "Central Web save action also rejects attempts without a linked email account"
+  ],
+  "checks": {
+    "frontend_build": "PASS",
+    "synthetic_remote_build": "PASS",
+    "frontend_unit": "118 passed, 0 failed",
+    "mock_e2e": "journey, guest, logic, bugs, probe3, crawl all PASS; no reported page errors; crawler no issues",
+    "new_web_ui_flow": "PASS at 320, 390 and 1280px; external network blocked",
+    "synthetic_remote_onboarding": "8 cases passed including time/prefecture payloads, failures, owner switch and stale history",
+    "git_diff_check": "PASS"
+  },
+  "verification_limits": [
+    "New email registration / code delivery was simulated, not sent to a real address during this revision",
+    "New anonymous save restriction is a Web product/UI rule; existing shared authenticated APIs and their anonymous permissions are unchanged",
+    "Shared backend / SQL / iOS were not modified; backend full suite was not rerun for this frontend-only revision",
+    "No new real AI requests, new real partner registration or production domain cutover"
+  ]
+}

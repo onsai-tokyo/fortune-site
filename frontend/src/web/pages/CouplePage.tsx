@@ -1,12 +1,15 @@
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
-import { IconBookmark, IconPen } from '../components/icons'
+import { IconPen } from '../components/icons'
 import { Card, Footer, LinkButton, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
 import { relationGroup, savedKey } from '../data/mock'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
+import { PartnerNewPage } from './PartnerNewPage'
+import { SaveReadingButton } from '../components/SaveReadingButton'
+import { coupleTags } from '../data/coupleTags'
 
 function MeetingYearForm({ partnerId }: { partnerId: string }) {
   const { saveMeetingYear } = useApp()
@@ -18,20 +21,19 @@ import { useCenterCurrent } from '../components/useCenterCurrent'
 
 /** /couple：相手がいれば最初の相手へ、いなければ案内 */
 export function CoupleIndexPage() {
-  const { partners, partnerNotice } = useApp()
+  const { partners } = useApp()
   if (partners.length) return <Navigate to={`/couple/${partners[0].id}`} replace />
   return (
     <Page>
       <SiteHeader current="couple" />
-      <section className="px-5 pt-6">
-        <Card className="flex flex-col items-center gap-[18px] px-6 pb-8 pt-5 text-center">
-          <NatureImage src={images.dunes} className="h-[150px] rounded-xl" />
-          <h1 className="m-0 text-xl font-medium leading-relaxed">大切な人との年表を<br />つくってみませんか</h1>
-          <p className="m-0 text-sm leading-[1.85] text-fl-body">相手の生年月日と出会った年を入れると、ふたりの関係を一年ずつ読めます。過去の年も、これからの年も無料で、相手は何度でも入れ替えられます。</p>
-          <LinkButton to="/couple/new" size="lg">相手を登録する</LinkButton>
-        </Card>
-        {partnerNotice && <p role="alert" className="mt-3 text-[13px] leading-[1.7] text-fl-danger">{partnerNotice}</p>}
+      <section className="flex flex-col gap-5 px-6 pb-5 pt-10">
+        <span className="text-xs tracking-[.2em] text-fl-moss">TWO LIVES, ONE TIMELINE</span>
+        <h1 className="m-0 text-[28px] leading-[1.65]">出会いから、いま。<br />ふたりの歩みを読む。</h1>
+        <p className="m-0 text-sm leading-[1.95] text-fl-body">近づく年も、それぞれの毎日を大切にする年も。ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解きます。</p>
+        <NatureImage src={images.dunes} className="h-[180px] rounded-card" />
+        <div className="grid grid-cols-3 gap-2 text-center text-xs text-fl-moss">{['無料で読める', '恋人・友人・家族も', '何度でも入れ替え'].map(t => <span key={t} className="rounded-field bg-fl-cream px-2 py-3">{t}</span>)}</div>
       </section>
+      <PartnerNewPage embedded />
       <section className="flex flex-col gap-1 px-5 pt-8">
         <h2 className="mb-2 mt-0 text-base font-medium">ふたりの年表でできること</h2>
         {['出会った年から今年まで、その年のふたりの読みものを読む', '同じ年の、あなたと相手それぞれの流れを知る', '気になる年について相談し、ブックにして本棚に残す'].map((t, i) => (
@@ -49,7 +51,7 @@ export function CoupleIndexPage() {
 export function CouplePage() {
   const { partnerId } = useParams()
   const [params, setParams] = useSearchParams()
-  const { partners, setDraft, savedIds, toggleSaved, coupleYears, coupleStatus, readingsStatus } = useApp()
+  const { partners, setDraft, coupleYears, coupleStatus, readingsStatus } = useApp()
   const tabsRef = useCenterCurrent<HTMLDivElement>(`${partnerId}-${params.get('year')}`)
   const partner = partners.find(p => p.id === partnerId)
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
@@ -98,13 +100,11 @@ export function CouplePage() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium tracking-[0.15em] text-fl-slate">{current.year}年のふたり</span>
             <span className="flex items-center gap-1 text-xs text-fl-muted">{current.label}
-              <button type="button" onClick={() => toggleSaved(savedKey.couple(partner.id, current.year))} aria-pressed={savedIds.includes(savedKey.couple(partner.id, current.year))}
-                aria-label={savedIds.includes(savedKey.couple(partner.id, current.year)) ? '保存を取り消す' : '本棚に保存する'} className="-my-2 flex h-11 w-11 items-center justify-center rounded-xl text-fl-ink hover:bg-fl-surface">
-                <IconBookmark size={18} filled={savedIds.includes(savedKey.couple(partner.id, current.year))} />
-              </button>
+              <SaveReadingButton readingKey={savedKey.couple(partner.id, current.year)} compact />
             </span>
           </div>
           <h2 className="m-0 text-[21px] font-medium leading-relaxed">{current.title}</h2>
+          <div className="flex flex-wrap gap-2">{coupleTags(current).map(tag => <span key={tag} className="rounded-full bg-fl-cream px-3 py-1 text-xs text-fl-moss">{tag}</span>)}</div>
           {current.body.map(p => <p key={p} className="m-0 text-[15px] leading-[1.9] text-fl-body">{p}</p>)}
           {(current.you || current.partner) && <div className="flex flex-wrap gap-2 pt-1">
             <span className="rounded-full bg-fl-surface px-3 py-1.5 text-xs text-fl-body">あなた：{current.you}</span>
@@ -130,11 +130,13 @@ export function CouplePage() {
               <span className="flex flex-1 flex-col gap-1 border-b border-fl-line pb-3.5 pt-2">
                 <span className="text-xs text-fl-muted">{y.year}年・{y.label}</span>
                 <span className={`text-[15px] leading-normal ${on ? 'font-bold' : 'font-medium'}`}>{y.title}</span>
+                <span className="flex flex-wrap gap-1.5">{coupleTags(y).map(tag => <span key={tag} className="rounded-full bg-fl-cream px-2.5 py-1 text-[11px] text-fl-moss">{tag}</span>)}</span>
               </span>
             </button>
           )
         })}
       </section>
+      <p className="mx-6 text-xs leading-relaxed text-fl-muted">タグは読みものの内容を整理する目印です。出来事や結果を約束するものではありません。</p>
 
       <section className="px-5">
         <LinkButton to="/couple/new" variant="secondary">別の人との年表を見る（相手を変える）</LinkButton>

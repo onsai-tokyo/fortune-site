@@ -11,7 +11,7 @@ const stages = ['生まれた日の暦を計算しています', '性格の章�
  * 本番：/api/calc/divination → /api/preview/generate（SSEの進み具合をそのまま stages に当てる）。
  * 画面確認用では一定の間隔で進める。
  */
-export function CreatingPage() {
+export function CreatingPage({ pending = false }: { pending?: boolean }) {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [done, setDone] = useState(0)
@@ -19,13 +19,14 @@ export function CreatingPage() {
   const next = safeReturnTo(returnTo, '/you')
 
   useEffect(() => {
+    if (pending) return
     if (done >= stages.length) {
       const t = window.setTimeout(() => navigate(next, { replace: true }), 400)
       return () => window.clearTimeout(t)
     }
     const t = window.setTimeout(() => setDone(d => d + 1), 900)
     return () => window.clearTimeout(t)
-  }, [done, navigate, next])
+  }, [done, navigate, next, pending])
 
   return (
     <Page>

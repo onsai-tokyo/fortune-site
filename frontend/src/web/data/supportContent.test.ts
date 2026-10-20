@@ -7,7 +7,7 @@ import { commerceRows } from './legalContent'
 test('Web support matches the approved contact and Web-only product/account rules', () => {
   assert.equal(WEB_SUPPORT_EMAIL, commerceRows.find(row => row[0] === 'メールアドレス')![1])
   const text = JSON.stringify(webSupportQuestions)
-  for (const expected of ['販売は準備中', '購入はできません', '質問は2回', '18歳以上', '15歳以上', '法定代理人の同意', 'ブラウザのデータ', '有効期限内', '使った1冊', '確認コードやパスワード']) assert.ok(text.includes(expected), expected)
+  for (const expected of ['販売は準備中', '購入はできません', 'ひとつの相談に、一冊の答え', '18歳以上', '15歳以上', '法定代理人の同意', 'ブラウザのデータ', '有効期限内', '使った1冊', '確認コードやパスワード']) assert.ok(text.includes(expected), expected)
   for (const forbidden of ['App Store', 'Apple Account', 'サブスクリプション', 'support@fate-lab.com', '必ず復元', '［', '］']) assert.ok(!text.includes(forbidden), forbidden)
 })
 

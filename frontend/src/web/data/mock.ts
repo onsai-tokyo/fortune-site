@@ -66,8 +66,8 @@ export function defaultDraftSource(partner: Partner | undefined, year = 2026) {
 
 
 export const plans: Plan[] = [
-  { id: 'single', name: '1冊', credits: 1, price: 500, detail: '相談のブック1冊（ブックへの質問2回つき）', recommended: false },
-  { id: 'pack5', name: '5冊セット', credits: 5, price: 1980, detail: '1冊あたり396円。1冊ずつより約2割お得（どのブックにも質問2回つき）', recommended: true },
+  { id: 'single', name: '1冊', credits: 1, price: 500, detail: 'ひとつの相談に、一冊の答え', recommended: false },
+  { id: 'pack5', name: '5冊セット', credits: 5, price: 1980, detail: '1冊あたり396円。1冊ずつより約2割お得', recommended: true },
 ]
 
 /** 相談のブック1冊につき、そのブックへ質問できる回数（無料の質問はなし） */

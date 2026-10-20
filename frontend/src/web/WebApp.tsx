@@ -13,7 +13,6 @@ import { PartnerNewPage } from './pages/PartnerNewPage'
 import { ComposePage } from './pages/ComposePage'
 import { BooksPage, SavedReadingsPage } from './pages/BooksPage'
 import { BookPage } from './pages/BookPage'
-import { AskPage } from './pages/AskPage'
 import { CreditsPage, PaymentReturnPage } from './pages/CreditsPage'
 import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage'
 import { DemoPage } from './pages/DemoPage'
@@ -56,6 +55,11 @@ function YearAskRedirect() {
   return <Navigate to={`/you/years/${year}`} replace />
 }
 
+function BookAskRedirect() {
+  const { bookId } = useParams()
+  return <Navigate to={`/books/${bookId}`} replace />
+}
+
 function LegacyReadingRedirect() {
   const { search } = useLocation()
   const id = new URLSearchParams(search).get('conversation')
@@ -91,7 +95,7 @@ function AppRoutes() {
         <Route path="/books" element={user(<BooksPage />)} />
         <Route path="/books/saved" element={user(<SavedReadingsPage />)} />
         <Route path="/books/:bookId" element={user(<BookPage />)} />
-        <Route path="/books/:bookId/ask" element={user(<AskPage />)} />
+        <Route path="/books/:bookId/ask" element={user(<BookAskRedirect />)} />
         <Route path="/credits" element={user(<CreditsPage />)} />
         <Route path="/credits/return" element={user(<PaymentReturnPage />)} />
         <Route path="/settings" element={user(<SettingsPage />)} />

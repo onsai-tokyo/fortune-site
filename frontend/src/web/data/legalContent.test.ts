@@ -41,7 +41,7 @@ test('public sales-preparation copy contains no draft brackets or unsupported co
   assert.ok(!text.includes('当社との契約に基づき、送られた情報をAIの学習に使いません'))
   assert.ok(!text.includes('最後の利用から'), 'unapproved inactive-account cleanup is not published as a policy')
   assert.ok(!text.includes('東京地方裁判所'), 'do not designate an unapproved exclusive court')
-  assert.ok(text.includes('販売開始前') && text.includes('ブックについての質問を2回'))
+  assert.ok(text.includes('販売開始前') && text.includes('Web版ではブックへの追加質問は受け付けていません'))
 })
 test('AI statements identify a public commercial policy with exceptions, not a verified private agreement', () => {
   const text = privacySections.find(s => s.title.startsWith('第3条'))!.paragraphs.join('\n')

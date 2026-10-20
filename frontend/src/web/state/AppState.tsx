@@ -726,6 +726,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       return true
     },
     toggleSaved: id => {
+      if (stateRef.current.session !== 'linked') return
       const isSaved = stateRef.current.savedIds.includes(id)
       setState(s => ({ ...s, savedIds: isSaved ? s.savedIds.filter(x => x !== id) : [...s.savedIds, id] }))
       if (REMOTE) void remoteToken().then(accessToken => { if (accessToken) return apiFetch(`/api/reading/saves/${encodeURIComponent(id)}`, { method: 'PUT', accessToken, body: JSON.stringify({ isSaved: !isSaved }) }).then(() => refreshRemote(accessToken)) }).catch(() => undefined)

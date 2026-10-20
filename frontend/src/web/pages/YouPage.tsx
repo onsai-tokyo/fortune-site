@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
-import { Card, Footer, ListRow, NatureImage, Page } from '../components/ui'
+import { Card, Footer, NatureImage, Page } from '../components/ui'
+import { SaveReadingButton } from '../components/SaveReadingButton'
+import { savedKey } from '../data/readingData'
 import { IconChevron, IconClose } from '../components/icons'
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
@@ -64,6 +66,7 @@ export function YouPage() {
             <span className="text-xs text-fl-muted">{current.label}</span>
           </div>
           <h2 className="m-0 text-[19px] font-medium leading-relaxed">{current.title}</h2>
+          <div className="flex justify-end"><SaveReadingButton readingKey={savedKey.year(current.year)} /></div>
           <p className="m-0 text-sm leading-[1.85] text-fl-body">{current.summary}</p>
           <div className="flex gap-2.5 pt-1">
             <Link to={`/you/years/${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] border border-fl-line text-sm font-medium">続きを読む</Link>
@@ -90,9 +93,15 @@ export function YouPage() {
 
       <section className="flex flex-col px-5 pb-2 pt-6">
         <h3 className="mb-2 mt-0 text-base font-medium">性格の章</h3>
-        {chapterList.map(ch => (
-          <ListRow key={ch.id} to={`/you/chapters/${ch.id}`} title={ch.title} sub={ch.sub}
-            leading={<NatureImage src={ch.image} className="h-11 w-11 shrink-0 rounded-[10px]" />} />
+        {chapterList.map((ch, index) => (
+          <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="group flex items-center gap-4 border-b border-fl-line py-5">
+            <span aria-hidden="true" className="self-start pt-1 font-book text-lg text-fl-moss">{String(index + 1).padStart(2, '0')}</span>
+            <span className="flex min-w-0 flex-1 flex-col gap-2">
+              <span className="text-xs font-medium tracking-[.08em] text-fl-moss">{ch.sub}</span>
+              <span className="text-[15px] font-medium leading-[1.85] group-hover:underline">{ch.title}</span>
+            </span>
+            <IconChevron size={16} className="shrink-0 text-fl-muted" />
+          </Link>
         ))}
       </section>
 

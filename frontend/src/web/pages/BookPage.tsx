@@ -70,9 +70,6 @@ export function BookPage() {
 
       <section className="flex flex-col gap-4 px-6 pb-14 pt-6">
         <Disclaimer>このブックは、暦の計算に基づく読みものと、いただいた相談文をもとにAIが作成しました。出来事や結果を約束するものではありません。</Disclaimer>
-        {book.questionsLeft > 0
-          ? <LinkButton to={`/books/${book.id}/ask`}>このブックについて質問する（あと{book.questionsLeft}回）</LinkButton>
-          : <span className="text-center text-xs text-fl-muted">このブックへの質問は使い切りました</span>}
         <LinkButton to="/compose" variant="secondary">別の相談を書く</LinkButton>
       </section>
     </Page>

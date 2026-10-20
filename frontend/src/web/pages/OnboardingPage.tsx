@@ -6,6 +6,8 @@ import type { Gender } from '../data/types'
 import { useApp } from '../state/AppState'
 import { prefectures } from '../data/mock'
 import { safeReturnTo } from '../../lib/safeReturnTo'
+import { CreatingPage } from './CreatingPage'
+import { remoteMode } from '../data/paymentConfig'
 
 /**
  * 生年月日の入力（トップから来なかった人・設定からの変更）。
@@ -36,11 +38,12 @@ export function OnboardingPage() {
     try {
       await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender })
       if (editing) navigate(returnTo ?? '/settings')
-      else navigate(`/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
+      else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
     } catch { setSaveError(true) }
     finally { setSaving(false) }
   }
 
+  if (saving && !editing) return <CreatingPage pending />
   return (
     <Page>
       {editing

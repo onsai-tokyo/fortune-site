@@ -21,7 +21,7 @@ export function personalReadings(timing: RawCard[], cards: RawCard[], sourceId: 
   return { chapters, years, personaTitle: chapters[0]?.title ?? '' }
 }
 export function coupleReadings(raw: { entries?: { year: number; label?: string | null; contentStatus: string; card?: RawCard | null }[] }): CoupleYear[] {
-  return (raw.entries ?? []).filter(e => e.contentStatus === 'ready' && e.card && !e.card.access?.locked).map(e => ({ year: e.year, label: realText(e.label), title: realText(e.card!.title), you: '', partner: '', body: readingSections(e.card!).map(s => s.body), sourceCardId: e.card!.id }))
+  return (raw.entries ?? []).filter(e => e.contentStatus === 'ready' && e.card && !e.card.access?.locked).map(e => ({ year: e.year, label: realText(e.label), title: realText(e.card!.title), tags: (e.card!.tags ?? []).map(realText), you: '', partner: '', body: readingSections(e.card!).map(s => s.body), sourceCardId: e.card!.id }))
 }
 export type SourceItem = { href: string; title: string; sub: string; theme: BookTheme; sourceId?: string; sourceCardId?: string }
 export function sourceCatalog(partners: Partner[], years: YearReading[], chapters: Chapter[], couples: Record<string, CoupleYear[]>): { label: string; items: SourceItem[] }[] {

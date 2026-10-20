@@ -31,12 +31,10 @@ with sync_playwright() as p:
     pg.get_by_role('button',name='確認コードを送る').click(); pg.fill('#link-code','1234567890'[:OTP_LENGTH]); pg.get_by_role('button',name='登録する').click(); pg.wait_for_timeout(200)
     ok(pg.get_by_text('引き継ぎ用に登録しました').count()==1,'email linked')
     nav('/settings'); ok(pg.get_by_text('me@example.com').count()>=1,'settings shows linked email')
-    # book questions
+    # Web books now finish with one answer; old question URLs return to the book.
     nav('/books/b-distance');
     nav('/demo'); pg.get_by_role('button',name='ブックへの質問').click(); pg.wait_for_timeout(400)
-    ok(pg.get_by_text('あと2回').count()>=1,'book has 2 questions')
-    pg.get_by_role('checkbox').check(); pg.fill('#ask','この時期はいつ頃ですか？'); pg.get_by_role('button',name='送信').click(); pg.wait_for_timeout(1700)
-    ok(pg.get_by_text('あと1回').count()>=1,'question consumed per book')
+    ok(pg.url.endswith('/books/b-distance') and pg.locator('#ask').count()==0,'old question URL returns to book without question form')
     nav('/you/years/2026'); ok(pg.get_by_role('link',name='この読みものについて質問する').count()==0,'no free reading questions')
     # restore on another device
     pg2=b.new_page(ignore_https_errors=True, viewport={'width':390,'height':844}); pg2.goto(B+'/demo'); pg2.wait_for_timeout(300); pg2.get_by_role('button',name='別の端末から引き継ぐ').click(); pg2.wait_for_timeout(300)

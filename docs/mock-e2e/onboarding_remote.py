@@ -46,11 +46,15 @@ with sync_playwright() as p:
                 if req.method != 'GET': assert req.headers.get('authorization') == 'Bearer ' + token
                 if path == '/api/web/calc/divination':
                     assert req.post_data_json['birthDate'] == '1990-01-15'
+                    assert req.post_data_json['birthTime'] == '06:45'
+                    assert req.post_data_json['birthplace'] == '大阪府'
                     if flags['hold']:
                         pending.append(r)
                         return
                     return r.fulfill(status=503 if flags['failure'] == 'calc' else 200, json={})
                 if path == '/api/web/preview/generate':
+                    assert req.post_data_json['birthTime'] == '06:45'
+                    assert req.post_data_json['birthplace'] == '大阪府'
                     assert 'x-fatelab-ai-consent' not in req.headers
                     if flags['failure'] == 'generate':
                         return r.fulfill(status=503, json={'error': 'synthetic generation failure'})
@@ -58,6 +62,8 @@ with sync_playwright() as p:
                     return r.fulfill(content_type='text/event-stream', body=body)
                 if path == '/api/web/reading/conversations':
                     if req.method == 'POST':
+                        assert req.post_data_json['birthData']['birthTime'] == '06:45'
+                        assert req.post_data_json['birthData']['birthplace'] == '大阪府'
                         if flags['failure'] == 'save':
                             return r.fulfill(status=503, json={'error': 'synthetic save failure'})
                         flags['saved'] = True
@@ -88,6 +94,12 @@ with sync_playwright() as p:
         page.goto(B + entry)
         date = page.get_by_label('生年月日', exact=True)
         date.fill('1990-01-15')
+        if entry == '/':
+            page.get_by_text('出生時刻・出生地も入力する（任意）', exact=True).click()
+            page.fill('#top-birthtime', '06:45'); page.select_option('#top-birthplace', '大阪府')
+        else:
+            page.get_by_text('もっと正確に（任意）', exact=True).click()
+            page.fill('#birthtime', '06:45'); page.select_option('#place', '大阪府')
         page.get_by_role('button', name='女性', exact=True).click()
         start = page.get_by_role('button', name='同意して、無料で読む', exact=True)
         start.click()
@@ -96,8 +108,8 @@ with sync_playwright() as p:
             while not pending and time.time() < deadline: page.wait_for_timeout(30)
             assert pending, (entry, failure, 'calc request never reached')
             page.wait_for_timeout(250)
-            assert date.input_value() == '1990-01-15', 'new SIGNED_IN must not discard the initial form'
-            assert page.get_by_role('button', name='読みものをつくっています…', exact=True).is_disabled()
+            assert page.locator('h1').inner_text().replace('\n', '').replace(' ', '') == 'あなたの読みものをつくっています'
+            assert page.get_by_role('heading', name='読みもの', exact=True).count() == 0, 'no intermediate generic loading screen'
             if failure == 'owner-switch':
                 page.evaluate('s=>{const c=new BroadcastChannel("sb-mock-auth-token");c.postMessage({event:"SIGNED_IN",session:s});c.close()}', other_session)
                 page.wait_for_timeout(150)

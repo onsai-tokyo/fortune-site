@@ -1,8 +1,10 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Chip, Footer, LinkButton, NatureImage, Page, PlainHeader } from '../components/ui'
+import { Button, Chip, Field, Footer, LinkButton, NatureImage, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
-import { mockYears, plans } from '../data/mock'
+import { mockYears, plans, prefectures } from '../data/mock'
+import { CreatingPage } from './CreatingPage'
+import { remoteMode } from '../data/paymentConfig'
 import type { Gender } from '../data/types'
 import { useApp } from '../state/AppState'
 import { paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
@@ -22,6 +24,8 @@ export function TopPage() {
   const navigate = useNavigate()
   const [birthDate, setBirthDate] = useState('')
   const [gender, setGender] = useState<Gender | null>(null)
+  const [birthTime, setBirthTime] = useState('')
+  const [birthPlace, setBirthPlace] = useState('東京都')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const dateRef = useRef<HTMLInputElement>(null)
@@ -35,8 +39,8 @@ export function TopPage() {
     setSaving(true)
     setSaveError(false)
     try {
-      await saveProfile({ nickname: '', birthDate, birthTime: null, birthPlace: '東京都', gender })
-      navigate('/creating')
+      await saveProfile({ nickname: '', birthDate, birthTime: birthTime || null, birthPlace, gender })
+      navigate(remoteMode ? '/you' : '/creating')
     } catch { setSaveError(true) }
     finally { setSaving(false) }
   }
@@ -46,6 +50,7 @@ export function TopPage() {
     window.setTimeout(() => dateRef.current?.focus({ preventScroll: true }), 300)
   }
 
+  if (saving) return <CreatingPage pending />
   return (
     <Page>
       <PlainHeader right={<Link to={profile ? '/you' : '/restore'} className="flex min-h-[44px] items-center px-1 text-[13px] text-fl-body">{profile ? 'つづきを読む' : '別の端末から引き継ぐ'}</Link>} />
@@ -77,12 +82,21 @@ export function TopPage() {
                 ))}
               </div>
             </fieldset>
+            <details className="rounded-field border border-fl-line bg-fl-canvas px-4">
+              <summary className="cursor-pointer py-3 text-[13px] font-medium">出生時刻・出生地も入力する（任意）</summary>
+              <div className="flex flex-col gap-4 pb-4">
+                <Field id="top-birthtime" label="出生時刻" type="time" value={birthTime} onChange={e => setBirthTime(e.target.value)} hint="分からない場合は空欄で進めます。" />
+                <label htmlFor="top-birthplace" className="text-[13px]">出生地</label>
+                <select id="top-birthplace" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] rounded-field border px-4 text-base">{prefectures.map(p => <option key={p}>{p}</option>)}</select>
+                <p className="m-0 text-xs text-fl-muted">出生時刻と出生地を合わせて、暦の計算に使います。あとから変更できます。</p>
+              </div>
+            </details>
             <p className="m-0 text-xs leading-[1.8] text-fl-muted">
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。AIの相談ブック作成・質問は18歳以上の方に限ります。
             </p>
             {saveError && <p role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">読みものを作成できませんでした。入力は残っています。時間をおいて、もう一度お試しください。</p>}
             <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : '同意して、無料で読む'}</Button>
-            <span className="text-center text-xs leading-[1.7] text-fl-muted">登録・ログインは不要です。出生時刻と出生地は、あとから足せます。</span>
+            <span className="text-center text-xs leading-[1.7] text-fl-muted">読むだけなら登録不要です。本棚への保存にはメール登録が必要です。</span>
           </form>
         )}
       </section>
@@ -94,6 +108,7 @@ export function TopPage() {
       <section className="flex flex-col gap-4 px-6 pb-12">
         <h2 className="m-0 text-xl font-medium leading-relaxed">たとえば、こんな年表に</h2>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">一年ごとに、その年の流れと過ごし方を読めます。過去の年をふり返ることも、これからの年を先に読むこともできます。</p>
+        <img src="/images/timeline-preview.svg" alt="年ごとの流れの見本。2024年は土台を整える、2025年は新しい一歩、2026年はつながりを育てる。" width="640" height="380" loading="lazy" className="w-full rounded-card border border-fl-line" />
         <ol className="m-0 flex list-none flex-col p-0" aria-label="年表の見本">
           {sampleYears.map(y => {
             const now = y.label === '今年'
@@ -140,7 +155,7 @@ export function TopPage() {
             <span>相談のブック {plan.name}</span><span className="font-medium">{plan.price.toLocaleString()}円</span>
           </div>
         )) : <p className="text-[15px]">{BOOK_PREPARING}</p>}
-        <span className="text-xs leading-[1.7] text-fl-muted">{paymentsAvailable ? '価格は税込です。' : '新しい冊数の購入は準備中です。'}ブック1冊ごとに、そのブックへの質問が2回つきます。月額の契約や自動更新はありません。届いたブックは、いつでも本棚で読み返せます。占いの結果は、出来事や効果を約束するものではありません。</span>
+        <span className="text-xs leading-[1.7] text-fl-muted">{paymentsAvailable ? '価格は税込です。' : '新しい冊数の購入は準備中です。'}ひとつの相談に、一冊の答えをお届けします。月額の契約や自動更新はありません。届いたブックは、いつでも本棚で読み返せます。占いの結果は、出来事や効果を約束するものではありません。</span>
       </section>
 
       <section className="px-6 pb-12">

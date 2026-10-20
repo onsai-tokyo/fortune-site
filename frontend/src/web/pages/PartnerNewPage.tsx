@@ -10,7 +10,7 @@ import { useApp } from '../state/AppState'
  * 本番：POST /api/partners（displayName, birthDate, birthTime, birthplace, gender, relationshipType, relationshipLabel, operationId）
  * → 出会った年は coupleMeetingSettings で別に保存（相手の登録だけ成功した場合は「登録」を押し直すと年だけ保存し直す）
  */
-export function PartnerNewPage() {
+export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
   const { setPartner, partners, partnerNotice, partnerDraft, profile } = useApp()
   const current = partners[0]
   const navigate = useNavigate()
@@ -51,11 +51,11 @@ export function PartnerNewPage() {
     } finally { setSaving(false) }
   }
 
-  return (
-    <Page>
-      <BackHeader to="/couple" title={current ? '相手を変える' : '相手を登録する'} />
+  const Heading = embedded ? 'h2' : 'h1'
+  const content = <>
+      {!embedded && <BackHeader to="/couple" title={current ? '相手を変える' : '相手を登録する'} />}
       <section className="flex flex-col gap-2.5 px-6 pb-2 pt-7">
-        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{current ? '相手を変える' : '相手を登録する'}</h1>
+        <Heading className="m-0 text-[24px] font-medium leading-[1.55]">{current ? '相手を変える' : '相手を登録する'}</Heading>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">相手の生年月日と出会った年から、ふたりの関係を一年ずつ読みます。</p>
         {partnerNotice && <p role="alert" className="m-0 text-[13px] leading-[1.7] text-fl-danger">{partnerNotice}</p>}
         {current && <Note>登録できる相手は1人です。登録すると、いまの相手（{current.name}）の年表と入れ替わります。{current.name}について作ったブックは本棚に残ります。入れ替えは何度でも無料です。</Note>}
@@ -99,13 +99,13 @@ export function PartnerNewPage() {
         </div>
 
         {error && <p role="alert" className="m-0 text-[13px] leading-[1.7] text-fl-danger">{error}</p>}
-        <Note>相手の方の生年月日は、ご本人の了解を得たうえで入力してください。登録した相手は、いつでも削除できます。</Note>
+        <Note>登録した相手は、いつでも削除できます。</Note>
 
         <div className="flex flex-col gap-2.5 pb-12 pt-2">
           <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '登録しています…' : current ? `${current.name}と入れ替えて登録` : '登録'}</Button>
         </div>
         </fieldset>
       </form>
-    </Page>
-  )
+    </>
+  return embedded ? content : <Page>{content}</Page>
 }
