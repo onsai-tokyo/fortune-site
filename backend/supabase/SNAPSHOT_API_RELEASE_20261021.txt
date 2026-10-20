@@ -1,0 +1,26 @@
+API-only release candidate. LOCAL ONLY; no push or deploy authorized here.
+
+Branch: codex/web-snapshots-api-20261021
+Base: 2534dabacdbd83c92d07d64fe76c87460ecea8b4
+Observed live Render service: srv-d6mjp65actks7384ebg0 (fortune-site).
+Observed rollback deployment: dep-dbb1s5lg1s2s73dv0gs0.
+Auto-deploy is OFF; use explicit commit deployment after separate approval.
+
+Changes: authenticated /api/web/reading/snapshots GET/POST/DELETE routes,
+snapshot validation/hash, tests, and the already-applied SQL source.
+Do NOT reapply web_reading_snapshots_20261021.sql: it was separately applied
+and catalog-verified on production. No migration is added to build/start.
+Existing reading_saves routes, iOS APIs, worker, frontend, dependency versions,
+environment values, and generation logic remain identical to the base.
+
+Before push: inspect this new branch's preview deployment side effects.
+Do not push main: Vercel main triggers production domain assignment.
+Before Render deployment: confirm target commit with user and record its hash.
+Rollback: redeploy the base commit above; retain the additive snapshot table.
+New API still needs real authenticated HTTP acceptance tests after deployment.
+
+Local validation: npm run build; existing npm test test-file list executed via
+node --import tsx --test, plus src/lib/webReadingSnapshot.test.ts and
+src/routes/webReadingSnapshots.test.ts. No real database or credentials used.
+Result: build succeeded; 541 tests passed, 0 failed. The initial sandboxed run
+could not bind loopback HTTP ports; the approved rerun passed all tests.
