@@ -26,7 +26,7 @@ with sync_playwright() as p:
     nav('/credits'); buy=pg.get_by_role('button',name='5冊セットを買う（1,980円）')
     ok(buy.is_disabled(),'email required to buy'); pg.fill('#receipt-email','me@example.com'); buy.click(); pg.wait_for_timeout(3200)
     ok(pg.get_by_text('5冊セットを追加しました').count()==1,'purchase done')
-    ok(pg.get_by_text('別の端末でも使えるようにする').count()==1,'link offer after purchase')
+    ok(pg.get_by_text('新規登録（無料）で鑑定を保存').count()==1,'link offer after purchase')
     ok(pg.input_value('#link-email')=='me@example.com','prefilled with receipt email')
     pg.get_by_role('button',name='確認コードを送る').click(); pg.fill('#link-code','1234567890'[:OTP_LENGTH]); pg.get_by_role('button',name='登録する').click(); pg.wait_for_timeout(200)
     ok(pg.get_by_text('メールを登録しました').count()==1,'email linked')

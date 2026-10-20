@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BackHeader, Button, Chip, Field, Page, PlainHeader } from '../components/ui'
-import { IconDown } from '../components/icons'
 import type { Gender } from '../data/types'
 import { useApp } from '../state/AppState'
 import { prefectures } from '../data/mock'
@@ -23,7 +22,7 @@ export function OnboardingPage() {
   const [nickname, setNickname] = useState(profile?.nickname ?? '')
   const [birthDate, setBirthDate] = useState(profile?.birthDate ?? '')
   const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '')
-  const [birthPlace, setBirthPlace] = useState(profile?.birthPlace ?? '東京都')
+  const [birthPlace, setBirthPlace] = useState(profile?.birthPlace ?? '')
   const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -69,24 +68,18 @@ export function OnboardingPage() {
           <span className="text-xs leading-[1.7] text-fl-muted">年ごとの流れの計算に使います。</span>
         </fieldset>
 
-        <details open={editing} className="group rounded-card border border-fl-line bg-white [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-3 px-5 text-[15px] font-medium">
-            <span className="flex flex-col gap-0.5"><span>もっと正確に（任意）</span><span className="text-xs font-normal text-fl-muted">出生時刻・出生地・呼び名</span></span>
-            <IconDown size={18} className="shrink-0 text-fl-muted transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="flex flex-col gap-[18px] border-t border-fl-line px-5 pb-5 pt-4">
-            <Field id="birthtime" label="出生時刻" type="time" value={birthTime} onChange={e => setBirthTime(e.target.value)}
+        <div className="flex flex-col gap-[18px]">
+            <Field id="birthtime" label="出生時刻（任意）" type="time" value={birthTime} onChange={e => setBirthTime(e.target.value)}
               hint="母子健康手帳の出産の記録に載っています。時刻があると、時期を月単位で読めます。" />
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="place" className="text-[13px] font-medium text-fl-body">出生地</label>
+              <label htmlFor="place" className="text-[13px] font-medium text-fl-body">出生地（任意）</label>
               <select id="place" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base">
-                {prefectures.map(p => <option key={p}>{p}</option>)}
+                <option value="">未選択・分からない</option>{prefectures.map(p => <option key={p}>{p}</option>)}
               </select>
               <span className="text-xs leading-[1.7] text-fl-muted">出生時刻と合わせて、時差の補正に使います。</span>
             </div>
-            <Field id="nickname" label="呼び名" maxLength={20} value={nickname} onChange={e => setNickname(e.target.value)} placeholder="例：ゆう" hint="読みものの中で、この名前で呼びかけます。" />
-          </div>
-        </details>
+            <Field id="nickname" label="呼び名（任意）" maxLength={20} value={nickname} onChange={e => setNickname(e.target.value)} placeholder="例：ゆう" hint="読みものの中で、この名前で呼びかけます。" />
+        </div>
 
         <div className="flex flex-col gap-3 pb-12 pt-2">
           {!editing && (

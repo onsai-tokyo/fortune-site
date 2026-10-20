@@ -4,6 +4,7 @@ import { Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../com
 import { SaveReadingButton } from '../components/SaveReadingButton'
 import { savedKey } from '../data/readingData'
 import { IconChevron, IconClose } from '../components/icons'
+import { chapterSections } from '../data/mock'
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
@@ -60,20 +61,19 @@ export function YouPage() {
         </section>
       )}
 
-      <section className="px-5 pb-2 pt-5">
-        <Card className="fl-year-feature flex flex-col gap-3 p-5">
-          <NatureImage src={images.nature.pampas} className="h-[132px] rounded-xl" />
-          <div className="fl-feature-meta flex items-center justify-between gap-3">
-            <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">{current.year}年のあなた</span>
-            <span className="flex items-center gap-2 text-xs text-fl-muted">{current.label}<SaveReadingButton readingKey={savedKey.year(current.year)} compact /></span>
-          </div>
-          <h2 className="m-0 text-[19px] font-medium leading-relaxed">{current.title}</h2>
-          <p className="m-0 text-sm leading-[1.85] text-fl-body">{current.summary}</p>
-          <div className="flex gap-2.5 pt-1">
-            <Link to={`/you/years/${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] border border-fl-line text-sm font-medium">続きを読む</Link>
-            <Link to={`/compose?source=you-${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] bg-fl-ink text-sm font-medium text-white">この年を相談</Link>
-          </div>
-        </Card>
+      <section className="fl-chapters flex flex-col px-5 pb-2 pt-6">
+        <SectionHeading detail={`${chapterList.length}の視点`}>性格の章</SectionHeading>
+        {chapterList.map((ch, index) => (
+          <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="fl-chapter-row group flex items-center gap-4 border-b border-fl-line py-5">
+            <span aria-hidden="true" className="fl-chapter-number self-start pt-1 text-lg text-fl-moss">{String(index + 1).padStart(2, '0')}</span>
+            <span className="flex min-w-0 flex-1 flex-col gap-2">
+              <span className="text-xs font-medium tracking-[.08em] text-fl-moss">{ch.sub}</span>
+              <span className="fl-chapter-title text-[15px] font-medium leading-[1.85] group-hover:underline">{ch.title}</span>
+              {(ch.sections?.[0]?.body || (!remoteMode && chapterSections[ch.id]?.[0]?.body)) && <span className="fl-chapter-preview text-[13px] leading-[1.85] text-fl-body">{(ch.sections?.[0]?.body || chapterSections[ch.id]?.[0]?.body || '').slice(0, 88)}…</span>}
+            </span>
+            <IconChevron size={16} className="shrink-0 text-fl-muted" />
+          </Link>
+        ))}
       </section>
 
       <section className="fl-year-section pb-2 pt-5">
@@ -92,25 +92,27 @@ export function YouPage() {
         </div>
       </section>
 
-      <section className="fl-chapters flex flex-col px-5 pb-2 pt-6">
-        <SectionHeading detail={`${chapterList.length}の視点`}>性格の章</SectionHeading>
-        {chapterList.map((ch, index) => (
-          <Link key={ch.id} to={`/you/chapters/${ch.id}`} className="fl-chapter-row group flex items-center gap-4 border-b border-fl-line py-5">
-            <span aria-hidden="true" className="fl-chapter-number self-start pt-1 text-lg text-fl-moss">{String(index + 1).padStart(2, '0')}</span>
-            <span className="flex min-w-0 flex-1 flex-col gap-2">
-              <span className="text-xs font-medium tracking-[.08em] text-fl-moss">{ch.sub}</span>
-              <span className="text-[15px] font-medium leading-[1.85] group-hover:underline">{ch.title}</span>
-            </span>
-            <IconChevron size={16} className="shrink-0 text-fl-muted" />
-          </Link>
-        ))}
+      <section className="px-5 pb-2 pt-5">
+        <Card className="fl-year-feature flex flex-col gap-3 p-5">
+          <NatureImage src={images.nature.pampas} className="h-[132px] rounded-xl" />
+          <div className="fl-feature-meta flex items-center justify-between gap-3">
+            <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">{current.year}年のあなた</span>
+            <span className="flex items-center gap-2 text-xs text-fl-muted">{current.label}<SaveReadingButton readingKey={savedKey.year(current.year)} compact /></span>
+          </div>
+          <h2 className="m-0 text-[19px] font-medium leading-relaxed">{current.title}</h2>
+          <p className="m-0 text-sm leading-[1.85] text-fl-body">{current.summary}</p>
+          <div className="flex gap-2.5 pt-1">
+            <Link to={`/you/years/${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] border border-fl-line text-sm font-medium">続きを読む</Link>
+            <Link to={`/compose?source=you-${current.year}`} className="flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] bg-fl-ink text-sm font-medium text-white">この年を相談</Link>
+          </div>
+        </Card>
       </section>
 
       <section className="px-5 pt-6">
-        <Link to={partner ? `/couple/${partner.id}` : '/couple'} className="flex items-center gap-3.5 rounded-card bg-fl-cream p-[18px]">
+        <Link to="/couple" className="flex items-center gap-3.5 rounded-card bg-fl-cream p-[18px]">
           <span className="flex flex-1 flex-col gap-1">
-            <span className="text-[15px] font-medium">{partner ? `${partner.name}との年表をひらく` : '大切な人との年表をつくる'}</span>
-            <span className="text-[13px] text-fl-body">あなたの年と、ふたりの年を見比べる</span>
+            <span className="text-[15px] font-medium">相性・相手との年表はこちら</span>
+            <span className="text-[13px] text-fl-body">{partner ? 'あなたの年と、ふたりの年を見比べる' : '相手を登録すると、ふたりの関係の流れが読めます'}</span>
           </span>
           <IconChevron size={18} />
         </Link>

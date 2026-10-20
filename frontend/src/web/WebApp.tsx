@@ -20,9 +20,7 @@ import { remoteMode } from './data/paymentConfig'
 import { ReadingStatus } from './components/ReadingStatus'
 
 // Web版専用。既存アプリ向け文書のソースは上書きしない。
-const TermsPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebTermsPage })))
-const PrivacyPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebPrivacyPage })))
-const TokushohoPage = lazy(() => import('./pages/LegalPages').then(m => ({ default: m.WebCommercePage })))
+import { WebTermsPage as TermsPage, WebPrivacyPage as PrivacyPage, WebCommercePage as TokushohoPage } from './pages/LegalPages'
 const SupportPage = lazy(() => import('./pages/SupportPage').then(m => ({ default: m.SupportPage })))
 const LegacyReadingPage = lazy(() => import('./pages/LegacyReadingPage').then(m => ({ default: m.LegacyReadingPage })))
 const LegacyLoginPage = lazy(() => import('./pages/LegacyLoginPage').then(m => ({ default: m.LegacyLoginPage })))
@@ -69,7 +67,7 @@ function LegacyReadingRedirect() {
 
 function AppRoutes() {
   return (
-    <Suspense fallback={<div aria-label="ページを読み込んでいます" className="fl-root" />}>
+    <Suspense fallback={<div role="status" className="fl-root p-8">ページを読み込んでいます…</div>}>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<TopPage />} />

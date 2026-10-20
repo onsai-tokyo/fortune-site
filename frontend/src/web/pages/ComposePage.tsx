@@ -84,7 +84,7 @@ export function ComposePage() {
 
       <section className="flex flex-col gap-2.5 px-5 pt-5">
         {remoteMode && readingsStatus !== 'ready' && <p role="status">{readingsStatus === 'loading' ? '読み込み中です…' : '読み込めませんでした。'}{readingsStatus !== 'loading' && <button onClick={reloadReadings}>再読み込み</button>}</p>}
-        <label htmlFor="source" className="text-[13px] font-medium text-fl-body">もとにする読みもの</label>
+        <label htmlFor="source" className="text-[13px] font-medium text-fl-body">深掘りたい鑑定結果</label>
         <div className="relative flex items-center gap-3.5 rounded-2xl border border-fl-line bg-white p-4 focus-within:outline focus-within:outline-2 focus-within:outline-fl-ink">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fl-cream text-fl-rose">
             {isCouple ? <IconPeople size={20} /> : <NatureImage src={images.nature.pampas} className="h-10 w-10 rounded-xl" />}

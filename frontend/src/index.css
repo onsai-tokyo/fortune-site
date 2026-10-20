@@ -376,7 +376,7 @@ button.bg-accent-dark {
 .fl-root .fl-chapter-row { gap: 18px; padding-block: 22px; }
 .fl-root .fl-chapter-number { min-width: 24px; font-family: "EB Garamond", Georgia, serif; font-size: 24px; line-height: 1.25; color: #74846c; }
 .fl-root .fl-chapter-row > span:nth-child(2) > :first-child { font-size: 12px; line-height: 1.8; }
-.fl-root .fl-chapter-row > span:nth-child(2) > :last-child { font-family: var(--fl-heading); font-size: 17px; font-weight: 500; line-height: 1.7; }
+.fl-root .fl-chapter-row .fl-chapter-title { font-family: var(--fl-heading); font-size: 17px; font-weight: 500; line-height: 1.7; }
 .fl-root .fl-chapter-row svg { transition: transform .2s ease; }
 
 .fl-root .fl-hero { gap: 20px; padding-top: 44px; padding-bottom: 24px; }
@@ -446,3 +446,14 @@ button.bg-accent-dark {
     scroll-behavior: auto !important;
   }
 }
+
+/* 比較用：Web画面は見出し・数字も含め Noto Sans JP に統一。 */
+.fl-root { --fl-heading: "Noto Sans JP", "Hiragino Sans", sans-serif; }
+.fl-root * { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; }
+.fl-root .fl-wordmark::before { display: none; }
+.fl-root .fl-timeline-choice { border: 1px solid #dedfd7; border-radius: 16px; padding: 12px; background: white; margin-bottom: 8px; }
+.fl-root .fl-timeline-choice:hover, .fl-root .fl-timeline-choice[aria-pressed="true"] { background: #edf1e7; border-color: #78856f; }
+.fl-root .fl-timeline-choice:focus-visible { outline: 2px solid #526348; outline-offset: 3px; }
+
+.fl-root .fl-chapter-preview { font-size: 13px; line-height: 1.85; font-weight: 400; }
+.fl-root .fl-chapter-number { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 18px; }

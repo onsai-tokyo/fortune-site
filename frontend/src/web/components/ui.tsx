@@ -1,3 +1,4 @@
+import { FateMark } from './FateMark'
 import { Link } from 'react-router-dom'
 import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { IconBack, IconChevron } from './icons'
@@ -84,7 +85,7 @@ export function BackHeader({ to, title, right, sticky }: { to: string; title: Re
 export function PlainHeader({ right }: { right?: ReactNode }) {
   return (
     <header className="fl-masthead flex items-center justify-between border-b border-fl-line px-5 py-1.5">
-      <Link to="/" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
+      <Link to="/" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]"><FateMark />FATE LAB</Link>
       {right}
     </header>
   )

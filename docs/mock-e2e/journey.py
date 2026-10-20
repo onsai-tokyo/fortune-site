@@ -18,7 +18,7 @@ with sync_playwright() as p:
     ok(pg.get_by_role('heading',name='あなたの読みものができました').count()==1,'first-visit guide shown')
     ok(pg.get_by_text('残り').count()==0,'no remaining count before first purchase')
     pg.get_by_role('link',name='出生時刻がわかる方は、足すともっと正確に読めます').click(); pg.wait_for_timeout(300)
-    ok(pg.locator('details[open]').count()==1,'edit opens optional details'); pg.fill('#birthtime','07:30'); pg.fill('#nickname','ゆう'); pg.get_by_role('button',name='保存する').click(); pg.wait_for_timeout(300)
+    ok(pg.locator('#birthtime').is_visible() and pg.locator('#place').is_visible(),'optional birth fields always visible'); pg.fill('#birthtime','07:30'); pg.fill('#nickname','ゆう'); pg.get_by_role('button',name='保存する').click(); pg.wait_for_timeout(300)
     ok(pg.url.endswith('/you') and pg.get_by_role('heading',name='ゆうさんの読みものができました').count()==1,'returns to /you with nickname')
     pg.get_by_role('button',name='案内を閉じる').click(); ok(pg.get_by_role('heading',name='ゆうさんの読みものができました').count()==0,'guide dismissible')
     # compose at 0 -> pay -> auto create

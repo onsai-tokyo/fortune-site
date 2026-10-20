@@ -1,3 +1,4 @@
+import { FateMark } from './FateMark'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useApp } from '../state/AppState'
@@ -33,7 +34,7 @@ export function SiteHeader({ current }: { current: NavKey }) {
   return (
     <div className="sticky top-0 z-30">
       <header className="fl-masthead relative flex items-center justify-between gap-3 border-b border-fl-line bg-fl-canvas py-1.5 pl-5 pr-2">
-        <Link to="/you" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]">FATE LAB</Link>
+        <Link to="/you" className="fl-wordmark flex min-h-[44px] items-center text-[13px] font-medium tracking-[0.3em]"><FateMark />FATE LAB</Link>
         <div className="flex items-center gap-1">
           {purchasedEver && (paymentsAvailable
             ? <Link to="/credits" aria-label={`相談のブック 残り${credits}冊`} className="flex min-h-[44px] items-center px-2.5 text-[13px] text-fl-body hover:text-fl-ink">残り {credits}冊</Link>
@@ -62,7 +63,7 @@ export function SiteHeader({ current }: { current: NavKey }) {
             <div className="flex flex-wrap gap-x-5 pt-3 text-[13px]">
               <Link to="/settings" className="flex min-h-[44px] items-center text-fl-body">設定</Link>
               <Link to="/support" className="flex min-h-[44px] items-center text-fl-body">お問い合わせ</Link>
-              {session === 'anonymous' && <Link to="/settings/link" className="flex min-h-[44px] items-center text-fl-body">別の端末でも使えるようにする</Link>}
+              {session === 'anonymous' && <Link to="/settings/link" className="flex min-h-[44px] items-center text-fl-body">新規登録（無料）</Link>}
             </div>
           </nav>
         </>

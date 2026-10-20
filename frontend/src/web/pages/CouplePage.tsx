@@ -95,6 +95,28 @@ export function CouplePage() {
         </div>
       </section>
 
+      <section className="flex flex-col gap-1 px-5 pb-6 pt-8">
+        <SectionHeading detail="年を押すと、下に詳しい鑑定が開きます">ふたりの年表</SectionHeading>
+        {years.map(y => {
+          const on = y.year === current.year
+          return (
+            <button key={y.year} type="button" aria-pressed={on} onClick={() => pick(y.year)} className="fl-timeline-choice flex min-h-[64px] items-stretch gap-3.5 text-left">
+              <span className="flex w-3.5 flex-col items-center">
+                <span className={on ? 'mt-3.5 h-3 w-3 rounded-full bg-fl-slate' : 'mt-[15px] h-2.5 w-2.5 rounded-full border border-fl-muted bg-white'} />
+                <span className="w-px flex-1 bg-fl-line" />
+              </span>
+              <span className="flex flex-1 flex-col gap-1 border-b border-fl-line pb-3.5 pt-2">
+                <span className="text-xs text-fl-muted">{y.year}年・{y.label}</span>
+                <span className={`text-[15px] leading-normal ${on ? 'font-bold' : 'font-medium'}`}>{y.title}</span>
+                <span className="flex flex-wrap gap-1.5">{coupleTags(y).map(tag => <span key={tag} className="rounded-full bg-fl-cream px-2.5 py-1 text-[11px] text-fl-moss">{tag}</span>)}</span>
+              </span>
+              <span aria-hidden="true" className="self-center text-lg text-fl-moss">›</span>
+            </button>
+          )
+        })}
+      </section>
+      <p className="mx-6 text-xs leading-relaxed text-fl-muted">タグは読みものの内容を整理する目印です。出来事や結果を約束するものではありません。</p>
+
       <section className="px-5 pt-1">
         <Card className="fl-year-feature flex flex-col gap-3.5 px-5 py-[22px]">
           <NatureImage src={images.starMountains} className="h-[140px] rounded-xl" position="center 55%" />
@@ -117,27 +139,6 @@ export function CouplePage() {
         </Card>
         {!remoteMode && <p className="mx-1 mt-2.5 text-xs text-fl-muted">文章はサンプルです。</p>}
       </section>
-
-      <section className="flex flex-col gap-1 px-5 pb-6 pt-8">
-        <SectionHeading detail="一年ずつ、関係をたどる">ふたりの年表</SectionHeading>
-        {years.map(y => {
-          const on = y.year === current.year
-          return (
-            <button key={y.year} type="button" onClick={() => pick(y.year)} className="flex min-h-[64px] items-stretch gap-3.5 text-left">
-              <span className="flex w-3.5 flex-col items-center">
-                <span className={on ? 'mt-3.5 h-3 w-3 rounded-full bg-fl-slate' : 'mt-[15px] h-2.5 w-2.5 rounded-full border border-fl-muted bg-white'} />
-                <span className="w-px flex-1 bg-fl-line" />
-              </span>
-              <span className="flex flex-1 flex-col gap-1 border-b border-fl-line pb-3.5 pt-2">
-                <span className="text-xs text-fl-muted">{y.year}年・{y.label}</span>
-                <span className={`text-[15px] leading-normal ${on ? 'font-bold' : 'font-medium'}`}>{y.title}</span>
-                <span className="flex flex-wrap gap-1.5">{coupleTags(y).map(tag => <span key={tag} className="rounded-full bg-fl-cream px-2.5 py-1 text-[11px] text-fl-moss">{tag}</span>)}</span>
-              </span>
-            </button>
-          )
-        })}
-      </section>
-      <p className="mx-6 text-xs leading-relaxed text-fl-muted">タグは読みものの内容を整理する目印です。出来事や結果を約束するものではありません。</p>
 
       <section className="px-5">
         {partners.length > 1 && <LinkButton to="/couple" variant="secondary">登録済みの別の相手を選ぶ</LinkButton>}

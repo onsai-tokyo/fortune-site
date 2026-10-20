@@ -24,8 +24,8 @@ export function ShelfTabs({ active, bookCount, savedCount }: { active: 'books' |
   const tab = (on: boolean) => `flex min-h-[44px] items-center justify-center rounded-[11px] text-sm ${on ? 'bg-white font-medium' : 'text-fl-body'}`
   return (
     <nav aria-label="本棚の表示" className="fl-shelf-tabs grid grid-cols-2 rounded-[14px] bg-fl-surface p-1">
-      <Link to="/books" aria-current={active === 'books' ? 'page' : undefined} className={tab(active === 'books')}>相談のブック {bookCount}冊</Link>
-      <Link to="/books/saved" aria-current={active === 'saved' ? 'page' : undefined} className={tab(active === 'saved')}>保存した読みもの {savedCount}件</Link>
+      <Link to="/books" aria-current={active === 'books' ? 'page' : undefined} className={tab(active === 'books')}>相談への回答 {bookCount}冊</Link>
+      <Link to="/books/saved" aria-current={active === 'saved' ? 'page' : undefined} className={tab(active === 'saved')}>お気に入りの鑑定 {savedCount}件</Link>
     </nav>
   )
 }

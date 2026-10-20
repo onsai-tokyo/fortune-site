@@ -82,9 +82,9 @@ function CheckoutPage() {
       </section>
 
       <section className="px-5 pt-5">
-        <Field id="receipt-email" label="領収書の送り先（メールアドレス）" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com"
+        <Field id="receipt-email" label="購入に使用するメールアドレス" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com"
           value={email} onChange={e => setEmail(e.target.value)} readOnly={!!linkedEmail}
-          hint={linkedEmail ? '引き継ぎ用に登録したメールに送ります。' : 'ブックができたときのお知らせもこのメールに送ります。お支払い後、このメールで別の端末への引き継ぎも設定できます。'} />
+          hint={linkedEmail ? '登録済みのメールアドレスです。' : 'ブックができたときのお知らせもこのメールに送ります。お支払い後、このメールで別の端末への引き継ぎも設定できます。'} />
       </section>
 
       <section className="flex flex-col gap-3 px-5 pb-14 pt-6">
@@ -151,14 +151,14 @@ function PaymentReturnContent() {
             <p className="m-0 text-sm leading-[1.85] text-fl-body">
               {startedBook
                 ? <>「{startedBook}」は数分で本棚に届きます。できあがったらメールでもお知らせします。{credits > 0 && <>残りは {credits}冊です。</>}</>
-                : <>いまの残りは {forced === 'done' && plan && credits <= startCredits.current ? credits + plan.credits : credits}冊です。領収書はメールでお送りしました。</>}
+                : <>いまの残りは {forced === 'done' && plan && credits <= startCredits.current ? credits + plan.credits : credits}冊です。本棚からブックを作成できます。</>}
             </p>
             {startedBook
               ? <LinkButton to="/books" size="lg" className="mt-2">本棚で待つ</LinkButton>
               : <LinkButton to="/compose" size="lg" className="mt-2">相談を書く</LinkButton>}
             {(session === 'anonymous' || linked) && (
               <div className="mt-6 flex w-full flex-col gap-3 rounded-card border border-fl-line bg-white p-5 text-left">
-                <span className="text-base font-medium">別の端末でも使えるようにする</span>
+                <span className="text-base font-medium">新規登録（無料）で鑑定を保存</span>
                 {linked ? (
                   <Note>メールを登録しました。別のスマホやPCでも「ログイン」からこのメールを入れてください。</Note>
                 ) : (

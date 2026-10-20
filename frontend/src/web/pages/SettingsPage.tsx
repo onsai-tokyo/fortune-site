@@ -4,6 +4,7 @@ import { safeReturnTo } from '../../lib/safeReturnTo'
 import { SiteHeader } from '../components/SiteHeader'
 import { BackHeader, Button, Note, Page } from '../components/ui'
 import { EmailCode } from '../components/EmailCode'
+import { PasswordSetup } from '../components/PasswordSetup'
 import { useApp } from '../state/AppState'
 import { remoteMode, paymentsAvailable, BOOK_PREPARING } from '../data/paymentConfig'
 import { ACCOUNT_DELETE_FAILED, ACCOUNT_DELETE_AUTH_REQUIRED, ACCOUNT_DELETE_OWNER_CHANGED, ACCOUNT_DELETE_SIGNOUT_FAILED } from '../state/accountDeletion'
@@ -33,14 +34,14 @@ export function PurchasesPage() {
     <Page>
       <SiteHeader current="none" />
       <section className="flex flex-col gap-2 px-5 pt-7">
-        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">購入履歴・領収書</h1>
+        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">購入履歴</h1>
         <p className="m-0 text-xs text-fl-muted">{!remoteMode && paymentsAvailable ? '表示はサンプルです。' : BOOK_PREPARING}</p>
       </section>
       <section className="flex flex-col px-5 pb-12 pt-3">
         {rows.map(r => (
           <div key={r.date} className="flex min-h-[64px] items-center justify-between border-b border-fl-line">
             <span className="flex flex-col gap-0.5"><span className="text-[15px] font-medium">{r.item}</span><span className="text-xs text-fl-muted">{r.date}</span></span>
-            <span className="flex items-center gap-3 text-[15px]">{r.price}<button type="button" className="min-h-[44px] text-[13px] text-fl-slate underline">領収書</button></span>
+            <span className="flex items-center gap-3 text-[15px]">{r.price}</span>
           </div>
         ))}
         <Link to="/settings" className="mt-6 flex min-h-[44px] items-center text-sm text-fl-body">← 設定にもどる</Link>
@@ -95,8 +96,8 @@ export function SettingsPage() {
 
       <Group title="アカウント">
         {session === 'linked'
-          ? <Row label="引き継ぎ用メール" value={email} />
-          : <Row label="引き継ぎ用メール" value={<span className="text-fl-ochre">未登録</span>} to="/settings/link" />}
+          ? <Row label="登録メール・パスワード" value={email} to="/settings/link" />
+          : <Row label="登録メールアドレス" value={<span className="text-fl-ochre">未登録</span>} to="/settings/link" />}
         <Row label="呼び名" value={profile?.nickname || '未設定'} to="/welcome" />
         <Row label="あなたの出生情報" value={birth} to="/welcome" />
       </Group>
@@ -104,7 +105,7 @@ export function SettingsPage() {
       <Group title="ご利用状況">
         <Row label="相談のブックの残り" value={<span className="font-medium text-fl-ink">{credits}冊</span>} />
         <Row label="ふたりの相手" value={partners.length > 1 ? `${partners.length}人（選択して読む）` : partners[0]?.name ?? '未登録'} to="/couple" />
-        <Row label="購入履歴・領収書" to="/settings/purchases" />
+        <Row label="購入履歴" to="/settings/purchases" />
       </Group>
 
       <Group title="AIへの送信">
@@ -152,7 +153,7 @@ export function SettingsPage() {
   )
 }
 
-/** 引き継ぎ用メールの登録（匿名アカウントにメールをひも付ける） */
+/** 登録メールアドレスの登録（匿名アカウントにメールをひも付ける） */
 export function LinkEmailPage() {
   const { session, email, receiptEmail, linkEmail } = useApp()
   const [done, setDone] = useState(false)
@@ -161,15 +162,15 @@ export function LinkEmailPage() {
   const savingReading = params.get('purpose') === 'save'
   return (
     <Page>
-      <BackHeader to={returnTo} title="引き継ぎ用メール" />
+      <BackHeader to={returnTo} title="登録メールアドレス" />
       <section className="flex flex-col gap-3 px-6 pb-2 pt-7">
-        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">別の端末でも使えるようにする</h1>
+        <h1 className="m-0 text-[24px] font-medium leading-[1.55]">新規登録（無料）で鑑定を保存</h1>
         {savingReading && <Note>本棚に保存するには、無料のメール登録をお願いします。登録後に元の読みものへ戻り、「本棚に保存」を押してください。</Note>}
         <p className="m-0 text-sm leading-[1.85] text-fl-body">メールアドレスを登録すると、機種変更やブラウザのデータを消したあとも、届いたコードを入れるだけで同じ本棚と残りの冊数を開けます。パスワードは不要です。</p>
       </section>
       <section className="flex flex-col gap-4 px-6 pb-12 pt-4">
         {done || session === 'linked' ? (
-          <Note><strong className="font-medium text-fl-ink">{email}</strong> を登録しました。別のスマホやPCでも「ログイン」からこのメールを入れると、同じ本棚を開けます。</Note>
+          <><Note><strong className="font-medium text-fl-ink">{email}</strong> を登録しました。別のスマホやPCでも「ログイン」からこのメールを入れると、同じ本棚を開けます。</Note><PasswordSetup /></>
         ) : (
           <LinkEmailForm initialEmail={receiptEmail ?? ''} onDone={address => { linkEmail(address); setDone(true) }} />
         )}

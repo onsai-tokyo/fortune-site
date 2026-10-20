@@ -16,7 +16,7 @@ with sync_playwright() as p:
     ok(pg.get_by_text('性格の章').count()>0,'compose source = chapter')
     nav('/you/years/2025'); pg.get_by_role('button',name='本棚に保存する').click()
     nav('/books/saved')
-    ok(pg.get_by_text('保存した読みもの 5件').count()==1,'saved count = 5')
+    ok(pg.get_by_text('お気に入りの鑑定 5件').count()==1,'saved count = 5')
     ok(pg.get_by_text('2025年').count()>0 or pg.get_by_text('土台を固め直す').count()>0,'2025 on shelf')
     nav('/books'); pg.wait_for_timeout(7000)
     ok(pg.get_by_text('作成中').count()==0,'seeded generating book delivered')
