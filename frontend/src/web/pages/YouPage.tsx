@@ -26,7 +26,7 @@ export function YouPage() {
     <Page>
       <SiteHeader current="you" />
 
-      <section className="flex flex-col gap-2.5 px-5 pb-2 pt-7">
+      <section className="fl-page-title flex flex-col gap-2.5 px-5 pb-2 pt-7">
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{personaTitle || 'あなたの読みもの'}</h1>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">{profile ? `${formatBirth(profile.birthDate)}${profile.birthTime ? `・${profile.birthTime}・${profile.birthPlace}` : ''}。` : ''}生年月日から読んだ、あなたの性格と年ごとの流れです。</p>
       </section>
@@ -57,7 +57,7 @@ export function YouPage() {
       )}
 
       <section className="px-5 pb-2 pt-5">
-        <Card className="flex flex-col gap-3 p-5">
+        <Card className="fl-year-feature flex flex-col gap-3 p-5">
           <NatureImage src={images.nature.pampas} className="h-[132px] rounded-xl" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">{current.year}年のあなた</span>

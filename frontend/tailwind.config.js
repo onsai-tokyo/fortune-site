@@ -3,6 +3,8 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      borderRadius: { button: '14px', field: '12px', card: '22px' },
+      maxWidth: { app: '640px' },
       colors: {
         'deep-navy': '#0F172A',
         'navy': '#1E293B',

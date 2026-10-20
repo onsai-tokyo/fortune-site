@@ -13,7 +13,7 @@ const variantClass: Record<Variant, string> = {
   dangerText: 'bg-transparent text-fl-danger hover:bg-[#fbeceb]',
 }
 
-const buttonBase = 'inline-flex w-full items-center justify-center gap-2 rounded-button px-4 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:bg-fl-line disabled:text-fl-muted disabled:border-transparent'
+const buttonBase = 'fl-button inline-flex w-full items-center justify-center gap-2 rounded-button px-4 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:bg-fl-line disabled:text-fl-muted disabled:border-transparent'
 
 export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'md' | 'lg' }>(
   function Button({ variant = 'primary', size = 'md', className = '', ...rest }, ref) {
@@ -32,7 +32,7 @@ export function Eyebrow({ children, className = '', as = 'span' }: { children: R
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-card border border-fl-line bg-white ${className}`}>{children}</div>
+  return <div className={`fl-card rounded-card border border-fl-line bg-white ${className}`}>{children}</div>
 }
 
 export function Note({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -119,7 +119,7 @@ export function Footer() {
 /** 画面の見出し（全画面で同じ大きさ・余白にそろえる） */
 export function PageTitle({ children, lead, className = '' }: { children: ReactNode; lead?: ReactNode; className?: string }) {
   return (
-    <section className={`flex flex-col gap-2.5 px-5 pb-2 pt-7 ${className}`}>
+    <section className={`fl-page-title flex flex-col gap-2.5 px-5 pb-2 pt-7 ${className}`}>
       <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{children}</h1>
       {lead && <p className="m-0 text-sm leading-[1.85] text-fl-body">{lead}</p>}
     </section>
@@ -130,7 +130,7 @@ export function Page({ children }: { children: ReactNode }) {
   return (
     <div className="fl-root">
       {/* スマホは全面、パソコンでは中央の一枚の紙のように見せる */}
-      <div className="relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]">{children}</div>
+      <div className="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]">{children}</div>
     </div>
   )
 }
