@@ -7,6 +7,10 @@ import { loadTimelineContext } from '../lib/timelineContext.js'
 import { readingSnapshot, saveReadingSnapshot } from '../lib/readingRevision.js'
 import { createHash } from 'node:crypto'
 import type { StructuredReport } from '../lib/reportCards.js'
+import { partnerReadingFromBirthSnapshot } from '../lib/report/partnerReading.js'
+import { selfTimingHistoryFromBirthSnapshot } from '../lib/report/coupleTimingHistory.js'
+import { japanDateParts } from '../lib/japanDate.js'
+import { readingCardProjector } from '../lib/readingCardAccess.js'
 
 export const webReadingsRouter = Router()
 const uuid = /^[0-9a-f-]{36}$/i
@@ -93,3 +97,40 @@ export async function webCoupleTimeline(req: AuthRequest, res: import('express')
   }
 }
 webReadingsRouter.route('/:selfId/partners/:partnerId/couple-timeline').get((req, res) => webCoupleTimeline(req, res)).post((req, res) => webCoupleTimeline(req, res))
+
+// Web-only, read-only views. Every privileged lookup is scoped to owner AND id.
+export async function webReadingOverview(req: AuthRequest, res: import('express').Response, kind: 'partner' | 'future', deps = {
+  admin: getSupabaseAdmin, partner: partnerReadingFromBirthSnapshot, future: selfTimingHistoryFromBirthSnapshot,
+  context: loadTimelineContext, project: readingCardProjector,
+}) {
+  res.setHeader('Cache-Control', 'private, no-store')
+  if (!req.userId || !req.accessToken) { res.status(401).json({ error: 'ログイン状態を確認してください。' }); return }
+  if (!uuid.test(String(req.params.selfId)) || (kind === 'partner' && !uuid.test(String(req.params.partnerId)))) { res.status(400).json({ error: '鑑定を選択してください。' }); return }
+  try {
+    const db = deps.admin()
+    const self = await db.from('reading_conversations').select('id,kind,birth_data,reading_revision_id').eq('id', req.params.selfId).eq('user_id', req.userId).maybeSingle()
+    if (self.error) throw new Error('READ_UNAVAILABLE')
+    if (!self.data || !['self', 'personal'].includes(self.data.kind)) { res.status(404).json({ error: '鑑定が見つかりません。' }); return }
+    if (kind === 'partner') {
+      const partner = await db.from('partner_profiles').select('id,birth_date,birth_time,birthplace,gender').eq('id', req.params.partnerId).eq('user_id', req.userId).maybeSingle()
+      if (partner.error) throw new Error('READ_UNAVAILABLE')
+      if (!partner.data) { res.status(404).json({ error: '相手が見つかりません。' }); return }
+      const birth = { ...partner.data, birth_time: partner.data.birth_time?.slice(0, 5) ?? null }
+      const report = deps.partner({ partner: birth })
+      // Return personality only; never expose chart or unprojected paid/timing cards.
+      const project = await deps.project(req.userId, self.data)
+      res.json({ cards: report.cards.filter(c => c.kind !== 'timing' && c.kind !== 'chart' && c.tab !== 'timing' && c.tab !== 'chart' && (!c.scope || c.scope === 'self')).map(project) })
+    } else {
+      const context = process.env.ANNUAL_READING_ENGINE?.trim() === 'timeline3' ? await deps.context(req.accessToken, req.userId, self.data.birth_data) : {}
+      const year = japanDateParts().year
+      const result = deps.future({ ...self.data.birth_data, ...context }, year + 5)
+      const project = await deps.project(req.userId, self.data)
+      res.json({ cards: result.cards.filter(c => {
+        const y = Number(c.id.match(/(?:^|[-_])(\d{4})(?:$|[-_])/)?.[1])
+        return y > year && y <= year + 5
+      }).map(project) })
+    }
+  } catch { res.status(503).json({ error: '鑑定を読み込めませんでした。もう一度お試しください。' }) }
+}
+webReadingsRouter.get('/:selfId/partners/:partnerId/about', (req, res) => webReadingOverview(req, res, 'partner'))
+webReadingsRouter.get('/:selfId/future-years', (req, res) => webReadingOverview(req, res, 'future'))

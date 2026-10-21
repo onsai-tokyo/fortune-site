@@ -1,4 +1,5 @@
-import { Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
+import { IconChevron } from '../components/icons'
 import { BackHeader, Disclaimer, LinkButton, NatureImage, Page } from '../components/ui'
 import { chapterSections, savedKey } from '../data/mock'
 import { remoteMode } from '../data/paymentConfig'
@@ -39,7 +40,10 @@ export function ChapterPage() {
       </article>
       <section className="flex flex-col gap-2.5 px-6 pt-6">
         <LinkButton to={`/compose?source=chapter-${chapter.id}`}>この章について相談する</LinkButton>
-        {next && <LinkButton to={`/you/chapters/${next.id}`} variant="secondary">次の章：{next.title}</LinkButton>}
+        <nav aria-label="章の移動" className="pt-5">
+          {next ? <Link to={`/you/chapters/${next.id}`} className="fl-next-chapter"><span><small>次の章　{String(index + 2).padStart(2, '0')} / {chapterList.length} · {next.sub}</small><strong>{next.title}</strong></span><IconChevron size={20} /></Link>
+            : <Link to="/you#personality-chapters" className="fl-next-chapter"><span><small>性格の章を読み終えました</small><strong>目次へ戻る</strong></span><IconChevron size={20} /></Link>}
+        </nav>
       </section>
       <section className="px-6 pb-12 pt-5"><Disclaimer>暦の計算に基づく読みものです。</Disclaimer></section>
     </Page>

@@ -1,10 +1,39 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { webCoupleTimeline } from './webReadings.js'
+import { webCoupleTimeline, webReadingOverview } from './webReadings.js'
 import { coupleSnapshot, snapshotTimeline } from '../lib/report/coupleAllYears/snapshot.js'
 import { bookSources } from '../lib/aiBooks.js'
 import { profileMeetingKey } from './coupleTimeline.js'
 const source = '11111111-1111-4111-8111-111111111111', partner = '22222222-2222-4222-8222-222222222222'
+
+test('Web overview scopes self and partner to owner; future range is bounded and cards are projected', async () => {
+  for (const kind of ['partner', 'future'] as const) for (const foreign of ['', 'self', 'partner']) {
+    const reads: string[] = []
+    let calculations = 0, status = 200, body: any
+    const req = { userId: 'owner', accessToken: 'token', params: { selfId: source, partnerId: partner } }
+    const res = { setHeader() {}, status(n: number) { status = n; return res }, json(v: unknown) { body = v } }
+    const year = new Date().getFullYear()
+    const deps = {
+      admin: () => ({ from(table: string) {
+        const filters: Record<string, string> = {}
+        const q = { select() { return q }, eq(k: string, v: string) { filters[k] = v; return q }, async maybeSingle() {
+          reads.push(table); assert.equal(filters.user_id, 'owner')
+          assert.equal(filters.id, table === 'reading_conversations' ? source : partner)
+          return { error: null, data: (table === 'reading_conversations' && foreign === 'self') || (table === 'partner_profiles' && foreign === 'partner') ? null : table === 'reading_conversations' ? { kind: 'self', birth_data: {} } : { birth_time: '03:02:00' } }
+        } }; return q
+      } }),
+      partner: (v: any) => { calculations++; assert.equal(v.partner.birth_time, '03:02'); return { cards: [{ id: 'personality' }, { id: 'private-chart', kind: 'chart' }] } },
+      future: (_v: unknown, end: number) => { calculations++; assert.equal(end, year + 5); return { cards: [{ id: `year-${year}` }, { id: `year-${year + 1}` }, { id: `year-${year + 6}` }] } },
+      context: async () => ({}), project: async () => (card: any) => ({ ...card, projected: true }),
+    }
+    await webReadingOverview(req as any, res as any, kind, deps as any)
+    const denied = foreign === 'self' || kind === 'partner' && foreign === 'partner'
+    assert.equal(status, denied ? 404 : 200)
+    assert.equal(calculations, denied ? 0 : 1)
+    if (!denied) { assert.equal(body.cards.length, 1); assert.equal(body.cards[0].projected, true) }
+    assert.ok(reads.every(t => ['reading_conversations', 'partner_profiles'].includes(t)))
+  }
+})
 function setup(birthDate = '1994-05-12', otherDate = '1996-08-23') {
   const saved: { payload: unknown; operation: string | undefined }[] = []
   const a = { id: source, kind: 'self', birth_data: { birthDate, birthTime: '12:00', birthplace: '東京都', gender: 'female' }, reading_revision_id: 'revision' }

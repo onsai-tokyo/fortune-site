@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { IconPen } from '../components/icons'
 import { Card, Footer, LinkButton, NatureImage, Page, SectionHeading } from '../components/ui'
@@ -10,6 +10,39 @@ import { ReadingStatus } from '../components/ReadingStatus'
 import { PartnerNewPage } from './PartnerNewPage'
 import { SaveReadingButton } from '../components/SaveReadingButton'
 import { coupleTags } from '../data/coupleTags'
+import { personalReadings } from '../data/readingData'
+import { apiFetch } from '../data/api'
+import { supabase } from '../../lib/supabase'
+import type { Chapter, Partner } from '../data/types'
+
+function PartnerAbout({ partner }: { partner: Partner }) {
+  const { selfSourceId, chapters: demoChapters } = useApp()
+  const [chapters, setChapters] = useState<Chapter[]>(remoteMode ? [] : demoChapters)
+  const [status, setStatus] = useState(remoteMode ? 'loading' : 'ready')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    if (!remoteMode) return
+    let active = true
+    setStatus('loading'); setChapters([])
+    void (async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session || !selfSourceId) throw new Error('SOURCE_MISSING')
+      const raw = await apiFetch<{ cards: Parameters<typeof personalReadings>[1] }>(`/api/reading/${selfSourceId}/partners/${partner.id}/about`, { accessToken: session.access_token })
+      const result = personalReadings([], raw.cards, '', images.nature.pampas).chapters
+      if (!result.length) throw new Error('READING_MISSING')
+      if (active) { setChapters(result); setStatus('ready') }
+    })().catch(() => { if (active) setStatus('error') })
+    return () => { active = false }
+  }, [selfSourceId, partner.id, attempt])
+  return <Page><SiteHeader current="couple" /><section className="fl-page-title px-6 py-8">
+    <Link to={`/couple/${partner.id}`} className="text-sm text-fl-moss">‹ ふたりの年表へ</Link>
+    <h1 className="my-5 text-2xl">{partner.name}について</h1>
+    <p className="text-sm text-fl-muted">{partner.birthDate.replace(/-/g, '/')}生まれ{partner.birthTime ? ` · ${partner.birthTime}` : ''}</p>
+    {status === 'loading' && <p role="status">相手の鑑定を読み込んでいます…</p>}
+    {status === 'error' && <div role="alert"><p>相手の鑑定を読み込めませんでした。</p><button className="min-h-[44px] underline" onClick={() => setAttempt(n => n + 1)}>再読み込み</button></div>}
+    {chapters.map((c, i) => <details key={c.id} className="border-b border-fl-line py-5"><summary className="cursor-pointer text-base leading-relaxed"><span className="mr-3 text-xs text-fl-moss">{String(i + 1).padStart(2, '0')}</span>{c.sub || c.title}</summary><h2 className="my-4 text-lg font-medium leading-relaxed">{c.title}</h2>{c.sections?.map(s => <p key={s.heading} className="text-sm leading-loose">{s.body}</p>)}</details>)}
+  </section><Footer /></Page>
+}
 
 function MeetingYearForm({ partnerId }: { partnerId: string }) {
   const { saveMeetingYear } = useApp()
@@ -56,6 +89,7 @@ export function CouplePage() {
   const partner = partners.find(p => p.id === partnerId)
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   if (!partner) return <Navigate to="/couple" replace />
+  if (params.get('view') === 'about') return <PartnerAbout key={`${partner.id}-${partner.birthDate}-${partner.birthTime}`} partner={partner} />
 
   const years = (coupleYears[partner.id] ?? []).filter(y => !partner.metYear || y.year >= partner.metYear)
   if (remoteMode && coupleStatus[partner.id] === 'needs_meeting_year') return <MeetingYearForm partnerId={partner.id} />
@@ -84,6 +118,8 @@ export function CouplePage() {
           <Link to={`/couple/new?replace=${partner.id}`} className="flex min-h-[44px] items-center px-1 text-[13px] font-medium text-fl-slate">相手を変える</Link>
         </div>
       </section>
+
+      <nav className="fl-year-navigation" aria-label="相手の鑑定"><Link to={`/couple/${partner.id}?view=about`}>{partner.name}について　›</Link></nav>
 
       <section className="pt-3">
         <div ref={tabsRef} role="tablist" aria-label="年を選ぶ" className="relative flex gap-2 overflow-x-auto px-5 pb-3 pt-1">

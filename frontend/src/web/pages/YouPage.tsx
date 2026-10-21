@@ -17,11 +17,12 @@ function formatBirth(date: string) {
 }
 
 export function YouPage() {
-  const { profile, partners, years, chapters, personaTitle, readingsStatus } = useApp()
-  const yearList = years
+  const { profile, partners, years, chapters, personaTitle, readingsStatus, reloadReadings } = useApp()
+  const yearList = [...years].sort((a, b) => a.year - b.year)
   const chapterList = chapters
   const current = yearList.find(y => y.label === '今年') ?? yearList[yearList.length - 1]
   const partner = partners[0]
+  const futureYears = yearList.filter(y => y.year > new Date().getFullYear()).sort((a, b) => a.year - b.year)
   const stripRef = useCenterCurrent<HTMLDivElement>(current?.year)
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   if (!current) return <ReadingStatus empty />
@@ -43,8 +44,9 @@ export function YouPage() {
         </div>
         <a href="#personality-chapters"><span>01</span><strong>性格の章</strong><small>{chapterList.length}の視点</small><IconChevron size={14} /></a>
         <a href="#personal-years"><span>02</span><strong>年ごとの流れ</strong><small>{yearList[0]?.year} — {yearList[yearList.length - 1]?.year}</small><IconChevron size={14} /></a>
-        <Link to={partner ? `/couple/${partner.id}` : '/couple'}><span>03</span><strong>ふたりの年表</strong><small>{partner ? partner.name : '相手を登録する'}</small><IconChevron size={14} /></Link>
-        <Link to="/compose"><span>04</span><strong>個別相談</strong><small>鑑定を深く読む</small><IconChevron size={14} /></Link>
+        {partner && <Link to={`/couple/${partner.id}?view=about`}><span>03</span><strong>相手について</strong><small>{partner.name}</small><IconChevron size={14} /></Link>}
+        <Link to={partner ? `/couple/${partner.id}` : '/couple'}><span>{partner ? '04' : '03'}</span><strong>ふたりの年表</strong><small>{partner ? partner.name : '相手を登録する'}</small><IconChevron size={14} /></Link>
+        <Link to="/compose"><span>{partner ? '05' : '04'}</span><strong>個別相談</strong><small>鑑定を深く読む</small><IconChevron size={14} /></Link>
       </nav>
 
       <section id="personality-chapters" className="fl-chapters flex flex-col px-5 pb-2 pt-6">
@@ -64,6 +66,11 @@ export function YouPage() {
 
       <section id="personal-years" className="fl-year-section pb-2 pt-5">
         <SectionHeading detail="過去から、これからへ">年ごとの流れ</SectionHeading>
+        <nav className="fl-year-navigation" aria-label="これからの年を読む">
+          <Link to={`/you/years/${current.year}`}>今年 · {current.year}年</Link>
+          {futureYears.slice(0, 3).map((y, i) => <Link key={y.year} to={`/you/years/${y.year}`}>{i === 0 && y.year === new Date().getFullYear() + 1 ? '来年 · ' : ''}{y.year}年 <IconChevron size={12} /></Link>)}
+        </nav>
+        {!futureYears.length && <p className="mx-6 mb-4 text-xs leading-relaxed text-fl-muted">来年以降の鑑定は現在取得できていません。<button type="button" onClick={() => void reloadReadings()} className="ml-1 underline">再読み込み</button></p>}
         <div ref={stripRef} className="fl-year-strip relative flex gap-2.5 overflow-x-auto px-5 pb-2">
           {yearList.map(y => {
             const on = y.year === current.year

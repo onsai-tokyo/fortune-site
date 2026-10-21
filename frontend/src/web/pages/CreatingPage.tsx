@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { NatureImage, Page, PlainHeader } from '../components/ui'
 import { images } from '../data/images'
@@ -12,6 +12,8 @@ const stages = ['生まれた日の暦を計算しています', '性格の章�
  * 画面確認用では一定の間隔で進める。
  */
 export function CreatingPage({ pending = false, progress = 0 }: { pending?: boolean; progress?: number }) {
+  // 入力フォームをスクロールした位置を、同じURLの作成画面へ持ち越さない。
+  useLayoutEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }) }, [])
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [done, setDone] = useState(0)

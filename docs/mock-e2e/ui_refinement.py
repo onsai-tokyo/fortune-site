@@ -47,6 +47,11 @@ with sync_playwright() as p:
         assert page.locator(".fl-year-section").evaluate("(el) => !!(el.compareDocumentPosition(document.querySelector('.fl-year-feature')) & Node.DOCUMENT_POSITION_FOLLOWING)")
         assert page.locator(".fl-chapter-preview").count() > 0
         assert page.get_by_role("link", name="相性・相手との年表はこちら", exact=False).count() == 1
+        expect(page.locator('.fl-reading-contents').get_by_role('link', name='相手について', exact=False)).to_be_visible()
+        expect(page.locator('.fl-year-navigation').get_by_role('link', name='来年', exact=False)).to_be_visible()
+        page.locator('.fl-chapter-row').first.click()
+        expect(page.get_by_role('navigation', name='章の移動').get_by_role('link')).to_be_visible()
+        page.goto(B + '/you')
         layout()
         if os.environ.get("UI_SCREENSHOT_DIR"):
             output = Path(os.environ["UI_SCREENSHOT_DIR"])

@@ -55,6 +55,7 @@ with sync_playwright() as p:
                 held.append(r);return
             return r.fulfill(json={"conversations":history})
         if path.endswith("/timing-history"):return r.fulfill(json={"cards":[year]})
+        if path.endswith("/future-years"):return r.fulfill(json={"cards":[]})
         if path.endswith("/cards"):return r.fulfill(json={"cards":[chapter]})
         if path.endswith("/partners"):return r.fulfill(json={"partners":[]})
         if path.endswith("/saves"):

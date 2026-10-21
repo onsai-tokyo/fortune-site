@@ -256,10 +256,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           .catch(()=>({rows:null,error:'保存した鑑定を読み込めませんでした。再読み込みしてください。'})),
       ])
       const first = history.conversations?.find(c => activeReading.current?.owner === remoteAuth.current.owner && c.id === activeReading.current?.id)
-      const [timing, cards] = first?.id ? await Promise.all([
+      const [pastTiming, cards, futureTiming] = first?.id ? await Promise.all([
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/timing-history', { accessToken }),
         apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/cards', { accessToken }),
-      ]) : [{ cards: [] }, { cards: [] }]
+        apiFetch<{ cards: Array<Record<string, unknown>> }>('/api/reading/' + first.id + '/future-years', { accessToken }).catch(() => ({ cards: [] })),
+      ]) : [{ cards: [] }, { cards: [] }, { cards: [] }]
+      const timing = { cards: [...new Map([...(pastTiming.cards ?? []), ...(futureTiming.cards ?? [])].map(c => [c.id, c])).values()].sort((a, b) => String(a.id).localeCompare(String(b.id))) }
       const birth = first?.birth_data as Record<string, unknown> | undefined
       const profile = birth ? {
         nickname: String(birth.nickname ?? ''), birthDate: String(birth.birthDate ?? birth.birth_date ?? ''),
