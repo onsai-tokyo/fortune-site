@@ -20,7 +20,7 @@ import { remoteMode } from './data/paymentConfig'
 import { ReadingStatus } from './components/ReadingStatus'
 
 // Web版専用。既存アプリ向け文書のソースは上書きしない。
-import { WebTermsPage as TermsPage, WebPrivacyPage as PrivacyPage, WebCommercePage as TokushohoPage } from './pages/LegalPages'
+import { WebTermsPage as TermsPage, WebPrivacyPage as PrivacyPage, WebCommercePage as TokushohoPage, SalesConditionsPage } from './pages/LegalPages'
 const SupportPage = lazy(() => import('./pages/SupportPage').then(m => ({ default: m.SupportPage })))
 const LegacyReadingPage = lazy(() => import('./pages/LegacyReadingPage').then(m => ({ default: m.LegacyReadingPage })))
 const LegacyLoginPage = lazy(() => import('./pages/LegacyLoginPage').then(m => ({ default: m.LegacyLoginPage })))
@@ -102,6 +102,7 @@ function AppRoutes() {
         <Route path="/settings/purchases" element={user(<PurchasesPage />)} />
         <Route path="/settings/link" element={user(<LinkEmailPage />)} />
         <Route path="/tokushoho" element={<TokushohoPage />} />
+        <Route path="/sales-conditions" element={<SalesConditionsPage />} />
         <Route path="/tokushohou" element={<LegacyLegalPage document="tokushohou" />} />
         <Route path="/app-legal/terms" element={<LegacyLegalPage document="terms" />} />
         <Route path="/app-legal/privacy" element={<LegacyLegalPage document="privacy" />} />

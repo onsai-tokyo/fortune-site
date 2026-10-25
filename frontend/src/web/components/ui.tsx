@@ -114,6 +114,7 @@ export function Footer() {
         <Link to="/privacy" className={link}>プライバシーポリシー</Link>
         <Link to="/tokushoho" className={link}>特定商取引法に基づく表記</Link>
         <Link to="/support" className={link}>お問い合わせ</Link>
+        <Link to="/sales-conditions" className={link}>販売予定条件</Link>
         {import.meta.env.VITE_ROUTER === 'hash' && <Link to="/demo" className={`${link} text-fl-slate underline`}>画面一覧（確認用）</Link>}
       </nav>
       <span className="text-[11px] text-fl-muted">運営：温齋株式会社</span>

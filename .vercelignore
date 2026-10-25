@@ -1,0 +1,9 @@
+.git
+.env*
+ios
+docs
+frontend/node_modules
+frontend/dist*
+backend/node_modules
+backend/dist
+*.zip
