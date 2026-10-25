@@ -50,10 +50,15 @@ test('AI statements identify a public commercial policy with exceptions, not a v
   assert.equal(aiDataPolicyLinks.length, 2)
   for (const link of aiDataPolicyLinks) assert.equal(new URL(link.href).hostname, 'privacy.claude.com')
 })
-test('approved contact and disclosure wording do not invent an address or publication date', () => {
+test('approved company address and phone are published consistently without inventing a publication date', () => {
   const text = JSON.stringify({ termsSections, privacySections, commerceRows })
   assert.ok(text.includes('山崎愛美') && text.includes('onsai.tokyo@gmail.com'))
-  for (const label of ['所在地', '電話番号']) assert.ok(commerceRows.find(row => row[0] === label)?.[1].includes('請求があれば遅滞なく開示します'))
+  assert.equal(commerceRows.find(row => row[0] === '販売事業者')?.[1], '温齋株式会社')
+  const address = '〒153-0064 東京都目黒区下目黒1丁目1−14 コノトラビル7F'
+  assert.equal(commerceRows.find(row => row[0] === '所在地')?.[1], address)
+  assert.equal(commerceRows.find(row => row[0] === '電話番号')?.[1], '080-3628-3942')
+  assert.ok(privacySections.find(s => s.title === '問い合わせ窓口')?.paragraphs.includes(`住所：${address}`))
+  assert.ok(!text.includes('請求があれば遅滞なく開示します'))
   assert.ok(text.includes('Web版の公開日から適用します'))
   for (const placeholder of ['［代表者の氏名］', '［所在地］', '［施行日］', '［問い合わせ用メールアドレス］']) assert.ok(!text.includes(placeholder))
 })
