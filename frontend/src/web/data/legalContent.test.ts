@@ -56,7 +56,7 @@ test('approved company address and phone are published consistently without inve
   assert.equal(commerceRows.find(row => row[0] === '販売事業者')?.[1], '温齋株式会社')
   const address = '〒153-0064 東京都目黒区下目黒1丁目1−14 コノトラビル7F'
   assert.equal(commerceRows.find(row => row[0] === '所在地')?.[1], address)
-  assert.equal(commerceRows.find(row => row[0] === '電話番号')?.[1], '080-3628-3942')
+  assert.equal(commerceRows.find(row => row[0] === '電話番号')?.[1], '050-1786-5550')
   assert.ok(privacySections.find(s => s.title === '問い合わせ窓口')?.paragraphs.includes(`住所：${address}`))
   assert.ok(!text.includes('請求があれば遅滞なく開示します'))
   assert.ok(text.includes('Web版の公開日から適用します'))
