@@ -42,6 +42,7 @@ export function TokushohouPage() {
           <section>
             <h2 className="text-white font-semibold text-lg mb-3 border-b border-white/10 pb-2">お問い合わせ</h2>
             <p className="text-white/70 text-sm">メールアドレス：support@fate-lab.com</p>
+            <p className="text-white/70 text-sm">電話番号：050-1786-5550</p>
             <p className="text-white/50 text-xs mt-1">※お問い合わせはメールにてお願いいたします</p>
           </section>
 
