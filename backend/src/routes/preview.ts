@@ -1,3 +1,6 @@
+import type { Response } from 'express'
+import { selfTimingHistoryFromBirthSnapshot } from '../lib/report/coupleTimingHistory.js'
+import { japanDateParts } from '../lib/japanDate.js'
 import { requireAIConsent, hasAIConsent } from '../middleware/aiConsent.js'
 import {projectSelfGeneration} from '../lib/readingCardAccess.js'
 import { loadTimelineContext, timelineEnabled } from '../lib/timelineContext.js'
@@ -91,7 +94,9 @@ previewRouter.get('/generations/:opId', requireAuth, async (req: AuthRequest, re
   catch {res.status(503).json({code:'DEPENDENCY_NOT_READY',error:'生成状況を確認できませんでした'})}
 })
 
-previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res) => {
+previewRouter.post('/generate', requireReadingAuth, (req, res) => generatePreview(req, res))
+
+export async function generatePreview(req: AuthRequest, res: Response, guest = false) {
   const useSse = req.query.format === 'sse'
   const requestId = req.header('Idempotency-Key') ?? randomUUID()
   const workerId = randomUUID()
@@ -219,7 +224,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
     console.info('Self-report pipeline metric', { correlationId: requestId, pipelineTag })
     progress(76, '鑑定書を書いています', '一枚ずつ読める文章に整えています')
     const fullyDeterministic = deterministicCardIds(deterministicReport.cards).size === deterministicReport.cards.length
-    const writtenReport = selfReportOptions.annualEngine === 'catalog3600' || personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic || !hasAIConsent(req)
+    const writtenReport = selfReportOptions.annualEngine === 'catalog3600' || personalityReport || process.env.AI_REPORT_ENABLED === 'false' || fullyDeterministic || guest || !hasAIConsent(req)
       ? finalizeReportProvenance(deterministicReport, (personalityReport || selfReportOptions.annualEngine === 'catalog3600') ? deterministicReport.generatorVersion! : 'self-report-v3', 'deterministic')
       : await writeReportWithAi(`${birthDate}|${birthplace ?? ''}|${gender}`, deterministicReport, metadata, undefined, {
         correlationId: requestId,
@@ -250,7 +255,18 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       const saved=await generationRPC('settle_self_generation',{p_user:req.userId,p_op:requestId,p_worker:workerId,p_result:response})
       if(saved.state!=='completed') throw new GenerationDependencyError('Generation completion unconfirmed')
     }
-    const visible=req.userId ? (await projectSelfGeneration(req.userId,requestId,{result:response})).result! : response
+    let visible: unknown = response
+    if (guest) {
+      const referenceYear = japanDateParts().year
+      const history = selfTimingHistoryFromBirthSnapshot(req.body, referenceYear).cards
+      const future = selfTimingHistoryFromBirthSnapshot(req.body, referenceYear + 5).cards.filter(card => {
+        const year = Number(card.id.match(/(?:^|[-_])(\d{4})(?:$|[-_])/)?.[1])
+        return year > referenceYear && year <= referenceYear + 5
+      })
+      visible = { cards: reportWithChart.cards, timingCards: [...history, ...future] }
+    } else if (req.userId) {
+      visible = (await projectSelfGeneration(req.userId, requestId, { result: response })).result
+    }
     if (res.destroyed || res.writableEnded) {if(keepAlive) clearInterval(keepAlive);return}
     progress(92, '最後の確認をしています', 'ページの長さと根拠を確認しています')
     if (useSse) {
@@ -278,7 +294,7 @@ previewRouter.post('/generate', requireReadingAuth, async (req: AuthRequest, res
       res.end()
     }
   }
-})
+}
 
 // 質問詳細回答（¥500 決済済みトークン必須）
 // POST /api/preview/question

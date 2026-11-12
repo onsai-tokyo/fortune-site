@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import { webRouter } from './web.js'
-import { publicBook } from './webBooks.js'
+import { publicBook, webBooksRouter } from './webBooks.js'
 import { declaredAdult } from '../middleware/webAiAge.js'
 
 test('Web AI declared age is fail-closed and changes at the eighteenth birthday in Japan', () => {
@@ -71,16 +71,23 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     assert.notEqual(name,'ai_book_order','must not call the iOS order RPC')
     return new Response(JSON.stringify(value),{status:200,headers:{'content-type':'application/json'}})
   }
-  const app=express(); app.use(express.json()); app.use('/api/web',webRouter)
+  const app=express(); app.use(express.json()); app.use('/api/web',webRouter); app.use('/book-contract/books',webBooksRouter)
   const server=app.listen(0,'127.0.0.1'); await new Promise<void>(resolve=>server.once('listening',resolve))
   const port=(server.address() as {port:number}).port
-  const call=(path:string, body?:unknown, consent=true)=>originalFetch(`http://127.0.0.1:${port}/api/web${path}`,{method:body?'POST':'GET',headers:{authorization:`Bearer ${token}`,'content-type':'application/json',...(consent?{'X-FateLab-AI-Consent':'anthropic-inline-2026-10-11-v3'}:{})},body:body?JSON.stringify(body):undefined})
+  const call=(path:string, body?:unknown, consent=true, prefix=path.startsWith('/books') ? '/book-contract' : '/api/web')=>originalFetch(`http://127.0.0.1:${port}${prefix}${path}`,{method:body?'POST':'GET',headers:{authorization:`Bearer ${token}`,'content-type':'application/json',...(consent?{'X-FateLab-AI-Consent':'anthropic-inline-2026-10-11-v3'}:{})},body:body?JSON.stringify(body):undefined})
   try {
     assert.equal((await (await call('/books/status')).json()).remaining,1)
     const payload={operationId:op,sourceId:source,theme:'仕事',question,focusCardId:'card-2'}
     assert.equal((await call('/books/validate',{...payload,focusCardId:''})).status,422)
     assert.equal((await call('/books',payload,false)).status,428)
     assert.equal(orders,0)
+    const beforePause = calls.length
+    for (const path of ['/books', '/books/validate', `/books/${book}/questions`, `/reading/conversations/${source}/chat`]) {
+      const paused = await call(path, payload, true, '/api/web')
+      assert.equal(paused.status, 403)
+      assert.equal((await paused.json()).code, 'WEB_AI_CONSULTATIONS_PAUSED')
+    }
+    assert.equal(calls.length, beforePause, 'paused endpoints must stop before any storage or provider request')
     assert.equal((await call('/books',payload)).status,201)
     assert.equal((await call('/books',payload)).status,200)
     assert.equal((await call('/books',{...payload,focusCardId:'card-1'})).status,409)
@@ -116,6 +123,9 @@ test('Web has its own paid-credit orders and blocks reading questions without mu
     selfBirth = '1987-05-12'
     assert.equal((await call('/books',payload)).status,200,'adult retries remain idempotent')
     assert.equal(orders,1)
+    const shelf = await call('/books', undefined, true, '/api/web')
+    assert.equal(shelf.status, 200)
+    assert.equal((await shelf.json()).books[0].id, book)
   } finally {
     server.closeAllConnections(); await new Promise<void>(resolve=>server.close(()=>resolve()))
     globalThis.fetch=originalFetch
