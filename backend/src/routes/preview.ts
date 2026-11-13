@@ -258,10 +258,12 @@ export async function generatePreview(req: AuthRequest, res: Response, guest = f
     let visible: unknown = response
     if (guest) {
       const referenceYear = japanDateParts().year
+      const firstAdultYear = year + 18
+      const lastYear = firstAdultYear > referenceYear + 5 ? firstAdultYear + 4 : referenceYear + 5
       const history = selfTimingHistoryFromBirthSnapshot(req.body, referenceYear).cards
-      const future = selfTimingHistoryFromBirthSnapshot(req.body, referenceYear + 5).cards.filter(card => {
+      const future = selfTimingHistoryFromBirthSnapshot(req.body, lastYear).cards.filter(card => {
         const year = Number(card.id.match(/(?:^|[-_])(\d{4})(?:$|[-_])/)?.[1])
-        return year > referenceYear && year <= referenceYear + 5
+        return year > referenceYear && year <= lastYear
       })
       visible = { cards: reportWithChart.cards, timingCards: [...history, ...future] }
     } else if (req.userId) {
