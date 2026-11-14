@@ -14,7 +14,7 @@ const topPagePath = path.join(process.cwd(), 'public', 'lp.html');
 const midArticleCta = `<aside class="inline-cta"><strong>あなたの場合は？</strong><p>生年月日を入力すると、命式と五行バランスを無料・登録不要で確認できます。</p><a href="/welcome">無料で鑑定する →</a></aside>`;
 
 const appRoutes = [
-  ['couple', '無料の相性占い｜生年月日でふたりの年表を鑑定', 'ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。'],
+  ['couple', '生年月日で相性占い｜無料・登録不要のふたりの年表', '二人の生年月日と出会った年を入力して、恋人・夫婦・友人・家族との関係を無料で鑑定。出会いから今年までの関係と、一人ひとりの流れを年ごとに読めます。登録や出生時刻の入力は不要です。'],
   ['coupons', '占いクーポン・初回特典', '電話占い・チャット占いの初回特典をまとめました。対象者や利用条件を比較し、各サービスの公式案内へ進めます。'],
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
   ['feature/compat', '無料の相性診断｜生年月日で恋愛・仕事の相性を鑑定', '2人の生年月日から、恋愛や仕事の相性、価値観、関係を良くするヒントを複数の占術で読み解きます。'],
@@ -595,7 +595,8 @@ const tools = [
   {
     path: 'tools/sanmeigaku-calculator',
     title: '算命学の無料鑑定｜生年月日から十大主星・十二大従星を自動計算',
-    searchDescription: '算命学の人体星図を生年月日から無料で作成。自分の中心星・十大主星・十二大従星・天中殺と、それぞれの星の意味がわかります。出生時刻・会員登録は不要です。',
+    searchTitle: '算命学の無料自動計算｜人体星図・十大主星・十二大従星',
+    searchDescription: '生年月日と性別から算命学の人体星図を無料で算出。結果の「あなたの人体星図」で中心星と十大主星を確認でき、十二大従星と天中殺もわかります。出生時刻・会員登録は不要です。',
     description: '生年月日から算命学の人体星図、中心星を含む十大主星、十二大従星、天中殺を無料で自動計算。登録不要で星の位置と意味を確認できます。',
     faqs: [
       ['算命学を無料で鑑定できますか？', 'はい。生年月日を入力すると、人体星図、十大主星、十二大従星、天中殺を登録不要で無料計算できます。'],
@@ -657,9 +658,23 @@ function appPageHtml(template, route) {
   const title = route.path.startsWith('feature/') ? route.title : `${route.title}｜${SITE_NAME}`;
   const robots = route.path.startsWith('feature/') ? 'noindex,nofollow' : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
   const content = route.path === 'couple'
-    ? template.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>${escapeHtml(route.description)}</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
+    ? template.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
     : template;
-  return content
+  const webApplicationSchema = route.path === 'couple' ? {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: route.title,
+    description: route.description,
+    url: canonical,
+    inLanguage: 'ja',
+    applicationCategory: 'LifestyleApplication',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: 0, priceCurrency: 'JPY' }
+  } : null;
+  const html = webApplicationSchema
+    ? content.replace('</head>', `<script type="application/ld+json">${JSON.stringify(webApplicationSchema).replace(/</g, '\\u003c')}</script></head>`)
+    : content;
+  return html
     .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
     .replace(/<meta name="description" content="[^"]*"\s*\/>/, `<meta name="description" content="${escapeHtml(route.description)}" />`)
     .replace(/<meta name="robots" content="[^"]*"\s*\/>/, `<meta name="robots" content="${robots}" />`)
@@ -709,7 +724,7 @@ function staticHtml(page, type = 'Article') {
   const isGuide = page.path.startsWith('guides/');
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
   const canonical = `${SITE_URL}/${page.path}`;
-  const title = `${page.title}｜${SITE_NAME}`;
+  const title = `${page.searchTitle ?? page.title}｜${SITE_NAME}`;
   const published = page.published ?? '2026-08-10';
   const updated = page.updated ?? UPDATED;
   const schema = {
