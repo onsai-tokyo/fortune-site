@@ -527,7 +527,7 @@ function shichuSuimeiGuideBody(page) {
 const shichuHubGroups = [
   ['まず調べる', [['/tools/shichu-suimei-calculator', '四柱推命の命式を無料で自動計算'], ['/guides/shichu-suimei-what-am-i', '四柱推命で自分は何か調べる'], ['/guides/birth-chart', '年柱・月柱・日柱・時柱の見方'], ['/guides/day-master', '日干10種類の特徴']]],
   ['命式を詳しく読む', [['/guides/five-elements', '五行バランスの読み方'], ['/guides/setsuiri-boundary', '立春・節入りで結果が変わる理由'], ['/guides/sanmeigaku-stars', '通変星と算命学の星を整理する'], ['/guides/nayin', '納音と日柱の違い']]],
-  ['恋愛・仕事へ活かす', [['/guides/partner-feelings', '相手の気持ちが気になるときの相性占い'], ['/guides/compatibility', '四柱推命を含む相性の見方'], ['/guides/marriage-timing', '大運・年運から婚期を見る'], ['/guides/reconciliation-timing', '二人の命式から復縁運を見る'], ['/guides/career', '命式から適職と働き方を見る']]],
+  ['恋愛・仕事へ活かす', [['/guides/meeting-timing', '出会いの時期を占う'], ['/guides/marriage-compatibility', '今の恋人との結婚相性を見る'], ['/guides/partner-feelings', '相手の気持ちが気になるときの相性占い'], ['/guides/compatibility', '四柱推命を含む相性の見方'], ['/guides/marriage-timing', '大運・年運から婚期を見る'], ['/guides/reconciliation-timing', '二人の命式から復縁運を見る'], ['/guides/career', '命式から適職と働き方を見る']]],
   ['ほかの占術と比べる', [['/guides/sanmeigaku-shichu-suimei-relationship', '算命学と四柱推命の関係'], ['/guides/shichu-suimei-animal-character', '四柱推命と動物占いの関係'], ['/guides/astrology-systems-comparison', 'インド占星術・紫微斗数との違い'], ['/guides/shichu-suimei-statistics', '四柱推命は統計学なのか']]],
 ];
 const shichuHub = `<nav class="topic-hub" aria-label="四柱推命の解説一覧"><h2>四柱推命を知りたい順に読む</h2><p>知りたい内容から選んでください。命式をまだ出していない場合は、無料自動計算から始められます。</p><div class="topic-hub-grid">${shichuHubGroups.map(([heading, links]) => `<section><h3>${heading}</h3>${links.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</section>`).join('')}</div></nav>`;
