@@ -3,6 +3,7 @@ import path from 'path';
 
 const SITE_URL = 'https://fate-lab.com';
 const SITE_NAME = 'Fate Lab';
+const contentMenuStyle = fs.readFileSync(new URL('./content-menu.css', import.meta.url), 'utf8');
 const guideThemeStyle = fs.readFileSync(new URL('./guide-theme.css', import.meta.url), 'utf8');
 const UPDATED = '2026-08-13';
 const distDir = path.join(process.cwd(), 'dist');
@@ -670,15 +671,40 @@ const sharedStyle = `:root{--bg-main:#faf7ef;--bg-card:#fffdf8;--text-main:#1a1a
 // 相生は円環、相剋は交差線ではなく関係ごとのラベルで示し、スマホでの誤読を防ぐ。
 const cycleFixStyle = `.control-sequence{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid #d4c5a0}.control-sequence strong{width:100%;text-align:center}.control-sequence span{padding:5px 10px;background:#f2eadb;border-radius:99px;font-size:13px;white-space:nowrap}.angel-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.angel-grid a{display:block;height:100%;box-sizing:border-box;padding:14px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:8px;text-decoration:none}.angel-grid strong,.angel-grid span{display:block}.angel-grid strong{font-size:19px}.angel-grid span{font-size:13px;color:#5f564c}@media(max-width:560px){.angel-grid{grid-template-columns:1fr}}`;
 const topUiPolish = `article{min-width:0}article img,article svg{max-width:100%;height:auto}.article-toc{display:block!important}.article-toc ol{width:100%;box-sizing:border-box}.table-scroll{display:block;max-width:100%;-webkit-overflow-scrolling:touch}.table-scroll table{max-width:none}.table-scroll th,.table-scroll td{overflow-wrap:anywhere}.example-grid>*,.couple-charts>*,.element-compare>*,.contrast-cards>*,.verified-grid>*,.relation-map>*{min-width:0}.sanmei-cross{max-width:100%}.article-toc,.reconciliation-flow,.sample-note,.couple-charts section,.element-compare section,.reading-result,.final-verdict,.sanmei-chart,.relation-map section,.answer-box,.contrast-cards section,.verified-grid section,.angel-grid a{border-radius:20px!important;box-shadow:0 4px 24px rgba(201,169,97,.12)!important}.article-toc,.reconciliation-flow,.sample-note,.reading-result,.final-verdict,.answer-box{background:#fffdf8!important;border:1px solid #d4c5a0!important}.sample-note{border-left:3px solid #8f6a1f!important}.article-toc strong,.reconciliation-flow figcaption{font-size:18px}.status{font-family:"Noto Sans JP",sans-serif}.reconciliation-flow section b{background:linear-gradient(135deg,#c9a961,#8f6a1f)!important}.final-verdict{border:2px solid #c9a961!important}@media(max-width:620px){header nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}header nav a{display:block;text-align:center;white-space:nowrap;font-size:11px}header nav a:first-child{grid-column:1/-1;width:auto;margin:0 0 4px;text-align:left;font-size:16px}.article-toc ol{display:grid!important;gap:5px!important;padding-left:24px}.table-scroll{border-radius:12px}.couple-charts section,.element-compare section,.example-grid section{padding:18px!important}}`;
-const nav = `<nav><a href="/">Fate Lab</a><a href="/tools/">無料計算</a><a href="/guides/">占い解説</a><a href="/methodology">鑑定ロジック</a><a href="/about">運営情報</a></nav>`;
+const contentHeader = `<header class="content-header">
+  <div class="content-masthead">
+    <a class="guide-wordmark" href="/"><img src="/favicon.svg" alt="" width="28" height="28">FATE LAB</a>
+    <details class="content-menu">
+      <summary aria-label="メニュー">
+        <svg class="menu-open" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg class="menu-close" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </summary>
+      <nav class="content-menu-panel" aria-label="メニュー">
+        <a class="content-menu-main" href="/you">あなたについて<small>性格の章と、年ごとの流れ</small></a>
+        <a class="content-menu-main" href="/couple">相性鑑定<small>相手との年表</small></a>
+        <a class="content-menu-banner" href="/coupons"><img src="/images/coupon-banner.jpg" alt="占いクーポン・初回特典を見る" width="1280" height="654" loading="lazy"></a>
+        <div class="content-menu-secondary"><a href="/settings">設定</a><a href="/support">お問い合わせ</a></div>
+      </nav>
+    </details>
+  </div>
+</header>
+<script>
+  const contentMenu = document.querySelector('.content-menu');
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && contentMenu.open) {
+      contentMenu.open = false;
+      contentMenu.querySelector('summary').focus();
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!contentMenu.contains(event.target)) contentMenu.open = false;
+  });
+</script>`;
 const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
 const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 function staticHtml(page, type = 'Article') {
   const isGuide = page.path.startsWith('guides/');
-  const pageNav = isGuide
-    ? nav.replace('<a href="/">Fate Lab</a>', '<a class="guide-wordmark" href="/"><img src="/favicon.svg" alt="" width="27" height="27">FATE LAB</a>')
-    : nav;
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
   const canonical = `${SITE_URL}/${page.path}`;
   const title = `${page.title}｜${SITE_NAME}`;
@@ -698,7 +724,7 @@ function staticHtml(page, type = 'Article') {
     : '';
   if (visibleFaq) page.body += visibleFaq;
   const editorial = type === 'Article' ? `<details class="editorial-details"><summary>この記事の制作方針と検証について</summary><div><section class="author"><strong>制作・計算仕様の検証：Fate Lab編集部</strong><p>記事の構成整理や表現確認に生成AIを利用する場合があります。本文の各論はFate Labの鑑定エンジンが持つ解釈マスタから展開し、実装済み計算仕様と固定テストに照らして確認しています。資格者監修がない記事を専門家監修とは表示しません。</p></section><section class="sources"><strong>参考情報と検証方針</strong><ul><li>暦・天体・干支計算は、公開された暦法と実装ライブラリの固定テストで検証</li><li>境界日や出生時間の有無で結果が変わる条件を明示</li><li>占術は科学的診断ではなく、自己理解の参考情報として提供</li></ul><a href="/editorial-policy">AI利用を含む制作方針</a>　<a href="/methodology">鑑定ロジック</a></section></div></details>` : '';
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}><header>${pageNav}</header><main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="${page.path === 'guides/compatibility' ? '/couple' : '/welcome'}">${page.path === 'guides/compatibility' ? 'ふたりの相性を無料で鑑定する' : '生年月日を入力して無料で鑑定する'}</a>${editorial}<p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="${page.path === 'guides/compatibility' ? '/couple' : '/welcome'}">${page.path === 'guides/compatibility' ? 'ふたりの相性を無料で鑑定する' : '生年月日を入力して無料で鑑定する'}</a>${editorial}<p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
 }
 
 function guideIndexHtml() {
