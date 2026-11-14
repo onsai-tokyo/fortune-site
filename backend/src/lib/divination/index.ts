@@ -588,7 +588,10 @@ export function calcShichuResult(
   gender?: 'male' | 'female',
 ) {
   const shichu = calcShichu(year, month, day, hour, minute)
+  const { shukumeiStar, chusatsu } = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
   return {
+    sanmeiStar: shukumeiStar,
+    chusatsu,
     shichuYear: shichu.year.kanshi,
     shichuMonth: shichu.month.kanshi,
     shichuDay: shichu.day.kanshi,
