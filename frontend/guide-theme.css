@@ -1,0 +1,65 @@
+/* Match the canvas, ink and controls of the current Fate Lab web app. */
+.guide-theme {
+  --bg-main: #f9f8f5;
+  --bg-card: #fff;
+  --text-main: #141614;
+  --text-sub: #3d3f3a;
+  --gold-primary: #667d63;
+  --gold-light: #e2e9df;
+  --gold-dark: #253b31;
+  --border-gold: #dedfd7;
+  --shadow: transparent;
+  background: #f9f8f5;
+  color: var(--text-main);
+  font: 15px/1.9 "Noto Sans JP", "Hiragino Sans", sans-serif;
+  overflow-wrap: anywhere;
+}
+.guide-theme :is(h1,h2,h3,h4) {
+  font-family: inherit;
+  letter-spacing: .025em;
+  font-weight: 700;
+}
+.guide-theme h1 { font-size: clamp(26px, 5.8vw, 38px); }
+.guide-theme h2::before { width: 100%; height: 1px; background: var(--border-gold); }
+.guide-theme :is(header,footer,.meta,.related a,th,td) { border-color: var(--border-gold); }
+.guide-theme header { background: #fbfaf7; padding-block: 14px; }
+.guide-theme header nav { min-height: 36px; }
+.guide-theme header .guide-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: .24em;
+}
+.guide-wordmark img { display: block; width: 27px; height: 27px; }
+.guide-theme a { color: #344f40; }
+.guide-theme a:hover { color: #253b31; }
+.guide-theme .breadcrumb,.guide-theme .meta { color: #62675f; }
+.guide-theme :is(.cta,.inline-cta a,.affiliate-link) {
+  min-height: 44px;
+  border-radius: 8px;
+  background: #253b31;
+  color: #fff;
+  box-shadow: none;
+}
+.guide-theme :is(.cta,.inline-cta a,.affiliate-link):hover {
+  background: #344f40;
+  color: #fff;
+  transform: none;
+}
+.guide-theme :is(a,summary):focus-visible { outline: 2px solid #526348; outline-offset: 3px; }
+.guide-theme :is(.author,.sources,.related,.editorial-details,.inline-cta,.affiliate-card,.element-chart,.cycle,.table-scroll,.checklist,.example-grid section,.article-toc,.sample-note,.answer-box,.guide-list a) {
+  background: var(--bg-card);
+  border-color: var(--border-gold);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.guide-theme :is(.affiliate-label,.note,.health-note) { color: #344f40; }
+.guide-theme :is(thead th,tbody th,.bar-track,.control-sequence span) { background: #efeee9; }
+.guide-theme .cycle .nodes circle { fill: #f9f8f5; stroke: #667d63; }
+.guide-theme .cycle .produce path { stroke: #667d63; }
+.guide-theme main article > p:first-of-type { color: var(--text-sub); }
+@media (max-width: 620px) {
+  .guide-theme header nav { row-gap: 8px; }
+  .guide-theme header nav .guide-wordmark { min-height: 28px; }
+}
