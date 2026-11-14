@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="380" viewBox="0 0 640 380" role="img" aria-labelledby="title desc">
+  <title id="title">一年ずつ、あなたの流れを読む</title><desc id="desc">2024年、2025年、2026年の年表を並べたイメージ。実際の鑑定結果ではありません。</desc>
+  <rect width="640" height="380" rx="24" fill="#eeeee3"/>
+  <g font-family="sans-serif" fill="#253b31"><text x="36" y="47" font-size="12" letter-spacing="3">YOUR YEARS</text><text x="36" y="84" font-size="24">一年ずつ、あなたの流れを読む。</text><text x="562" y="46" font-size="12">見本</text></g>
+  <path d="M84 140V317" stroke="#adb9a5" stroke-width="2"/>
+  <g font-family="sans-serif">
+    <rect x="112" y="112" width="490" height="68" rx="14" fill="#fff"/><circle cx="84" cy="146" r="6" fill="#819177"/>
+    <text x="132" y="138" font-size="12" fill="#6c7068">2024</text><text x="132" y="163" font-size="18" fill="#253b31">土台を整える年</text>
+    <rect x="112" y="194" width="490" height="68" rx="14" fill="#fff"/><circle cx="84" cy="228" r="6" fill="#819177"/>
+    <text x="132" y="220" font-size="12" fill="#6c7068">2025</text><text x="132" y="245" font-size="18" fill="#253b31">新しい一歩を踏み出す年</text>
+    <rect x="112" y="276" width="490" height="68" rx="14" fill="#253b31"/><circle cx="84" cy="310" r="8" fill="#253b31"/>
+    <text x="132" y="302" font-size="12" fill="#d7e2d1">2026</text><text x="132" y="327" font-size="18" fill="#fff">つながりを育てる年</text>
+    <text x="466" y="320" font-size="12" fill="#d7e2d1">続きを読む →</text>
+  </g>
+</svg>
