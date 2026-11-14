@@ -1,12 +1,127 @@
 {
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://fortune-site-iuzo.onrender.com/api/$1"
+      "source": "/contact",
+      "destination": "/support",
+      "permanent": false
     },
     {
-      "source": "/health",
-      "destination": "https://fortune-site-iuzo.onrender.com/health"
+      "source": "/lp",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/lp.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/chat/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/mypage/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/me/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/analyze/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/result/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/feature/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/payment/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/history/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/compat-report/:path*",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path((?!threads-event$).*)",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/:path*"
+    },
+    {
+      "source": "/api/apple/notifications",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/apple/notifications"
+    },
+    {
+      "source": "/guides",
+      "destination": "/guides/index.html"
+    },
+    {
+      "source": "/guides/:slug",
+      "destination": "/guides/:slug/index.html"
+    },
+    {
+      "source": "/tools",
+      "destination": "/tools/index.html"
+    },
+    {
+      "source": "/tools/:slug",
+      "destination": "/tools/:slug/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology/index.html"
+    },
+    {
+      "source": "/editorial-policy",
+      "destination": "/editorial-policy/index.html"
+    },
+    {
+      "source": "/press",
+      "destination": "/press/index.html"
+    },
+    {
+      "source": "/threads-launch",
+      "destination": "/threads-launch/index.html"
+    },
+    {
+      "source": "/couple",
+      "destination": "/couple/index.html"
+    },
+    {
+      "source": "/coupons",
+      "destination": "/coupons/index.html"
+    },
+    {
+      "source": "/((?!api/|assets/|images/|favicon[.]svg$).*)",
+      "destination": "/index.html"
     }
   ]
 }

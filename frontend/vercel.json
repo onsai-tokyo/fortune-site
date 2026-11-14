@@ -1,43 +1,127 @@
 {
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://fortune-site-iuzo.onrender.com/api/:path*" },
-    { "source": "/health", "destination": "https://fortune-site-iuzo.onrender.com/health" },
-    { "source": "/lp", "destination": "/lp.html" },
-    { "source": "/auth", "destination": "/app.html" },
-    { "source": "/chat", "destination": "/app.html" },
-    { "source": "/reading", "destination": "/app.html" },
-    { "source": "/reading/:path*", "destination": "/app.html" },
-    { "source": "/r/:path*", "destination": "/app.html" },
-    { "source": "/s/:path*", "destination": "/app.html" },
-    { "source": "/mypage", "destination": "/app.html" },
-    { "source": "/me", "destination": "/app.html" },
-    { "source": "/history/:path*", "destination": "/app.html" },
-    { "source": "/payment/:path*", "destination": "/app.html" },
-    { "source": "/result", "destination": "/app.html" },
-    { "source": "/analyze", "destination": "/app.html" },
-    { "source": "/compat-report", "destination": "/app.html" },
-    { "source": "/feature/:path*", "destination": "/app.html" }
+  "redirects": [
+    {
+      "source": "/contact",
+      "destination": "/support",
+      "permanent": false
+    },
+    {
+      "source": "/lp",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/lp.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/chat/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/mypage/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/me/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/analyze/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/result/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/feature/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/payment/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/history/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/compat-report/:path*",
+      "destination": "/",
+      "permanent": false
+    }
   ],
-  "headers": [
-    { "source": "/auth", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/chat", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/reading", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/reading/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/r/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/mypage", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/me", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/history/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/payment/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/result", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/analyze", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/compat-report", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/feature/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/lp", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
-    { "source": "/lp.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
-    { "source": "/debug.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/auto-test.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/final-check.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/simple-test.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/test-toast.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  "rewrites": [
+    {
+      "source": "/api/:path((?!threads-event$).*)",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/:path*"
+    },
+    {
+      "source": "/api/apple/notifications",
+      "destination": "https://fortune-site-iuzo.onrender.com/api/apple/notifications"
+    },
+    {
+      "source": "/guides",
+      "destination": "/guides/index.html"
+    },
+    {
+      "source": "/guides/:slug",
+      "destination": "/guides/:slug/index.html"
+    },
+    {
+      "source": "/tools",
+      "destination": "/tools/index.html"
+    },
+    {
+      "source": "/tools/:slug",
+      "destination": "/tools/:slug/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology/index.html"
+    },
+    {
+      "source": "/editorial-policy",
+      "destination": "/editorial-policy/index.html"
+    },
+    {
+      "source": "/press",
+      "destination": "/press/index.html"
+    },
+    {
+      "source": "/threads-launch",
+      "destination": "/threads-launch/index.html"
+    },
+    {
+      "source": "/couple",
+      "destination": "/couple/index.html"
+    },
+    {
+      "source": "/coupons",
+      "destination": "/coupons/index.html"
+    },
+    {
+      "source": "/((?!api/|assets/|images/|favicon[.]svg$).*)",
+      "destination": "/index.html"
+    }
   ]
 }

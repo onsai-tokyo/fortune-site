@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;1,500&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -294,4 +296,351 @@ button.bg-accent-dark {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(155, 130, 77, 0.5);
+}
+
+/* The legacy ivory theme remaps .text-white globally. New Web screens use
+   actual dark controls, selected chips and chat bubbles: keep their intended
+   foreground without changing any legacy route's palette. */
+.fl-root .text-white {
+  color: #fff !important;
+}
+
+/* Preserve the explicit disabled foreground over the white override above. */
+.fl-root .disabled\:text-fl-muted:disabled {
+  color: #6c7068 !important;
+}
+
+/* Web editorial theme. Scoped so the preserved app/legacy pages keep their styles. */
+.fl-root {
+  --fl-gutter: clamp(20px, 5.6vw, 40px);
+  --fl-heading: "Noto Serif JP", "Hiragino Mincho ProN", serif;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background:
+    radial-gradient(ellipse at 14% 12%, #e1e8e0 0, transparent 45%),
+    radial-gradient(ellipse at 90% 65%, #e8e2d8 0, transparent 50%), #eeede8;
+  color: #242c27;
+  font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
+}
+
+.fl-root .fl-sheet {
+  background: linear-gradient(160deg, #fbfaf7 0, #f9f8f5 600px);
+  box-shadow: 0 20px 100px rgba(30, 39, 32, .055);
+}
+
+.fl-root .fl-sheet > :is(section, article, nav, footer):is(.px-5, .px-6) {
+  padding-left: var(--fl-gutter);
+  padding-right: var(--fl-gutter);
+}
+
+.fl-root h1,
+.fl-root h2 {
+  font-family: var(--fl-heading);
+  text-wrap: pretty;
+  letter-spacing: .025em;
+}
+
+.fl-root .fl-page-title { padding-top: 36px; padding-bottom: 16px; gap: 12px; }
+.fl-root .fl-page-title h1 { font-size: clamp(25px, 5.8vw, 30px); line-height: 1.6; font-weight: 500; }
+.fl-root .fl-page-title p { color: #62675f; line-height: 1.9; }
+.fl-root .fl-page-title .fl-profile-meta { font-size: 12px; letter-spacing: .035em; margin-top: 4px; }
+.fl-root .fl-page-title .fl-profile-meta + p { margin-top: -6px; }
+.fl-root h3 { letter-spacing: .04em; }
+.fl-root .font-book { font-family: var(--fl-heading); }
+
+.fl-root header { background-color: rgba(249, 248, 245, .95); backdrop-filter: blur(16px); }
+.fl-root .fl-masthead { min-height: 65px; padding-left: var(--fl-gutter); padding-right: max(12px, calc(var(--fl-gutter) - 10px)); }
+.fl-root .fl-wordmark { gap: 10px; letter-spacing: .24em; font-size: 12px; }
+.fl-root .fl-wordmark::before {
+  content: ""; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #859582;
+  border-radius: 50%; box-shadow: inset 4px 0 0 #dfe5da; transform: rotate(-30deg);
+}
+.fl-root .fl-back-header { min-height: 65px; }
+.fl-root .fl-card { box-shadow: 0 8px 30px rgba(35, 44, 36, .035); border-color: #e1e5dc; }
+.fl-root .fl-year-feature { padding: 20px; gap: 16px; }
+.fl-root .fl-year-feature > img { height: clamp(152px, 40vw, 220px); border-radius: 12px; }
+.fl-root .fl-year-feature h2 { font-size: clamp(21px, 5vw, 25px); line-height: 1.65; }
+.fl-root .fl-year-feature > p { line-height: 2; }
+.fl-root .fl-feature-meta { margin-bottom: -8px; }
+.fl-root .fl-eyebrow { letter-spacing: .14em; line-height: 1.8; }
+.fl-root .fl-section-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-bottom: 18px; }
+.fl-root .fl-section-heading h2 { margin: 0; font-size: 19px; font-weight: 500; letter-spacing: .06em; }
+.fl-root .fl-section-heading > span { color: #6c7068; font-size: 11px; letter-spacing: .04em; }
+.fl-root .fl-year-section { padding-top: 36px; }
+.fl-root .fl-year-section > .fl-section-heading { padding-inline: var(--fl-gutter); }
+.fl-root .fl-year-strip { padding-inline: var(--fl-gutter); gap: 12px; scrollbar-width: thin; scroll-padding-inline: var(--fl-gutter); }
+.fl-root :is(.fl-year-strip, .fl-couple-year-tabs) { max-width: 100%; overscroll-behavior-x: contain; }
+.fl-root .fl-year-strip > a { width: 148px; min-height: 124px; padding: 16px; gap: 12px; border-radius: 16px; }
+.fl-root .fl-year-strip > a > :first-child { font-variant-numeric: tabular-nums; letter-spacing: .045em; }
+.fl-root .fl-chapters { padding-top: 38px; }
+.fl-root .fl-chapter-row { gap: 18px; padding-block: 22px; }
+.fl-root .fl-chapter-number { min-width: 24px; font-family: "EB Garamond", Georgia, serif; font-size: 24px; line-height: 1.25; color: #74846c; }
+.fl-root .fl-chapter-row > span:nth-child(2) > :first-child { font-size: 12px; line-height: 1.8; }
+.fl-root .fl-chapter-row .fl-chapter-title { font-family: var(--fl-heading); font-size: 17px; font-weight: 500; line-height: 1.7; }
+.fl-root .fl-chapter-row svg { transition: transform .2s ease; }
+
+.fl-root .fl-hero { gap: 20px; padding-top: 44px; padding-bottom: 24px; }
+.fl-root .fl-hero h1 { font-size: clamp(25px, 6.5vw, 36px); line-height: 1.65; letter-spacing: .025em; }
+.fl-root .fl-hero > p { font-size: 14px; line-height: 2; max-width: 36em; }
+.fl-root .fl-hero-image { margin-top: 8px; height: clamp(150px, 42vw, 230px); border-radius: 70px 16px 16px 16px; }
+.fl-root .fl-entry-form { padding: clamp(20px, 4vw, 28px); gap: 22px; box-shadow: 0 12px 40px #253b3108; }
+.fl-root .fl-landing-section { padding-top: 40px; padding-bottom: 40px; gap: 22px; }
+.fl-root .fl-landing-section h2 { font-size: 23px; line-height: 1.6; }
+.fl-root .fl-reading-title { padding-top: 30px; padding-bottom: 12px; gap: 16px; }
+.fl-root .fl-reading-title h1 { font-size: clamp(25px, 5.8vw, 30px); line-height: 1.65; }
+.fl-root .fl-reading-body { gap: 32px; padding-top: 24px; }
+.fl-root .fl-reading-body h2 { font-size: 19px; line-height: 1.7; padding-bottom: 10px; border-bottom: 1px solid #e2e5dc; }
+.fl-root .fl-reading-body p { font-size: 15px; line-height: 2.1; letter-spacing: .025em; }
+.fl-root .fl-shelf-tabs { gap: 4px; border: 1px solid #e2e1dc; padding: 5px; }
+.fl-root .fl-shelf-tabs a { font-size: 12px; line-height: 1.6; padding: 8px; }
+.fl-root .fl-shelf-tabs a[aria-current="page"] { box-shadow: 0 2px 8px #253b3110; }
+.fl-root .fl-book-row { padding: 20px; align-items: center; gap: 18px; }
+.fl-root .fl-book-row > img { height: 88px; width: 60px; box-shadow: 3px 4px 10px #253b3115; }
+.fl-root .fl-book-row > span { min-width: 0; gap: 8px; }
+.fl-root .fl-book-row > span > :nth-child(2) { font-family: var(--fl-heading); font-size: 16px; line-height: 1.75; }
+.fl-root .fl-book-row > svg { flex-shrink: 0; }
+
+.fl-root .fl-button { letter-spacing: .035em; padding: 12px 16px; line-height: 1.6; font-size: 14px; }
+.fl-root .bg-fl-ink { background-color: #253b31; }
+.fl-root .bg-fl-ink:disabled { background-color: #e2e1dc; }
+@media (hover: hover) {
+  .fl-root .fl-button.bg-fl-ink:not(:disabled):hover { background-color: #344f40; }
+  .fl-root .fl-chapter-row:hover svg { transform: translateX(3px); }
+  .fl-root .fl-chapter-row:hover { background: #eeeee340; }
+}
+.fl-root .bg-fl-cream { background-color: #eeeee3; }
+.fl-root input,
+.fl-root select,
+.fl-root textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  background-color: #fff !important;
+  border-color: #d4d9d1 !important;
+  color: #141614 !important;
+  font-family: inherit;
+  box-shadow: inset 0 1px 2px rgba(25, 40, 30, .025);
+}
+.fl-root .fl-hero-backdrop { background-size: cover; background-position: center; padding-bottom: 44px; }
+.fl-root input::-webkit-date-and-time-value { text-align: left; min-height: 1.5em; }
+@media (pointer: coarse) {
+  .fl-root :is(input, select, textarea) { font-size: max(16px, 1rem); }
+}
+.fl-root :is(input[type="date"], input[type="time"]) { display: block; appearance: none; }
+.fl-root input[type="time"] {
+  height: 52px;
+  padding-block: 0;
+  line-height: normal;
+}
+.fl-root input[type="time"]::-webkit-date-and-time-value {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+.fl-root .fl-couple-birth-form :is(input, select, button[aria-pressed]) {
+  box-sizing: border-box;
+  height: 52px;
+  padding-block: 0;
+}
+.fl-root .fl-couple-birth-form :is(input, select) {
+  font-size: max(16px, 1rem);
+}
+.fl-root input::placeholder,
+.fl-root textarea::placeholder { color: #747a71 !important; }
+.fl-root :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #667d63;
+  outline-offset: 4px;
+}
+.fl-root :is(a, button) { -webkit-tap-highlight-color: transparent; }
+.fl-root a { text-underline-offset: 4px; }
+.fl-root footer { margin-top: 52px; padding-top: 32px; padding-bottom: max(36px, env(safe-area-inset-bottom)); gap: 18px; }
+.fl-root footer nav { row-gap: 4px; }
+.fl-root ::selection { background: #dce5d6; color: #141614; }
+.fl-root ::-webkit-scrollbar-track { background: transparent; }
+.fl-root ::-webkit-scrollbar-thumb { background: #c6cfc1; }
+
+@media (min-width: 640px) {
+  .fl-root .fl-page-title { padding-top: 48px; padding-bottom: 20px; }
+  .fl-root .fl-year-feature { padding: 28px; gap: 20px; }
+  .fl-root .fl-hero { padding-top: 56px; }
+  .fl-root .fl-reading-body { gap: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-root *, .fl-root *::before, .fl-root *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 比較用：Web画面は見出し・数字も含め Noto Sans JP に統一。 */
+.fl-root { --fl-heading: "Noto Sans JP", "Hiragino Sans", sans-serif; }
+.fl-root * { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; }
+.fl-root .fl-wordmark::before { display: none; }
+.fl-root .fl-timeline-summary {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+}
+.fl-root .fl-timeline-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: #62675f;
+  font-size: 14px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.fl-root .fl-timeline-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+  min-height: 44px;
+  padding-inline: 13px;
+  border-radius: 8px;
+  background: #253b31;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.fl-root .fl-timeline-choice:hover { background: #344f40; }
+.fl-root .fl-timeline-choice:focus-visible { outline: 2px solid #526348; outline-offset: 3px; }
+
+.fl-root .fl-chapter-preview { font-size: 13px; line-height: 1.85; font-weight: 400; }
+.fl-root .fl-chapter-number { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 18px; }
+
+/* Safariがステータスバーまで描画する場合にもロゴを重ねない。 */
+.fl-root .fl-sheet { padding-top: env(safe-area-inset-top, 0px); }
+.fl-root .fl-back-header.sticky { top: env(safe-area-inset-top, 0px); }
+.fl-root .fl-next-chapter { display: grid; grid-template-columns: minmax(0, 1fr) 24px; gap: 10px 20px; padding: 24px 0; border-block: 1px solid #dedfd7; }
+.fl-root .fl-next-chapter small { display: block; margin-bottom: 10px; font-size: 12px; color: #6c7068; }
+.fl-root .fl-next-chapter strong { display: block; font-size: 17px; font-weight: 500; line-height: 1.8; }
+.fl-root .fl-next-chapter > svg { align-self: center; }
+.fl-root .fl-year-navigation { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 var(--fl-gutter) 18px; }
+.fl-root .fl-year-navigation a { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #b9c4b5; border-radius: 4px; font-size: 13px; }
+
+/* 読みものの目次と共通の誌面。装飾よりも罫線と文字の階層で整理する。 */
+.fl-root .fl-reading-contents { margin: 28px var(--fl-gutter) 8px; border-top: 1px solid #758074; }
+.fl-root .fl-contents-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; padding: 20px 0 14px; }
+.fl-root .fl-contents-heading h2 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: .12em; }
+.fl-root .fl-contents-heading > span { font-size: 12px; color: #6c7068; }
+.fl-root .fl-reading-contents > a { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 14px; align-items: center; gap: 12px; min-height: 64px; padding: 14px 0; border-bottom: 1px solid #dedfd7; text-decoration: none; }
+.fl-root .fl-reading-contents > a > span { font-size: 11px; color: #74846c; font-variant-numeric: tabular-nums; }
+.fl-root .fl-reading-contents strong { font-size: 15px; font-weight: 500; }
+.fl-root .fl-reading-contents small { max-width: 11em; font-size: 11px; color: #6c7068; overflow-wrap: anywhere; text-align: right; }
+.fl-root :is(#personality-chapters, #personal-years) { scroll-margin-top: 100px; }
+.fl-root:not(:has(.fl-hero-backdrop)) .fl-card { border-radius: 8px; box-shadow: none; }
+.fl-root:not(:has(.fl-hero-backdrop)) .fl-button { border-radius: 8px; }
+.fl-root .fl-year-strip > a { border-radius: 4px; }
+.fl-root .fl-shelf-tabs { border: 0; border-bottom: 1px solid #dedfd7; border-radius: 0; padding: 0; gap: 16px; }
+.fl-root .fl-shelf-tabs a { border-radius: 0; background: transparent; padding: 14px 0; }
+.fl-root .fl-shelf-tabs a[aria-current="page"] { box-shadow: inset 0 -2px #253b31; color: #253b31; background: transparent; }
+@media (hover: hover) {
+  .fl-root .fl-reading-contents > a:hover { color: #526348; background: #eeeee340; }
+}
+@media (max-width: 359px) {
+  .fl-root .fl-reading-contents > a { gap: 8px; grid-template-columns: 20px minmax(0, 1fr) auto 14px; }
+  .fl-root .fl-reading-contents strong { font-size: 14px; }
+  .fl-root .fl-reading-contents small { max-width: 8em; font-size: 10px; }
+}
+
+/* クーポン一覧の券面 */
+.fl-root .fl-coupons { padding-inline: var(--fl-gutter); }
+.fl-coupons { --ticket-tint: #dce3d6; --ticket-ink: #4f6450; }
+.fl-coupons .fl-ticket-intro { padding-block: 20px 10px; }
+.fl-coupons .fl-ticket-intro h1 { margin: 6px 0 8px; font-size: 26px; font-weight: 500; line-height: 1.45; }
+.fl-coupons .fl-ticket-intro p { margin: 0; color: #3d3f3a; font-size: 13px; }
+.fl-root .fl-coupons .fl-ticket-english,
+.fl-root .fl-coupons .fl-ticket-english > * { font-family: "EB Garamond", Georgia, serif; font-weight: 500; }
+.fl-coupons .fl-ticket-intro i { font-size: 15px; color: #4f6450; }
+.fl-coupons .fl-ticket-intro span { color: #5a5e57; font-size: 12px; letter-spacing: .08em; }
+.fl-coupons .fl-ticket-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding-block: 8px 12px; border-top: 1px solid #c9c6bc; color: #5a5e57; font-size: 11px; }
+.fl-coupons .fl-ticket-legend [data-channel]::before { content: ""; display: inline-block; width: 12px; height: 7px; margin-right: 4px; background: var(--ticket-tint); }
+.fl-coupons .fl-ticket-list { display: grid; gap: 24px; margin: 0; padding: 0; list-style: none; }
+.fl-coupons .fl-ticket { min-width: 0; }
+.fl-coupons .fl-ticket-list > li { min-width: 0; }
+.fl-coupons .fl-ticket-face {
+  --stub-width: clamp(42px, 13vw, 74px);
+  --notch: 9px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stub-width);
+  min-height: clamp(176px, 45vw, 192px);
+  overflow: hidden;
+  border: 4px solid #58705b;
+  border-radius: 5px;
+  background: white;
+  color: #22362c;
+  mask: radial-gradient(circle at calc(100% - var(--stub-width) - 4px) 0, transparent var(--notch), #000 calc(var(--notch) + 1px)) top / 100% 51% no-repeat,
+        radial-gradient(circle at calc(100% - var(--stub-width) - 4px) 100%, transparent var(--notch), #000 calc(var(--notch) + 1px)) bottom / 100% 51% no-repeat;
+}
+.fl-coupons .fl-ticket-body { min-width: 0; padding: 16px clamp(10px, 4vw, 24px) 18px; }
+.fl-coupons .fl-ticket-ad-label { display: inline-block; border: 1px solid #d6d4cb; border-radius: 4px; padding-inline: 4px; color: #6c7068; font-size: 10px; }
+.fl-coupons .fl-ticket h2 { margin: 6px 0 12px; font-size: clamp(15px, 4vw, 20px); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.fl-coupons .fl-ticket-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 5px; margin: 0; line-height: 1.12; }
+.fl-root .fl-coupons :is(.fl-ticket-value > *, .fl-ticket-vertical) { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-weight: 700; }
+.fl-coupons .fl-ticket-value strong { font-size: clamp(28px, 10vw, 52px); color: #284d37; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.fl-coupons .fl-ticket-value span { font-size: 14px; line-height: 1.35; }
+.fl-coupons .fl-ticket-example { margin: 8px 0 0; color: #3d3f3a; font-size: 12px; line-height: 1.65; }
+.fl-coupons .fl-ticket-facts { display: grid; grid-template-columns: 34px minmax(0, 1fr); row-gap: 6px; margin: 0 0 12px; line-height: 1.65; }
+.fl-coupons .fl-ticket-facts dt { color: var(--ticket-ink); font-size: 11px; }
+.fl-coupons .fl-ticket-facts dd { margin: 0; color: #3d3f3a; font-size: 12px; }
+.fl-coupons .fl-ticket-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 0;
+  border-left: 2px dashed #6d826e;
+  color: #344f40;
+}
+.fl-coupons .fl-ticket-vertical { writing-mode: vertical-rl; font-size: 14px; letter-spacing: .18em; }
+.fl-root .fl-coupons .fl-ticket-number { font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; font-size: 12px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fl-coupons .fl-coupon-cta a:not(:has(img:not([width="1"]))) { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 50px; padding: 10px 14px; border-radius: 9px; background: #22362c; color: white; font-size: 14px; font-weight: 700; text-decoration: none; }
+.fl-coupons .fl-coupon-cta a:not(:has(img:not([width="1"]))):hover { background: #344f40; }
+.fl-coupons .fl-coupon-cta a:focus-visible { outline: 2px solid #e2b96f; outline-offset: -4px; }
+.fl-coupons .fl-coupon-cta { margin-top: 6px; padding: 14px clamp(10px, 4vw, 20px); border: 1px solid #e2e1dc; border-radius: 5px 5px 12px 12px; background: white; }
+.fl-coupons .fl-ticket-ad { position: relative; overflow-x: auto; }
+.fl-coupons .fl-ticket-ad img[width="1"][height="1"] { position: absolute; inset: auto 0 0 auto; }
+.fl-coupons .fl-ticket-note { margin: 8px 2px 0; color: #5a5e57; font-size: 11px; line-height: 1.8; }
+
+.fl-root .fl-coupon-banner {
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.fl-root .fl-coupon-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fl-root .fl-coupon-banner:focus-visible {
+  outline: 2px solid #344f40;
+  outline-offset: 3px;
+}
+
+.fl-coupons .fl-ticket-compact-terms {
+  margin: 0 0 12px;
+  color: #5a5e57;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.fl-coupons .fl-ticket-ad-compact a::after {
+  content: "";
+  flex: 0 0 8px;
+  height: 8px;
+  border-block-start: 2px solid currentColor;
+  border-inline-end: 2px solid currentColor;
+  transform: rotate(45deg);
 }
