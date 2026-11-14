@@ -238,7 +238,7 @@ export async function generatePreview(req: AuthRequest, res: Response, guest = f
       cards: orderedReport.cards.filter(card => card.tab !== 'chart' && card.kind !== 'chart'),
       chartSections: buildChartSections(reportInput),
     }
-    warnReportContract(reportWithChart, reportInput, requestId)
+    if (!guest) warnReportContract(reportWithChart, reportInput, requestId)
     const generationDiagnostics = reportDiagnostics(reportWithChart)
     console.info('Self-report response diagnostic', {
       correlationId: requestId,
