@@ -438,3 +438,10 @@ test('一つの鑑定ブロックが失敗しても他ブロックを返す', ()
   ], 'test')
   assert.equal(report, '最初のブロック\n\n最後のブロック')
 })
+
+test('四柱推命の公開APIは算命学の中心星と天中殺を返す', () => {
+  const result = calcShichuResult(1995, 2, 20, undefined, 0, 'female')
+  assert.equal(result.sanmeiStar, '鳳閣星')
+  assert.equal(result.chusatsu, '申酉天中殺')
+  assert.equal(result.sanmeiChart.bodyChart.center.star, result.sanmeiStar)
+})
