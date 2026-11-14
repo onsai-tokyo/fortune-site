@@ -1,4 +1,6 @@
-const events = new Set(['threads_visit', 'couple_reading_complete', 'coupon_click'])
+import { campaignMedium, couponParameters, sanitizeAttribution } from '../src/web/data/measurementRules.js'
+
+const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_click'])
 const origin = 'https://fate-lab.com'
 
 export default async function handler(req, res) {
@@ -12,6 +14,9 @@ export default async function handler(req, res) {
       !Number.isInteger(sessionId) || sessionId < 1700000000 ||
       sessionId > Math.floor(Date.now() / 1000) + 60) return res.status(400).end()
 
+  const attribution = sanitizeAttribution(req.body ?? {})
+  const source = attribution.source ?? (req.body?.source === undefined && !['landing_visit', 'self_reading_complete'].includes(event) ? 'threads' : undefined)
+  const coupon = event === 'coupon_click' ? couponParameters(req.body ?? {}) : {}
   const secret = process.env.GA4_API_SECRET
   if (!secret) return res.status(503).end()
 
@@ -29,9 +34,12 @@ export default async function handler(req, res) {
         events: [{ name: event, params: {
           session_id: sessionId,
           engagement_time_msec: 1,
-          campaign_source: 'threads',
-          campaign_medium: 'social',
-          campaign_name: 'fatelab_launch',
+          ...attribution,
+          ...coupon,
+          source,
+          campaign_source: source,
+          campaign_medium: campaignMedium(source),
+          campaign_name: req.body?.source === undefined && source === 'threads' ? 'fatelab_launch' : attribution.campaign_name,
         } }],
       }),
     })
