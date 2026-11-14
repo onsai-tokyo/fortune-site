@@ -26,7 +26,11 @@ export function CouponOfferCard({ offer }: { offer: CouponOffer }) {
           </div>
         </div>
         <div className="fl-coupon-cta" onClick={event => {
-          if (event.target instanceof Element && event.target.closest('a[href]')) trackThreadsEvent('coupon_click')
+          const link = event.target instanceof Element ? event.target.closest('a[href]') : null
+          if (link) trackThreadsEvent('coupon_click', {
+            link_type: link.closest('.fl-ticket-ad') ? 'affiliate' : 'official',
+            offer_id: offer.id,
+          })
         }}>
           {offer.compactTerms ? (
             <p className="fl-ticket-compact-terms">{offer.compactTerms} {offer.facts.validity}。</p>

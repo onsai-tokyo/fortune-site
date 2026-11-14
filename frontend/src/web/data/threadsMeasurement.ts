@@ -1,40 +1,55 @@
-type CampaignEvent = 'threads_visit' | 'couple_reading_complete' | 'coupon_click'
+import { classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
 
-const campaignKey = 'fl-threads-measurement-v2'
-let session: { clientId: string; sessionId: number } | undefined
+type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_click'
+type Session = Attribution & { clientId: string; sessionId: number }
+
+const sessionKey = 'fl-site-measurement-v1'
+const sessionDuration = 1800
+let session: Session | undefined
+
+function active(value: Session | undefined, now: number): value is Session {
+  return Boolean(value && /^[0-9]{1,10}\.[0-9]{10}$/.test(value.clientId) &&
+    Number.isInteger(value.sessionId) && now >= value.sessionId && now - value.sessionId < sessionDuration)
+}
 
 export function startThreadsMeasurement() {
   if (location.origin !== 'https://fate-lab.com') return
-  const params = new URLSearchParams(location.search)
-  const landing = location.pathname === '/threads-launch' || (location.pathname === '/couple' &&
-    params.get('utm_source') === 'threads' &&
-    params.get('utm_medium') === 'social' &&
-    params.get('utm_campaign') === 'fatelab_launch')
+  const now = Math.floor(Date.now() / 1000)
+  if (active(session, now)) return
 
   try {
-    const saved = sessionStorage.getItem(campaignKey)
-    if (saved) session = JSON.parse(saved)
-  } catch { /* Storage can be unavailable in embedded browsers. */ }
+    const saved = JSON.parse(sessionStorage.getItem(sessionKey) ?? 'null') as Session | undefined
+    if (active(saved, now)) {
+      session = { clientId: saved.clientId, sessionId: saved.sessionId, ...sanitizeAttribution(saved) }
+      return
+    }
+  } catch { /* Embedded browsers can deny storage. */ }
 
-  const now = Math.floor(Date.now() / 1000)
-  if (session && now - session.sessionId < 1800) return
-  session = undefined
-  if (!landing) return
-
+  const url = new URL(location.href)
+  const source = classifySource(url, document.referrer)
+  let referrerPath: string | undefined
+  if (source === 'site_guide') referrerPath = new URL(document.referrer).pathname
+  const attribution = sanitizeAttribution({
+    source,
+    landing_path: sanitizeLandingPath(url.pathname),
+    referrer_path: referrerPath,
+    campaign_name: url.searchParams.get('utm_source') !== null ? url.searchParams.get('utm_campaign') : undefined,
+  })
   const random = crypto.getRandomValues(new Uint32Array(1))[0]
-  session = { clientId: `${random}.${now}`, sessionId: now }
-  try { sessionStorage.setItem(campaignKey, JSON.stringify(session)) } catch { /* In-memory attribution still works. */ }
-  trackThreadsEvent('threads_visit')
+  session = { clientId: `${random}.${now}`, sessionId: now, ...attribution }
+  try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch { /* Keep the current session in memory. */ }
+  trackThreadsEvent('landing_visit')
+  if (source === 'threads') trackThreadsEvent('threads_visit')
 }
 
-export function trackThreadsEvent(event: CampaignEvent) {
-  if (!session || Date.now() / 1000 - session.sessionId >= 1800) return
+export function trackThreadsEvent(event: MeasurementEvent, coupon?: { link_type: 'affiliate' | 'official'; offer_id: string }) {
+  if (!active(session, Math.floor(Date.now() / 1000))) return
   void fetch('/api/threads-event', {
     method: 'POST',
     credentials: 'omit',
     referrerPolicy: 'no-referrer',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event, ...session }),
+    body: JSON.stringify({ event, ...session, ...coupon }),
     keepalive: true,
   }).catch(() => { /* Measurement must not interrupt the reading. */ })
 }

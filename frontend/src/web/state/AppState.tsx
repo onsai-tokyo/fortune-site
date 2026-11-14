@@ -1,3 +1,4 @@
+import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { bookQuestionProblem, countChars, defaultDraftSource, initialSavedIds, mockBooks, mockFailedBook, mockPartners, mockProfile, mockChapters, mockYears, mockCoupleYears, mockPersonaTitle, plans, QUESTIONS_PER_BOOK, savedKey, relationGroup } from '../data/mock'
 import { personalReadings, coupleReadings, type LoadState } from '../data/readingData'
@@ -823,6 +824,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             ...s, ...reading, profile, selfSourceId: sourceId, readingsStatus: 'ready', snapshots: readLocalBookshelf(),
             ...(partner && { coupleYears: {}, coupleStatus: { [partner.id]: 'loading' as const } }),
           }))
+          trackThreadsEvent('self_reading_complete')
           if (partner) {
             const metYear = partner.metYear && partner.metYear < Number(profile.birthDate.slice(0, 4)) ? null : partner.metYear
             void calculateGuestCouple(profile, { ...partner, metYear }).then(couple => {
