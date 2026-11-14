@@ -1,7 +1,7 @@
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuPositionExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import path from 'path';
-import { relationshipGuideDate, relationshipGuides, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
+import { relationshipGuides, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
 
 const SITE_URL = 'https://fate-lab.com';
 const SITE_NAME = 'Fate Lab';
@@ -16,6 +16,7 @@ const midArticleCta = `<aside class="inline-cta"><strong>あなたの場合は�
 
 const appRoutes = [
   ['couple', '生年月日で相性占い｜無料・登録不要のふたりの年表', '二人の生年月日と出会った年を入力して、恋人・夫婦・友人・家族との関係を無料で鑑定。出会いから今年までの関係と、一人ひとりの流れを年ごとに読めます。登録や出生時刻の入力は不要です。'],
+  ['support', 'お問い合わせ', 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。'],
   ['coupons', '占いクーポン・初回特典', '電話占い・チャット占いの初回特典をまとめました。対象者や利用条件を比較し、各サービスの公式案内へ進めます。'],
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
   ['feature/compat', '無料の相性診断｜生年月日で恋愛・仕事の相性を鑑定', '2人の生年月日から、恋愛や仕事の相性、価値観、関係を良くするヒントを複数の占術で読み解きます。'],
@@ -34,7 +35,7 @@ const appRoutes = [
 
 const guides = [
   {
-    path: 'guides/shichu-suimei',
+    path: 'guides/shichu-suimei', updated: '2026-11-14',
     title: '四柱推命とは？命式の見方と生年月日でわかること',
     description: '四柱推命の年柱・月柱・日柱・時柱、十干十二支、出生時間が不明な場合の考え方を初心者向けに解説します。',
     body: `<p>四柱推命は、生まれた年・月・日・時刻を「年柱・月柱・日柱・時柱」という4つの柱に置き換え、十干と十二支の組み合わせから傾向を読み解く占術です。4つの柱を合わせた表は「命式」と呼ばれます。</p><h2>四柱は何を表すのか</h2><p><strong>年柱</strong>は家系や幼少期、<strong>月柱</strong>は仕事や社会性、<strong>日柱</strong>は本人の本質や配偶者との関係、<strong>時柱</strong>は内面や晩年を見る手がかりとされます。ひとつの柱だけで断定せず、命式全体の五行や陰陽のバランスを合わせて解釈します。</p><h2>出生時間が不明でも鑑定できる？</h2><p>出生時間がわからない場合は時柱を除く三柱で大枠を確認できます。ただし、時柱を使う項目は判断材料が減るため、Fate Labでは不明な時刻を推測で埋めません。母子手帳などで確認できる場合は時刻まで入力してください。</p><h2>Fate Labでの扱い</h2><p>Fate Labは四柱推命だけで結論を出さず、東洋・西洋・インドの複数占術で繰り返し現れる特徴を整理します。結果は未来を保証するものではなく、自己理解や対話の材料として提供します。四柱推命を統計学と呼べるか、計算の再現性と科学的根拠の違いは<a href="/guides/shichu-suimei-statistics">四柱推命は統計学？</a>で検証しています。</p>`
@@ -64,13 +65,13 @@ const guides = [
     body: `<p>生年月日占いは、生まれた日時を暦、天体、数の体系に当てはめ、性格や行動の傾向を整理する方法です。Fate Labは、四柱推命・算命学・納音・宿曜・九星気学・数秘術・紫微斗数・西洋占星術・インド占星術を扱います。</p><h2>東洋・西洋・インドで見る角度が違う</h2><p>四柱推命や算命学は干支と暦、西洋占星術は出生時の天体配置、インド占星術は恒星黄道、数秘術は生年月日の数を軸にします。異なる体系なので、同じ意味を別の言葉で示す場合も、異なる側面を強調する場合もあります。</p><h2>統合する理由</h2><p>Fate Labでは、9つの占術を暦・天体・数・宿の4系統から照合し、2系統以上で一致した性質を中心にまとめます。一つの系統だけに現れる特徴は本文へ載せません。</p><h2>結果の活用方法</h2><p>結果は「当たる・外れる」だけでなく、自分の経験と照らし合わせてください。医療・法律・金融・採用など重要な判断は、資格を持つ専門家や客観的な情報と合わせて決めましょう。</p>`
   },
   {
-    path: 'guides/compatibility',
+    path: 'guides/compatibility', updated: '2026-11-14',
     title: '生年月日による相性占い｜恋愛・結婚・仕事で見るポイント',
     description: '生年月日から恋愛、結婚、仕事の相性を見る観点と、結果を関係改善に活かす方法を解説します。',
     body: compatibilityCopy
   },
   {
-    path: 'guides/marriage-timing', updated: relationshipGuideDate, title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
+    path: 'guides/marriage-timing', updated: '2026-11-14', title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
     searchDescription: '四柱推命で結婚の時期をどう読む？ 命式の配偶者星・日支と、大運・年運が重なる年を、婚期の候補を絞る具体例で解説します。',
     description: '四柱推命で婚期を見る方法を、配偶者星、日支、六合・冲、桃花、大運・年運の重なりから解説。紫微斗数やインド占星術との照合、具体的な候補年の読み方も紹介します。',
     body: ''
@@ -81,12 +82,12 @@ const guides = [
     body: ''
   },
   {
-    path: 'guides/reconciliation-timing', updated: relationshipGuideDate, title: '復縁できる相性の見方｜二人の命式と復縁運を判断する方法',
+    path: 'guides/reconciliation-timing', updated: '2026-11-14', title: '復縁できる相性の見方｜二人の命式と復縁運を判断する方法',
     description: '二人の生年月日から復縁相性をどう判断するかを解説。日柱・五行・六合・冲・宿曜・夫妻宮と、双方の大運・年運を比較し、復縁しやすい条件と難しい条件を具体例で確認します。',
     body: ''
   },
   {
-    path: 'guides/birth-chart', title: '命式とは？無料鑑定で確認する年柱・月柱・日柱・時柱',
+    path: 'guides/birth-chart', updated: '2026-11-14', title: '命式とは？無料鑑定で確認する年柱・月柱・日柱・時柱',
     description: '四柱推命の命式を構成する四つの柱と、無料鑑定で確認できる項目を解説します。',
     body: birthChartCopy
   },
@@ -151,12 +152,12 @@ const guides = [
     body: `<p>宿曜占星術は、月の運行と二十七宿を基に性質や人間関係を整理する占術です。生まれた日の宿である命宿を入口にします。</p><h2>二十七宿と暦</h2><p>宿の算出は旧暦との対応を含み、採用する暦や方式によって境界日の結果が異なる場合があります。サイト間で結果を比較するときは計算基準を確認してください。</p><h2>相性は関係の型を見る</h2><p>栄親・友衰・安壊などの関係は、二人の関係に出やすい動きを表す分類です。良い・悪いの一語で人間関係を決めるものではありません。</p><h2>Fate Labでの扱い</h2><p>宿曜単独の評価は行わず、四柱推命や数秘術などから得た対人傾向と照合して、共通する特徴をまとめます。</p>`
   },
   {
-    path: 'guides/sanmeigaku', title: '算命学とは？陰陽五行と天中殺の読み方',
+    path: 'guides/sanmeigaku', updated: '2026-11-14', title: '算命学とは？陰陽五行と天中殺の読み方',
     description: '算命学で使われる陰陽五行、十大主星、十二大従星、天中殺を読む際の基本姿勢を解説します。',
     body: sanmeigakuCopy
   },
   {
-    path: 'guides/sanmeigaku-stars', title: '算命学の星一覧｜十大主星・十二大従星と位置別の読み方',
+    path: 'guides/sanmeigaku-stars', updated: '2026-11-14', title: '算命学の星一覧｜十大主星・十二大従星と位置別の読み方',
     description: '算命学の十大主星と十二大従星の特徴を一覧で解説。人体星図の中心・東・西・南・北に入る位置による意味の違い、組み合わせ例、歴史的背景も確認できます。',
     body: ''
   },
@@ -641,10 +642,9 @@ const tools = [
 ];
 
 const infoPages = [
-  { path: 'about', title: 'Fate Labについて', description: 'Fate Labの目的、提供する無料統合占い、運営会社と運営方針についてご案内します。', body: `<p>Fate Lab（フェイトラボ）は、生年月日・出生時刻・出生地から複数の占術を計算し、自己理解の材料を提供するオンラインサービスです。</p><h2>提供するもの</h2><p>東洋・西洋・インドの9つの占術を独立して計算し、複数の体系で共通して現れた本質・仕事・恋愛などの傾向を統合鑑定書として表示します。</p><h2>大切にしていること</h2><p>同じ出生データなら、同じ計算結果から読み解くこと、計算できない項目を推測で埋めないこと、結果を人生の断定ではなく対話の出発点として提示することを大切にしています。</p><h2>運営会社</h2><p>Fate Labは温齋株式会社が企画・開発・運営し、Fate Lab編集部が解説コンテンツの制作と計算仕様の確認を行っています。運営情報は<a href="/tokushoho">特定商取引法に基づく表記</a>、ご連絡は<a href="/contact">お問い合わせページ</a>をご覧ください。</p>` },
+  { path: 'about', title: 'Fate Labについて', description: 'Fate Labの目的、提供する無料統合占い、運営会社と運営方針についてご案内します。', body: `<p>Fate Lab（フェイトラボ）は、生年月日・出生時刻・出生地から複数の占術を計算し、自己理解の材料を提供するオンラインサービスです。</p><h2>提供するもの</h2><p>東洋・西洋・インドの9つの占術を独立して計算し、複数の体系で共通して現れた本質・仕事・恋愛などの傾向を統合鑑定書として表示します。</p><h2>大切にしていること</h2><p>同じ出生データなら、同じ計算結果から読み解くこと、計算できない項目を推測で埋めないこと、結果を人生の断定ではなく対話の出発点として提示することを大切にしています。</p><h2>運営会社</h2><p>Fate Labは温齋株式会社が企画・開発・運営し、Fate Lab編集部が解説コンテンツの制作と計算仕様の確認を行っています。運営情報は<a href="/tokushoho">特定商取引法に基づく表記</a>、ご連絡は<a href="/support">お問い合わせページ</a>をご覧ください。</p>` },
   { path: 'methodology', title: '鑑定ロジックと計算方針', description: 'Fate Labが9つの占術を計算・統合する方法、境界日の検証、再現性、出生時間が不明な場合の扱いを説明します。', body: `<p>Fate Labは、入力された生年月日・出生時刻・出生地・性別から各占術を個別に計算し、定めた解釈ルールで結果を統合します。</p><h2>独立計算</h2><p>四柱推命、算命学、納音、宿曜、九星気学、数秘術、紫微斗数、西洋占星術、インド占星術を、それぞれの前提に沿って計算します。異なる体系の記号を無理に同一視しません。</p><h2>境界条件と再現テスト</h2><p>立春の直前と直後における年柱・月柱の切り替え、出生時刻がある場合だけ返す時柱、11・22・33を保持する数秘術、代表日の宿曜・納音・九星を固定テストで検証します。1995年2月20日5時40分など基準となる出生条件では、詳細命式、西洋・インド占星術の天体位置、紫微斗数十二宮まで同じ結果を再現できることを確認しています。</p><h2>一致する傾向を優先</h2><p>2系統以上で共通して現れる行動傾向を中心に鑑定書へ反映します。ただし四柱推命と算命学のように素材を共有する体系は、別々の系統票として過大評価しません。単独の結果は補足として扱い、強い断定を避けます。</p><h2>不明情報の扱い</h2><p>出生時間が不明な場合、時柱、ハウス、紫微斗数命盤など時刻に依存する項目を省略します。推測した時刻を確定情報として使用しません。</p><h2>限界</h2><p>占術は科学的な性格検査や医療診断ではありません。結果はエンターテインメントおよび自己理解を目的とし、重要な意思決定の唯一の根拠にはできません。固定計算と科学的な予測精度の違いは<a href="/guides/shichu-suimei-statistics">四柱推命は統計学？</a>で詳しく説明しています。</p>` },
-  { path: 'editorial-policy', title: 'コンテンツ制作方針', description: 'Fate Labの占い解説記事、AI利用、計算根拠、更新、表現、免責に関する制作方針です。', body: `<p>Fate Labは、読者が占術の前提と限界を理解し、結果を安全に活用できるコンテンツを目指します。</p><h2>制作原則</h2><p>計算方法と解釈を区別し、複数の流派がある事項は一つを絶対視しません。恐怖をあおる表現、健康・投資・法律上の結果を保証する表現を使用しません。</p><h2>AIの利用</h2><p>記事の下書き、構成整理、表現の確認に生成AIを使用する場合があります。公開内容はFate Labの実装済み計算仕様と自動テストに照らして確認します。AIの出力を専門家の見解として扱わず、資格者または占術家による監修がない記事を「専門家監修」と表示しません。</p><h2>鑑定文の生成</h2><p>統合鑑定書は各占術の計算結果と固定された統合ルールを土台に生成します。同じ出生データと同じ計算バージョンでは、鑑定の根拠となる数値・命式は変わりません。</p><h2>更新と訂正</h2><p>計算仕様や解説を変更した場合は内容を見直し、記事の更新日を表示します。誤りのご連絡は<a href="/contact">お問い合わせページ</a>から受け付けます。</p>` },
-  { path: 'contact', title: 'お問い合わせ', description: 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。', body: `<p>サービスに関するご質問、表示内容の訂正、個人情報に関するご相談は、下記窓口へご連絡ください。</p><h2>メール窓口</h2><p><a href="mailto:support@fate-lab.com">support@fate-lab.com</a></p><p>お問い合わせの際は、対象ページのURLと状況をお書きください。パスワード、クレジットカード番号などの機密情報は送信しないでください。</p><h2>返信について</h2><p>内容を確認のうえ順次返信します。営業・勧誘、鑑定結果の個別解釈、緊急性の高い医療・法律相談には対応できません。</p>` },
+  { path: 'editorial-policy', title: 'コンテンツ制作方針', description: 'Fate Labの占い解説記事、AI利用、計算根拠、更新、表現、免責に関する制作方針です。', body: `<p>Fate Labは、読者が占術の前提と限界を理解し、結果を安全に活用できるコンテンツを目指します。</p><h2>制作原則</h2><p>計算方法と解釈を区別し、複数の流派がある事項は一つを絶対視しません。恐怖をあおる表現、健康・投資・法律上の結果を保証する表現を使用しません。</p><h2>AIの利用</h2><p>記事の下書き、構成整理、表現の確認に生成AIを使用する場合があります。公開内容はFate Labの実装済み計算仕様と自動テストに照らして確認します。AIの出力を専門家の見解として扱わず、資格者または占術家による監修がない記事を「専門家監修」と表示しません。</p><h2>鑑定文の生成</h2><p>統合鑑定書は各占術の計算結果と固定された統合ルールを土台に生成します。同じ出生データと同じ計算バージョンでは、鑑定の根拠となる数値・命式は変わりません。</p><h2>更新と訂正</h2><p>計算仕様や解説を変更した場合は内容を見直し、記事の更新日を表示します。誤りのご連絡は<a href="/support">お問い合わせページ</a>から受け付けます。</p>` },
   { path: 'press', title: 'Fate Labプレスキット', description: 'Fate Labのサービス概要、運営会社、正式表記、対応占術、ロゴ利用、お問い合わせ先をメディア向けにまとめています。', body: `<p>Fate Lab（フェイトラボ）をご紹介いただく際に利用できる公式情報です。事実確認や取材のご相談は<a href="mailto:support@fate-lab.com">support@fate-lab.com</a>へご連絡ください。</p><h2>正式名称と概要</h2><p><strong>サービス名：</strong>Fate Lab（フェイトラボ）<br><strong>URL：</strong><a href="https://fate-lab.com/">https://fate-lab.com/</a><br><strong>運営：</strong>温齋株式会社</p><p>Fate Labは、東洋・西洋・インドの9つの占術を同じ出生条件から個別に計算し、複数体系で一致した傾向をまとめる無料オンライン占いです。</p><h2>対応する9占術</h2><p>四柱推命、算命学、納音、宿曜、九星気学、数秘術、紫微斗数、西洋占星術、インド占星術に対応しています。</p><h2>サービスの特徴</h2><ul><li>同じ出生データと同じ計算バージョンなら同じ結果を返す</li><li>出生時刻が不明な場合、時刻依存項目を推測で確定しない</li><li>複数占術で共通する傾向を優先し、単独結果による断定を避ける</li><li>境界日や代表出生条件を自動テストで検証する</li></ul><h2>ロゴ・画像</h2><p>サービス紹介には<a href="/og-fate-lab.png">公式OG画像（1200×630 PNG）</a>をご利用いただけます。画像の縦横比、色、文字を変更せず、Fate Labの紹介目的に限ってお使いください。</p><h2>紹介文</h2><p>「Fate Lab（フェイトラボ）は、四柱推命や紫微斗数、西洋占星術、インド占星術など9つの占術を固定ルールで統合する、生年月日の無料オンライン占いです。」</p><h2>注意事項</h2><p>本サービスは医療、法律、金融、採用などの専門的判断を代替しません。「科学的に未来を予測する」「必ず当たる」など、提供内容と異なる表現は使用しないでください。</p>` },
 ];
 
@@ -659,9 +659,10 @@ function appPageHtml(template, route) {
   const canonical = `${SITE_URL}/${route.path}`;
   const title = route.path.startsWith('feature/') ? route.title : `${route.title}｜${SITE_NAME}`;
   const robots = route.path.startsWith('feature/') ? 'noindex,nofollow' : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+  const pageTemplate = template.replace(/<script type="application\/ld\+json">\s*\{[^<]*"@type"\s*:\s*"WebApplication"[^<]*<\/script>/, '');
   const content = route.path === 'couple'
-    ? template.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
-    : template;
+    ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
+    : pageTemplate;
   const webApplicationSchema = route.path === 'couple' ? {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
@@ -719,7 +720,7 @@ const contentHeader = `<header class="content-header">
     if (!contentMenu.contains(event.target)) contentMenu.open = false;
   });
 </script>`;
-const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
+const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/support">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
 const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 function staticHtml(page, type = 'Article') {
@@ -791,7 +792,7 @@ for (const tool of tools.map(expandedTool)) writePage(tool.path, staticHtml(tool
 for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
 writePage('guides', guideIndexHtml());
 writePage('tools', toolIndexHtml());
-const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushoho', 'coupons', 'couple'];
+const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushoho', 'coupons', 'couple', 'support'];
 const guideUpdateDates = new Map(guides.map(guide => [guide.path, guide.updated]));
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => `  <url><loc>${SITE_URL}/${route}</loc><lastmod>${guideUpdateDates.get(route) ?? UPDATED}</lastmod><changefreq>${route === '' || route.endsWith('/') ? 'weekly' : 'monthly'}</changefreq><priority>${route === '' ? '1.0' : route === 'tools/shichu-suimei-calculator' ? '0.9' : route.startsWith('guides/angel-number') ? '0.8' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`;
 fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml);

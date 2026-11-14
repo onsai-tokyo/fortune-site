@@ -120,6 +120,30 @@
       "destination": "/coupons/index.html"
     },
     {
+      "source": "/guides/:group/:slug",
+      "destination": "/guides/:group/:slug/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/tokushoho",
+      "destination": "/tokushoho/index.html"
+    },
+    {
+      "source": "/tokushohou",
+      "destination": "/tokushohou/index.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/support/index.html"
+    },
+    {
       "source": "/((?!api/|assets/|images/|favicon[.]svg$).*)",
       "destination": "/index.html"
     }

@@ -2,15 +2,13 @@ const coupleLink = `<aside class="inline-cta"><strong>二人の相性を見て�
 
 const couponLink = `<aside class="inline-cta"><strong>今の状況を具体的に相談したい方へ</strong><p>相談したいことが決まったら、ココナラ電話占いなどの初回特典と利用条件を確認できます。</p><a href="/coupons" data-guide-coupon>占いの初回特典を見る</a></aside>`;
 
-export const relationshipGuideDate = '2026-11-14';
-
 export const relationshipGuides = [
   {
     path: 'guides/partner-feelings',
     title: '相手の気持ちを占いたいときに｜生年月日で見る二人の相性',
     description: '相手の気持ちがわからないとき、生年月日の相性占いで整理できる距離感や連絡の傾向を、片思いと復縁の例で解説します。',
-    published: relationshipGuideDate,
-    updated: relationshipGuideDate,
+    published: '2026-11-14',
+    updated: '2026-11-14',
     hideDefaultCta: true,
     body: `
 <p>会うと親しいのに次の約束が決まらない。そんなとき、生年月日の相性鑑定で照らし合わせられるのは、二人の関わり方と年ごとのテーマです。相手が今どう感じているかを知りたいなら、返信の速さだけで判断せず、相手も会話や予定づくりに関わっているかを見てください。</p>
@@ -38,8 +36,8 @@ ${couponLink}`
     path: 'guides/one-sided-love',
     title: '片思いは進展する？ 相性占いで見る二人の距離と動くタイミング',
     description: '片思いの相手を誘うか、もう少し待つか。生年月日の相性占いをヒントに、二人の距離と次に取れる行動を考えます。',
-    published: relationshipGuideDate,
-    updated: relationshipGuideDate,
+    published: '2026-11-14',
+    updated: '2026-11-14',
     hideDefaultCta: true,
     body: `
 <p>片思いが進展するか気になるときは、まず「次に何が起きたら進展と言えるか」を考えてみましょう。二人で出かける、連絡を取り合う、気持ちを言葉にする。今の段階に合った目標があると、相性占いの結果を次の一歩に使いやすくなります。</p>
@@ -65,8 +63,8 @@ ${couponLink}`
     path: 'guides/married-partner-feelings',
     title: '既婚者の相手の気持ちが気になるとき｜相性占いで整理できること',
     description: '既婚者の相手との関係や不倫の悩みで相手の気持ちを占いたいとき、言葉と行動、自分が望む関係をどう整理するかを解説します。',
-    published: relationshipGuideDate,
-    updated: relationshipGuideDate,
+    published: '2026-11-14',
+    updated: '2026-11-14',
     hideDefaultCta: true,
     body: `
 <p>既婚者の相手に「大切に思っている」と言われても、この先どう関わるつもりかは、その一言からはわかりません。相性占いを読む前に、相手の言葉、実際に守られた約束、自分が望む関係をそれぞれ書き出すと、今の悩みを具体的にできます。</p>
@@ -85,8 +83,8 @@ ${couponLink}`
     path: 'guides/meeting-timing',
     title: '出会いはいつ？ 生年月日占いで見る恋愛の出会いの時期',
     description: '生年月日から読む出会い運の見方を、四柱推命の年運や桃花の考え方とともに解説。出会いを増やす行動の例も紹介します。',
-    published: relationshipGuideDate,
-    updated: relationshipGuideDate,
+    published: '2026-11-14',
+    updated: '2026-11-14',
     hideDefaultCta: true,
     body: `
 <p>四柱推命で出会いの時期を見るときは、約十年単位の大運で生活の背景を読み、一年ごとの年運で交流が広がりそうな時期を探します。引っ越しや担当替えで会う人が変わる予定があるなら、そこから年運と現実の予定を重ねて読めます。</p>
@@ -104,8 +102,8 @@ ${couponLink}`
     path: 'guides/marriage-compatibility',
     title: '今の恋人と結婚できる？ 生年月日で見る結婚相性と話し合いのヒント',
     description: '今の恋人との結婚相性が気になる方へ。生年月日の相性占いを、生活リズムや結婚の希望時期を話し合うきっかけにする方法を紹介します。',
-    published: relationshipGuideDate,
-    updated: relationshipGuideDate,
+    published: '2026-11-14',
+    updated: '2026-11-14',
     hideDefaultCta: true,
     body: `
 <p>今の恋人と結婚できるか考えるなら、二人に結婚の意思があるか、同じ時期に生活を変えられるかを別々に確かめます。生年月日の相性鑑定は、話し合いが進みやすい場面や、違いが出たときの二人の関わり方を振り返る材料になります。</p>
