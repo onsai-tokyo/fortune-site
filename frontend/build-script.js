@@ -1,3 +1,4 @@
+import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuPositionExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import path from 'path';
 import { relationshipGuideDate, relationshipGuides, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
@@ -66,7 +67,7 @@ const guides = [
     path: 'guides/compatibility',
     title: '生年月日による相性占い｜恋愛・結婚・仕事で見るポイント',
     description: '生年月日から恋愛、結婚、仕事の相性を見る観点と、結果を関係改善に活かす方法を解説します。',
-    body: `<p>相性占いは、2人の生年月日から性格や行動の傾向を比較し、噛み合いやすい点と違いが出やすい点を整理するものです。良し悪しを一つの点数で断定するより、関係を築くヒントとして使うのが適しています。</p><h2>目的によって見る観点が違う</h2><p><strong>恋愛</strong>では感情表現や距離感、<strong>結婚</strong>では生活リズムや役割分担、<strong>仕事</strong>では意思決定や報告の仕方を重視します。同じ2人でも、関係の目的によって相性の現れ方は変わります。</p><h2>違いは弱点とは限らない</h2><p>似ている2人は意思疎通が早い一方、同じ弱点を抱えることがあります。異なる2人は誤解が生じやすい反面、役割を補い合える場合があります。</p><h2>決めつけに使わない</h2><p>相性診断は別れや結婚を指示するものではありません。気になる表現は相手を決めつける材料にせず、実際の会話で確認してください。</p>`
+    body: compatibilityCopy
   },
   {
     path: 'guides/marriage-timing', updated: relationshipGuideDate, title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
@@ -87,7 +88,7 @@ const guides = [
   {
     path: 'guides/birth-chart', title: '命式とは？無料鑑定で確認する年柱・月柱・日柱・時柱',
     description: '四柱推命の命式を構成する四つの柱と、無料鑑定で確認できる項目を解説します。',
-    body: `<p>命式は、生年月日時を暦の規則に沿って干支へ置き換えた表です。四柱推命では年・月・日・時の四つの柱を使い、それぞれに天干と地支が入ります。</p><h2>命式で最初に見る項目</h2><p>中心になるのは日柱の天干である「日干」です。そのうえで月令、五行の偏り、陰陽の配分、柱同士の関係を確認します。単独の記号だけで性格や運勢を断定するものではありません。</p><h2>節入りと出生地</h2><p>年柱と月柱は元日や毎月1日ではなく節入りで切り替わります。境界付近では出生時刻が結果に影響します。また方式によって時刻補正の扱いが異なるため、計算基準の明示が重要です。</p><h2>無料鑑定での確認</h2><p>Fate Labは入力条件から命式を計算し、他の占術と共通する傾向を統合します。時刻が不明な場合は、時刻を必要とする項目を省略して表示します。</p>`
+    body: birthChartCopy
   },
   {
     path: 'guides/day-master', title: '日干とは？十干から見る自分の本質',
@@ -152,7 +153,7 @@ const guides = [
   {
     path: 'guides/sanmeigaku', title: '算命学とは？陰陽五行と天中殺の読み方',
     description: '算命学で使われる陰陽五行、十大主星、十二大従星、天中殺を読む際の基本姿勢を解説します。',
-    body: `<p>算命学は、生年月日を干支へ置き換え、陰陽五行の関係から性質や環境との関わりを考える体系です。四柱推命と共通する素材を使いますが、解釈体系は同一ではありません。</p><h2>星は役割を整理する記号</h2><p>十大主星は行動や才能の方向、十二大従星はエネルギーの質を表す手がかりとされます。星名の印象だけで吉凶を決めず、配置と全体の関係を見ます。</p><h2>天中殺を怖がらない</h2><p>天中殺は一定の周期を示す概念であり、必ず不幸が起きる期間ではありません。大きな決断では現実の条件と専門家の助言を優先してください。</p><h2>四柱推命との統合</h2><p>同じ干支を使う結果を重複票として数えすぎないよう、Fate Labでは近い体系同士の関連性を考慮して文章化します。陰占・陽占、通変星と十大主星の対応は<a href="/guides/sanmeigaku-shichu-suimei-relationship">算命学と四柱推命の関係</a>で図解しています。</p>`
+    body: sanmeigakuCopy
   },
   {
     path: 'guides/sanmeigaku-stars', title: '算命学の星一覧｜十大主星・十二大従星と位置別の読み方',
@@ -536,8 +537,9 @@ const shichuHubStyle = `.topic-hub{margin:46px 0;padding:26px;background:#fffdf8
 function expandedGuide(page) {
   const calculatorLinkTargets = new Set(['guides/shichu-suimei', 'guides/birth-chart', 'guides/day-master', 'guides/five-elements', 'guides/setsuiri-boundary']);
   const withCalculatorLink = body => calculatorLinkTargets.has(page.path) ? `${body}<aside class="inline-cta"><strong>自分の命式を自動計算する</strong><p>年柱・月柱・日柱・時柱、通変星、蔵干、五行バランスを無料で確認できます。</p><a href="/tools/shichu-suimei-calculator">四柱推命を無料で自動計算する</a></aside>` : body;
-  if (page.path === 'guides/shichu-suimei') return { ...page, body: `${shichuSuimeiGuideBody(page)}${shichuHub}<style>${shichuHubStyle}</style>` };
-  if (page.path === 'guides/shichu-suimei-what-am-i' || relationshipGuides.includes(page)) return page;
+  if (page.path === 'guides/shichu-suimei') return { ...page, body: `${shichuSuimeiGuideBody(page)}${shichuReadingExample}${shichuHub}<style>${shichuHubStyle}</style>` };
+  if (page.path === 'guides/birth-chart') return { ...page, body: withCalculatorLink(page.body) };
+  if (page.path === 'guides/shichu-suimei-what-am-i' || page.path === 'guides/compatibility' || relationshipGuides.includes(page)) return page;
   if (page.path === 'guides/sanmeigaku-shichu-suimei-relationship') return { ...page, body: `${sanmeiShichuRelationshipBody()}<style>.dual-reading{grid-template-columns:repeat(2,minmax(0,1fr))}.dual-reading>section{min-width:0;overflow:hidden}.dual-reading .table-scroll{max-width:100%}@media(max-width:620px){.dual-reading{grid-template-columns:minmax(0,1fr)}.dual-reading>section{width:100%;max-width:100%}}</style>` };
   if (page.path === 'guides/shichu-suimei-statistics') return { ...page, body: editorialStatisticsBody() };
   if (page.path === 'guides/reconciliation-timing') return { ...page, body: reconciliationCompatibilityBody().replace('<h2>復縁相性を判断する4つの軸</h2>', `${reconciliationVisualIntro}<h2>復縁相性を判断する4つの軸</h2>`).replace('<h2>算命学・宿曜・紫微斗数では何を見るか</h2>', `${reconciliationBranchGuide}<h2>算命学・宿曜・紫微斗数では何を見るか</h2>`).replace('<h2>復縁相性の具体例</h2>', `${reconciliationTimingGuide}<h2>復縁相性の具体例</h2>`).replace('<h2>架空の二人を順番に判定する例</h2>', `<h2>架空の二人を順番に判定する例</h2>${reconciliationSampleCharts}`).replace('<h2>よくある質問</h2>', `${reconciliationDecisionGuide}${reconciliationContactSection}<h2>よくある質問</h2>`) };
@@ -546,8 +548,8 @@ function expandedGuide(page) {
   if (page.path === 'guides/nayin') return { ...page, body: nayinBody() };
   if (page.path === 'guides/astrology-systems-comparison') return { ...page, body: astrologySystemsComparisonBody() };
   if (page.path === 'guides/shichu-suimei-animal-character') return { ...page, body: animalCharacterBody() };
-  if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: `${sanmeigakuStarsBody()}<aside class="inline-cta"><strong>自分の星を調べる</strong><p>生年月日から人体星図・十大主星・十二大従星・天中殺を無料で計算できます。</p><a href="/tools/sanmeigaku-calculator">算命学の無料鑑定を開く →</a></aside>` };
-  if (page.path === 'guides/sanmeigaku') return { ...page, body: `${page.body}<aside class="inline-cta"><strong>あなたの算命学の星は？</strong><p>中心星だけでなく、位置別の十大主星と十二大従星まで無料で確認できます。</p><a href="/tools/sanmeigaku-calculator">生年月日から無料計算する →</a></aside>${engineReferenceSection(page)}` };
+  if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: `${sanmeigakuStarsBody()}${sanmeigakuPositionExample}<aside class="inline-cta"><strong>自分の星を調べる</strong><p>生年月日から人体星図・十大主星・十二大従星・天中殺を無料で計算できます。</p><a href="/tools/sanmeigaku-calculator">算命学の無料鑑定を開く →</a></aside>` };
+  if (page.path === 'guides/sanmeigaku') return { ...page, body: `${page.body}<aside class="inline-cta"><strong>あなたの算命学の星は？</strong><p>中心星だけでなく、位置別の十大主星と十二大従星まで無料で確認できます。</p><a href="/tools/sanmeigaku-calculator">生年月日から無料計算する →</a></aside>` };
   if (page.path === 'guides/angel-numbers') return { ...page, body: `${angelNumberHubBody()}${angelHubAppendix}<style>${cycleFixStyle}</style>` };
   if (page.path.startsWith('guides/angel-number-')) {
     const number = Number(page.path.split('-').at(-1));
