@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { relationshipGuideDate, relationshipGuides, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
 
 const SITE_URL = 'https://fate-lab.com';
 const SITE_NAME = 'Fate Lab';
@@ -68,7 +69,7 @@ const guides = [
     body: `<p>相性占いは、2人の生年月日から性格や行動の傾向を比較し、噛み合いやすい点と違いが出やすい点を整理するものです。良し悪しを一つの点数で断定するより、関係を築くヒントとして使うのが適しています。</p><h2>目的によって見る観点が違う</h2><p><strong>恋愛</strong>では感情表現や距離感、<strong>結婚</strong>では生活リズムや役割分担、<strong>仕事</strong>では意思決定や報告の仕方を重視します。同じ2人でも、関係の目的によって相性の現れ方は変わります。</p><h2>違いは弱点とは限らない</h2><p>似ている2人は意思疎通が早い一方、同じ弱点を抱えることがあります。異なる2人は誤解が生じやすい反面、役割を補い合える場合があります。</p><h2>決めつけに使わない</h2><p>相性診断は別れや結婚を指示するものではありません。気になる表現は相手を決めつける材料にせず、実際の会話で確認してください。</p>`
   },
   {
-    path: 'guides/marriage-timing', title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
+    path: 'guides/marriage-timing', updated: relationshipGuideDate, title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
     searchDescription: '四柱推命で結婚の時期をどう読む？ 命式の配偶者星・日支と、大運・年運が重なる年を、婚期の候補を絞る具体例で解説します。',
     description: '四柱推命で婚期を見る方法を、配偶者星、日支、六合・冲、桃花、大運・年運の重なりから解説。紫微斗数やインド占星術との照合、具体的な候補年の読み方も紹介します。',
     body: ''
@@ -79,7 +80,7 @@ const guides = [
     body: ''
   },
   {
-    path: 'guides/reconciliation-timing', title: '復縁できる相性の見方｜二人の命式と復縁運を判断する方法',
+    path: 'guides/reconciliation-timing', updated: relationshipGuideDate, title: '復縁できる相性の見方｜二人の命式と復縁運を判断する方法',
     description: '二人の生年月日から復縁相性をどう判断するかを解説。日柱・五行・六合・冲・宿曜・夫妻宮と、双方の大運・年運を比較し、復縁しやすい条件と難しい条件を具体例で確認します。',
     body: ''
   },
@@ -178,6 +179,7 @@ const guides = [
     description: '同じ誕生日でも出生時刻・場所・経験によって結果や人生が異なる理由と、再現性のある占いの正しい使い方を説明します。',
     body: `<p>同じ生年月日を入力すれば、固定された計算規則から得られる命式や数字は同じになります。しかし、同じ人生になるわけではありません。計算結果の再現性と、人間の未来を決定することは別の話です。</p><h2>出生時刻と場所で変わる項目</h2><p>四柱推命の時柱、紫微斗数の命宮、西洋・インド占星術の上昇点やハウスは出生時刻と場所の影響を受けます。同じ日でも入力条件が違えば、一部の計算結果は変わります。</p><h2>同じ命式でも経験は異なる</h2><p>家庭環境、教育、文化、健康、仕事、本人の選択は生年月日だけから決まりません。同じ傾向があっても、支援的な環境では強みとして、合わない環境では負担として現れることがあります。</p><h2>再現性が意味するもの</h2><p>Fate Labが重視する再現性は「同じ入力と同じ計算バージョンなら同じ結果を返す」という意味です。当日の気分やランダム処理で鑑定の土台が変わらないため、利用者が結果を比較・検証できます。これは予測精度の証明とは異なります。詳しくは<a href="/guides/shichu-suimei-statistics">四柱推命は統計学？</a>をご覧ください。</p><h2>結果を仮説として使う</h2><p>当てはまる記述は具体的な経験と照合し、当てはまらないものは無理に受け入れないでください。占いは人生の答えではなく、自分や相手への問いを作る参考資料として使うのが適切です。</p>`
   },
+  ...relationshipGuides,
 ];
 
 // SEO解説は鑑定結果と表現が食い違わないよう、鑑定エンジンのマスタを直接読み込んで展開する。
@@ -525,7 +527,7 @@ function shichuSuimeiGuideBody(page) {
 const shichuHubGroups = [
   ['まず調べる', [['/tools/shichu-suimei-calculator', '四柱推命の命式を無料で自動計算'], ['/guides/shichu-suimei-what-am-i', '四柱推命で自分は何か調べる'], ['/guides/birth-chart', '年柱・月柱・日柱・時柱の見方'], ['/guides/day-master', '日干10種類の特徴']]],
   ['命式を詳しく読む', [['/guides/five-elements', '五行バランスの読み方'], ['/guides/setsuiri-boundary', '立春・節入りで結果が変わる理由'], ['/guides/sanmeigaku-stars', '通変星と算命学の星を整理する'], ['/guides/nayin', '納音と日柱の違い']]],
-  ['恋愛・仕事へ活かす', [['/guides/compatibility', '四柱推命を含む相性の見方'], ['/guides/marriage-timing', '大運・年運から婚期を見る'], ['/guides/reconciliation-timing', '二人の命式から復縁運を見る'], ['/guides/career', '命式から適職と働き方を見る']]],
+  ['恋愛・仕事へ活かす', [['/guides/partner-feelings', '相手の気持ちが気になるときの相性占い'], ['/guides/compatibility', '四柱推命を含む相性の見方'], ['/guides/marriage-timing', '大運・年運から婚期を見る'], ['/guides/reconciliation-timing', '二人の命式から復縁運を見る'], ['/guides/career', '命式から適職と働き方を見る']]],
   ['ほかの占術と比べる', [['/guides/sanmeigaku-shichu-suimei-relationship', '算命学と四柱推命の関係'], ['/guides/shichu-suimei-animal-character', '四柱推命と動物占いの関係'], ['/guides/astrology-systems-comparison', 'インド占星術・紫微斗数との違い'], ['/guides/shichu-suimei-statistics', '四柱推命は統計学なのか']]],
 ];
 const shichuHub = `<nav class="topic-hub" aria-label="四柱推命の解説一覧"><h2>四柱推命を知りたい順に読む</h2><p>知りたい内容から選んでください。命式をまだ出していない場合は、無料自動計算から始められます。</p><div class="topic-hub-grid">${shichuHubGroups.map(([heading, links]) => `<section><h3>${heading}</h3>${links.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</section>`).join('')}</div></nav>`;
@@ -535,12 +537,12 @@ function expandedGuide(page) {
   const calculatorLinkTargets = new Set(['guides/shichu-suimei', 'guides/birth-chart', 'guides/day-master', 'guides/five-elements', 'guides/setsuiri-boundary']);
   const withCalculatorLink = body => calculatorLinkTargets.has(page.path) ? `${body}<aside class="inline-cta"><strong>自分の命式を自動計算する</strong><p>年柱・月柱・日柱・時柱、通変星、蔵干、五行バランスを無料で確認できます。</p><a href="/tools/shichu-suimei-calculator">四柱推命を無料で自動計算する</a></aside>` : body;
   if (page.path === 'guides/shichu-suimei') return { ...page, body: `${shichuSuimeiGuideBody(page)}${shichuHub}<style>${shichuHubStyle}</style>` };
-  if (page.path === 'guides/shichu-suimei-what-am-i') return page;
+  if (page.path === 'guides/shichu-suimei-what-am-i' || relationshipGuides.includes(page)) return page;
   if (page.path === 'guides/sanmeigaku-shichu-suimei-relationship') return { ...page, body: `${sanmeiShichuRelationshipBody()}<style>.dual-reading{grid-template-columns:repeat(2,minmax(0,1fr))}.dual-reading>section{min-width:0;overflow:hidden}.dual-reading .table-scroll{max-width:100%}@media(max-width:620px){.dual-reading{grid-template-columns:minmax(0,1fr)}.dual-reading>section{width:100%;max-width:100%}}</style>` };
   if (page.path === 'guides/shichu-suimei-statistics') return { ...page, body: editorialStatisticsBody() };
-  if (page.path === 'guides/reconciliation-timing') return { ...page, body: reconciliationCompatibilityBody().replace('<h2>復縁相性を判断する4つの軸</h2>', `${reconciliationVisualIntro}<h2>復縁相性を判断する4つの軸</h2>`).replace('<h2>算命学・宿曜・紫微斗数では何を見るか</h2>', `${reconciliationBranchGuide}<h2>算命学・宿曜・紫微斗数では何を見るか</h2>`).replace('<h2>復縁相性の具体例</h2>', `${reconciliationTimingGuide}<h2>復縁相性の具体例</h2>`).replace('<h2>架空の二人を順番に判定する例</h2>', `<h2>架空の二人を順番に判定する例</h2>${reconciliationSampleCharts}`).replace('<h2>よくある質問</h2>', `${reconciliationDecisionGuide}<h2>よくある質問</h2>`) };
+  if (page.path === 'guides/reconciliation-timing') return { ...page, body: reconciliationCompatibilityBody().replace('<h2>復縁相性を判断する4つの軸</h2>', `${reconciliationVisualIntro}<h2>復縁相性を判断する4つの軸</h2>`).replace('<h2>算命学・宿曜・紫微斗数では何を見るか</h2>', `${reconciliationBranchGuide}<h2>算命学・宿曜・紫微斗数では何を見るか</h2>`).replace('<h2>復縁相性の具体例</h2>', `${reconciliationTimingGuide}<h2>復縁相性の具体例</h2>`).replace('<h2>架空の二人を順番に判定する例</h2>', `<h2>架空の二人を順番に判定する例</h2>${reconciliationSampleCharts}`).replace('<h2>よくある質問</h2>', `${reconciliationDecisionGuide}${reconciliationContactSection}<h2>よくある質問</h2>`) };
   if (page.path === 'guides/ziwei-marriage-timing') return { ...page, body: ziweiMarriageTimingBody() };
-  if (page.path === 'guides/marriage-timing') return { ...page, body: marriageTimingBody().replace('<h2>四柱推命で婚期を見る5つの要素</h2>', `${marriagePillarBasics}<h2>四柱推命で婚期を見る5つの要素</h2>`) };
+  if (page.path === 'guides/marriage-timing') return { ...page, body: marriageTimingBody().replace('<h2>四柱推命で婚期を見る5つの要素</h2>', `${marriageQuestionSection}${marriagePillarBasics}<h2>四柱推命で婚期を見る5つの要素</h2>`) };
   if (page.path === 'guides/nayin') return { ...page, body: nayinBody() };
   if (page.path === 'guides/astrology-systems-comparison') return { ...page, body: astrologySystemsComparisonBody() };
   if (page.path === 'guides/shichu-suimei-animal-character') return { ...page, body: animalCharacterBody() };
@@ -701,16 +703,18 @@ const contentHeader = `<header class="content-header">
   });
 </script>`;
 const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/contact">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
-const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
+const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 function staticHtml(page, type = 'Article') {
   const isGuide = page.path.startsWith('guides/');
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
   const canonical = `${SITE_URL}/${page.path}`;
   const title = `${page.title}｜${SITE_NAME}`;
+  const published = page.published ?? '2026-08-10';
+  const updated = page.updated ?? UPDATED;
   const schema = {
     '@context': 'https://schema.org', '@graph': [
-      { '@type': type, headline: page.title, name: page.title, description: page.description, url: canonical, inLanguage: 'ja', mainEntityOfPage: canonical, datePublished: '2026-08-10', dateModified: UPDATED, ...(type === 'WebApplication' ? { applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' } } : {}), author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
+      { '@type': type, headline: page.title, name: page.title, description: page.description, url: canonical, inLanguage: 'ja', mainEntityOfPage: canonical, datePublished: published, dateModified: updated, ...(type === 'WebApplication' ? { applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' } } : {}), author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
       { '@type': 'BreadcrumbList', itemListElement: type === 'Article' ? [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: '占い解説', item: `${SITE_URL}/guides/` }, { '@type': 'ListItem', position: 3, name: page.title, item: canonical }] : [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: page.title, item: canonical }] }
     ]
   };
@@ -718,13 +722,13 @@ function staticHtml(page, type = 'Article') {
   const currentIndex = guides.findIndex(g => g.path === page.path);
   const relatedGuides = currentIndex < 0 ? guides.slice(0, 4) : Array.from({ length: Math.min(4, guides.length - 1) }, (_, offset) => guides[(currentIndex + offset + 1) % guides.length]);
   const related = relatedGuides.map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
-  const meta = type === 'Article' ? `<div class="meta">公開日：2026-08-10　更新日：${UPDATED}　Fate Lab編集部</div>` : '';
+  const meta = type === 'Article' ? `<div class="meta">公開日：${published}　更新日：${updated}　Fate Lab編集部</div>` : '';
   const visibleFaq = page.path === 'tools/sanmeigaku-calculator' && page.faqs?.length
     ? `<section class="visible-faq"><h2>算命学の無料鑑定についてよくある質問</h2>${page.faqs.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}</section>`
     : '';
   if (visibleFaq) page.body += visibleFaq;
   const editorial = type === 'Article' ? `<details class="editorial-details"><summary>この記事の制作方針と検証について</summary><div><section class="author"><strong>制作・計算仕様の検証：Fate Lab編集部</strong><p>記事の構成整理や表現確認に生成AIを利用する場合があります。本文の各論はFate Labの鑑定エンジンが持つ解釈マスタから展開し、実装済み計算仕様と固定テストに照らして確認しています。資格者監修がない記事を専門家監修とは表示しません。</p></section><section class="sources"><strong>参考情報と検証方針</strong><ul><li>暦・天体・干支計算は、公開された暦法と実装ライブラリの固定テストで検証</li><li>境界日や出生時間の有無で結果が変わる条件を明示</li><li>占術は科学的診断ではなく、自己理解の参考情報として提供</li></ul><a href="/editorial-policy">AI利用を含む制作方針</a>　<a href="/methodology">鑑定ロジック</a></section></div></details>` : '';
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="${page.path === 'guides/compatibility' ? '/couple' : '/welcome'}">${page.path === 'guides/compatibility' ? 'ふたりの相性を無料で鑑定する' : '生年月日を入力して無料で鑑定する'}</a>${editorial}<p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}${page.hideDefaultCta ? '' : `<a class="cta" href="${page.path === 'guides/compatibility' ? '/couple' : '/welcome'}">${page.path === 'guides/compatibility' ? 'ふたりの相性を無料で鑑定する' : '生年月日を入力して無料で鑑定する'}</a>`}${editorial}<p>最終更新日：${updated}</p></main>${footer}</body></html>`;
 }
 
 function guideIndexHtml() {
@@ -758,7 +762,8 @@ for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
 writePage('guides', guideIndexHtml());
 writePage('tools', toolIndexHtml());
 const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushoho', 'coupons', 'couple'];
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => `  <url><loc>${SITE_URL}/${route}</loc><lastmod>${UPDATED}</lastmod><changefreq>${route === '' || route.endsWith('/') ? 'weekly' : 'monthly'}</changefreq><priority>${route === '' ? '1.0' : route === 'tools/shichu-suimei-calculator' ? '0.9' : route.startsWith('guides/angel-number') ? '0.8' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`;
+const guideUpdateDates = new Map(guides.map(guide => [guide.path, guide.updated]));
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => `  <url><loc>${SITE_URL}/${route}</loc><lastmod>${guideUpdateDates.get(route) ?? UPDATED}</lastmod><changefreq>${route === '' || route.endsWith('/') ? 'weekly' : 'monthly'}</changefreq><priority>${route === '' ? '1.0' : route === 'tools/shichu-suimei-calculator' ? '0.9' : route.startsWith('guides/angel-number') ? '0.8' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`;
 fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml);
 // Keep Vite's WebApp entry at /. The legacy landing page redirects to it.
 console.log(`Generated SEO HTML for /, ${appRoutes.length} app routes, ${guides.length} guides, ${tools.length} tools, and ${infoPages.length} information pages`);
