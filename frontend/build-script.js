@@ -66,6 +66,7 @@ const guides = [
   },
   {
     path: 'guides/marriage-timing', title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
+    searchDescription: '四柱推命で結婚の時期をどう読む？ 命式の配偶者星・日支と、大運・年運が重なる年を、婚期の候補を絞る具体例で解説します。',
     description: '四柱推命で婚期を見る方法を、配偶者星、日支、六合・冲、桃花、大運・年運の重なりから解説。紫微斗数やインド占星術との照合、具体的な候補年の読み方も紹介します。',
     body: ''
   },
@@ -586,6 +587,7 @@ const tools = [
   {
     path: 'tools/sanmeigaku-calculator',
     title: '算命学の無料鑑定｜生年月日から十大主星・十二大従星を自動計算',
+    searchDescription: '算命学の人体星図を生年月日から無料で作成。自分の中心星・十大主星・十二大従星・天中殺と、それぞれの星の意味がわかります。出生時刻・会員登録は不要です。',
     description: '生年月日から算命学の人体星図、中心星を含む十大主星、十二大従星、天中殺を無料で自動計算。登録不要で星の位置と意味を確認できます。',
     faqs: [
       ['算命学を無料で鑑定できますか？', 'はい。生年月日を入力すると、人体星図、十大主星、十二大従星、天中殺を登録不要で無料計算できます。'],
@@ -600,6 +602,7 @@ const tools = [
   {
     path: 'tools/shichu-suimei-calculator',
     title: '四柱推命 無料｜生年月日から命式・日干・五行を自動計算',
+    searchDescription: '生年月日から四柱推命の命式を無料で作成。日干・通変星・十二運・五行バランスを確認できます。出生時間がわからなくても計算でき、会員登録も不要です。',
     description: '四柱推命の命式を生年月日から無料で自動計算。日干、通変星、十二運、五行に加え、希望する場合は大運・年運も登録不要で確認できます。',
     faqs: [
       ['四柱推命とは何ですか？', '生まれた年・月・日・時刻を四つの柱へ置き換え、日干、五行、通変星、十二運などから傾向を読む占術です。'],
@@ -684,7 +687,7 @@ function staticHtml(page, type = 'Article') {
   if (visibleFaq) page.body += visibleFaq;
   const editorial = type === 'Article' ? `<details class="editorial-details"><summary>この記事の制作方針と検証について</summary><div><section class="author"><strong>制作・計算仕様の検証：Fate Lab編集部</strong><p>記事の構成整理や表現確認に生成AIを利用する場合があります。本文の各論はFate Labの鑑定エンジンが持つ解釈マスタから展開し、実装済み計算仕様と固定テストに照らして確認しています。資格者監修がない記事を専門家監修とは表示しません。</p></section><section class="sources"><strong>参考情報と検証方針</strong><ul><li>暦・天体・干支計算は、公開された暦法と実装ライブラリの固定テストで検証</li><li>境界日や出生時間の有無で結果が変わる条件を明示</li><li>占術は科学的診断ではなく、自己理解の参考情報として提供</li></ul><a href="/editorial-policy">AI利用を含む制作方針</a>　<a href="/methodology">鑑定ロジック</a></section></div></details>` : '';
   const showAffiliate = page.path === 'tools/shichu-suimei-calculator' ? false : type === 'Article' ? SHOW_GUIDE_AFFILIATE : ['WebApplication', 'CollectionPage'].includes(type);
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#faf7ef"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/og-fate-lab.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/og-fate-lab.png">${analytics}<style>${sharedStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body><header>${nav}</header><main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="/#form">生年月日を入力して無料で鑑定する</a>${editorial}${showAffiliate ? affiliateCard : ''}<p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#faf7ef"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/og-fate-lab.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/og-fate-lab.png">${analytics}<style>${sharedStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body><header>${nav}</header><main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}<a class="cta" href="/#form">生年月日を入力して無料で鑑定する</a>${editorial}${showAffiliate ? affiliateCard : ''}<p>最終更新日：${UPDATED}</p></main>${footer}</body></html>`;
 }
 
 function guideIndexHtml() {
