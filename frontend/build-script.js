@@ -768,6 +768,19 @@ if (!fs.existsSync(lpPath) || !fs.existsSync(indexPath) || !fs.existsSync(topPag
 }
 
 const appTemplate = fs.readFileSync(indexPath, 'utf-8');
+const siteNameSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  alternateName: ['FateLab', 'フェイトラボ'],
+  url: `${SITE_URL}/`
+};
+const homepage = appTemplate.replace(
+  '</head>',
+  `  <script type="application/ld+json">${JSON.stringify(siteNameSchema)}</script>\n  </head>`
+);
+fs.writeFileSync(indexPath, homepage);
+
 fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate);
 for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, route));
 writePage('threads-launch', appTemplate
