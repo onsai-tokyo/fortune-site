@@ -23,9 +23,40 @@ export function classifySource(url, referrer) {
   return 'direct'
 }
 
+const guideEntryKey = 'fl-guide-entry-v1'
+export const attributionLifetime = 1800
+
+function readGuideEntry(storage, now) {
+  const entry = JSON.parse(storage.getItem(guideEntryKey) ?? 'null')
+  if (!entry || !sources.has(entry.source) || !Number.isInteger(entry.time) ||
+      now < entry.time || now - entry.time >= attributionLifetime) return undefined
+  return sanitizeAttribution(entry)
+}
+
+export function rememberGuideEntry(url, referrer, storage, now) {
+  const source = classifySource(url, referrer)
+  if (source === 'site_guide') {
+    if (readGuideEntry(storage, now)) return
+  } else if (source === 'direct') {
+    // Navigating between same-site pages should not reset the original landing.
+    if (referrer && new URL(referrer).origin === url.origin && readGuideEntry(storage, now)) return
+  }
+  const attribution = sanitizeAttribution({
+    source,
+    landing_path: url.pathname,
+    campaign_name: url.searchParams.has('utm_source') ? url.searchParams.get('utm_campaign') : undefined,
+  })
+  storage.setItem(guideEntryKey, JSON.stringify({ ...attribution, time: now }))
+}
+
+export function attributionFromGuide(storage, now) {
+  return readGuideEntry(storage, now)
+}
+
 export function sanitizeAttribution(input) {
   const source = sources.has(input.source) ? input.source : undefined
-  const landing_path = paths.has(input.landing_path) || input.landing_path === 'other' ? input.landing_path : undefined
+  const landing_path = paths.has(input.landing_path) || input.landing_path === 'other' ||
+    (typeof input.landing_path === 'string' && input.landing_path.length <= 100 && guide.test(input.landing_path)) ? input.landing_path : undefined
   const referrer_path = source === 'site_guide' && typeof input.referrer_path === 'string' &&
     input.referrer_path.length <= 100 && guide.test(input.referrer_path) ? input.referrer_path : undefined
   const campaign_name = typeof input.campaign_name === 'string' && campaign.test(input.campaign_name)

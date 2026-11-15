@@ -1,16 +1,15 @@
-import { classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
+import { attributionFromGuide, attributionLifetime, classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
 
 type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_view' | 'coupon_click'
 type Session = Attribution & { clientId: string; sessionId: number }
 
 const sessionKey = 'fl-site-measurement-v1'
-const sessionDuration = 1800
 let session: Session | undefined
 let couponPageVisible = false
 
 function active(value: Session | undefined, now: number): value is Session {
   return Boolean(value && /^[0-9]{1,10}\.[0-9]{10}$/.test(value.clientId) &&
-    Number.isInteger(value.sessionId) && now >= value.sessionId && now - value.sessionId < sessionDuration)
+    Number.isInteger(value.sessionId) && now >= value.sessionId && now - value.sessionId < attributionLifetime)
 }
 
 export function startThreadsMeasurement() {
@@ -30,7 +29,11 @@ export function startThreadsMeasurement() {
   const source = classifySource(url, document.referrer)
   let referrerPath: string | undefined
   if (source === 'site_guide') referrerPath = new URL(document.referrer).pathname
-  const attribution = sanitizeAttribution({
+  let guideEntry: Attribution | undefined
+  if (source === 'site_guide') {
+    try { guideEntry = attributionFromGuide(sessionStorage, now) } catch { /* Keep the entry referrer as fallback. */ }
+  }
+  const attribution = guideEntry ?? sanitizeAttribution({
     source,
     landing_path: sanitizeLandingPath(url.pathname),
     referrer_path: referrerPath,
@@ -40,7 +43,7 @@ export function startThreadsMeasurement() {
   session = { clientId: `${random}.${now}`, sessionId: now, ...attribution }
   try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch { /* Keep the current session in memory. */ }
   trackThreadsEvent('landing_visit')
-  if (source === 'threads') trackThreadsEvent('threads_visit')
+  if (attribution.source === 'threads') trackThreadsEvent('threads_visit')
 }
 
 // StrictMode replays effects on mount. Clear this flag only after leaving the route.
