@@ -1,7 +1,7 @@
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import path from 'path';
-import { relationshipGuides, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
+import { relationshipGuides, reconciliationFirstContact, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
 
 const SITE_URL = 'https://fate-lab.com';
 const SITE_NAME = 'Fate Lab';
@@ -596,7 +596,7 @@ function expandedGuide(page) {
   if (page.path === 'guides/shichu-suimei-what-am-i' || page.path === 'guides/compatibility' || relationshipGuides.includes(page)) return page;
   if (page.path === 'guides/sanmeigaku-shichu-suimei-relationship') return { ...page, body: `${sanmeiShichuRelationshipBody()}<style>.dual-reading{grid-template-columns:repeat(2,minmax(0,1fr))}.dual-reading>section{min-width:0;overflow:hidden}.dual-reading .table-scroll{max-width:100%}@media(max-width:620px){.dual-reading{grid-template-columns:minmax(0,1fr)}.dual-reading>section{width:100%;max-width:100%}}</style>` };
   if (page.path === 'guides/shichu-suimei-statistics') return { ...page, body: editorialStatisticsBody() };
-  if (page.path === 'guides/reconciliation-timing') return { ...page, body: reconciliationCompatibilityBody().replace('<h2>復縁相性を判断する4つの軸</h2>', `${reconciliationVisualIntro}<h2>復縁相性を判断する4つの軸</h2>`).replace('<h2>算命学・宿曜・紫微斗数では何を見るか</h2>', `${reconciliationBranchGuide}<h2>算命学・宿曜・紫微斗数では何を見るか</h2>`).replace('<h2>復縁相性の具体例</h2>', `${reconciliationTimingGuide}<h2>復縁相性の具体例</h2>`).replace('<h2>架空の二人を順番に判定する例</h2>', `<h2>架空の二人を順番に判定する例</h2>${reconciliationSampleCharts}`).replace('<h2>よくある質問</h2>', `${reconciliationDecisionGuide}${reconciliationContactSection}<h2>よくある質問</h2>`) };
+  if (page.path === 'guides/reconciliation-timing') return { ...page, body: (reconciliationFirstContact + reconciliationCompatibilityBody()).replace('<h2>復縁相性を判断する4つの軸</h2>', `${reconciliationVisualIntro}<h2>復縁相性を判断する4つの軸</h2>`).replace('<h2>算命学・宿曜・紫微斗数では何を見るか</h2>', `${reconciliationBranchGuide}<h2>算命学・宿曜・紫微斗数では何を見るか</h2>`).replace('<h2>復縁相性の具体例</h2>', `${reconciliationTimingGuide}<h2>復縁相性の具体例</h2>`).replace('<h2>架空の二人を順番に判定する例</h2>', `<h2>架空の二人を順番に判定する例</h2>${reconciliationSampleCharts}`).replace('<h2>よくある質問</h2>', `${reconciliationDecisionGuide}${reconciliationContactSection}<h2>よくある質問</h2>`) };
   if (page.path === 'guides/ziwei-marriage-timing') return { ...page, body: ziweiMarriageTimingBody() };
   if (page.path === 'guides/marriage-timing') return { ...page, body: marriageTimingBody().replace('<h2>四柱推命で婚期を見る5つの要素</h2>', `${marriageQuestionSection}${marriagePillarBasics}<h2>四柱推命で婚期を見る5つの要素</h2>`) };
   if (page.path === 'guides/nayin') return { ...page, body: nayinBody() };
