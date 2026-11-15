@@ -39,6 +39,7 @@ export default async function handler(req, res) {
           ...coupon,
           page_location: couponPage ? `${origin}/coupons` : undefined,
           source,
+          fl_traffic_source: attribution.source ?? (event === 'threads_visit' ? 'threads' : 'unknown'),
           campaign_source: source,
           campaign_medium: campaignMedium(source),
           campaign_name: req.body?.source === undefined && source === 'threads' ? 'fatelab_launch' : attribution.campaign_name,

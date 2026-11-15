@@ -8,3 +8,6 @@ export type Attribution = {
 export function classifySource(url: URL, referrer: string): Source
 export function sanitizeLandingPath(path: string): string
 export function sanitizeAttribution(input: Record<string, unknown>): Attribution
+export const attributionLifetime: number
+export function rememberGuideEntry(url: URL, referrer: string, storage: Storage, now: number): void
+export function attributionFromGuide(storage: Storage, now: number): Attribution | undefined

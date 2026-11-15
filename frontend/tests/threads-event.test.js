@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import handler from '../api/threads-event.js'
-import { classifySource, sanitizeLandingPath } from '../src/web/data/measurementRules.js'
+import { attributionFromGuide, classifySource, rememberGuideEntry, sanitizeLandingPath } from '../src/web/data/measurementRules.js'
 
 test('classifies campaign, search, internal and direct arrivals in order', () => {
   const url = path => new URL(path, 'https://fate-lab.com')
@@ -17,6 +17,23 @@ test('classifies campaign, search, internal and direct arrivals in order', () =>
   assert.equal(classifySource(url('/coupons'), 'https://l.threads.com/'), 'threads')
   assert.equal(classifySource(url('/coupons'), 'https://www.threads.net/'), 'threads')
   assert.equal(classifySource(url('/coupons'), 'https://threads.com.example.test/'), 'direct')
+})
+
+test('carries a safe search or Threads landing through guide navigation', () => {
+  const data = new Map()
+  const storage = { getItem: key => data.get(key), setItem: (key, value) => data.set(key, value) }
+  const guide = new URL('https://fate-lab.com/guides/marriage-timing?private_token=secret')
+  const tool = new URL('https://fate-lab.com/tools/shichu-suimei-calculator')
+  rememberGuideEntry(guide, 'https://www.google.co.jp/?q=secret', storage, 1000)
+  rememberGuideEntry(tool, guide.href, storage, 1020)
+  assert.deepEqual(attributionFromGuide(storage, 1040), {
+    source: 'organic_search', landing_path: '/guides/marriage-timing', referrer_path: undefined, campaign_name: '(not set)',
+  })
+  assert.equal(attributionFromGuide(storage, 2800), undefined)
+  rememberGuideEntry(new URL(guide.origin + guide.pathname + '?utm_source=threads&utm_campaign=seo_share'), '', storage, 3000)
+  assert.equal(attributionFromGuide(storage, 3010).source, 'threads')
+  assert.equal(attributionFromGuide(storage, 3010).campaign_name, 'seo_share')
+  assert.ok(![...data.values()].join().includes('secret'))
 })
 
 test('forwards only validated event parameters to GA4', async t => {
@@ -43,6 +60,7 @@ test('forwards only validated event parameters to GA4', async t => {
   assert.equal(res.code, 204)
   const { params } = payload.events[0]
   assert.equal(params.campaign_medium, 'internal')
+  assert.equal(params.fl_traffic_source, 'site_guide')
   assert.equal(params.campaign_name, '(not set)')
   assert.equal(params.page_location, 'https://fate-lab.com/coupons')
   assert.equal(params.link_type, 'affiliate')
@@ -55,8 +73,18 @@ test('forwards only validated event parameters to GA4', async t => {
   assert.equal(payload.events[0].params.page_location, 'https://fate-lab.com/coupons')
   assert.equal(payload.events[0].params.landing_path, '/')
   assert.equal(payload.events[0].params.source, 'threads')
+  assert.equal(payload.events[0].params.fl_traffic_source, 'threads')
   assert.equal(payload.events[0].params.link_type, undefined)
+  for (const event of ['self_reading_complete', 'couple_reading_complete', 'coupon_click']) {
+    await handler({ ...req, body: { event, clientId: req.body.clientId, sessionId,
+      source: 'organic_search', landing_path: '/guides/marriage-timing' } }, res)
+    assert.equal(res.code, 204)
+    assert.equal(payload.events[0].params.fl_traffic_source, 'organic_search')
+    assert.equal(payload.events[0].params.landing_path, '/guides/marriage-timing')
+  }
+  await handler({ ...req, body: { event: 'coupon_click', clientId: req.body.clientId, sessionId } }, res)
+  assert.equal(payload.events[0].params.fl_traffic_source, 'unknown')
   await handler({ ...req, headers: { origin: 'https://example.com' } }, res)
   assert.equal(res.code, 403)
-  assert.equal(send.mock.callCount(), 2)
+  assert.equal(send.mock.callCount(), 6)
 })
