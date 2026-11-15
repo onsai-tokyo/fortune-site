@@ -743,12 +743,13 @@ function staticHtml(page, type = 'Article') {
       { '@type': 'BreadcrumbList', itemListElement: type === 'Article' ? [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: '占い解説', item: `${SITE_URL}/guides/` }, { '@type': 'ListItem', position: 3, name: page.title, item: canonical }] : [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: page.title, item: canonical }] }
     ]
   };
-  if (page.faqs?.length) schema['@graph'].push({ '@type': 'FAQPage', mainEntity: page.faqs.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) });
+  const hasVisibleFaq = page.path === 'tools/sanmeigaku-calculator' && Boolean(page.faqs?.length);
+  if (hasVisibleFaq) schema['@graph'].push({ '@type': 'FAQPage', mainEntity: page.faqs.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) });
   const currentIndex = guides.findIndex(g => g.path === page.path);
   const relatedGuides = currentIndex < 0 ? guides.slice(0, 4) : Array.from({ length: Math.min(4, guides.length - 1) }, (_, offset) => guides[(currentIndex + offset + 1) % guides.length]);
   const related = relatedGuides.map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
   const meta = type === 'Article' ? `<div class="meta">公開日：${published}　更新日：${updated}　Fate Lab編集部</div>` : '';
-  const visibleFaq = page.path === 'tools/sanmeigaku-calculator' && page.faqs?.length
+  const visibleFaq = hasVisibleFaq
     ? `<section class="visible-faq"><h2>算命学の無料鑑定についてよくある質問</h2>${page.faqs.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}</section>`
     : '';
   if (visibleFaq) page.body += visibleFaq;
