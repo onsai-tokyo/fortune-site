@@ -95,7 +95,7 @@ const guides = [
   {
     path: 'guides/day-master', title: '日干とは？十干から見る自分の本質',
     description: '四柱推命で本人を表す日干と、甲・乙・丙・丁・戊・己・庚・辛・壬・癸の基本的な見方を解説します。',
-    body: `<p>日干は、四柱推命で自分を読む基準になる一文字です。調べるには、<a href="/tools/shichu-suimei-calculator">生年月日から命式を無料で計算</a>し、「日柱」の干支の最初の文字を見ます。日柱が「壬午」なら日干は「壬」、日支は「午」です。出生時刻が分からなくても、この計算で日柱を確認できます。</p><h2>十干と五行・陰陽</h2><p>甲乙は木、丙丁は火、戊己は土、庚辛は金、壬癸は水に属します。同じ五行でも陽と陰で表れ方が異なると考えます。たとえば甲は大樹、乙は草花というように象徴で説明されます。</p><h2>日干だけで性格は決まらない</h2><p>日干は入口ですが、季節を示す月支、周囲の干支、五行の強弱によって同じ日干でも表れ方が変わります。「甲だから必ずリーダー」のような決めつけは避ける必要があります。</p><h2>統合鑑定での役割</h2><p>Fate Labでは日干の象徴を、算命学や星座、数秘など別の体系から得た傾向と照合し、共通点を中心に文章化します。</p>`
+    body: `<p>日干は、四柱推命で自分を読む基準になる一文字です。日干と日柱は、<a href="/tools/day-master">生年月日から無料で調べられます</a>。<a href="/tools/shichu-suimei-calculator">命式全体を計算</a>した場合は、「日柱」の干支の最初の文字を見ます。日柱が「壬午」なら日干は「壬」、日支は「午」です。出生時刻が分からなくても、この計算で日柱を確認できます。</p><h2>十干と五行・陰陽</h2><p>甲乙は木、丙丁は火、戊己は土、庚辛は金、壬癸は水に属します。同じ五行でも陽と陰で表れ方が異なると考えます。たとえば甲は大樹、乙は草花というように象徴で説明されます。</p><h2>日干だけで性格は決まらない</h2><p>日干は入口ですが、季節を示す月支、周囲の干支、五行の強弱によって同じ日干でも表れ方が変わります。「甲だから必ずリーダー」のような決めつけは避ける必要があります。</p><h2>統合鑑定での役割</h2><p>Fate Labでは日干の象徴を、算命学や星座、数秘など別の体系から得た傾向と照合し、共通点を中心に文章化します。</p>`
   },
   {
     path: 'guides/five-elements', title: '五行バランスとは？木・火・土・金・水の見方',
@@ -637,12 +637,16 @@ const tools = [
   {
     path: 'tools/life-path-number',
     title: '運命数・ライフパスナンバー無料計算',
+    searchTitle: '生年月日で運命数を無料計算｜ライフパスナンバーの調べ方',
+    searchDescription: '生年月日から数秘術の運命数を無料で自動計算。入力はサーバーへ送信せず、11・22・33のマスターナンバーも確認できます。',
     description: '生年月日から数秘術の運命数（ライフパスナンバー）を無料で自動計算します。11・22・33はマスターナンバーとして保持します。',
     body: `<p>生年月日を入力すると、Fate Labの鑑定エンジンと同じ規則で運命数を計算します。入力内容はこの計算ではサーバーへ送信されません。</p><form class="tool" id="life-path-tool"><label for="life-path-date">生年月日</label><input id="life-path-date" type="date" required><button type="submit">運命数を計算する</button></form><div class="tool-result" id="life-path-result" role="status" aria-live="polite">生年月日を入力してください。</div><h2>計算方法</h2><p>生年月日の数字をすべて足し、一桁になるまで加算します。ただし、計算途中で11・22・33になった場合はマスターナンバーとして残します。</p><h2>結果の見方</h2><p>運命数は人生全体のテーマを考える補助指標です。能力や将来を決定する数字ではありません。詳しくは<a href="/guides/numerology">数秘術とライフパスの解説</a>をご覧ください。</p><script>(()=>{const meanings={1:'自立・開拓',2:'協調・感受性',3:'表現・創造',4:'基盤・継続',5:'変化・自由',6:'責任・調和',7:'探究・分析',8:'達成・現実性',9:'包容・完成',11:'直感・着想',22:'構想の実現',33:'奉仕・共感'};document.getElementById('life-path-tool').addEventListener('submit',e=>{e.preventDefault();const value=document.getElementById('life-path-date').value;if(!value)return;let n=[...value.replaceAll('-','')].reduce((sum,d)=>sum+Number(d),0);while(n>9&&![11,22,33].includes(n))n=[...String(n)].reduce((sum,d)=>sum+Number(d),0);document.getElementById('life-path-result').innerHTML='<strong>運命数 '+n+'</strong><span>'+meanings[n]+'</span>';if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'life_path_number',result:String(n)})})})()</script>`
   },
   {
     path: 'tools/day-master',
     title: '日干・日柱を無料で調べる｜四柱推命自動計算',
+    searchTitle: '日干・日柱を生年月日で調べる｜四柱推命の無料自動計算',
+    searchDescription: '生年月日を入力すると、自分の日干と日柱を無料で自動計算できます。出生時刻や会員登録は不要です。',
     description: '生年月日から四柱推命の日柱と、自分自身を表す日干を無料で自動計算します。登録不要です。',
     body: `<p>四柱推命で本人の基準となる日柱と、その先頭の文字である日干を計算します。計算のため生年月日をFate LabのAPIへ送信しますが、このページでは保存しません。</p><form class="tool" id="day-master-tool"><label for="day-master-date">生年月日</label><input id="day-master-date" type="date" required><button type="submit">日干・日柱を計算する</button></form><div class="tool-result" id="day-master-result" role="status" aria-live="polite">生年月日を入力してください。</div><h2>日干とは</h2><p>日干は日柱の天干で、甲・乙・丙・丁・戊・己・庚・辛・壬・癸の10種類です。四柱推命では本人を表す基準点として使います。</p><h2>日干だけで断定しない</h2><p>同じ日干でも、生まれた季節や命式全体の五行によって表れ方は変わります。詳しくは<a href="/guides/day-master">日干と十干の解説</a>、境界日の考え方は<a href="/guides/setsuiri-boundary">節入りの検証</a>をご覧ください。</p><script>(()=>{const labels={甲:'木の陽',乙:'木の陰',丙:'火の陽',丁:'火の陰',戊:'土の陽',己:'土の陰',庚:'金の陽',辛:'金の陰',壬:'水の陽',癸:'水の陰'};const form=document.getElementById('day-master-tool'),result=document.getElementById('day-master-result');form.addEventListener('submit',async e=>{e.preventDefault();const birthDate=document.getElementById('day-master-date').value;if(!birthDate)return;result.textContent='計算中…';try{const response=await fetch('/api/calc/shichu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({birthDate})});if(!response.ok)throw new Error();const data=await response.json(),stem=data.shichuDay?.[0];result.innerHTML='<strong>日柱 '+data.shichuDay+' ／ 日干 '+stem+'</strong><span>'+(labels[stem]||'')+'</span>';if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'day_master',result:stem})}catch{result.textContent='計算できませんでした。時間をおいて再度お試しください。'}})})()</script>`
   },
