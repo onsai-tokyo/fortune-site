@@ -635,7 +635,7 @@ function expandedTool(tool) {
     .replace("'<strong>日柱 '+data.shichuDay+' ／ 日干 '+dayStem+'（'", "'<strong>日柱 '+data.shichuDay+' ／ 日干 <a href=\"/guides/day-master/'+stemSlugs[dayStem]+'\">'+dayStem+'</a>（'")
     .replace("p.stemTenGod+'</td><td>'+p.hiddenStems", "(godSlugs[p.stemTenGod]?'<a href=\"/guides/ten-god/'+godSlugs[p.stemTenGod]+'\">'+p.stemTenGod+'</a>':p.stemTenGod)+'</td><td>'+(stageSlugs[p.twelveStage]?'<a href=\"/guides/twelve-stage/'+stageSlugs[p.twelveStage]+'\">'+p.twelveStage+'</a>':(p.twelveStage||'—'))+'</td><td>'+p.hiddenStems")
     .replace("h.stem+'（'+h.tenGod+'）'", "h.stem+'（'+(godSlugs[h.tenGod]?'<a href=\"/guides/ten-god/'+godSlugs[h.tenGod]+'\">'+h.tenGod+'</a>':h.tenGod)+'）'")
-    .replace('<p>五行は、多いほど良い・ゼロなら悪いという点数ではありません。日干、生まれた季節、五行同士の流れを合わせて読みます。詳しくは<a href="/guides/five-elements">五行バランスの読み方</a>をご覧ください。</p></section>', '<p>五行は、多いほど良い・ゼロなら悪いという点数ではありません。日干、生まれた季節、五行同士の流れを合わせて読みます。詳しくは<a href="/guides/five-elements">五行バランスの読み方</a>をご覧ください。</p><h2>あなたの命式にある通変星</h2><div class="meaning-grid" id="ten-god-meanings"></div><h2>あなたの命式にある十二運</h2><div class="meaning-grid" id="twelve-stage-meanings"></div><section class="timing-panel"><h2>大運・年運を確認する</h2><p>大運の順行・逆行を決めるときだけ性別を使用します。命式そのものの計算には使いません。結婚を考える時期については、<a href="/guides/marriage-timing#marriage-timing-cycles">大運と年運を重ねて婚期の候補年を読む方法</a>を参考にしてください。</p><form class="tool timing-tool" id="shichu-timing"><label for="timing-gender">大運計算上の性別<select id="timing-gender"><option value="female">女性</option><option value="male">男性</option></select></label><button type="submit">現在の大運・年運を表示する</button></form><div id="timing-result" role="status" aria-live="polite"></div></section></section>')
+    .replace('<p>五行は、多いほど良い・ゼロなら悪いという点数ではありません。日干、生まれた季節、五行同士の流れを合わせて読みます。詳しくは<a href="/guides/five-elements">五行バランスの読み方</a>をご覧ください。</p></section>', '<p>五行は、多いほど良い・ゼロなら悪いという点数ではありません。日干、生まれた季節、五行同士の流れを合わせて読みます。詳しくは<a href="/guides/five-elements">五行バランスの読み方</a>をご覧ください。</p><h2>あなたの命式にある通変星</h2><div class="meaning-grid" id="ten-god-meanings"></div><h2>あなたの命式にある十二運</h2><div class="meaning-grid" id="twelve-stage-meanings"></div><section class="timing-panel"><h2>大運・年運を確認する</h2><p>「現在の大運・年運を表示する」を押すと、現在の大運が何年から何年までかと、年運ごとの干支・通変星が分かります。大運の順行・逆行を決めるときだけ性別を使用します。結婚を考える時期については、<a href="/guides/marriage-timing#marriage-timing-cycles">大運と年運を重ねて婚期の候補年を読む方法</a>を参考にしてください。</p><form class="tool timing-tool" id="shichu-timing"><label for="timing-gender">大運計算上の性別<select id="timing-gender"><option value="female">女性</option><option value="male">男性</option></select></label><button type="submit">現在の大運・年運を表示する</button></form><div id="timing-result" role="status" aria-live="polite"></div></section></section>')
     .replace("birthTime=document.getElementById('shichu-time').value,gender=document.getElementById('shichu-gender').value", "birthTime=document.getElementById('shichu-time').value")
     .replace("fetch('/api/calc/divination'", "fetch('/api/calc/shichu'")
     .replace('JSON.stringify({birthDate,birthTime,gender})', 'JSON.stringify({birthDate,birthTime})')
@@ -667,7 +667,8 @@ const tools = [
   {
     path: 'tools/shichu-suimei-calculator',
     title: '四柱推命 無料｜生年月日から命式・日干・五行を自動計算',
-    searchDescription: '生年月日から四柱推命の命式を無料で作成。日干・通変星・十二運・五行バランスを確認できます。出生時間がわからなくても計算でき、会員登録も不要です。',
+    searchTitle: '四柱推命の無料計算｜生年月日から命式・大運・年運を調べる',
+    searchDescription: '生年月日から四柱推命の命式を無料で自動計算。日干・五行を確認し、結果から現在の大運と年ごとの年運も表示できます。出生時刻が不明でも利用でき、会員登録は不要です。',
     description: '四柱推命の命式を生年月日から無料で自動計算。日干、通変星、十二運、五行に加え、希望する場合は大運・年運も登録不要で確認できます。',
     faqs: [
       ['四柱推命とは何ですか？', '生まれた年・月・日・時刻を四つの柱へ置き換え、日干、五行、通変星、十二運などから傾向を読む占術です。'],
