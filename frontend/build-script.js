@@ -744,7 +744,11 @@ const relatedGuidesByPath = {
   'guides/unknown-birth-time': ['birth-chart', 'day-master', 'setsuiri-boundary', 'sanmeigaku'],
   'guides/setsuiri-boundary': ['birth-chart', 'unknown-birth-time', 'day-master', 'shichu-suimei'],
   'guides/sanmeigaku': ['sanmeigaku-stars', 'sanmeigaku-shichu-suimei-relationship', 'unknown-birth-time', 'five-elements'],
-  'guides/sanmeigaku-stars': ['sanmeigaku', 'sanmeigaku-shichu-suimei-relationship', 'five-elements', 'birth-chart']
+  'guides/sanmeigaku-stars': ['sanmeigaku', 'sanmeigaku-shichu-suimei-relationship', 'five-elements', 'birth-chart'],
+  'guides/partner-feelings': ['one-sided-love', 'ex-partner-feelings', 'married-partner-feelings', 'compatibility'],
+  'guides/ex-partner-feelings': ['reconciliation-timing', 'partner-feelings', 'compatibility', 'meeting-timing'],
+  'guides/one-sided-love': ['partner-feelings', 'compatibility', 'meeting-timing', 'married-partner-feelings'],
+  'guides/married-partner-feelings': ['partner-feelings', 'one-sided-love', 'compatibility', 'meeting-timing']
 };
 
 function staticHtml(page, type = 'Article') {
