@@ -1,6 +1,6 @@
 import { campaignMedium, couponParameters, sanitizeAttribution } from '../src/web/data/measurementRules.js'
 
-const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_click'])
+const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_view', 'coupon_click'])
 const origin = 'https://fate-lab.com'
 
 export default async function handler(req, res) {
@@ -15,8 +15,9 @@ export default async function handler(req, res) {
       sessionId > Math.floor(Date.now() / 1000) + 60) return res.status(400).end()
 
   const attribution = sanitizeAttribution(req.body ?? {})
-  const source = attribution.source ?? (req.body?.source === undefined && !['landing_visit', 'self_reading_complete'].includes(event) ? 'threads' : undefined)
+  const source = attribution.source ?? (req.body?.source === undefined && ['threads_visit', 'couple_reading_complete', 'coupon_click'].includes(event) ? 'threads' : undefined)
   const coupon = event === 'coupon_click' ? couponParameters(req.body ?? {}) : {}
+  const couponPage = event === 'coupon_view' || event === 'coupon_click'
   const secret = process.env.GA4_API_SECRET
   if (!secret) return res.status(503).end()
 
@@ -31,11 +32,12 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         client_id: clientId,
         consent: { ad_user_data: 'DENIED', ad_personalization: 'DENIED' },
-        events: [{ name: event, params: {
+        events: [{ name: event === 'coupon_view' ? 'page_view' : event, params: {
           session_id: sessionId,
           engagement_time_msec: 1,
           ...attribution,
           ...coupon,
+          page_location: couponPage ? `${origin}/coupons` : undefined,
           source,
           campaign_source: source,
           campaign_medium: campaignMedium(source),

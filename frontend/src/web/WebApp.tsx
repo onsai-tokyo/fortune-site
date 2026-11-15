@@ -1,3 +1,4 @@
+import { trackCouponRoute } from './data/threadsMeasurement'
 import { CouponsPage } from './pages/CouponsPage'
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { BrowserRouter, HashRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
@@ -28,6 +29,7 @@ const LegacyLegalPage = lazy(() => import('./pages/LegacyLegalPage').then(m => (
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  useEffect(() => { trackCouponRoute(/^\/coupons\/?$/i.test(pathname)) }, [pathname])
   return null
 }
 

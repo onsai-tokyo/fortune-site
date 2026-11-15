@@ -1,11 +1,12 @@
 import { classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
 
-type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_click'
+type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_view' | 'coupon_click'
 type Session = Attribution & { clientId: string; sessionId: number }
 
 const sessionKey = 'fl-site-measurement-v1'
 const sessionDuration = 1800
 let session: Session | undefined
+let couponPageVisible = false
 
 function active(value: Session | undefined, now: number): value is Session {
   return Boolean(value && /^[0-9]{1,10}\.[0-9]{10}$/.test(value.clientId) &&
@@ -42,7 +43,14 @@ export function startThreadsMeasurement() {
   if (source === 'threads') trackThreadsEvent('threads_visit')
 }
 
+// StrictMode replays effects on mount. Clear this flag only after leaving the route.
+export function trackCouponRoute(isCouponPage: boolean) {
+  if (isCouponPage && !couponPageVisible) trackThreadsEvent('coupon_view')
+  couponPageVisible = isCouponPage
+}
+
 export function trackThreadsEvent(event: MeasurementEvent, coupon?: { link_type: 'affiliate' | 'official'; offer_id: string }) {
+  if (event === 'coupon_view' || event === 'coupon_click') startThreadsMeasurement()
   if (!active(session, Math.floor(Date.now() / 1000))) return
   void fetch('/api/threads-event', {
     method: 'POST',

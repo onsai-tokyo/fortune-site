@@ -11,11 +11,12 @@ export function sanitizeLandingPath(path) {
 }
 
 export function classifySource(url, referrer) {
-  const utm = url.searchParams.get('utm_source')
+  const utm = url.searchParams.get('utm_source')?.trim().toLowerCase()
   if (url.pathname === '/threads-launch') return 'threads'
-  if (utm !== null) return social.has(utm) ? utm : 'other_campaign'
+  if (utm !== undefined) return social.has(utm) ? utm : 'other_campaign'
   try {
     const incoming = new URL(referrer)
+    if (/(?:^|\.)threads\.(?:com|net)$/.test(incoming.hostname)) return 'threads'
     if (search.test(incoming.hostname)) return 'organic_search'
     if (incoming.origin === 'https://fate-lab.com' && /^\/(guides|tools)(?:\/|$)/.test(incoming.pathname)) return 'site_guide'
   } catch { /* Direct visits can have an empty referrer. */ }
