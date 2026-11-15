@@ -736,7 +736,15 @@ const relatedGuidesByPath = {
   'guides/reconciliation-timing': ['ex-partner-feelings', 'partner-feelings', 'compatibility', 'marriage-compatibility'],
   'guides/marriage-timing': ['ziwei-marriage-timing', 'marriage-compatibility', 'meeting-timing', 'birth-chart'],
   'guides/ziwei-marriage-timing': ['ziwei-doushu', 'marriage-timing', 'marriage-compatibility', 'unknown-birth-time'],
-  'guides/meeting-timing': ['one-sided-love', 'compatibility', 'marriage-timing', 'birthdate-fortune']
+  'guides/meeting-timing': ['one-sided-love', 'compatibility', 'marriage-timing', 'birthdate-fortune'],
+  'guides/shichu-suimei': ['birth-chart', 'day-master', 'five-elements', 'setsuiri-boundary'],
+  'guides/birth-chart': ['day-master', 'five-elements', 'unknown-birth-time', 'setsuiri-boundary'],
+  'guides/day-master': ['birth-chart', 'five-elements', 'shichu-suimei-what-am-i', 'setsuiri-boundary'],
+  'guides/five-elements': ['birth-chart', 'day-master', 'shichu-suimei', 'sanmeigaku-shichu-suimei-relationship'],
+  'guides/unknown-birth-time': ['birth-chart', 'day-master', 'setsuiri-boundary', 'sanmeigaku'],
+  'guides/setsuiri-boundary': ['birth-chart', 'unknown-birth-time', 'day-master', 'shichu-suimei'],
+  'guides/sanmeigaku': ['sanmeigaku-stars', 'sanmeigaku-shichu-suimei-relationship', 'unknown-birth-time', 'five-elements'],
+  'guides/sanmeigaku-stars': ['sanmeigaku', 'sanmeigaku-shichu-suimei-relationship', 'five-elements', 'birth-chart']
 };
 
 function staticHtml(page, type = 'Article') {
