@@ -730,6 +730,15 @@ const contentHeader = `<header class="content-header">
 const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/support">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
 const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
+const relatedGuidesByPath = {
+  'guides/compatibility': ['marriage-compatibility', 'partner-feelings', 'reconciliation-timing', 'same-birthdate'],
+  'guides/marriage-compatibility': ['marriage-timing', 'compatibility', 'partner-feelings', 'ziwei-marriage-timing'],
+  'guides/reconciliation-timing': ['ex-partner-feelings', 'partner-feelings', 'compatibility', 'marriage-compatibility'],
+  'guides/marriage-timing': ['ziwei-marriage-timing', 'marriage-compatibility', 'meeting-timing', 'birth-chart'],
+  'guides/ziwei-marriage-timing': ['ziwei-doushu', 'marriage-timing', 'marriage-compatibility', 'unknown-birth-time'],
+  'guides/meeting-timing': ['one-sided-love', 'compatibility', 'marriage-timing', 'birthdate-fortune']
+};
+
 function staticHtml(page, type = 'Article') {
   const isGuide = page.path.startsWith('guides/');
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
@@ -747,7 +756,8 @@ function staticHtml(page, type = 'Article') {
   if (hasVisibleFaq) schema['@graph'].push({ '@type': 'FAQPage', mainEntity: page.faqs.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) });
   const currentIndex = guides.findIndex(g => g.path === page.path);
   const relatedGuides = currentIndex < 0 ? guides.slice(0, 4) : Array.from({ length: Math.min(4, guides.length - 1) }, (_, offset) => guides[(currentIndex + offset + 1) % guides.length]);
-  const related = relatedGuides.map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
+  const curatedGuides = relatedGuidesByPath[page.path]?.map(slug => guides.find(guide => guide.path === `guides/${slug}`));
+  const related = (curatedGuides ?? relatedGuides).map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
   const meta = type === 'Article' ? `<div class="meta">公開日：${published}　更新日：${updated}　Fate Lab編集部</div>` : '';
   const visibleFaq = hasVisibleFaq
     ? `<section class="visible-faq"><h2>算命学の無料鑑定についてよくある質問</h2>${page.faqs.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}</section>`
