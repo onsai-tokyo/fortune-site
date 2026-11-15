@@ -748,7 +748,13 @@ const relatedGuidesByPath = {
   'guides/partner-feelings': ['one-sided-love', 'ex-partner-feelings', 'married-partner-feelings', 'compatibility'],
   'guides/ex-partner-feelings': ['reconciliation-timing', 'partner-feelings', 'compatibility', 'meeting-timing'],
   'guides/one-sided-love': ['partner-feelings', 'compatibility', 'meeting-timing', 'married-partner-feelings'],
-  'guides/married-partner-feelings': ['partner-feelings', 'one-sided-love', 'compatibility', 'meeting-timing']
+  'guides/married-partner-feelings': ['partner-feelings', 'one-sided-love', 'compatibility', 'meeting-timing'],
+  'guides/astrology-systems-comparison': ['east-west-astrology', 'ziwei-doushu', 'vedic-astrology', 'sanmeigaku-shichu-suimei-relationship'],
+  'guides/east-west-astrology': ['astrology-systems-comparison', 'vedic-astrology', 'shichu-suimei', 'unknown-birth-time'],
+  'guides/ziwei-doushu': ['ziwei-marriage-timing', 'astrology-systems-comparison', 'unknown-birth-time', 'east-west-astrology'],
+  'guides/vedic-astrology': ['east-west-astrology', 'astrology-systems-comparison', 'unknown-birth-time', 'ziwei-doushu'],
+  'guides/sanmeigaku-shichu-suimei-relationship': ['sanmeigaku', 'shichu-suimei', 'sanmeigaku-stars', 'birth-chart'],
+  'guides/sukuyo': ['compatibility', 'reconciliation-timing', 'vedic-astrology', 'astrology-systems-comparison']
 };
 
 function staticHtml(page, type = 'Article') {
