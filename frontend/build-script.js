@@ -549,8 +549,8 @@ function expandedGuide(page) {
   if (page.path === 'guides/nayin') return { ...page, body: nayinBody() };
   if (page.path === 'guides/astrology-systems-comparison') return { ...page, body: astrologySystemsComparisonBody() };
   if (page.path === 'guides/shichu-suimei-animal-character') return { ...page, body: animalCharacterBody() };
-  if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: `${sanmeigakuStarsBody()}${sanmeigakuPositionExample}<aside class="inline-cta"><strong>自分の星を調べる</strong><p>生年月日から人体星図・十大主星・十二大従星・天中殺を無料で計算できます。</p><a href="/tools/sanmeigaku-calculator">算命学の無料鑑定を開く →</a></aside>` };
-  if (page.path === 'guides/sanmeigaku') return { ...page, body: `${page.body}<aside class="inline-cta"><strong>あなたの算命学の星は？</strong><p>中心星だけでなく、位置別の十大主星と十二大従星まで無料で確認できます。</p><a href="/tools/sanmeigaku-calculator">生年月日から無料計算する →</a></aside>` };
+  if (page.path === 'guides/sanmeigaku-stars') return { ...page, body: `${sanmeigakuStarsBody()}${sanmeigakuPositionExample}<aside class="inline-cta"><strong>自分の星を調べる</strong><p>生年月日から人体星図・十大主星・十二大従星・天中殺を無料で計算できます。</p><a href="/tools/sanmeigaku-calculator">算命学の十大主星・十二大従星を無料で計算する →</a></aside>` };
+  if (page.path === 'guides/sanmeigaku') return { ...page, body: `${page.body}<aside class="inline-cta"><strong>あなたの算命学の星は？</strong><p>中心星だけでなく、位置別の十大主星と十二大従星まで無料で確認できます。</p><a href="/tools/sanmeigaku-calculator">算命学の人体星図を無料で計算する →</a></aside>` };
   if (page.path === 'guides/angel-numbers') return { ...page, body: `${angelNumberHubBody()}${angelHubAppendix}<style>${cycleFixStyle}</style>` };
   if (page.path.startsWith('guides/angel-number-')) {
     const number = Number(page.path.split('-').at(-1));

@@ -6,7 +6,10 @@ test('both deployment configs keep legacy reading routes and existing API proxy'
   for (const path of ['../../../vercel.json', '../../../../vercel.json']) {
     const config = JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
     for (const prefix of ['/r/', '/s/', '/reading/']) assert.ok(!config.redirects.some((r: { source: string }) => r.source.startsWith(prefix)))
-    assert.ok(config.rewrites.some((r: { source: string; destination: string }) => r.source === '/api/:path*' && r.destination === 'https://fortune-site-iuzo.onrender.com/api/:path*'))
+    assert.ok(config.rewrites.some((r: { source: string; destination: string }) =>
+      r.source === '/api/:path((?!threads-event$).*)' &&
+      r.destination === 'https://fortune-site-iuzo.onrender.com/api/:path*'
+    ), 'Render handles application APIs while Vercel handles /api/threads-event')
   }
 })
 
