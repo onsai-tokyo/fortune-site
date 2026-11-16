@@ -615,21 +615,6 @@ button.bg-accent-dark {
 .fl-coupons .fl-ticket-ad img[width="1"][height="1"] { position: absolute; inset: auto 0 0 auto; }
 .fl-coupons .fl-ticket-note { margin: 8px 2px 0; color: #5a5e57; font-size: 11px; line-height: 1.8; }
 
-.fl-root .fl-coupon-banner {
-  display: block;
-  overflow: hidden;
-  border-radius: 12px;
-}
-.fl-root .fl-coupon-banner img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.fl-root .fl-coupon-banner:focus-visible {
-  outline: 2px solid #344f40;
-  outline-offset: 3px;
-}
-
 .fl-coupons .fl-ticket-compact-terms {
   margin: 0 0 12px;
   color: #5a5e57;

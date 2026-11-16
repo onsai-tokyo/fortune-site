@@ -1,4 +1,4 @@
-import { CouponDirectoryLink } from './ui'
+import { CoconalaBanner } from './ui'
 import { FateMark } from './FateMark'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
@@ -52,8 +52,9 @@ export function SiteHeader({ current }: { current: NavKey }) {
                 <IconChevron size={16} className="text-fl-muted" />
               </Link>
             ))}
-            <CouponDirectoryLink className="mt-2 w-full max-w-[360px] shrink-0" current={current === 'coupons'} onClick={() => setOpen(false)} />
+            <CoconalaBanner className="mt-2 w-full max-w-[360px] shrink-0" />
             <div className="flex flex-wrap gap-x-5 pt-3 text-[13px]">
+              <Link to="/coupons" aria-current={current === 'coupons' ? 'page' : undefined} onClick={() => setOpen(false)} className="flex min-h-[44px] items-center text-fl-body">占いクーポン・初回特典</Link>
               <Link to="/settings" className="flex min-h-[44px] items-center text-fl-body">設定</Link>
               <Link to="/support" className="flex min-h-[44px] items-center text-fl-body">お問い合わせ</Link>
             </div>

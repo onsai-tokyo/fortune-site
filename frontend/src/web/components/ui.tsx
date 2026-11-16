@@ -1,3 +1,6 @@
+import { coconalaBannerContent } from '../data/coconalaBanner.js'
+import { trackThreadsEvent } from '../data/threadsMeasurement'
+import '../coconala-banner.css'
 import { FateMark } from './FateMark'
 import { Link } from 'react-router-dom'
 import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
@@ -108,19 +111,18 @@ export function ListRow({ to, title, sub, leading, trailing }: { to: string; tit
   )
 }
 
-export function CouponDirectoryLink({ className = '', current = false, onClick }: { className?: string; current?: boolean; onClick?: () => void }) {
+export function CoconalaBanner({ className = '' }: { className?: string }) {
   return (
     <div className={className}>
-      <Link to="/coupons" className="fl-coupon-banner" aria-current={current ? 'page' : undefined} onClick={onClick}>
-        <img
-          src={`${import.meta.env.BASE_URL}images/coupon-banner.jpg`}
-          alt="占いクーポン・初回特典を見る（特典例：3,000円分無料、10分無料鑑定）"
-          width={1280}
-          height={654}
-          loading="lazy"
-          decoding="async"
-        />
-      </Link>
+      <div
+        className="fl-coconala-banner"
+        onClick={event => {
+          if (event.target instanceof Element && event.target.closest('a[href]')) {
+            trackThreadsEvent('coconala_banner_click')
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: coconalaBannerContent }}
+      />
     </div>
   )
 }

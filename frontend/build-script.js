@@ -1,3 +1,4 @@
+import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import { twelveStageCopy } from './twelve-stage-copy.js';
@@ -9,7 +10,8 @@ import { relationshipGuides, reconciliationFirstContact, reconciliationContactSe
 
 const SITE_URL = 'https://fate-lab.com';
 const SITE_NAME = 'Fate Lab';
-const contentMenuStyle = fs.readFileSync(new URL('./content-menu.css', import.meta.url), 'utf8');
+const contentMenuStyle = fs.readFileSync(new URL('./content-menu.css', import.meta.url), 'utf8') +
+  fs.readFileSync(new URL('./src/web/coconala-banner.css', import.meta.url), 'utf8');
 const guideThemeStyle = fs.readFileSync(new URL('./guide-theme.css', import.meta.url), 'utf8');
 const UPDATED = '2026-08-13';
 const distDir = path.join(process.cwd(), 'dist');
@@ -927,8 +929,8 @@ const contentHeader = `<header class="content-header">
       <nav class="content-menu-panel" aria-label="メニュー">
         <a class="content-menu-main" href="/you">あなたについて<small>性格の章と、年ごとの流れ</small></a>
         <a class="content-menu-main" href="/couple">相性鑑定<small>相手との年表</small></a>
-        <a class="content-menu-banner" href="/coupons"><img src="/images/coupon-banner.jpg" alt="占いクーポン・初回特典を見る" width="1280" height="654" loading="lazy"></a>
-        <div class="content-menu-secondary"><a href="/settings">設定</a><a href="/support">お問い合わせ</a></div>
+        <div class="content-menu-banner fl-coconala-banner">${coconalaBannerContent}</div>
+        <div class="content-menu-secondary"><a href="/coupons">占いクーポン・初回特典</a><a href="/settings">設定</a><a href="/support">お問い合わせ</a></div>
       </nav>
     </details>
   </div>
@@ -945,8 +947,8 @@ const contentHeader = `<header class="content-header">
     if (!contentMenu.contains(event.target)) contentMenu.open = false;
   });
 </script>`;
-const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/support">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a></nav><p>© Fate Lab</p></footer>`;
-const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('article')&&a.origin===location.origin&&a.pathname.startsWith('/tools/'))gtag('event','guide_to_tool',{page_path:location.pathname,tool_path:a.pathname});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
+const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/editorial-policy">制作方針</a><a href="/press">プレスキット</a><a href="/support">お問い合わせ</a><a href="/privacy">プライバシー</a><a href="/terms">利用規約</a><a href="/coupons">占いクーポン・初回特典</a></nav><p>© Fate Lab</p></footer>`;
+const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.closest('.fl-coconala-banner'))gtag('event',new URLSearchParams(location.search).get('fl_test')==='1'?'qa_coconala_banner_click':'coconala_banner_click',{page_path:location.pathname});else if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('article')&&a.origin===location.origin&&a.pathname.startsWith('/tools/'))gtag('event','guide_to_tool',{page_path:location.pathname,tool_path:a.pathname});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 const relatedGuidesByPath = {
   'guides/compatibility': ['marriage-compatibility', 'partner-feelings', 'reconciliation-timing', 'same-birthdate'],
