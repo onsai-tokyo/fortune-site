@@ -92,14 +92,25 @@ test('forwards only validated event parameters to GA4', async t => {
   await handler({ ...req, body: click }, res)
   assert.equal(res.code, 204)
   assert.equal(payload.client_id, click.clientId)
-  assert.deepEqual(payload.events.map(event => event.name), ['coupon_click', 'threads_coconala_click'])
+  assert.deepEqual(payload.events.map(event => event.name), ['coupon_click', 'coconala_list_click', 'threads_coconala_click'])
 
   await handler({ ...req, body: { ...click, test: true } }, res)
   assert.equal(payload.client_id, click.clientId)
-  assert.deepEqual(payload.events.map(event => event.name), ['qa_coupon_click', 'qa_threads_coconala_click'])
+  assert.deepEqual(payload.events.map(event => event.name), ['qa_coupon_click', 'qa_coconala_list_click', 'qa_threads_coconala_click'])
 
   await handler({ ...req, body: { ...click, event: 'coupon_view', test: true } }, res)
   assert.deepEqual(payload.events.map(event => event.name), ['qa_page_view', 'qa_threads_coupon_view'])
+
+  await handler({ ...req, body: { ...click, event: 'coconala_banner_click' } }, res)
+  assert.equal(res.code, 204)
+  assert.deepEqual(payload.events.map(event => event.name), ['coconala_banner_click'])
+  assert.equal(payload.events[0].params.fl_traffic_source, 'threads')
+
+  await handler({ ...req, body: { ...click, event: 'coconala_banner_click', test: true } }, res)
+  assert.deepEqual(payload.events.map(event => event.name), ['qa_coconala_banner_click'])
+
+  await handler({ ...req, body: { ...click, source: 'direct' } }, res)
+  assert.deepEqual(payload.events.map(event => event.name), ['coupon_click', 'coconala_list_click'])
 
   await handler({ ...req, body: { ...click, offer_id: 'spacia-phone' } }, res)
   assert.deepEqual(payload.events.map(event => event.name), ['coupon_click'])

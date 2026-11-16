@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { CouponDirectoryLink, BackHeader, Disclaimer, NatureImage, Page } from '../components/ui'
+import { CoconalaBanner, BackHeader, Disclaimer, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
@@ -61,7 +61,7 @@ export function YearReadingPage() {
       </nav>
 
       <section className="px-6 pb-6 pt-5"><Disclaimer>暦の計算に基づく読みものです。出来事や結果を約束するものではありません。</Disclaimer></section>
-      <CouponDirectoryLink className="px-6 pb-10" />
+      <CoconalaBanner className="px-6 pb-10" />
     </Page>
   )
 }

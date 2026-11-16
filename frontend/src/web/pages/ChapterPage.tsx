@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { IconChevron } from '../components/icons'
-import { CouponDirectoryLink, BackHeader, Disclaimer, NatureImage, Page } from '../components/ui'
+import { CoconalaBanner, BackHeader, Disclaimer, NatureImage, Page } from '../components/ui'
 import { chapterSections } from '../data/mock'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
@@ -41,7 +41,7 @@ export function ChapterPage() {
         </nav>
       </section>
       <section className="px-6 pb-6 pt-5"><Disclaimer>暦の計算に基づく読みものです。</Disclaimer></section>
-      <CouponDirectoryLink className="px-6 pb-10" />
+      <CoconalaBanner className="px-6 pb-10" />
     </Page>
   )
 }

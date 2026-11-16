@@ -2,7 +2,7 @@ import { MeetingYearSelect } from '../components/MeetingYearSelect'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
-import { CouponDirectoryLink, Footer, LinkButton, NatureImage, Page, SectionHeading } from '../components/ui'
+import { CoconalaBanner, Footer, LinkButton, NatureImage, Page, SectionHeading } from '../components/ui'
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
@@ -178,7 +178,7 @@ export function CouplePage() {
         {!standalone && <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">{partners.length > 1 ? '選んだ相手だけを入れ替えます。他の相手は削除しません。' : '相手は1人ずつ登録できます。何度でも無料で入れ替えられます。'}{partner.name}について作ったブックは、入れ替えても引き続き閲覧できます。</p>}
       </section>
 
-      <CouponDirectoryLink className="px-5 pt-6" />
+      <CoconalaBanner className="px-5 pt-6" />
       <Footer />
     </Page>
   )

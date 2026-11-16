@@ -1,0 +1,55 @@
+.fl-coconala-banner {
+  position: relative;
+  display: flex;
+  width: 100%;
+  aspect-ratio: 1280 / 654;
+  container-type: inline-size;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 3%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 50% 0%, #466553, #22362c 75%);
+  color: #fffaf0;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.fl-coconala-pr {
+  position: absolute;
+  inset: 6% auto auto 5%;
+  font-size: 11px;
+  color: #fffaf0;
+}
+
+.fl-coconala-title { font-size: clamp(13px, 5cqi, 27px); }
+.fl-coconala-offer { font-size: clamp(16px, 7cqi, 38px); }
+
+.fl-coconala-banner .fl-coconala-ad a {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  padding: .45em 1.4em;
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #22362c;
+  font-size: clamp(12px, 4cqi, 19px);
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.fl-coconala-banner .fl-coconala-ad a::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+}
+
+.fl-coconala-banner:focus-within {
+  outline: 2px solid #344f40;
+  outline-offset: 3px;
+}
+
+.fl-coconala-ad img { position: absolute; inset: auto 0 0 auto; }
+.content-menu-banner.fl-coconala-banner { border-radius: 8px; }

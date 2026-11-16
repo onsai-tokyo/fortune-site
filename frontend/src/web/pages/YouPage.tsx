@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
-import { CouponDirectoryLink, Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../components/ui'
+import { CoconalaBanner, Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../components/ui'
 import { IconChevron } from '../components/icons'
 import { chapterSections } from '../data/mock'
 import { images } from '../data/images'
@@ -110,7 +110,7 @@ export function YouPage() {
         </Link>
       </section>
 
-      <CouponDirectoryLink className="px-5 pt-6" />
+      <CoconalaBanner className="px-5 pt-6" />
       <Footer />
     </Page>
   )

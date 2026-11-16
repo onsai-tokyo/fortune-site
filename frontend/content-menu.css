@@ -12,7 +12,6 @@
 .content-menu-main:hover { background: #efeee9; }
 .content-menu-main small { color: #6c7068; font-size: 12px; }
 .content-menu-banner { display: block; max-width: 360px; }
-.content-menu-banner img { display: block; width: 100%; height: auto; border-radius: 8px; }
 .content-menu-secondary { display: flex; flex-wrap: wrap; gap: 20px; }
 .content-menu-secondary a { display: inline-flex; align-items: center; min-height: 44px; }
 .content-header :is(a,summary):focus-visible { outline: 2px solid #526348; outline-offset: 3px; }

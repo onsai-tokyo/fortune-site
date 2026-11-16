@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
 import { Link, useNavigate } from 'react-router-dom'
-import { CouponDirectoryLink, Button, Chip, Eyebrow, Field, Footer, NatureImage, Page } from '../components/ui'
+import { CoconalaBanner, Button, Chip, Eyebrow, Field, Footer, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
 import { prefectures } from '../data/mock'
 import { CreatingPage } from './CreatingPage'
@@ -96,7 +96,7 @@ export function TopPage() {
           </form>
       </section>
 
-      <CouponDirectoryLink className="px-5" />
+      <CoconalaBanner className="px-5" />
 
       <section className="fl-landing-section flex flex-col gap-4 px-6 pb-12">
         <h2 className="m-0 text-xl font-medium leading-relaxed">たとえば、こんな年表に</h2>

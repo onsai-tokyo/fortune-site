@@ -1,6 +1,6 @@
 import { attributionFromGuide, attributionLifetime, classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
 
-type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_view' | 'coupon_click'
+type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_view' | 'coupon_click' | 'coconala_banner_click'
 type Session = Attribution & { clientId: string; sessionId: number; test?: true }
 
 const sessionKey = 'fl-site-measurement-v1'

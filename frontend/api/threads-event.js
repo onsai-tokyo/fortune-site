@@ -1,6 +1,6 @@
 import { campaignMedium, couponParameters, sanitizeAttribution } from '../src/web/data/measurementRules.js'
 
-const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_view', 'coupon_click'])
+const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_view', 'coupon_click', 'coconala_banner_click'])
 const origin = 'https://fate-lab.com'
 const clientIdPattern = /^[0-9]{1,10}\.[0-9]{10}$/
 
@@ -53,15 +53,17 @@ export default async function handler(req, res) {
   }
   const name = event === 'coupon_view' ? 'page_view' : event
   const test = req.body?.test === true
-  const reportingName = attribution.source !== 'threads' ? undefined :
-    event === 'coupon_view' ? 'threads_coupon_view' :
-    coupon.offer_id === 'coconala-phone' && coupon.link_type === 'affiliate' ? 'threads_coconala_click' : undefined
+  const reportNames = []
+  if (event === 'coupon_view' && attribution.source === 'threads') reportNames.push('threads_coupon_view')
+  if (coupon.offer_id === 'coconala-phone' && coupon.link_type === 'affiliate') {
+    reportNames.push('coconala_list_click')
+    if (attribution.source === 'threads') reportNames.push('threads_coconala_click')
+  }
 
   try {
     // QA events never share names with production metrics.
-    const original = { name: test ? `qa_${name}` : name, params }
-    const reporting = reportingName ? { name: test ? `qa_${reportingName}` : reportingName, params } : undefined
-    const ok = await sendEvents(endpoint, clientId, reporting ? [original, reporting] : [original])
+    const reports = [name, ...reportNames].map(name => ({ name: test ? `qa_${name}` : name, params }))
+    const ok = await sendEvents(endpoint, clientId, reports)
     return res.status(ok ? 204 : 502).end()
   } catch {
     return res.status(502).end()
