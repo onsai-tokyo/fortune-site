@@ -2,6 +2,21 @@ import { campaignMedium, couponParameters, sanitizeAttribution } from '../src/we
 
 const events = new Set(['landing_visit', 'self_reading_complete', 'threads_visit', 'couple_reading_complete', 'coupon_view', 'coupon_click'])
 const origin = 'https://fate-lab.com'
+const clientIdPattern = /^[0-9]{1,10}\.[0-9]{10}$/
+
+async function sendEvents(endpoint, clientId, events) {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(4000),
+    body: JSON.stringify({
+      client_id: clientId,
+      consent: { ad_user_data: 'DENIED', ad_personalization: 'DENIED' },
+      events,
+    }),
+  })
+  return response.ok
+}
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
@@ -10,7 +25,7 @@ export default async function handler(req, res) {
 
   const { event, clientId, sessionId } = req.body ?? {}
   if (!events.has(event) || typeof clientId !== 'string' ||
-      !/^[0-9]{1,10}\.[0-9]{10}$/.test(clientId) ||
+      !clientIdPattern.test(clientId) ||
       !Number.isInteger(sessionId) || sessionId < 1700000000 ||
       sessionId > Math.floor(Date.now() / 1000) + 60) return res.status(400).end()
 
@@ -24,29 +39,30 @@ export default async function handler(req, res) {
   const endpoint = new URL('https://www.google-analytics.com/mp/collect')
   endpoint.searchParams.set('measurement_id', 'G-FPZ7QKTXLJ')
   endpoint.searchParams.set('api_secret', secret)
+  const params = {
+    session_id: sessionId,
+    engagement_time_msec: 1,
+    ...attribution,
+    ...coupon,
+    page_location: couponPage ? `${origin}/coupons` : undefined,
+    source,
+    fl_traffic_source: attribution.source ?? (event === 'threads_visit' ? 'threads' : 'unknown'),
+    campaign_source: source,
+    campaign_medium: campaignMedium(source),
+    campaign_name: req.body?.source === undefined && source === 'threads' ? 'fatelab_launch' : attribution.campaign_name,
+  }
+  const name = event === 'coupon_view' ? 'page_view' : event
+  const test = req.body?.test === true
+  const reportingName = attribution.source !== 'threads' ? undefined :
+    event === 'coupon_view' ? 'threads_coupon_view' :
+    coupon.offer_id === 'coconala-phone' && coupon.link_type === 'affiliate' ? 'threads_coconala_click' : undefined
+
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(4000),
-      body: JSON.stringify({
-        client_id: clientId,
-        consent: { ad_user_data: 'DENIED', ad_personalization: 'DENIED' },
-        events: [{ name: event === 'coupon_view' ? 'page_view' : event, params: {
-          session_id: sessionId,
-          engagement_time_msec: 1,
-          ...attribution,
-          ...coupon,
-          page_location: couponPage ? `${origin}/coupons` : undefined,
-          source,
-          fl_traffic_source: attribution.source ?? (event === 'threads_visit' ? 'threads' : 'unknown'),
-          campaign_source: source,
-          campaign_medium: campaignMedium(source),
-          campaign_name: req.body?.source === undefined && source === 'threads' ? 'fatelab_launch' : attribution.campaign_name,
-        } }],
-      }),
-    })
-    return res.status(response.ok ? 204 : 502).end()
+    // QA events never share names with production metrics.
+    const original = { name: test ? `qa_${name}` : name, params }
+    const reporting = reportingName ? { name: test ? `qa_${reportingName}` : reportingName, params } : undefined
+    const ok = await sendEvents(endpoint, clientId, reporting ? [original, reporting] : [original])
+    return res.status(ok ? 204 : 502).end()
   } catch {
     return res.status(502).end()
   }

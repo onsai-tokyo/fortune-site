@@ -87,4 +87,20 @@ test('forwards only validated event parameters to GA4', async t => {
   await handler({ ...req, headers: { origin: 'https://example.com' } }, res)
   assert.equal(res.code, 403)
   assert.equal(send.mock.callCount(), 6)
+
+  const click = { ...req.body, source: 'threads' }
+  await handler({ ...req, body: click }, res)
+  assert.equal(res.code, 204)
+  assert.equal(payload.client_id, click.clientId)
+  assert.deepEqual(payload.events.map(event => event.name), ['coupon_click', 'threads_coconala_click'])
+
+  await handler({ ...req, body: { ...click, test: true } }, res)
+  assert.equal(payload.client_id, click.clientId)
+  assert.deepEqual(payload.events.map(event => event.name), ['qa_coupon_click', 'qa_threads_coconala_click'])
+
+  await handler({ ...req, body: { ...click, event: 'coupon_view', test: true } }, res)
+  assert.deepEqual(payload.events.map(event => event.name), ['qa_page_view', 'qa_threads_coupon_view'])
+
+  await handler({ ...req, body: { ...click, offer_id: 'spacia-phone' } }, res)
+  assert.deepEqual(payload.events.map(event => event.name), ['coupon_click'])
 })
