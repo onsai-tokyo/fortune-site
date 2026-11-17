@@ -9,5 +9,8 @@ export function classifySource(url: URL, referrer: string): Source
 export function sanitizeLandingPath(path: string): string
 export function sanitizeAttribution(input: Record<string, unknown>): Attribution
 export const attributionLifetime: number
+export const measurementSessionKey: string
+export const measurementClientIdPattern: RegExp
+export function isMeasurementTest(url: URL, now?: number): boolean
 export function rememberGuideEntry(url: URL, referrer: string, storage: Storage, now: number): void
 export function attributionFromGuide(storage: Storage, now: number): Attribution | undefined

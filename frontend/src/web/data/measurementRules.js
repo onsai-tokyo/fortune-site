@@ -25,6 +25,20 @@ export function classifySource(url, referrer) {
 
 const guideEntryKey = 'fl-guide-entry-v1'
 export const attributionLifetime = 1800
+export const measurementSessionKey = 'fl-site-measurement-v1'
+export const measurementClientIdPattern = /^[0-9]{1,10}\.[0-9]{10}$/
+const testKey = 'fl-measurement-test-at'
+
+export function isMeasurementTest(url, now = Math.floor(Date.now() / 1000)) {
+  const flagged = url.searchParams.get('fl_test') === '1'
+  try {
+    if (flagged) sessionStorage.setItem(testKey, String(now))
+    const recent = time => Number.isInteger(time) && now >= time && now - time < attributionLifetime
+    if (recent(Number(sessionStorage.getItem(testKey)))) return true
+    const saved = JSON.parse(sessionStorage.getItem(measurementSessionKey) ?? 'null')
+    return flagged || (saved?.test === true && recent(saved.sessionId))
+  } catch { return flagged }
+}
 
 function readGuideEntry(storage, now) {
   const entry = JSON.parse(storage.getItem(guideEntryKey) ?? 'null')

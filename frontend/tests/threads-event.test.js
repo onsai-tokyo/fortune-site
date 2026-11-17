@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import handler from '../api/threads-event.js'
+import { guideReadingEvents } from '../src/web/data/guideReadingMeasurement.js'
 import { attributionFromGuide, classifySource, rememberGuideEntry, sanitizeLandingPath } from '../src/web/data/measurementRules.js'
 
 test('classifies campaign, search, internal and direct arrivals in order', () => {
@@ -114,4 +115,37 @@ test('forwards only validated event parameters to GA4', async t => {
 
   await handler({ ...req, body: { ...click, offer_id: 'spacia-phone' } }, res)
   assert.deepEqual(payload.events.map(event => event.name), ['coupon_click'])
+})
+
+test('forwards an article path and no personal fields at every guide reading stage', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true }))
+  const original = process.env.GA4_API_SECRET
+  process.env.GA4_API_SECRET = 'test'
+  t.after(() => {
+    if (original === undefined) delete process.env.GA4_API_SECRET
+    else process.env.GA4_API_SECRET = original
+  })
+  const now = Math.floor(Date.now() / 1000)
+  const res = { setHeader() {}, status(code) { this.code = code; return this }, end() {} }
+  const req = { method: 'POST', headers: { origin: 'https://fate-lab.com' }, body: {
+    clientId: `123.${now}`, sessionId: now, guidePath: '/guides/day-master/kinoe/',
+    birthDate: '1990-02-03', gender: 'female', source: 'threads', referrer_path: '/guides/compatibility',
+    page_location: 'https://example.test/with-personal-data',
+  } }
+  for (const event of Object.values(guideReadingEvents)) {
+    await handler({ ...req, body: { ...req.body, event } }, res)
+    assert.equal(res.code, 204)
+    const payload = JSON.parse(fetch.mock.calls.at(-1).arguments[1].body)
+    assert.equal(payload.client_id, req.body.clientId)
+    assert.deepEqual(payload.events, [{ name: event, params: {
+      session_id: now, engagement_time_msec: 1, page_location: 'https://fate-lab.com/guides/day-master/kinoe',
+    } }])
+    await handler({ ...req, body: { ...req.body, event, test: true } }, res)
+    assert.equal(res.code, 204)
+  }
+  for (const guidePath of ['/tools/shichu-suimei-calculator', '/guides', '/guides/marriage-timing?birthDate=1990-02-03', 'https://example.test/guides/other']) {
+    await handler({ ...req, body: { ...req.body, event: guideReadingEvents.start, guidePath } }, res)
+    assert.equal(res.code, 400)
+  }
+  assert.equal(fetch.mock.callCount(), 3)
 })

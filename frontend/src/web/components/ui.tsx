@@ -1,8 +1,9 @@
 import { coconalaBannerContent } from '../data/coconalaBanner.js'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
+import { recordGuideReadingBanner } from '../data/guideReadingMeasurement.js'
 import '../coconala-banner.css'
 import { FateMark } from './FateMark'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { IconBack, IconChevron } from './icons'
 
@@ -112,12 +113,14 @@ export function ListRow({ to, title, sub, leading, trailing }: { to: string; tit
 }
 
 export function CoconalaBanner({ className = '' }: { className?: string }) {
+  const { pathname } = useLocation()
   return (
     <div className={className}>
       <div
         className="fl-coconala-banner"
         onClick={event => {
           if (event.target instanceof Element && event.target.closest('a[href]')) {
+            recordGuideReadingBanner(pathname)
             trackThreadsEvent('coconala_banner_click')
           }
         }}

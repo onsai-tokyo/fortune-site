@@ -1073,10 +1073,14 @@ writePage('threads-launch', appTemplate
 for (const guide of guides.map(expandedGuide)) writePage(guide.path, staticHtml({ ...guide, body: `${guide.body}<style>${topUiPolish}</style>` }));
 fs.copyFileSync(new URL('./src/web/data/guideBirthDateDraft.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate-draft.js'));
 fs.copyFileSync(new URL('./scripts/guide-birthdate.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate.js'));
-const attributionRules = fs.readFileSync(new URL('./src/web/data/measurementRules.js', import.meta.url), 'utf8');
-fs.writeFileSync(path.join(distDir, 'assets', 'fl-entry-attribution.js'), `${attributionRules}
+for (const script of ['guideReadingMeasurement.js', 'measurementRules.js']) {
+  fs.copyFileSync(new URL(`./src/web/data/${script}`, import.meta.url), path.join(distDir, 'assets', script));
+}
+fs.writeFileSync(path.join(distDir, 'assets', 'fl-entry-attribution.js'), `import { isMeasurementTest, rememberGuideEntry } from './measurementRules.js';
 try {
-  rememberGuideEntry(new URL(location.href), document.referrer, sessionStorage, Math.floor(Date.now() / 1000));
+  const url = new URL(location.href);
+  const now = Math.floor(Date.now() / 1000);
+  if (!isMeasurementTest(url, now)) rememberGuideEntry(url, document.referrer, sessionStorage, now);
 } catch { /* Embedded browsers can deny storage. */ }
 `);
 
