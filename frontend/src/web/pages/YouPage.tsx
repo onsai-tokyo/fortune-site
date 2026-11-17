@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
 import { CoconalaBanner, Card, Eyebrow, Footer, NatureImage, Page, SectionHeading } from '../components/ui'
 import { IconChevron } from '../components/icons'
@@ -8,6 +9,7 @@ import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 import { useCenterCurrent } from '../components/useCenterCurrent'
+import { recordGuideReadingResult } from '../data/guideReadingMeasurement.js'
 
 function formatBirth(date: string) {
   const [y, m, d] = date.split('-').map(Number)
@@ -16,6 +18,7 @@ function formatBirth(date: string) {
 
 export function YouPage() {
   const { profile, partners, years, chapters, personaTitle, readingsStatus, reloadReadings } = useApp()
+  const { state } = useLocation()
   const yearList = [...years].sort((a, b) => a.year - b.year)
   const chapterList = chapters
   const current = yearList.find(y => y.label === '今年') ?? yearList[0]
@@ -23,6 +26,10 @@ export function YouPage() {
   const partner = partners[0]
   const futureYears = yearList.filter(y => y.year > new Date().getFullYear()).sort((a, b) => a.year - b.year)
   const stripRef = useCenterCurrent<HTMLDivElement>(current?.year)
+  const hasResult = (!remoteMode || readingsStatus === 'ready') && Boolean(current || chapterList.length)
+  useEffect(() => {
+    if (hasResult) recordGuideReadingResult(state?.guideReadingStartedAt)
+  }, [hasResult, state])
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   if (!current && !chapterList.length) return <ReadingStatus empty />
   return (

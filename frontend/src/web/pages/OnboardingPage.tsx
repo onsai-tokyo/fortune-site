@@ -11,6 +11,7 @@ import { remoteMode } from '../data/paymentConfig'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
 import { clearGuideBirthDate, readGuideBirthDate } from '../data/guideBirthDateDraft.js'
+import { pendingGuideReading } from '../data/guideReadingMeasurement.js'
 
 /**
  * 生年月日の入力（トップから来なかった人・設定からの変更）。
@@ -28,6 +29,7 @@ export function OnboardingPage() {
     return draft && validBirthDate(draft.birthDate) ? draft : null
   })
   const autoStart = Boolean(guideDraft?.gender)
+  const [guideReadingStartedAt] = useState(() => autoStart ? pendingGuideReading() : undefined)
   const useProfileDetails = !autoStart ||
     (profile?.birthDate === guideDraft?.birthDate && profile?.gender === guideDraft?.gender)
   const [nickname, setNickname] = useState(useProfileDetails ? profile?.nickname ?? '' : '')
@@ -51,14 +53,18 @@ export function OnboardingPage() {
     try {
       await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender }, setProgress)
       if (fromGuide) clearGuideBirthDate()
-      if (editing) navigate(returnTo ?? '/settings', { replace: autoStart })
-      else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, { replace: autoStart })
+      const options = {
+        replace: autoStart,
+        state: returnTo === '/you' && guideReadingStartedAt !== undefined ? { guideReadingStartedAt } : undefined,
+      }
+      if (editing) navigate(returnTo ?? '/settings', options)
+      else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, options)
     } catch { setSaveError(true) }
     finally {
       inFlight.current = false
       setSaving(false)
     }
-  }, [autoStart, birthDate, birthPlace, birthTime, editing, fromGuide, gender, navigate, nickname, returnTo, saveProfile, valid])
+  }, [autoStart, birthDate, birthPlace, birthTime, editing, fromGuide, gender, guideReadingStartedAt, navigate, nickname, returnTo, saveProfile, valid])
 
   useEffect(() => {
     if (!autoStart || startedFromGuide.current) return

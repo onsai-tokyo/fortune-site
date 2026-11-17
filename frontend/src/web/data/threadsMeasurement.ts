@@ -1,16 +1,14 @@
-import { attributionFromGuide, attributionLifetime, classifySource, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
+import { attributionFromGuide, attributionLifetime, classifySource, isMeasurementTest, measurementClientIdPattern, measurementSessionKey, sanitizeAttribution, sanitizeLandingPath, type Attribution } from './measurementRules.js'
 
 type MeasurementEvent = 'landing_visit' | 'threads_visit' | 'self_reading_complete' | 'couple_reading_complete' | 'coupon_view' | 'coupon_click' | 'coconala_banner_click'
 type Session = Attribution & { clientId: string; sessionId: number; test?: true }
 
-const sessionKey = 'fl-site-measurement-v1'
 const visitorKey = 'fl-coupon-visitor-v1'
-const clientIdPattern = /^[0-9]{1,10}\.[0-9]{10}$/
 let session: Session | undefined
 let couponPageVisible = false
 
 function active(value: Session | undefined, now: number): value is Session {
-  return Boolean(value && clientIdPattern.test(value.clientId) &&
+  return Boolean(value && measurementClientIdPattern.test(value.clientId) &&
     Number.isInteger(value.sessionId) && now >= value.sessionId && now - value.sessionId < attributionLifetime)
 }
 
@@ -18,11 +16,11 @@ export function startThreadsMeasurement() {
   if (location.origin !== 'https://fate-lab.com') return
   const now = Math.floor(Date.now() / 1000)
   const url = new URL(location.href)
-  const test = url.searchParams.get('fl_test') === '1'
+  const test = isMeasurementTest(url, now)
   if (active(session, now) && (!test || session?.test)) return
 
   try {
-    const saved = JSON.parse(sessionStorage.getItem(sessionKey) ?? 'null') as Session | undefined
+    const saved = JSON.parse(sessionStorage.getItem(measurementSessionKey) ?? 'null') as Session | undefined
     if (active(saved, now) && (!test || saved?.test)) {
       session = { clientId: saved.clientId, sessionId: saved.sessionId, ...sanitizeAttribution(saved),
         test: saved.test === true ? true : undefined }
@@ -47,7 +45,7 @@ export function startThreadsMeasurement() {
   const sessionClientId = `${random}.${now}`
   const clientId = attribution.source === 'threads' && !test ? couponVisitorId(sessionClientId) : sessionClientId
   session = { clientId, sessionId: now, ...attribution, test: test ? true : undefined }
-  try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch { /* Keep the current session in memory. */ }
+  try { sessionStorage.setItem(measurementSessionKey, JSON.stringify(session)) } catch { /* Keep the current session in memory. */ }
   trackThreadsEvent('landing_visit')
   if (attribution.source === 'threads') trackThreadsEvent('threads_visit')
 }
@@ -62,7 +60,7 @@ export function trackCouponRoute(isCouponPage: boolean) {
 function couponVisitorId(fallback: string): string {
   try {
     const saved = localStorage.getItem(visitorKey)
-    if (saved && clientIdPattern.test(saved)) return saved
+    if (saved && measurementClientIdPattern.test(saved)) return saved
     localStorage.setItem(visitorKey, fallback)
   } catch { /* Use the session ID when persistent storage is unavailable. */ }
   return fallback

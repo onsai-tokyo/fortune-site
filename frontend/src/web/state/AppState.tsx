@@ -1,4 +1,5 @@
 import { trackThreadsEvent } from '../data/threadsMeasurement'
+import { clearCompletedGuideReading } from '../data/guideReadingMeasurement.js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { bookQuestionProblem, countChars, defaultDraftSource, initialSavedIds, mockBooks, mockFailedBook, mockPartners, mockProfile, mockChapters, mockYears, mockCoupleYears, mockPersonaTitle, plans, QUESTIONS_PER_BOOK, savedKey, relationGroup } from '../data/mock'
 import { personalReadings, coupleReadings, type LoadState } from '../data/readingData'
@@ -771,6 +772,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setState(blankState())
     },
     saveProfile: async (profile, onProgress) => {
+      clearCompletedGuideReading()
       if (!REMOTE) {
         setState(s => ({ ...s, years: mockYears, chapters: mockChapters, personaTitle: mockPersonaTitle, profile, session: s.session === 'none' ? 'anonymous' : s.session, showGuide: s.profile ? s.showGuide : true }))
         return

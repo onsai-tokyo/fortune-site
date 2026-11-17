@@ -1,9 +1,15 @@
 import { saveGuideBirthDate } from '/assets/fl-guide-birthdate-draft.js'
+import { startGuideReading } from '/assets/guideReadingMeasurement.js'
+import { isMeasurementTest } from '/assets/measurementRules.js'
 
 const form = document.querySelector('#guide-reading form')
 if (form) {
   const input = form.querySelector('input[type="date"]')
   const feedback = form.querySelector('[role="status"]')
+  let analyticsClientId
+  if (!isMeasurementTest(new URL(location.href))) {
+    window.gtag?.('get', 'G-FPZ7QKTXLJ', 'client_id', id => { analyticsClientId = id })
+  }
   input.max = new Date().toISOString().slice(0, 10)
   input.addEventListener('input', () => { feedback.textContent = '' })
   form.addEventListener('submit', event => {
@@ -20,7 +26,10 @@ if (form) {
     form.querySelector('button[type="submit"]').disabled = true
     // Keep the reading inputs in this tab, outside analytics and the URL.
     const destination = form.action
-    window.gtag?.('event', 'guide_to_fortune', { page_path: location.pathname, link_url: destination })
+    startGuideReading(analyticsClientId)
+    if (!isMeasurementTest(new URL(location.href))) {
+      window.gtag?.('event', 'guide_to_fortune', { page_path: location.pathname, link_url: destination })
+    }
     location.assign(destination)
   })
 
