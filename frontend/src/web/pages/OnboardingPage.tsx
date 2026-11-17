@@ -1,5 +1,5 @@
 import { SiteHeader } from '../components/SiteHeader'
-import { useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BackHeader, Button, Chip, Field, Page } from '../components/ui'
 import type { Gender } from '../data/types'
@@ -22,33 +22,54 @@ export function OnboardingPage() {
   const [params] = useSearchParams()
   const rawReturn = params.get('returnTo')
   const returnTo = safeReturnTo(rawReturn, null)
-  const [nickname, setNickname] = useState(profile?.nickname ?? '')
   const fromGuide = params.get('from') === 'guide'
-  const [birthDate, setBirthDate] = useState(() => {
-    const guideDate = fromGuide ? readGuideBirthDate() : ''
-    return validBirthDate(guideDate) ? guideDate : profile?.birthDate ?? ''
+  const [guideDraft] = useState(() => {
+    const draft = fromGuide ? readGuideBirthDate() : null
+    return draft && validBirthDate(draft.birthDate) ? draft : null
   })
-  const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '')
-  const [birthPlace, setBirthPlace] = useState(profile?.birthPlace ?? '')
-  const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null)
-  const [saving, setSaving] = useState(false)
+  const autoStart = Boolean(guideDraft?.gender)
+  const useProfileDetails = !autoStart ||
+    (profile?.birthDate === guideDraft?.birthDate && profile?.gender === guideDraft?.gender)
+  const [nickname, setNickname] = useState(useProfileDetails ? profile?.nickname ?? '' : '')
+  const [birthDate, setBirthDate] = useState(guideDraft?.birthDate ?? profile?.birthDate ?? '')
+  const [birthTime, setBirthTime] = useState(useProfileDetails ? profile?.birthTime ?? '' : '')
+  const [birthPlace, setBirthPlace] = useState(useProfileDetails ? profile?.birthPlace ?? '' : '')
+  const [gender, setGender] = useState<Gender | null>(guideDraft?.gender ?? profile?.gender ?? null)
+  const [saving, setSaving] = useState(autoStart)
   const [saveError, setSaveError] = useState(false)
   const [progress, setProgress] = useState(0)
+  const startedFromGuide = useRef(false)
+  const inFlight = useRef(false)
   const editing = !!profile
   const valid = validBirthDate(birthDate) && gender !== null
 
-  async function submit(e: FormEvent) {
-    e.preventDefault()
-    if (!valid || !gender || saving) return
+  const startReading = useCallback(async () => {
+    if (!valid || !gender || inFlight.current) return
+    inFlight.current = true
     setSaving(true)
     setSaveError(false)
     try {
       await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender }, setProgress)
       if (fromGuide) clearGuideBirthDate()
-      if (editing) navigate(returnTo ?? '/settings')
-      else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
+      if (editing) navigate(returnTo ?? '/settings', { replace: autoStart })
+      else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, { replace: autoStart })
     } catch { setSaveError(true) }
-    finally { setSaving(false) }
+    finally {
+      inFlight.current = false
+      setSaving(false)
+    }
+  }, [autoStart, birthDate, birthPlace, birthTime, editing, fromGuide, gender, navigate, nickname, returnTo, saveProfile, valid])
+
+  useEffect(() => {
+    if (!autoStart || startedFromGuide.current) return
+    startedFromGuide.current = true
+    clearGuideBirthDate()
+    void startReading()
+  }, [autoStart, startReading])
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    void startReading()
   }
 
   if (saving) return <CreatingPage pending progress={progress} />

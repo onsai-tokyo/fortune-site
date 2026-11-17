@@ -53,7 +53,7 @@
 .guide-birthdate-form { display: grid; gap: 8px; max-width: 340px; margin: 14px auto 0; text-align: left; }
 .guide-birthdate-form[hidden], #guide-reading-fallback[hidden], .guide-birthdate-form [role="status"]:empty { display: none; }
 .guide-birthdate-form label { font-weight: 600; }
-.guide-birthdate-form input, .guide-birthdate-form button {
+.guide-birthdate-form input[type="date"], .guide-birthdate-form button {
   width: 100%;
   min-width: 0;
   min-height: 48px;
@@ -62,9 +62,32 @@
   font: inherit;
   font-size: 16px;
 }
-.guide-birthdate-form input { border: 1px solid #b8bdb4; background: white; color: var(--text-main); }
+.guide-birthdate-form input[type="date"] { border: 1px solid #b8bdb4; background: white; color: var(--text-main); }
 .guide-birthdate-form button { border: 0; background: #253b31; color: white; font-weight: 700; cursor: pointer; }
 .guide-birthdate-form button:hover { background: #344f40; }
 .guide-birthdate-form :is(input,button):focus-visible { outline: 2px solid #526348; outline-offset: 3px; }
 .guide-birthdate-form p { margin: 0; font-size: 13px; color: var(--text-sub); }
 #guide-reading { scroll-margin-top: 24px; }
+.guide-reading-gender { min-width: 0; margin: 0; padding: 0; border: 0; }
+.guide-reading-gender legend { padding: 0; font-weight: 600; }
+.guide-reading-gender-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.guide-reading-gender-options label {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #b8bdb4;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.guide-reading-gender-options input { margin: 0; accent-color: #253b31; }
+.guide-theme .guide-birthdate-form p a {
+  display: inline;
+  padding: 0;
+  background: transparent;
+  color: #344f40;
+  text-decoration: underline;
+}
+.guide-theme .guide-birthdate-form p a:hover { background: transparent; color: #253b31; }

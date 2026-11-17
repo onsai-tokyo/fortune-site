@@ -10,18 +10,22 @@ if (form) {
     event.preventDefault()
     if (!form.reportValidity()) return
 
-    if (!saveGuideBirthDate(input.value)) {
+    const gender = new FormData(form).get('guide-gender')
+    if (!saveGuideBirthDate(input.value, gender)) {
       feedback.textContent = 'このブラウザでは入力を引き継げません。下のリンクから鑑定に進めます。'
       document.querySelector('#guide-reading-fallback').hidden = false
       return
     }
 
-    // The selected date is stored in this tab and never included in analytics or the URL.
+    form.querySelector('button[type="submit"]').disabled = true
+    // Keep the reading inputs in this tab, outside analytics and the URL.
     const destination = form.action
     window.gtag?.('event', 'guide_to_fortune', { page_path: location.pathname, link_url: destination })
     location.assign(destination)
   })
 
+  // Re-enable the form when the browser restores this guide from its back/forward cache.
+  window.addEventListener('pageshow', () => { form.querySelector('button[type="submit"]').disabled = false })
   form.hidden = false
   document.querySelector('#guide-reading-fallback').hidden = true
 }
