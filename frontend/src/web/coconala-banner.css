@@ -1,43 +1,106 @@
 .fl-coconala-banner {
+  --ticket-green: #304638;
+  --ticket-paper: #fcf8ec;
+  --ticket-seam: 76%;
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--ticket-seam) 1fr;
   width: 100%;
   aspect-ratio: 1280 / 654;
   container-type: inline-size;
-  flex-direction: column;
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 3%;
   overflow: hidden;
+  border: clamp(4px, 1.4vw, 9px) solid var(--ticket-green);
   border-radius: 12px;
-  background: radial-gradient(ellipse at 50% 0%, #466553, #22362c 75%);
-  color: #fffaf0;
-  text-align: center;
-  line-height: 1.25;
+  background: var(--ticket-paper);
+  color: var(--ticket-green);
+  line-height: 1.2;
+}
+
+.fl-coconala-banner::before,
+.fl-coconala-banner::after {
+  position: absolute;
+  z-index: 1;
+  left: var(--ticket-seam);
+  width: clamp(10px, 5cqi, 26px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--ticket-green);
+  content: "";
+  pointer-events: none;
+}
+
+.fl-coconala-banner::before { top: 0; transform: translate(-50%, -50%); }
+.fl-coconala-banner::after { bottom: 0; transform: translate(-50%, 50%); }
+
+.fl-coconala-ticket,
+.fl-coconala-stub {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fl-coconala-ticket {
+  gap: clamp(4px, 2cqi, 12px);
+  padding-inline: 8%;
 }
 
 .fl-coconala-pr {
-  position: absolute;
-  inset: 6% auto auto 5%;
-  font-size: 11px;
-  color: #fffaf0;
+  align-self: flex-start;
+  padding: .2em .6em;
+  border: 1px solid #899376;
+  border-radius: 99px;
+  font: 700 clamp(9px, 2.2cqi, 13px)/1.15 system-ui, sans-serif;
 }
 
-.fl-coconala-title { font-size: clamp(13px, 5cqi, 27px); }
-.fl-coconala-offer { font-size: clamp(16px, 7cqi, 38px); }
+.fl-coconala-title {
+  font-size: clamp(14px, 5cqi, 30px);
+  font-weight: 700;
+}
+
+.fl-coconala-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .15em .45em;
+  font-size: clamp(13px, 3.8cqi, 22px);
+  font-weight: 700;
+}
+
+.fl-coconala-amount { white-space: nowrap; }
+
+.fl-coconala-number {
+  font: 800 clamp(26px, 11cqi, 65px)/.95 system-ui, sans-serif;
+  letter-spacing: -.045em;
+}
+
+.fl-coconala-stub {
+  align-items: center;
+  gap: clamp(5px, 2cqi, 12px);
+  padding-inline: 4%;
+  border-left: 2px dashed #879276;
+  background: #e7eadb;
+  text-align: center;
+}
+
+.fl-coconala-stub-label {
+  font-size: clamp(9px, 3cqi, 17px);
+  white-space: nowrap;
+}
 
 .fl-coconala-banner .fl-coconala-ad a {
   display: inline-block;
   width: auto;
   margin: 0;
-  padding: .45em 1.4em;
+  padding: .45em .65em;
   border-radius: 999px;
-  background: #fffaf0;
-  color: #22362c;
-  font-size: clamp(12px, 4cqi, 19px);
-  line-height: 1.25;
+  background: var(--ticket-green);
+  color: #fffaf0;
+  font-size: clamp(11px, 3.4cqi, 20px);
+  line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .fl-coconala-banner .fl-coconala-ad a::after {
@@ -47,7 +110,7 @@
 }
 
 .fl-coconala-banner:focus-within {
-  outline: 2px solid #344f40;
+  outline: 2px solid var(--ticket-green);
   outline-offset: 3px;
 }
 
