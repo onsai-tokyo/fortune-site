@@ -49,3 +49,22 @@
 .guide-theme .cycle .nodes circle { fill: #f9f8f5; stroke: #667d63; }
 .guide-theme .cycle .produce path { stroke: #667d63; }
 .guide-theme main article > p:first-of-type { color: var(--text-sub); }
+
+.guide-birthdate-form { display: grid; gap: 8px; max-width: 340px; margin: 14px auto 0; text-align: left; }
+.guide-birthdate-form[hidden], #guide-reading-fallback[hidden], .guide-birthdate-form [role="status"]:empty { display: none; }
+.guide-birthdate-form label { font-weight: 600; }
+.guide-birthdate-form input, .guide-birthdate-form button {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 16px;
+}
+.guide-birthdate-form input { border: 1px solid #b8bdb4; background: white; color: var(--text-main); }
+.guide-birthdate-form button { border: 0; background: #253b31; color: white; font-weight: 700; cursor: pointer; }
+.guide-birthdate-form button:hover { background: #344f40; }
+.guide-birthdate-form :is(input,button):focus-visible { outline: 2px solid #526348; outline-offset: 3px; }
+.guide-birthdate-form p { margin: 0; font-size: 13px; color: var(--text-sub); }
+#guide-reading { scroll-margin-top: 24px; }
