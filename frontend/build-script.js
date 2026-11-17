@@ -977,6 +977,18 @@ const relatedGuidesByPath = {
   'guides/sukuyo': ['compatibility', 'reconciliation-timing', 'vedic-astrology', 'astrology-systems-comparison']
 };
 
+const guideBirthDateForm = `<div id="guide-reading">
+  <form class="guide-birthdate-form" action="/welcome?from=guide&amp;returnTo=%2Fyou" hidden>
+    <label for="guide-birthdate">生年月日</label>
+    <input id="guide-birthdate" type="date" min="1900-01-01" autocomplete="bday" required>
+    <button type="submit">生年月日で占う</button>
+    <p>次の画面で性別を選ぶと、無料で鑑定できます。</p>
+    <p role="status"></p>
+  </form>
+  <a id="guide-reading-fallback" class="cta" href="/welcome">生年月日を入力して無料で鑑定する</a>
+</div>`;
+const inlinePersonalReadingLink = /<a(?: class="cta")? href="\/welcome">(?:無料で鑑定する →|生年月日で無料鑑定を始める)<\/a>/;
+
 function staticHtml(page, type = 'Article') {
   const isGuide = page.path.startsWith('guides/');
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
@@ -1001,7 +1013,16 @@ function staticHtml(page, type = 'Article') {
     ? `<section class="visible-faq"><h2>算命学の無料鑑定についてよくある質問</h2>${page.faqs.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}</section>`
     : '';
   if (visibleFaq) page.body += visibleFaq;
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}${/^(guides|tools)\//.test(page.path) ? '<script type="module" src="/assets/fl-entry-attribution.js"></script>' : ''}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${page.body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}${page.hideDefaultCta ? '' : `<a class="cta" href="${page.path === 'guides/compatibility' ? '/couple' : '/welcome'}">${page.path === 'guides/compatibility' ? 'ふたりの相性を無料で鑑定する' : '生年月日を入力して無料で鑑定する'}</a>`}<p>最終更新日：${updated}</p></main>${footer}</body></html>`;
+  const isGuideArticle = isGuide && type === 'Article';
+  const inlineReading = isGuideArticle && inlinePersonalReadingLink.test(page.body);
+  const body = inlineReading ? page.body.replace(inlinePersonalReadingLink, guideBirthDateForm) : page.body;
+  const readingCta = isGuideArticle
+    ? inlineReading
+      ? (page.hideDefaultCta ? '' : '<a class="cta" href="#guide-reading">生年月日を入力する</a>')
+      : `<aside class="inline-cta"><strong>生年月日から、あなたの流れを読む</strong>${guideBirthDateForm}</aside>`
+    : (page.hideDefaultCta ? '' : '<a class="cta" href="/welcome">生年月日を入力して無料で鑑定する</a>');
+  const coupleCta = page.path === 'guides/compatibility' ? '<a class="cta" href="/couple">ふたりの相性を無料で鑑定する</a>' : '';
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}${/^(guides|tools)\//.test(page.path) ? '<script type="module" src="/assets/fl-entry-attribution.js"></script>' : ''}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}${readingCta}${coupleCta}<p>最終更新日：${updated}</p></main>${footer}${isGuideArticle ? '<script type="module" src="/assets/fl-guide-birthdate.js"></script>' : ''}</body></html>`;
 }
 
 function guideIndexHtml() {
@@ -1043,6 +1064,8 @@ writePage('threads-launch', appTemplate
   .replace(/(<meta property="og:url" content=")[^"]+/, '$1https://fate-lab.com/threads-launch'));
 
 for (const guide of guides.map(expandedGuide)) writePage(guide.path, staticHtml({ ...guide, body: `${guide.body}<style>${topUiPolish}</style>` }));
+fs.copyFileSync(new URL('./src/web/data/guideBirthDateDraft.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate-draft.js'));
+fs.copyFileSync(new URL('./scripts/guide-birthdate.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate.js'));
 const attributionRules = fs.readFileSync(new URL('./src/web/data/measurementRules.js', import.meta.url), 'utf8');
 fs.writeFileSync(path.join(distDir, 'assets', 'fl-entry-attribution.js'), `${attributionRules}
 try {

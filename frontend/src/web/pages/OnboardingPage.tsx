@@ -10,6 +10,7 @@ import { CreatingPage } from './CreatingPage'
 import { remoteMode } from '../data/paymentConfig'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
+import { clearGuideBirthDate, readGuideBirthDate } from '../data/guideBirthDateDraft.js'
 
 /**
  * 生年月日の入力（トップから来なかった人・設定からの変更）。
@@ -22,7 +23,11 @@ export function OnboardingPage() {
   const rawReturn = params.get('returnTo')
   const returnTo = safeReturnTo(rawReturn, null)
   const [nickname, setNickname] = useState(profile?.nickname ?? '')
-  const [birthDate, setBirthDate] = useState(profile?.birthDate ?? '')
+  const fromGuide = params.get('from') === 'guide'
+  const [birthDate, setBirthDate] = useState(() => {
+    const guideDate = fromGuide ? readGuideBirthDate() : ''
+    return validBirthDate(guideDate) ? guideDate : profile?.birthDate ?? ''
+  })
   const [birthTime, setBirthTime] = useState(profile?.birthTime ?? '')
   const [birthPlace, setBirthPlace] = useState(profile?.birthPlace ?? '')
   const [gender, setGender] = useState<Gender | null>(profile?.gender ?? null)
@@ -39,6 +44,7 @@ export function OnboardingPage() {
     setSaveError(false)
     try {
       await saveProfile({ nickname: nickname.trim(), birthDate, birthTime: birthTime || null, birthPlace, gender }, setProgress)
+      if (fromGuide) clearGuideBirthDate()
       if (editing) navigate(returnTo ?? '/settings')
       else navigate(remoteMode ? returnTo ?? '/you' : `/creating${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`)
     } catch { setSaveError(true) }
