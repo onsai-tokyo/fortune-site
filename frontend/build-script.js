@@ -978,11 +978,18 @@ const relatedGuidesByPath = {
 };
 
 const guideBirthDateForm = `<div id="guide-reading">
-  <form class="guide-birthdate-form" action="/welcome?from=guide&amp;returnTo=%2Fyou" hidden>
+  <form class="guide-birthdate-form" action="/welcome?from=guide&amp;returnTo=%2Fyou" method="post" hidden>
     <label for="guide-birthdate">生年月日</label>
     <input id="guide-birthdate" type="date" min="1900-01-01" autocomplete="bday" required>
+    <fieldset class="guide-reading-gender">
+      <legend>性別</legend>
+      <div class="guide-reading-gender-options">
+        <label><input type="radio" name="guide-gender" value="female" required>女性</label>
+        <label><input type="radio" name="guide-gender" value="male" required>男性</label>
+      </div>
+    </fieldset>
+    <p>「生年月日で占う」を押すと、<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意して鑑定を始めます。15歳以上の方がご利用いただけます。18歳未満の方は保護者などの法定代理人の同意が必要です。</p>
     <button type="submit">生年月日で占う</button>
-    <p>次の画面で性別を選ぶと、無料で鑑定できます。</p>
     <p role="status"></p>
   </form>
   <a id="guide-reading-fallback" class="cta" href="/welcome">生年月日を入力して無料で鑑定する</a>
