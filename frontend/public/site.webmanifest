@@ -6,5 +6,16 @@
   "display": "standalone",
   "background_color": "#faf7ef",
   "theme_color": "#faf7ef",
-  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [
+    {
+      "src": "/images/fate-mark-v2-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/fate-mark-v2-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

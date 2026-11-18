@@ -212,7 +212,7 @@
       "destination": "/app.html"
     },
     {
-      "source": "/((?!api/|assets/|images/|favicon[.]svg$).*)",
+      "source": "/((?!api/|assets/|images/|favicon[.](?:svg|ico)$|site[.]webmanifest$).*)",
       "destination": "/index.html"
     }
   ],
