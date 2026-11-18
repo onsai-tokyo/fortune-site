@@ -1227,9 +1227,9 @@ const homepageContent = `<div class="fl-root">
   </div>
 </div>`;
 const homepage = appTemplate
-  .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homepageCopy.title)}｜${SITE_NAME}</title>`)
+  .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homepageCopy.title)}</title>`)
   .replace(/(<meta name="description" content=")[^"]*/, `$1${escapeHtml(homepageCopy.description)}`)
-  .replace(/(<meta property="og:title" content=")[^"]*/, `$1${escapeHtml(homepageCopy.title)}｜${SITE_NAME}`)
+  .replace(/(<meta property="og:title" content=")[^"]*/, `$1${escapeHtml(homepageCopy.title)}`)
   .replace(/(<meta property="og:description" content=")[^"]*/, `$1${escapeHtml(homepageCopy.description)}`)
   .replace(
     '</head>',
