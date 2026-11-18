@@ -1,29 +1,33 @@
 {
   "note": "scripts/article-data/series-examples.ts で生成。手で編集しない。",
+  "range": {
+    "from": 1980,
+    "to": 2005
+  },
   "stage": {
     "長生": {
-      "date": "1984-01-04",
+      "date": "1990-05-07",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "癸亥",
-          "tenGod": "偏官",
+          "kanshi": "庚午",
+          "tenGod": "偏印",
           "stage": "胎",
-          "hidden": "壬（正官）・甲（正印）"
+          "hidden": "丁（正財）・己（正官）"
         },
         {
           "label": "月柱",
-          "kanshi": "甲子",
+          "kanshi": "辛巳",
           "tenGod": "正印",
           "stage": "絶",
-          "hidden": "癸（偏官）"
+          "hidden": "丙（偏財）・戊（偏官）・庚（偏印）"
         },
         {
           "label": "日柱",
-          "kanshi": "丁酉",
+          "kanshi": "壬申",
           "tenGod": "日主",
           "stage": "長生",
-          "hidden": "辛（偏財）"
+          "hidden": "庚（偏印）・壬（比肩）・戊（偏官）"
         }
       ]
     },
@@ -210,97 +214,97 @@
       ]
     },
     "墓": {
-      "date": "2008-06-12",
+      "date": "1982-05-03",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "戊子",
-          "tenGod": "正官",
-          "stage": "建禄",
-          "hidden": "癸（比肩）"
+          "kanshi": "壬戌",
+          "tenGod": "偏官",
+          "stage": "墓",
+          "hidden": "戊（食神）・辛（正財）・丁（劫財）"
         },
         {
           "label": "月柱",
-          "kanshi": "戊午",
-          "tenGod": "正官",
-          "stage": "絶",
-          "hidden": "丁（偏財）・己（偏官）"
+          "kanshi": "甲辰",
+          "tenGod": "偏印",
+          "stage": "冠帯",
+          "hidden": "戊（食神）・乙（正印）・癸（正官）"
         },
         {
           "label": "日柱",
-          "kanshi": "癸未",
+          "kanshi": "丙戌",
           "tenGod": "日主",
           "stage": "墓",
-          "hidden": "己（偏官）・丁（偏財）・乙（食神）"
+          "hidden": "戊（食神）・辛（正財）・丁（劫財）"
         }
       ]
     },
     "絶": {
-      "date": "2011-10-02",
+      "date": "1985-10-12",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "辛卯",
+          "kanshi": "乙丑",
           "tenGod": "劫財",
-          "stage": "胎",
-          "hidden": "乙（正財）"
+          "stage": "冠帯",
+          "hidden": "己（正財）・癸（正印）・辛（正官）"
         },
         {
           "label": "月柱",
-          "kanshi": "丁酉",
-          "tenGod": "正官",
-          "stage": "帝旺",
-          "hidden": "辛（劫財）"
+          "kanshi": "丙戌",
+          "tenGod": "食神",
+          "stage": "養",
+          "hidden": "戊（偏財）・辛（正官）・丁（傷官）"
         },
         {
           "label": "日柱",
-          "kanshi": "庚寅",
+          "kanshi": "甲申",
           "tenGod": "日主",
           "stage": "絶",
-          "hidden": "甲（偏財）・丙（偏官）・戊（偏印）"
+          "hidden": "庚（偏官）・壬（偏印）・戊（偏財）"
         }
       ]
     },
     "胎": {
-      "date": "2014-03-12",
+      "date": "1988-03-22",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "甲午",
+          "kanshi": "戊辰",
           "tenGod": "食神",
-          "stage": "胎",
-          "hidden": "丁（正財）・己（正官）"
+          "stage": "冠帯",
+          "hidden": "戊（食神）・乙（正印）・癸（正官）"
         },
         {
           "label": "月柱",
-          "kanshi": "丁卯",
-          "tenGod": "正財",
-          "stage": "死",
-          "hidden": "乙（傷官）"
+          "kanshi": "乙卯",
+          "tenGod": "正印",
+          "stage": "沐浴",
+          "hidden": "乙（正印）"
         },
         {
           "label": "日柱",
-          "kanshi": "壬午",
+          "kanshi": "丙子",
           "tenGod": "日主",
           "stage": "胎",
-          "hidden": "丁（正財）・己（正官）"
+          "hidden": "癸（正官）"
         }
       ]
     },
     "養": {
-      "date": "2017-08-15",
+      "date": "1991-09-01",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "丁酉",
-          "tenGod": "傷官",
-          "stage": "胎",
-          "hidden": "辛（正官）"
+          "kanshi": "辛未",
+          "tenGod": "正官",
+          "stage": "墓",
+          "hidden": "己（正財）・丁（傷官）・乙（劫財）"
         },
         {
           "label": "月柱",
-          "kanshi": "戊申",
-          "tenGod": "偏財",
+          "kanshi": "丙申",
+          "tenGod": "食神",
           "stage": "絶",
           "hidden": "庚（偏官）・壬（偏印）・戊（偏財）"
         },
@@ -498,80 +502,80 @@
       ]
     },
     "正官": {
-      "date": "2007-02-12",
+      "date": "1981-02-06",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "丁亥",
-          "tenGod": "比肩",
-          "stage": "胎",
-          "hidden": "壬（正官）・甲（正印）"
+          "kanshi": "辛酉",
+          "tenGod": "偏官",
+          "stage": "絶",
+          "hidden": "辛（偏官）"
         },
         {
           "label": "月柱",
-          "kanshi": "壬寅",
+          "kanshi": "庚寅",
           "tenGod": "正官",
-          "stage": "死",
-          "hidden": "甲（正印）・丙（劫財）・戊（傷官）"
+          "stage": "帝旺",
+          "hidden": "甲（劫財）・丙（傷官）・戊（正財）"
         },
         {
           "label": "日柱",
-          "kanshi": "丁丑",
+          "kanshi": "乙卯",
           "tenGod": "日主",
-          "stage": "墓",
-          "hidden": "己（食神）・癸（偏官）・辛（偏財）"
+          "stage": "建禄",
+          "hidden": "乙（比肩）"
         }
       ]
     },
     "偏印": {
-      "date": "2010-09-03",
+      "date": "1984-09-18",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "庚寅",
-          "tenGod": "偏財",
-          "stage": "長生",
-          "hidden": "甲（偏印）・丙（比肩）・戊（食神）"
+          "kanshi": "甲子",
+          "tenGod": "劫財",
+          "stage": "病",
+          "hidden": "癸（偏印）"
         },
         {
           "label": "月柱",
-          "kanshi": "甲申",
+          "kanshi": "癸酉",
           "tenGod": "偏印",
-          "stage": "病",
-          "hidden": "庚（偏財）・壬（偏官）・戊（食神）"
+          "stage": "絶",
+          "hidden": "辛（偏官）"
         },
         {
           "label": "日柱",
-          "kanshi": "丙辰",
+          "kanshi": "乙卯",
           "tenGod": "日主",
-          "stage": "冠帯",
-          "hidden": "戊（食神）・乙（正印）・癸（正官）"
+          "stage": "建禄",
+          "hidden": "乙（比肩）"
         }
       ]
     },
     "正印": {
-      "date": "2013-04-13",
+      "date": "1987-04-08",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "癸巳",
-          "tenGod": "偏財",
-          "stage": "帝旺",
-          "hidden": "丙（正印）・戊（劫財）・庚（傷官）"
+          "kanshi": "丁卯",
+          "tenGod": "比肩",
+          "stage": "病",
+          "hidden": "乙（偏印）"
         },
         {
           "label": "月柱",
-          "kanshi": "丙辰",
+          "kanshi": "甲辰",
           "tenGod": "正印",
           "stage": "衰",
-          "hidden": "戊（劫財）・乙（偏官）・癸（偏財）"
+          "hidden": "戊（傷官）・乙（偏印）・癸（偏官）"
         },
         {
           "label": "日柱",
-          "kanshi": "己酉",
+          "kanshi": "丁亥",
           "tenGod": "日主",
-          "stage": "長生",
-          "hidden": "辛（食神）"
+          "stage": "胎",
+          "hidden": "壬（正官）・甲（正印）"
         }
       ]
     }
@@ -760,82 +764,504 @@
       ]
     },
     "辛": {
-      "date": "2006-03-03",
+      "date": "1980-03-09",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "丙戌",
-          "tenGod": "正官",
-          "stage": "冠帯",
-          "hidden": "戊（正印）・辛（比肩）・丁（偏官）"
+          "kanshi": "庚申",
+          "tenGod": "劫財",
+          "stage": "帝旺",
+          "hidden": "庚（劫財）・壬（傷官）・戊（正印）"
         },
         {
           "label": "月柱",
-          "kanshi": "庚寅",
-          "tenGod": "劫財",
-          "stage": "胎",
-          "hidden": "甲（正財）・丙（正官）・戊（正印）"
+          "kanshi": "己卯",
+          "tenGod": "偏印",
+          "stage": "絶",
+          "hidden": "乙（偏財）"
         },
         {
           "label": "日柱",
-          "kanshi": "辛卯",
+          "kanshi": "辛巳",
           "tenGod": "日主",
-          "stage": "絶",
-          "hidden": "乙（偏財）"
+          "stage": "死",
+          "hidden": "丙（正官）・戊（正印）・庚（劫財）"
         }
       ]
     },
     "壬": {
-      "date": "2009-03-08",
+      "date": "1983-03-05",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "己丑",
-          "tenGod": "正官",
-          "stage": "衰",
-          "hidden": "己（正官）・癸（劫財）・辛（正印）"
+          "kanshi": "癸亥",
+          "tenGod": "劫財",
+          "stage": "建禄",
+          "hidden": "壬（比肩）・甲（食神）"
         },
         {
           "label": "月柱",
-          "kanshi": "丁卯",
-          "tenGod": "正財",
-          "stage": "死",
-          "hidden": "乙（傷官）"
+          "kanshi": "甲寅",
+          "tenGod": "食神",
+          "stage": "病",
+          "hidden": "甲（食神）・丙（偏財）・戊（偏官）"
         },
         {
           "label": "日柱",
-          "kanshi": "壬子",
+          "kanshi": "壬辰",
           "tenGod": "日主",
-          "stage": "帝旺",
-          "hidden": "癸（劫財）"
+          "stage": "墓",
+          "hidden": "戊（偏官）・乙（傷官）・癸（劫財）"
         }
       ]
     },
     "癸": {
-      "date": "2012-03-03",
+      "date": "1986-03-10",
       "pillars": [
         {
           "label": "年柱",
-          "kanshi": "壬辰",
-          "tenGod": "劫財",
-          "stage": "養",
-          "hidden": "戊（正官）・乙（食神）・癸（比肩）"
-        },
-        {
-          "label": "月柱",
-          "kanshi": "壬寅",
-          "tenGod": "劫財",
+          "kanshi": "丙寅",
+          "tenGod": "正財",
           "stage": "沐浴",
           "hidden": "甲（傷官）・丙（正財）・戊（正官）"
         },
         {
+          "label": "月柱",
+          "kanshi": "辛卯",
+          "tenGod": "偏印",
+          "stage": "長生",
+          "hidden": "乙（食神）"
+        },
+        {
           "label": "日柱",
-          "kanshi": "癸亥",
+          "kanshi": "癸丑",
           "tenGod": "日主",
-          "stage": "帝旺",
-          "hidden": "壬（劫財）・甲（傷官）"
+          "stage": "冠帯",
+          "hidden": "己（偏官）・癸（比肩）・辛（偏印）"
         }
       ]
+    }
+  },
+  "relations": {
+    "甲": {
+      "甲": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "乙": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "丙": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "丁": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "戊": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "己": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "庚": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "辛": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "壬": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "癸": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      }
+    },
+    "乙": {
+      "甲": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "乙": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "丙": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "丁": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "戊": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "己": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "庚": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "辛": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "壬": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "癸": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      }
+    },
+    "丙": {
+      "甲": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "乙": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "丙": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "丁": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "戊": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "己": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "庚": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "辛": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "壬": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "癸": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      }
+    },
+    "丁": {
+      "甲": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "乙": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "丙": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "丁": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "戊": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "己": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "庚": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "辛": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "壬": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "癸": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      }
+    },
+    "戊": {
+      "甲": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "乙": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "丙": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "丁": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "戊": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "己": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "庚": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "辛": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "壬": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "癸": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      }
+    },
+    "己": {
+      "甲": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "乙": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "丙": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "丁": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "戊": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "己": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "庚": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "辛": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "壬": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "癸": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      }
+    },
+    "庚": {
+      "甲": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "乙": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "丙": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "丁": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "戊": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "己": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "庚": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "辛": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "壬": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "癸": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      }
+    },
+    "辛": {
+      "甲": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "乙": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "丙": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "丁": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "戊": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "己": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "庚": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "辛": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "壬": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "癸": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      }
+    },
+    "壬": {
+      "甲": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "乙": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "丙": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "丁": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "戊": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "己": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "庚": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "辛": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "壬": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      },
+      "癸": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      }
+    },
+    "癸": {
+      "甲": {
+        "tenGod": "傷官",
+        "reverseTenGod": "正印"
+      },
+      "乙": {
+        "tenGod": "食神",
+        "reverseTenGod": "偏印"
+      },
+      "丙": {
+        "tenGod": "正財",
+        "reverseTenGod": "正官"
+      },
+      "丁": {
+        "tenGod": "偏財",
+        "reverseTenGod": "偏官"
+      },
+      "戊": {
+        "tenGod": "正官",
+        "reverseTenGod": "正財"
+      },
+      "己": {
+        "tenGod": "偏官",
+        "reverseTenGod": "偏財"
+      },
+      "庚": {
+        "tenGod": "正印",
+        "reverseTenGod": "傷官"
+      },
+      "辛": {
+        "tenGod": "偏印",
+        "reverseTenGod": "食神"
+      },
+      "壬": {
+        "tenGod": "劫財",
+        "reverseTenGod": "劫財"
+      },
+      "癸": {
+        "tenGod": "比肩",
+        "reverseTenGod": "比肩"
+      }
     }
   }
 }

@@ -1,0 +1,198 @@
+{
+  "baseCommit": "ed10e8fa0450bf664974972577936649fb61b930",
+  "definition": "Visible article paragraphs; NFKC, commas and whitespace normalized; exact matches of 12+ characters in another one of the 32 pages.",
+  "pages": {
+    "/guides/day-master/hinoe": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "1e4dc32b9856477e709940c48136771a8437c16a2ef9606c1d4c295d445d4dd2"
+    },
+    "/guides/day-master/hinoto": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "fe9e03e5d491d2513e0413f6e61410d469f5bb344bbb965405b17aa42a506903"
+    },
+    "/guides/day-master/kanoe": {
+      "sentences": 28,
+      "duplicate": 12,
+      "ratio": 0.42857142857142855,
+      "fingerprint": "b3b825c6b45da6c00629a316bb70441255ffa8f5a8d9932f37d243e11cea29d1"
+    },
+    "/guides/day-master/kanoto": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "44e435caf79205934fd81ec1561459380b2522c58e620c65531af75c938c2f23"
+    },
+    "/guides/day-master/kinoe": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "f74fd9da70ba67b7724e53b19af02c868e95f64cd1b77d57b32e8fed04cde69d"
+    },
+    "/guides/day-master/kinoto": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "9e478a5255c3b6ad8bc6cd88fb313c6676e5b36c5a356521924591e8fd2b5abf"
+    },
+    "/guides/day-master/mizunoe": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "aaeaacc396ab408d938404a20abfb6cf474dd17fb28839705686801fe24592e3"
+    },
+    "/guides/day-master/mizunoto": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "e4f6fd8554183844976a2f1a8c548cdd2c4f5130b155144437fb4099432b8cc2"
+    },
+    "/guides/day-master/tsuchinoe": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "0cc7b61432b9eed2880ff4a21918a754a3bc48201b995a5df695354829df37ac"
+    },
+    "/guides/day-master/tsuchinoto": {
+      "sentences": 27,
+      "duplicate": 12,
+      "ratio": 0.4444444444444444,
+      "fingerprint": "1f07a258f9956090d227f4e6632750d3559af8153e16622b239e14b40a5c0b59"
+    },
+    "/guides/ten-god/gozai": {
+      "sentences": 25,
+      "duplicate": 6,
+      "ratio": 0.24,
+      "fingerprint": "18b731fc082082629d34f5a5e2d7602d38e8fb5df8ada5a583c9871262980749"
+    },
+    "/guides/ten-god/henin": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "08129e68b2187b0049960c7588f09a400b163fb38a1ed9aab441a9b4fd3d9de6"
+    },
+    "/guides/ten-god/henkan": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "a9b0cc6aa6339bb0def8a17774b509350a732621b7c22f12f59ef1ab9d91e6d0"
+    },
+    "/guides/ten-god/henzai": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "bedab8f73fbc16a6a6f113dd1fb99cb84c5cc63f531ca90b12c3a6dccbd2a762"
+    },
+    "/guides/ten-god/hiken": {
+      "sentences": 26,
+      "duplicate": 6,
+      "ratio": 0.23076923076923078,
+      "fingerprint": "7d076f67cf82d6f78b573b5d41bb610e2632acfdafb4c881b9844596acfc1fa1"
+    },
+    "/guides/ten-god/seiin": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "00ac7d4c563ca9b791d68eea331b246afc860adbd523ea434d8b27370bc6274f"
+    },
+    "/guides/ten-god/seikan": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "e114cf85e7055e5ec1cd1e1d8c8586642961ea346333bd25b855fec8c16e3dd2"
+    },
+    "/guides/ten-god/seizai": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "c4858eb35f6b0a8c26831f0b874c5d0c00ca3a23365178bf2671cfbf521bd277"
+    },
+    "/guides/ten-god/shokan": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "3cd589cdd88f638457876d095985f87e2aa8c11fdec5157a242d425dc7a87411"
+    },
+    "/guides/ten-god/shokujin": {
+      "sentences": 24,
+      "duplicate": 6,
+      "ratio": 0.25,
+      "fingerprint": "3c18c6d3e86908820ff2721758f43f561d3327442c69f08872484defbbb1440d"
+    },
+    "/guides/twelve-stage/bo": {
+      "sentences": 26,
+      "duplicate": 13,
+      "ratio": 0.5,
+      "fingerprint": "4ebb62bb86af1e393890badf34a505fc5978e643db0675c64fe090aafd486c86"
+    },
+    "/guides/twelve-stage/byo": {
+      "sentences": 28,
+      "duplicate": 13,
+      "ratio": 0.4642857142857143,
+      "fingerprint": "8269590e38b0c35aa93e5f816edff472a482e61639c83404edfc29e5b90e0025"
+    },
+    "/guides/twelve-stage/chosei": {
+      "sentences": 42,
+      "duplicate": 5,
+      "ratio": 0.11904761904761904,
+      "fingerprint": "af2b47026e57bb1826664550882b5dd2b6ac393d8839677c9326af89679fc0b1"
+    },
+    "/guides/twelve-stage/kantai": {
+      "sentences": 23,
+      "duplicate": 10,
+      "ratio": 0.43478260869565216,
+      "fingerprint": "4cba78931a00de8d895d5a2ce93f5d122eb085708ff627dbde4d6061c800b556"
+    },
+    "/guides/twelve-stage/kenroku": {
+      "sentences": 22,
+      "duplicate": 10,
+      "ratio": 0.45454545454545453,
+      "fingerprint": "a7eb08c49f3f47ed101aca575c5f3159805d02cb28520a66378320f12f95f233"
+    },
+    "/guides/twelve-stage/mokuyoku": {
+      "sentences": 24,
+      "duplicate": 10,
+      "ratio": 0.4166666666666667,
+      "fingerprint": "08ef5a03f17e3cbb8036c69006b177f120d286af7f1fc8fc3bcce209bb4929f9"
+    },
+    "/guides/twelve-stage/shi": {
+      "sentences": 28,
+      "duplicate": 13,
+      "ratio": 0.4642857142857143,
+      "fingerprint": "8714d0b7941d0728645546824c34cc2b9e0c0c755b2bcfebe4ccec93c0ab9ae0"
+    },
+    "/guides/twelve-stage/sui": {
+      "sentences": 23,
+      "duplicate": 10,
+      "ratio": 0.43478260869565216,
+      "fingerprint": "498a27dbb4b13423965f22e1dfcc3ffbb00b15354cd6dcc91a4a31997bfb42d1"
+    },
+    "/guides/twelve-stage/tai": {
+      "sentences": 24,
+      "duplicate": 10,
+      "ratio": 0.4166666666666667,
+      "fingerprint": "d36d2b89a6a997a81d8cdfe4f7b5969d88fb1e8e288183a2a718e938929be86e"
+    },
+    "/guides/twelve-stage/teio": {
+      "sentences": 23,
+      "duplicate": 9,
+      "ratio": 0.391304347826087,
+      "fingerprint": "b58161b0dac70356ff1284bcf7ad4fddf8c1b73c13b7431220500f38528be0d5"
+    },
+    "/guides/twelve-stage/yo": {
+      "sentences": 24,
+      "duplicate": 10,
+      "ratio": 0.4166666666666667,
+      "fingerprint": "388bad18e2f8dfbdea80938dd57e233c5ae9bef61146f312e2839feca35e4879"
+    },
+    "/guides/twelve-stage/zetsu": {
+      "sentences": 28,
+      "duplicate": 12,
+      "ratio": 0.42857142857142855,
+      "fingerprint": "6ac8d5440acd46e66b171dbb33f3a49b3114faca24cdd31e34bfc69e8abd9e0f"
+    }
+  }
+}

@@ -13,6 +13,7 @@ import { twelveStageCopy } from './twelve-stage-copy.js';
 import { overviewGuideCopy } from './overview-guide-copy.js';
 import { ANGEL_SUMMARY } from './angel-number-copy.js';
 import { DAY_STEM_COPY, TEN_GOD_COPY, TEN_GOD_PAIR, STAGE_COPY } from './series-guide-copy.js';
+import { STEM_FOCUS, GOD_FOCUS, STAGE_FOCUS } from './series-focus-copy.js';
 import path from 'path';
 import { relationshipGuides, reconciliationFirstContact, reconciliationContactSection, marriageQuestionSection } from './relationship-guides.js';
 
@@ -461,16 +462,67 @@ function stagePage(name, [phase, , star]) {
 ${healthNote}${shichuToolCta}<h2>実例：${jpDate(example.date)}生まれ（架空）</h2><p>出生時刻を入れずに計算すると、次の命式になります。</p>${exampleTable(example)}<p>日干は${day.kanshi[0]}で、日支の${day.kanshi[1]}が${name}にあたります。早見表の${day.kanshi[0]}の列と同じ結果です。日柱はふだんの生活やパートナーとの関係を表すので、この人は身近な関係の中で${copy.keyword}が出やすいと読みます。ほかの柱には別の十二運が並び、それぞれの領域で別の段階として読みます。</p>` };
 }
 
+const focusParagraphs = paragraphs => paragraphs.map(text => `<p>${text}</p>`).join('');
+function focusFaqs(name, copy, relation = '') {
+  return `<h2>${name}のよくある質問</h2>${copy.faqs.map(([question, answer], i) => `<h3>${question}</h3><p>${i === 0 ? relation : ''}${answer}</p>`).join('')}`;
+}
+function enrichSeriesPage(page, group, name) {
+  const copy = { stem: STEM_FOCUS, god: GOD_FOCUS, stage: STAGE_FOCUS }[group][name];
+  const example = SERIES_EXAMPLES[group][name];
+  const [year, month, day] = example.pillars;
+  let comparison, walkthrough, relation = '', description, searchTitle;
+  if (group === 'stem') {
+    const peer = STEM_ORDER[STEM_ORDER.indexOf(name) ^ 1];
+    const facts = SERIES_EXAMPLES.relations[name][peer];
+    relation = `${name}から${peer}を見る通変星は${facts.tenGod}で、逆に${peer}から${name}を見ても${facts.reverseTenGod}です。`;
+    comparison = `<h2>${name}と${peer}の違いを場面で比べる</h2><div class="table-scroll"><table><thead><tr><th>比べる点</th><th>${name}</th><th><a href="/guides/day-master/${STEM_SLUG[peer]}">${peer}</a></th></tr></thead><tbody>${copy.comparison.map(([label, own, other]) => `<tr><th>${label}</th><td>${own}</td><td>${other}</td></tr>`).join('')}</tbody></table></div>`;
+    walkthrough = [
+      `${jpDate(example.date)}の例を読むときは、まず日柱の${day.kanshi}を確認します。上の${name}が本人を表す日干、下の${day.kanshi[1]}が日支です。日柱にある十二運の${day.stage}は、日干の性格とは別に、力の出し方を見る項目です。`,
+      `次に月柱の${month.kanshi}を見ます。${month.kanshi[1]}は春の地支なので、季節の表の春に当てはめられます。月柱の天干${month.kanshi[0]}には、日干${name}から見た${month.tenGod}が付きます。${name}という本人の基準と、月柱にある${month.tenGod}の役割を分けてから、仕事での表れ方を読み合わせます。`,
+    ];
+    searchTitle = `${copy.feature}｜日干「${name}」の性格・仕事・恋愛`;
+    description = `${copy.feature}にたとえる日干${name}（${DAY_STEM_COPY[name].reading}）。${copy.scenes[0].split('。')[0]}。${peer}との違いを4つの場面で比較し、架空の命式から日干や季節の見方をたどります。相性や仕事の疑問にも回答。`;
+  } else if (group === 'god') {
+    const [peer] = TEN_GOD_PAIR[name];
+    comparison = `<h2>${name}と${peer}を使い分けて読む</h2><div class="table-scroll"><table><thead><tr><th>比べる点</th><th>${name}</th><th>${godLink(peer)}</th></tr></thead><tbody>${copy.comparison.map(([label, own, other]) => `<tr><th>${label}</th><td>${own}</td><td>${other}</td></tr>`).join('')}</tbody></table></div>`;
+    walkthrough = [
+      `${jpDate(example.date)}の命式では、本人の基準は日柱${day.kanshi}の${day.kanshi[0]}です。そこから月柱${month.kanshi}の天干${month.kanshi[0]}を見ると、通変星が${month.tenGod}になります。月柱に表示された${name}と、日干そのものを区別するところから読み始めます。`,
+      `この例の年柱${year.kanshi}の天干は${year.tenGod}です。月柱の${name}と年柱の${year.tenGod}が同じか違うかを確かめ、位置ごとの役割を読みます。蔵干は地支の中に含まれる天干で、表では括弧の中に通変星を示しています。${name}を数えるときも、天干の欄だけか蔵干まで含めるかを混ぜないようにします。`,
+    ];
+    searchTitle = `${copy.feature}｜通変星「${name}」の性格・仕事・恋愛`;
+    description = `${copy.feature}、${name}（${TEN_GOD_COPY[name].reading}）。${copy.scenes[0].split('。')[0]}。${peer}と4つの観点で比べ、架空の命式で${name}が出る位置を確認します。恋愛や星の有無についての疑問にも答えます。`;
+  } else {
+    comparison = `<h2>${name}と前後の段階を比べる</h2><div class="table-scroll"><table><thead><tr><th>十二運</th><th>${name}を中心に見た違い</th></tr></thead><tbody>${copy.comparison.map(([stage, text]) => `<tr><th>${stage === name ? name : stageLink(stage)}</th><td>${text}</td></tr>`).join('')}</tbody></table></div>`;
+    walkthrough = [
+      `${jpDate(example.date)}の例では、日柱は${day.kanshi}です。日干の${day.kanshi[0]}を基準に、日支${day.kanshi[1]}を早見表で探すと${day.stage}になります。${day.kanshi[1]}という地支だけで決めず、日干と組にして確認するのが手順です。`,
+      `同じ日干${day.kanshi[0]}から、年支${year.kanshi[1]}を見ると${year.stage}、月支${month.kanshi[1]}を見ると${month.stage}です。日柱の${name}だけを命式全体の性格に広げず、三つの柱を分けます。出生時刻は入力していないため、この例には時柱がありません。時柱の十二運まで推測して付け足さないようにします。`,
+    ];
+    searchTitle = `${copy.feature}｜十二運「${name}」の意味・性格と読み方`;
+    description = `${copy.feature}を表す十二運${name}（${STAGE_COPY[name].reading}）。${copy.scenes[0].split('。')[0]}。${copy.comparison[0][0]}・${copy.comparison[2][0]}との違いと、架空の命式の読み方を紹介します。${['病', '死', '墓', '絶'].includes(name) ? '健康や寿命を占う名称ではありません。' : '仕事や恋愛の具体例、3つの疑問も解説。'}`;
+  }
+  const application = `<h2>${name}を仕事や身近な関係で考える</h2>${focusParagraphs(copy.scenes)}`;
+  const exampleReading = `<h2>${name}の計算例を順に読み解く</h2>${focusParagraphs(walkthrough)}`;
+  if (group === 'stage' && name === '長生') {
+    // Keep the existing three-stage comparison and replace its FAQ in place.
+    const faqStart = page.body.indexOf('<h2>よくある質問</h2>');
+    const faqEnd = page.body.indexOf('<h2>Fate Labではどう扱っているか</h2>', faqStart);
+    if (faqStart < 0 || faqEnd < 0) throw new Error('長生の既存FAQが見つかりません');
+    page = { ...page, body: page.body.slice(0, faqStart) + focusFaqs(name, copy) + page.body.slice(faqEnd) };
+    return { ...page, searchTitle, searchDescription: description, body: page.body + exampleReading + application + `<h3>この命式で仕事と恋愛を読み分ける例</h3>${focusParagraphs(copy.case)}` };
+  }
+  return { ...page, searchTitle, searchDescription: description, body: page.body + exampleReading + application + comparison + focusFaqs(name, copy, relation) };
+}
 
 
 
 const shichuDetailGuides = [
-  ...Object.entries(ENGINE_DAY_STEM).map(([name, detail]) => dayStemPage(name, detail)),
-  ...Object.entries(ENGINE_TEN_GOD).filter(([name]) => name !== '日主').map(([name]) => tenGodPage(name)),
+  ...Object.entries(ENGINE_DAY_STEM).map(([name, detail]) => enrichSeriesPage(dayStemPage(name, detail), 'stem', name)),
+  ...Object.entries(ENGINE_TEN_GOD).filter(([name]) => name !== '日主').map(([name]) => enrichSeriesPage(tenGodPage(name), 'god', name)),
   ...Object.entries(STAGE_DETAIL).map(([name, detail]) => {
     const page = stagePage(name, detail);
     const copy = twelveStageCopy[name];
-    return copy ? { ...page, updated: copy.updated, description: copy.description, body: copy.body(stageLookupTable, shichuToolCta) } : page;
+    const resolved = copy ? { ...page, updated: copy.updated, description: copy.description, body: copy.body(stageLookupTable, shichuToolCta) } : page;
+    return enrichSeriesPage(resolved, 'stage', name);
   }),
 ];
 guides.push(...shichuDetailGuides);
