@@ -50,6 +50,18 @@ html { min-height: 100%; scroll-behavior: smooth; background: radial-gradient(el
 .content-page :is(.cta, .inline-cta a, .affiliate-link) { display: block; min-height: 48px; margin: 28px 0; padding: 13px 18px; border: 0; border-radius: 8px; background: #253b31; color: #fff; text-align: center; text-decoration: none; font: 500 14px/1.7 "Noto Sans JP", sans-serif; letter-spacing: .035em; box-shadow: none; }
 .content-page :is(.cta, .inline-cta a, .affiliate-link):hover { background: #344f40; color: #fff; transform: none; box-shadow: none; }
 .content-page :is(.author, .sources, .related, .editorial-details, .inline-cta, .affiliate-card, .element-chart, .cycle, .checklist, .example-grid section, .tool, .tool-result, .topic-hub, .guide-list a, .tool-list a, .article-toc, .sample-note, .answer-box, .reading-result, .final-verdict, .reconciliation-flow, .sanmei-chart, .couple-charts section, .element-compare section, .contrast-cards section, .verified-grid section, .relation-map section, .angel-grid a) { background: #fff !important; border: 1px solid #e2e1dc !important; border-radius: 22px !important; box-shadow: none !important; }
+.content-page :is(.shared-root, .root-source, .root-branches section, .yin-yang-cards section, .dual-reading section, .reading-conclusion, .topic-hub-grid section) { background: #fff !important; border: 1px solid #e2e1dc !important; border-radius: 22px !important; box-shadow: none !important; }
+.content-page :is(.root-source span, .root-branches span, .relation-map span) { background: #efeee9; border-radius: 8px; }
+.content-page .yin-yang-cards section > span { background: #253b31; }
+.content-page .yin-yang-cards section + section > span { background: #94704a; }
+.content-page :is(.root-branches i, .reconciliation-flow i, .contrast-cards b) { color: #667d63; }
+.content-page .reconciliation-flow section { background: #efeee9; }
+.content-page .reconciliation-flow section b { background: #253b31; }
+.content-page .element-compare i { background: #667d63; }
+.content-page .sanmei-chart rect { fill: #f9f8f5; stroke: #667d63; }
+.content-page .sanmei-chart path { stroke: #aeb9aa; }
+.content-page .nayin-detail { border-bottom-color: #e2e1dc; }
+.content-page .angel-grid span { color: #62675f; }
 .content-page :is(.author, .sources, .related, .editorial-details, .inline-cta, .affiliate-card, .element-chart, .cycle, .checklist, .topic-hub, .tool) { margin: 28px 0; padding: 20px; }
 .content-page .editorial-details { padding: 0; overflow: hidden; }
 .content-page .editorial-details summary { padding: 18px 20px; cursor: pointer; }
@@ -82,7 +94,7 @@ html { min-height: 100%; scroll-behavior: smooth; background: radial-gradient(el
 .content-page :is(.example-grid, .angel-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .content-page .example-grid section { padding: 20px; }
 .content-page .example-grid h3 { margin-top: 0; }
-.content-page :is(.example-grid, .couple-charts, .element-compare, .contrast-cards, .verified-grid, .relation-map) > * { min-width: 0; }
+.content-page :is(.example-grid, .couple-charts, .element-compare, .contrast-cards, .verified-grid, .relation-map, .root-branches, .yin-yang-cards, .dual-reading) > * { min-width: 0; }
 .content-page .article-toc ol { width: 100%; padding-left: 24px; }
 .content-page .bar-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 35px; gap: 10px; align-items: center; margin: 8px 0; }
 .content-page .bar-track { height: 14px; background: #efeee9; border-radius: 8px; overflow: hidden; }

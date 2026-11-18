@@ -18,7 +18,7 @@ const screens: { to: string; label: string; preset?: DemoPreset }[] = [
   { to: '/books/b-distance', label: 'ブックを読む' },
   { to: '/settings', label: '設定（この端末だけで利用中）' },
   { to: '/settings', label: '設定（引き継ぎ用メール登録済み）', preset: 'linked' },
-  { to: '/settings/link', label: '引き継ぎ用メールの登録' },
+  { to: '/settings/link', label: '引き継ぎ用メールの登録', preset: 'linked' },
   { to: '/tokushoho', label: '特定商取引法に基づく表記' },
 ]
 
