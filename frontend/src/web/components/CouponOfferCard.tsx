@@ -3,6 +3,7 @@ import '../coconala-banner.css'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { IconChevron } from './icons'
 import type { CouponOffer } from '../data/couponOffers'
+import { checkedAtLabel } from '../data/couponPageCopy.js'
 
 export function CouponOfferCard({ offer }: { offer: CouponOffer }) {
   const headingId = `coupon-${offer.id}`
@@ -18,7 +19,7 @@ export function CouponOfferCard({ offer }: { offer: CouponOffer }) {
           }
         }} dangerouslySetInnerHTML={{ __html: coconalaBannerContent }} />
       </article>
-      <p className="fl-ticket-note">リンク経由の申込みなどに応じて、FATE LABが報酬を受け取る場合があります。</p>
+      <p className="fl-ticket-note">リンク経由の申込みなどに応じて、FATE LABが報酬を受け取る場合があります。 確認日：{checkedAtLabel(offer.checkedAt)}</p>
     </>
   )
 
@@ -74,9 +75,7 @@ export function CouponOfferCard({ offer }: { offer: CouponOffer }) {
           )}
         </div>
       </article>
-      {adHtml && (
-        <p className="fl-ticket-note">リンク経由の申込みなどに応じて、FATE LABが報酬を受け取る場合があります。</p>
-      )}
+      <p className="fl-ticket-note">{adHtml && 'リンク経由の申込みなどに応じて、FATE LABが報酬を受け取る場合があります。'} 確認日：{checkedAtLabel(offer.checkedAt)}</p>
     </>
   )
 }

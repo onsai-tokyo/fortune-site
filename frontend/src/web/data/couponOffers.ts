@@ -5,6 +5,8 @@ export type CouponOffer = {
   name: string
   channel: 'phone' | 'chat'
   no: string
+  // Date the operator checked the official conditions; empty means not recorded.
+  checkedAt: string
   prefix?: string
   facts: { target: string; terms: string; validity: string }
   redemption: string
@@ -23,6 +25,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: 'ココナラ電話占い',
     channel: 'phone',
     no: '01',
+    checkedAt: '',
     facts: { target: 'はじめて会員登録する方', terms: '電話占いページの専用バナーから新規登録', validity: '利用期限・適用条件は公式案内へ' },
     redemption: '下のボタンから公式案内を開き、ココナラ電話占いの専用バナーから新規登録してください。',
     amount: '3,000',
@@ -37,6 +40,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: '電話占い 恋愛応援スペーシア',
     channel: 'phone',
     no: '02',
+    checkedAt: '',
     facts: { target: 'スペーシアを初めて利用する方', terms: '会員登録不要。鑑定師のプロフィールで無料鑑定を選び、電話番号を入力', validity: '公式サイトでご確認ください' },
     redemption: '下のボタンから公式ガイドを開き、鑑定師のプロフィールで「10分間の無料電話占い」を選んでください。',
     amount: '10',
@@ -53,6 +57,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: 'MIROR（ミラー）電話占い',
     channel: 'phone',
     no: '03',
+    checkedAt: '',
     prefix: '最大',
     facts: { target: '電話鑑定が初めてで、対象クーポンをお持ちの方', terms: '対象の占い師に限り1人1回。別途通話料1分30円', validity: 'クーポンの有無・割引額・期限はログイン後に確認' },
     redemption: '下のボタンからログインして対象クーポンを確認し、申込みの決済画面で「クーポンを使用する」を選んでください。',
@@ -70,6 +75,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: 'MIROR（ミラー）チャット占い',
     channel: 'chat',
     no: '04',
+    checkedAt: '',
     facts: { target: 'MIRORを初めて利用する方', terms: '公式キャンペーン掲載の鑑定メニューのみ', validity: '期間限定。実施状況と適用条件は申込み前に確認' },
     redemption: '下のボタンからキャンペーンを開き、対象の無料鑑定メニューを選んで申し込んでください。',
     amount: '初回無料',
@@ -86,6 +92,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: 'チャット占い ブリランテ',
     channel: 'chat',
     no: '05',
+    checkedAt: '',
     facts: { target: '新規のお客様限定', terms: 'メッセージの送受信などにポイントを使用。必要ポイントは鑑定師ごとに異なります', validity: '公式サイトで利用条件をご確認ください' },
     redemption: '下のボタンから公式案内を開き、新規登録後に付与されたポイントを確認してからご利用ください。',
     amount: '500',
@@ -102,6 +109,7 @@ export const couponOffers: readonly CouponOffer[] = [
     name: '電話占いデスティニー',
     channel: 'phone',
     no: '06',
+    checkedAt: '',
     prefix: '初回',
     amount: '10',
     unit: '分の鑑定が無料',

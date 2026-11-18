@@ -2,8 +2,10 @@ import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
 import { crawlEntryLinks } from './src/web/data/crawlEntryLinks.js';
 import { homepageCopy } from './homepage-copy.js';
 import { coupleSearchMetadata, coupleLandingHtml } from './src/web/data/coupleLandingCopy.js';
+import { couponOffers } from './src/web/data/couponOffers.ts';
+import { couponPageMetadata, couponComparisonHtml, warnStaleCouponChecks } from './src/web/data/couponPageCopy.js';
 import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
-import { nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
+import { japanDate, nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
 import { writeSitemaps } from './seo/sitemaps.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
@@ -54,10 +56,12 @@ function topicCta(page) {
   return midArticleCta;
 }
 
+warnStaleCouponChecks(couponOffers, { today: japanDate() });
+const couponMetadata = couponPageMetadata(couponOffers);
 const appRoutes = [
   ['couple', coupleSearchMetadata.title, coupleSearchMetadata.description],
   ['support', 'お問い合わせ', 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。'],
-  ['coupons', '占いクーポン・初回特典', '電話占い・チャット占いの初回特典をまとめました。対象者や利用条件を比較し、各サービスの公式案内へ進めます。'],
+  ['coupons', couponMetadata.title, couponMetadata.description],
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
   ['feature/compat', '無料の相性診断｜生年月日で恋愛・仕事の相性を鑑定', '2人の生年月日から、恋愛や仕事の相性、価値観、関係を良くするヒントを複数の占術で読み解きます。'],
   ['feature/marriage', '結婚相性占い｜生年月日で夫婦関係・結婚生活を診断', '2人の生年月日から結婚相性、夫婦の力関係、結婚生活を円満にするヒントを統合鑑定で読み解きます。'],
@@ -924,7 +928,9 @@ function appPageHtml(template, route) {
   const pageTemplate = template.replace(/<script type="application\/ld\+json">\s*\{[^<]*"@type"\s*:\s*"WebApplication"[^<]*<\/script>/, '');
   const content = route.path === 'couple'
     ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(coupleSearchMetadata.heading)}</h1>${coupleLandingHtml()}</section></article></main></div></div>`)
-    : pageTemplate;
+    : route.path === 'coupons'
+      ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(couponMetadata.heading)}</h1>${couponComparisonHtml(couponOffers)}</section></article></main></div></div>`)
+      : pageTemplate;
   const webApplicationSchema = route.path === 'couple' ? {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
