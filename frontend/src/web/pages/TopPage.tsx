@@ -11,15 +11,16 @@ import { images } from '../data/images'
 import { prefectures } from '../data/mock'
 import { CreatingPage } from './CreatingPage'
 import { remoteMode } from '../data/paymentConfig'
-import type { Gender } from '../data/types'
+import type { BirthProfile, Gender } from '../data/types'
 import { useApp } from '../state/AppState'
+import { readingFocusLandingHtml, readingFocusPages } from '../data/readingFocus.js'
 
 const steps = [
   { title: 'あなたを読む', body: '生年月日を入れると、性格の章と、過去からこれからまでの年ごとの流れが読めます。' },
   { title: 'ふたりの年表をひらく', body: '大切な人の生年月日と出会った年から、ふたりの関係を一年ずつたどれます。相手は何度でも入れ替えられます。' },
 ]
 
-export function TopPage() {
+export function TopPage({ focus, onRead }: { focus?: 'konki'; onRead?: (profile: BirthProfile, progress: (percent: number) => void) => Promise<void> } = {}) {
   const { saveProfile } = useApp()
   const navigate = useNavigate()
   const [birthDate, setBirthDate] = useState('')
@@ -42,13 +43,17 @@ export function TopPage() {
     setSaving(true)
     setSaveError('')
     try {
-      await saveProfile({ nickname: '', birthDate, birthTime: birthTime || null, birthPlace, gender }, setProgress)
-      navigate(remoteMode ? '/you' : '/creating')
+      const input = { nickname: '', birthDate, birthTime: birthTime || null, birthPlace, gender }
+      if (focus && onRead) await onRead(input, setProgress)
+      else {
+        await saveProfile(input, setProgress)
+        navigate(remoteMode ? '/you' : '/creating')
+      }
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         setSaveError('短時間に鑑定が続いています。1分ほど待ってから、もう一度お試しください。')
       } else if (error instanceof ApiError && error.status === 400) {
-        setSaveError('出生情報をご確認のうえ、もう一度お試しください。')
+        setSaveError(focus ? error.message : '出生情報をご確認のうえ、もう一度お試しください。')
       } else {
         setSaveError('鑑定結果を取得できませんでした。時間をおいて、もう一度お試しください。')
       }
@@ -61,15 +66,15 @@ export function TopPage() {
     window.setTimeout(() => document.querySelector<HTMLSelectElement>('#top-birthdate select')?.focus({ preventScroll: true }), 300)
   }
 
-  if (saving) return <CreatingPage pending progress={progress} />
+  if (saving) return <CreatingPage pending progress={progress} focus={focus} />
   return (
     <Page>
       <SiteHeader current="none" />
 
       <section className="fl-hero fl-hero-backdrop flex flex-col gap-4 px-6 pb-6 pt-10" style={{ backgroundImage: `linear-gradient(90deg, rgba(250,249,245,.96), rgba(250,249,245,.76)), url("${images.mountains}")` }}>
-        <Eyebrow>暦をひらく。自分を知る。</Eyebrow>
-        <h1 className="m-0 text-[28px] font-medium leading-[1.6]">生まれた日から、<br />あなたの一年ずつを読む。</h1>
-        <p className="m-0 text-[15px] leading-[1.9] text-fl-body">四柱推命とインド占星術の暦から、あなたの性格と年ごとの流れを読み解きます。大切な人を登録すると、ふたりの年表もひらけます。</p>
+        <Eyebrow>{focus ? '生年月日から、これからの関係を考える。' : '暦をひらく。自分を知る。'}</Eyebrow>
+        <h1 className="m-0 text-[28px] font-medium leading-[1.6]">{focus ? readingFocusPages.konki.heading : <>生まれた日から、<br />あなたの一年ずつを読む。</>}</h1>
+        <p className="m-0 text-[15px] leading-[1.9] text-fl-body">{focus ? readingFocusPages.konki.intro : '四柱推命とインド占星術の暦から、あなたの性格と年ごとの流れを読み解きます。大切な人を登録すると、ふたりの年表もひらけます。'}</p>
       </section>
 
       <section className="px-5 pb-10">
@@ -92,14 +97,16 @@ export function TopPage() {
             <p className="m-0 text-xs leading-[1.8] text-fl-muted">
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。
             </p>
+            {focus && <p className="m-0 text-xs leading-[1.8] text-fl-muted">入力を計算APIへ送信し、この画面の表示中だけ使います。この画面では保存せず、生年月日・性別・出生時刻・出生地をURLやアクセス解析へ送ることはありません。</p>}
             {saveError && <p ref={errorRef} tabIndex={-1} role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">{saveError} 入力内容は残っています。</p>}
-            <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : '同意して、無料で読む'}</Button>
+            <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : focus ? readingFocusPages.konki.button : '同意して、無料で読む'}</Button>
             <span className="text-center text-xs leading-[1.7] text-fl-muted">鑑定は会員登録・ログイン不要です。</span>
           </form>
       </section>
 
       <CoconalaBanner className="px-5" />
 
+      {focus ? <section className="fl-landing-section flex flex-col gap-4 px-6 py-10" dangerouslySetInnerHTML={{ __html: readingFocusLandingHtml(focus) }} /> : <>
       <section className="fl-landing-section flex flex-col gap-4 px-6 pb-12">
         <h2 className="m-0 text-xl font-medium leading-relaxed">たとえば、こんな年表に</h2>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">一年ごとに、その年の流れと過ごし方を読めます。過去の年をふり返ることも、これからの年を先に読むこともできます。</p>
@@ -160,6 +167,7 @@ export function TopPage() {
       <section className="px-6 pb-12">
         <Button size="lg" onClick={goToForm}>生年月日を入れて読む</Button>
       </section>
+      </>}
 
       <Footer includeCrawlLinks />
     </Page>

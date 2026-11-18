@@ -1,5 +1,5 @@
 const social = new Set(['threads', 'tiktok', 'instagram', 'x'])
-const paths = new Set(['/', '/welcome', '/couple', '/coupons', '/threads-launch', '/you'])
+const paths = new Set(['/', '/welcome', '/couple', '/coupons', '/threads-launch', '/you', ...readingFocusPaths])
 const sources = new Set([...social, 'other_campaign', 'organic_search', 'site_guide', 'direct'])
 const offers = new Set(['coconala-phone', 'spacia-phone', 'miror-phone', 'miror-chat', 'brillante-chat', 'destiny-phone'])
 const guide = /^\/(guides|tools)\/[a-z0-9-]+(?:\/[a-z0-9-]+)?$/
@@ -90,3 +90,4 @@ export function campaignMedium(source) {
     organic_search: 'organic', site_guide: 'internal', other_campaign: 'campaign', direct: 'none',
   })[source]
 }
+import { readingFocusPaths } from './readingFocus.js'

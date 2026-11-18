@@ -1,6 +1,6 @@
 export const indexRobots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
 export const privateRobots = 'noindex,nofollow'
-const publicAppPaths = new Set(['/', '/couple', '/coupons', '/support', '/terms', '/privacy', '/tokushoho', '/tokushohou', '/threads-launch', '/contact'])
+const publicAppPaths = new Set(['/', '/couple', '/coupons', '/support', '/terms', '/privacy', '/tokushoho', '/tokushohou', '/threads-launch', '/contact', ...readingFocusPaths])
 
 // These routes must also return noindex before any JavaScript runs.
 export const privateAppRouteSources = [
@@ -18,3 +18,4 @@ export function updateAppRobots(document, pathname) {
   meta.content = appRobots(pathname)
   if (!meta.isConnected) document.head.appendChild(meta)
 }
+import { readingFocusPaths } from './readingFocus.js'

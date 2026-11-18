@@ -57,14 +57,14 @@ test('saved records are deterministic and visible and structured dates use the s
   assert.doesNotMatch(unknown, /dateModified/)
 })
 
-test('sitemap index has three nonempty groups, 96 public URLs and no noindex pages', () => {
+test('sitemap index has four nonempty groups, 100 public URLs and no noindex pages', () => {
   const index = fs.readFileSync(new URL('sitemap.xml', dist), 'utf8')
   assert.match(index, /<sitemapindex /)
   const children = [...index.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, value]) => new URL(value).pathname)
-  assert.deepEqual(children, ['/sitemap-tools.xml', '/sitemap-guides.xml', '/sitemap-series.xml'])
+  assert.deepEqual(children, ['/sitemap-tools.xml', '/sitemap-guides.xml', '/sitemap-series.xml', '/sitemap-uranai.xml'])
   const routes = sitemapRoutes(dist)
-  assert.equal(routes.length, 96)
-  assert.equal(new Set(routes).size, 96)
+  assert.equal(routes.length, 100)
+  assert.equal(new Set(routes).size, 100)
   assert.ok(routes.includes('/coupons'))
   for (const route of routes) {
     assert.ok(!['/support', '/tokushoho'].includes(route))
