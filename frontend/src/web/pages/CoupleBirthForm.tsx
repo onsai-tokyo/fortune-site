@@ -1,9 +1,10 @@
+import { BirthTimeFields } from '../components/BirthTimeFields'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { MeetingYearSelect } from '../components/MeetingYearSelect'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { BirthDateFields } from '../components/BirthDateFields'
-import { Button, Chip, Field } from '../components/ui'
+import { Button, Chip } from '../components/ui'
 import { ApiError } from '../data/api'
 import { validBirthDate } from '../data/birthDate'
 import { prefectures, relationOptions } from '../data/mock'
@@ -20,8 +21,8 @@ function BirthFields({ id, title, date, setDate, gender, setGender, details, set
   return <section aria-labelledby={`${id}-title`} className="flex min-w-0 flex-col gap-3 rounded-card border border-fl-line bg-white p-4">
     <h2 id={`${id}-title`} className="m-0 text-base">{title}</h2>
     <BirthDateFields id={id} value={date} onChange={setDate} />
-    <Field id={`${id}-time`} label="出生時刻（任意）" type="time" onClear={() => setDetails({ ...details, time: '' })} value={details.time}
-      onChange={e => setDetails({ ...details, time: e.target.value })} />
+    <BirthTimeFields id={`${id}-time`} value={details.time}
+      onChange={time => setDetails({ ...details, time })} />
     <label className="flex min-w-0 flex-col gap-1.5 text-[13px] font-medium text-fl-body">
       出生地（任意）
       <select className="rounded-field border border-fl-line bg-white px-3 text-base"

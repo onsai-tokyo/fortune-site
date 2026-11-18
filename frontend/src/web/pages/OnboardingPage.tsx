@@ -1,3 +1,4 @@
+import { BirthTimeFields } from '../components/BirthTimeFields'
 import { SiteHeader } from '../components/SiteHeader'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -105,7 +106,7 @@ export function OnboardingPage() {
         </fieldset>
 
         <div className="flex flex-col gap-[18px]">
-            <Field id="birthtime" label="出生時刻（任意）" type="time" onClear={() => setBirthTime('')} value={birthTime} onChange={e => setBirthTime(e.target.value)}
+            <BirthTimeFields id="birthtime" value={birthTime} onChange={setBirthTime}
               hint="母子健康手帳の出産の記録に載っています。時刻があると、時期を月単位で読めます。" />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="place" className="text-[13px] font-medium text-fl-body">出生地（任意）</label>
