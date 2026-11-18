@@ -7,6 +7,7 @@ import { couponPageMetadata, couponComparisonHtml, warnStaleCouponChecks } from 
 import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
 import { japanDate, nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
 import { writeSitemaps } from './seo/sitemaps.js';
+import { pageBreadcrumbs, structuredDates } from './seo/structured-data.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import { twelveStageCopy } from './twelve-stage-copy.js';
@@ -22,7 +23,6 @@ const SITE_NAME = 'Fate Lab';
 const contentMenuStyle = fs.readFileSync(new URL('./content-menu.css', import.meta.url), 'utf8') +
   fs.readFileSync(new URL('./src/web/coconala-banner.css', import.meta.url), 'utf8');
 const guideThemeStyle = fs.readFileSync(new URL('./guide-theme.css', import.meta.url), 'utf8');
-const UPDATED = '2026-08-13';
 const distDir = path.join(process.cwd(), 'dist');
 const lpPath = path.join(distDir, 'lp.html');
 const indexPath = path.join(distDir, 'index.html');
@@ -1109,21 +1109,18 @@ function staticHtml(page, type = 'Article') {
   const themeColor = isGuide ? '#f9f8f5' : '#faf7ef';
   const canonical = `${SITE_URL}/${page.path}`;
   const title = `${page.searchTitle ?? page.title}｜${SITE_NAME}`;
-  const published = page.published ?? '2026-08-10';
-  const updated = page.updated ?? UPDATED;
-  const seriesParent = seriesHubs.find(hub => page.path.startsWith(`${hub.path}/`));
-  const breadcrumbs = [
-    { name: 'Fate Lab', item: `${SITE_URL}/` },
-    ...(type === 'Article' ? [{ name: '占い解説', item: `${SITE_URL}/guides/` }] : []),
-    ...(seriesParent ? [{ name: seriesParent.name, item: `${SITE_URL}/${seriesParent.path}` }] : []),
-    { name: page.title, item: canonical },
-  ];
+  const dates = structuredDates({ published: page.published, modified: page.updated ?? page.published });
+  const published = dates.datePublished ?? '記録なし';
+  const updated = dates.dateModified ?? '記録なし';
+  const breadcrumbs = pageBreadcrumbs(page, {
+    type, origin: SITE_URL, seriesHubs, availablePaths: new Set(guides.map(guide => guide.path)),
+  });
   const breadcrumbHtml = breadcrumbs.map((crumb, index) => index === breadcrumbs.length - 1
     ? escapeHtml(crumb.name)
     : `<a href="${new URL(crumb.item).pathname}">${escapeHtml(crumb.name)}</a>`).join(' › ');
   const schema = {
     '@context': 'https://schema.org', '@graph': [
-      { '@type': type, headline: page.title, name: page.title, description: page.description, url: canonical, inLanguage: 'ja', mainEntityOfPage: canonical, ...(page.published ? { datePublished: page.published } : {}), ...(page.updated ?? page.published ? { dateModified: page.updated ?? page.published } : {}), ...(type === 'WebApplication' ? { applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' } } : {}), author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
+      { '@type': type, headline: page.title, name: page.title, description: page.description, url: canonical, inLanguage: 'ja', mainEntityOfPage: canonical, ...dates, ...(type === 'WebApplication' ? { applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' } } : {}), author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
       { '@type': 'BreadcrumbList', itemListElement: breadcrumbs.map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, ...crumb })) }
     ]
   };
