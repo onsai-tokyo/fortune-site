@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import { recordedDate } from './structured-data.js'
 
 export function japanDate(now = new Date()) {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
@@ -28,6 +29,7 @@ export function nextLastmod(previous, html, { initialLastmod = null, today = jap
 }
 
 export function applyLastmod(html, lastmod) {
+  lastmod = recordedDate(lastmod, 'lastmod')
   const display = lastmod ?? '記録なし'
   return html
     .replace(/更新日：[^　<]+(?=　)/g, `更新日：${display}`)
