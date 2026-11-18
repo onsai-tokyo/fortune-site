@@ -3,12 +3,12 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import test from 'node:test'
 import { crawlEntryLinks } from '../src/web/data/crawlEntryLinks.js'
+import { sitemapRoutes } from './helpers/sitemaps.js'
 
 const dist = new URL('../dist/', import.meta.url)
 const origin = 'https://fate-lab.com'
 const html = route => fs.readFileSync(new URL(route === '/' ? 'index.html' : `${route.slice(1).replace(/\/$/, '')}/index.html`, dist), 'utf8')
-const sitemap = fs.readFileSync(new URL('sitemap.xml', dist), 'utf8')
-const routes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, url]) => new URL(url).pathname)
+const routes = sitemapRoutes(dist)
 const normalize = route => route.replace(/\/$/, '') || '/'
 
 function links(markup, route) {

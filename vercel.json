@@ -144,8 +144,240 @@
       "destination": "/support/index.html"
     },
     {
+      "source": "/restore/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/legacy/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/reading/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/r/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/s/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/login/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/welcome/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/creating/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/you/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/compose/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/books/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/credits/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/settings/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/sales-conditions/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/app-legal/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/demo/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/couple/:partnerId",
+      "destination": "/app.html"
+    },
+    {
       "source": "/((?!api/|assets/|images/|favicon[.]svg$).*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/restore/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/legacy/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/reading/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/r/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/s/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/login/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/welcome/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/creating/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/you/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/compose/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/books/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/credits/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/settings/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/sales-conditions/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/app-legal/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/demo/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/couple/:partnerId",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/app.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex,nofollow"
+        }
+      ]
     }
   ]
 }

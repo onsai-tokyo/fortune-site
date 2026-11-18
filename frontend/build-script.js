@@ -1,5 +1,8 @@
 import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
 import { crawlEntryLinks } from './src/web/data/crawlEntryLinks.js';
+import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
+import { nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
+import { writeSitemaps } from './seo/sitemaps.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import { twelveStageCopy } from './twelve-stage-copy.js';
@@ -347,7 +350,6 @@ function tenGodLookupTable(name) {
 }
 
 
-const SERIES_UPDATED = '2026-11-16';
 const SERIES_EXAMPLES = JSON.parse(fs.readFileSync(new URL('./article-data/series-examples.json', import.meta.url), 'utf8'));
 const ELEMENT_NAMES = ['木', '火', '土', '金', '水'];
 const jpDate = iso => { const [y, m, d] = iso.split('-').map(Number); return `${y}年${m}月${d}日`; };
@@ -408,7 +410,7 @@ function dayStemPage(stem, detail) {
   const copy = DAY_STEM_COPY[stem];
   const example = SERIES_EXAMPLES.stem[stem];
   const [, month] = example.pillars;
-  return { path: `guides/day-master/${STEM_SLUG[stem]}`, updated: SERIES_UPDATED, title: `日干「${stem}」とは？${symbol}タイプの性格・仕事・恋愛の読み方`, description: `日干が${stem}（${copy.reading}）の人は「${detail.core}」タイプ。${copy.portrait.split('。')[1]}。性格・仕事・恋愛の傾向と、生まれた季節や相手の日干による違いを紹介します。`, body: `<p><strong>${stem}（${copy.reading}）は、${copy.portrait.split('。')[0]}。</strong>${copy.portrait.split('。').slice(1).join('。')}五行では${element.split('・')[0]}、陰陽では${element.split('・')[1]}にあたります。</p><p>日干は、命式の日柱の上の文字で、四柱推命では本人を表します。自分の日干がわからない場合は、<a href="/tools/day-master">日干の無料計算</a>で調べられます。</p>
+  return { path: `guides/day-master/${STEM_SLUG[stem]}`, title: `日干「${stem}」とは？${symbol}タイプの性格・仕事・恋愛の読み方`, description: `日干が${stem}（${copy.reading}）の人は「${detail.core}」タイプ。${copy.portrait.split('。')[1]}。性格・仕事・恋愛の傾向と、生まれた季節や相手の日干による違いを紹介します。`, body: `<p><strong>${stem}（${copy.reading}）は、${copy.portrait.split('。')[0]}。</strong>${copy.portrait.split('。').slice(1).join('。')}五行では${element.split('・')[0]}、陰陽では${element.split('・')[1]}にあたります。</p><p>日干は、命式の日柱の上の文字で、四柱推命では本人を表します。自分の日干がわからない場合は、<a href="/tools/day-master">日干の無料計算</a>で調べられます。</p>
 <h2>${stem}の性格：強みと注意点</h2><p>Fate Labの鑑定では、${stem}を「${detail.core}」として読みます。</p><ul><li><strong>強み：</strong>${detail.strength}</li><li><strong>注意したい点：</strong>${detail.caution}</li></ul><p>注意したい点は欠点ではなく、強みを急いで使ったときや、環境と合わないときに出やすい偏りです。</p>
 <h2>仕事での${stem}</h2><p>${detail.work}などの分野で持ち味を生かしやすい日干です。職業名で決めるより、今の仕事の中で「${detail.strength.replace(/力$/, '')}」場面がどれだけあるかを見ると、向き不向きがわかりやすくなります。</p>
 <h2>恋愛での${stem}</h2><p>${stem}の人が心地よいと感じやすいのは、${detail.love}です。ただし、恋愛での表れ方は日支や、財星・官星など命式のほかの星によっても変わります。</p>
@@ -424,7 +426,7 @@ function tenGodPage(name) {
   const example = SERIES_EXAMPLES.god[name];
   const [, month, day] = example.pillars;
   const sampleStem = '甲', sampleTargets = STEM_ORDER.filter((_, t) => tenGodOf(0, t) === name);
-  return { path: `guides/ten-god/${TEN_GOD_SLUG[name]}`, updated: SERIES_UPDATED, title: `通変星「${name}」とは？${TEN_GOD_GROUP[name][0]}の性格・仕事と位置別の読み方`, description: `通変星の${name}（${copy.reading}）は「${copy.keyword}」を表す星。${copy.strengths[0]}などの性格、仕事・恋愛での表れ方、自分の命式で${name}を探す早見表を紹介します。`, body: `<p><strong>${copy.lead}</strong></p><p>通変星は、日干から見て、命式のほかの文字がどんな関係にあるかを表す10種類の星です。一人の命式に複数の星が並ぶので、${name}があるからといって、性格がそれだけで決まるわけではありません。</p>
+  return { path: `guides/ten-god/${TEN_GOD_SLUG[name]}`, title: `通変星「${name}」とは？${TEN_GOD_GROUP[name][0]}の性格・仕事と位置別の読み方`, description: `通変星の${name}（${copy.reading}）は「${copy.keyword}」を表す星。${copy.strengths[0]}などの性格、仕事・恋愛での表れ方、自分の命式で${name}を探す早見表を紹介します。`, body: `<p><strong>${copy.lead}</strong></p><p>通変星は、日干から見て、命式のほかの文字がどんな関係にあるかを表す10種類の星です。一人の命式に複数の星が並ぶので、${name}があるからといって、性格がそれだけで決まるわけではありません。</p>
 <h2>${name}の性格</h2><p>${name}を一言でいえば「${copy.keyword}」です。</p><p><strong>長所</strong></p>${bulletList(copy.strengths)}<p><strong>気をつけたい点</strong></p>${bulletList(copy.cautions)}
 <h2>仕事での${name}</h2><p>${copy.work}</p>
 <h2>恋愛での${name}</h2><p>${copy.love}</p>
@@ -444,7 +446,7 @@ function stagePage(name, [phase, , star]) {
   const healthNote = ['病', '死', '墓', '絶'].includes(name)
     ? `<h2>「${name}」は健康や寿命を表さない</h2><p>十二運の名前は、人の一生を生まれてから次の命へ向かうまでの段階にたとえた、昔からの呼び方です。「${name}」という名前は、病気、寿命、亡くなる時期を表すものではありません。健康の不安は、医療機関に相談してください。</p>`
     : '';
-  return { path: `guides/twelve-stage/${STAGE_SLUG[name]}`, updated: SERIES_UPDATED, title: `十二運「${name}」とは？意味・性格と柱の位置別の読み方`, description: `十二運の${name}（${copy.reading}）は「${copy.keyword}」を表す段階。${['病', '死', '墓', '絶'].includes(name) ? '名前は健康や寿命を表しません。' : ''}${copy.strengths[0]}などの性格、仕事・恋愛での表れ方、自分の命式で${name}を探す早見表を紹介します。`, body: `<p><strong>${copy.lead}</strong>算命学の十二大従星では${star}に当たります。</p><p>十二運は、日干から見た各柱の地支の勢いを、人の一生にたとえた12段階で表したものです。強い・弱いで良し悪しを決めるものではなく、力の出し方の違いとして読みます。</p>
+  return { path: `guides/twelve-stage/${STAGE_SLUG[name]}`, title: `十二運「${name}」とは？意味・性格と柱の位置別の読み方`, description: `十二運の${name}（${copy.reading}）は「${copy.keyword}」を表す段階。${['病', '死', '墓', '絶'].includes(name) ? '名前は健康や寿命を表しません。' : ''}${copy.strengths[0]}などの性格、仕事・恋愛での表れ方、自分の命式で${name}を探す早見表を紹介します。`, body: `<p><strong>${copy.lead}</strong>算命学の十二大従星では${star}に当たります。</p><p>十二運は、日干から見た各柱の地支の勢いを、人の一生にたとえた12段階で表したものです。強い・弱いで良し悪しを決めるものではなく、力の出し方の違いとして読みます。</p>
 <h2>${name}の性格</h2><p>${name}を一言でいえば「${copy.keyword}」です。</p><p><strong>長所</strong></p>${bulletList(copy.strengths)}<p><strong>気をつけたい点</strong></p>${bulletList(copy.cautions)}
 <h2>仕事と恋愛での${name}</h2><p><strong>仕事：</strong>${copy.work}</p><p><strong>恋愛：</strong>${copy.love}</p>
 <h2>自分の命式に${name}があるか調べる</h2><p>命式の年柱・月柱・日柱・時柱の地支（下の文字）を、自分の日干の列と照らし合わせます。日干がわからない場合は、<a href="/tools/shichu-suimei-calculator">四柱推命の無料計算</a>で十二運まで表示できます。</p>${stageLookupTable(name)}<p>Fate Labの計算では、陽干は十二支を順に、陰干は逆にたどって十二運を出します。陰干の数え方は流派によって違うため、ほかのサイトと結果が違うことがあります。</p>
@@ -905,7 +907,7 @@ const writePage = (routePath, html) => {
 function appPageHtml(template, route) {
   const canonical = `${SITE_URL}/${route.path}`;
   const title = route.path.startsWith('feature/') ? route.title : `${route.title}｜${SITE_NAME}`;
-  const robots = route.path.startsWith('feature/') ? 'noindex,nofollow' : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+  const robots = appRobots(`/${route.path}`);
   const pageTemplate = template.replace(/<script type="application\/ld\+json">\s*\{[^<]*"@type"\s*:\s*"WebApplication"[^<]*<\/script>/, '');
   const content = route.path === 'couple'
     ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
@@ -1147,7 +1149,7 @@ const homepage = appTemplate.replace(
 ).replace('<div id="root"></div>', `<div id="root"><noscript>${homepageFooter}</noscript></div>`);
 fs.writeFileSync(indexPath, homepage);
 
-fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate);
+fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate.replace(/(<meta name="robots" content=")[^"]*/, `$1${privateRobots}`));
 for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, route));
 writePage('threads-launch', appTemplate
   .replace(/(<meta property="og:url" content=")[^"]+/, '$1https://fate-lab.com/threads-launch'));
@@ -1170,16 +1172,58 @@ for (const tool of tools.map(expandedTool)) writePage(tool.path, staticHtml(tool
 for (const page of infoPages) writePage(page.path, staticHtml(page, 'WebPage'));
 writePage('guides', guideIndexHtml());
 writePage('tools', toolIndexHtml());
-const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushoho', 'coupons', 'couple', 'support'];
-const explicitUpdateDates = new Map(
-  [...guides, ...tools, ...infoPages, guideIndexPage].map(page => [page.path, page.updated ?? page.published])
-);
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => {
-  const updated = explicitUpdateDates.get(route);
-  const lastmod = updated ? `<lastmod>${updated}</lastmod>` : '';
-  return `  <url><loc>${SITE_URL}/${route}</loc>${lastmod}<changefreq>${route === '' || route.endsWith('/') ? 'weekly' : 'monthly'}</changefreq><priority>${route === '' ? '1.0' : route === 'tools/shichu-suimei-calculator' ? '0.9' : route.startsWith('guides/angel-number') ? '0.8' : '0.7'}</priority></url>`;
-}).join('\n')}\n</urlset>\n`;
-fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapXml);
+const ledgerFile = new URL('./seo/lastmod.json', import.meta.url);
+const previousLastmod = JSON.parse(fs.readFileSync(ledgerFile, 'utf8'));
+const lastmod = {};
+const publicAppPages = appRoutes.filter(page => !appRobots(`/${page.path}`).includes('noindex'));
+const trackedPages = [...guides, ...tools, ...infoPages, guideIndexPage, { path: 'tools/' }, ...publicAppPages, { path: '' }, { path: 'threads-launch' }];
+const spaBodies = {
+  '': ['TopPage.tsx'], 'threads-launch': ['TopPage.tsx'],
+  couple: ['CouplePage.tsx', 'CoupleIndexPage'], coupons: ['CouponsPage.tsx'],
+  support: ['SupportPage.tsx'], terms: ['LegalPages.tsx', 'WebTermsPage'],
+  privacy: ['LegalPages.tsx', 'WebPrivacyPage'], tokushoho: ['LegalPages.tsx', 'WebCommercePage'],
+  tokushohou: ['LegacyLegalPage.tsx'],
+};
+const spaData = {
+  coupons: ['couponOffers.ts'],
+  terms: ['legalContent.ts', 'termsSections'],
+  privacy: ['legalContent.ts', 'privacyIntro', 'collectedInformation', 'processors', 'aiDataPolicyLinks', 'privacySections', 'crossBorderNotice'],
+  tokushoho: ['legalContent.ts', 'webSalesNotice', 'commerceRows'],
+};
+function sourceExport(source, name) {
+  const start = source.search(new RegExp(`^export (?:const|function) ${name}\\b`, 'm'));
+  if (start < 0) throw new Error(`Missing public content export: ${name}`);
+  const end = source.indexOf('\nexport ', start + 1);
+  return source.slice(start, end < 0 ? undefined : end);
+}
+for (const page of trackedPages) {
+  const route = `/${page.path}`;
+  const file = path.join(distDir, page.path, 'index.html');
+  const html = fs.readFileSync(file, 'utf8');
+  // SPA text is not fully pre-rendered. Include its public component as a stable
+  // build input as well; never use a user's rendered result or input values.
+  let bodySource = '';
+  if (spaBodies[page.path]) {
+    const [name, component] = spaBodies[page.path];
+    bodySource = fs.readFileSync(new URL(`./src/web/pages/${name}`, import.meta.url), 'utf8');
+    if (component) bodySource = sourceExport(bodySource, component);
+  }
+  if (spaData[page.path]) {
+    const [name, ...exports] = spaData[page.path];
+    const source = fs.readFileSync(new URL(`./src/web/data/${name}`, import.meta.url), 'utf8');
+    bodySource += exports.length ? exports.map(name => sourceExport(source, name)).join('\n') : source;
+  }
+  const entry = nextLastmod(previousLastmod[route], html, { initialLastmod: page.updated ?? page.published ?? null, bodySource });
+  lastmod[route] = entry;
+  fs.writeFileSync(file, applyLastmod(html, entry.lastmod));
+}
+saveLastmod(ledgerFile, lastmod);
+const sitemapPaths = ['', 'guides/', 'tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'coupons', 'couple'];
+writeSitemaps(distDir, SITE_URL, [...new Set(sitemapPaths)].map(route => {
+  const html = fs.readFileSync(path.join(distDir, route, 'index.html'), 'utf8');
+  if (/<meta name="robots" content="[^"]*noindex/.test(html)) throw new Error(`Noindex page in sitemap: ${route}`);
+  return { path: route, lastmod: lastmod[`/${route}`].lastmod };
+}));
 // Keep Vite's WebApp entry at /. The legacy landing page redirects to it.
 console.log(`Generated SEO HTML for /, ${appRoutes.length} app routes, ${guides.length} guides, ${tools.length} tools, and ${infoPages.length} information pages`);
 
