@@ -7,16 +7,16 @@ const read = name => fs.readFileSync(new URL(`../dist/${name}`, import.meta.url)
 const strip = value => value.replace(/<[^>]*>/g, '')
 const main = html => html.match(/<main>([\s\S]*?)<\/main>/)[1]
 
-test('home has readable initial copy, three FAQs and working crawl entrances before JavaScript', () => {
+test('home has readable initial copy, four FAQs and working crawl entrances before JavaScript', () => {
   const html = read('index.html')
   const body = main(html)
   assert.match(body, /<h1[^>]*>生年月日で占う無料鑑定<\/h1>/)
-  assert.match(body, /Fate Labでわかること/)
+  assert.match(body, /FateLab（フェイトラボ）でわかること/)
   const intro = strip(body.match(/<p[^>]*>(.*?)<\/p>/)[1])
   assert.equal(intro.split('。').filter(Boolean).length, 4)
-  assert.match(intro, /Fate Lab（フェイトラボ／FateLab）/)
+  assert.match(intro, /FateLab（フェイトラボ）/)
   for (const term of ['性格', '恋愛', '年ごと', '会員登録なし', '出生時刻が不明']) assert.ok(intro.includes(term))
-  assert.equal([...body.matchAll(/<h3\b/g)].length, 3)
+  assert.equal([...body.matchAll(/<h3\b/g)].length, 4)
   assert.doesNotMatch(body, /<noscript|\bhidden\b|display:\s*none/)
   assert.doesNotMatch(intro, /十大主星|出し方|同じ生年月日なら/)
   for (const [href] of crawlEntryLinks) assert.ok(html.includes(`href="${href}"`), href)
@@ -26,8 +26,8 @@ test('home search metadata describes integrated reading, without changing the Re
   const html = read('index.html')
   const title = html.match(/<title>(.*?)<\/title>/)[1]
   assert.equal((title.match(/算命学/g) ?? []).length, 1)
-  assert.equal((title.match(/Fate Lab/g) ?? []).length, 1)
-  assert.match(title, /^Fate Lab（フェイトラボ）｜生年月日で無料鑑定.*9占術を統合$/)
+  assert.equal((title.match(/FateLab/g) ?? []).length, 1)
+  assert.match(title, /^FateLab（フェイトラボ）｜生年月日で無料鑑定.*9占術を統合$/)
   const description = html.match(/<meta name="description" content="([^"]*)"/)[1]
   assert.ok([...description].length <= 120)
   for (const term of ['無料', '会員登録は不要', '性格', '出生時刻が不明']) assert.ok(description.includes(term))

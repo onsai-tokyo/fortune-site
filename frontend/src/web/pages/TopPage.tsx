@@ -138,7 +138,7 @@ export function TopPage() {
       </section>
 
       <section className="fl-landing-section flex flex-col gap-4 px-6 py-10">
-        <h2 className="m-0 text-xl font-medium leading-relaxed">Fate Labでわかること</h2>
+        <h2 className="m-0 text-xl font-medium leading-relaxed">FateLab（フェイトラボ）でわかること</h2>
         <p className="m-0 text-sm leading-[1.85] text-fl-body">{homepageCopy.introduction}</p>
         <h2 className="m-0 text-xl font-medium leading-relaxed">よくある質問</h2>
         {homepageCopy.faqs.map(faq => (
