@@ -380,12 +380,12 @@
     "lastmod": null
   },
   "/tools/": {
-    "hash": "77e12704890e6fd5149659f1cf7cef618702ce06d79fbdf55e1af24316576bc9",
-    "lastmod": null
+    "hash": "90ffef24739d29671827e601564f30a0504d4a8a481cb4bcea4893ab26828858",
+    "lastmod": "2026-11-18"
   },
   "/tools/day-master": {
-    "hash": "c296d46b20d694feafce49f2a942b3f098904e56d9fc510b4d14ce0c41e37071",
-    "lastmod": null
+    "hash": "4f20f0cd42e71bc2a9183ef28dcb0b9dc359d3623f58ed33224318308228c0c5",
+    "lastmod": "2026-11-18"
   },
   "/tools/life-path-number": {
     "hash": "8cb5e0da059a208c5dd24979b3db109793ac744b2611c12ae4ddb34bd7d20d30",
@@ -396,7 +396,7 @@
     "lastmod": "2026-11-15"
   },
   "/tools/shichu-suimei-calculator": {
-    "hash": "e191aaff1a69338768b1177a704d7dad5973f34d5da71476a8e60bf9ae05faf8",
-    "lastmod": "2026-11-15"
+    "hash": "dfadb438b1fe9fb284ae07fe58c3070be3939561e638596b7b5f41f2d354bd39",
+    "lastmod": "2026-11-18"
   }
 }
