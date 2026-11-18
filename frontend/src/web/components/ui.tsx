@@ -138,6 +138,10 @@ export function Footer({ includeCrawlLinks = false }: { includeCrawlLinks?: bool
       <span className="text-[12px] font-medium tracking-[0.3em] text-fl-ink">FATE LAB</span>
       <nav aria-label="サイトの情報" className="grid grid-cols-2 gap-x-4 text-xs">
         {includeCrawlLinks && crawlEntryLinks.map(([href, label]) => <a key={href} href={href} className={link}>{label}</a>)}
+        <a href="/about" className={link}>Fate Labについて</a>
+        <a href="/methodology" className={link}>鑑定のしくみ</a>
+        <a href="/editorial-policy" className={link}>制作方針</a>
+        <a href="/press" className={link}>プレスキット</a>
         <Link to="/terms" className={link}>利用規約</Link>
         <Link to="/privacy" className={link}>プライバシーポリシー</Link>
         <Link to="/tokushoho" className={link}>特定商取引法に基づく表記</Link>
