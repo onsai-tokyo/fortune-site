@@ -11,7 +11,7 @@ const stages = ['生まれた日の暦を計算しています', '性格の章�
  * 本番：/api/calc/divination → /api/preview/generate（SSEの進み具合をそのまま stages に当てる）。
  * 画面確認用では一定の間隔で進める。
  */
-export function CreatingPage({ pending = false, progress = 0 }: { pending?: boolean; progress?: number }) {
+export function CreatingPage({ pending = false, progress = 0, focus }: { pending?: boolean; progress?: number; focus?: 'konki' }) {
   // 入力フォームをスクロールした位置を、同じURLの作成画面へ持ち越さない。
   useLayoutEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }) }, [])
   const navigate = useNavigate()
@@ -20,6 +20,7 @@ export function CreatingPage({ pending = false, progress = 0 }: { pending?: bool
   const returnTo = params.get('returnTo')
   const next = safeReturnTo(returnTo, '/you')
   const activeStage = pending ? progress >= 76 ? 2 : progress >= 58 ? 1 : 0 : done
+  const displayedStages = focus ? ['生まれた日の暦を計算しています', '関係のテーマと根拠を確認しています', '10年分の年運を並べています'] : stages
 
   useEffect(() => {
     if (pending) return
@@ -38,7 +39,7 @@ export function CreatingPage({ pending = false, progress = 0 }: { pending?: bool
         <NatureImage src={images.moonClouds} className="h-36 w-36 rounded-full" />
         <h1 className="m-0 w-full text-[22px] font-medium leading-relaxed">あなたの鑑定を<br />つくっています</h1>
         <ol aria-live="polite" className="m-0 flex w-full max-w-[300px] list-none flex-col gap-3 p-0 text-left">
-          {stages.map((stage, i) => {
+          {displayedStages.map((stage, i) => {
             const state = i < activeStage ? 'done' : i === activeStage ? 'now' : 'wait'
             return (
               <li key={stage} className={`flex items-center gap-3 text-sm ${state === 'wait' ? 'text-fl-muted' : 'text-fl-ink'}`}>
@@ -48,7 +49,7 @@ export function CreatingPage({ pending = false, progress = 0 }: { pending?: bool
             )
           })}
         </ol>
-        <p className="m-0 text-xs leading-[1.8] text-fl-muted">{pending && progress >= 96 ? '鑑定を保存しています。' : '通信状況により1〜2分ほどかかる場合があります。'}<br />これは進み具合の表示です。各項目を押す必要はありません。</p>
+        <p className="m-0 text-xs leading-[1.8] text-fl-muted">{pending && progress >= 96 ? focus ? '10年分の年運を整理しています。' : '鑑定を保存しています。' : '通信状況により1〜2分ほどかかる場合があります。'}<br />これは進み具合の表示です。各項目を押す必要はありません。</p>
       </section>
     </Page>
   )

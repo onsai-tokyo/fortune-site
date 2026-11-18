@@ -27,8 +27,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLBut
   },
 )
 
-export function LinkButton({ to, variant = 'primary', size = 'md', className = '', children }: { to: string; variant?: Variant; size?: 'md' | 'lg'; className?: string; children: ReactNode }) {
-  return <Link to={to} className={`${buttonBase} ${size === 'lg' ? 'min-h-[52px] text-base' : 'min-h-[48px]'} ${variantClass[variant]} ${className}`}>{children}</Link>
+export function LinkButton({ to, variant = 'primary', size = 'md', className = '', children, reloadDocument }: { to: string; variant?: Variant; size?: 'md' | 'lg'; className?: string; children: ReactNode; reloadDocument?: boolean }) {
+  return <Link to={to} reloadDocument={reloadDocument} className={`${buttonBase} ${size === 'lg' ? 'min-h-[52px] text-base' : 'min-h-[48px]'} ${variantClass[variant]} ${className}`}>{children}</Link>
 }
 
 /** 画面の小見出し。ページの見出しを兼ねるときは as="h1" にする（見た目は同じ） */
@@ -81,10 +81,10 @@ export function NatureImage({ src, alt = '', className = '', position }: { src: 
   return <img src={src} alt={alt} aria-hidden={alt ? undefined : true} loading="lazy" decoding="async" className={`block object-cover ${width} ${className}`} style={position ? { objectPosition: position } : undefined} />
 }
 
-export function BackHeader({ to, title, right, sticky }: { to: string; title: ReactNode; right?: ReactNode; sticky?: boolean }) {
+export function BackHeader({ to, title, right, sticky, onBack }: { to: string; title: ReactNode; right?: ReactNode; sticky?: boolean; onBack?: () => void }) {
   return (
     <header className={`fl-back-header flex items-center gap-2 border-b border-fl-line bg-fl-canvas px-3 py-1.5 ${sticky ? 'sticky top-0 z-20' : ''}`}>
-      <Link to={to} aria-label="もどる" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-fl-surface"><IconBack /></Link>
+      <Link to={to} onClick={event => { if (onBack) { event.preventDefault(); onBack() } }} aria-label="もどる" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-fl-surface"><IconBack /></Link>
       <div className="min-w-0 flex-1 truncate text-[15px] font-medium">{title}</div>
       {right}
     </header>

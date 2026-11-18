@@ -31,7 +31,7 @@ test('initial HTML has the shared readable body, three FAQs, example rows and fi
   assert.equal([...body.matchAll(/<h3\b/g)].length, 3)
   for (const heading of ['この相性占いでわかること・わからないこと', '結果の例', '悩み別の使い方', 'よくある質問']) assert.ok(body.includes(heading))
   const targets = [...body.matchAll(/href="([^"]+)"/g)].map(([, href]) => href)
-  assert.deepEqual(targets, ['/guides/reconciliation-timing', '/guides/one-sided-love', '/guides/partner-feelings', '/guides/marriage-compatibility', '/guides/compatibility'])
+  assert.deepEqual(targets, ['/guides/reconciliation-timing', '/guides/one-sided-love', '/guides/partner-feelings', '/guides/marriage-compatibility', '/guides/compatibility', '/uranai/fukuen', '/uranai/kataomoi', '/uranai/aite-no-kimochi'])
   for (const target of targets) assert.ok(fs.existsSync(new URL(`../dist${target}/index.html`, import.meta.url)))
   assert.equal([...body.matchAll(/<tbody>(.*?)<\/tbody>/g)][0][1].match(/<tr>/g).length, 3)
   for (const row of coupleLandingExample.rows) {
@@ -44,9 +44,9 @@ test('initial HTML has the shared readable body, three FAQs, example rows and fi
   assert.doesNotMatch(body, /今年まで|関係が必ず|確実に復縁/)
 })
 
-test('unpublished question pages stay absent until the single shared release flag is enabled', () => {
-  assert.equal(coupleQuestionPagesPublished, false)
-  assert.doesNotMatch(html(), /href="\/uranai\//)
+test('published question pages share the same links in HTML and React while the off flag hides them', () => {
+  assert.equal(coupleQuestionPagesPublished, true)
+  assert.match(html(), /href="\/uranai\//)
   assert.doesNotMatch(coupleLandingHtml(false), /href="\/uranai\//)
   const released = [...coupleLandingHtml(true).matchAll(/href="(\/uranai\/[^"#?]+)"/g)].map(([, href]) => href)
   assert.deepEqual(released, ['/uranai/fukuen', '/uranai/kataomoi', '/uranai/aite-no-kimochi'])

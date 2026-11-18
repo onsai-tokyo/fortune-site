@@ -5,11 +5,15 @@ import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
 import { useApp } from '../state/AppState'
 import { visibleYearSections } from '../data/readingPresentation'
+import type { YearReading } from '../data/types'
 
-export function YearReadingPage() {
-  const { year } = useParams()
-  const { years, readingsStatus } = useApp()
-  const yearList = years
+export function YearReadingPage({ readingYear, readings, onBack, onSelectYear }: { readingYear?: number; readings?: YearReading[]; onBack?: () => void; onSelectYear?: (year: number) => void } = {}) {
+  const { year: routeYear } = useParams()
+  const app = useApp()
+  const year = readingYear !== undefined ? String(readingYear) : routeYear
+  const readingsStatus = readings ? 'ready' : app.readingsStatus
+  const yearList = readings ?? app.years
+  const yearHref = (value: number) => readings ? `/uranai/konki#year-${value}` : `/you/years/${value}`
   if (remoteMode && readingsStatus !== 'ready') return <ReadingStatus loading={readingsStatus === 'loading'} />
   const index = yearList.findIndex(y => String(y.year) === year)
   if (index < 0) return remoteMode ? <ReadingStatus empty /> : <Navigate to="/you" replace />
@@ -20,7 +24,7 @@ export function YearReadingPage() {
 
   return (
     <Page>
-      <BackHeader to="/you" title={`${reading.year}年のあなた`} sticky />
+      <BackHeader to={readings ? '/uranai/konki' : '/you'} onBack={onBack} title={`${reading.year}年のあなた`} sticky />
       <NatureImage src={images.nature.seaLight} className="h-[170px]" />
 
       <section className="fl-reading-title flex flex-col gap-3 px-6 pb-2 pt-7">
@@ -45,14 +49,14 @@ export function YearReadingPage() {
 
       <nav aria-label="ほかの年" className="mx-6 mt-8 grid grid-cols-2 border-y border-fl-line">
         {prev ? (
-          <Link to={`/you/years/${prev.year}`} className="group flex min-h-[112px] flex-col justify-center gap-2 py-5 pr-5 transition-colors hover:bg-fl-surface/50">
+          <Link to={yearHref(prev.year)} onClick={event => { if (onSelectYear) { event.preventDefault(); onSelectYear(prev.year) } }} className="group flex min-h-[112px] flex-col justify-center gap-2 py-5 pr-5 transition-colors hover:bg-fl-surface/50">
             <span className="text-[11px] tracking-widest text-fl-moss">前の年へ</span>
             <span className="flex items-center gap-3 text-xl font-medium"><span aria-hidden="true" className="text-fl-moss">‹</span>{prev.year}<span className="text-xs font-normal">年</span></span>
             <span className="text-xs leading-relaxed text-fl-muted">{prev.title}</span>
           </Link>
         ) : <span />}
         {next && (
-          <Link to={`/you/years/${next.year}`} className="group flex min-h-[112px] flex-col justify-center gap-2 border-l border-fl-line py-5 pl-5 text-right transition-colors hover:bg-fl-surface/50">
+          <Link to={yearHref(next.year)} onClick={event => { if (onSelectYear) { event.preventDefault(); onSelectYear(next.year) } }} className="group flex min-h-[112px] flex-col justify-center gap-2 border-l border-fl-line py-5 pl-5 text-right transition-colors hover:bg-fl-surface/50">
             <span className="text-[11px] tracking-widest text-fl-moss">次の年へ</span>
             <span className="flex items-center justify-end gap-3 text-xl font-medium">{next.year}<span className="text-xs font-normal">年</span><span aria-hidden="true" className="text-fl-moss">›</span></span>
             <span className="text-xs leading-relaxed text-fl-muted">{next.title}</span>

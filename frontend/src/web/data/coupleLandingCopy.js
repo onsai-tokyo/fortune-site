@@ -7,7 +7,7 @@ export const coupleSearchMetadata = {
 }
 
 // Enable together with the three published SEO-07 pages; shared by HTML and React.
-export const coupleQuestionPagesPublished = false
+export const coupleQuestionPagesPublished = true
 export const coupleResultConsultation = 'この年表を手元に、二人のこれからを個別に相談することもできます。'
 
 const heading = text => `<h2 class="m-0 text-xl font-medium leading-relaxed">${text}</h2>`

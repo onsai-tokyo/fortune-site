@@ -19,6 +19,12 @@ import { LinkEmailPage, PurchasesPage, SettingsPage } from './pages/SettingsPage
 import { DemoPage } from './pages/DemoPage'
 import { remoteMode } from './data/paymentConfig'
 import { ReadingStatus } from './components/ReadingStatus'
+import { ReadingFocusPage } from './pages/ReadingFocusPage'
+import { readingFocusForPath, readingFocusPages } from './data/readingFocus.js'
+import { coupleSearchMetadata } from './data/coupleLandingCopy.js'
+import { couponPageMetadata } from './data/couponPageCopy.js'
+import { couponOffers } from './data/couponOffers'
+import { homepageCopy } from '../../homepage-copy.js'
 
 // Web版専用。既存アプリ向け文書のソースは上書きしない。
 import { WebTermsPage as TermsPage, WebPrivacyPage as PrivacyPage, WebCommercePage as TokushohoPage } from './pages/LegalPages'
@@ -31,6 +37,19 @@ function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   useEffect(() => { updateAppRobots(document, pathname) }, [pathname])
+  useEffect(() => {
+    const focus = readingFocusForPath(pathname)
+    const page = focus ? readingFocusPages[focus] : pathname === '/' ? { ...homepageCopy, path: '/' }
+      : pathname === '/couple' ? { ...coupleSearchMetadata, path: '/couple' }
+        : pathname === '/coupons' ? { ...couponPageMetadata(couponOffers), path: '/coupons' } : undefined
+    if (!page) return
+    document.title = `${page.title}｜Fate Lab`
+    for (const [selector, value] of [
+      ['meta[name="description"]', page.description], ['meta[property="og:title"]', `${page.title}｜Fate Lab`],
+      ['meta[property="og:description"]', page.description], ['meta[property="og:url"]', `https://fate-lab.com${page.path}`],
+    ]) document.querySelector(selector)?.setAttribute('content', value)
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://fate-lab.com${page.path}`)
+  }, [pathname])
   useEffect(() => { trackCouponRoute(/^\/coupons\/?$/i.test(pathname)) }, [pathname])
   return null
 }
@@ -92,6 +111,10 @@ function AppRoutes() {
         <Route path="/you/years/:year/ask" element={<YearAskRedirect />} />
         <Route path="/you/chapters/:id" element={user(<ChapterPage />)} />
         <Route path="/couple" element={<CoupleIndexPage />} />
+        <Route path="/uranai/fukuen" element={<ReadingFocusPage key="fukuen" focus="fukuen" />} />
+        <Route path="/uranai/kataomoi" element={<ReadingFocusPage key="kataomoi" focus="kataomoi" />} />
+        <Route path="/uranai/aite-no-kimochi" element={<ReadingFocusPage key="aite" focus="aite" />} />
+        <Route path="/uranai/konki" element={<ReadingFocusPage key="konki" focus="konki" />} />
         <Route path="/threads-launch" element={<TopPage />} />
         <Route path="/couple/new" element={user(<PartnerNewPage />)} />
         <Route path="/couple/:partnerId" element={<CouplePage />} />

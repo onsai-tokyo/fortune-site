@@ -10,6 +10,8 @@ import { validBirthDate } from '../data/birthDate'
 import { prefectures, relationOptions } from '../data/mock'
 import type { Gender, Relation } from '../data/types'
 import { useApp } from '../state/AppState'
+import { readingFocusPages, type CoupleFocus } from '../data/readingFocus.js'
+import type { Partner } from '../data/types'
 
 type BirthDetails = { time: string; place: string }
 
@@ -41,7 +43,7 @@ function BirthFields({ id, title, date, setDate, gender, setGender, details, set
   </section>
 }
 
-export function CoupleBirthForm() {
+export function CoupleBirthForm({ focus, onComplete }: { focus?: CoupleFocus; onComplete?: (partner: Partner, breakupYear?: number) => void } = {}) {
   const { readStandaloneCouple } = useApp()
   const navigate = useNavigate()
   const [selfDate, setSelfDate] = useState('')
@@ -51,7 +53,8 @@ export function CoupleBirthForm() {
   const [selfDetails, setSelfDetails] = useState<BirthDetails>({ time: '', place: '' })
   const [partnerDetails, setPartnerDetails] = useState<BirthDetails>({ time: '', place: '' })
   const [meetingYear, setMeetingYear] = useState('')
-  const [relation, setRelation] = useState<Relation | ''>('')
+  const [relation, setRelation] = useState<Relation | ''>(focus ? readingFocusPages[focus].relation as Relation | '' : '')
+  const [breakupYear, setBreakupYear] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   async function submit(event: FormEvent) {
@@ -75,6 +78,10 @@ export function CoupleBirthForm() {
       setError('出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください。')
       return
     }
+    if (focus === 'fukuen' && (!/^\d{4}$/.test(breakupYear) || Number(breakupYear) < year || Number(breakupYear) > new Date().getFullYear())) {
+      setError('別れた年は、出会った年以降から今年までを選択してください。')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -83,7 +90,8 @@ export function CoupleBirthForm() {
         { name: 'お相手', birthDate: partnerDate, birthTime: partnerDetails.time || null, birthPlace: partnerDetails.place, gender: partnerGender, relation, metYear: year },
       )
       trackThreadsEvent('couple_reading_complete')
-      navigate(`/couple/${partner.id}`)
+      if (onComplete) onComplete(partner, focus === 'fukuen' ? Number(breakupYear) : undefined)
+      else navigate(`/couple/${partner.id}`)
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 429) {
         setError('短時間に鑑定が続いています。入力内容はそのままで、少し待ってからもう一度お試しください。')
@@ -102,15 +110,17 @@ export function CoupleBirthForm() {
         ふたりの関係（必須）
         <select required className="rounded-field border px-3 text-base" value={relation} onChange={e => setRelation(e.target.value as Relation | '')}>
           <option value="">選択してください</option>
-          {relationOptions.map(option => <option key={option}>{option}</option>)}
+          {relationOptions.filter(option => focus === 'fukuen' ? ['復縁希望', '元恋人'].includes(option) : focus === 'kataomoi' ? option === '片思い' : true).map(option => <option key={option}>{option}</option>)}
         </select>
       </label>
       <MeetingYearSelect id="couple-meeting-year" value={meetingYear} onChange={setMeetingYear} />
+      {focus === 'fukuen' && <MeetingYearSelect id="couple-breakup-year" label="別れた年（必須）" value={breakupYear} onChange={setBreakupYear} />}
+      {focus && <p className="m-0 text-xs leading-relaxed text-fl-muted">出会った年は年表の計算に使います。{focus === 'fukuen' && '別れた年は、先に読む年を選ぶために使い、出会いの年には置き換えません。'}相手の情報は計算と結果の表示にだけ利用し、この画面では保存しません。生年月日・性別・入力した年を、URLやアクセス解析へ送ることはありません。</p>}
       <p className="m-0 text-xs leading-relaxed text-fl-muted">
         <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方が利用できます。18歳未満の方は、保護者などの法定代理人の同意が必要です。
       </p>
       {error && <p role="alert" className="m-0 text-sm text-fl-danger">{error}</p>}
-      <Button type="submit" disabled={busy}>{busy ? '年表を作成しています…' : 'ふたりの年表を読む'}</Button>
+      <Button type="submit" disabled={busy}>{busy ? '年表を作成しています…' : focus ? readingFocusPages[focus].button : 'ふたりの年表を読む'}</Button>
     </fieldset>
   </form>
 }

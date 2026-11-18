@@ -8,6 +8,7 @@ import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
 import { japanDate, nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
 import { writeSitemaps } from './seo/sitemaps.js';
 import { pageBreadcrumbs, structuredDates } from './seo/structured-data.js';
+import { readingFocusPages, readingFocusForPath, readingFocusLandingHtml } from './src/web/data/readingFocus.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import { twelveStageCopy } from './twelve-stage-copy.js';
@@ -61,6 +62,7 @@ warnStaleCouponChecks(couponOffers, { today: japanDate() });
 const couponMetadata = couponPageMetadata(couponOffers);
 const appRoutes = [
   ['couple', coupleSearchMetadata.title, coupleSearchMetadata.description],
+  ...Object.values(readingFocusPages).map(page => [page.path.slice(1), page.title, page.description]),
   ['support', 'お問い合わせ', 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。'],
   ['coupons', couponMetadata.title, couponMetadata.description],
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
@@ -76,7 +78,7 @@ const appRoutes = [
   ['terms', '利用規約', 'Fate Labのサービス利用条件について説明します。'],
   ['tokushoho', '特定商取引法に基づく表記（Web版）', '無料の鑑定、外部サービスの取引条件、運営事業者のご案内です。'],
   ['tokushohou', '特定商取引法に基づく表記', 'Fate Labの特定商取引法に基づく表記です。'],
-].map(([path, title, description]) => ({ path, title, description }));
+].map(([path, title, description]) => ({ path, title, description, ...(path.startsWith('uranai/') ? { updated: '2026-11-19' } : {}) }));
 
 const guides = [
   {
@@ -978,12 +980,15 @@ function appPageHtml(template, route) {
   const title = route.path.startsWith('feature/') ? route.title : `${route.title}｜${SITE_NAME}`;
   const robots = appRobots(`/${route.path}`);
   const pageTemplate = template.replace(/<script type="application\/ld\+json">\s*\{[^<]*"@type"\s*:\s*"WebApplication"[^<]*<\/script>/, '');
-  const content = route.path === 'couple'
+  const focus = readingFocusForPath(`/${route.path}`);
+  const content = focus
+    ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(readingFocusPages[focus].heading)}</h1>${readingFocusLandingHtml(focus)}</section></article></main></div></div>`)
+    : route.path === 'couple'
     ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(coupleSearchMetadata.heading)}</h1>${coupleLandingHtml()}</section></article></main></div></div>`)
     : route.path === 'coupons'
       ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(couponMetadata.heading)}</h1>${couponComparisonHtml(couponOffers)}</section></article></main></div></div>`)
       : pageTemplate;
-  const webApplicationSchema = route.path === 'couple' ? {
+  const webApplicationSchema = route.path === 'couple' || focus ? {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: route.title,
@@ -1136,7 +1141,10 @@ function staticHtml(page, type = 'Article') {
     : '';
   if (visibleFaq) page.body += visibleFaq;
   const isGuideArticle = isGuide && type === 'Article';
-  const linkedBody = crawlGuideLinks[page.path] ? page.body.replace('</p>', `</p>${crawlGuideLinks[page.path]}`) : page.body;
+  let linkedBody = crawlGuideLinks[page.path] ? page.body.replace('</p>', `</p>${crawlGuideLinks[page.path]}`) : page.body;
+  const focusGuide = Object.values(readingFocusPages).find(entry => entry.guide === `/${page.path}`);
+  if (focusGuide) linkedBody = linkedBody.replace('</p>', `</p>${inlineCta('生年月日を入力し、自分の場合の関わり方や年ごとの流れを確認するなら、専用の鑑定ページへ進めます。この解説では、結果を現実の状況に照らす見方を確認してください。', focusGuide.path, focusGuide.button).replace('あなたの場合は？', '今すぐ占うなら')}`);
+  if (page.path === 'guides/ex-partner-feelings') linkedBody += '<p>二人の生年月日を使って読み進める場合は、<a href="/uranai/fukuen">復縁占い</a>で関係の築き方と別れた後の年ごとの流れを確認できます。</p>';
   const inlineReading = isGuideArticle && inlinePersonalReadingLink.test(linkedBody);
   const body = inlineReading ? linkedBody.replace(inlinePersonalReadingLink, guideBirthDateForm) : linkedBody;
   const readingCta = isGuideArticle
@@ -1242,6 +1250,13 @@ for (const route of appRoutes) writePage(route.path, appPageHtml(appTemplate, ro
 writePage('threads-launch', appTemplate
   .replace(/(<meta property="og:url" content=")[^"]+/, '$1https://fate-lab.com/threads-launch'));
 
+for (const page of Object.values(readingFocusPages)) {
+  const guide = guides.find(guide => `/${guide.path}` === page.guide);
+  if (!guide) throw new Error(`Missing focus guide: ${page.guide}`);
+  guide.title = page.guideTitle;
+  guide.searchTitle = page.guideTitle;
+  guide.searchDescription = page.guideDescription;
+}
 for (const guide of guides.map(expandedGuide)) writePage(guide.path, staticHtml({ ...guide, body: `${guide.body}<style>${topUiPolish}</style>` }));
 fs.copyFileSync(new URL('./src/web/data/guideBirthDateDraft.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate-draft.js'));
 fs.copyFileSync(new URL('./scripts/guide-birthdate.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate.js'));
@@ -1311,7 +1326,7 @@ saveLastmod(ledgerFile, lastmod);
 // without JS too, but remains noindex with / as its canonical URL.
 fs.writeFileSync(lpPath, fs.readFileSync(indexPath, 'utf8')
   .replace(/(<meta name="robots" content=")[^"]*/, '$1noindex,follow'));
-const sitemapPaths = ['', 'guides/', 'tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'coupons', 'couple'];
+const sitemapPaths = ['', 'guides/', 'tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'coupons', 'couple', ...Object.values(readingFocusPages).map(page => page.path.slice(1))];
 writeSitemaps(distDir, SITE_URL, [...new Set(sitemapPaths)].map(route => {
   const html = fs.readFileSync(path.join(distDir, route, 'index.html'), 'utf8');
   if (/<meta name="robots" content="[^"]*noindex/.test(html)) throw new Error(`Noindex page in sitemap: ${route}`);
