@@ -1207,7 +1207,7 @@ const homepageContent = `<div class="fl-root">
     <main>
       <section class="fl-landing-section flex flex-col gap-4 px-6 pb-12">
         <h1 class="m-0 text-[28px] font-medium leading-[1.6]">${escapeHtml(homepageCopy.heading)}</h1>
-        <h2 class="m-0 text-xl font-medium leading-relaxed">Fate Labでわかること</h2>
+        <h2 class="m-0 text-xl font-medium leading-relaxed">FateLab（フェイトラボ）でわかること</h2>
         <p class="m-0 text-sm leading-[1.85] text-fl-body">${escapeHtml(homepageCopy.introduction)}</p>
         <h2 class="m-0 text-xl font-medium leading-relaxed">よくある質問</h2>
         ${homepageCopy.faqs.map(faq => `<h3 class="m-0 text-base font-medium">${escapeHtml(faq.question)}</h3><p class="m-0 text-sm leading-[1.85] text-fl-body">${escapeHtml(faq.answer)}</p>`).join('')}
