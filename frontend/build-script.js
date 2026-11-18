@@ -1,4 +1,5 @@
 import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
+import { crawlEntryLinks } from './src/web/data/crawlEntryLinks.js';
 import { shichuReadingExample, birthChartCopy, sanmeigakuCopy, sanmeigakuCalculationExample, compatibilityCopy } from './priority-guide-copy.js';
 import fs from 'fs';
 import { twelveStageCopy } from './twelve-stage-copy.js';
@@ -294,6 +295,11 @@ const TEN_GOD_GROUP = {
   偏印: ['転換する学びの星', '独創、専門性、切り替え'], 正印: ['受け継ぐ学びの星', '知識、支援、継承'],
 };
 const STAGE_SLUG = { 長生: 'chosei', 沐浴: 'mokuyoku', 冠帯: 'kantai', 建禄: 'kenroku', 帝旺: 'teio', 衰: 'sui', 病: 'byo', 死: 'shi', 墓: 'bo', 絶: 'zetsu', 胎: 'tai', 養: 'yo' };
+const seriesHubs = [
+  { path: 'guides/day-master', name: '日干' },
+  { path: 'guides/ten-god', name: '通変星' },
+  { path: 'guides/twelve-stage', name: '十二運' },
+];
 const STAGE_DETAIL = {
   長生: ['生まれて育つ段階', '新しい環境から素直に吸収し、周囲に育てられながら力をつける', '天貴星'],
   沐浴: ['外の刺激を試す段階', '好奇心と感受性を外へ向け、試行錯誤から自分らしい表現を探す', '天恍星'],
@@ -460,6 +466,20 @@ const shichuDetailGuides = [
   }),
 ];
 guides.push(...shichuDetailGuides);
+guides.push(
+  {
+    path: 'guides/ten-god', published: '2026-11-18', updated: '2026-11-18',
+    title: '通変星10種類の一覧｜命式に出た星から解説を読む',
+    description: '通変星10種類の解説を一覧にしました。命式に表示された比肩・食神・正財などの名前から、意味と柱の位置ごとの読み方を確認できます。',
+    body: `<p>通変星は、日干とほかの天干の関係から算出する星です。命式に出た名前を選ぶと、意味と柱の位置ごとの読み方を確認できます。</p><div class="table-scroll"><table><thead><tr><th>通変星</th><th>解説</th></tr></thead><tbody>${Object.entries(TEN_GOD_SLUG).map(([name, slug]) => `<tr><th>${name}</th><td><a href="/guides/ten-god/${slug}">${name}の意味と位置別の読み方</a></td></tr>`).join('')}</tbody></table></div>`,
+  },
+  {
+    path: 'guides/twelve-stage', published: '2026-11-18', updated: '2026-11-18',
+    title: '十二運12種類の一覧｜命式に出た名前から意味を調べる',
+    description: '十二運12種類の解説を一覧にしました。命式に表示された長生・建禄・帝旺などの名前から、意味と柱の位置ごとの読み方を確認できます。',
+    body: `<p>十二運は、日干と地支の関係を十二の段階で表すものです。命式に出た名前から、意味や位置ごとの読み方を確認できます。</p><div class="table-scroll"><table><thead><tr><th>十二運</th><th>解説</th></tr></thead><tbody>${Object.entries(STAGE_SLUG).map(([name, slug]) => `<tr><th>${name}</th><td><a href="/guides/twelve-stage/${slug}">${name}の意味と位置別の読み方</a></td></tr>`).join('')}</tbody></table></div>`,
+  },
+);
 
 const ANGEL_DIGIT_MEANINGS = {
   0: ['余白と可能性', 'いったん立ち止まり、前提を空にして選び直す'],
@@ -864,7 +884,7 @@ const tools = [
     searchTitle: '日干・日柱を生年月日で調べる｜四柱推命の無料自動計算',
     searchDescription: '生年月日を入力すると、自分の日干と日柱を無料で自動計算できます。出生時刻や会員登録は不要です。',
     description: '生年月日から四柱推命の日柱と、自分自身を表す日干を無料で自動計算します。登録不要です。',
-    body: `<p>四柱推命で本人の基準となる日柱と、その先頭の文字である日干を計算します。計算のため生年月日をFate LabのAPIへ送信しますが、このページでは保存しません。</p><form class="tool" id="day-master-tool"><label for="day-master-date">生年月日</label><input id="day-master-date" type="date" required><button type="submit">日干・日柱を計算する</button></form><div class="tool-result" id="day-master-result" role="status" aria-live="polite">生年月日を入力してください。</div><h2>日干とは</h2><p>日干は日柱の天干で、甲・乙・丙・丁・戊・己・庚・辛・壬・癸の10種類です。四柱推命では本人を表す基準点として使います。</p><h2>日干だけで断定しない</h2><p>同じ日干でも、生まれた季節や命式全体の五行によって表れ方は変わります。詳しくは<a href="/guides/day-master">日干と十干の解説</a>、境界日の考え方は<a href="/guides/setsuiri-boundary">節入りの検証</a>をご覧ください。</p><script>(()=>{const labels={甲:'木の陽',乙:'木の陰',丙:'火の陽',丁:'火の陰',戊:'土の陽',己:'土の陰',庚:'金の陽',辛:'金の陰',壬:'水の陽',癸:'水の陰'};const form=document.getElementById('day-master-tool'),result=document.getElementById('day-master-result');form.addEventListener('submit',async e=>{e.preventDefault();const birthDate=document.getElementById('day-master-date').value;if(!birthDate)return;result.textContent='計算中…';try{const response=await fetch('/api/calc/shichu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({birthDate})});if(!response.ok)throw new Error();const data=await response.json(),stem=data.shichuDay?.[0];result.innerHTML='<strong>日柱 '+data.shichuDay+' ／ 日干 '+stem+'</strong><span>'+(labels[stem]||'')+'</span>';if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'day_master',result:stem})}catch{result.textContent='計算できませんでした。時間をおいて再度お試しください。'}})})()</script>`
+    body: `<p>四柱推命で本人の基準となる日柱と、その先頭の文字である日干を計算します。計算のため生年月日をFate LabのAPIへ送信しますが、このページでは保存しません。</p><form class="tool" id="day-master-tool"><label for="day-master-date">生年月日</label><input id="day-master-date" type="date" required><button type="submit">日干・日柱を計算する</button></form><div class="tool-result" id="day-master-result" role="status" aria-live="polite">生年月日を入力してください。</div><h2>日干とは</h2><p>日干は日柱の天干で、甲・乙・丙・丁・戊・己・庚・辛・壬・癸の10種類です。四柱推命では本人を表す基準点として使います。</p><h2>日干だけで断定しない</h2><p>同じ日干でも、生まれた季節や命式全体の五行によって表れ方は変わります。詳しくは<a href="/guides/day-master">日干と十干の解説</a>、境界日の考え方は<a href="/guides/setsuiri-boundary">節入りの検証</a>をご覧ください。</p><script>(()=>{const stemSlugs=${JSON.stringify(STEM_SLUG)},labels={甲:'木の陽',乙:'木の陰',丙:'火の陽',丁:'火の陰',戊:'土の陽',己:'土の陰',庚:'金の陽',辛:'金の陰',壬:'水の陽',癸:'水の陰'};const form=document.getElementById('day-master-tool'),result=document.getElementById('day-master-result');form.addEventListener('submit',async e=>{e.preventDefault();const birthDate=document.getElementById('day-master-date').value;if(!birthDate)return;result.textContent='計算中…';try{const response=await fetch('/api/calc/shichu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({birthDate})});if(!response.ok)throw new Error();const data=await response.json(),stem=data.shichuDay?.[0];result.innerHTML='<strong>日柱 '+data.shichuDay+' ／ 日干 '+stem+'</strong><span>'+(labels[stem]||'')+'</span>'+(stemSlugs[stem]?'<a href="/guides/day-master/'+stemSlugs[stem]+'">あなたの日干「'+stem+'」の解説</a>':'');if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'day_master',result:stem})}catch{result.textContent='計算できませんでした。時間をおいて再度お試しください。'}})})()</script>`
   },
 ];
 
@@ -951,30 +971,45 @@ const footer = `<footer><nav><a href="/about">Fate Labについて</a><a href="/
 const analytics = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet"><script async src="https://www.googletagmanager.com/gtag/js?id=G-FPZ7QKTXLJ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-FPZ7QKTXLJ');document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.closest('.fl-coconala-banner'))gtag('event',new URLSearchParams(location.search).get('fl_test')==='1'?'qa_coconala_banner_click':'coconala_banner_click',{page_path:location.pathname});else if(a.matches('.affiliate-link'))gtag('event','affiliate_click',{placement:'seo_page',page_path:location.pathname,link_url:a.href});else if(a.matches('.cta'))gtag('event','guide_to_fortune',{page_path:location.pathname,link_url:a.href});else if(a.hasAttribute('data-guide-coupon'))gtag('event','guide_to_coupons',{page_path:location.pathname,link_url:a.href});else if(a.closest('article')&&a.origin===location.origin&&a.pathname.startsWith('/tools/'))gtag('event','guide_to_tool',{page_path:location.pathname,tool_path:a.pathname});else if(a.closest('.related'))gtag('event','related_guide_click',{page_path:location.pathname,link_url:a.href})})</script>`;
 
 const relatedGuidesByPath = {
-  'guides/compatibility': ['marriage-compatibility', 'partner-feelings', 'reconciliation-timing', 'same-birthdate'],
-  'guides/marriage-compatibility': ['marriage-timing', 'compatibility', 'partner-feelings', 'ziwei-marriage-timing'],
-  'guides/reconciliation-timing': ['ex-partner-feelings', 'partner-feelings', 'compatibility', 'marriage-compatibility'],
-  'guides/marriage-timing': ['ziwei-marriage-timing', 'marriage-compatibility', 'meeting-timing', 'birth-chart'],
+  'guides/compatibility': ['marriage-compatibility', 'partner-feelings', 'day-master', 'tools/day-master'],
+  'guides/marriage-compatibility': ['marriage-timing', 'compatibility', 'ten-god', 'tools/shichu-suimei-calculator'],
+  'guides/reconciliation-timing': ['ex-partner-feelings', 'partner-feelings', 'day-master', 'tools/shichu-suimei-calculator'],
+  'guides/marriage-timing': ['ziwei-marriage-timing', 'marriage-compatibility', 'ten-god/seikan', 'tools/day-master'],
   'guides/ziwei-marriage-timing': ['ziwei-doushu', 'marriage-timing', 'marriage-compatibility', 'unknown-birth-time'],
-  'guides/meeting-timing': ['one-sided-love', 'compatibility', 'marriage-timing', 'birthdate-fortune'],
+  'guides/meeting-timing': ['one-sided-love', 'marriage-timing', 'twelve-stage', 'tools/shichu-suimei-calculator'],
   'guides/shichu-suimei': ['birth-chart', 'day-master', 'five-elements', 'setsuiri-boundary'],
   'guides/birth-chart': ['day-master', 'five-elements', 'unknown-birth-time', 'setsuiri-boundary'],
-  'guides/day-master': ['birth-chart', 'five-elements', 'shichu-suimei-what-am-i', 'setsuiri-boundary'],
+  'guides/day-master': ['birth-chart', 'ten-god', 'twelve-stage', 'tools/day-master'],
+  'guides/ten-god': ['birth-chart', 'day-master', 'twelve-stage', 'tools/shichu-suimei-calculator'],
+  'guides/twelve-stage': ['birth-chart', 'day-master', 'ten-god', 'tools/shichu-suimei-calculator'],
   'guides/five-elements': ['birth-chart', 'day-master', 'shichu-suimei', 'sanmeigaku-shichu-suimei-relationship'],
   'guides/unknown-birth-time': ['birth-chart', 'day-master', 'setsuiri-boundary', 'sanmeigaku'],
   'guides/setsuiri-boundary': ['birth-chart', 'unknown-birth-time', 'day-master', 'shichu-suimei'],
   'guides/sanmeigaku': ['sanmeigaku-stars', 'sanmeigaku-shichu-suimei-relationship', 'unknown-birth-time', 'five-elements'],
-  'guides/sanmeigaku-stars': ['sanmeigaku', 'sanmeigaku-shichu-suimei-relationship', 'five-elements', 'birth-chart'],
-  'guides/partner-feelings': ['one-sided-love', 'ex-partner-feelings', 'married-partner-feelings', 'compatibility'],
-  'guides/ex-partner-feelings': ['reconciliation-timing', 'partner-feelings', 'compatibility', 'meeting-timing'],
-  'guides/one-sided-love': ['partner-feelings', 'compatibility', 'meeting-timing', 'married-partner-feelings'],
-  'guides/married-partner-feelings': ['partner-feelings', 'one-sided-love', 'compatibility', 'meeting-timing'],
+  'guides/sanmeigaku-stars': ['sanmeigaku', 'sanmeigaku-shichu-suimei-relationship', 'twelve-stage', 'tools/sanmeigaku-calculator'],
+  'guides/partner-feelings': ['one-sided-love', 'ex-partner-feelings', 'day-master', 'tools/day-master'],
+  'guides/ex-partner-feelings': ['reconciliation-timing', 'partner-feelings', 'day-master', 'tools/shichu-suimei-calculator'],
+  'guides/one-sided-love': ['partner-feelings', 'compatibility', 'day-master', 'tools/day-master'],
+  'guides/married-partner-feelings': ['partner-feelings', 'one-sided-love', 'day-master', 'tools/day-master'],
   'guides/astrology-systems-comparison': ['east-west-astrology', 'ziwei-doushu', 'vedic-astrology', 'sanmeigaku-shichu-suimei-relationship'],
   'guides/east-west-astrology': ['astrology-systems-comparison', 'vedic-astrology', 'shichu-suimei', 'unknown-birth-time'],
   'guides/ziwei-doushu': ['ziwei-marriage-timing', 'astrology-systems-comparison', 'unknown-birth-time', 'east-west-astrology'],
   'guides/vedic-astrology': ['east-west-astrology', 'astrology-systems-comparison', 'unknown-birth-time', 'ziwei-doushu'],
   'guides/sanmeigaku-shichu-suimei-relationship': ['sanmeigaku', 'shichu-suimei', 'sanmeigaku-stars', 'birth-chart'],
   'guides/sukuyo': ['compatibility', 'reconciliation-timing', 'vedic-astrology', 'astrology-systems-comparison']
+};
+
+const crawlGuideLinks = {
+  'guides/partner-feelings': '<p>二人の生年月日が分かるなら、<a href="/tools/day-master">日干を無料で調べる</a>と、相性を読む基準を確認できます。</p>',
+  'guides/one-sided-love': '<p>相手の生年月日が分かる場合は、<a href="/tools/day-master">二人の日干を調べる</a>と、相性の解説を読み進めやすくなります。</p>',
+  'guides/reconciliation-timing': '<p>二人の傾向を命式から確かめたいときは、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で計算</a>して、日干や日支を確認できます。</p>',
+  'guides/ex-partner-feelings': '<p>二人の生年月日が分かる場合は、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で出す</a>と、相性を読む日干や日支を確認できます。</p>',
+  'guides/married-partner-feelings': '<p>相性の解説を読む前に、<a href="/tools/day-master">二人の日干を無料で調べる</a>と、命式の基準を確認できます。</p>',
+  'guides/marriage-timing': '<p>日支を確かめるには、<a href="/tools/day-master">自分の日柱を調べる</a>と、生まれた日の干支を確認できます。日柱の二文字目が日支です。</p>',
+  'guides/marriage-compatibility': '<p>命式を用意するときは、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で出す</a>と、日干・日支や五行を見比べられます。</p>',
+  'guides/meeting-timing': '<p>出会いの候補時期を読む前に、<a href="/tools/shichu-suimei-calculator">四柱推命の命式を無料で計算</a>して、自分の日干や日支を確認できます。</p>',
+  'guides/compatibility': '<p>相性を読む前に、<a href="/tools/day-master">二人の日干を無料で調べる</a>と、命式の基準を確認できます。言葉の意味は<a href="/guides/day-master">日干の調べ方と意味</a>で説明しています。</p>',
+  'guides/unknown-birth-time': '<p>生まれた日の干支を先に知りたい場合は、<a href="/tools/day-master">出生時刻なしで日干を調べる</a>ことができます。</p>',
 };
 
 const guideBirthDateForm = `<div id="guide-reading">
@@ -1003,40 +1038,71 @@ function staticHtml(page, type = 'Article') {
   const title = `${page.searchTitle ?? page.title}｜${SITE_NAME}`;
   const published = page.published ?? '2026-08-10';
   const updated = page.updated ?? UPDATED;
+  const seriesParent = seriesHubs.find(hub => page.path.startsWith(`${hub.path}/`));
+  const breadcrumbs = [
+    { name: 'Fate Lab', item: `${SITE_URL}/` },
+    ...(type === 'Article' ? [{ name: '占い解説', item: `${SITE_URL}/guides/` }] : []),
+    ...(seriesParent ? [{ name: seriesParent.name, item: `${SITE_URL}/${seriesParent.path}` }] : []),
+    { name: page.title, item: canonical },
+  ];
+  const breadcrumbHtml = breadcrumbs.map((crumb, index) => index === breadcrumbs.length - 1
+    ? escapeHtml(crumb.name)
+    : `<a href="${new URL(crumb.item).pathname}">${escapeHtml(crumb.name)}</a>`).join(' › ');
   const schema = {
     '@context': 'https://schema.org', '@graph': [
       { '@type': type, headline: page.title, name: page.title, description: page.description, url: canonical, inLanguage: 'ja', mainEntityOfPage: canonical, ...(page.published ? { datePublished: page.published } : {}), ...(page.updated ?? page.published ? { dateModified: page.updated ?? page.published } : {}), ...(type === 'WebApplication' ? { applicationCategory: 'LifestyleApplication', operatingSystem: 'Web', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' } } : {}), author: { '@type': 'Organization', '@id': `${SITE_URL}/#editorial`, name: 'Fate Lab編集部', url: `${SITE_URL}/editorial-policy` }, reviewedBy: { '@type': 'Organization', name: '温齋株式会社', url: `${SITE_URL}/about` }, publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } }, image: { '@type': 'ImageObject', url: `${SITE_URL}/og-fate-lab.png`, width: 1200, height: 630 } },
-      { '@type': 'BreadcrumbList', itemListElement: type === 'Article' ? [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: '占い解説', item: `${SITE_URL}/guides/` }, { '@type': 'ListItem', position: 3, name: page.title, item: canonical }] : [{ '@type': 'ListItem', position: 1, name: 'Fate Lab', item: `${SITE_URL}/` }, { '@type': 'ListItem', position: 2, name: page.title, item: canonical }] }
+      { '@type': 'BreadcrumbList', itemListElement: breadcrumbs.map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, ...crumb })) }
     ]
   };
   const hasVisibleFaq = page.path === 'tools/sanmeigaku-calculator' && Boolean(page.faqs?.length);
   if (hasVisibleFaq) schema['@graph'].push({ '@type': 'FAQPage', mainEntity: page.faqs.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) });
   const currentIndex = guides.findIndex(g => g.path === page.path);
   const relatedGuides = currentIndex < 0 ? guides.slice(0, 4) : Array.from({ length: Math.min(4, guides.length - 1) }, (_, offset) => guides[(currentIndex + offset + 1) % guides.length]);
-  const curatedGuides = relatedGuidesByPath[page.path]?.map(slug => guides.find(guide => guide.path === `guides/${slug}`));
-  const related = (curatedGuides ?? relatedGuides).map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
+  const curatedGuides = relatedGuidesByPath[page.path]?.map(slug => guides.find(guide => guide.path === `guides/${slug}`) ?? tools.find(tool => tool.path === slug));
+  const related = (curatedGuides ?? relatedGuides).slice(0, 4).map(g => `<a href="/${g.path}">${escapeHtml(g.title)}</a>`).join('');
   const meta = type === 'Article' ? `<div class="meta">公開日：${published}　更新日：${updated}　Fate Lab編集部</div>` : '';
   const visibleFaq = hasVisibleFaq
     ? `<section class="visible-faq"><h2>算命学の無料鑑定についてよくある質問</h2>${page.faqs.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}</section>`
     : '';
   if (visibleFaq) page.body += visibleFaq;
   const isGuideArticle = isGuide && type === 'Article';
-  const inlineReading = isGuideArticle && inlinePersonalReadingLink.test(page.body);
-  const body = inlineReading ? page.body.replace(inlinePersonalReadingLink, guideBirthDateForm) : page.body;
+  const linkedBody = crawlGuideLinks[page.path] ? page.body.replace('</p>', `</p>${crawlGuideLinks[page.path]}`) : page.body;
+  const inlineReading = isGuideArticle && inlinePersonalReadingLink.test(linkedBody);
+  const body = inlineReading ? linkedBody.replace(inlinePersonalReadingLink, guideBirthDateForm) : linkedBody;
   const readingCta = isGuideArticle
     ? inlineReading
       ? (page.hideDefaultCta ? '' : '<a class="cta" href="#guide-reading">生年月日を入力する</a>')
       : `<aside class="inline-cta"><strong>生年月日から、あなたの流れを読む</strong>${guideBirthDateForm}</aside>`
     : (page.hideDefaultCta ? '' : '<a class="cta" href="/welcome">生年月日を入力して無料で鑑定する</a>');
   const coupleCta = page.path === 'guides/compatibility' ? '<a class="cta" href="/couple">ふたりの相性を無料で鑑定する</a>' : '';
-  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}${/^(guides|tools)\//.test(page.path) ? '<script type="module" src="/assets/fl-entry-attribution.js"></script>' : ''}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb"><a href="/">Fate Lab</a> › ${type === 'Article' ? '<a href="/guides/">占い解説</a> › ' : ''}${escapeHtml(page.title)}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}${readingCta}${coupleCta}<p>最終更新日：${updated}</p></main>${footer}${isGuideArticle ? '<script type="module" src="/assets/fl-guide-birthdate.js"></script>' : ''}</body></html>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="${themeColor}"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(page.searchDescription ?? page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="${canonical}"><meta property="og:type" content="${type === 'Article' ? 'article' : 'website'}"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="Fate Lab"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SITE_URL}/images/fate-lab-social-v9.jpg">${analytics}${/^(guides|tools)\//.test(page.path) ? '<script type="module" src="/assets/fl-entry-attribution.js"></script>' : ''}<style>${sharedStyle}${isGuide ? guideThemeStyle : ''}${contentMenuStyle}</style><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head><body${isGuide ? ' class="guide-theme"' : ''}>${contentHeader}<main><div class="breadcrumb">${breadcrumbHtml}</div><article><h1>${escapeHtml(page.title)}</h1>${meta}<p>${escapeHtml(page.description)}</p>${body}</article>${type === 'Article' ? `<aside class="related"><strong>関連する占い解説</strong>${related}</aside>` : ''}${readingCta}${coupleCta}<p>最終更新日：${updated}</p></main>${footer}${isGuideArticle ? '<script type="module" src="/assets/fl-guide-birthdate.js"></script>' : ''}</body></html>`;
 }
 
+const guideIndexPage = { path: 'guides/', updated: '2026-11-18', title: '生年月日占い・四柱推命の基礎知識', description: '四柱推命、命式、日干、五行、性格、適職、相性など、生年月日占いの基礎をFate Labが解説します。' };
+
 function guideIndexHtml() {
-  const page = { path: 'guides/', title: '生年月日占い・四柱推命の基礎知識', description: '四柱推命、命式、日干、五行、性格、適職、相性など、生年月日占いの基礎をFate Labが解説します。' };
-  const cards = guides.map(expandedGuide).map(g => `<li><a href="/${g.path}"><strong>${escapeHtml(g.title)}</strong><span>${escapeHtml(g.description)}</span></a></li>`).join('');
-  page.body = `<p>占術の計算方法、結果の読み方、注意点をテーマ別にまとめています。診断結果を決めつけに使わず、自分の経験と照らし合わせるための参考資料としてご利用ください。</p>${shichuHub}<h2>すべての占い解説</h2><ul class="guide-list">${cards}</ul><style>${shichuHubStyle}.guide-list{list-style:none;padding:0;display:grid;gap:14px}.guide-list a{display:block;padding:18px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:8px;text-decoration:none}.guide-list strong,.guide-list span{display:block}.guide-list span{font-size:14px;color:#5f564c;margin-top:6px}</style>`;
-  return staticHtml(page, 'CollectionPage');
+  const groups = [
+    ['四柱推命の基本', ['shichu-suimei', 'shichu-suimei-what-am-i', 'birth-chart', 'five-elements', 'unknown-birth-time', 'setsuiri-boundary', 'same-birthdate', 'shichu-suimei-statistics', 'shichu-suimei-animal-character']],
+    ['日干10種類', ['day-master', ...Object.values(STEM_SLUG).map(slug => `day-master/${slug}`)]],
+    ['通変星10種類', ['ten-god', ...Object.values(TEN_GOD_SLUG).map(slug => `ten-god/${slug}`)]],
+    ['十二運12種類', ['twelve-stage', ...Object.values(STAGE_SLUG).map(slug => `twelve-stage/${slug}`)]],
+    ['算命学', ['sanmeigaku', 'sanmeigaku-stars', 'sanmeigaku-shichu-suimei-relationship']],
+    ['相性', ['compatibility', 'marriage-compatibility']],
+    ['恋愛の悩み（復縁・片思い・相手の気持ち）', ['partner-feelings', 'reconciliation-timing', 'one-sided-love', 'ex-partner-feelings', 'married-partner-feelings']],
+    ['婚期・時期', ['marriage-timing', 'ziwei-marriage-timing', 'meeting-timing']],
+  ];
+  const assigned = new Set(groups.flatMap(([, slugs]) => slugs.map(slug => `guides/${slug}`)));
+  groups.push(['そのほか', guides.filter(guide => !assigned.has(guide.path)).map(guide => guide.path.slice('guides/'.length))]);
+  const byPath = new Map(guides.map(expandedGuide).map(guide => [guide.path, guide]));
+  const cards = groups.map(([heading, slugs]) => {
+    const links = slugs.map(slug => {
+      const guide = byPath.get(`guides/${slug}`);
+      return `<li><a href="/${guide.path}"><strong>${escapeHtml(guide.title)}</strong><span>${escapeHtml(guide.description)}</span></a></li>`;
+    }).join('');
+    return `<h2>${escapeHtml(heading)}</h2><ul class="guide-list">${links}</ul>`;
+  }).join('');
+  const body = `<p>占術の計算方法、結果の読み方、注意点をテーマ別にまとめています。診断結果を決めつけに使わず、自分の経験と照らし合わせるための参考資料としてご利用ください。</p>${shichuHub}${cards}<style>${shichuHubStyle}.guide-list{list-style:none;padding:0;display:grid;gap:14px}.guide-list a{display:block;padding:18px;background:#fffdf8;border:1px solid #d4c5a0;border-radius:8px;text-decoration:none}.guide-list strong,.guide-list span{display:block}.guide-list span{font-size:14px;color:#5f564c;margin-top:6px}</style>`;
+  return staticHtml({ ...guideIndexPage, body }, 'CollectionPage');
 }
 
 function toolIndexHtml() {
@@ -1059,10 +1125,26 @@ const siteNameSchema = {
   alternateName: ['FateLab', 'フェイトラボ'],
   url: `${SITE_URL}/`
 };
+// Keep the top-page footer links readable in the initial HTML without JavaScript.
+const homepageFooter = `<div class="fl-root">
+  <div class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]">
+    <footer class="mt-12 flex flex-col gap-3 border-t border-fl-line px-6 pb-10 pt-6">
+      <span class="text-[12px] font-medium tracking-[0.3em] text-fl-ink">FATE LAB</span>
+      <nav aria-label="サイトの情報" class="grid grid-cols-2 gap-x-4 text-xs">
+        ${[
+          ...crawlEntryLinks,
+          ['/terms', '利用規約'], ['/privacy', 'プライバシーポリシー'],
+          ['/tokushoho', '特定商取引法に基づく表記'], ['/support', 'お問い合わせ'],
+          ['/coupons', '占いクーポン・初回特典'],
+        ].map(([href, label]) => `<a href="${href}" class="flex min-h-[40px] items-center text-fl-body hover:text-fl-ink">${label}</a>`).join('')}
+      </nav>
+    </footer>
+  </div>
+</div>`;
 const homepage = appTemplate.replace(
   '</head>',
   `  <script type="application/ld+json">${JSON.stringify(siteNameSchema)}</script>\n  </head>`
-);
+).replace('<div id="root"></div>', `<div id="root"><noscript>${homepageFooter}</noscript></div>`);
 fs.writeFileSync(indexPath, homepage);
 
 fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate);
@@ -1090,7 +1172,7 @@ writePage('guides', guideIndexHtml());
 writePage('tools', toolIndexHtml());
 const sitemapPaths = ['','guides/','tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'tokushoho', 'coupons', 'couple', 'support'];
 const explicitUpdateDates = new Map(
-  [...guides, ...tools, ...infoPages].map(page => [page.path, page.updated ?? page.published])
+  [...guides, ...tools, ...infoPages, guideIndexPage].map(page => [page.path, page.updated ?? page.published])
 );
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(sitemapPaths)].map(route => {
   const updated = explicitUpdateDates.get(route);

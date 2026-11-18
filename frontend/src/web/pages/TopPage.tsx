@@ -147,7 +147,7 @@ export function TopPage() {
         <Button size="lg" onClick={goToForm}>生年月日を入れて読む</Button>
       </section>
 
-      <Footer />
+      <Footer includeCrawlLinks />
     </Page>
   )
 }

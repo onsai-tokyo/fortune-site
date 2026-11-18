@@ -1,4 +1,5 @@
 import { coconalaBannerContent } from '../data/coconalaBanner.js'
+import { crawlEntryLinks } from '../data/crawlEntryLinks.js'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { recordGuideReadingBanner } from '../data/guideReadingMeasurement.js'
 import '../coconala-banner.css'
@@ -130,12 +131,13 @@ export function CoconalaBanner({ className = '' }: { className?: string }) {
   )
 }
 
-export function Footer() {
+export function Footer({ includeCrawlLinks = false }: { includeCrawlLinks?: boolean }) {
   const link = 'flex min-h-[40px] items-center text-fl-body hover:text-fl-ink'
   return (
     <footer className="mt-12 flex flex-col gap-3 border-t border-fl-line px-6 pb-10 pt-6">
       <span className="text-[12px] font-medium tracking-[0.3em] text-fl-ink">FATE LAB</span>
       <nav aria-label="サイトの情報" className="grid grid-cols-2 gap-x-4 text-xs">
+        {includeCrawlLinks && crawlEntryLinks.map(([href, label]) => <a key={href} href={href} className={link}>{label}</a>)}
         <Link to="/terms" className={link}>利用規約</Link>
         <Link to="/privacy" className={link}>プライバシーポリシー</Link>
         <Link to="/tokushoho" className={link}>特定商取引法に基づく表記</Link>
