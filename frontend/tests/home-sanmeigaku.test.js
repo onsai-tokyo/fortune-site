@@ -14,6 +14,7 @@ test('home has readable initial copy, three FAQs and working crawl entrances bef
   assert.match(body, /Fate Labでわかること/)
   const intro = strip(body.match(/<p[^>]*>(.*?)<\/p>/)[1])
   assert.equal(intro.split('。').filter(Boolean).length, 4)
+  assert.match(intro, /Fate Lab（フェイトラボ／FateLab）/)
   for (const term of ['性格', '恋愛', '年ごと', '会員登録なし', '出生時刻が不明']) assert.ok(intro.includes(term))
   assert.equal([...body.matchAll(/<h3\b/g)].length, 3)
   assert.doesNotMatch(body, /<noscript|\bhidden\b|display:\s*none/)
@@ -26,7 +27,7 @@ test('home search metadata describes integrated reading, without changing the Re
   const title = html.match(/<title>(.*?)<\/title>/)[1]
   assert.equal((title.match(/算命学/g) ?? []).length, 1)
   assert.equal((title.match(/Fate Lab/g) ?? []).length, 1)
-  assert.match(title, /^生年月日で無料鑑定.*9占術を統合｜Fate Lab$/)
+  assert.match(title, /^Fate Lab（フェイトラボ）｜生年月日で無料鑑定.*9占術を統合$/)
   const description = html.match(/<meta name="description" content="([^"]*)"/)[1]
   assert.ok([...description].length <= 120)
   for (const term of ['無料', '会員登録は不要', '性格', '出生時刻が不明']) assert.ok(description.includes(term))
@@ -34,6 +35,8 @@ test('home search metadata describes integrated reading, without changing the Re
   assert.ok(html.includes(`<meta property="og:description" content="${description}"`))
   const topPage = fs.readFileSync(new URL('../src/web/pages/TopPage.tsx', import.meta.url), 'utf8')
   assert.match(topPage, /生まれた日から、<br \/>あなたの一年ずつを読む。/)
+  assert.match(topPage, /homepageCopy\.introduction/)
+  assert.match(topPage, /homepageCopy\.faqs\.map/)
 })
 
 test('legacy landing file is readable, canonicalized to home and noindex; redirects remain', () => {
