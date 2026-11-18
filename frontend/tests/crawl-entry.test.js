@@ -41,7 +41,7 @@ test('the initial homepage has all eight crawl entrances in the specified order'
   const footer = homepage.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1]
   const actual = [...footer.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].slice(0, 8).map(([, href, label]) => [href, label])
   assert.deepEqual(actual, crawlEntryLinks)
-  assert.ok(homepage.includes('<div id="root"><noscript><div class="fl-root">'))
+  assert.ok(homepage.includes('<div id="root"><div class="fl-root">'))
 })
 
 test('the guide index groups every guide once and starts each theme with its introduction', () => {
