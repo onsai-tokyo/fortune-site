@@ -3,6 +3,7 @@ import { calcAstrology } from '../astrology.js'
 import { Solar } from 'lunar-javascript'
 import { calcZiwei } from '../ziwei.js'
 import { requireReadingAuth } from '../../middleware/auth.js'
+import { calcAge } from '../age.js'
 
 export const calcRouter = Router()
 
@@ -312,7 +313,8 @@ function timingThemes(tenGod: string, branchRelation?: string): string[] {
 
 // 大運・流年は lunar-javascript の節入り基準（sect=2）で算出する。
 // 配偶者星は伝統的な男女別の見方で候補年を抽出するが、出来事の確定には用いない。
-export function calcTimingCycles(year: number, month: number, day: number, hour: number | undefined, minute: number, gender: 'male' | 'female') {
+export function calcTimingCycles(year: number, month: number, day: number, hour: number | undefined, minute: number, gender: 'male' | 'female', annualWindow?: { from: number; to: number }) {
+  if (annualWindow && (!Number.isInteger(annualWindow.from) || !Number.isInteger(annualWindow.to) || annualWindow.to - annualWindow.from !== 9 || annualWindow.from < year)) throw new RangeError('Invalid annual display window')
   const localHour = hour ?? 12
   const cst = toChineseStandardTime(year, month, day, localHour, minute)
   const lunar = Solar.fromYmdHms(cst.year, cst.month, cst.day, cst.hour, cst.minute, 0).getLunar()
@@ -336,8 +338,10 @@ export function calcTimingCycles(year: number, month: number, day: number, hour:
     }
   })
 
-  const annual: AnnualTiming[] = yun.getDaYun(8).flatMap((period: any) => period.getLiuNian())
-    .filter((item: any) => item.getYear() >= year + 18 && item.getYear() <= year + 60)
+  // A focus page changes the displayed years, never the rules for each year.
+  const annualPeriods = annualWindow ? Math.max(8, Math.ceil((annualWindow.to - year) / 10) + 2) : 8
+  const annual: AnnualTiming[] = yun.getDaYun(annualPeriods).flatMap((period: any) => period.getLiuNian())
+    .filter((item: any) => item.getYear() >= (annualWindow?.from ?? year + 18) && item.getYear() <= (annualWindow?.to ?? year + 60))
     .map((item: any) => {
       const pillar = pillarFromKanshi(item.getGanZhi())
       const tenGod = calcTenGod(dayStemIdx, pillar.stemIdx)
@@ -586,6 +590,7 @@ export function calcShichuResult(
   hour?: number,
   minute = 0,
   gender?: 'male' | 'female',
+  annualWindow?: { from: number; to: number },
 ) {
   const shichu = calcShichu(year, month, day, hour, minute)
   const { shukumeiStar, chusatsu } = calcSanmei(shichu.day.stemIdx, shichu.day.branchIdx, shichu.month.branchIdx, shichu.jieDays)
@@ -597,19 +602,27 @@ export function calcShichuResult(
     shichuDay: shichu.day.kanshi,
     shichuHour: shichu.hour?.kanshi ?? null,
     ...calcExpandedDivination(shichu),
-    timing: gender ? calcTimingCycles(year, month, day, hour, minute, gender) : null,
+    timing: gender ? calcTimingCycles(year, month, day, hour, minute, gender, annualWindow) : null,
   }
 }
 
 calcRouter.post('/shichu', (req, res) => {
   try {
-    const { birthDate, birthTime, gender } = req.body as { birthDate?: string; birthTime?: string; gender?: string }
+    const { birthDate, birthTime, gender, readingFocus } = req.body as { birthDate?: string; birthTime?: string; gender?: string; readingFocus?: string }
     if (!birthDate) {
       res.status(400).json({ error: '生年月日は必須です' })
       return
     }
     if (gender && gender !== 'male' && gender !== 'female') {
       res.status(400).json({ error: '性別の形式が正しくありません' })
+      return
+    }
+    if (readingFocus !== undefined && readingFocus !== 'konki') {
+      res.status(400).json({ error: '鑑定の種類を確認してください' })
+      return
+    }
+    if (readingFocus === 'konki' && !gender) {
+      res.status(400).json({ error: '婚期の計算には性別を選択してください' })
       return
     }
     const [year, month, day] = birthDate.split('-').map(Number)
@@ -623,7 +636,17 @@ calcRouter.post('/shichu', (req, res) => {
       res.status(400).json({ error: '出生時刻の形式が正しくありません' })
       return
     }
-    res.json(calcShichuResult(year, month, day, birthHour, birthMinute, gender as 'male' | 'female' | undefined))
+    const referenceYear = Number(new Intl.DateTimeFormat('en', { timeZone: 'Asia/Tokyo', year: 'numeric' }).format(new Date()))
+    if (readingFocus === 'konki' && (year < 1900 || year > referenceYear)) {
+      res.status(400).json({ error: '生年月日を確認してください' })
+      return
+    }
+    if (readingFocus === 'konki' && (calcAge(birthDate) ?? -1) < 15) {
+      res.status(400).json({ error: '無料の鑑定は15歳以上の方が利用できます' })
+      return
+    }
+    const window = readingFocus === 'konki' ? { from: referenceYear, to: referenceYear + 9 } : undefined
+    res.json(calcShichuResult(year, month, day, birthHour, birthMinute, gender as 'male' | 'female' | undefined, window))
   } catch (err) {
     console.error('Shichu calc error:', err)
     res.status(500).json({ error: '四柱推命の計算に失敗しました' })
