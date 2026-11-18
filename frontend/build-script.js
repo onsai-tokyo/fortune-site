@@ -1,6 +1,7 @@
 import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
 import { crawlEntryLinks } from './src/web/data/crawlEntryLinks.js';
 import { homepageCopy } from './homepage-copy.js';
+import { coupleSearchMetadata, coupleLandingHtml } from './src/web/data/coupleLandingCopy.js';
 import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
 import { nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
 import { writeSitemaps } from './seo/sitemaps.js';
@@ -54,7 +55,7 @@ function topicCta(page) {
 }
 
 const appRoutes = [
-  ['couple', '生年月日で相性占い｜無料・登録不要のふたりの年表', '二人の生年月日と出会った年を入力して、恋人・夫婦・友人・家族との関係を無料で鑑定。出会いから今年までの関係と、一人ひとりの流れを年ごとに読めます。登録や出生時刻の入力は不要です。'],
+  ['couple', coupleSearchMetadata.title, coupleSearchMetadata.description],
   ['support', 'お問い合わせ', 'Fate Labへのお問い合わせ、内容の訂正依頼、個人情報に関する窓口をご案内します。'],
   ['coupons', '占いクーポン・初回特典', '電話占い・チャット占いの初回特典をまとめました。対象者や利用条件を比較し、各サービスの公式案内へ進めます。'],
   ['feature/self', '無料の自己分析｜強み・適職・人生の転換期を命式で診断', '生年月日から複数の占術を統合し、性格の本質、強み・弱み、適職、人生の転換期を診断します。'],
@@ -922,7 +923,7 @@ function appPageHtml(template, route) {
   const robots = appRobots(`/${route.path}`);
   const pageTemplate = template.replace(/<script type="application\/ld\+json">\s*\{[^<]*"@type"\s*:\s*"WebApplication"[^<]*<\/script>/, '');
   const content = route.path === 'couple'
-    ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><main style="max-width:640px;margin:32px auto;padding:0 20px"><h1>生年月日で見る無料の相性占い</h1><p>ふたりの生年月日と出会った年から、関係の流れを一年ずつ読み解く無料の相性鑑定です。会員登録なしで、恋愛・家族・友人などの関係を占えます。</p><p>出会った年から、ふたりの関係の流れを年ごとに読めます。出生時刻と出生地は任意です。</p><p><a href="/guides/compatibility">生年月日で相性を見る仕組み</a></p></main></div>`)
+    ? pageTemplate.replace('<div id="root"></div>', `<div id="root"><div class="fl-root"><main class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]"><article><section class="fl-landing-section flex flex-col gap-4 px-6 py-10"><h1 class="m-0 text-[28px] leading-[1.65]">${escapeHtml(coupleSearchMetadata.heading)}</h1>${coupleLandingHtml()}</section></article></main></div></div>`)
     : pageTemplate;
   const webApplicationSchema = route.path === 'couple' ? {
     '@context': 'https://schema.org',
