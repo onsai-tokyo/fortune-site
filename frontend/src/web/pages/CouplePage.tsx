@@ -8,6 +8,7 @@ import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
 import { CoupleBirthForm } from './CoupleBirthForm'
 import { coupleTags } from '../data/coupleTags'
+import { coupleLandingHtml, coupleResultConsultation } from '../data/coupleLandingCopy.js'
 import { personalReadings } from '../data/readingData'
 import { apiFetch } from '../data/api'
 import { supabase } from '../../lib/supabase'
@@ -68,13 +69,14 @@ export function CoupleIndexPage() {
       </section>}
       <section className="flex flex-col gap-1 px-5 pt-8">
         <h2 className="mb-2 mt-0 text-base font-medium">ふたりの年表でできること</h2>
-        {['出会った年から今年まで、その年のふたりの読みものを読む', '同じ年の、あなたと相手それぞれの流れを知る'].map((t, i) => (
+        {['出会った年から、一年ごとのふたりの読みものを読む', '同じ年の、あなたと相手それぞれの流れを知る'].map((t, i) => (
           <div key={t} className="flex gap-3.5 border-b border-fl-line py-3.5">
             <span className="w-[22px] text-[13px] text-fl-muted">0{i + 1}</span>
             <span className="text-sm leading-[1.8] text-fl-body">{t}</span>
           </div>
         ))}
       </section>
+      <section className="fl-landing-section flex flex-col gap-4 px-6 py-10" dangerouslySetInnerHTML={{ __html: coupleLandingHtml() }} />
       <Footer />
     </Page>
   )
@@ -178,6 +180,7 @@ export function CouplePage() {
         {!standalone && <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">{partners.length > 1 ? '選んだ相手だけを入れ替えます。他の相手は削除しません。' : '相手は1人ずつ登録できます。何度でも無料で入れ替えられます。'}{partner.name}について作ったブックは、入れ替えても引き続き閲覧できます。</p>}
       </section>
 
+      <p className="mx-6 text-xs leading-relaxed text-fl-muted">{coupleResultConsultation}</p>
       <CoconalaBanner className="px-5 pt-6" />
       <Footer />
     </Page>
