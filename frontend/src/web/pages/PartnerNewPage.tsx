@@ -1,3 +1,4 @@
+import { BirthTimeFields } from '../components/BirthTimeFields'
 import { MeetingYearSelect } from '../components/MeetingYearSelect'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
@@ -104,7 +105,7 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
         <div className="flex flex-col gap-[18px] rounded-card bg-white p-5">
           <span className="text-[13px] font-medium text-fl-body">相手の出生情報</span>
           <BirthDateFields id="pbirth" value={birthDate} onChange={value => { setBirthDate(value); setError(null) }} disabled={saving} />
-          <Field id="ptime" label="出生時刻（任意）" type="time" onClear={() => setBirthTime('')} value={birthTime} onChange={e => setBirthTime(e.target.value)} hint="分からない場合は空欄のままで大丈夫です。" />
+          <BirthTimeFields id="ptime" value={birthTime} onChange={setBirthTime} />
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pplace" className="text-[13px] font-medium text-fl-body">出生地</label>
             <select id="pplace" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base">

@@ -1,10 +1,11 @@
+import { BirthTimeFields } from '../components/BirthTimeFields'
 import { ApiError } from '../data/api'
 import { SiteHeader } from '../components/SiteHeader'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
 import { Link, useNavigate } from 'react-router-dom'
-import { CoconalaBanner, Button, Chip, Eyebrow, Field, Footer, NatureImage, Page } from '../components/ui'
+import { CoconalaBanner, Button, Chip, Eyebrow, Footer, NatureImage, Page } from '../components/ui'
 import { images } from '../data/images'
 import { prefectures } from '../data/mock'
 import { CreatingPage } from './CreatingPage'
@@ -82,7 +83,7 @@ export function TopPage() {
               </div>
             </fieldset>
               <div className="flex flex-col gap-4 bg-white">
-                <Field id="top-birthtime" label="出生時刻（任意）" type="time" onClear={() => setBirthTime('')} value={birthTime} onChange={e => setBirthTime(e.target.value)} hint="分からない場合は空欄で進めます。" />
+                <BirthTimeFields id="top-birthtime" value={birthTime} onChange={setBirthTime} />
                 <label htmlFor="top-birthplace" className="text-[13px]">出生地（任意）</label>
                 <select id="top-birthplace" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] rounded-field border bg-white px-4 text-base"><option value="">未選択・分からない</option>{prefectures.map(p => <option key={p}>{p}</option>)}</select>
                 <p className="m-0 text-xs text-fl-muted">暦は日本標準時で計算します。出生地が未選択の場合、場所は不明のまま扱います。海外生まれの方には対応していません。あとから変更できます。</p>
