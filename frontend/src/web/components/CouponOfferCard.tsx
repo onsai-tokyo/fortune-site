@@ -1,3 +1,5 @@
+import { coconalaBannerContent } from '../data/coconalaBanner.js'
+import '../coconala-banner.css'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { IconChevron } from './icons'
 import type { CouponOffer } from '../data/couponOffers'
@@ -5,6 +7,20 @@ import type { CouponOffer } from '../data/couponOffers'
 export function CouponOfferCard({ offer }: { offer: CouponOffer }) {
   const headingId = `coupon-${offer.id}`
   const adHtml = offer.adHtml?.trim()
+
+  if (offer.id === 'coconala-phone') return (
+    <>
+      <article className="fl-coconala-coupon" data-channel={offer.channel} aria-labelledby={headingId}>
+        <h2 id={headingId} className="sr-only">{offer.name}</h2>
+        <div className="fl-coconala-banner fl-ticket-ad" onClick={event => {
+          if (event.target instanceof Element && event.target.closest('a[href]')) {
+            trackThreadsEvent('coupon_click', { link_type: 'affiliate', offer_id: offer.id })
+          }
+        }} dangerouslySetInnerHTML={{ __html: coconalaBannerContent }} />
+      </article>
+      <p className="fl-ticket-note">リンク経由の申込みなどに応じて、FATE LABが報酬を受け取る場合があります。</p>
+    </>
+  )
 
   return (
     <>

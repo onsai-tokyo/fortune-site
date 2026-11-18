@@ -1,3 +1,5 @@
+import { coconalaBannerContent } from './coconalaBanner.js'
+
 export type CouponOffer = {
   id: string
   name: string
@@ -28,9 +30,7 @@ export const couponOffers: readonly CouponOffer[] = [
     example: 'アプリ通話で1分300円なら、鑑定料10分分が無料',
     officialDetailsUrl: 'https://coconala.com/magazine/32107',
     compactTerms: '初めての会員登録で、電話占いページの専用バナーからの登録が対象。',
-    adHtml: `<a href="https://px.a8.net/svt/ejp?a8mat=4BAE5C+IGJMA+2PEO+C3BAQ" rel="nofollow">電話占い【ココナラ】新規会員登録で3,000円無料クーポンプレゼント中</a>
-
-<img border="0" width="1" height="1" src="https://www17.a8.net/0.gif?a8mat=4BAE5C+IGJMA+2PEO+C3BAQ" alt="">`,
+    adHtml: coconalaBannerContent,
   },
   {
     id: 'spacia-phone',
