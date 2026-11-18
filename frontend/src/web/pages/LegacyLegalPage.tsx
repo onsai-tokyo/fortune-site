@@ -1,14 +1,16 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Footer, Page, PlainHeader } from '../components/ui'
 import snapshots from '../data/legacyLegalSnapshots.json'
+import '../legacy-legal.css'
 
 export function LegacyLegalPage({ document }: { document: keyof typeof snapshots.documents }) {
   const location = useLocation()
   useEffect(() => {
     if (location.hash === '#ai-consultation') window.document.getElementById('ai-consultation')?.scrollIntoView()
   }, [location.hash])
-  return <main className="break-words">
-    <aside className="mx-auto max-w-4xl space-y-3 border-b border-fl-line p-6 text-sm leading-relaxed" aria-label="アプリ向け文書の保存版">
+  return <Page><PlainHeader /><main className="fl-legacy-legal break-words">
+    <aside className="fl-legacy-legal-notice space-y-3 text-sm leading-relaxed" aria-label="アプリ向け文書の保存版">
       <h2 className="text-xl font-medium">アプリ向け文書の保存版</h2>
       <p>参照元：main {snapshots.sourceCommit.slice(0, 7)}。Web版とは別の文書です。現在の公開サイトや配布済みアプリの文面との完全一致は未確認です。</p>
       <p>保存版は閲覧専用です。旧画面の動的な料金取得は行わず、元の初期表示文を保存しています。ここから購入や契約はできません。</p>
@@ -16,6 +18,6 @@ export function LegacyLegalPage({ document }: { document: keyof typeof snapshots
       <nav className="flex flex-wrap gap-4 underline" aria-label="現在のWeb版文書"><Link to="/terms">Web版の利用規約</Link><Link to="/privacy">Web版のプライバシーポリシー</Link><Link to="/tokushoho">Web版の特商法表記</Link></nav>
     </aside>
     {/* Trusted, checked-in server-rendered repository text; never API/user HTML. */}
-    <div data-testid="legacy-legal-document" dangerouslySetInnerHTML={{ __html: snapshots.documents[document] }} />
-  </main>
+    <div className="fl-legacy-legal-document" data-testid="legacy-legal-document" dangerouslySetInnerHTML={{ __html: snapshots.documents[document] }} />
+  </main><Footer /></Page>
 }

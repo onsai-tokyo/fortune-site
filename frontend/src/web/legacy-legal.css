@@ -1,0 +1,106 @@
+/* Keep the archived wording intact while presenting it in the current Web shell. */
+.fl-root .fl-legacy-legal {
+  min-width: 0;
+  padding: 28px var(--fl-gutter) 8px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.fl-root .fl-legacy-legal-notice {
+  padding: 20px;
+  border: 1px solid #e2e1dc;
+  border-radius: 22px;
+  background: #efeee9;
+  color: #3d3f3a;
+}
+.fl-root .fl-legacy-legal-notice h2 {
+  font-size: 18px;
+  font-weight: 500;
+}
+.fl-root .fl-legacy-legal-notice nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.fl-root .fl-legacy-legal-notice a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #5a708c;
+  text-underline-offset: 4px;
+}
+.fl-root .fl-legacy-legal-document > .min-h-screen {
+  min-height: 0;
+  background: transparent !important;
+}
+.fl-root .fl-legacy-legal-document .max-w-4xl {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.fl-root .fl-legacy-legal-document header {
+  margin: 28px 0 20px;
+  padding: 0;
+  background: transparent !important;
+  backdrop-filter: none;
+}
+.fl-root .fl-legacy-legal-document header > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #5a708c;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.fl-root .fl-legacy-legal-document h1 {
+  margin: 14px 0 8px;
+  color: #242c27 !important;
+  font-size: clamp(25px, 5.8vw, 30px);
+  font-weight: 500;
+  line-height: 1.6;
+}
+.fl-root .fl-legacy-legal-document h2 {
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-color: #e2e1dc;
+  color: #242c27 !important;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.8;
+}
+.fl-root .fl-legacy-legal-document .glass-card {
+  padding: 20px;
+  border: 1px solid #e2e1dc !important;
+  border-radius: 22px;
+  background: #fff !important;
+  box-shadow: none;
+}
+.fl-root .fl-legacy-legal-document [class*="text-white"] {
+  color: #3d3f3a !important;
+}
+.fl-root .fl-legacy-legal-document :is([class*="text-white/40"], [class*="text-white/50"]) {
+  color: #6c7068 !important;
+}
+.fl-root .fl-legacy-legal-document h1,
+.fl-root .fl-legacy-legal-document h2 {
+  color: #242c27 !important;
+}
+.fl-root .fl-legacy-legal-document .text-accent {
+  color: #344f40;
+}
+.fl-root .fl-legacy-legal-document .justify-between {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.fl-root .fl-legacy-legal-document .justify-between > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.fl-root .fl-legacy-legal-document section {
+  scroll-margin-top: 24px;
+}
+.fl-root .fl-legacy-legal-document a:focus-visible,
+.fl-root .fl-legacy-legal-notice a:focus-visible {
+  outline: 2px solid #667d63;
+  outline-offset: 3px;
+}
