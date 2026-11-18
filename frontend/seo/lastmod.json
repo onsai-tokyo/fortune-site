@@ -20,8 +20,52 @@
     "lastmod": null
   },
   "/guides/": {
-    "hash": "e8c4e8a165447a164e8e4a2ce153459d1387cdbd2ddd4319bac3c1920becdf90",
+    "hash": "74fd4de5a9a17f35a4d8cd1c0f853fed90bf818c0959f07d7334b99a81b6d27b",
     "lastmod": "2026-11-18"
+  },
+  "/guides/2027-fortune": {
+    "hash": "8d0c8c6c27e51a5e0e3ce8bac3d6efd65adaaa4975a13a918ef065a97a3480d4",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/hinoe": {
+    "hash": "8341c65bb121b513bb91f47b9f761a6949525587998a5865d30d28707dfabee8",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/hinoto": {
+    "hash": "2077de6ffc533875d9b4d384061288296ee5e16938817f2347629d0007c9d39c",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/kanoe": {
+    "hash": "ea67216f82aba45f1b8c90ea8d923bd25e16c2e609421b1b33c3adf2d6faf193",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/kanoto": {
+    "hash": "47e3665dec5634ec6c9aab9900dba847cc4f3f8f9387fc67e18bfde1fe311625",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/kinoe": {
+    "hash": "40acd8787806658be88e9aa06997dd4ea1d855835cf5a00378fa5d611f96f9d8",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/kinoto": {
+    "hash": "d8946b59d8086b8230b354d1ad4f1042970d25ed38eed0d4e91c245b98a6d566",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/mizunoe": {
+    "hash": "0be84744710a50f6b47b607898625880c457a6a7b48095d84175d25540b8a068",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/mizunoto": {
+    "hash": "b500d56d8238de8de3e30c114a6db8d116eea80df13071eb94327e077a5aa3da",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/tsuchinoe": {
+    "hash": "7ee4765948547b5904f8277aa245686a2b629957022cd62cefc193894cf23762",
+    "lastmod": "2026-12-01"
+  },
+  "/guides/2027-fortune/tsuchinoto": {
+    "hash": "60afa91d929caaf2cb16ed7a2f74a203411f1930bb8eb7bf2451f26329a13a89",
+    "lastmod": "2026-12-01"
   },
   "/guides/angel-number-111": {
     "hash": "32e82f13f3e9132ec6f7c8b6d02bb68cf90342a923517c4c8445dfef3a2268c1",
@@ -100,43 +144,43 @@
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/hinoe": {
-    "hash": "0952cdfec41bd790173aea8640013c3a01636947c8ef7d8b4c92c6e01f0d0161",
+    "hash": "fd566f6588ea0a2efbe11d60e5236b6f2af16a33be754094d0545c6e1768c853",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/hinoto": {
-    "hash": "0d859d0fde09f27aa564d4594fd566559213d8dc83ee593713b3896ede8d1b84",
+    "hash": "ae146508d31833e22affd25cd233d69b2fa1e6ca66a10ae8eb922ba72ee68914",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/kanoe": {
-    "hash": "d614f2b929b1f7a98c7d7255f4d79cd095b0471258e886694db55e73a1ed541f",
+    "hash": "0b8f0a8f920026d9264d6531c1b8e24d1aed5186b7f460a295d2593f7dcfdd4c",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/kanoto": {
-    "hash": "f4ed1ee7f2db3bb983a15db6e5a9f0134018fc4fe4cc2bd65b1a501d7754ac1f",
+    "hash": "57a10c3e6fe0c349f4bc78c58b2405f9154f4e81c6decc17443d8885731ebfbf",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/kinoe": {
-    "hash": "1542c39d5b7c007b085dcb9ac5366c650dee048d01c0d99df7a51285af1be769",
+    "hash": "da87b932e15a8bf3190f7970f16d0ff821ef003dbc270e1fd5c0b9fab2cb430c",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/kinoto": {
-    "hash": "a614a2ce1dc85f005fbe74fc6e7d851af7c4a310161a7a2474a010b3607df9ff",
+    "hash": "59fa433094d6dcf24b3f3bd2ab9717f0de42356ee984e33403a9838fde19787a",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/mizunoe": {
-    "hash": "3dd414e4edcefc8df0336a4bf908f26e5c448720d4f9aaf4e422f60379b607cb",
+    "hash": "ac0fcac532af75d56bb82de0cfad583a982bb0d7dbae5c173120631166577472",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/mizunoto": {
-    "hash": "6826eff39c9b8ef967d6e3c2bfe58a6d7ab058092af880e7a1b06a06b187b7f5",
+    "hash": "fcb045c3b6513faefd4860ee091f3c7c3fd0d08cbbd9c293adb1dba34ad91cab",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/tsuchinoe": {
-    "hash": "d16e49af15ada57cfecba1204b2a387c6aaf85144ecc30f3432c485897c5cc2e",
+    "hash": "8118fc6b0badf54feffc83bf3598966ece93c937393bb1312e46f2ef6778b5fa",
     "lastmod": "2026-11-16"
   },
   "/guides/day-master/tsuchinoto": {
-    "hash": "348272e83c8250b85ae4c68fc6e7f63a9fc4bdbe844d20fdd148e00831b994e2",
+    "hash": "a88adb99c87541b596758a08e63e2347cf2fcc890539684fa08c16780e56e0a3",
     "lastmod": "2026-11-16"
   },
   "/guides/east-west-astrology": {
@@ -168,7 +212,7 @@
     "lastmod": "2026-11-16"
   },
   "/guides/meeting-timing": {
-    "hash": "d9db0b674e723eb175d8eaf241126154d476e91c39b0b05fa9b661de1dd6493e",
+    "hash": "687febc6234de58f7f2446eaf0c99b0d218ffaeca03d8af8575bdecc334b5829",
     "lastmod": "2026-11-16"
   },
   "/guides/nayin": {
