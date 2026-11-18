@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "cf28b9357054726964910dccd51bbebe878595ad7901af0f07d260f4e36cceb4",
-    "lastmod": null
+    "hash": "b187f4a460125ad38454f731bfc328bfff1ced9c6b05984d1c043e3640e05e39",
+    "lastmod": "2026-11-18"
   },
   "/about": {
     "hash": "7d9baa4453416ebdee9c71a371237aa6d39dfc1581bbbd0897c83a28e29b7a38",
@@ -380,7 +380,7 @@
     "lastmod": null
   },
   "/tools/": {
-    "hash": "90ffef24739d29671827e601564f30a0504d4a8a481cb4bcea4893ab26828858",
+    "hash": "b7b5ec4e77fcb521879249a58aa35169056459ac600d0587b8af8e54ebe65762",
     "lastmod": "2026-11-18"
   },
   "/tools/day-master": {
@@ -392,8 +392,8 @@
     "lastmod": null
   },
   "/tools/sanmeigaku-calculator": {
-    "hash": "8203dfb258df3ba4dd109573e55dff396536c6aba20fbd464d74b65616f3dd44",
-    "lastmod": "2026-11-15"
+    "hash": "d5c4ab3bcb9450f01c82d9135d2d15604deb03758ee032467162288e857de51a",
+    "lastmod": "2026-11-18"
   },
   "/tools/shichu-suimei-calculator": {
     "hash": "dfadb438b1fe9fb284ae07fe58c3070be3939561e638596b7b5f41f2d354bd39",

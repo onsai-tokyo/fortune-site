@@ -1,5 +1,6 @@
 import { coconalaBannerContent } from './src/web/data/coconalaBanner.js';
 import { crawlEntryLinks } from './src/web/data/crawlEntryLinks.js';
+import { homepageCopy } from './homepage-copy.js';
 import { appRobots, privateRobots } from './src/web/data/indexingPolicy.js';
 import { nextLastmod, applyLastmod, saveLastmod } from './seo/lastmod.js';
 import { writeSitemaps } from './seo/sitemaps.js';
@@ -851,10 +852,10 @@ const tools = [
   {
     path: 'tools/sanmeigaku-calculator',
     updated: '2026-11-15',
-    title: '算命学の無料鑑定｜生年月日から十大主星・十二大従星を自動計算',
-    searchTitle: '算命学の無料自動計算｜生年月日で人体星図・中心星を算出',
-    searchDescription: '算命学の人体星図を登録なしで無料計算。生年月日と性別を入力すると、中心星と天中殺がすぐ表示され、十大主星の配置と十二大従星も確認できます。出生時刻は不要です。',
-    description: '生年月日から算命学の人体星図、中心星を含む十大主星、十二大従星、天中殺を無料で自動計算。登録不要で星の位置と意味を確認できます。',
+    title: '算命学の無料計算｜生年月日から十大主星・十二大従星を自動算出',
+    searchTitle: '算命学 無料計算｜十大主星・十二大従星・天中殺を算出',
+    searchDescription: '算命学の人体星図を生年月日から無料で計算。中心星を含む十大主星の配置、十二大従星、天中殺を表示します。十大主星の出し方も解説。登録・出生時刻は不要です。',
+    description: '生年月日と性別を入力すると、人体星図（星の配置図）を無料で算出します。中心星を含む十大主星、十二大従星、天中殺を表示。会員登録と出生時刻は不要です。',
     faqs: [
       ['算命学を無料で鑑定できますか？', 'はい。生年月日を入力すると、人体星図、十大主星、十二大従星、天中殺を登録不要で無料計算できます。'],
       ['算命学の中心星とは何ですか？', '人体星図の中央に配置される十大主星で、本人が判断するときに戻りやすい核として読みます。ただし中心星だけで性格全体は決めません。'],
@@ -863,7 +864,7 @@ const tools = [
       ['出生時間が分からなくても計算できますか？', 'このページで表示する人体星図、十二大従星、天中殺は生年月日から計算できます。分からない出生時刻を推測して入力する必要はありません。'],
       ['算命学と四柱推命は同じですか？', 'どちらも陰陽五行や干支を使い共通する素材がありますが、星の配置や解釈の体系は同じではありません。Fate Labでは重複する根拠として過大評価しません。']
     ],
-    body: `<p>生年月日と性別を入力すると、算命学の人体星図・十二大従星・天中殺を無料で算出できます。計算後は、最初の結果欄に中心星と天中殺が表示されます。位置ごとの十大主星は「あなたの人体星図」、初年期・中年期・晩年期の星はその下の「十二大従星」を見てください。出生時刻と会員登録は不要です。</p><form class="tool" id="sanmei-tool"><label for="sanmei-date">生年月日</label><input id="sanmei-date" type="date" required><label for="sanmei-gender">性別</label><select id="sanmei-gender"><option value="female">女性</option><option value="male">男性</option></select><button type="submit">算命学の命式を無料計算する</button></form><div class="tool-result" id="sanmei-result" role="status" aria-live="polite">生年月日を入力してください。</div><section id="sanmei-detail" hidden><h2>あなたの人体星図</h2><p>中央は自分の核、西は家庭・配偶者、東は仕事・社会、北は目上・思考、南は目下・未来への表れ方を読む位置です。ひとつの星だけで性格を決めず、位置ごとの違いを合わせて見ます。</p><div class="table-scroll"><table><thead><tr><th>位置</th><th>十大主星</th><th>読み方</th></tr></thead><tbody id="sanmei-body-chart"></tbody></table></div><h2>十二大従星</h2><p>十二大従星は、初年期・中年期・晩年期でエネルギーをどう使いやすいかを見る補助指標です。数値の大小を優劣として扱うものではありません。</p><div class="table-scroll"><table><thead><tr><th>人生段階</th><th>星</th><th>エネルギー値</th></tr></thead><tbody id="sanmei-subordinate-stars"></tbody></table></div><p class="health-note">算命学の結果は、性格や未来を確定する診断ではありません。実際の経験や現在の環境と照らして、自己理解の参考としてご利用ください。</p></section><h2>無料鑑定で分かること</h2><ul><li>自分の中心となる十大主星</li><li>家庭・仕事・目上・目下の各位置に出る星</li><li>初年期・中年期・晩年期の十二大従星</li><li>日柱から求める天中殺</li></ul>${sanmeigakuCalculationExample}<p><a href="/guides/sanmeigaku-stars#sanmei-example">同じ計算例を星一覧ガイドで読む</a></p><h2>算命学の星は「位置」と合わせて読む</h2><p>同じ貫索星でも、中央にあれば本人の核として、西にあれば家庭や配偶者との関係で表れやすい傾向として読みます。星そのものの意味と、置かれた場所の意味を重ねるのが人体星図の基本です。</p><p>十大主星・十二大従星それぞれの特徴は<a href="/guides/sanmeigaku-stars">算命学の星一覧と位置別の読み方</a>、四柱推命との共通点と違いは<a href="/guides/sanmeigaku-shichu-suimei-relationship">算命学と四柱推命の関係</a>で詳しく解説しています。</p><script>(()=>{const form=document.getElementById('sanmei-tool'),summary=document.getElementById('sanmei-result'),detail=document.getElementById('sanmei-detail'),body=document.getElementById('sanmei-body-chart'),sub=document.getElementById('sanmei-subordinate-stars');const positionMeaning={north:'目上・思考・学び方',west:'家庭・配偶者・身近な関係',center:'本人の核・基本姿勢',east:'仕事・社会・行動',south:'目下・子ども・未来'},energyByStar={天馳星:1,天極星:2,天報星:3,天胡星:4,天庫星:5,天印星:6,天恍星:7,天堂星:8,天貴星:9,天南星:10,天禄星:11,天将星:12};const addRow=(target,values)=>{const tr=document.createElement('tr');values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td)});target.appendChild(tr)};form.addEventListener('submit',async e=>{e.preventDefault();const birthDate=document.getElementById('sanmei-date').value,gender=document.getElementById('sanmei-gender').value;if(!birthDate)return;summary.textContent='計算中…';detail.hidden=true;try{const response=await fetch('/api/calc/shichu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({birthDate,gender})});if(!response.ok)throw new Error();const data=await response.json(),chart=data.sanmeiChart;summary.replaceChildren();const heading=document.createElement('strong');heading.textContent='中心星 '+data.sanmeiStar+' ／ '+data.chusatsu;const note=document.createElement('span');note.textContent='人体星図と十二大従星を下に表示しました。';summary.append(heading,note);body.replaceChildren();['north','west','center','east','south'].forEach(key=>{const item=chart.bodyChart[key];addRow(body,[item.label,item.star,positionMeaning[key]])});sub.replaceChildren();['early','middle','late'].forEach(key=>{const item=chart.subordinateStars[key];addRow(sub,[item.label,item.star,energyByStar[item.star]])});detail.hidden=false;if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'sanmeigaku_calculator',result:data.sanmeiStar})}catch{summary.textContent='計算できませんでした。時間をおいて再度お試しください。'}})})()</script><style>.tool select{font:inherit;padding:12px;border:1px solid #b8aa8b;border-radius:10px;background:#fff}#sanmei-detail[hidden]{display:none}</style>`
+    body: `<p>計算後は、最初の結果欄で中心星と天中殺を確認してください。位置ごとの十大主星は「あなたの人体星図」に表示します。初年期・中年期・晩年期の星は、その下の「十二大従星」で読めます。</p><form class="tool" id="sanmei-tool"><label for="sanmei-date">生年月日</label><input id="sanmei-date" type="date" required><label for="sanmei-gender">性別</label><select id="sanmei-gender"><option value="female">女性</option><option value="male">男性</option></select><button type="submit">算命学の命式を無料計算する</button></form><div class="tool-result" id="sanmei-result" role="status" aria-live="polite">生年月日を入力してください。</div><section id="sanmei-detail" hidden><h2>あなたの人体星図</h2><p>中央は自分の核、西は家庭・配偶者、東は仕事・社会、北は目上・思考、南は目下・未来への表れ方を読む位置です。ひとつの星だけで性格を決めず、位置ごとの違いを合わせて見ます。</p><div class="table-scroll"><table><thead><tr><th>位置</th><th>十大主星</th><th>読み方</th></tr></thead><tbody id="sanmei-body-chart"></tbody></table></div><h2>十二大従星</h2><p>十二大従星は、初年期・中年期・晩年期でエネルギーをどう使いやすいかを見る補助指標です。数値の大小を優劣として扱うものではありません。</p><div class="table-scroll"><table><thead><tr><th>人生段階</th><th>星</th><th>エネルギー値</th></tr></thead><tbody id="sanmei-subordinate-stars"></tbody></table></div><p class="health-note">算命学の結果は、性格や未来を確定する診断ではありません。実際の経験や現在の環境と照らして、自己理解の参考としてご利用ください。</p></section><p><a href="/guides/sanmeigaku-stars">結果の星を読む：十大主星・十二大従星の一覧</a></p><h2>算命学の無料計算でわかること</h2><ul><li>自分の中心となる十大主星</li><li>家庭・仕事・目上・目下の各位置に出る星</li><li>初年期・中年期・晩年期の十二大従星</li><li>日柱から求める天中殺</li></ul><h2>十大主星の出し方</h2><p>十大主星は、日干（生まれた日の干支の上の文字）を基準に求めます。年・月の十干や、年・月・日の十二支に含まれる蔵干との関係を使います。蔵干とは、十二支の内側にあるとされる十干です。</p><p>Fate Labでは、節入り（暦の月の切り替わり）からの日数で蔵干を選びます。そのため、同じ月の生まれでも、中心星などが変わることがあります。結果では中央の中心星を読み、次に東・西・北・南の星を確認します。</p><h2>十二大従星を無料で調べる</h2><p>十二大従星は、日干と生まれた年・月・日の十二支から求めます。年の十二支から初年期、月から中年期、日から晩年期の星を算出します。結果欄の人生段階と星名を合わせて読んでください。</p><h2>天中殺の調べ方</h2><p>天中殺は、生まれた日の干支が、60種類を10個ずつに分けたどの組に属するかで求めます。結果欄に表示される天中殺の名称を確認してください。ここでは天中殺の種類を示し、その年の出来事を断定するものではありません。</p>${sanmeigakuCalculationExample}<p><a href="/guides/sanmeigaku-stars#sanmei-example">同じ計算例を星一覧ガイドで読む</a></p><h2>人体星図の見方</h2><p>同じ貫索星でも、中央にあれば本人の核として、西にあれば家庭や配偶者との関係で表れやすい傾向として読みます。星そのものの意味と、置かれた場所の意味を重ねるのが人体星図の基本です。</p><p>四柱推命との共通点と違いは、<a href="/guides/sanmeigaku-shichu-suimei-relationship">算命学と四柱推命の関係</a>で詳しく解説しています。</p><script>(()=>{const form=document.getElementById('sanmei-tool'),summary=document.getElementById('sanmei-result'),detail=document.getElementById('sanmei-detail'),body=document.getElementById('sanmei-body-chart'),sub=document.getElementById('sanmei-subordinate-stars');const positionMeaning={north:'目上・思考・学び方',west:'家庭・配偶者・身近な関係',center:'本人の核・基本姿勢',east:'仕事・社会・行動',south:'目下・子ども・未来'},energyByStar={天馳星:1,天極星:2,天報星:3,天胡星:4,天庫星:5,天印星:6,天恍星:7,天堂星:8,天貴星:9,天南星:10,天禄星:11,天将星:12};const addRow=(target,values)=>{const tr=document.createElement('tr');values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td)});target.appendChild(tr)};form.addEventListener('submit',async e=>{e.preventDefault();const birthDate=document.getElementById('sanmei-date').value,gender=document.getElementById('sanmei-gender').value;if(!birthDate)return;summary.textContent='計算中…';detail.hidden=true;try{const response=await fetch('/api/calc/shichu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({birthDate,gender})});if(!response.ok)throw new Error();const data=await response.json(),chart=data.sanmeiChart;summary.replaceChildren();const heading=document.createElement('strong');heading.textContent='中心星 '+data.sanmeiStar+' ／ '+data.chusatsu;const note=document.createElement('span');note.textContent='人体星図と十二大従星を下に表示しました。';summary.append(heading,note);body.replaceChildren();['north','west','center','east','south'].forEach(key=>{const item=chart.bodyChart[key];addRow(body,[item.label,item.star,positionMeaning[key]])});sub.replaceChildren();['early','middle','late'].forEach(key=>{const item=chart.subordinateStars[key];addRow(sub,[item.label,item.star,energyByStar[item.star]])});detail.hidden=false;if(typeof gtag==='function')gtag('event','seo_tool_complete',{tool_name:'sanmeigaku_calculator',result:data.sanmeiStar})}catch{summary.textContent='計算できませんでした。時間をおいて再度お試しください。'}})})()</script><style>.tool select{font:inherit;padding:12px;border:1px solid #b8aa8b;border-radius:10px;background:#fff}#sanmei-detail[hidden]{display:none}</style>`
   },
   {
     path: 'tools/shichu-suimei-calculator',
@@ -1144,9 +1145,18 @@ const siteNameSchema = {
   alternateName: ['FateLab', 'フェイトラボ'],
   url: `${SITE_URL}/`
 };
-// Keep the top-page footer links readable in the initial HTML without JavaScript.
-const homepageFooter = `<div class="fl-root">
+// Readable initial copy uses existing UI classes; React replaces the root on mount.
+const homepageContent = `<div class="fl-root">
   <div class="fl-sheet relative mx-auto min-h-screen max-w-app bg-fl-canvas sm:border-x sm:border-fl-line sm:shadow-[0_0_48px_rgba(20,22,20,0.05)]">
+    <main>
+      <section class="fl-landing-section flex flex-col gap-4 px-6 pb-12">
+        <h1 class="m-0 text-[28px] font-medium leading-[1.6]">${escapeHtml(homepageCopy.heading)}</h1>
+        <h2 class="m-0 text-xl font-medium leading-relaxed">Fate Labでわかること</h2>
+        <p class="m-0 text-sm leading-[1.85] text-fl-body">${escapeHtml(homepageCopy.introduction)}</p>
+        <h2 class="m-0 text-xl font-medium leading-relaxed">よくある質問</h2>
+        ${homepageCopy.faqs.map(faq => `<h3 class="m-0 text-base font-medium">${escapeHtml(faq.question)}</h3><p class="m-0 text-sm leading-[1.85] text-fl-body">${escapeHtml(faq.answer)}</p>`).join('')}
+      </section>
+    </main>
     <footer class="mt-12 flex flex-col gap-3 border-t border-fl-line px-6 pb-10 pt-6">
       <span class="text-[12px] font-medium tracking-[0.3em] text-fl-ink">FATE LAB</span>
       <nav aria-label="サイトの情報" class="grid grid-cols-2 gap-x-4 text-xs">
@@ -1160,10 +1170,15 @@ const homepageFooter = `<div class="fl-root">
     </footer>
   </div>
 </div>`;
-const homepage = appTemplate.replace(
-  '</head>',
-  `  <script type="application/ld+json">${JSON.stringify(siteNameSchema)}</script>\n  </head>`
-).replace('<div id="root"></div>', `<div id="root"><noscript>${homepageFooter}</noscript></div>`);
+const homepage = appTemplate
+  .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(homepageCopy.title)}｜${SITE_NAME}</title>`)
+  .replace(/(<meta name="description" content=")[^"]*/, `$1${escapeHtml(homepageCopy.description)}`)
+  .replace(/(<meta property="og:title" content=")[^"]*/, `$1${escapeHtml(homepageCopy.title)}｜${SITE_NAME}`)
+  .replace(/(<meta property="og:description" content=")[^"]*/, `$1${escapeHtml(homepageCopy.description)}`)
+  .replace(
+    '</head>',
+    `  <script type="application/ld+json">${JSON.stringify(siteNameSchema)}</script>\n  </head>`
+  ).replace('<div id="root"></div>', `<div id="root">${homepageContent}</div>`);
 fs.writeFileSync(indexPath, homepage);
 
 fs.writeFileSync(path.join(distDir, 'app.html'), appTemplate.replace(/(<meta name="robots" content=")[^"]*/, `$1${privateRobots}`));
@@ -1235,6 +1250,10 @@ for (const page of trackedPages) {
   fs.writeFileSync(file, applyLastmod(html, entry.lastmod));
 }
 saveLastmod(ledgerFile, lastmod);
+// /lp and /lp.html retain their permanent redirects. The legacy file is readable
+// without JS too, but remains noindex with / as its canonical URL.
+fs.writeFileSync(lpPath, fs.readFileSync(indexPath, 'utf8')
+  .replace(/(<meta name="robots" content=")[^"]*/, '$1noindex,follow'));
 const sitemapPaths = ['', 'guides/', 'tools/', ...guides.map(page => page.path), ...tools.map(page => page.path), ...infoPages.map(page => page.path), 'privacy', 'terms', 'coupons', 'couple'];
 writeSitemaps(distDir, SITE_URL, [...new Set(sitemapPaths)].map(route => {
   const html = fs.readFileSync(path.join(distDir, route, 'index.html'), 'utf8');
