@@ -3,7 +3,8 @@
 // 出力: frontend/article-data/series-examples.json（build-script.js が読み込む）
 import fs from 'fs'
 import path from 'path'
-import { calcShichuResult } from '../../../backend/src/lib/divination/index.ts'
+import { pathToFileURL } from 'node:url'
+import { calcShichuResult, calcTenGod } from '../../../backend/src/lib/divination/index.ts'
 
 type Pillar = { label: string; kanshi: string; stemTenGod: string; twelveStage: string; hiddenStems: { stem: string; tenGod: string }[] }
 const STAGES = ['長生', '沐浴', '冠帯', '建禄', '帝旺', '衰', '病', '死', '墓', '絶', '胎', '養']
@@ -17,26 +18,44 @@ const toExample = (y: number, m: number, d: number) => {
     pillars: (r.fourPillars as Pillar[]).map(p => ({ label: p.label, kanshi: p.kanshi, tenGod: p.stemTenGod, stage: p.twelveStage, hidden: p.hiddenStems.map(h => `${h.stem}（${h.tenGod}）`).join('・') })),
   }
 }
-const stage: Record<string, unknown> = {}
-const god: Record<string, unknown> = {}
-const stem: Record<string, unknown> = {}
 // 記事ごとに探し始める年をずらし、条件に合う最初の日を実例にする（同じ年の例ばかりにならないようにする）。
-const findDate = (startYear: number, startMonth: number, test: (pillars: Pillar[]) => boolean) => {
-  for (let offset = 0; offset < 4000; offset++) {
-    const date = new Date(Date.UTC(startYear, startMonth - 1, 1 + offset))
+const findDate = (startYear: number, startMonth: number, used: Set<string>, test: (pillars: Pillar[]) => boolean, startDay = 1) => {
+  const first = Date.UTC(1980, 0, 1), end = Date.UTC(2006, 0, 1), days = (end - first) / 86400000
+  const start = (Date.UTC(startYear, startMonth - 1, startDay) - first) / 86400000
+  for (let offset = 0; offset < days; offset++) {
+    const date = new Date(first + ((start + offset) % days) * 86400000)
     const [y, m, d] = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()]
+    if (used.has(date.toISOString().slice(0, 10))) continue
     // 節入りの前後1日は月柱が時刻で変わりうるため、実例に使わない。
     const monthOf = (shift: number) => { const t = new Date(Date.UTC(y, m - 1, d + shift)); return (calcShichuResult(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()).fourPillars as Pillar[])[1].kanshi }
     const pillars = calcShichuResult(y, m, d).fourPillars as Pillar[]
     if (monthOf(-1) !== pillars[1].kanshi || monthOf(1) !== pillars[1].kanshi) continue
-    if (test(pillars)) return toExample(y, m, d)
+    if (test(pillars)) {
+      const example = toExample(y, m, d)
+      used.add(example.date)
+      return example
+    }
   }
   throw new Error('実例が見つかりません')
 }
-STAGES.forEach((name, i) => { stage[name] = findDate(1984 + i * 3, 1 + (i * 5) % 12, ([, , day]) => day.twelveStage === name) })
-GODS.forEach((name, i) => { god[name] = findDate(1986 + i * 3, 1 + (i * 7) % 12, ([, month]) => month.stemTenGod === name) })
-// 日干の実例は、季節の読み方を示すため春（月支が寅・卯・辰）の生まれから選ぶ。
-STEMS.forEach((name, i) => { stem[name] = findDate(1985 + i * 3, 3, ([, month, day]) => day.kanshi[0] === name && ['寅', '卯', '辰'].includes(month.kanshi[1])) })
-const out = { note: 'scripts/article-data/series-examples.ts で生成。手で編集しない。', stage, god, stem }
-fs.writeFileSync(path.join(import.meta.dirname, '..', '..', 'article-data', 'series-examples.json'), `${JSON.stringify(out, null, 2)}\n`)
-console.log('十二運', Object.keys(stage).length, '通変星', Object.keys(god).length, '日干', Object.keys(stem).length)
+export function buildSeriesExamples() {
+  const used = new Set<string>()
+  const stage: Record<string, ReturnType<typeof toExample>> = {}, god: typeof stage = {}, stem: typeof stage = {}
+  STAGES.forEach((name, i) => {
+    // Preserve the independently verified example in the existing 長生 article.
+    stage[name] = name === '長生'
+      ? findDate(1990, 5, used, ([, , day]) => day.twelveStage === name, 7)
+      : findDate(1980 + (4 + i * 3) % 26, 1 + (i * 5) % 12, used, ([, , day]) => day.twelveStage === name)
+  })
+  GODS.forEach((name, i) => { god[name] = findDate(1980 + (6 + i * 3) % 26, 1 + (i * 7) % 12, used, ([, month]) => month.stemTenGod === name) })
+  // 日干の実例は、季節の読み方を示すため春（月支が寅・卯・辰）から選ぶ。
+  STEMS.forEach((name, i) => { stem[name] = findDate(1980 + (5 + i * 3) % 26, 3, used, ([, month, day]) => day.kanshi[0] === name && ['寅', '卯', '辰'].includes(month.kanshi[1])) })
+  const relations = Object.fromEntries(STEMS.map((name, d) => [name, Object.fromEntries(STEMS.map((other, t) => [other, { tenGod: calcTenGod(d, t), reverseTenGod: calcTenGod(t, d) }]))]))
+  return { note: 'scripts/article-data/series-examples.ts で生成。手で編集しない。', range: { from: 1980, to: 2005 }, stage, god, stem, relations }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const out = buildSeriesExamples()
+  fs.writeFileSync(path.join(import.meta.dirname, '..', '..', 'article-data', 'series-examples.json'), `${JSON.stringify(out, null, 2)}\n`)
+  console.log('十二運', Object.keys(out.stage).length, '通変星', Object.keys(out.god).length, '日干', Object.keys(out.stem).length, '関係', 100)
+}
