@@ -1261,7 +1261,7 @@ for (const guide of guides.map(expandedGuide)) writePage(guide.path, staticHtml(
 fs.copyFileSync(new URL('./src/web/data/guideBirthDateDraft.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate-draft.js'));
 fs.copyFileSync(new URL('./scripts/guide-birthdate.js', import.meta.url), path.join(distDir, 'assets', 'fl-guide-birthdate.js'));
 fs.copyFileSync(new URL('./scripts/public-birthdate.js', import.meta.url), path.join(distDir, 'assets', 'fl-public-birthdate.js'));
-for (const script of ['guideReadingMeasurement.js', 'measurementRules.js']) {
+for (const script of ['guideReadingMeasurement.js', 'measurementRules.js', 'readingFocus.js']) {
   fs.copyFileSync(new URL(`./src/web/data/${script}`, import.meta.url), path.join(distDir, 'assets', script));
 }
 fs.writeFileSync(path.join(distDir, 'assets', 'fl-entry-attribution.js'), `import { isMeasurementTest, rememberGuideEntry } from './measurementRules.js';

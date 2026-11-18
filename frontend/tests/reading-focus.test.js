@@ -103,3 +103,10 @@ test('GA4 receives focus attribution but no birth data, relationship year or res
     }
   }
 })
+
+test('static guide measurement loads its published modules without the SPA bundle', async () => {
+  const { sanitizeLandingPath } = await import(new URL('assets/measurementRules.js', dist))
+  assert.equal(sanitizeLandingPath('/uranai/konki'), '/uranai/konki')
+  const { startGuideReading } = await import(new URL('assets/guideReadingMeasurement.js', dist))
+  assert.equal(typeof startGuideReading, 'function')
+})
