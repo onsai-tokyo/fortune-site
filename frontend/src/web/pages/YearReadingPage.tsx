@@ -27,7 +27,7 @@ export function YearReadingPage() {
         <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">年ごとの流れ{reading.label ? ` ・ ${reading.label}` : ''}</span>
         <h1 className="m-0 text-[24px] font-medium leading-[1.55]">{reading.title}</h1>
         <div className="flex flex-wrap gap-2">
-          {reading.tags.map(tag => <span key={tag} className="rounded-full bg-fl-surface px-3 py-1.5 text-xs text-fl-body">#{tag}</span>)}
+          {reading.tags.map(tag => <span key={tag} className="rounded-full bg-fl-surface px-3 py-1.5 text-xs text-fl-body">#{tag.replace(/^#+/, '')}</span>)}
         </div>
       </section>
 
