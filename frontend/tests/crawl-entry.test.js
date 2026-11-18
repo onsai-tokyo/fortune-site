@@ -48,11 +48,11 @@ test('the guide index groups every guide once and starts each theme with its int
   const sections = [...html('/guides/').matchAll(/<h2>([^<]+)<\/h2><ul class="guide-list">([\s\S]*?)<\/ul>/g)]
   assert.deepEqual(sections.map(([, heading]) => heading), [
     '四柱推命の基本', '日干10種類', '通変星10種類', '十二運12種類', '算命学', '相性',
-    '恋愛の悩み（復縁・片思い・相手の気持ち）', '婚期・時期', 'そのほか',
+    '恋愛の悩み（復縁・片思い・相手の気持ち）', '婚期・時期', '2027年の運勢', 'そのほか',
   ])
   assert.deepEqual(sections.map(([, , body]) => links(body, '/guides/')[0]), [
     '/guides/shichu-suimei', '/guides/day-master', '/guides/ten-god', '/guides/twelve-stage',
-    '/guides/sanmeigaku', '/guides/compatibility', '/guides/partner-feelings', '/guides/marriage-timing', '/guides/birthdate-fortune',
+    '/guides/sanmeigaku', '/guides/compatibility', '/guides/partner-feelings', '/guides/marriage-timing', '/guides/2027-fortune', '/guides/birthdate-fortune',
   ])
   const cards = sections.flatMap(([, , body]) => links(body, '/guides/'))
   const guideRoutes = routes.filter(route => route.startsWith('/guides/') && route !== '/guides/').map(normalize)

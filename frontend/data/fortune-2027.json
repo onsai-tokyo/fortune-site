@@ -1,0 +1,687 @@
+{
+  "year": 2027,
+  "timeZone": "Asia/Tokyo",
+  "yearPillar": "丁未",
+  "startAt": "2027-02-04T10:46:18+09:00",
+  "endAt": "2028-02-04T16:31:13+09:00",
+  "months": [
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 2,
+      "term": "立春",
+      "startAt": "2027-02-04T10:46:18+09:00",
+      "endAt": "2027-03-06T04:39:33+09:00",
+      "pillar": "壬寅"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 3,
+      "term": "啓蟄",
+      "startAt": "2027-03-06T04:39:33+09:00",
+      "endAt": "2027-04-05T09:17:31+09:00",
+      "pillar": "癸卯"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 4,
+      "term": "清明",
+      "startAt": "2027-04-05T09:17:31+09:00",
+      "endAt": "2027-05-06T02:25:12+09:00",
+      "pillar": "甲辰"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 5,
+      "term": "立夏",
+      "startAt": "2027-05-06T02:25:12+09:00",
+      "endAt": "2027-06-06T06:25:48+09:00",
+      "pillar": "乙巳"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 6,
+      "term": "芒種",
+      "startAt": "2027-06-06T06:25:48+09:00",
+      "endAt": "2027-07-07T16:37:03+09:00",
+      "pillar": "丙午"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 7,
+      "term": "小暑",
+      "startAt": "2027-07-07T16:37:03+09:00",
+      "endAt": "2027-08-08T02:26:46+09:00",
+      "pillar": "丁未"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 8,
+      "term": "立秋",
+      "startAt": "2027-08-08T02:26:46+09:00",
+      "endAt": "2027-09-08T05:28:28+09:00",
+      "pillar": "戊申"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 9,
+      "term": "白露",
+      "startAt": "2027-09-08T05:28:28+09:00",
+      "endAt": "2027-10-08T21:17:06+09:00",
+      "pillar": "己酉"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 10,
+      "term": "寒露",
+      "startAt": "2027-10-08T21:17:06+09:00",
+      "endAt": "2027-11-08T00:38:35+09:00",
+      "pillar": "庚戌"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 11,
+      "term": "立冬",
+      "startAt": "2027-11-08T00:38:35+09:00",
+      "endAt": "2027-12-07T17:37:41+09:00",
+      "pillar": "辛亥"
+    },
+    {
+      "calendarYear": 2027,
+      "calendarMonth": 12,
+      "term": "大雪",
+      "startAt": "2027-12-07T17:37:41+09:00",
+      "endAt": "2028-01-06T04:54:39+09:00",
+      "pillar": "壬子"
+    },
+    {
+      "calendarYear": 2028,
+      "calendarMonth": 1,
+      "term": "小寒",
+      "startAt": "2028-01-06T04:54:39+09:00",
+      "endAt": "2028-02-04T16:31:13+09:00",
+      "pillar": "癸丑"
+    }
+  ],
+  "stems": [
+    {
+      "stem": "甲",
+      "slug": "kinoe",
+      "annual": {
+        "tenGod": "傷官",
+        "twelveStage": "墓"
+      },
+      "months": [
+        {
+          "tenGod": "偏印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "冠帯"
+        }
+      ]
+    },
+    {
+      "stem": "乙",
+      "slug": "kinoto",
+      "annual": {
+        "tenGod": "食神",
+        "twelveStage": "養"
+      },
+      "months": [
+        {
+          "tenGod": "正印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "衰"
+        }
+      ]
+    },
+    {
+      "stem": "丙",
+      "slug": "hinoe",
+      "annual": {
+        "tenGod": "劫財",
+        "twelveStage": "衰"
+      },
+      "months": [
+        {
+          "tenGod": "偏官",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "養"
+        }
+      ]
+    },
+    {
+      "stem": "丁",
+      "slug": "hinoto",
+      "annual": {
+        "tenGod": "比肩",
+        "twelveStage": "冠帯"
+      },
+      "months": [
+        {
+          "tenGod": "正官",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "墓"
+        }
+      ]
+    },
+    {
+      "stem": "戊",
+      "slug": "tsuchinoe",
+      "annual": {
+        "tenGod": "正印",
+        "twelveStage": "衰"
+      },
+      "months": [
+        {
+          "tenGod": "偏財",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "養"
+        }
+      ]
+    },
+    {
+      "stem": "己",
+      "slug": "tsuchinoto",
+      "annual": {
+        "tenGod": "偏印",
+        "twelveStage": "冠帯"
+      },
+      "months": [
+        {
+          "tenGod": "正財",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "墓"
+        }
+      ]
+    },
+    {
+      "stem": "庚",
+      "slug": "kanoe",
+      "annual": {
+        "tenGod": "正官",
+        "twelveStage": "冠帯"
+      },
+      "months": [
+        {
+          "tenGod": "食神",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "墓"
+        }
+      ]
+    },
+    {
+      "stem": "辛",
+      "slug": "kanoto",
+      "annual": {
+        "tenGod": "偏官",
+        "twelveStage": "衰"
+      },
+      "months": [
+        {
+          "tenGod": "傷官",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "養"
+        }
+      ]
+    },
+    {
+      "stem": "壬",
+      "slug": "mizunoe",
+      "annual": {
+        "tenGod": "正財",
+        "twelveStage": "養"
+      },
+      "months": [
+        {
+          "tenGod": "比肩",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "冠帯"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "衰"
+        }
+      ]
+    },
+    {
+      "stem": "癸",
+      "slug": "mizunoto",
+      "annual": {
+        "tenGod": "偏財",
+        "twelveStage": "墓"
+      },
+      "months": [
+        {
+          "tenGod": "劫財",
+          "twelveStage": "沐浴"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "長生"
+        },
+        {
+          "tenGod": "傷官",
+          "twelveStage": "養"
+        },
+        {
+          "tenGod": "食神",
+          "twelveStage": "胎"
+        },
+        {
+          "tenGod": "正財",
+          "twelveStage": "絶"
+        },
+        {
+          "tenGod": "偏財",
+          "twelveStage": "墓"
+        },
+        {
+          "tenGod": "正官",
+          "twelveStage": "死"
+        },
+        {
+          "tenGod": "偏官",
+          "twelveStage": "病"
+        },
+        {
+          "tenGod": "正印",
+          "twelveStage": "衰"
+        },
+        {
+          "tenGod": "偏印",
+          "twelveStage": "帝旺"
+        },
+        {
+          "tenGod": "劫財",
+          "twelveStage": "建禄"
+        },
+        {
+          "tenGod": "比肩",
+          "twelveStage": "冠帯"
+        }
+      ]
+    }
+  ]
+}
