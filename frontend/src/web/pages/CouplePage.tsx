@@ -17,7 +17,7 @@ import { readingFocusPages, readingFocusLandingHtml, type CoupleFocus } from '..
 import { focusChapters, focusCoupleYears } from '../data/focusResults'
 
 function PartnerChapterList({ chapters }: { chapters: Chapter[] }) {
-  return <>{chapters.map((c, i) => <details key={c.id} className="border-b border-fl-line py-5"><summary className="cursor-pointer text-base leading-relaxed"><span className="mr-3 text-xs text-fl-moss">{String(i + 1).padStart(2, '0')}</span>{c.sub || c.title}</summary><h2 className="my-4 text-lg font-medium leading-relaxed">{c.title}</h2>{c.sections?.map(s => <p key={s.heading} className="text-sm leading-loose">{s.body}</p>)}</details>)}</>
+  return <>{chapters.map((c, i) => <details key={c.id} className="border-b border-fl-line py-3"><summary className="min-h-[44px] cursor-pointer py-2 text-base leading-relaxed"><span className="mr-3 text-xs text-fl-moss">{String(i + 1).padStart(2, '0')}</span>{c.sub || c.title}</summary><h2 className="my-4 text-lg font-medium leading-relaxed">{c.title}</h2>{c.sections?.map(s => <p key={s.heading} className="text-sm leading-loose">{s.body}</p>)}</details>)}</>
 }
 
 function PartnerAbout({ partner, standalone }: { partner: Partner; standalone?: Chapter[] }) {
@@ -40,7 +40,7 @@ function PartnerAbout({ partner, standalone }: { partner: Partner; standalone?: 
     return () => { active = false }
   }, [selfSourceId, partner.id, attempt, session, standalone])
   return <Page><SiteHeader current="couple" /><section className="fl-page-title px-6 py-8">
-    <Link to={`/couple/${partner.id}`} className="text-sm text-fl-moss">‹ ふたりの年表へ</Link>
+    <Link to={`/couple/${partner.id}`} className="inline-flex min-h-[44px] items-center text-sm text-fl-moss">‹ ふたりの年表へ</Link>
     <h1 className="my-5 text-2xl">{partner.name}について</h1>
     <p className="text-sm text-fl-muted">{partner.birthDate.replace(/-/g, '/')}生まれ{partner.birthTime ? ` · ${partner.birthTime}` : ''}</p>
     {status === 'loading' && <p role="status">相手の鑑定を読み込んでいます…</p>}

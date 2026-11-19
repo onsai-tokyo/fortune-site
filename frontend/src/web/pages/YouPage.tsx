@@ -84,7 +84,7 @@ export function YouPage({ reading, onSelectYear, onReadAgain }: { reading?: Pers
             <Link to={yearHref(current.year)} onClick={e => openYear(e,current.year)}>{current.label === '今年' && '今年 · '}{current.year}年</Link>
             {futureYears.filter(y => y.year !== current.year).slice(0, 3).map(y => <Link key={y.year} to={yearHref(y.year)} onClick={e => openYear(e,y.year)}>{y.year === new Date().getFullYear() + 1 ? '来年 · ' : ''}{y.year}年 <IconChevron size={12} /></Link>)}
           </nav>
-          {!futureYears.length && <p className="mx-6 mb-4 text-xs leading-relaxed text-fl-muted">来年以降の鑑定は現在取得できていません。<button type="button" onClick={() => void reloadReadings()} className="ml-1 underline">再読み込み</button></p>}
+          {!futureYears.length && <p className="mx-6 mb-4 text-xs leading-relaxed text-fl-muted">来年以降の鑑定は現在取得できていません。<button type="button" onClick={() => void reloadReadings()} className="ml-1 inline-flex min-h-[44px] items-center px-2 underline">再読み込み</button></p>}
           <div ref={stripRef} className="fl-year-strip relative flex gap-2.5 overflow-x-auto px-5 pb-2">
             {yearList.map(y => {
               const on = y.year === current.year

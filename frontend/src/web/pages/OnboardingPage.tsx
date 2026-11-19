@@ -40,6 +40,10 @@ export function OnboardingPage() {
   const [gender, setGender] = useState<Gender | null>(guideDraft?.gender ?? profile?.gender ?? null)
   const [saving, setSaving] = useState(autoStart)
   const [saveError, setSaveError] = useState(false)
+  const errorRef = useRef<HTMLParagraphElement>(null)
+  useEffect(() => {
+    if (saveError && !saving) errorRef.current?.focus()
+  }, [saveError, saving])
   const [progress, setProgress] = useState(0)
   const startedFromGuide = useRef(false)
   const inFlight = useRef(false)
@@ -124,7 +128,7 @@ export function OnboardingPage() {
               <Link to="/terms" className="underline">利用規約</Link>と<Link to="/privacy" className="underline">プライバシーポリシー</Link>に同意のうえお進みください。15歳以上の方がご利用いただけます。18歳未満の方は、保護者などの法定代理人の同意を得たうえでご利用ください。
             </p>
           )}
-          {saveError && <p role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">読みものを作成できませんでした。入力は残っています。時間をおいて、もう一度お試しください。</p>}
+          {saveError && <p ref={errorRef} tabIndex={-1} role="alert" className="m-0 text-sm leading-[1.8] text-fl-body">読みものを作成できませんでした。入力は残っています。時間をおいて、もう一度お試しください。</p>}
           <Button type="submit" size="lg" disabled={!valid || saving}>{saving ? '読みものをつくっています…' : editing ? '保存する' : '同意して、無料で読む'}</Button>
           {!editing && <span className="text-center text-xs leading-[1.7] text-fl-muted">登録・ログインは不要です。</span>}
         </div>
