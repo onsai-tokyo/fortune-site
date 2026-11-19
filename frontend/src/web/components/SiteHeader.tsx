@@ -9,6 +9,7 @@ export type NavKey = 'you' | 'couple' | 'compose' | 'books' | 'coupons' | 'none'
 const items: { key: NavKey; label: string; sub: string; to: string }[] = [
   { key: 'you', label: 'あなたについて', sub: '性格の章と、年ごとの流れ', to: '/you' },
   { key: 'couple', label: '相性鑑定', sub: '相手との年表', to: '/couple' },
+  { key: 'books', label: '保存した鑑定', sub: 'あとから読み返す', to: '/books/saved' },
 ]
 
 export function SiteHeader({ current }: { current: NavKey }) {

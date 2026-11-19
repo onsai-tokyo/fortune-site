@@ -1027,6 +1027,7 @@ const contentHeader = `<header class="content-header">
       <nav class="content-menu-panel" aria-label="メニュー">
         <a class="content-menu-main" href="/you">あなたについて<small>性格の章と、年ごとの流れ</small></a>
         <a class="content-menu-main" href="/couple">相性鑑定<small>相手との年表</small></a>
+        <a class="content-menu-main" href="/books/saved">保存した鑑定<small>あとから読み返す</small></a>
         <div class="content-menu-banner fl-coconala-banner">${coconalaBannerContent}</div>
         <div class="content-menu-secondary"><a href="/coupons">占いクーポン・初回特典</a><a href="/settings">設定</a><a href="/support">お問い合わせ</a></div>
       </nav>
