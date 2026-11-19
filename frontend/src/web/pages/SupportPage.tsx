@@ -17,10 +17,7 @@ export function SupportPage() {
         <h2 className="m-0 text-lg font-medium">{question.title}</h2>
         {question.paragraphs.map((text, index) => <p key={index} className="m-0">{text}</p>)}
         {question.id === 'previous-account' && (
-          <>
-          <Link to="/books/saved" className="flex min-h-[44px] items-center text-fl-slate underline">このブラウザーに保存済みの鑑定を確認する</Link>
           <Link to="/restore" className="inline-flex min-h-[44px] items-center text-fl-slate underline">以前のWebアカウントでログイン</Link>
-          </>
         )}
       </section>)}
     </article>
