@@ -2,7 +2,7 @@ import { BirthTimeFields } from '../components/BirthTimeFields'
 import { MeetingYearSelect } from '../components/MeetingYearSelect'
 import { BirthDateFields } from '../components/BirthDateFields'
 import { validBirthDate } from '../data/birthDate'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BackHeader, Button, Chip, Field, Note, Page } from '../components/ui'
 import { prefectures, relationGroup, relationOptions } from '../data/mock'
@@ -26,30 +26,34 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [relation, setRelation] = useState<Relation | ''>('')
-  const [birthDate, setBirthDate] = useState('1990-01-01')
+  const [birthDate, setBirthDate] = useState('')
   const [birthTime, setBirthTime] = useState('')
-  const [birthPlace, setBirthPlace] = useState('東京都')
-  const [gender, setGender] = useState<Gender>('female')
+  const [birthPlace, setBirthPlace] = useState('')
+  const [gender, setGender] = useState<Gender | null>(null)
   const [metYear, setMetYear] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const errorRef = useRef<HTMLParagraphElement>(null)
+  useEffect(() => {
+    if (error && !saving) errorRef.current?.focus()
+  }, [error, saving])
   useEffect(() => {
     if (partnerReplacementId) setReplacementId(partnerReplacementId)
   }, [partnerReplacementId])
   useEffect(() => {
     setName(partnerDraft?.name ?? ''); setRelation(partnerDraft?.relation ?? '')
-    setBirthDate(partnerDraft?.birthDate ?? '1990-01-01'); setBirthTime(partnerDraft?.birthTime ?? '')
-    setBirthPlace(partnerDraft?.birthPlace ?? '東京都'); setGender(partnerDraft?.gender ?? 'female')
+    setBirthDate(partnerDraft?.birthDate ?? ''); setBirthTime(partnerDraft?.birthTime ?? '')
+    setBirthPlace(partnerDraft?.birthPlace ?? ''); setGender(partnerDraft?.gender ?? null)
     setMetYear(partnerDraft?.metYear == null ? '' : String(partnerDraft.metYear)); setError(null)
   }, [partnerDraft])
   const thisYear = new Date().getFullYear()
   // iOSと同じ：出会った年は「ふたりが生まれた年以降」から今年まで
   const minMetYear = Math.max(Number(birthDate.slice(0, 4)) || 1900, Number(profile?.birthDate.slice(0, 4)) || 0)
-  const valid = name.trim().length > 0 && validBirthDate(birthDate) && relation !== '' && metYear.trim() !== ''
+  const valid = name.trim().length > 0 && validBirthDate(birthDate) && gender !== null && relation !== '' && metYear.trim() !== '' && (guest || birthPlace !== '')
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!valid || !relation || saving || missingTarget || (!partnerDraft && multiple && (!current || noCapacity))) return
+    if (!valid || !gender || !relation || saving || missingTarget || (!partnerDraft && multiple && (!current || noCapacity))) return
     const raw = metYear.trim()
     if (!/^[0-9]{4}$/.test(raw) || Number(raw) < minMetYear || Number(raw) > thisYear) {
       setError('出会った年は、ふたりが生まれた年以降から今年までの西暦4桁で入力してください。')
@@ -85,10 +89,10 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
           finally { setSaving(false) }
         }}>未完了の登録を取り消して入力し直す</Button>}
         {partnerDraft && <p className="text-xs text-fl-muted">登録済みの相手を削除する操作ではありません。前の相手が削除済みの場合は、取り消しても元には戻りません。</p>}
-        {current && <Note>{!multiple && '登録できる相手は1人です。'}登録すると、{multiple ? '選んだ相手' : 'いまの相手'}（{current.name}）の年表と入れ替わります。{multiple && '他の相手は削除しません。'}{current.name}について作ったブックは引き続き閲覧できます。入れ替えは何度でも無料です。</Note>}
+        {current && <Note>{!multiple && '登録できる相手は1人です。'}登録すると、{multiple ? '選んだ相手' : 'いまの相手'}（{current.name}）の年表と入れ替わります。{multiple && '他の相手は削除しません。'}入れ替えは何度でも無料です。</Note>}
       </section>
 
-      <form onSubmit={submit} noValidate aria-busy={saving} className="flex flex-col gap-[22px] px-6 pt-5">
+      <form onSubmit={submit} aria-busy={saving} className="flex flex-col gap-[22px] px-6 pt-5">
         <fieldset disabled={saving} className="contents">
         <Field id="pname" label="表示名" required maxLength={20} value={name} onChange={e => setName(e.target.value)} placeholder="呼び名" hint="読みものの中でこの名前を使います。本名でなくてかまいません。" />
         <MeetingYearSelect id="pmet" value={metYear} onChange={value => { setMetYear(value); setError(null) }} />
@@ -107,9 +111,9 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
           <BirthDateFields id="pbirth" value={birthDate} onChange={value => { setBirthDate(value); setError(null) }} disabled={saving} />
           <BirthTimeFields id="ptime" value={birthTime} onChange={setBirthTime} />
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="pplace" className="text-[13px] font-medium text-fl-body">出生地</label>
-            <select id="pplace" value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base">
-              {prefectures.map(p => <option key={p}>{p}</option>)}
+            <label htmlFor="pplace" className="text-[13px] font-medium text-fl-body">出生地（{guest ? '任意' : '必須'}）</label>
+            <select id="pplace" required={!guest} value={birthPlace} onChange={e => setBirthPlace(e.target.value)} className="min-h-[52px] w-full rounded-field border border-fl-line bg-white px-4 text-base">
+              <option value="">{guest ? '未選択・分からない' : '選択してください'}</option>{prefectures.map(p => <option key={p}>{p}</option>)}
             </select>
           </div>
           <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
@@ -122,7 +126,7 @@ export function PartnerNewPage({ embedded = false }: { embedded?: boolean }) {
           </fieldset>
         </div>
 
-        {error && <p role="alert" className="m-0 text-[13px] leading-[1.7] text-fl-danger">{error}</p>}
+        {error && <p ref={errorRef} tabIndex={-1} role="alert" className="m-0 text-[13px] leading-[1.7] text-fl-danger">{error}</p>}
         {!guest && <Note>登録した相手は、いつでも削除できます。</Note>}
 
         <div className="flex flex-col gap-2.5 pb-12 pt-2">
