@@ -1,4 +1,5 @@
-import { attributionLifetime, isMeasurementTest, measurementClientIdPattern } from './measurementRules.js'
+import { measurementSession, sendMeasurement } from './browserMeasurement.js'
+import { attributionLifetime, measurementClientIdPattern, productionOrigin, sanitizeLandingPath } from './measurementRules.js'
 
 export const guideReadingEvents = {
   start: 'guide_reading_start',
@@ -6,60 +7,61 @@ export const guideReadingEvents = {
   banner: 'guide_reading_coconala_click',
 }
 
-const origin = 'https://fate-lab.com'
 const journeyKey = 'fl-guide-reading-v1'
-const visitorKey = 'fl-guide-reading-visitor-v1'
+const coupleKey = 'fl-guide-couple-v1'
 
 export function guideReadingPath(path) {
-  if (typeof path !== 'string' || path.length > 100) return undefined
-  const canonical = path.replace(/\/$/, '')
-  return /^\/guides\/[a-z0-9-]+(?:\/[a-z0-9-]+)?$/.test(canonical) ? canonical : undefined
+  const safe = sanitizeLandingPath(path)
+  return safe.startsWith('/guides/') ? safe : undefined
 }
 
-function visitorId(analyticsClientId, sessionId) {
-  if (typeof analyticsClientId === 'string' && measurementClientIdPattern.test(analyticsClientId)) return analyticsClientId
-  const generated = `${crypto.getRandomValues(new Uint32Array(1))[0]}.${sessionId}`
-  try {
-    const saved = localStorage.getItem(visitorKey)
-    if (saved && measurementClientIdPattern.test(saved)) return saved
-    localStorage.setItem(visitorKey, generated)
-  } catch { /* The generated ID still links the three events in this tab. */ }
-  return generated
-}
-
-function readJourney() {
-  if (location.origin !== origin || isMeasurementTest(new URL(location.href))) return null
-  const journey = JSON.parse(sessionStorage.getItem(journeyKey) ?? 'null')
+function readJourney(key = journeyKey) {
+  if (location.origin !== productionOrigin) return null
+  const journey = JSON.parse(sessionStorage.getItem(key) ?? 'null')
   const age = Date.now() - journey?.startedAt
-  return age >= 0 && age < attributionLifetime * 1000 ? journey : null
+  if (!(age >= 0 && age < attributionLifetime * 1000) || !guideReadingPath(journey.guidePath)) return null
+  if (key === journeyKey && (!measurementClientIdPattern.test(journey.clientId) || !Number.isInteger(journey.sessionId)
+    || (journey.flow_id !== undefined && !/^[0-9a-f]{16}$/.test(journey.flow_id)))) return null
+  return journey
 }
 
-function sendGuideEvent(event, { guidePath, clientId, sessionId }) {
-  void fetch('/api/threads-event', {
-    method: 'POST',
-    mode: 'cors',
-    credentials: 'omit',
-    referrerPolicy: 'no-referrer',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event, guidePath, clientId, sessionId }),
-    keepalive: true,
-  }).catch(() => { /* A measurement failure must not interrupt the reading. */ })
+function journeyFields(journey) {
+  const { guidePath, flow_id, clientId, sessionId } = journey
+  return { guidePath, flow_id, clientId, sessionId, reading_type: 'self' }
 }
 
-export function startGuideReading(analyticsClientId) {
+export function startGuideReading() {
   try {
-    const url = new URL(location.href)
-    if (url.origin !== origin) return
-    sessionStorage.removeItem(journeyKey)
-    if (isMeasurementTest(url)) return
-    const guidePath = guideReadingPath(url.pathname)
-    if (!guidePath) return
-    const startedAt = Date.now()
-    const sessionId = Math.floor(startedAt / 1000)
-    const journey = { startedAt, guidePath, sessionId, clientId: visitorId(analyticsClientId, sessionId), stage: 'started' }
+    const session = measurementSession()
+    const guidePath = guideReadingPath(location.pathname)
+    if (!session || !guidePath) return
+    const journey = { startedAt: Date.now(), guidePath, sessionId: session.sessionId, clientId: session.clientId,
+      flow_id: crypto.randomUUID().replaceAll('-', '').slice(0, 16), stage: 'started' }
     sessionStorage.setItem(journeyKey, JSON.stringify(journey))
-    sendGuideEvent(guideReadingEvents.start, journey)
-  } catch { /* Reading still works when analytics is unavailable. */ }
+    sendMeasurement(guideReadingEvents.start, journeyFields(journey))
+  } catch { /* Ignore unavailable storage. */ }
+}
+
+export function startGuideCouple() {
+  const guidePath = guideReadingPath(location.pathname)
+  if (location.origin !== productionOrigin || !guidePath) return
+  try { sessionStorage.setItem(coupleKey, JSON.stringify({ startedAt: Date.now(), guidePath })) } catch { /* Still count the click. */ }
+  sendMeasurement('guide_to_couple', { guidePath, reading_type: 'couple' })
+}
+
+export function articleOrigin(kind) {
+  try {
+    if (!kind) {
+      const self = readJourney()
+      const couple = readJourney(coupleKey)
+      if (self && (!couple || self.startedAt >= couple.startedAt)) return journeyFields(self)
+      return couple ? { guidePath: couple.guidePath, reading_type: 'couple' } : {}
+    }
+    const journey = readJourney(kind === 'couple' ? coupleKey : journeyKey)
+    if (kind === 'couple' && journey) return { guidePath: journey.guidePath }
+    if (journey && kind === 'self') return journeyFields(journey)
+  } catch { /* Storage is optional. */ }
+  return {}
 }
 
 export function pendingGuideReading() {
@@ -82,7 +84,7 @@ export function recordGuideReadingResult(startedAt) {
     const journey = readJourney()
     if (journey?.stage !== 'started' || journey.startedAt !== startedAt) return
     sessionStorage.setItem(journeyKey, JSON.stringify({ ...journey, stage: 'result' }))
-    sendGuideEvent(guideReadingEvents.result, journey)
+    sendMeasurement(guideReadingEvents.result, journeyFields(journey))
   } catch { /* Ignore unavailable or invalid storage. */ }
 }
 
@@ -92,6 +94,6 @@ export function recordGuideReadingBanner(path) {
     const journey = readJourney()
     if (journey?.stage !== 'result') return
     sessionStorage.setItem(journeyKey, JSON.stringify({ ...journey, stage: 'banner' }))
-    sendGuideEvent(guideReadingEvents.banner, journey)
+    sendMeasurement(guideReadingEvents.banner, { ...journeyFields(journey), cta_position: path.startsWith('/you/years/') ? 'year_result' : 'self_result' })
   } catch { /* Ignore unavailable or invalid storage. */ }
 }

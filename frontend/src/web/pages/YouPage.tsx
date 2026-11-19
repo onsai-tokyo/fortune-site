@@ -126,7 +126,7 @@ export function YouPage({ reading, onSelectYear, onReadAgain }: { reading?: Pers
       </section>}
       {focused && <section className="px-5 pt-6"><Button variant="secondary" onClick={onReadAgain}>入力し直して、もう一度占う</Button><LinkButton to={readingFocusPages.konki.guide} variant="secondary" reloadDocument>詳しい婚期の見方を読む</LinkButton></section>}
 
-      <CoconalaBanner className="px-5 pt-6" />
+      <CoconalaBanner position="self_result" className="px-5 pt-6" />
       <Footer />
     </Page>
   )
