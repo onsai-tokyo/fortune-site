@@ -7,7 +7,7 @@ import { commerceRows } from './legalContent'
 test('Web support matches the approved contact and Web-only product/account rules', () => {
   assert.equal(WEB_SUPPORT_EMAIL, commerceRows.find(row => row[0] === 'メールアドレス')![1])
   const text = JSON.stringify(webSupportQuestions)
-  for (const expected of ['個別相談の新規受付・販売は休止中', 'すでに届いたブックは登録済みのアカウントで読めます', '以前このブラウザーで保存した鑑定', '15歳以上', '法定代理人の同意', 'ブラウザのデータ', '有効期限内', '確認コードやパスワード']) assert.ok(text.includes(expected), expected)
+  for (const expected of ['以前のWeb版のアカウントや利用履歴', '以前このブラウザーで保存した鑑定', '15歳以上', '法定代理人の同意', 'ブラウザのデータ', '確認コードやパスワード']) assert.ok(text.includes(expected), expected)
   for (const forbidden of ['App Store', 'Apple Account', 'サブスクリプション', 'support@fate-lab.com', '必ず復元', '［', '］']) assert.ok(!text.includes(forbidden), forbidden)
 })
 
@@ -21,4 +21,5 @@ test('Web support uses its own page and the common Web footer, not the iOS suppo
   assert.ok(footer.includes('to="/tokushoho"'))
   assert.ok(!page.includes('to="/tokushohou"'))
   assert.ok(page.includes('秘密キー') && page.includes('個人情報'))
+  assert.doesNotMatch(page, /to="\/(books|restore|compose|credits)/)
 })

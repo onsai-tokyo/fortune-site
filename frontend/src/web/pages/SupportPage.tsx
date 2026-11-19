@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { Footer, Page, PageTitle, PlainHeader } from '../components/ui'
 import { WEB_SUPPORT_EMAIL, webSupportQuestions } from '../data/supportContent'
 
@@ -16,9 +15,6 @@ export function SupportPage() {
       {webSupportQuestions.map(question => <section key={question.title} className="space-y-3">
         <h2 className="m-0 text-lg font-medium">{question.title}</h2>
         {question.paragraphs.map((text, index) => <p key={index} className="m-0">{text}</p>)}
-        {question.id === 'previous-account' && (
-          <Link to="/restore" className="inline-flex min-h-[44px] items-center text-fl-slate underline">以前のWebアカウントでログイン</Link>
-        )}
       </section>)}
     </article>
     <Footer />
