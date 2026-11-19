@@ -3,7 +3,6 @@ import { CoconalaBanner, BackHeader, Disclaimer, NatureImage, Page } from '../co
 import { images } from '../data/images'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
-import { SaveReadingButton } from '../components/SaveReadingButton'
 import { useApp } from '../state/AppState'
 import { visibleYearSections } from '../data/readingPresentation'
 import type { YearReading } from '../data/types'
@@ -25,7 +24,7 @@ export function YearReadingPage({ readingYear, readings, onBack, onSelectYear }:
 
   return (
     <Page>
-      <BackHeader to={readings ? '/uranai/konki' : '/you'} onBack={onBack} title={`${reading.year}年のあなた`} sticky right={!readings && <SaveReadingButton readingKey={`you-${reading.year}`} compact />} />
+      <BackHeader to={readings ? '/uranai/konki' : '/you'} onBack={onBack} title={`${reading.year}年のあなた`} sticky />
       <NatureImage src={images.nature.seaLight} className="h-[170px]" />
 
       <section className="fl-reading-title flex flex-col gap-3 px-6 pb-2 pt-7">
