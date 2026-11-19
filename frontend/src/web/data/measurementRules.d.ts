@@ -1,5 +1,8 @@
 export type Source = 'threads' | 'tiktok' | 'instagram' | 'x' | 'other_campaign' | 'organic_search' | 'site_guide' | 'direct'
+export type LandingGroup = 'top' | 'tool' | 'guide' | 'series' | 'uranai' | 'fortune' | 'couple' | 'other'
+export function landingGroupsFor(publicPaths: readonly string[]): Map<string, LandingGroup>
 export type Attribution = {
+  fl_landing_group: LandingGroup
   fl_search_engine?: string
   source?: Source
   landing_path?: string

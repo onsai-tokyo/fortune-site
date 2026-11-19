@@ -28,7 +28,7 @@ test('carries a safe search or Threads landing through guide navigation', () => 
   rememberGuideEntry(guide, 'https://www.google.co.jp/?q=secret', storage, 1000)
   rememberGuideEntry(tool, guide.href, storage, 1020)
   assert.deepEqual(attributionFromGuide(storage, 1040), {
-    source: 'organic_search', fl_search_engine: 'google', landing_path: '/guides/marriage-timing', referrer_path: undefined, campaign_name: '(not set)',
+    source: 'organic_search', fl_search_engine: 'google', landing_path: '/guides/marriage-timing', fl_landing_group: 'guide', referrer_path: undefined, campaign_name: '(not set)',
   })
   assert.equal(attributionFromGuide(storage, 2800), undefined)
   rememberGuideEntry(new URL(guide.origin + guide.pathname + '?utm_source=threads&utm_campaign=seo_share'), '', storage, 3000)
@@ -139,7 +139,7 @@ test('forwards an article path and no personal fields at every guide reading sta
     assert.equal(payload.client_id, req.body.clientId)
     assert.deepEqual(payload.events, [{ name: event, params: {
       session_id: now, engagement_time_msec: 1, page_location: 'https://fate-lab.com/guides/day-master/kinoe',
-      guide_path: '/guides/day-master/kinoe', reading_type: 'self', fl_landing_path: 'other',
+      guide_path: '/guides/day-master/kinoe', reading_type: 'self', fl_landing_path: 'other', fl_landing_group: 'other',
       source: 'threads', fl_traffic_source: 'threads', campaign_source: 'threads',
       campaign_medium: 'social', campaign_name: '(not set)',
     } }])
