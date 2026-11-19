@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import handler from '../api/threads-event.js'
 import { guideReadingPath, articleOrigin, startGuideCouple } from '../src/web/data/guideReadingMeasurement.js'
-import { arrivalAttribution, safeCampaignQuery } from '../src/web/data/measurementRules.js'
+import { arrivalAttribution, landingGroupsFor, measurementSessionKey, safeCampaignQuery, sanitizeAttribution } from '../src/web/data/measurementRules.js'
 import { startThreadsMeasurement, trackMeasurementRoute, trackThreadsEvent } from '../src/web/data/threadsMeasurement.ts'
 
 const origin = 'https://fate-lab.com'
@@ -10,6 +10,26 @@ const storage = () => {
   const entries = new Map()
   return { getItem: k => entries.get(k) ?? null, setItem: (k, v) => entries.set(k, v), removeItem: k => entries.delete(k) }
 }
+
+test('landing groups use only published paths, with specific series and annual guides taking precedence', () => {
+  const examples = [
+    ['/', 'top'], ['/threads-launch', 'top'], ['/couple/', 'couple'],
+    ['/tools/', 'tool'], ['/tools/shichu-suimei-calculator', 'tool'],
+    ['/guides/', 'guide'], ['/guides/day-master', 'guide'], ['/guides/marriage-timing', 'guide'],
+    ['/guides/day-master/kinoe', 'series'], ['/guides/ten-god/hiken', 'series'],
+    ['/guides/twelve-stage/chosei', 'series'], ['/uranai/konki', 'uranai'], ['/coupons', 'other'],
+    ['/r/private-token', 'other'], ['/guides/ten-god/private-token', 'other'],
+    ['/uranai/1995-02-20', 'other'], ['/guides/compatibility?gender=female', 'other'],
+    [undefined, 'other'],
+  ]
+  for (const [landing_path, expected] of examples) {
+    assert.equal(sanitizeAttribution({ landing_path, fl_landing_group: 'fortune' }).fl_landing_group, expected)
+  }
+  // The annual hub and its articles join this index when added to the public inventory.
+  const annual = landingGroupsFor(['/guides/2027-fortune', '/guides/2027-fortune/kinoe'])
+  assert.deepEqual([...annual.values()], ['fortune', 'fortune'])
+  assert.equal(annual.has('/guides/2027-fortune/private-token'), false)
+})
 
 test('routes, guide-to-couple and the static loader share the production boundary', async t => {
   const sent = []
@@ -45,7 +65,9 @@ test('routes, guide-to-couple and the static loader share the production boundar
   trackMeasurementRoute('/r/private-token')
   assert.deepEqual(sent.filter(hit => ['page_view', 'coupon_view'].includes(hit.event)).map(hit => hit.page_path),
     ['/couple', '/coupons', '/you', '/you'])
-  assert.ok(sent.every(hit => hit.test && hit.source === 'threads' && hit.landing_path === '/guides/compatibility'))
+  assert.ok(sent.every(hit => hit.test && hit.source === 'threads' && hit.landing_path === '/guides/compatibility' && hit.fl_landing_group === 'guide'))
+  assert.equal(JSON.parse(sessionStorage.getItem(measurementSessionKey)).fl_landing_group, 'guide')
+  assert.equal(localStorage.getItem(measurementSessionKey), null)
   for (const hit of sent.filter(hit => ['guide_to_couple', 'couple_reading_complete', 'coconala_banner_click'].includes(hit.event))) {
     assert.equal(hit.guidePath, '/guides/compatibility')
     assert.equal(hit.flow_id, undefined)
@@ -58,6 +80,7 @@ test('routes, guide-to-couple and the static loader share the production boundar
   open('/coupons')
   trackThreadsEvent('coupon_click', { offer_id: 'coconala-phone', link_type: 'affiliate' })
   assert.equal(sent.at(-1).test, true)
+  assert.equal(sent.at(-1).fl_landing_group, 'other')
   open('/coupons?fl_test=0')
   trackThreadsEvent('coupon_click')
   assert.equal(sent.at(-1).test, false)
@@ -76,6 +99,20 @@ test('collection rebuilds page locations, source, tool names and CTA fields from
       sessionId: now, test: true, page_path: '/welcome', source: 'organic_search', landing_path: '/guides/compatibility',
       fl_search_engine: 'google', engagement: 1800001, ...extra } }, res)
     return res.code
+  }
+  for (const event of ['self_reading_complete', 'couple_reading_complete']) {
+    for (const test of [false, true]) {
+      assert.equal(await post(event, {
+        test, page_path: '/you', landing_path: '/tools/day-master', fl_landing_group: 'private-token',
+        birthDate: '1995-02-20', gender: 'female', birthTime: '05:40', metYear: '2021',
+      }), 204)
+      const [hit] = requests.at(-1).events
+      assert.equal(hit.name, test ? 'qa_' + event : event)
+      assert.equal(hit.params.traffic_type, test ? 'internal' : undefined)
+      assert.equal(hit.params.fl_traffic_source, 'organic_search')
+      assert.equal(hit.params.fl_landing_group, 'tool')
+      assert.doesNotMatch(JSON.stringify(hit), /private-token|1995-02-20|female|05:40|"2021"|metYear|birthDate|birthTime|gender/)
+    }
   }
   const utm = { utm_source: 'threads', utm_medium: 'social', utm_campaign: 'seo_share', dob: '1995-02-20' }
   assert.equal(await post('page_view', utm), 204)

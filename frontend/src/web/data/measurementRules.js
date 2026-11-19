@@ -2,7 +2,27 @@ import { publicMeasurementPaths } from './publicMeasurementPaths.js'
 
 const social = new Set(['threads', 'tiktok', 'instagram', 'x'])
 export const productionOrigin = 'https://fate-lab.com'
-const paths = new Set([...publicMeasurementPaths.map(path => path.replace(/\/$/, '') || '/'), '/welcome', '/you'])
+function groupForPublicPath(path) {
+  if (path === '/' || path === '/threads-launch') return 'top'
+  if (path === '/couple') return 'couple'
+  if (/^\/tools(?:\/|$)/.test(path)) return 'tool'
+  if (path.startsWith('/uranai/')) return 'uranai'
+  if (/^\/guides\/\d{4}-fortune(?:\/|$)/.test(path)) return 'fortune'
+  if (/^\/guides\/(?:day-master|ten-god|twelve-stage)\//.test(path)) return 'series'
+  if (/^\/guides(?:\/|$)/.test(path)) return 'guide'
+  return 'other'
+}
+
+export function landingGroupsFor(publicPaths) {
+  const groups = new Map()
+  for (const path of publicPaths) {
+    const canonical = path.replace(/\/$/, '') || '/'
+    groups.set(canonical, groupForPublicPath(canonical))
+  }
+  return groups
+}
+
+const paths = landingGroupsFor([...publicMeasurementPaths, '/welcome', '/you'])
 const sources = new Set([...social, 'other_campaign', 'organic_search', 'site_guide', 'direct'])
 const offers = new Set(['coconala-phone', 'spacia-phone', 'miror-phone', 'miror-chat', 'brillante-chat', 'destiny-phone'])
 const engines = new Set(['google', 'bing', 'yahoo', 'other'])
@@ -113,7 +133,8 @@ export function sanitizeAttribution(input) {
   const fl_search_engine = source === 'organic_search' && engines.has(input.fl_search_engine) ? input.fl_search_engine : undefined
   const campaign_name = campaigns.has(input.campaign_name)
     ? input.campaign_name : '(not set)'
-  return { source, landing_path, referrer_path, campaign_name, ...(fl_search_engine && { fl_search_engine }) }
+  const fl_landing_group = paths.get(landing) ?? 'other'
+  return { source, landing_path, fl_landing_group, referrer_path, campaign_name, ...(fl_search_engine && { fl_search_engine }) }
 }
 
 export function couponParameters(input) {

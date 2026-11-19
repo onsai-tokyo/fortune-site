@@ -37,7 +37,7 @@ function staticPageView(path, session) {
     const params = {
       send_page_view: false, page_location: productionOrigin + path + (query ? '?' + query : ''), page_title: document.title,
       page_referrer: searchReferrer ? referrer.origin + '/' : '',
-      fl_traffic_source: session.source, fl_landing_path: session.landing_path,
+      fl_traffic_source: session.source, fl_landing_path: session.landing_path, fl_landing_group: session.fl_landing_group,
       fl_search_engine: session.fl_search_engine, allow_google_signals: false, allow_ad_personalization_signals: false,
       client_id: session.clientId,
     }
