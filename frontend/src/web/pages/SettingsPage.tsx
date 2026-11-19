@@ -35,7 +35,8 @@ export function PurchasesPage() {
 
 /** 退会の本番：DELETE /api/reading/account */
 export function SettingsPage() {
-  const { profile, partners, forgetDevice, deleteAccount, session, email, resetReading } = useApp()
+  const { profile, partners, forgetDevice, deleteAccount, session, email, resetReading, books, credits, purchasedEver } = useApp()
+  const hasPastPurchases = books.length > 0 || credits > 0 || purchasedEver
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -82,14 +83,14 @@ export function SettingsPage() {
         <Row label="呼び名" value={profile?.nickname || '未設定'} to="/welcome" />
         <Row label="あなたの出生情報" value={birth} to="/welcome" />
         <button type="button" className="min-h-[56px] px-4 text-left text-sm text-fl-moss" onClick={()=>{
-          if (!window.confirm('表示中の鑑定をリセットして、入力し直します。保存済みの鑑定・相談ブックは残ります。')) return
+          if (!window.confirm('表示中の鑑定をリセットして、出生情報を入力し直します。')) return
           resetReading(); navigate('/welcome')
         }}>入力をリセットして、別の鑑定を読む</button>
       </Group>
 
       <Group title="ご利用状況">
         <Row label="ふたりの相手" value={partners.length > 1 ? `${partners.length}人（選択して読む）` : partners[0]?.name ?? '未登録'} to="/couple" />
-        {session !== 'none' && <Row label="過去のご利用" to="/settings/purchases" />}
+        {hasPastPurchases && <Row label="過去のご利用" to="/settings/purchases" />}
       </Group>
 
       <Group title="サポート">
@@ -120,7 +121,7 @@ export function SettingsPage() {
           <div role="dialog" aria-modal="true" aria-busy={deleting} aria-labelledby="del-title" onClick={e => e.stopPropagation()}
             className="flex w-full max-w-app flex-col gap-3.5 rounded-t-[20px] bg-fl-canvas px-5 pb-7 pt-6">
             <h2 id="del-title" className="m-0 text-lg font-medium">退会しますか？</h2>
-            <p className="m-0 text-sm leading-[1.85] text-fl-body">読みもの、登録した相手、相談のブック、残りの冊数がすべて削除され、元に戻せません。</p>
+            <p className="m-0 text-sm leading-[1.85] text-fl-body">読みもの、登録した相手{hasPastPurchases ? '、過去の相談ブック、残りの冊数' : ''}がすべて削除され、元に戻せません。</p>
             {deleteError && <p role="alert" className="m-0 text-sm leading-[1.85] text-fl-danger">{deleteError}</p>}
             <Button variant="danger" disabled={deleting} onClick={() => { void confirmDeletion() }}>{deleting ? '退会処理中です…' : 'すべて削除して退会する'}</Button>
             <Button ref={cancelRef} variant="ghost" disabled={deleting} onClick={closeConfirmation}>やめる</Button>

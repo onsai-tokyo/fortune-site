@@ -192,7 +192,7 @@ export function CouplePage({ focus, partnerId: focusedPartnerId, breakupYear, on
       <section className="px-5">
         {!focus && partners.length > 1 && <LinkButton to="/couple" variant="secondary">登録済みの別の相手を選ぶ</LinkButton>}
         {focus ? <><Button variant="secondary" onClick={onReadAgain}>入力し直して、もう一度占う</Button><LinkButton to={readingFocusPages[focus].guide} variant="secondary" reloadDocument>詳しい見方を読む</LinkButton></> : <LinkButton to={standalone ? "/couple" : `/couple/new?replace=${partner.id}`} variant="secondary">別の人との年表を見る（相手を変える）</LinkButton>}
-        {!standalone && <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">{partners.length > 1 ? '選んだ相手だけを入れ替えます。他の相手は削除しません。' : '相手は1人ずつ登録できます。何度でも無料で入れ替えられます。'}{partner.name}について作ったブックは、入れ替えても引き続き閲覧できます。</p>}
+        {!standalone && <p className="mx-1 mt-2.5 text-xs leading-[1.7] text-fl-muted">{partners.length > 1 ? '選んだ相手だけを入れ替えます。他の相手は削除しません。' : '相手は1人ずつ登録できます。何度でも無料で入れ替えられます。'}</p>}
       </section>
 
       <p className="mx-6 text-xs leading-relaxed text-fl-muted">{coupleResultConsultation}</p>

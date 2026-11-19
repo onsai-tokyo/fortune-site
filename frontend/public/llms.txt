@@ -42,4 +42,4 @@
 - [プレスキット](https://fate-lab.com/press)
 - [利用規約](https://fate-lab.com/terms)
 - [プライバシーポリシー](https://fate-lab.com/privacy)
-- [特定商取引法に基づく表記](https://fate-lab.com/tokushohou)
+- [特定商取引法に基づく表記](https://fate-lab.com/tokushoho)

@@ -128,7 +128,7 @@ export function SavedReadingsPage() {
         </div>
       </section>
       <section className="flex flex-col px-5 pt-1">
-        {session !== 'linked' && <p className="mb-3 mt-1 text-xs text-fl-muted">新しく保存した鑑定はこのブラウザーで読めます。</p>}
+        {session !== 'linked' && <p className="mb-3 mt-1 text-xs text-fl-muted">以前このブラウザーに保存した鑑定を表示しています。</p>}
         {snapshotError && <div role="alert"><p>{snapshotError}</p><Button onClick={reloadReadings}>再読み込み</Button></div>}
         {remoteMode && savedIds.length > 0 && <aside className="my-4 rounded-xl bg-fl-surface p-4 text-sm leading-relaxed">
           以前の保存項目 {savedIds.length}件は残っています。旧方式では保存時点の本文を記録していなかったため、新しい鑑定と混ぜずに保留しています。
@@ -148,9 +148,8 @@ export function SavedReadingsPage() {
             <IconChevron size={16} className="text-fl-muted" />
           </Link>
         ))}
-        {rows.length === 0 && !snapshotError && <p className="m-0 py-8 text-center text-sm leading-[1.85] text-fl-muted">保存した読みものはまだありません。<br />読みものの右上の保存ボタンで、ここに残せます。</p>}
+        {rows.length === 0 && !snapshotError && <p className="m-0 py-8 text-center text-sm leading-[1.85] text-fl-muted">以前保存した読みものはありません。</p>}
       </section>
-      <section className="px-5 pt-6"><p className="m-0 text-xs leading-[1.8] text-fl-muted">読みものの右上の保存ボタンで、ここに追加できます。</p></section>
       <Footer />
     </Page>
   )
