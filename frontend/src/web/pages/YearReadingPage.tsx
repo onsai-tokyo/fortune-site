@@ -66,7 +66,7 @@ export function YearReadingPage({ readingYear, readings, onBack, onSelectYear }:
       </nav>
 
       <section className="px-6 pb-6 pt-5"><Disclaimer>暦の計算に基づく読みものです。出来事や結果を約束するものではありません。</Disclaimer></section>
-      <CoconalaBanner className="px-6 pb-10" />
+      <CoconalaBanner position="year_result" className="px-6 pb-10" />
     </Page>
   )
 }

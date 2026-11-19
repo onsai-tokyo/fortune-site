@@ -113,7 +113,7 @@ export function ListRow({ to, title, sub, leading, trailing }: { to: string; tit
   )
 }
 
-export function CoconalaBanner({ className = '' }: { className?: string }) {
+export function CoconalaBanner({ className = '', position }: { className?: string; position?: 'self_result' | 'year_result' | 'couple_result' }) {
   const { pathname } = useLocation()
   return (
     <div className={className}>
@@ -121,8 +121,8 @@ export function CoconalaBanner({ className = '' }: { className?: string }) {
         className="fl-coconala-banner"
         onClick={event => {
           if (event.target instanceof Element && event.target.closest('a[href]')) {
-            recordGuideReadingBanner(pathname)
-            trackThreadsEvent('coconala_banner_click')
+            if (position === 'self_result' || position === 'year_result') recordGuideReadingBanner(pathname)
+            trackThreadsEvent('coconala_banner_click', { cta_position: position })
           }
         }}
         dangerouslySetInnerHTML={{ __html: coconalaBannerContent }}

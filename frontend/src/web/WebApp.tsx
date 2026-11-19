@@ -1,4 +1,4 @@
-import { trackCouponRoute } from './data/threadsMeasurement'
+import { trackMeasurementRoute } from './data/threadsMeasurement'
 import { updateAppRobots } from './data/indexingPolicy.js'
 import { CouponsPage } from './pages/CouponsPage'
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
@@ -50,7 +50,7 @@ function ScrollToTop() {
     ]) document.querySelector(selector)?.setAttribute('content', value)
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://fate-lab.com${page.path}`)
   }, [pathname])
-  useEffect(() => { trackCouponRoute(/^\/coupons\/?$/i.test(pathname)) }, [pathname])
+  useEffect(() => { trackMeasurementRoute(pathname) }, [pathname])
   return null
 }
 

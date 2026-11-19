@@ -28,7 +28,7 @@ test('carries a safe search or Threads landing through guide navigation', () => 
   rememberGuideEntry(guide, 'https://www.google.co.jp/?q=secret', storage, 1000)
   rememberGuideEntry(tool, guide.href, storage, 1020)
   assert.deepEqual(attributionFromGuide(storage, 1040), {
-    source: 'organic_search', landing_path: '/guides/marriage-timing', referrer_path: undefined, campaign_name: '(not set)',
+    source: 'organic_search', fl_search_engine: 'google', landing_path: '/guides/marriage-timing', referrer_path: undefined, campaign_name: '(not set)',
   })
   assert.equal(attributionFromGuide(storage, 2800), undefined)
   rememberGuideEntry(new URL(guide.origin + guide.pathname + '?utm_source=threads&utm_campaign=seo_share'), '', storage, 3000)
@@ -139,6 +139,9 @@ test('forwards an article path and no personal fields at every guide reading sta
     assert.equal(payload.client_id, req.body.clientId)
     assert.deepEqual(payload.events, [{ name: event, params: {
       session_id: now, engagement_time_msec: 1, page_location: 'https://fate-lab.com/guides/day-master/kinoe',
+      guide_path: '/guides/day-master/kinoe', reading_type: 'self', fl_landing_path: 'other',
+      source: 'threads', fl_traffic_source: 'threads', campaign_source: 'threads',
+      campaign_medium: 'social', campaign_name: '(not set)',
     } }])
     await handler({ ...req, body: { ...req.body, event, test: true } }, res)
     assert.equal(res.code, 204)
@@ -147,5 +150,10 @@ test('forwards an article path and no personal fields at every guide reading sta
     await handler({ ...req, body: { ...req.body, event: guideReadingEvents.start, guidePath } }, res)
     assert.equal(res.code, 400)
   }
-  assert.equal(fetch.mock.callCount(), 3)
+  assert.equal(fetch.mock.callCount(), 6)
+  for (const { arguments: [, options] } of fetch.mock.calls) {
+    const event = JSON.parse(options.body).events[0]
+    assert.equal(event.name.startsWith('qa_'), event.params.traffic_type === 'internal')
+    assert.doesNotMatch(options.body, /1990-02-03|female|personal-data/)
+  }
 })

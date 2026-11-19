@@ -42,7 +42,7 @@ export function ChapterPage() {
         </nav>
       </section>
       <section className="px-6 pb-6 pt-5"><Disclaimer>暦の計算に基づく読みものです。</Disclaimer></section>
-      <CoconalaBanner className="px-6 pb-10" />
+      <CoconalaBanner position="self_result" className="px-6 pb-10" />
     </Page>
   )
 }

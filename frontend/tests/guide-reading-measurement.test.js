@@ -4,6 +4,7 @@ import {
   clearCompletedGuideReading, guideReadingEvents, pendingGuideReading,
   recordGuideReadingBanner, recordGuideReadingResult, startGuideReading,
 } from '../src/web/data/guideReadingMeasurement.js'
+import { readTagIdentity } from '../src/web/data/browserMeasurement.js'
 import { isMeasurementTest, measurementSessionKey } from '../src/web/data/measurementRules.js'
 
 function browserStorage() {
@@ -43,7 +44,8 @@ test('tracks an article start, the displayed result and one subsequent result ba
   const { startedAt, open, sent } = setup(t)
   const clientId = '12.1799999999'
   open('/guides/day-master/kinoe/?utm_campaign=secret#anchor')
-  startGuideReading(clientId)
+  readTagIdentity((_command, _tag, key, resolve) => resolve(key === 'client_id' ? clientId : startedAt / 1000 - 30))
+  startGuideReading()
   open('/welcome?from=guide&returnTo=%2Fyou')
   assert.equal(pendingGuideReading(), startedAt)
   recordGuideReadingBanner('/you') // A banner before the result is never part of this funnel.
@@ -55,9 +57,16 @@ test('tracks an article start, the displayed result and one subsequent result ba
   recordGuideReadingBanner('/couple')
   recordGuideReadingBanner('/you/years/2026')
   recordGuideReadingBanner('/you')
-  assert.deepEqual(sent, Object.values(guideReadingEvents).map(event => ({
-    event, guidePath: '/guides/day-master/kinoe', clientId, sessionId: 1800000000,
-  })))
+  assert.deepEqual(sent.map(hit => hit.event), Object.values(guideReadingEvents))
+  assert.match(sent[0].flow_id, /^[0-9a-f]{16}$/)
+  for (const hit of sent) {
+    assert.equal(hit.flow_id, sent[0].flow_id)
+    assert.equal(hit.clientId, clientId)
+    assert.equal(hit.sessionId, startedAt / 1000 - 30)
+    assert.equal(hit.guidePath, '/guides/day-master/kinoe')
+    assert.equal(hit.reading_type, 'self')
+  }
+  assert.equal(sent.at(-1).cta_position, 'year_result')
 })
 
 test('expires journeys and replaces an earlier article for a new reading in the same tab', t => {
@@ -81,18 +90,21 @@ test('expires journeys and replaces an earlier article for a new reading in the 
   assert.equal(sent.length, 4)
 })
 
-test('excludes tests from the whole funnel even after the URL loses the QA marker', t => {
+test('marks the whole QA funnel internal after the URL loses the marker', t => {
   const { open, sent, startedAt } = setup(t)
   open('/guides/marriage-timing?fl_test=1')
   startGuideReading()
-  assert.equal(pendingGuideReading(), undefined)
+  assert.equal(pendingGuideReading(), startedAt)
   open('/guides/meeting-timing')
   assert.equal(isMeasurementTest(location), true)
   startGuideReading()
   open('/you')
   recordGuideReadingResult(startedAt)
   recordGuideReadingBanner('/you')
-  assert.deepEqual(sent, [])
+  assert.equal(sent.length, 4)
+  assert.ok(sent.every(hit => hit.test))
+  assert.equal(isMeasurementTest(new URL('/?fl_test=0', location.origin)), false)
+  assert.equal(isMeasurementTest(new URL('/couple', location.origin)), false)
 })
 
 test('honors a QA visit already marked by the site and skips non-production origins', t => {
@@ -100,7 +112,10 @@ test('honors a QA visit already marked by the site and skips non-production orig
   sessionStorage.setItem(measurementSessionKey, JSON.stringify({ test: true, sessionId: startedAt / 1000 }))
   startGuideReading()
   sessionStorage.removeItem(measurementSessionKey)
-  open('https://example.test/guides/marriage-timing')
-  startGuideReading()
-  assert.deepEqual(sent, [])
+  assert.equal(sent[0].test, true)
+  for (const host of ['localhost', '127.0.0.1', 'preview.vercel.app']) {
+    open('https://' + host + '/guides/marriage-timing')
+    startGuideReading()
+  }
+  assert.equal(sent.length, 1)
 })

@@ -196,7 +196,7 @@ export function CouplePage({ focus, partnerId: focusedPartnerId, breakupYear, on
       </section>
 
       <p className="mx-6 text-xs leading-relaxed text-fl-muted">{coupleResultConsultation}</p>
-      <CoconalaBanner className="px-5 pt-6" />
+      <CoconalaBanner position="couple_result" className="px-5 pt-6" />
       <Footer />
     </Page>
   )
