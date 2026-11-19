@@ -4,7 +4,6 @@ import { CoconalaBanner, BackHeader, Disclaimer, NatureImage, Page } from '../co
 import { chapterSections } from '../data/mock'
 import { remoteMode } from '../data/paymentConfig'
 import { ReadingStatus } from '../components/ReadingStatus'
-import { SaveReadingButton } from '../components/SaveReadingButton'
 import { useApp } from '../state/AppState'
 
 export function ChapterPage() {
@@ -20,7 +19,7 @@ export function ChapterPage() {
 
   return (
     <Page>
-      <BackHeader to="/you" title="性格の章" sticky right={<SaveReadingButton readingKey={`chapter-${chapter.id}`} compact />} />
+      <BackHeader to="/you" title="性格の章" sticky />
       <NatureImage src={chapter.image} className="h-[170px]" />
       <section className="fl-reading-title flex flex-col gap-3 px-6 pb-2 pt-7">
         <span className="text-xs font-medium tracking-[0.15em] text-fl-moss">性格の章 ・ {index + 1} / {chapterList.length}</span>
