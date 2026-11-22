@@ -210,10 +210,6 @@
     {
       "source": "/couple/:partnerId",
       "destination": "/app.html"
-    },
-    {
-      "source": "/((?!api/|assets/|images/|favicon[.](?:svg|ico)$|site[.]webmanifest$).*)",
-      "destination": "/index.html"
     }
   ],
   "headers": [
