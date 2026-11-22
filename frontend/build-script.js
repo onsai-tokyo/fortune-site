@@ -130,7 +130,7 @@ const guides = [
   },
   {
     path: 'guides/marriage-timing', updated: '2026-11-15', title: '婚期の見方｜四柱推命の結婚時期・大運・年運を具体例で解説',
-    searchTitle: '私はいつ結婚する？ 四柱推命で婚期の候補年を読む',
+    searchTitle: '四柱推命で結婚時期・婚期を見る方法｜大運・年運の読み方',
     searchDescription: '生年月日から命式を出し、日支と配偶者星を確認。大運と年運を重ね、結婚を考えやすい候補年とその年の年齢を読み取る手順を例で紹介します。',
     description: '四柱推命で婚期を見る方法を、配偶者星、日支、六合・冲、桃花、大運・年運の重なりから解説。紫微斗数やインド占星術との照合、具体的な候補年の読み方も紹介します。',
     body: ''
@@ -913,8 +913,8 @@ const tools = [
     path: 'tools/sanmeigaku-calculator',
     updated: '2026-11-15',
     title: '算命学の無料計算｜生年月日から十大主星・十二大従星を自動算出',
-    searchTitle: '算命学 無料計算｜十大主星・十二大従星・天中殺を算出',
-    searchDescription: '算命学の人体星図を生年月日から無料で計算。中心星を含む十大主星の配置、十二大従星、天中殺を表示します。十大主星の出し方も解説。登録・出生時刻は不要です。',
+    searchTitle: '算命学の無料自動計算｜十大主星・十二大従星・天中殺',
+    searchDescription: '生年月日と性別から、算命学の人体星図・十大主星・十二大従星・天中殺を無料で自動計算。会員登録と出生時刻は不要です。計算結果で中心星と星の配置を確認し、各星の意味は解説一覧で読めます。',
     description: '生年月日と性別を入力すると、人体星図（星の配置図）を無料で算出します。中心星を含む十大主星、十二大従星、天中殺を表示。会員登録と出生時刻は不要です。',
     faqs: [
       ['算命学を無料で鑑定できますか？', 'はい。生年月日を入力すると、人体星図、十大主星、十二大従星、天中殺を登録不要で無料計算できます。'],
@@ -1079,15 +1079,17 @@ const relatedGuidesByPath = {
 };
 
 const crawlGuideLinks = {
+  'guides/sanmeigaku': '<p>この記事では、算命学の基本と人体星図・天中殺の読み方を説明します。自分の星を先に知りたい方は<a href="/tools/sanmeigaku-calculator">算命学の無料自動計算</a>へ。すでに結果がある方は<a href="/guides/sanmeigaku-stars">十大主星・十二大従星の意味と位置別の見方</a>で星の名前を探せます。</p>',
+  'guides/sanmeigaku-stars': '<p>この一覧では、計算結果に出た星の意味を位置や人生段階と合わせて確認できます。まだ自分の星がわからない方は<a href="/tools/sanmeigaku-calculator">生年月日から十大主星・十二大従星を無料で自動計算</a>してください。占術の全体像は<a href="/guides/sanmeigaku">算命学の基本</a>で説明しています。</p>',
   'guides/partner-feelings': '<p>二人の生年月日が分かるなら、<a href="/tools/day-master">日干を無料で調べる</a>と、相性を読む基準を確認できます。</p>',
   'guides/one-sided-love': '<p>相手の生年月日が分かる場合は、<a href="/tools/day-master">二人の日干を調べる</a>と、相性の解説を読み進めやすくなります。</p>',
   'guides/reconciliation-timing': '<p>二人の傾向を命式から確かめたいときは、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で計算</a>して、日干や日支を確認できます。</p>',
   'guides/ex-partner-feelings': '<p>二人の生年月日が分かる場合は、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で出す</a>と、相性を読む日干や日支を確認できます。</p>',
   'guides/married-partner-feelings': '<p>相性の解説を読む前に、<a href="/tools/day-master">二人の日干を無料で調べる</a>と、命式の基準を確認できます。</p>',
-  'guides/marriage-timing': '<p>日支を確かめるには、<a href="/tools/day-master">自分の日柱を調べる</a>と、生まれた日の干支を確認できます。日柱の二文字目が日支です。</p>',
-  'guides/marriage-compatibility': '<p>命式を用意するときは、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で出す</a>と、日干・日支や五行を見比べられます。</p>',
+  'guides/marriage-timing': '<p>この記事では、自分の命式と大運・年運から結婚時期の候補を読む手順を説明します。今の恋人と結婚生活を築けそうか考えたい方は、<a href="/guides/marriage-compatibility">結婚相性と話し合う条件</a>をご覧ください。</p><p>日支を確かめるには、<a href="/tools/day-master">自分の日柱を調べる</a>と、生まれた日の干支を確認できます。日柱の二文字目が日支です。</p>',
+  'guides/marriage-compatibility': '<p>この記事では、今の恋人との暮らしや結婚の意思を話し合うために、結婚相性をどう使うかを説明します。自分の結婚時期の候補を知りたい方は、<a href="/guides/marriage-timing">四柱推命で婚期を見る方法</a>へ進めます。</p><p>命式を用意するときは、<a href="/tools/shichu-suimei-calculator">二人の命式を無料で出す</a>と、日干・日支や五行を見比べられます。</p>',
   'guides/meeting-timing': '<p>出会いの候補時期を読む前に、<a href="/tools/shichu-suimei-calculator">四柱推命の命式を無料で計算</a>して、自分の日干や日支を確認できます。</p>',
-  'guides/compatibility': '<p>相性を読む前に、<a href="/tools/day-master">二人の日干を無料で調べる</a>と、命式の基準を確認できます。言葉の意味は<a href="/guides/day-master">日干の調べ方と意味</a>で説明しています。</p>',
+  'guides/compatibility': '<p>この記事では、二人の日干・日支・五行を比べる相性占いの仕組みを解説します。今すぐ結果を読みたい方は<a href="/couple">生年月日で二人の相性を無料鑑定</a>へ、結婚生活について考えたい方は<a href="/guides/marriage-compatibility">結婚相性の見方</a>へ進めます。</p><p>相性を読む前に、<a href="/tools/day-master">二人の日干を無料で調べる</a>と、命式の基準を確認できます。言葉の意味は<a href="/guides/day-master">日干の調べ方と意味</a>で説明しています。</p>',
   'guides/unknown-birth-time': '<p>生まれた日の干支を先に知りたい場合は、<a href="/tools/day-master">出生時刻なしで日干を調べる</a>ことができます。</p>',
 };
 
