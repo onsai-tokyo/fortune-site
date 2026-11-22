@@ -65,7 +65,7 @@ test('sanmeigaku answers free calculation queries and links to stars directly af
   }
   assert.match(article, /<section id="sanmei-detail" hidden>[\s\S]*?<\/section><p><a href="\/guides\/sanmeigaku-stars">/)
   assert.ok(fs.existsSync(new URL('../dist/guides/sanmeigaku-stars/index.html', import.meta.url)))
-  assert.match(html, /<title>算命学 無料計算｜十大主星・十二大従星・天中殺を算出｜Fate Lab<\/title>/)
+  assert.match(html, /<title>算命学の無料自動計算｜十大主星・十二大従星・天中殺｜Fate Lab<\/title>/)
   assert.match(article, /<h1>算命学の無料計算｜生年月日から十大主星・十二大従星を自動算出<\/h1>/)
 
   const faq = article.match(/<section class="visible-faq">([\s\S]*?)<\/section>/)[1]
