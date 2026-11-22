@@ -22,6 +22,7 @@ import { validBirthDate } from '../data/birthDate'
 import { webBirthCalculation, personalReadingReady } from '../data/birthCalculation'
 import { keepReadingVisible } from '../data/readingPresentation'
 import { snapshotForReading, matchingSnapshot, type ReadingSnapshot } from '../data/readingSnapshot'
+import { createCoupleCalculation } from './coupleCalculation'
 
 function pendingBirthProfile(owner: string): BirthProfile | null {
   try {
@@ -80,7 +81,7 @@ interface AppState {
 }
 
 interface Actions {
-  readStandaloneCouple: (self: BirthProfile, input: Omit<Partner, 'id'>, id?: string) => Promise<Partner>
+  readStandaloneCouple: (self: BirthProfile, input: Omit<Partner, 'id'>, id?: string, signal?: AbortSignal) => Promise<Partner>
   resetReading: () => void
   removeSnapshot: (id: string) => Promise<void>
   reloadReadings: () => void
@@ -211,6 +212,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const remoteAuth = useRef({ owner: null as string | null, token: null as string | null, revision: 0, ownerEpoch: 0 })
   const sessionResolved = useRef(false)
   const profileSaveInProgress = useRef(false)
+  const standaloneCalculation = useRef(createCoupleCalculation())
   const profileSaveOwner = useRef<string | null>(null)
   const refreshSequence = useRef(0)
   // Deliberately memory-only. A fresh page session does not restore an unsaved
@@ -663,13 +665,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return token
   }, [])
 
-  const calculateGuestCouple = useCallback(async (profile: BirthProfile, partner: Partner) => {
+  const calculateGuestCouple = useCallback(async (profile: BirthProfile, partner: Partner, signal?: AbortSignal) => {
     const { timeline, cards } = await apiFetch<{
       timeline: Parameters<typeof coupleReadings>[0] & { status: string }
       cards: Parameters<typeof personalReadings>[1]
     }>('/api/guest/couple', {
       method: 'POST',
-      signal: AbortSignal.timeout(60_000),
+      signal: signal ?? AbortSignal.timeout(60_000),
       body: JSON.stringify({
         self: webBirthCalculation(profile),
         partner: { birthDate: partner.birthDate, birthTime: partner.birthTime, birthplace: partner.birthPlace, gender: partner.gender },
@@ -689,13 +691,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const actions = useMemo<Actions>(() => ({
-    readStandaloneCouple: async (self, input, id) => {
+    readStandaloneCouple: async (self, input, id, signal) => {
       const partner = { ...input, id: id ?? `pair-${crypto.randomUUID()}` }
-      const result = await calculateGuestCouple(self, partner)
-      setState(s => ({ ...s, standaloneCouple: {
-        self, partner, years: result.coupleYears[partner.id],
-        status: result.coupleStatus[partner.id], chapters: result.guestPartnerChapters,
-      } }))
+      await standaloneCalculation.current(
+        requestSignal => calculateGuestCouple(self, partner, requestSignal),
+        result => setState(s => ({ ...s, standaloneCouple: {
+          self, partner, years: result.coupleYears[partner.id],
+          status: result.coupleStatus[partner.id], chapters: result.guestPartnerChapters,
+        } })), signal,
+      )
       return partner
     },
     resetReading: () => {

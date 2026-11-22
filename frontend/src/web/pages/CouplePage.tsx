@@ -134,7 +134,7 @@ export function CouplePage({ focus, partnerId: focusedPartnerId, breakupYear, on
       </section>
 
       <nav className="fl-year-navigation" aria-label="相手の鑑定">{focus ? <a href="#focus-partner">お相手の関わり方　›</a> : <Link to={`/couple/${partner.id}?view=about`}>{partner.name}について　›</Link>}</nav>
-      {focus && standalone && <section id="focus-partner" className="px-6 py-8">
+      {focus && standalone && <section id="focus-partner" className="scroll-mt-24 px-6 py-8">
         <h2 className="my-4 text-lg font-medium leading-relaxed">{readingFocusPages[focus].chapterHeading}</h2>
         <p className="text-sm text-fl-muted">以下の鑑定文の「あなた」は、お相手を指します。相手自身の傾向で、あなたへの特定の感情や、復縁・交際の可否を決めるものではありません。</p>
         <PartnerChapterList chapters={focusChapters(standalone.chapters, focus, partner.relation)} />
