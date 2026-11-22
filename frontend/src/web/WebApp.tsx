@@ -1,3 +1,4 @@
+import { NotFoundPage } from './pages/NotFoundPage'
 import { trackMeasurementRoute } from './data/threadsMeasurement'
 import { updateAppRobots } from './data/indexingPolicy.js'
 import { CouponsPage } from './pages/CouponsPage'
@@ -141,7 +142,7 @@ function AppRoutes() {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/contact" element={<Navigate to="/support" replace />} />
         <Route path="/demo" element={remoteMode ? <Navigate to="/" replace /> : <DemoPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   )
