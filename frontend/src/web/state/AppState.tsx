@@ -1,3 +1,4 @@
+import { checkSignupMeasurement } from '../data/signupMeasurement'
 import { trackThreadsEvent } from '../data/threadsMeasurement'
 import { clearCompletedGuideReading } from '../data/guideReadingMeasurement.js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -316,6 +317,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     let authEvents = 0
     const applySession = (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'], resolved = true) => {
       if (disposed) return
+      // Run outside the synchronous Supabase callback; tokens go only to our collector.
+      void Promise.resolve().then(() => checkSignupMeasurement(session))
       sessionResolved.current = resolved
       const owner = session?.user.id ?? null
       const token = session?.access_token ?? null

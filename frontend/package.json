@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && node build-script.js && node scripts/check-articles.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:attribution": "node --experimental-strip-types --test tests/content-attribution.test.js tests/signup-analytics.test.js tests/measurement-foundation.test.js tests/threads-event.test.js tests/guide-reading-measurement.test.js",
+    "test:e2e:attribution": "VITE_SUPABASE_URL=https://auth.fatelab.test VITE_SUPABASE_ANON_KEY=test-anon npm run build && node --test tests/content-attribution.browser.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
@@ -16,6 +18,7 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

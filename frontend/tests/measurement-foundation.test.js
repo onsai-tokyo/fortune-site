@@ -122,7 +122,7 @@ test('collection rebuilds page locations, source, tool names and CTA fields from
   assert.equal(hit.params.engagement_time_msec, 1800000)
   assert.equal(hit.params.fl_search_engine, 'google')
   assert.equal(hit.params.fl_landing_path, '/guides/compatibility')
-  assert.equal(hit.params.page_location, origin + '/welcome?utm_source=threads&utm_medium=social&utm_campaign=seo_share')
+  assert.equal(hit.params.page_location, origin + '/welcome')
   assert.equal(await post('page_view', { ...utm, page_path: '/you' }), 204)
   assert.equal(requests.at(-1).events[0].params.page_location, origin + '/you')
   assert.equal(await post('page_view', { page_path: '/guides/private-token' }), 400)

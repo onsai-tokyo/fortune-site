@@ -60,9 +60,9 @@ test('forwards only validated event parameters to GA4', async t => {
   await handler(req, res)
   assert.equal(res.code, 204)
   const { params } = payload.events[0]
-  assert.equal(params.campaign_medium, 'internal')
+  assert.equal(params.campaign_medium, undefined)
   assert.equal(params.fl_traffic_source, 'site_guide')
-  assert.equal(params.campaign_name, '(not set)')
+  assert.equal(params.campaign_name, undefined)
   assert.equal(params.page_location, 'https://fate-lab.com/coupons')
   assert.equal(params.link_type, 'affiliate')
   assert.equal(params.offer_id, 'coconala-phone')
@@ -73,7 +73,7 @@ test('forwards only validated event parameters to GA4', async t => {
   assert.equal(payload.events[0].name, 'page_view')
   assert.equal(payload.events[0].params.page_location, 'https://fate-lab.com/coupons')
   assert.equal(payload.events[0].params.landing_path, '/')
-  assert.equal(payload.events[0].params.source, 'threads')
+  assert.equal(payload.events[0].params.source, undefined)
   assert.equal(payload.events[0].params.fl_traffic_source, 'threads')
   assert.equal(payload.events[0].params.link_type, undefined)
   for (const event of ['self_reading_complete', 'couple_reading_complete', 'coupon_click']) {
@@ -140,8 +140,7 @@ test('forwards an article path and no personal fields at every guide reading sta
     assert.deepEqual(payload.events, [{ name: event, params: {
       session_id: now, engagement_time_msec: 1, page_location: 'https://fate-lab.com/guides/day-master/kinoe',
       guide_path: '/guides/day-master/kinoe', reading_type: 'self', fl_landing_path: 'other', fl_landing_group: 'other',
-      source: 'threads', fl_traffic_source: 'threads', campaign_source: 'threads',
-      campaign_medium: 'social', campaign_name: '(not set)',
+      fl_traffic_source: 'threads',
     } }])
     await handler({ ...req, body: { ...req.body, event, test: true } }, res)
     assert.equal(res.code, 204)
