@@ -68,7 +68,7 @@
   ],
   "rewrites": [
     {
-      "source": "/api/:path((?!threads-event$).*)",
+      "source": "/api/:path((?!(?:threads-event|analytics-signup)$).*)",
       "destination": "https://fortune-site-iuzo.onrender.com/api/:path*"
     },
     {

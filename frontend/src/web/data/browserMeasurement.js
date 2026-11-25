@@ -1,3 +1,4 @@
+import { browserAttributionFields, landingCampaignFields } from './contentAttribution.js'
 import {
   arrivalAttribution, attributionFromGuide, attributionLifetime, isMeasurementTest, measurementClientIdPattern,
   measurementSessionKey, productionOrigin, safeCampaignQuery, sanitizeAttribution, sanitizeLandingPath,
@@ -89,7 +90,8 @@ export function sendMeasurement(event, fields = {}) {
   void fetch('/api/threads-event', {
     method: 'POST', mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', keepalive: true,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...session, event, engagement, ...campaign, ...fields }),
+    body: JSON.stringify({ ...session, event, engagement, ...campaign, ...fields, ...browserAttributionFields(),
+      ...(event === 'page_view' || event === 'coupon_view' ? landingCampaignFields() : {}) }),
   }).catch(() => { /* Never block navigation or a reading on analytics. */ })
 }
 

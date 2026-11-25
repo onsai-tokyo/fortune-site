@@ -1,3 +1,4 @@
+import { captureBrowserVisit, observeContent } from './contentAttribution.js'
 import { announceArrival, readTagIdentity, resetEngagement, resultPage, sendMeasurement } from './browserMeasurement.js'
 import { articleOrigin } from './guideReadingMeasurement.js'
 import { productionOrigin } from './measurementRules.js'
@@ -9,6 +10,7 @@ let previousRoute: string | undefined
 
 export function startThreadsMeasurement() {
   if (location.origin !== productionOrigin) return
+  captureBrowserVisit()
   readTagIdentity()
   announceArrival()
 }
@@ -16,6 +18,7 @@ export function startThreadsMeasurement() {
 export function trackMeasurementRoute(path: string) {
   if (location.origin !== productionOrigin || previousRoute === path) return
   previousRoute = path
+  observeContent(path)
   resetEngagement()
   const page = resultPage(path)
   if (!page || !['/', '/couple', '/coupons', '/welcome', '/you', '/threads-launch', ...readingFocusPaths].includes(page)) return

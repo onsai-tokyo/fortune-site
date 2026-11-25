@@ -1,13 +1,15 @@
+import { browserAttributionFields, observeContent, landingCampaignFields } from './contentAttribution.js'
 import { announceArrival, measurementSession, readTagIdentity, sendMeasurement } from './browserMeasurement.js'
-import { classifySource, isMeasurementTest, productionOrigin, safeCampaignQuery, sanitizeLandingPath } from './measurementRules.js'
+import { classifySource, isMeasurementTest, productionOrigin, sanitizeLandingPath } from './measurementRules.js'
 import { guideReadingPath, startGuideCouple } from './guideReadingMeasurement.js'
 
 const tagId = 'G-FPZ7QKTXLJ'
 
 function staticPageView(path, session) {
+  const campaign = landingCampaignFields()
   if (session.test) {
     announceArrival()
-    sendMeasurement('page_view', { page_path: path })
+    sendMeasurement('page_view', { page_path: path, ...campaign })
     return
   }
   // Keep the browser tag's native session/first-visit attribution. Its document
@@ -21,7 +23,7 @@ function staticPageView(path, session) {
   function fallback() {
     if (recorded) return
     recorded = true
-    sendMeasurement('page_view', { page_path: path })
+    sendMeasurement('page_view', { page_path: path, ...campaign })
     announceArrival()
   }
   frame.onerror = fallback
@@ -31,20 +33,14 @@ function staticPageView(path, session) {
     if (!context || recorded) return
     context.dataLayer = []
     const tag = function () { context.dataLayer.push(arguments) }
-    const query = safeCampaignQuery(Object.fromEntries(new URL(location.href).searchParams)).toString()
     const referrer = document.referrer ? new URL(document.referrer) : null
     const searchReferrer = session.source === 'organic_search' && referrer && classifySource(new URL(location.origin), referrer.href) === 'organic_search'
     const params = {
-      send_page_view: false, page_location: productionOrigin + path + (query ? '?' + query : ''), page_title: document.title,
+      send_page_view: false, page_location: productionOrigin + path, page_title: 'Fate Lab',
       page_referrer: searchReferrer ? referrer.origin + '/' : '',
       fl_traffic_source: session.source, fl_landing_path: session.landing_path, fl_landing_group: session.fl_landing_group,
       fl_search_engine: session.fl_search_engine, allow_google_signals: false, allow_ad_personalization_signals: false,
-      client_id: session.clientId,
-    }
-    if (session.source && !['organic_search', 'direct', 'site_guide'].includes(session.source)) {
-      params.campaign_source = session.source
-      params.campaign_medium = session.source === 'other_campaign' ? 'campaign' : 'social'
-      params.campaign_name = session.campaign_name
+      client_id: session.clientId, ...browserAttributionFields(), ...campaign,
     }
     window.addEventListener('storage', () => {
       context['ga-disable-' + tagId] = isMeasurementTest(new URL(location.href))
@@ -72,6 +68,7 @@ function staticPageView(path, session) {
 
 function install() {
   if (location.origin !== productionOrigin) return
+  observeContent(location.pathname)
   const session = measurementSession()
   const path = sanitizeLandingPath(location.pathname)
   if (!session || path === 'other') return

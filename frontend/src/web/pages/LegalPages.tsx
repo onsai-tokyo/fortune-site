@@ -28,9 +28,9 @@ export function WebPrivacyPage() {
       {s.title.startsWith('第3条') && <ul className="list-disc space-y-2 pl-5">{aiDataPolicyLinks.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noreferrer" className="text-fl-slate underline">{link.title}</a></li>)}</ul>}
       {s.title.startsWith('第4条') && <><Rows headers={['委託先', '委託すること', '国']} rows={processors} /><p>{crossBorderNotice}</p></>}
       {s.title.startsWith('第9条') && <><Rows headers={['送信先', '送られる情報', '目的', '止める方法']} rows={[
-        ['Google LLC（Googleアナリティクス）', '開いたページ、端末・ブラウザの情報、IPアドレス、Cookieなどの識別子', '利用状況の分析', 'Googleアナリティクス オプトアウト アドオン'],
+        ['Google LLC（Googleアナリティクス）', '公開ページの識別子、流入元・経路、施策・投稿コード、入口ページ、最後に見た公開コンテンツ、登録完了、端末・ブラウザの情報、Cookieなどの識別子（配信時はIPアドレスを含む）', '流入・閲覧・登録実績の分析', 'Googleアナリティクス オプトアウト アドオン'],
         ['Google LLC（Google Fonts）', 'IPアドレス、ブラウザの情報', '文字の書体の表示', 'ブラウザの設定で外部の書体を止める'],
-      ]} /><a href="https://tools.google.com/dlpage/gaoptout?hl=ja" target="_blank" rel="noreferrer" className="text-fl-slate underline">Googleアナリティクス オプトアウト アドオン</a><p>相談文、生年月日、相手の情報は、これらの送信先には送りません。</p><h3 className="font-medium">外部サービスへのリンク</h3>
+      ]} /><a href="https://tools.google.com/dlpage/gaoptout?hl=ja" target="_blank" rel="noreferrer" className="text-fl-slate underline">Googleアナリティクス オプトアウト アドオン</a><p>メールアドレス、表示名、入力内容、出生情報、診断結果、鑑定・相談の本文、検索語、認証コード・トークン、生のURLクエリ・ハッシュ・参照元はGoogleアナリティクスに送りません。公開コンテンツは当社が管理するページ識別子だけを使います。</p><p>流入の効果を確認するため、直近の識別可能な流入と公開コンテンツの閲覧情報を、このブラウザーのlocalStorageに流入時から30日間保持します。直接再訪やメール認証からの戻りでは流入を置き換えません。新しい識別可能な流入では保持内容を更新します。ブラウザーのサイトデータ削除で消去できます。同じブラウザーのタブ間で共有されますが、別端末とは共有しません。GA標準のセッション流入とは別の集計です。</p><h3 className="font-medium">外部サービスへのリンク</h3>
         <p>リンク先で入力した情報は、各事業者のプライバシーポリシーに従って取り扱われます。FATE LABのリンクに出生情報や鑑定結果は含めません。</p>
         {hasAffiliateAds && <p>「PR・広告」の掲載箇所では、広告配信や成果計測のため、A8.net（株式会社ファンコミュニケーションズ）や広告主に、広告の識別子、IPアドレス、ブラウザ情報、Cookieなどの識別子が送られる場合があります。</p>}</>}
     </Section>)}
